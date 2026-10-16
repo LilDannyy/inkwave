@@ -19,7 +19,9 @@
    "nums": {
     "kit": 0,
     "problems": 0,
-    "floating": []
+    "floating": [],
+    "sweeps": [],
+    "inPath": []
    },
    "flags": []
   },
@@ -87,6 +89,14 @@
     ]
    },
    "flags": [
+    {
+     "at": [
+      -2.5,
+      0.08,
+      -0.5
+     ],
+     "what": "2: L 83.5 / 81.1 m (Δ 2.9 %)"
+    },
     {
      "at": [
       0.25,
@@ -308,7 +318,7 @@
    "n": 7,
    "name": "No shortcut into a base",
    "status": "FAIL",
-   "text": "(c) 10 drop(s) > 2.5 m into a Gate's ring: t0 3.2 m at (-5.5, 64.5), t0 3.2 m at (-6.5, 65.5), t0 3.2 m at (-5.5, 65.5), t0 3.2 m at (-5.5, 64.5); (d) 28 connection(s) the graph lacks gaining > 10 m: lowGap [8.5,-1.2,-4.5]→[8.5,-1.2,-1.5] 11.2 m, lowGap [9.5,-1.2,-4.5]→[9.5,-1.2,-1.5] 11.2 m, lowGap [7.5,-1.2,-3.5]→[7.5,-1.2,-0.5] 10.6 m, lowGap [8.5,-1.2,-3.5]→[6.5,-1.2,-1.5] 10.2 m, lowGap [8.5,-1.2,-3.5]→[7.5,-1.2,-1.5] 10.6 m … (by probe: lowGap 28)",
+   "text": "(c) 12 drop(s) > 2.5 m into a Gate's ring: t0 3.2 m at (-5.5, 64.5), t0 3.2 m at (-6.5, 65.5), t0 3.2 m at (-5.5, 65.5), t0 3.2 m at (-5.5, 64.5); (d) 100 connection(s) the graph lacks gaining > 10 m: lowGap [3.5,2.4,-64.5]→[1.5,2.4,-62.5] 13.7 m, lowGap [3.5,2.4,-64.5]→[2.5,2.4,-62.5] 12.7 m, lowGap [3.5,2.4,-64.5]→[3.5,2.4,-62.5] 11.7 m, lowGap [2.5,2.4,-63.5]→[1.5,2.4,-62.5] 12.4 m, lowGap [2.5,2.4,-63.5]→[2.5,2.4,-62.5] 11.8 m … (by probe: lowGap 47, longGap 24, riseGap 8, vault 21)",
    "nums": {
     "teams": [
      {
@@ -316,16 +326,18 @@
       "entrances": [
        {
         "c": [
-         -3.1,
+         -2.2,
          0.6,
-         56.2
+         56.5
         ],
         "w": 29.4,
-        "n": 100,
+        "n": 103,
         "types": [
          "walk",
          "drop",
-         "rising gap"
+         "squid gap",
+         "long gap",
+         "vault over a low wall or rail"
         ],
         "seen": true,
         "plainSeen": true,
@@ -333,7 +345,7 @@
          "walk",
          "drop"
         ],
-        "moves": 3,
+        "moves": 6,
         "physUnseen": [],
         "from": [
          -9.5,
@@ -364,6 +376,28 @@
          0,
          64.5
         ]
+       },
+       {
+        "c": [
+         -0.8,
+         0.5,
+         59
+        ],
+        "w": 3.6,
+        "n": 6,
+        "types": [
+         "long gap"
+        ],
+        "seen": true,
+        "plainSeen": true,
+        "plainTypes": [],
+        "moves": 6,
+        "physUnseen": [],
+        "from": [
+         8.5,
+         2.2,
+         62.5
+        ]
        }
       ]
      },
@@ -372,16 +406,18 @@
       "entrances": [
        {
         "c": [
-         3.1,
+         2.2,
          0.6,
-         -56.2
+         -56.5
         ],
         "w": 29.4,
-        "n": 100,
+        "n": 103,
         "types": [
          "walk",
          "drop",
-         "rising gap"
+         "squid gap",
+         "long gap",
+         "vault over a low wall or rail"
         ],
         "seen": true,
         "plainSeen": true,
@@ -389,7 +425,7 @@
          "walk",
          "drop"
         ],
-        "moves": 3,
+        "moves": 6,
         "physUnseen": [],
         "from": [
          -8.5,
@@ -420,32 +456,257 @@
          0,
          -64.5
         ]
+       },
+       {
+        "c": [
+         1.3,
+         0.4,
+         -58.5
+        ],
+        "w": 3.2,
+        "n": 4,
+        "types": [
+         "long gap"
+        ],
+        "seen": true,
+        "plainSeen": true,
+        "plainTypes": [],
+        "moves": 4,
+        "physUnseen": [],
+        "from": [
+         -8.5,
+         2.2,
+         -62.5
+        ]
        }
       ]
      }
     ],
-    "rise": {
-     "cand": 110,
-     "tried": 6
+    "lowGap": {
+     "pairs": 389,
+     "ring": 8
     },
-    "offGap": {
-     "cand": 12,
+    "high": {
+     "tried": 2
+    },
+    "long": {
+     "tried": 53
+    },
+    "rise": {
+     "tried": 9
+    },
+    "offHop": {
+     "cand": 397,
      "tried": 0
     },
+    "offGap": {
+     "tried": 0
+    },
+    "climbOff": {
+     "tops": 0,
+     "noExit": 0
+    },
+    "vault": {
+     "cand": 192,
+     "tried": 25
+    },
+    "window": {
+     "cells": 19,
+     "m": 19,
+     "kid": 10.6,
+     "swim": 19
+    },
     "cand": {
-     "high": 6,
-     "long": 171
+     "high": 2,
+     "long": 53
     },
     "finds": {
-     "lowGap": 28,
+     "lowGap": 47,
      "tallWall": 0,
      "longDrop": 0,
      "highHop": 0,
-     "longGap": 0
+     "longGap": 0,
+     "climbOff": 0
     },
-    "drops": 10,
+    "drops": 12,
     "climbShortcuts": 0,
     "d": [
+     {
+      "probe": "lowGap",
+      "a": [
+       3.5,
+       2.4,
+       -64.5
+      ],
+      "b": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 13.7,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       3.5,
+       2.4,
+       -64.5
+      ],
+      "b": [
+       2.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 12.7,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       3.5,
+       2.4,
+       -64.5
+      ],
+      "b": [
+       3.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 11.7,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       2.5,
+       2.4,
+       -63.5
+      ],
+      "b": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 12.4,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       2.5,
+       2.4,
+       -63.5
+      ],
+      "b": [
+       2.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 11.8,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       2.5,
+       2.4,
+       -63.5
+      ],
+      "b": [
+       3.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 10.9,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       3.5,
+       2.4,
+       -63.5
+      ],
+      "b": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 12.7,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       3.5,
+       2.4,
+       -63.5
+      ],
+      "b": [
+       2.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 11.7,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       3.5,
+       2.4,
+       -63.5
+      ],
+      "b": [
+       3.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 10.7,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       2.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       4.75,
+       2.4,
+       -63.5
+      ],
+      "gain": 12.3,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       3.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       4.75,
+       2.4,
+       -63.5
+      ],
+      "gain": 11.3,
+      "phys": false,
+      "by": null
+     },
      {
       "probe": "lowGap",
       "a": [
@@ -459,7 +720,8 @@
        -1.5
       ],
       "gain": 11.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -474,7 +736,8 @@
        -1.5
       ],
       "gain": 11.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -489,7 +752,8 @@
        -0.5
       ],
       "gain": 10.6,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -504,7 +768,8 @@
        -1.5
       ],
       "gain": 10.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -519,7 +784,8 @@
        -1.5
       ],
       "gain": 10.6,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -534,7 +800,8 @@
        -1.5
       ],
       "gain": 10.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -549,7 +816,8 @@
        -0.5
       ],
       "gain": 11.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -564,7 +832,8 @@
        -1.5
       ],
       "gain": 11.6,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -579,7 +848,8 @@
        -1.5
       ],
       "gain": 11.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -594,7 +864,8 @@
        -1.5
       ],
       "gain": 10.8,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -609,7 +880,8 @@
        -0.5
       ],
       "gain": 11.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -624,7 +896,8 @@
        -1.5
       ],
       "gain": 11.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -639,7 +912,8 @@
        -1.5
       ],
       "gain": 10.8,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -654,7 +928,8 @@
        -0.5
       ],
       "gain": 10.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -669,7 +944,8 @@
        3.5
       ],
       "gain": 10.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -684,7 +960,8 @@
        3.5
       ],
       "gain": 11.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -699,7 +976,8 @@
        3.5
       ],
       "gain": 11.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -714,7 +992,8 @@
        3.5
       ],
       "gain": 10.6,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -729,7 +1008,8 @@
        3.5
       ],
       "gain": 10.8,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -744,7 +1024,8 @@
        3.5
       ],
       "gain": 10.8,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -759,7 +1040,8 @@
        4.5
       ],
       "gain": 11.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -774,7 +1056,8 @@
        3.5
       ],
       "gain": 11.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -789,7 +1072,8 @@
        3.5
       ],
       "gain": 11.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -804,7 +1088,8 @@
        3.5
       ],
       "gain": 10.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -819,7 +1104,8 @@
        4.5
       ],
       "gain": 11.2,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -834,7 +1120,8 @@
        3.5
       ],
       "gain": 11.6,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -849,7 +1136,8 @@
        3.5
       ],
       "gain": 10.6,
-      "phys": false
+      "phys": false,
+      "by": null
      },
      {
       "probe": "lowGap",
@@ -864,7 +1152,984 @@
        3.5
       ],
       "gain": 10.2,
-      "phys": false
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -3.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -4.75,
+       2.4,
+       63.5
+      ],
+      "gain": 11.3,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -3.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       63.5
+      ],
+      "gain": 10.7,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -3.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -2.5,
+       2.4,
+       63.5
+      ],
+      "gain": 10.3,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -2.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -4.75,
+       2.4,
+       63.5
+      ],
+      "gain": 12.3,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -2.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       63.5
+      ],
+      "gain": 11.7,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -2.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -2.5,
+       2.4,
+       63.5
+      ],
+      "gain": 11.3,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       63.5
+      ],
+      "gain": 12.7,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "lowGap",
+      "a": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -2.5,
+       2.4,
+       63.5
+      ],
+      "gain": 12.3,
+      "phys": false,
+      "by": null
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -6.5,
+       2.4,
+       -68.5
+      ],
+      "b": [
+       0.5,
+       2.01,
+       -61.5
+      ],
+      "gain": 24.2,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -6.5,
+       2.4,
+       -68.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       -60.5
+      ],
+      "gain": 25.2,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -7.5,
+       2.4,
+       -64.5
+      ],
+      "b": [
+       3.5,
+       0,
+       -61.5
+      ],
+      "gain": 24.8,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -6.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       5.5,
+       0,
+       -62.5
+      ],
+      "gain": 19,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -5.5,
+       2.2,
+       -62.5
+      ],
+      "b": [
+       5.5,
+       0,
+       -62.5
+      ],
+      "gain": 19.9,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -5.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       5.5,
+       0,
+       -62.5
+      ],
+      "gain": 18.4,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -5.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       3.5,
+       0,
+       -60.5
+      ],
+      "gain": 15.6,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -4.5,
+       2.01,
+       -61.5
+      ],
+      "b": [
+       3.5,
+       2.4,
+       -65.5
+      ],
+      "gain": 26.1,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -4.5,
+       2.01,
+       -61.5
+      ],
+      "b": [
+       4.75,
+       2.4,
+       -64.5
+      ],
+      "gain": 26.1,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       4.5,
+       2.01,
+       61.5
+      ],
+      "b": [
+       -4.75,
+       2.4,
+       64.5
+      ],
+      "gain": 26.1,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       4.5,
+       2.01,
+       61.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       65.5
+      ],
+      "gain": 26.1,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       5.5,
+       2.2,
+       62.5
+      ],
+      "b": [
+       -5.5,
+       0,
+       62.5
+      ],
+      "gain": 19.9,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       5.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -3.5,
+       0,
+       60.5
+      ],
+      "gain": 15.6,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       5.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -5.5,
+       0,
+       62.5
+      ],
+      "gain": 18.4,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       6.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -5.5,
+       0,
+       62.5
+      ],
+      "gain": 19,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       7.5,
+       2.4,
+       64.5
+      ],
+      "b": [
+       -1.25,
+       0,
+       59.5
+      ],
+      "gain": 21.3,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       7.5,
+       2.4,
+       64.5
+      ],
+      "b": [
+       -3.5,
+       0,
+       61.5
+      ],
+      "gain": 24.8,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -2.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "gain": 15.4,
+      "phys": true,
+      "by": "kid"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       6.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       0.5,
+       1.22,
+       59.5
+      ],
+      "gain": 19,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       6.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "gain": 18,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       6.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       -1.5,
+       0,
+       61.5
+      ],
+      "gain": 27.8,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       7.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "gain": 17,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       -8.95,
+       2.4,
+       -65.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       -60.5
+      ],
+      "gain": 20.4,
+      "phys": true,
+      "by": "kid"
+     },
+     {
+      "probe": "longGap",
+      "a": [
+       8.95,
+       2.4,
+       65.5
+      ],
+      "b": [
+       -1.25,
+       0,
+       59.5
+      ],
+      "gain": 21.4,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "riseGap",
+      "a": [
+       0.5,
+       2.01,
+       -61.5
+      ],
+      "b": [
+       3.5,
+       3.15,
+       -66.5
+      ],
+      "gain": 19,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "riseGap",
+      "a": [
+       0.5,
+       2.01,
+       -61.5
+      ],
+      "b": [
+       4.5,
+       3.15,
+       -66.5
+      ],
+      "gain": 20,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "riseGap",
+      "a": [
+       0.5,
+       1.61,
+       -60.5
+      ],
+      "b": [
+       3.5,
+       3.15,
+       -66.5
+      ],
+      "gain": 17.9,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "riseGap",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       62.5
+      ],
+      "gain": 11.1,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "riseGap",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -4.5,
+       3.15,
+       66.5
+      ],
+      "gain": 26.2,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "riseGap",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -3.5,
+       3.15,
+       66.5
+      ],
+      "gain": 25.2,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "riseGap",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -2.5,
+       2.4,
+       68.5
+      ],
+      "gain": 24.3,
+      "phys": true,
+      "by": "kid"
+     },
+     {
+      "probe": "riseGap",
+      "a": [
+       -8.25,
+       -1.2,
+       -6.5
+      ],
+      "b": [
+       -13.5,
+       0,
+       -0.5
+      ],
+      "gain": 14.2,
+      "phys": true,
+      "by": "kid"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       3.5,
+       2.4,
+       -64.5
+      ],
+      "gain": 13.7,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       64.5
+      ],
+      "gain": 13.7,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       3.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       4.75,
+       2.4,
+       -65.5
+      ],
+      "gain": 13.3,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -3.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -4.75,
+       2.4,
+       65.5
+      ],
+      "gain": 13.3,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       2.5,
+       2.4,
+       -63.5
+      ],
+      "b": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 12.4,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       5.5,
+       0,
+       -65.5
+      ],
+      "b": [
+       7.5,
+       1.46,
+       -67.5
+      ],
+      "gain": 12.3,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -5.5,
+       0,
+       65.5
+      ],
+      "b": [
+       -7.5,
+       1.46,
+       66.25
+      ],
+      "gain": 12.3,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -3.5,
+       2.4,
+       64.5
+      ],
+      "b": [
+       -2.5,
+       0,
+       61.5
+      ],
+      "gain": 12,
+      "phys": true,
+      "by": "kid"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       5.5,
+       0,
+       -64.5
+      ],
+      "b": [
+       8.5,
+       1.09,
+       -66.25
+      ],
+      "gain": 11.6,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       4.75,
+       2.4,
+       -63.5
+      ],
+      "b": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 11.4,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       3.5,
+       2.4,
+       -64.5
+      ],
+      "b": [
+       3.5,
+       0,
+       -61.5
+      ],
+      "gain": 11,
+      "phys": true,
+      "by": "kid"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       8.5,
+       -1.2,
+       -4.5
+      ],
+      "b": [
+       7.5,
+       0.08,
+       -1.5
+      ],
+      "gain": 11,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       0.08,
+       1.5
+      ],
+      "gain": 11,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -4.75,
+       2.4,
+       63.5
+      ],
+      "b": [
+       -1.5,
+       2.2,
+       62.5
+      ],
+      "gain": 10.8,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       7.5,
+       0,
+       -64.5
+      ],
+      "b": [
+       7.5,
+       1.46,
+       -67.5
+      ],
+      "gain": 10.7,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -7.5,
+       0,
+       64.5
+      ],
+      "b": [
+       -7.5,
+       1.46,
+       67.5
+      ],
+      "gain": 10.7,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       10.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       8.5,
+       0.08,
+       -1.5
+      ],
+      "gain": 10.6,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -0.5,
+       1.61,
+       -60.5
+      ],
+      "b": [
+       2.5,
+       0,
+       -60.5
+      ],
+      "gain": 10.4,
+      "phys": true,
+      "by": "kid"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -2.5,
+       0,
+       60.5
+      ],
+      "gain": 10.4,
+      "phys": true,
+      "by": "kid"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       7.5,
+       0,
+       -63.5
+      ],
+      "b": [
+       8.5,
+       1.09,
+       -66.25
+      ],
+      "gain": 10,
+      "phys": true,
+      "by": "swim"
+     },
+     {
+      "probe": "vault",
+      "a": [
+       -7.5,
+       0,
+       63.5
+      ],
+      "b": [
+       -8.5,
+       1.09,
+       66.25
+      ],
+      "gain": 10,
+      "phys": true,
+      "by": "swim"
      }
     ]
    },
@@ -875,7 +2140,19 @@
       0,
       65.1
      ],
-     "what": "7c: a 3.2 m drop into the Gate's ring"
+     "what": "7c: a 3.2 m drop into the Gate's ring",
+     "move": [
+      [
+       -4.5,
+       3.15,
+       66.5
+      ],
+      [
+       -5.5,
+       0,
+       64.5
+      ]
+     ]
     },
     {
      "at": [
@@ -883,7 +2160,134 @@
       0,
       -65.1
      ],
-     "what": "7c: a 3.2 m drop into the Gate's ring"
+     "what": "7c: a 3.2 m drop into the Gate's ring",
+     "move": [
+      [
+       3.5,
+       3.15,
+       -66.5
+      ],
+      [
+       5.5,
+       0,
+       -65.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      -5.5,
+      0,
+      -60.5
+     ],
+     "what": "7c: a 2.9 m drop into the Gate's ring",
+     "move": [
+      [
+       -8.5,
+       2.92,
+       -66.5
+      ],
+      [
+       -5.5,
+       0,
+       -60.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      5.5,
+      0,
+      60.5
+     ],
+     "what": "7c: a 2.9 m drop into the Gate's ring",
+     "move": [
+      [
+       8.5,
+       2.92,
+       66.5
+      ],
+      [
+       5.5,
+       0,
+       60.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      3.5,
+      2.4,
+      -64.5
+     ],
+     "what": "7d lowGap ×11: gain 10.7–13.7 m",
+     "look": {
+      "x": 1.5,
+      "y": 2.4,
+      "z": -62.5
+     },
+     "move": [
+      [
+       3.5,
+       2.4,
+       -64.5
+      ],
+      [
+       1.5,
+       2.4,
+       -62.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      0.5,
+      2.01,
+      -61.5
+     ],
+     "what": "7d riseGap (swim-jump) ×3: gain 17.9–20 m",
+     "look": {
+      "x": 4.5,
+      "y": 3.15,
+      "z": -66.5
+     },
+     "move": [
+      [
+       0.5,
+       2.01,
+       -61.5
+      ],
+      [
+       4.5,
+       3.15,
+       -66.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      1.5,
+      2.4,
+      -62.5
+     ],
+     "what": "7d vault (swim-jump) ×10: gain 10–13.7 m",
+     "look": {
+      "x": 3.5,
+      "y": 2.4,
+      "z": -64.5
+     },
+     "move": [
+      [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      [
+       3.5,
+       2.4,
+       -64.5
+      ]
+     ]
     },
     {
      "at": [
@@ -896,7 +2300,44 @@
       "x": 7.5,
       "y": -1.2,
       "z": -1.5
-     }
+     },
+     "move": [
+      [
+       9.5,
+       -1.2,
+       -3.5
+      ],
+      [
+       7.5,
+       -1.2,
+       -1.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      8.5,
+      -1.2,
+      -4.5
+     ],
+     "what": "7d vault (swim-jump) ×2: gain 10.6–11 m",
+     "look": {
+      "x": 7.5,
+      "y": 0.08,
+      "z": -1.5
+     },
+     "move": [
+      [
+       8.5,
+       -1.2,
+       -4.5
+      ],
+      [
+       7.5,
+       0.08,
+       -1.5
+      ]
+     ]
     },
     {
      "at": [
@@ -909,7 +2350,269 @@
       "x": -9.5,
       "y": -1.2,
       "z": 3.5
-     }
+     },
+     "move": [
+      [
+       -7.5,
+       -1.2,
+       1.5
+      ],
+      [
+       -9.5,
+       -1.2,
+       3.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      -9.5,
+      -1.2,
+      3.5
+     ],
+     "what": "7d vault (swim-jump): gain 11 m",
+     "look": {
+      "x": -7.5,
+      "y": 0.08,
+      "z": 1.5
+     },
+     "move": [
+      [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      [
+       -7.5,
+       0.08,
+       1.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      -1.5,
+      2.4,
+      62.5
+     ],
+     "what": "7d lowGap ×8: gain 10.3–12.7 m",
+     "look": {
+      "x": -3.5,
+      "y": 2.4,
+      "z": 63.5
+     },
+     "move": [
+      [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      [
+       -3.5,
+       2.4,
+       63.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      0.5,
+      1.61,
+      60.5
+     ],
+     "what": "7d riseGap (swim-jump) ×4: gain 11.1–26.2 m",
+     "look": {
+      "x": -4.5,
+      "y": 3.15,
+      "z": 66.5
+     },
+     "move": [
+      [
+       0.5,
+       1.61,
+       60.5
+      ],
+      [
+       -4.5,
+       3.15,
+       66.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      -1.5,
+      2.4,
+      62.5
+     ],
+     "what": "7d vault (swim-jump) ×8: gain 10–13.7 m",
+     "look": {
+      "x": -3.5,
+      "y": 2.4,
+      "z": 64.5
+     },
+     "move": [
+      [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      [
+       -3.5,
+       2.4,
+       64.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      -6.5,
+      2.4,
+      -68.5
+     ],
+     "what": "7d longGap (swim-jump) ×2: gain 24.2–25.2 m",
+     "look": {
+      "x": 0.5,
+      "y": 1.61,
+      "z": -60.5
+     },
+     "move": [
+      [
+       -6.5,
+       2.4,
+       -68.5
+      ],
+      [
+       0.5,
+       1.61,
+       -60.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      -4.5,
+      2.01,
+      -61.5
+     ],
+     "what": "7d longGap (swim-jump) ×8: gain 15.6–26.1 m",
+     "look": {
+      "x": 3.5,
+      "y": 2.4,
+      "z": -65.5
+     },
+     "move": [
+      [
+       -4.5,
+       2.01,
+       -61.5
+      ],
+      [
+       3.5,
+       2.4,
+       -65.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      4.5,
+      2.01,
+      61.5
+     ],
+     "what": "7d longGap (swim-jump) ×9: gain 15.6–26.1 m",
+     "look": {
+      "x": -4.75,
+      "y": 2.4,
+      "z": 64.5
+     },
+     "move": [
+      [
+       4.5,
+       2.01,
+       61.5
+      ],
+      [
+       -4.75,
+       2.4,
+       64.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      -2.5,
+      2.4,
+      68.5
+     ],
+     "what": "7d longGap: gain 15.4 m",
+     "look": {
+      "x": 0.5,
+      "y": 1.61,
+      "z": 60.5
+     },
+     "move": [
+      [
+       -2.5,
+       2.4,
+       68.5
+      ],
+      [
+       0.5,
+       1.61,
+       60.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      6.5,
+      2.4,
+      68.5
+     ],
+     "what": "7d longGap (swim-jump) ×4: gain 17–27.8 m",
+     "look": {
+      "x": -1.5,
+      "y": 0,
+      "z": 61.5
+     },
+     "move": [
+      [
+       6.5,
+       2.4,
+       68.5
+      ],
+      [
+       -1.5,
+       0,
+       61.5
+      ]
+     ]
+    },
+    {
+     "at": [
+      -8.25,
+      -1.2,
+      -6.5
+     ],
+     "what": "7d riseGap: gain 14.2 m",
+     "look": {
+      "x": -13.5,
+      "y": 0,
+      "z": -0.5
+     },
+     "move": [
+      [
+       -8.25,
+       -1.2,
+       -6.5
+      ],
+      [
+       -13.5,
+       0,
+       -0.5
+      ]
+     ]
     }
    ]
   },
@@ -1923,7 +3626,24 @@
      "plateau (7.7, 68.1) 5 m²: a single entrance"
     ]
    },
-   "flags": []
+   "flags": [
+    {
+     "at": [
+      -2,
+      1.5,
+      -66
+     ],
+     "what": "9: a zone touching team 1's Gate"
+    },
+    {
+     "at": [
+      2,
+      1.5,
+      66
+     ],
+     "what": "9: a zone touching team 0's Gate"
+    }
+   ]
   },
   "10": {
    "n": 10,
@@ -2040,6 +3760,11 @@
       "walks": {
        "retreat": {
         "ran": true,
+        "at": [
+         7.5,
+         1.46,
+         -67.5
+        ],
         "stretch": 14.8,
         "mark": -62.6,
         "on": 8.11,
@@ -2104,6 +3829,11 @@
         "plant": true,
         "tWeir": 9.7,
         "w1": {
+         "at": [
+          -13.37,
+          0,
+          30.83
+         ],
          "ok": true,
          "t": 7.8,
          "stuck": 0
@@ -2112,6 +3842,11 @@
         "knockout": true,
         "tGate": 8.7,
         "w2": {
+         "at": [
+          -7.31,
+          1.88,
+          67.22
+         ],
          "ok": true,
          "end": true,
          "t": 8.7,
@@ -2155,13 +3890,13 @@
       ],
       "events": [
        {
-        "t": 0.1,
+        "t": 0,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 5.3,
+        "t": 5.2,
         "k": "rate",
         "team": 0,
         "how": "retreat"
@@ -2173,7 +3908,7 @@
         "how": "×1 "
        },
        {
-        "t": 14.9,
+        "t": 14.8,
         "k": "rate",
         "team": 0,
         "how": "zone"
@@ -2191,25 +3926,25 @@
         "how": ""
        },
        {
-        "t": 19.4,
+        "t": 19.3,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 19.4,
+        "t": 19.3,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 23.7,
+        "t": 23.6,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 23.7,
+        "t": 23.6,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -2227,25 +3962,25 @@
         "how": ""
        },
        {
-        "t": 32.2,
+        "t": 32.1,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 32.2,
+        "t": 32.1,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 36.5,
+        "t": 36.4,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 36.5,
+        "t": 36.4,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -2263,25 +3998,25 @@
         "how": ""
        },
        {
-        "t": 45,
+        "t": 44.9,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 45,
+        "t": 44.9,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 49.3,
+        "t": 49.2,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 49.3,
+        "t": 49.2,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -2299,25 +4034,25 @@
         "how": ""
        },
        {
-        "t": 57.8,
+        "t": 57.7,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 57.8,
+        "t": 57.7,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 62.1,
+        "t": 62,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 62.1,
+        "t": 62,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -2335,25 +4070,25 @@
         "how": ""
        },
        {
-        "t": 70.6,
+        "t": 70.5,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 70.6,
+        "t": 70.5,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 74.9,
+        "t": 74.8,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 74.9,
+        "t": 74.8,
         "k": "pickup",
         "team": 0,
         "how": ""
@@ -2371,25 +4106,25 @@
         "how": ""
        },
        {
-        "t": 83.4,
+        "t": 83.3,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 83.4,
+        "t": 83.3,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 83.5,
+        "t": 83.4,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 83.5,
+        "t": 83.4,
         "k": "drop",
         "team": 0,
         "how": "splat",
@@ -2400,19 +4135,19 @@
         ]
        },
        {
-        "t": 86.8,
+        "t": 86.7,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 95,
+        "t": 94.9,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 95,
+        "t": 94.9,
         "k": "plant",
         "team": 0,
         "how": ""
@@ -2424,7 +4159,7 @@
         "how": ""
        },
        {
-        "t": 105.1,
+        "t": 105,
         "k": "end",
         "how": "knockout"
        }
@@ -2437,6 +4172,11 @@
       "walks": {
        "retreat": {
         "ran": true,
+        "at": [
+         -7.5,
+         1.46,
+         67.5
+        ],
         "stretch": 14.8,
         "mark": -65,
         "on": 8.11,
@@ -2501,6 +4241,11 @@
         "plant": true,
         "tWeir": 10.5,
         "w1": {
+         "at": [
+          13.37,
+          0,
+          -30.84
+         ],
          "ok": true,
          "t": 8.6,
          "stuck": 0
@@ -2509,6 +4254,11 @@
         "knockout": true,
         "tGate": 8.7,
         "w2": {
+         "at": [
+          7.31,
+          1.88,
+          -67.22
+         ],
          "ok": true,
          "end": true,
          "t": 8.7,
@@ -2552,217 +4302,229 @@
       ],
       "events": [
        {
-        "t": 0.1,
+        "t": 0,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 5.3,
+        "t": 5.2,
         "k": "rate",
         "team": 1,
         "how": "retreat"
        },
        {
-        "t": 15.1,
+        "t": 14.9,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 15.1,
+        "t": 15,
         "k": "rate",
         "team": 1,
         "how": "zone"
        },
        {
-        "t": 15.4,
+        "t": 15.2,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 15.4,
+        "t": 15.2,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 19.6,
+        "t": 19.5,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 19.6,
+        "t": 19.5,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 23.9,
+        "t": 23.8,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 23.9,
+        "t": 23.8,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 28.2,
+        "t": 28,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 28.2,
+        "t": 28,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 32.4,
+        "t": 32.3,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 32.4,
+        "t": 32.3,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 36.7,
+        "t": 36.6,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 36.7,
+        "t": 36.6,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 41,
+        "t": 40.8,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 41,
+        "t": 40.8,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 45.2,
+        "t": 45.1,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 45.2,
+        "t": 45.1,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 49.5,
+        "t": 49.4,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 49.5,
+        "t": 49.4,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 53.8,
+        "t": 53.6,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 53.8,
+        "t": 53.6,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 58,
+        "t": 57.9,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 58,
+        "t": 57.9,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 62.3,
+        "t": 62.2,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 62.3,
+        "t": 62.2,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 66.6,
+        "t": 66.4,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 66.6,
+        "t": 66.4,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 70.8,
+        "t": 70.7,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 70.8,
+        "t": 70.7,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 75.1,
+        "t": 75,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 75.1,
+        "t": 75,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 79.4,
+        "t": 79.2,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 79.4,
+        "t": 79.2,
+        "k": "pickup",
+        "team": 1,
+        "how": ""
+       },
+       {
+        "t": 83.5,
+        "k": "rate",
+        "team": 1,
+        "how": "×1 "
+       },
+       {
+        "t": 83.5,
         "k": "pickup",
         "team": 1,
         "how": ""
@@ -2775,18 +4537,6 @@
        },
        {
         "t": 83.6,
-        "k": "pickup",
-        "team": 1,
-        "how": ""
-       },
-       {
-        "t": 83.7,
-        "k": "rate",
-        "team": 1,
-        "how": "×1 "
-       },
-       {
-        "t": 83.7,
         "k": "drop",
         "team": 1,
         "how": "splat",
@@ -2797,31 +4547,31 @@
         ]
        },
        {
-        "t": 87,
+        "t": 86.9,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 96,
+        "t": 95.9,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 96,
+        "t": 95.9,
         "k": "plant",
         "team": 1,
         "how": ""
        },
        {
-        "t": 97.4,
+        "t": 97.3,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 106.1,
+        "t": 106,
         "k": "end",
         "how": "knockout"
        }
@@ -3002,6 +4752,7 @@
         "d": 2.96
        }
       ],
+      "swept": [],
       "attackers": true,
       "defenders": true,
       "seen": 6
@@ -3035,6 +4786,7 @@
         "d": 2.96
        }
       ],
+      "swept": [],
       "attackers": true,
       "defenders": true,
       "seen": 6
@@ -3063,610 +4815,60 @@
   "16": {
    "n": 16,
    "name": "The hop and gap edges, proved physically",
-   "status": "FAIL",
-   "text": "277 added edges tried (91 hops, 186 gaps): 261 made, 16 not (0 hops, 6 gaps up / level, 10 gaps down) → hopVeto [[-8.5,2.2,-62.5,-11.5,0,-62.5],[-8.5,2.4,-62.5,-11.5,0,-62.5],[-6.5,2.2,-62.5,-4.5,1.61,-60.5],[-6.5,2.4,-62.5,-4.5,1.61,-60.5],[-5.5,2.4,-62.5,-4.5,1.61,-60.5],[1.5,2.4,-62.5,0.5,1.61,-60.5]] … 16; 183 candidates beyond the rules (6 high hops, 171 long gaps, 6 rising gaps worth trying of 110): 169 made (4 / 159 / 6: to #7d, and #7a when into a ring); 32 moves onto off-field ground (32 hops, 0 jumps across air worth trying of 12): 32 made (to #7d / #7a); climbs of ≤ 1.8 m tried as hops: 58 of 58 made (hops, not climbs, in the no-climb searches); walks with the carrier's rules: routes 8/8, entrances 4/4 · 964 trials, 2 s; walks 0 s; climb hops 89 trials",
+   "status": "OK",
+   "text": "277 added edges tried (91 hops, 186 gaps): 277 made, 0 not; 89 moves beyond the rules worth trying (> 10 m or into a ring; 2 high hops, 53 long gaps, 9 rising gaps, 25 vaults, out to 10.6 m from dry floor and 19 m from floor that takes ink): 65 made (0 / 34 / 8 / 23: to #7d, and #7a when into a ring); 0 moves onto off-field ground worth trying (0 hops of 397 from up to two cells out, 0 jumps across air): 0 made (to #7d / #7a); the swimming carrier (its own ink, 9.44 m/s, swimJumpVel; from 287 takeoffs whose floor takes ink): 70 made that the kid didn't (16 added edges, 54 beyond the rules, 0 onto off-field ground), 493 swim trials; climbs of ≤ 1.8 m tried as hops: 58 of 58 made (hops, not climbs, in the no-climb searches); walks with the carrier's rules: routes 8/8, entrances 4/4 · 2056 trials, 6 s; walks 0 s; climb hops 89 trials",
    "nums": {
     "tried": 277,
-    "failed": 16,
+    "failed": 0,
     "failedBy": {
      "hop": 0,
-     "gapLevel": 6,
-     "gapDown": 10
+     "gapLevel": 0,
+     "gapDown": 0
     },
-    "hopVeto": [
-     [
-      -8.5,
-      2.2,
-      -62.5,
-      -11.5,
-      0,
-      -62.5
-     ],
-     [
-      -8.5,
-      2.4,
-      -62.5,
-      -11.5,
-      0,
-      -62.5
-     ],
-     [
-      -6.5,
-      2.2,
-      -62.5,
-      -4.5,
-      1.61,
-      -60.5
-     ],
-     [
-      -6.5,
-      2.4,
-      -62.5,
-      -4.5,
-      1.61,
-      -60.5
-     ],
-     [
-      -5.5,
-      2.4,
-      -62.5,
-      -4.5,
-      1.61,
-      -60.5
-     ],
-     [
-      1.5,
-      2.4,
-      -62.5,
-      0.5,
-      1.61,
-      -60.5
-     ],
-     [
-      2.5,
-      2.2,
-      -62.5,
-      0.5,
-      1.61,
-      -60.5
-     ],
-     [
-      2.5,
-      2.4,
-      -62.5,
-      0.5,
-      1.61,
-      -60.5
-     ],
-     [
-      -4.5,
-      1.61,
-      -60.5,
-      -6.5,
-      2.2,
-      -62.5
-     ],
-     [
-      0.5,
-      1.61,
-      -60.5,
-      2.5,
-      2.2,
-      -62.5
-     ],
-     [
-      4.5,
-      1.61,
-      60.5,
-      6.5,
-      2.2,
-      62.5
-     ],
-     [
-      5.5,
-      2.4,
-      62.5,
-      4.5,
-      1.61,
-      60.5
-     ],
-     [
-      6.5,
-      2.2,
-      62.5,
-      4.5,
-      1.61,
-      60.5
-     ],
-     [
-      6.5,
-      2.4,
-      62.5,
-      4.5,
-      1.61,
-      60.5
-     ],
-     [
-      8.5,
-      2.2,
-      62.5,
-      11.5,
-      0,
-      62.5
-     ],
-     [
-      8.5,
-      2.4,
-      62.5,
-      11.5,
-      0,
-      62.5
-     ]
-    ],
-    "beyond": 183,
-    "beyondMade": 169,
+    "hopVeto": [],
+    "beyond": 89,
+    "beyondMade": 65,
     "rise": {
-     "cand": 110,
-     "tried": 6,
-     "made": 6
+     "tried": 9,
+     "made": 8
     },
-    "offHops": 32,
-    "offGaps": {
-     "cand": 12,
+    "high": {
+     "tried": 2,
+     "made": 0
+    },
+    "long": {
+     "tried": 53,
+     "made": 34
+    },
+    "vault": {
+     "cand": 192,
+     "tried": 25,
+     "made": 23
+    },
+    "swim": {
+     "takeoffs": 287,
+     "made": 70,
+     "edges": 16,
+     "beyond": 54,
+     "off": 0,
+     "trials": 493
+    },
+    "lowGap": {
+     "pairs": 389,
+     "ring": 8
+    },
+    "offHops": {
+     "cand": 397,
      "tried": 0
     },
-    "offMade": [
-     {
-      "kind": "off hop",
-      "a": [
-       -10.5,
-       0,
-       -56.5
-      ],
-      "top": [
-       -10.5,
-       1.3,
-       -55.5
-      ],
-      "exits": 15
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -8.5,
-       0,
-       -56.5
-      ],
-      "top": [
-       -8.5,
-       1.3,
-       -55.5
-      ],
-      "exits": 15
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       17.5,
-       0,
-       -46.5
-      ],
-      "top": [
-       17.5,
-       1.3,
-       -45.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       16.5,
-       0,
-       -45.5
-      ],
-      "top": [
-       17.5,
-       1.3,
-       -45.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       18.5,
-       0,
-       -45.5
-      ],
-      "top": [
-       17.5,
-       1.3,
-       -45.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       16.5,
-       0,
-       -44.5
-      ],
-      "top": [
-       17.5,
-       1.3,
-       -44.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       18.5,
-       0,
-       -44.5
-      ],
-      "top": [
-       17.5,
-       1.3,
-       -44.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       16.5,
-       0,
-       -43.5
-      ],
-      "top": [
-       17.5,
-       1.3,
-       -43.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       18.5,
-       0,
-       -43.5
-      ],
-      "top": [
-       17.5,
-       1.3,
-       -43.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       16.5,
-       0,
-       -42.5
-      ],
-      "top": [
-       17.5,
-       1.3,
-       -42.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       18.5,
-       0,
-       -42.5
-      ],
-      "top": [
-       17.5,
-       1.3,
-       -42.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       17.5,
-       0,
-       -41.5
-      ],
-      "top": [
-       17.5,
-       1.3,
-       -42.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -7.5,
-       0,
-       -17.5
-      ],
-      "top": [
-       -6.5,
-       1.3,
-       -17.5
-      ],
-      "exits": 24
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       19.5,
-       0,
-       -5.5
-      ],
-      "top": [
-       19.5,
-       1.3,
-       -4.5
-      ],
-      "exits": 21
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -9.5,
-       -1.2,
-       -3.5
-      ],
-      "top": [
-       -9.5,
-       0.1,
-       -2.5
-      ],
-      "exits": 19
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       9.5,
-       -1.2,
-       3.5
-      ],
-      "top": [
-       9.5,
-       0.1,
-       2.5
-      ],
-      "exits": 19
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -19.5,
-       0,
-       5.5
-      ],
-      "top": [
-       -19.5,
-       1.3,
-       4.5
-      ],
-      "exits": 21
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       7.5,
-       0,
-       17.5
-      ],
-      "top": [
-       6.5,
-       1.3,
-       17.5
-      ],
-      "exits": 24
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -17.5,
-       0,
-       41.5
-      ],
-      "top": [
-       -17.5,
-       1.3,
-       42.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -18.5,
-       0,
-       42.5
-      ],
-      "top": [
-       -17.5,
-       1.3,
-       42.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -16.5,
-       0,
-       42.5
-      ],
-      "top": [
-       -17.5,
-       1.3,
-       42.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -18.5,
-       0,
-       43.5
-      ],
-      "top": [
-       -17.5,
-       1.3,
-       43.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -16.5,
-       0,
-       43.5
-      ],
-      "top": [
-       -17.5,
-       1.3,
-       43.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -18.5,
-       0,
-       44.5
-      ],
-      "top": [
-       -17.5,
-       1.3,
-       44.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -16.5,
-       0,
-       44.5
-      ],
-      "top": [
-       -17.5,
-       1.3,
-       44.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -18.5,
-       0,
-       45.5
-      ],
-      "top": [
-       -17.5,
-       1.3,
-       45.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -16.5,
-       0,
-       45.5
-      ],
-      "top": [
-       -17.5,
-       1.3,
-       45.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -17.5,
-       0,
-       46.5
-      ],
-      "top": [
-       -17.5,
-       1.3,
-       45.5
-      ],
-      "exits": 36
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       8.5,
-       0,
-       56.5
-      ],
-      "top": [
-       8.5,
-       1.3,
-       55.5
-      ],
-      "exits": 17
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       10.5,
-       0,
-       56.5
-      ],
-      "top": [
-       10.5,
-       1.3,
-       55.5
-      ],
-      "exits": 17
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       -4.5,
-       0,
-       -17.05
-      ],
-      "top": [
-       -5.5,
-       1.3,
-       -17.5
-      ],
-      "exits": 24
-     },
-     {
-      "kind": "off hop",
-      "a": [
-       4.5,
-       0,
-       17.05
-      ],
-      "top": [
-       5.5,
-       1.3,
-       17.5
-      ],
-      "exits": 24
-     }
-    ],
-    "trials": 964,
-    "ms": 1788,
+    "offGaps": {
+     "tried": 0
+    },
+    "offMadeN": 0,
+    "coyote": 10,
+    "offMade": [],
+    "trials": 2056,
+    "ms": 5626,
     "climbHops": {
      "tried": 58,
      "made": 58,
@@ -3929,2723 +5131,1048 @@
     "walkFailed": 0,
     "made": [
      {
-      "kind": "high hop",
-      "a": [
-       10.5,
-       -0.9,
-       -16.5
-      ],
-      "b": [
-       10.5,
-       0.95,
-       -17.5
-      ],
-      "gain": 1.6
-     },
-     {
-      "kind": "high hop",
-      "a": [
-       19.5,
-       1.56,
-       -13.5
-      ],
-      "b": [
-       20.5,
-       3.6,
-       -13.5
-      ],
-      "gain": 0
-     },
-     {
-      "kind": "high hop",
-      "a": [
-       -19.5,
-       1.56,
-       13.5
-      ],
-      "b": [
-       -20.5,
-       3.6,
-       13.5
-      ],
-      "gain": 0
-     },
-     {
-      "kind": "high hop",
-      "a": [
-       -10.5,
-       -0.9,
-       16.5
-      ],
-      "b": [
-       -10.5,
-       0.95,
-       17.5
-      ],
-      "gain": 1.6
-     },
-     {
       "kind": "long gap",
       "a": [
-       6.5,
-       1.84,
+       -6.5,
+       2.4,
        -68.5
       ],
       "b": [
-       8.5,
-       0,
-       -65.5
+       0.5,
+       2.01,
+       -61.5
       ],
-      "gain": 5
+      "gain": 24.2,
+      "how": "swim-jump jump 0.5 m before the rim",
+      "by": "swim"
      },
      {
       "kind": "long gap",
       "a": [
-       -7.5,
+       -6.5,
+       2.4,
+       -68.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       -60.5
+      ],
+      "gain": 25.2,
+      "how": "swim-jump jump 1.1 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       -8.5,
        2.92,
        -66.5
       ],
       "b": [
-       -9.5,
+       -5.5,
        0,
-       -63.5
+       -60.5
       ],
-      "gain": 6.1
+      "gain": 9.8,
+      "how": "jump 0.2 m before the rim",
+      "by": "kid"
      },
      {
       "kind": "long gap",
       "a": [
-       -8.5,
+       -7.5,
        2.4,
        -64.5
       ],
       "b": [
-       -10.5,
-       0.71,
+       3.5,
+       0,
        -61.5
       ],
-      "gain": 5.3
+      "gain": 24.8,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       -8.5,
+       2.2,
+       -62.5
+      ],
+      "b": [
+       1.5,
+       0,
+       -57.5
+      ],
+      "gain": 14.2,
+      "how": "swim-jump coyote jump 0.3 m past the rim",
+      "by": "swim"
      },
      {
       "kind": "long gap",
       "a": [
        -8.5,
        2.4,
-       -63.5
+       -62.5
       ],
       "b": [
-       -10.5,
+       1.5,
+       0,
+       -58.5
+      ],
+      "gain": 14,
+      "how": "swim-jump coyote jump 0.3 m past the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       -8.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       1.5,
+       0,
+       -57.5
+      ],
+      "gain": 14.3,
+      "how": "swim-jump coyote jump 0.3 m past the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       -6.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       5.5,
+       0,
+       -62.5
+      ],
+      "gain": 19,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       -5.5,
+       2.2,
+       -62.5
+      ],
+      "b": [
+       5.5,
+       0,
+       -62.5
+      ],
+      "gain": 19.9,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       -5.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       5.5,
+       0,
+       -62.5
+      ],
+      "gain": 18.4,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       -5.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       3.5,
        0,
        -60.5
       ],
-      "gain": 5.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       6.5,
-       0.1,
-       -56.5
-      ],
-      "b": [
-       5.5,
-       0.6,
-       -53.5
-      ],
-      "gain": 4.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       6.5,
-       0.1,
-       -56.5
-      ],
-      "b": [
-       7.5,
-       0.6,
-       -53.5
-      ],
-      "gain": 3.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       7.5,
-       0.1,
-       -56.5
-      ],
-      "b": [
-       6.5,
-       0.6,
-       -53.5
-      ],
-      "gain": 5.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       7.5,
-       0.1,
-       -56.5
-      ],
-      "b": [
-       8.5,
-       0.6,
-       -53.5
-      ],
-      "gain": 4.4
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       6.5,
-       1.2,
-       -55.5
-      ],
-      "b": [
-       9.5,
-       0.6,
-       -53.5
-      ],
-      "gain": 3.1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       7.5,
-       1.2,
-       -55.5
-      ],
-      "b": [
-       4.5,
-       0.6,
-       -53.5
-      ],
-      "gain": 6.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       14.5,
-       0,
-       -46.5
-      ],
-      "b": [
-       11.5,
-       0.3,
-       -44.5
-      ],
-      "gain": 1.5
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -9.5,
-       1.5,
-       -43.5
-      ],
-      "b": [
-       -12.5,
-       1.18,
-       -45.5
-      ],
-      "gain": 0.1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -8.5,
-       1.5,
-       -43.5
-      ],
-      "b": [
-       -11.5,
-       1.39,
-       -44.5
-      ],
-      "gain": -1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -7.5,
-       1.5,
-       -43.5
-      ],
-      "b": [
-       -10.5,
-       1.18,
-       -45.5
-      ],
-      "gain": -1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -7.5,
-       1.5,
-       -43.5
-      ],
-      "b": [
-       -10.5,
-       1.39,
-       -44.5
-      ],
-      "gain": -0.4
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -9.5,
-       1.5,
-       -41.5
-      ],
-      "b": [
-       -10.5,
-       1.39,
-       -44.5
-      ],
-      "gain": 0.9
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -12.5,
-       1.5,
-       -40.5
-      ],
-      "b": [
-       -13.5,
-       0,
-       -43.5
-      ],
-      "gain": 0.5
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -12.5,
-       1.5,
-       -39.5
-      ],
-      "b": [
-       -13.5,
-       0,
-       -42.5
-      ],
-      "gain": 0.5
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -11.5,
-       2.25,
-       -38.5
-      ],
-      "b": [
-       -9.95,
-       0.91,
-       -35.5
-      ],
-      "gain": 1.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -14.5,
-       0.71,
-       -27.5
-      ],
-      "b": [
-       -11.5,
-       -0.6,
-       -29.5
-      ],
-      "gain": 6.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -14.5,
-       0.71,
-       -27.5
-      ],
-      "b": [
-       -11.5,
-       -0.6,
-       -28.5
-      ],
-      "gain": 5.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       21.5,
-       3.04,
-       -27.5
-      ],
-      "b": [
-       22.5,
-       0,
-       -30.5
-      ],
-      "gain": 4.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -17.5,
-       3,
-       -25.5
-      ],
-      "b": [
-       -15.5,
-       0,
-       -28.5
-      ],
-      "gain": 4.7
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -16.5,
-       3,
-       -25.5
-      ],
-      "b": [
-       -18.5,
-       0,
-       -28.5
-      ],
-      "gain": 2.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -25.5,
-       3.2,
-       -24.5
-      ],
-      "b": [
-       -28.5,
-       0,
-       -22.5
-      ],
-      "gain": 2.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -21.5,
-       3.2,
-       -24.5
-      ],
-      "b": [
-       -18.5,
-       0,
-       -26.5
-      ],
-      "gain": 4.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -16.5,
-       3.2,
-       -24.5
-      ],
-      "b": [
-       -14.5,
-       0.71,
-       -27.5
-      ],
-      "gain": 2.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -25.5,
-       3.63,
-       -19.5
-      ],
-      "b": [
-       -28.5,
-       0.52,
-       -17.5
-      ],
-      "gain": 1.5
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -6.5,
-       0,
-       -19.5
-      ],
-      "b": [
-       -8.5,
-       -0.9,
-       -16.5
-      ],
-      "gain": 5.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -6.5,
-       0,
-       -19.5
-      ],
-      "b": [
-       -7.5,
-       -0.9,
-       -16.5
-      ],
-      "gain": 4.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -25.5,
-       3.2,
-       -18.5
-      ],
-      "b": [
-       -28.5,
-       0.52,
-       -17.5
-      ],
-      "gain": 0.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -25.5,
-       3.2,
-       -18.5
-      ],
-      "b": [
-       -28.5,
-       0,
-       -16.5
-      ],
-      "gain": 1.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -25.5,
-       3.2,
-       -18.5
-      ],
-      "b": [
-       -27.5,
-       0,
-       -15.5
-      ],
-      "gain": 3.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -24.5,
-       3.2,
-       -18.5
-      ],
-      "b": [
-       -27.5,
-       0,
-       -16.5
-      ],
-      "gain": 2.3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -24.5,
-       3.2,
-       -18.5
-      ],
-      "b": [
-       -26.5,
-       0,
-       -15.5
-      ],
-      "gain": 3.7
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -23.5,
-       3.2,
-       -18.5
-      ],
-      "b": [
-       -26.5,
-       0,
-       -16.5
-      ],
-      "gain": 2.9
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -23.5,
-       3.2,
-       -18.5
-      ],
-      "b": [
-       -25.5,
-       1.1,
-       -15.5
-      ],
-      "gain": 3.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -22.5,
-       3.2,
-       -18.5
-      ],
-      "b": [
-       -25.5,
-       1.1,
-       -16.5
-      ],
-      "gain": 1.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -24.5,
-       2.57,
-       -17.5
-      ],
-      "b": [
-       -26.5,
-       -0.09,
-       -14.5
-      ],
-      "gain": 3.4
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -22.5,
-       1.1,
-       -17.5
-      ],
-      "b": [
-       -24.25,
-       0.75,
-       -14.5
-      ],
-      "gain": 2.5
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -7.5,
-       0,
-       -17.5
-      ],
-      "b": [
-       -6.5,
-       -0.6,
-       -20.5
-      ],
-      "gain": 7.3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -7.5,
-       0,
-       -17.5
-      ],
-      "b": [
-       -5.5,
-       -0.6,
-       -20.5
-      ],
-      "gain": 7.7
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -20.5,
-       0.82,
-       -11.5
-      ],
-      "b": [
-       -18.5,
-       1.2,
-       -14.5
-      ],
-      "gain": 3.7
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -14.5,
-       0.75,
-       -11.5
-      ],
-      "b": [
-       -16.5,
-       1.3,
-       -14.5
-      ],
-      "gain": 1.3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -11.5,
-       0,
-       -9.5
-      ],
-      "b": [
-       -13.5,
-       0,
-       -6.5
-      ],
-      "gain": 8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -14.5,
-       0,
-       -8.5
-      ],
-      "b": [
-       -11.5,
-       -0.9,
-       -10.5
-      ],
-      "gain": 3.7
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -11.5,
-       0,
-       -8.5
-      ],
-      "b": [
-       -13.5,
-       0,
-       -5.5
-      ],
-      "gain": 6.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -10.5,
-       0,
-       -8.5
-      ],
-      "b": [
-       -13.5,
-       0,
-       -6.5
-      ],
-      "gain": 6.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -9.5,
-       0,
-       -8.5
-      ],
-      "b": [
-       -7.5,
-       -1.2,
-       -5.5
-      ],
-      "gain": 2.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -8.5,
-       0,
-       -8.5
-      ],
-      "b": [
-       -7.5,
-       -1.2,
-       -5.5
-      ],
-      "gain": 3.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -7.5,
-       0,
-       -8.5
-      ],
-      "b": [
-       -4.5,
-       -0.45,
-       -6.5
-      ],
-      "gain": 1.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -2.5,
-       0,
-       -8.5
-      ],
-      "b": [
-       -5.25,
-       -1.2,
-       -6.5
-      ],
-      "gain": 4.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -1.5,
-       0,
-       -8.5
-      ],
-      "b": [
-       -4.5,
-       -0.45,
-       -6.5
-      ],
-      "gain": 4.7
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       10.5,
-       0,
-       -8.5
-      ],
-      "b": [
-       13.5,
-       0,
-       -6.5
-      ],
-      "gain": 5.1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -13.5,
-       0,
-       -6.5
-      ],
-      "b": [
-       -11.5,
-       0,
-       -9.5
-      ],
-      "gain": 4.7
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -13.5,
-       0,
-       -6.5
-      ],
-      "b": [
-       -10.5,
-       0,
-       -8.5
-      ],
-      "gain": 5.3
+      "gain": 15.6,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
      },
      {
       "kind": "long gap",
       "a": [
        -4.5,
-       -0.45,
-       -6.5
-      ],
-      "b": [
-       -1.5,
-       0,
-       -8.5
-      ],
-      "gain": 3.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       13.5,
-       0,
-       -6.5
-      ],
-      "b": [
-       10.5,
-       0,
-       -8.5
-      ],
-      "gain": 1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -13.5,
-       0,
-       -5.5
-      ],
-      "b": [
-       -11.5,
-       0,
-       -8.5
-      ],
-      "gain": 5.3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       6.5,
-       -0.5,
-       -5.5
+       2.01,
+       -61.5
       ],
       "b": [
        3.5,
-       0.08,
-       -3.5
+       2.4,
+       -65.5
       ],
-      "gain": 6
+      "gain": 26.1,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
      },
      {
       "kind": "long gap",
       "a": [
-       12.5,
-       -0.19,
-       -5.5
-      ],
-      "b": [
-       10.5,
-       0,
-       -8.5
-      ],
-      "gain": 3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -3.5,
-       0.08,
-       -3.5
-      ],
-      "b": [
-       -2.5,
-       -1.2,
-       -6.5
-      ],
-      "gain": 3.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -2.5,
-       0.08,
-       -3.5
-      ],
-      "b": [
        -4.5,
-       -0.45,
-       -6.5
+       2.01,
+       -61.5
       ],
-      "gain": 3.5
+      "b": [
+       4.75,
+       2.4,
+       -64.5
+      ],
+      "gain": 26.1,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
      },
      {
       "kind": "long gap",
       "a": [
-       -0.5,
-       0.08,
-       -3.5
+       4.5,
+       2.01,
+       61.5
+      ],
+      "b": [
+       -4.75,
+       2.4,
+       64.5
+      ],
+      "gain": 26.1,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       4.5,
+       2.01,
+       61.5
       ],
       "b": [
        -3.5,
-       -0.45,
-       -5.5
+       2.4,
+       65.5
       ],
-      "gain": 4.3
+      "gain": 26.1,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
      },
      {
       "kind": "long gap",
       "a": [
-       -1.5,
-       0.08,
-       -1.5
-      ],
-      "b": [
-       -0.5,
-       -1.2,
-       -4.5
-      ],
-      "gain": 4.1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -1.5,
-       0.08,
-       -1.5
-      ],
-      "b": [
-       0.5,
-       -1.2,
-       -4.5
-      ],
-      "gain": 3.7
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -2.5,
-       0.08,
-       -0.5
+       5.5,
+       2.2,
+       62.5
       ],
       "b": [
        -5.5,
-       -0.25,
-       -2.5
-      ],
-      "gain": 1.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       2.5,
-       0.93,
-       -0.5
-      ],
-      "b": [
-       4.5,
-       -1.2,
-       -3.5
-      ],
-      "gain": 4.1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -2.5,
-       0.93,
-       0.5
-      ],
-      "b": [
-       -4.5,
-       -1.2,
-       3.5
-      ],
-      "gain": 4.1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       2.5,
-       0.08,
-       0.5
-      ],
-      "b": [
-       5.5,
-       -0.25,
-       2.5
-      ],
-      "gain": 1.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       1.5,
-       0.08,
-       2.5
-      ],
-      "b": [
-       3.5,
-       -0.45,
-       5.5
-      ],
-      "gain": 4.9
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       0.5,
-       0.08,
-       3.5
-      ],
-      "b": [
-       3.5,
-       -0.45,
-       5.5
-      ],
-      "gain": 4.3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       2.5,
-       0.08,
-       3.5
-      ],
-      "b": [
-       4.5,
-       -0.45,
-       6.5
-      ],
-      "gain": 3.5
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       3.5,
-       0.08,
-       3.5
-      ],
-      "b": [
-       2.5,
-       -1.2,
-       6.5
-      ],
-      "gain": 3.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -12.5,
-       -0.19,
-       5.5
-      ],
-      "b": [
-       -10.5,
        0,
-       8.5
+       62.5
       ],
-      "gain": 3
+      "gain": 19.9,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
      },
      {
       "kind": "long gap",
       "a": [
-       -6.5,
-       -0.5,
-       5.5
+       5.5,
+       2.4,
+       62.5
       ],
       "b": [
        -3.5,
-       0.08,
-       3.5
-      ],
-      "gain": 6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       13.5,
        0,
-       5.5
-      ],
-      "b": [
-       11.5,
-       0,
-       8.5
-      ],
-      "gain": 5.3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -13.5,
-       0,
-       6.5
-      ],
-      "b": [
-       -10.5,
-       0,
-       8.5
-      ],
-      "gain": 1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       4.5,
-       -0.45,
-       6.5
-      ],
-      "b": [
-       1.5,
-       0,
-       8.5
-      ],
-      "gain": 3.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       13.5,
-       0,
-       6.5
-      ],
-      "b": [
-       10.5,
-       0,
-       8.5
-      ],
-      "gain": 5.3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       13.5,
-       0,
-       6.5
-      ],
-      "b": [
-       11.5,
-       0,
-       9.5
-      ],
-      "gain": 4.7
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -10.5,
-       0,
-       8.5
-      ],
-      "b": [
-       -13.5,
-       0,
-       6.5
-      ],
-      "gain": 5.1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       1.5,
-       0,
-       8.5
-      ],
-      "b": [
-       4.5,
-       -0.45,
-       6.5
-      ],
-      "gain": 4.3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       2.5,
-       0,
-       8.5
-      ],
-      "b": [
-       5.25,
-       -1.2,
-       6.5
-      ],
-      "gain": 4.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       7.5,
-       0,
-       8.5
-      ],
-      "b": [
-       4.5,
-       -0.45,
-       6.5
-      ],
-      "gain": 1.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       10.5,
-       0,
-       8.5
-      ],
-      "b": [
-       13.5,
-       0,
-       6.5
-      ],
-      "gain": 6.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       11.5,
-       0,
-       8.5
-      ],
-      "b": [
-       13.5,
-       0,
-       5.5
-      ],
-      "gain": 6.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       14.5,
-       0,
-       8.5
-      ],
-      "b": [
-       11.5,
-       -0.9,
-       10.5
-      ],
-      "gain": 3.7
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       11.5,
-       0,
-       9.5
-      ],
-      "b": [
-       13.5,
-       0,
-       6.5
-      ],
-      "gain": 8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       14.5,
-       0.75,
-       11.5
-      ],
-      "b": [
-       16.5,
-       1.3,
-       14.5
-      ],
-      "gain": 1.3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       20.5,
-       0.82,
-       11.5
-      ],
-      "b": [
-       18.5,
-       1.2,
-       14.5
-      ],
-      "gain": 4
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       7.5,
-       0,
-       17.5
-      ],
-      "b": [
-       5.5,
-       -0.6,
-       20.5
-      ],
-      "gain": 7.7
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       7.5,
-       0,
-       17.5
-      ],
-      "b": [
-       6.5,
-       -0.6,
-       20.5
-      ],
-      "gain": 7.3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       21.5,
-       1.1,
-       17.5
-      ],
-      "b": [
-       23.75,
-       0.75,
-       14.5
-      ],
-      "gain": 2.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       22.5,
-       1.1,
-       17.5
-      ],
-      "b": [
-       23.75,
-       0.75,
-       14.5
-      ],
-      "gain": 3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       24.5,
-       2.57,
-       17.5
-      ],
-      "b": [
-       26.5,
-       -0.09,
-       14.5
-      ],
-      "gain": 3.1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       22.5,
-       3.2,
-       18.5
-      ],
-      "b": [
-       25.5,
-       1.1,
-       16.5
-      ],
-      "gain": 1.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       23.5,
-       3.2,
-       18.5
-      ],
-      "b": [
-       25.5,
-       1.1,
-       15.5
-      ],
-      "gain": 3.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       23.5,
-       3.2,
-       18.5
-      ],
-      "b": [
-       26.5,
-       0,
-       16.5
-      ],
-      "gain": 2.9
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       24.5,
-       3.2,
-       18.5
-      ],
-      "b": [
-       26.5,
-       0,
-       15.5
-      ],
-      "gain": 3.4
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       24.5,
-       3.2,
-       18.5
-      ],
-      "b": [
-       27.5,
-       0,
-       16.5
-      ],
-      "gain": 1.9
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       25.5,
-       3.2,
-       18.5
-      ],
-      "b": [
-       27.5,
-       0,
-       15.5
-      ],
-      "gain": 3.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       25.5,
-       3.2,
-       18.5
-      ],
-      "b": [
-       28.5,
-       0,
-       16.5
-      ],
-      "gain": 1.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       25.5,
-       3.2,
-       18.5
-      ],
-      "b": [
-       28.5,
-       0.52,
-       17.5
-      ],
-      "gain": 0.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       6.5,
-       0,
-       19.5
-      ],
-      "b": [
-       7.5,
-       -0.9,
-       16.5
-      ],
-      "gain": 4.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       6.5,
-       0,
-       19.5
-      ],
-      "b": [
-       8.5,
-       -0.9,
-       16.5
-      ],
-      "gain": 5.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       25.5,
-       3.63,
-       19.5
-      ],
-      "b": [
-       28.5,
-       0.52,
-       17.5
-      ],
-      "gain": 1.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       16.5,
-       3.2,
-       24.5
-      ],
-      "b": [
-       14.5,
-       0.71,
-       27.5
-      ],
-      "gain": 2.9
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       21.5,
-       3.2,
-       24.5
-      ],
-      "b": [
-       18.5,
-       0,
-       26.5
-      ],
-      "gain": 4.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       25.5,
-       3.2,
-       24.5
-      ],
-      "b": [
-       28.5,
-       0,
-       22.5
-      ],
-      "gain": 2.3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       16.5,
-       3,
-       25.5
-      ],
-      "b": [
-       18.5,
-       0,
-       28.5
-      ],
-      "gain": 2.3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       17.5,
-       3,
-       25.5
-      ],
-      "b": [
-       15.5,
-       0,
-       28.5
-      ],
-      "gain": 5
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -21.5,
-       3.04,
-       27.5
-      ],
-      "b": [
-       -22.5,
-       0,
-       30.5
-      ],
-      "gain": 4.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       14.5,
-       0.71,
-       27.5
-      ],
-      "b": [
-       11.5,
-       -0.6,
-       28.5
-      ],
-      "gain": 5.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       14.5,
-       0.71,
-       27.5
-      ],
-      "b": [
-       11.5,
-       -0.6,
-       29.5
-      ],
-      "gain": 6.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       15.5,
-       0.9,
-       31.5
-      ],
-      "b": [
-       17.75,
-       1.4,
-       29.5
-      ],
-      "gain": 2.5
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       11.5,
-       2.25,
-       38.5
-      ],
-      "b": [
-       9.95,
-       0.91,
-       35.5
-      ],
-      "gain": 2.3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       12.5,
-       1.5,
-       39.5
-      ],
-      "b": [
-       13.5,
-       0,
-       42.5
-      ],
-      "gain": 0.5
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       12.5,
-       1.5,
-       40.5
-      ],
-      "b": [
-       13.5,
-       0,
-       43.5
-      ],
-      "gain": 0.5
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       9.5,
-       1.5,
-       41.5
-      ],
-      "b": [
-       10.5,
-       1.39,
-       44.5
-      ],
-      "gain": 0.9
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       7.5,
-       1.5,
-       43.5
-      ],
-      "b": [
-       10.5,
-       1.39,
-       44.5
-      ],
-      "gain": -0.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       7.5,
-       1.5,
-       43.5
-      ],
-      "b": [
-       10.5,
-       1.18,
-       45.5
-      ],
-      "gain": -1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       8.5,
-       1.5,
-       43.5
-      ],
-      "b": [
-       11.5,
-       1.39,
-       44.5
-      ],
-      "gain": -1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       9.5,
-       1.5,
-       43.5
-      ],
-      "b": [
-       12.5,
-       1.18,
-       45.5
-      ],
-      "gain": 0.1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -14.5,
-       0,
-       46.5
-      ],
-      "b": [
-       -11.5,
-       0.3,
-       44.5
-      ],
-      "gain": 1.5
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -7.5,
-       1.2,
-       55.5
-      ],
-      "b": [
-       -4.5,
-       0.6,
-       53.5
-      ],
-      "gain": 6.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -6.5,
-       1.2,
-       55.5
-      ],
-      "b": [
-       -9.5,
-       0.6,
-       53.5
-      ],
-      "gain": 3.1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -7.5,
-       0.1,
-       56.5
-      ],
-      "b": [
-       -8.5,
-       0.6,
-       53.5
-      ],
-      "gain": 4.4
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -7.5,
-       0.1,
-       56.5
-      ],
-      "b": [
-       -6.5,
-       0.6,
-       53.5
-      ],
-      "gain": 5.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -6.5,
-       0.1,
-       56.5
-      ],
-      "b": [
-       -7.5,
-       0.6,
-       53.5
-      ],
-      "gain": 3.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -6.5,
-       0.1,
-       56.5
-      ],
-      "b": [
-       -5.5,
-       0.6,
-       53.5
-      ],
-      "gain": 4.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       0.5,
-       1.61,
        60.5
+      ],
+      "gain": 15.6,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       5.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -5.5,
+       0,
+       62.5
+      ],
+      "gain": 18.4,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       6.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -5.5,
+       0,
+       62.5
+      ],
+      "gain": 19,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       8.5,
+       2.2,
+       62.5
       ],
       "b": [
        -1.5,
        0,
        57.5
       ],
-      "gain": 7.6
+      "gain": 14.2,
+      "how": "swim-jump coyote jump 0.3 m past the rim",
+      "by": "swim"
      },
      {
       "kind": "long gap",
       "a": [
-       -1.5,
+       8.5,
        2.4,
        62.5
+      ],
+      "b": [
+       -1.5,
+       0,
+       57.5
+      ],
+      "gain": 14.3,
+      "how": "swim-jump coyote jump 0.3 m past the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       8.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -1.5,
+       0,
+       58.5
+      ],
+      "gain": 14,
+      "how": "swim-jump coyote jump 0.3 m past the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       7.5,
+       2.4,
+       64.5
+      ],
+      "b": [
+       -1.25,
+       0,
+       59.5
+      ],
+      "gain": 21.3,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       7.5,
+       2.4,
+       64.5
+      ],
+      "b": [
+       -3.5,
+       0,
+       61.5
+      ],
+      "gain": 24.8,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       8.5,
+       2.92,
+       66.5
+      ],
+      "b": [
+       5.5,
+       0,
+       60.5
+      ],
+      "gain": 9.8,
+      "how": "jump 0.2 m before the rim",
+      "by": "kid"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       8.5,
+       2.4,
+       67.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "gain": 15.5,
+      "how": "swim-jump jump 0.8 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       -2.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "gain": 15.4,
+      "how": "jump 0.8 m before the rim",
+      "by": "kid"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       6.5,
+       2.4,
+       68.5
       ],
       "b": [
        0.5,
        1.22,
        59.5
       ],
-      "gain": 4.9
+      "gain": 19,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
      },
      {
       "kind": "long gap",
       "a": [
+       6.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "gain": 18,
+      "how": "swim-jump jump 0.8 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       6.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       -1.5,
+       0,
+       61.5
+      ],
+      "gain": 27.8,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       7.5,
+       2.4,
+       68.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "gain": 17,
+      "how": "swim-jump jump 0.5 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       -8.95,
+       2.4,
+       -65.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       -60.5
+      ],
+      "gain": 20.4,
+      "how": "jump 1.1 m before the rim",
+      "by": "kid"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       8.95,
+       2.4,
+       65.5
+      ],
+      "b": [
+       -1.25,
+       0,
+       59.5
+      ],
+      "gain": 21.4,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "long gap",
+      "a": [
+       8.95,
+       2.4,
+       65.5
+      ],
+      "b": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "gain": 13.1,
+      "how": "jump 0.5 m before the rim",
+      "by": "kid"
+     },
+     {
+      "kind": "rise gap",
+      "a": [
+       0.5,
+       2.01,
+       -61.5
+      ],
+      "b": [
+       3.5,
+       3.15,
+       -66.5
+      ],
+      "gain": 19,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "rise gap",
+      "a": [
+       0.5,
+       2.01,
+       -61.5
+      ],
+      "b": [
+       4.5,
+       3.15,
+       -66.5
+      ],
+      "gain": 20,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "rise gap",
+      "a": [
+       0.5,
+       1.61,
+       -60.5
+      ],
+      "b": [
+       3.5,
+       3.15,
+       -66.5
+      ],
+      "gain": 17.9,
+      "how": "swim-jump coyote jump 0.3 m past the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "rise gap",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       62.5
+      ],
+      "gain": 11.1,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "rise gap",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -4.5,
+       3.15,
+       66.5
+      ],
+      "gain": 26.2,
+      "how": "swim-jump coyote jump 0.9 m past the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "rise gap",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -3.5,
+       3.15,
+       66.5
+      ],
+      "gain": 25.2,
+      "how": "swim-jump coyote jump 0.6 m past the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "rise gap",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -2.5,
+       2.4,
+       68.5
+      ],
+      "gain": 24.3,
+      "how": "jump at the rim",
+      "by": "kid"
+     },
+     {
+      "kind": "rise gap",
+      "a": [
+       -8.25,
+       -1.2,
+       -6.5
+      ],
+      "b": [
+       -13.5,
+       0,
+       -0.5
+      ],
+      "gain": 14.2,
+      "how": "jump 1.4 m before the rim",
+      "by": "kid"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       3.5,
+       2.4,
+       -64.5
+      ],
+      "gain": 13.7,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       -1.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -3.5,
+       2.4,
+       64.5
+      ],
+      "gain": 13.7,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       3.5,
+       2.4,
+       -62.5
+      ],
+      "b": [
+       4.75,
+       2.4,
+       -65.5
+      ],
+      "gain": 13.3,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       -3.5,
+       2.4,
+       62.5
+      ],
+      "b": [
+       -4.75,
+       2.4,
+       65.5
+      ],
+      "gain": 13.3,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       2.5,
+       2.4,
+       -63.5
+      ],
+      "b": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 12.4,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       5.5,
+       0,
+       -65.5
+      ],
+      "b": [
+       7.5,
+       1.46,
+       -67.5
+      ],
+      "gain": 12.3,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       -5.5,
+       0,
+       65.5
+      ],
+      "b": [
+       -7.5,
+       1.46,
+       66.25
+      ],
+      "gain": 12.3,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       -3.5,
+       2.4,
+       64.5
+      ],
+      "b": [
+       -2.5,
+       0,
+       61.5
+      ],
+      "gain": 12,
+      "how": "jump 0.2 m before the rim",
+      "by": "kid"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       5.5,
+       0,
+       -64.5
+      ],
+      "b": [
        8.5,
+       1.09,
+       -66.25
+      ],
+      "gain": 11.6,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       4.75,
+       2.4,
+       -63.5
+      ],
+      "b": [
+       1.5,
+       2.4,
+       -62.5
+      ],
+      "gain": 11.4,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       3.5,
+       2.4,
+       -64.5
+      ],
+      "b": [
+       3.5,
+       0,
+       -61.5
+      ],
+      "gain": 11,
+      "how": "jump 0.5 m before the rim",
+      "by": "kid"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       8.5,
+       -1.2,
+       -4.5
+      ],
+      "b": [
+       7.5,
+       0.08,
+       -1.5
+      ],
+      "gain": 11,
+      "how": "swim-jump jump 1.1 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       -9.5,
+       -1.2,
+       3.5
+      ],
+      "b": [
+       -7.5,
+       0.08,
+       1.5
+      ],
+      "gain": 11,
+      "how": "swim-jump jump 0.8 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       -4.75,
        2.4,
        63.5
       ],
       "b": [
+       -1.5,
+       2.2,
+       62.5
+      ],
+      "gain": 10.8,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       7.5,
+       0,
+       -64.5
+      ],
+      "b": [
+       7.5,
+       1.46,
+       -67.5
+      ],
+      "gain": 10.7,
+      "how": "swim-jump jump 0.5 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       -7.5,
+       0,
+       64.5
+      ],
+      "b": [
+       -7.5,
+       1.46,
+       67.5
+      ],
+      "gain": 10.7,
+      "how": "swim-jump jump 0.5 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
        10.5,
+       -1.2,
+       -3.5
+      ],
+      "b": [
+       8.5,
+       0.08,
+       -1.5
+      ],
+      "gain": 10.6,
+      "how": "swim-jump jump 0.8 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       -0.5,
+       1.61,
+       -60.5
+      ],
+      "b": [
+       2.5,
+       0,
+       -60.5
+      ],
+      "gain": 10.4,
+      "how": "jump 0.5 m before the rim",
+      "by": "kid"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       0.5,
+       1.61,
+       60.5
+      ],
+      "b": [
+       -2.5,
        0,
        60.5
       ],
-      "gain": 5.6
+      "gain": 10.4,
+      "how": "jump 0.5 m before the rim",
+      "by": "kid"
      },
      {
-      "kind": "long gap",
+      "kind": "vault",
+      "a": [
+       7.5,
+       0,
+       -63.5
+      ],
+      "b": [
+       8.5,
+       1.09,
+       -66.25
+      ],
+      "gain": 10,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       -7.5,
+       0,
+       63.5
+      ],
+      "b": [
+       -8.5,
+       1.09,
+       66.25
+      ],
+      "gain": 10,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
+      "a": [
+       -8.5,
+       2.4,
+       -64.5
+      ],
+      "b": [
+       -6.5,
+       2.2,
+       -62.5
+      ],
+      "gain": 7.9,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
+     },
+     {
+      "kind": "vault",
       "a": [
        8.5,
        2.4,
        64.5
       ],
       "b": [
-       10.5,
-       0.71,
-       61.5
-      ],
-      "gain": 5.3
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       7.5,
-       2.92,
-       66.5
-      ],
-      "b": [
-       9.5,
-       0,
-       63.5
-      ],
-      "gain": 6.1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -6.5,
-       1.84,
-       68.5
-      ],
-      "b": [
-       -8.5,
-       0,
-       65.5
-      ],
-      "gain": 5
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -17.25,
-       1.8,
-       -28.5
-      ],
-      "b": [
-       -18.5,
-       0,
-       -31.5
-      ],
-      "gain": 2.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -17.25,
-       1.8,
-       -28.5
-      ],
-      "b": [
-       -15.5,
-       0.9,
-       -31.5
-      ],
-      "gain": 1.4
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -16.25,
-       1.8,
-       -28.5
-      ],
-      "b": [
-       -18.5,
-       0,
-       -30.5
-      ],
-      "gain": 1.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -17.25,
+       6.5,
        2.2,
-       -27.5
+       62.5
       ],
-      "b": [
-       -15.5,
-       0,
-       -30.5
-      ],
-      "gain": 3.9
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -16.25,
-       2.2,
-       -27.5
-      ],
-      "b": [
-       -18.5,
-       0,
-       -30.5
-      ],
-      "gain": 2.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -17.25,
-       2.6,
-       -26.5
-      ],
-      "b": [
-       -15.5,
-       0,
-       -29.5
-      ],
-      "gain": 4.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -16.25,
-       2.6,
-       -26.5
-      ],
-      "b": [
-       -18.5,
-       0,
-       -29.5
-      ],
-      "gain": 2.7
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -24.5,
-       2,
-       -16.25
-      ],
-      "b": [
-       -22.5,
-       0,
-       -13.5
-      ],
-      "gain": 4.4
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       -24.25,
-       0.75,
-       -14.5
-      ],
-      "b": [
-       -22.5,
-       1.1,
-       -17.5
-      ],
-      "gain": 7.6
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       23.75,
-       0.75,
-       14.5
-      ],
-      "b": [
-       21.5,
-       1.1,
-       17.5
-      ],
-      "gain": 6.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       23.75,
-       0.75,
-       14.5
-      ],
-      "b": [
-       22.5,
-       1.1,
-       17.5
-      ],
-      "gain": 6.4
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       24.75,
-       0.75,
-       14.5
-      ],
-      "b": [
-       22.5,
-       1.1,
-       16.5
-      ],
-      "gain": 6.5
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       24.5,
-       2,
-       16.25
-      ],
-      "b": [
-       22.5,
-       0,
-       13.5
-      ],
-      "gain": 4.1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       16.75,
-       2.6,
-       26.5
-      ],
-      "b": [
-       18.5,
-       0,
-       29.5
-      ],
-      "gain": 2.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       17.75,
-       2.6,
-       26.5
-      ],
-      "b": [
-       15.5,
-       0,
-       29.5
-      ],
-      "gain": 5.1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       16.75,
-       2.2,
-       27.5
-      ],
-      "b": [
-       18.5,
-       0,
-       30.5
-      ],
-      "gain": 2.1
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       17.75,
-       2.2,
-       27.5
-      ],
-      "b": [
-       15.5,
-       0,
-       30.5
-      ],
-      "gain": 4.5
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       16.75,
-       1.8,
-       28.5
-      ],
-      "b": [
-       15.5,
-       0.9,
-       31.5
-      ],
-      "gain": 3.8
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       16.75,
-       1.8,
-       28.5
-      ],
-      "b": [
-       18.5,
-       0,
-       31.5
-      ],
-      "gain": 2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       17.75,
-       1.8,
-       28.5
-      ],
-      "b": [
-       15.5,
-       0,
-       30.5
-      ],
-      "gain": 3.4
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       17.75,
-       1.8,
-       28.5
-      ],
-      "b": [
-       15.5,
-       0.9,
-       31.5
-      ],
-      "gain": 4.2
-     },
-     {
-      "kind": "long gap",
-      "a": [
-       17.75,
-       1.4,
-       29.5
-      ],
-      "b": [
-       15.5,
-       0.9,
-       31.5
-      ],
-      "gain": 3.1
-     },
-     {
-      "kind": "rise gap",
-      "a": [
-       14.5,
-       0,
-       -53.5
-      ],
-      "b": [
-       16.5,
-       1.2,
-       -55.5
-      ],
-      "gain": 0.6
-     },
-     {
-      "kind": "rise gap",
-      "a": [
-       16.5,
-       0,
-       -53.5
-      ],
-      "b": [
-       16.5,
-       1.2,
-       -55.5
-      ],
-      "gain": 2.6
-     },
-     {
-      "kind": "rise gap",
-      "a": [
-       18.5,
-       0,
-       -53.5
-      ],
-      "b": [
-       16.5,
-       1.2,
-       -55.5
-      ],
-      "gain": 4.6
-     },
-     {
-      "kind": "rise gap",
-      "a": [
-       -18.5,
-       0,
-       53.5
-      ],
-      "b": [
-       -16.5,
-       1.2,
-       55.5
-      ],
-      "gain": 4.6
-     },
-     {
-      "kind": "rise gap",
-      "a": [
-       -16.5,
-       0,
-       53.5
-      ],
-      "b": [
-       -16.5,
-       1.2,
-       55.5
-      ],
-      "gain": 2.6
-     },
-     {
-      "kind": "rise gap",
-      "a": [
-       -14.5,
-       0,
-       53.5
-      ],
-      "b": [
-       -16.5,
-       1.2,
-       55.5
-      ],
-      "gain": 0.6
+      "gain": 7.9,
+      "how": "swim-jump jump 0.2 m before the rim",
+      "by": "swim"
      }
     ]
    },
-   "flags": [
-    {
-     "at": [
-      -8.5,
-      2.2,
-      -62.5
-     ],
-     "what": "16: a gap edge no kid makes",
-     "look": {
-      "id": 235,
-      "x": -11.5,
-      "y": 0,
-      "z": -62.5,
-      "ix": 18,
-      "iz": 7,
-      "nb": [
-       {
-        "to": 190,
-        "cost": 1.4142135623730951,
-        "type": "walk"
-       },
-       {
-        "to": 191,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 234,
-        "cost": 1,
-        "type": "walk"
-       }
-      ],
-      "zone": -1,
-      "wet": 0,
-      "overWater": false
-     }
-    },
-    {
-     "at": [
-      -8.5,
-      2.4,
-      -62.5
-     ],
-     "what": "16: a gap edge no kid makes",
-     "look": {
-      "id": 235,
-      "x": -11.5,
-      "y": 0,
-      "z": -62.5,
-      "ix": 18,
-      "iz": 7,
-      "nb": [
-       {
-        "to": 190,
-        "cost": 1.4142135623730951,
-        "type": "walk"
-       },
-       {
-        "to": 191,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 234,
-        "cost": 1,
-        "type": "walk"
-       }
-      ],
-      "zone": -1,
-      "wet": 0,
-      "overWater": false
-     }
-    },
-    {
-     "at": [
-      -6.5,
-      2.2,
-      -62.5
-     ],
-     "what": "16: a gap edge no kid makes",
-     "look": {
-      "id": 322,
-      "x": -4.5,
-      "y": 1.6131147540983606,
-      "z": -60.5,
-      "ix": 25,
-      "iz": 9,
-      "nb": [
-       {
-        "to": 285,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 286,
-        "cost": 1.4142135623730951,
-        "type": "walk"
-       },
-       {
-        "to": 323,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 360,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 361,
-        "cost": 1.4142135623730951,
-        "type": "walk"
-       }
-      ],
-      "zone": -1,
-      "wet": 0,
-      "overWater": false
-     }
-    },
-    {
-     "at": [
-      -6.5,
-      2.4,
-      -62.5
-     ],
-     "what": "16: a gap edge no kid makes",
-     "look": {
-      "id": 322,
-      "x": -4.5,
-      "y": 1.6131147540983606,
-      "z": -60.5,
-      "ix": 25,
-      "iz": 9,
-      "nb": [
-       {
-        "to": 285,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 286,
-        "cost": 1.4142135623730951,
-        "type": "walk"
-       },
-       {
-        "to": 323,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 360,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 361,
-        "cost": 1.4142135623730951,
-        "type": "walk"
-       }
-      ],
-      "zone": -1,
-      "wet": 0,
-      "overWater": false
-     }
-    },
-    {
-     "at": [
-      -5.5,
-      2.4,
-      -62.5
-     ],
-     "what": "16: a gap edge no kid makes",
-     "look": {
-      "id": 322,
-      "x": -4.5,
-      "y": 1.6131147540983606,
-      "z": -60.5,
-      "ix": 25,
-      "iz": 9,
-      "nb": [
-       {
-        "to": 285,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 286,
-        "cost": 1.4142135623730951,
-        "type": "walk"
-       },
-       {
-        "to": 323,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 360,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 361,
-        "cost": 1.4142135623730951,
-        "type": "walk"
-       }
-      ],
-      "zone": -1,
-      "wet": 0,
-      "overWater": false
-     }
-    },
-    {
-     "at": [
-      1.5,
-      2.4,
-      -62.5
-     ],
-     "what": "16: a gap edge no kid makes",
-     "look": {
-      "id": 327,
-      "x": 0.5,
-      "y": 1.6131147540983606,
-      "z": -60.5,
-      "ix": 30,
-      "iz": 9,
-      "nb": [
-       {
-        "to": 289,
-        "cost": 1.4142135623730951,
-        "type": "walk"
-       },
-       {
-        "to": 290,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 326,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 364,
-        "cost": 1.4142135623730951,
-        "type": "walk"
-       },
-       {
-        "to": 365,
-        "cost": 1,
-        "type": "walk"
-       }
-      ],
-      "zone": -1,
-      "wet": 0,
-      "overWater": false
-     }
-    },
-    {
-     "at": [
-      2.5,
-      2.2,
-      -62.5
-     ],
-     "what": "16: a gap edge no kid makes",
-     "look": {
-      "id": 327,
-      "x": 0.5,
-      "y": 1.6131147540983606,
-      "z": -60.5,
-      "ix": 30,
-      "iz": 9,
-      "nb": [
-       {
-        "to": 289,
-        "cost": 1.4142135623730951,
-        "type": "walk"
-       },
-       {
-        "to": 290,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 326,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 364,
-        "cost": 1.4142135623730951,
-        "type": "walk"
-       },
-       {
-        "to": 365,
-        "cost": 1,
-        "type": "walk"
-       }
-      ],
-      "zone": -1,
-      "wet": 0,
-      "overWater": false
-     }
-    },
-    {
-     "at": [
-      2.5,
-      2.4,
-      -62.5
-     ],
-     "what": "16: a gap edge no kid makes",
-     "look": {
-      "id": 327,
-      "x": 0.5,
-      "y": 1.6131147540983606,
-      "z": -60.5,
-      "ix": 30,
-      "iz": 9,
-      "nb": [
-       {
-        "to": 289,
-        "cost": 1.4142135623730951,
-        "type": "walk"
-       },
-       {
-        "to": 290,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 326,
-        "cost": 1,
-        "type": "walk"
-       },
-       {
-        "to": 364,
-        "cost": 1.4142135623730951,
-        "type": "walk"
-       },
-       {
-        "to": 365,
-        "cost": 1,
-        "type": "walk"
-       }
-      ],
-      "zone": -1,
-      "wet": 0,
-      "overWater": false
-     }
-    }
-   ]
+   "flags": []
   }
  },
  "draw": {
@@ -43028,16 +42555,18 @@
     "ents": [
      {
       "c": [
-       -3.1,
+       -2.2,
        0.6,
-       56.2
+       56.5
       ],
       "w": 29.4,
-      "n": 100,
+      "n": 103,
       "types": [
        "walk",
        "drop",
-       "rising gap"
+       "squid gap",
+       "long gap",
+       "vault over a low wall or rail"
       ],
       "seen": true,
       "plainSeen": true,
@@ -43045,7 +42574,7 @@
        "walk",
        "drop"
       ],
-      "moves": 3,
+      "moves": 6,
       "physUnseen": [],
       "from": [
        -9.5,
@@ -43076,6 +42605,28 @@
        0,
        64.5
       ]
+     },
+     {
+      "c": [
+       -0.8,
+       0.5,
+       59
+      ],
+      "w": 3.6,
+      "n": 6,
+      "types": [
+       "long gap"
+      ],
+      "seen": true,
+      "plainSeen": true,
+      "plainTypes": [],
+      "moves": 6,
+      "physUnseen": [],
+      "from": [
+       8.5,
+       2.2,
+       62.5
+      ]
      }
     ]
    },
@@ -43089,16 +42640,18 @@
     "ents": [
      {
       "c": [
-       3.1,
+       2.2,
        0.6,
-       -56.2
+       -56.5
       ],
       "w": 29.4,
-      "n": 100,
+      "n": 103,
       "types": [
        "walk",
        "drop",
-       "rising gap"
+       "squid gap",
+       "long gap",
+       "vault over a low wall or rail"
       ],
       "seen": true,
       "plainSeen": true,
@@ -43106,7 +42659,7 @@
        "walk",
        "drop"
       ],
-      "moves": 3,
+      "moves": 6,
       "physUnseen": [],
       "from": [
        -8.5,
@@ -43136,6 +42689,28 @@
        21.5,
        0,
        -64.5
+      ]
+     },
+     {
+      "c": [
+       1.3,
+       0.4,
+       -58.5
+      ],
+      "w": 3.2,
+      "n": 4,
+      "types": [
+       "long gap"
+      ],
+      "seen": true,
+      "plainSeen": true,
+      "plainTypes": [],
+      "moves": 4,
+      "physUnseen": [],
+      "from": [
+       -8.5,
+       2.2,
+       -62.5
       ]
      }
     ]
@@ -46061,7 +45636,7 @@
      -62.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -46073,7 +45648,7 @@
      -62.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -46085,7 +45660,7 @@
      -60.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -46097,7 +45672,7 @@
      -60.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -46109,7 +45684,7 @@
      -60.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -46121,7 +45696,7 @@
      -60.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -46133,7 +45708,7 @@
      -60.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -46145,7 +45720,7 @@
      -60.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -46157,7 +45732,7 @@
      -62.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -46169,7 +45744,7 @@
      -62.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -49073,7 +48648,7 @@
      62.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -49085,7 +48660,7 @@
      60.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -49097,7 +48672,7 @@
      60.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -49109,7 +48684,7 @@
      60.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -49121,7 +48696,7 @@
      62.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -49133,7 +48708,7 @@
      62.5
     ],
     "type": "gap",
-    "ok": false
+    "ok": true
    },
    {
     "a": [
@@ -49307,1493 +48882,217 @@
   "beyond": [
    {
     "a": [
-     10.5,
-     -16.5
-    ],
-    "b": [
-     10.5,
-     -17.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     19.5,
-     -13.5
-    ],
-    "b": [
-     20.5,
-     -13.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -19.5,
-     13.5
-    ],
-    "b": [
-     -20.5,
-     13.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -10.5,
-     16.5
-    ],
-    "b": [
-     -10.5,
-     17.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     6.5,
+     -6.5,
      -68.5
     ],
     "b": [
-     8.5,
-     -65.5
+     0.5,
+     -61.5
     ],
-    "find": false
+    "find": true
    },
    {
     "a": [
-     -7.5,
+     -6.5,
+     -68.5
+    ],
+    "b": [
+     0.5,
+     -60.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -8.5,
      -66.5
     ],
     "b": [
-     -9.5,
-     -63.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -8.5,
-     -64.5
-    ],
-    "b": [
-     -10.5,
-     -61.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -8.5,
-     -63.5
-    ],
-    "b": [
-     -10.5,
+     -5.5,
      -60.5
     ],
     "find": false
    },
    {
     "a": [
-     6.5,
-     -56.5
+     -7.5,
+     -64.5
     ],
     "b": [
-     5.5,
-     -53.5
+     3.5,
+     -61.5
     ],
-    "find": false
-   },
-   {
-    "a": [
-     6.5,
-     -56.5
-    ],
-    "b": [
-     7.5,
-     -53.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     7.5,
-     -56.5
-    ],
-    "b": [
-     6.5,
-     -53.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     7.5,
-     -56.5
-    ],
-    "b": [
-     8.5,
-     -53.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     6.5,
-     -55.5
-    ],
-    "b": [
-     9.5,
-     -53.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     7.5,
-     -55.5
-    ],
-    "b": [
-     4.5,
-     -53.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     14.5,
-     -46.5
-    ],
-    "b": [
-     11.5,
-     -44.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -9.5,
-     -43.5
-    ],
-    "b": [
-     -12.5,
-     -45.5
-    ],
-    "find": false
+    "find": true
    },
    {
     "a": [
      -8.5,
-     -43.5
-    ],
-    "b": [
-     -11.5,
-     -44.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -7.5,
-     -43.5
-    ],
-    "b": [
-     -10.5,
-     -45.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -7.5,
-     -43.5
-    ],
-    "b": [
-     -10.5,
-     -44.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -9.5,
-     -41.5
-    ],
-    "b": [
-     -10.5,
-     -44.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -12.5,
-     -40.5
-    ],
-    "b": [
-     -13.5,
-     -43.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -12.5,
-     -39.5
-    ],
-    "b": [
-     -13.5,
-     -42.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -11.5,
-     -38.5
-    ],
-    "b": [
-     -9.9,
-     -35.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -14.5,
-     -27.5
-    ],
-    "b": [
-     -11.5,
-     -29.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -14.5,
-     -27.5
-    ],
-    "b": [
-     -11.5,
-     -28.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     21.5,
-     -27.5
-    ],
-    "b": [
-     22.5,
-     -30.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -17.5,
-     -25.5
-    ],
-    "b": [
-     -15.5,
-     -28.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -16.5,
-     -25.5
-    ],
-    "b": [
-     -18.5,
-     -28.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -25.5,
-     -24.5
-    ],
-    "b": [
-     -28.5,
-     -22.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -21.5,
-     -24.5
-    ],
-    "b": [
-     -18.5,
-     -26.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -16.5,
-     -24.5
-    ],
-    "b": [
-     -14.5,
-     -27.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -25.5,
-     -19.5
-    ],
-    "b": [
-     -28.5,
-     -17.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -6.5,
-     -19.5
-    ],
-    "b": [
-     -8.5,
-     -16.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -6.5,
-     -19.5
-    ],
-    "b": [
-     -7.5,
-     -16.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -25.5,
-     -18.5
-    ],
-    "b": [
-     -28.5,
-     -17.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -25.5,
-     -18.5
-    ],
-    "b": [
-     -28.5,
-     -16.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -25.5,
-     -18.5
-    ],
-    "b": [
-     -27.5,
-     -15.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -24.5,
-     -18.5
-    ],
-    "b": [
-     -27.5,
-     -16.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -24.5,
-     -18.5
-    ],
-    "b": [
-     -26.5,
-     -15.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -23.5,
-     -18.5
-    ],
-    "b": [
-     -26.5,
-     -16.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -23.5,
-     -18.5
-    ],
-    "b": [
-     -25.5,
-     -15.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -22.5,
-     -18.5
-    ],
-    "b": [
-     -25.5,
-     -16.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -24.5,
-     -17.5
-    ],
-    "b": [
-     -26.5,
-     -14.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -22.5,
-     -17.5
-    ],
-    "b": [
-     -24.2,
-     -14.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -7.5,
-     -17.5
-    ],
-    "b": [
-     -6.5,
-     -20.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -7.5,
-     -17.5
-    ],
-    "b": [
-     -5.5,
-     -20.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -20.5,
-     -11.5
-    ],
-    "b": [
-     -18.5,
-     -14.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -14.5,
-     -11.5
-    ],
-    "b": [
-     -16.5,
-     -14.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -11.5,
-     -9.5
-    ],
-    "b": [
-     -13.5,
-     -6.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -14.5,
-     -8.5
-    ],
-    "b": [
-     -11.5,
-     -10.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -11.5,
-     -8.5
-    ],
-    "b": [
-     -13.5,
-     -5.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -10.5,
-     -8.5
-    ],
-    "b": [
-     -13.5,
-     -6.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -9.5,
-     -8.5
-    ],
-    "b": [
-     -7.5,
-     -5.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -8.5,
-     -8.5
-    ],
-    "b": [
-     -7.5,
-     -5.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -7.5,
-     -8.5
-    ],
-    "b": [
-     -4.5,
-     -6.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -2.5,
-     -8.5
-    ],
-    "b": [
-     -5.2,
-     -6.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -1.5,
-     -8.5
-    ],
-    "b": [
-     -4.5,
-     -6.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     10.5,
-     -8.5
-    ],
-    "b": [
-     13.5,
-     -6.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -13.5,
-     -6.5
-    ],
-    "b": [
-     -11.5,
-     -9.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -13.5,
-     -6.5
-    ],
-    "b": [
-     -10.5,
-     -8.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -4.5,
-     -6.5
-    ],
-    "b": [
-     -1.5,
-     -8.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     13.5,
-     -6.5
-    ],
-    "b": [
-     10.5,
-     -8.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -13.5,
-     -5.5
-    ],
-    "b": [
-     -11.5,
-     -8.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     6.5,
-     -5.5
-    ],
-    "b": [
-     3.5,
-     -3.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     12.5,
-     -5.5
-    ],
-    "b": [
-     10.5,
-     -8.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -3.5,
-     -3.5
-    ],
-    "b": [
-     -2.5,
-     -6.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -2.5,
-     -3.5
-    ],
-    "b": [
-     -4.5,
-     -6.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -0.5,
-     -3.5
-    ],
-    "b": [
-     -3.5,
-     -5.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -1.5,
-     -1.5
-    ],
-    "b": [
-     -0.5,
-     -4.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -1.5,
-     -1.5
-    ],
-    "b": [
-     0.5,
-     -4.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -2.5,
-     -0.5
-    ],
-    "b": [
-     -5.5,
-     -2.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     2.5,
-     -0.5
-    ],
-    "b": [
-     4.5,
-     -3.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -2.5,
-     0.5
-    ],
-    "b": [
-     -4.5,
-     3.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     2.5,
-     0.5
-    ],
-    "b": [
-     5.5,
-     2.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     1.5,
-     2.5
-    ],
-    "b": [
-     3.5,
-     5.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     0.5,
-     3.5
-    ],
-    "b": [
-     3.5,
-     5.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     2.5,
-     3.5
-    ],
-    "b": [
-     4.5,
-     6.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     3.5,
-     3.5
-    ],
-    "b": [
-     2.5,
-     6.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -12.5,
-     5.5
-    ],
-    "b": [
-     -10.5,
-     8.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -6.5,
-     5.5
-    ],
-    "b": [
-     -3.5,
-     3.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     13.5,
-     5.5
-    ],
-    "b": [
-     11.5,
-     8.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -13.5,
-     6.5
-    ],
-    "b": [
-     -10.5,
-     8.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     4.5,
-     6.5
+     -62.5
     ],
     "b": [
      1.5,
-     8.5
+     -57.5
     ],
     "find": false
    },
    {
     "a": [
-     13.5,
-     6.5
+     -8.5,
+     -62.5
     ],
     "b": [
-     10.5,
-     8.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     13.5,
-     6.5
-    ],
-    "b": [
-     11.5,
-     9.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -10.5,
-     8.5
-    ],
-    "b": [
-     -13.5,
-     6.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
      1.5,
-     8.5
-    ],
-    "b": [
-     4.5,
-     6.5
+     -58.5
     ],
     "find": false
    },
    {
     "a": [
-     2.5,
-     8.5
+     -8.5,
+     -62.5
     ],
     "b": [
-     5.3,
-     6.5
+     1.5,
+     -57.5
     ],
     "find": false
    },
    {
     "a": [
-     7.5,
-     8.5
-    ],
-    "b": [
-     4.5,
-     6.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     10.5,
-     8.5
-    ],
-    "b": [
-     13.5,
-     6.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     11.5,
-     8.5
-    ],
-    "b": [
-     13.5,
-     5.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     14.5,
-     8.5
-    ],
-    "b": [
-     11.5,
-     10.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     11.5,
-     9.5
-    ],
-    "b": [
-     13.5,
-     6.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     14.5,
-     11.5
-    ],
-    "b": [
-     16.5,
-     14.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     20.5,
-     11.5
-    ],
-    "b": [
-     18.5,
-     14.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     7.5,
-     17.5
+     -6.5,
+     -62.5
     ],
     "b": [
      5.5,
-     20.5
+     -62.5
     ],
-    "find": false
+    "find": true
    },
    {
     "a": [
-     7.5,
-     17.5
+     -5.5,
+     -62.5
     ],
     "b": [
-     6.5,
-     20.5
+     5.5,
+     -62.5
     ],
-    "find": false
+    "find": true
    },
    {
     "a": [
-     21.5,
-     17.5
+     -5.5,
+     -62.5
     ],
     "b": [
-     23.8,
-     14.5
+     5.5,
+     -62.5
     ],
-    "find": false
+    "find": true
    },
    {
     "a": [
-     22.5,
-     17.5
+     -5.5,
+     -62.5
     ],
     "b": [
-     23.8,
-     14.5
+     3.5,
+     -60.5
     ],
-    "find": false
+    "find": true
    },
    {
     "a": [
-     24.5,
-     17.5
-    ],
-    "b": [
-     26.5,
-     14.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     22.5,
-     18.5
-    ],
-    "b": [
-     25.5,
-     16.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     23.5,
-     18.5
-    ],
-    "b": [
-     25.5,
-     15.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     23.5,
-     18.5
-    ],
-    "b": [
-     26.5,
-     16.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     24.5,
-     18.5
-    ],
-    "b": [
-     26.5,
-     15.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     24.5,
-     18.5
-    ],
-    "b": [
-     27.5,
-     16.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     25.5,
-     18.5
-    ],
-    "b": [
-     27.5,
-     15.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     25.5,
-     18.5
-    ],
-    "b": [
-     28.5,
-     16.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     25.5,
-     18.5
-    ],
-    "b": [
-     28.5,
-     17.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     6.5,
-     19.5
-    ],
-    "b": [
-     7.5,
-     16.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     6.5,
-     19.5
-    ],
-    "b": [
-     8.5,
-     16.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     25.5,
-     19.5
-    ],
-    "b": [
-     28.5,
-     17.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     16.5,
-     24.5
-    ],
-    "b": [
-     14.5,
-     27.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     21.5,
-     24.5
-    ],
-    "b": [
-     18.5,
-     26.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     25.5,
-     24.5
-    ],
-    "b": [
-     28.5,
-     22.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     16.5,
-     25.5
-    ],
-    "b": [
-     18.5,
-     28.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     17.5,
-     25.5
-    ],
-    "b": [
-     15.5,
-     28.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -21.5,
-     27.5
-    ],
-    "b": [
-     -22.5,
-     30.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     14.5,
-     27.5
-    ],
-    "b": [
-     11.5,
-     28.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     14.5,
-     27.5
-    ],
-    "b": [
-     11.5,
-     29.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     15.5,
-     31.5
-    ],
-    "b": [
-     17.8,
-     29.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     11.5,
-     38.5
-    ],
-    "b": [
-     10,
-     35.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     12.5,
-     39.5
-    ],
-    "b": [
-     13.5,
-     42.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     12.5,
-     40.5
-    ],
-    "b": [
-     13.5,
-     43.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     9.5,
-     41.5
-    ],
-    "b": [
-     10.5,
-     44.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     7.5,
-     43.5
-    ],
-    "b": [
-     10.5,
-     44.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     7.5,
-     43.5
-    ],
-    "b": [
-     10.5,
-     45.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     8.5,
-     43.5
-    ],
-    "b": [
-     11.5,
-     44.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     9.5,
-     43.5
-    ],
-    "b": [
-     12.5,
-     45.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -14.5,
-     46.5
-    ],
-    "b": [
-     -11.5,
-     44.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -7.5,
-     55.5
-    ],
-    "b": [
      -4.5,
-     53.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -6.5,
-     55.5
+     -61.5
     ],
     "b": [
-     -9.5,
-     53.5
+     3.5,
+     -65.5
     ],
-    "find": false
+    "find": true
    },
    {
     "a": [
-     -7.5,
-     56.5
+     -4.5,
+     -61.5
     ],
     "b": [
-     -8.5,
-     53.5
+     4.8,
+     -64.5
     ],
-    "find": false
+    "find": true
    },
    {
     "a": [
-     -7.5,
-     56.5
+     4.5,
+     61.5
     ],
     "b": [
-     -6.5,
-     53.5
+     -4.7,
+     64.5
     ],
-    "find": false
+    "find": true
    },
    {
     "a": [
-     -6.5,
-     56.5
+     4.5,
+     61.5
     ],
     "b": [
-     -7.5,
-     53.5
+     -3.5,
+     65.5
     ],
-    "find": false
+    "find": true
    },
    {
     "a": [
-     -6.5,
-     56.5
+     5.5,
+     62.5
     ],
     "b": [
      -5.5,
-     53.5
+     62.5
     ],
-    "find": false
+    "find": true
    },
    {
     "a": [
-     0.5,
+     5.5,
+     62.5
+    ],
+    "b": [
+     -3.5,
      60.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     5.5,
+     62.5
+    ],
+    "b": [
+     -5.5,
+     62.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     6.5,
+     62.5
+    ],
+    "b": [
+     -5.5,
+     62.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     8.5,
+     62.5
     ],
     "b": [
      -1.5,
@@ -50803,23 +49102,485 @@
    },
    {
     "a": [
-     -1.5,
+     8.5,
      62.5
     ],
     "b": [
-     0.5,
-     59.5
+     -1.5,
+     57.5
     ],
     "find": false
    },
    {
     "a": [
      8.5,
+     62.5
+    ],
+    "b": [
+     -1.5,
+     58.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     7.5,
+     64.5
+    ],
+    "b": [
+     -1.2,
+     59.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     7.5,
+     64.5
+    ],
+    "b": [
+     -3.5,
+     61.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     8.5,
+     66.5
+    ],
+    "b": [
+     5.5,
+     60.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     8.5,
+     67.5
+    ],
+    "b": [
+     0.5,
+     60.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -2.5,
+     68.5
+    ],
+    "b": [
+     0.5,
+     60.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     6.5,
+     68.5
+    ],
+    "b": [
+     0.5,
+     59.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     6.5,
+     68.5
+    ],
+    "b": [
+     0.5,
+     60.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     6.5,
+     68.5
+    ],
+    "b": [
+     -1.5,
+     61.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     7.5,
+     68.5
+    ],
+    "b": [
+     0.5,
+     60.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -8.9,
+     -65.5
+    ],
+    "b": [
+     0.5,
+     -60.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     9,
+     65.5
+    ],
+    "b": [
+     -1.2,
+     59.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     9,
+     65.5
+    ],
+    "b": [
+     0.5,
+     60.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     0.5,
+     -61.5
+    ],
+    "b": [
+     3.5,
+     -66.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     0.5,
+     -61.5
+    ],
+    "b": [
+     4.5,
+     -66.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     0.5,
+     -60.5
+    ],
+    "b": [
+     3.5,
+     -66.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     0.5,
+     60.5
+    ],
+    "b": [
+     -3.5,
+     62.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     0.5,
+     60.5
+    ],
+    "b": [
+     -4.5,
+     66.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     0.5,
+     60.5
+    ],
+    "b": [
+     -3.5,
+     66.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     0.5,
+     60.5
+    ],
+    "b": [
+     -2.5,
+     68.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -8.2,
+     -6.5
+    ],
+    "b": [
+     -13.5,
+     -0.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     1.5,
+     -62.5
+    ],
+    "b": [
+     3.5,
+     -64.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -1.5,
+     62.5
+    ],
+    "b": [
+     -3.5,
+     64.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     3.5,
+     -62.5
+    ],
+    "b": [
+     4.8,
+     -65.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -3.5,
+     62.5
+    ],
+    "b": [
+     -4.7,
+     65.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     2.5,
+     -63.5
+    ],
+    "b": [
+     1.5,
+     -62.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     5.5,
+     -65.5
+    ],
+    "b": [
+     7.5,
+     -67.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -5.5,
+     65.5
+    ],
+    "b": [
+     -7.5,
+     66.3
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -3.5,
+     64.5
+    ],
+    "b": [
+     -2.5,
+     61.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     5.5,
+     -64.5
+    ],
+    "b": [
+     8.5,
+     -66.2
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     4.8,
+     -63.5
+    ],
+    "b": [
+     1.5,
+     -62.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     3.5,
+     -64.5
+    ],
+    "b": [
+     3.5,
+     -61.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     8.5,
+     -4.5
+    ],
+    "b": [
+     7.5,
+     -1.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -9.5,
+     3.5
+    ],
+    "b": [
+     -7.5,
+     1.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -4.7,
      63.5
     ],
     "b": [
+     -1.5,
+     62.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     7.5,
+     -64.5
+    ],
+    "b": [
+     7.5,
+     -67.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -7.5,
+     64.5
+    ],
+    "b": [
+     -7.5,
+     67.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
      10.5,
+     -3.5
+    ],
+    "b": [
+     8.5,
+     -1.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -0.5,
+     -60.5
+    ],
+    "b": [
+     2.5,
+     -60.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     0.5,
      60.5
+    ],
+    "b": [
+     -2.5,
+     60.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     7.5,
+     -63.5
+    ],
+    "b": [
+     8.5,
+     -66.2
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -7.5,
+     63.5
+    ],
+    "b": [
+     -8.5,
+     66.3
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -8.5,
+     -64.5
+    ],
+    "b": [
+     -6.5,
+     -62.5
     ],
     "find": false
    },
@@ -50829,690 +49590,8 @@
      64.5
     ],
     "b": [
-     10.5,
-     61.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     7.5,
-     66.5
-    ],
-    "b": [
-     9.5,
-     63.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -6.5,
-     68.5
-    ],
-    "b": [
-     -8.5,
-     65.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -17.2,
-     -28.5
-    ],
-    "b": [
-     -18.5,
-     -31.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -17.2,
-     -28.5
-    ],
-    "b": [
-     -15.5,
-     -31.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -16.2,
-     -28.5
-    ],
-    "b": [
-     -18.5,
-     -30.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -17.2,
-     -27.5
-    ],
-    "b": [
-     -15.5,
-     -30.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -16.2,
-     -27.5
-    ],
-    "b": [
-     -18.5,
-     -30.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -17.2,
-     -26.5
-    ],
-    "b": [
-     -15.5,
-     -29.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -16.2,
-     -26.5
-    ],
-    "b": [
-     -18.5,
-     -29.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -24.5,
-     -16.2
-    ],
-    "b": [
-     -22.5,
-     -13.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -24.2,
-     -14.5
-    ],
-    "b": [
-     -22.5,
-     -17.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     23.8,
-     14.5
-    ],
-    "b": [
-     21.5,
-     17.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     23.8,
-     14.5
-    ],
-    "b": [
-     22.5,
-     17.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     24.8,
-     14.5
-    ],
-    "b": [
-     22.5,
-     16.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     24.5,
-     16.3
-    ],
-    "b": [
-     22.5,
-     13.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     16.8,
-     26.5
-    ],
-    "b": [
-     18.5,
-     29.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     17.8,
-     26.5
-    ],
-    "b": [
-     15.5,
-     29.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     16.8,
-     27.5
-    ],
-    "b": [
-     18.5,
-     30.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     17.8,
-     27.5
-    ],
-    "b": [
-     15.5,
-     30.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     16.8,
-     28.5
-    ],
-    "b": [
-     15.5,
-     31.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     16.8,
-     28.5
-    ],
-    "b": [
-     18.5,
-     31.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     17.8,
-     28.5
-    ],
-    "b": [
-     15.5,
-     30.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     17.8,
-     28.5
-    ],
-    "b": [
-     15.5,
-     31.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     17.8,
-     29.5
-    ],
-    "b": [
-     15.5,
-     31.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     14.5,
-     -53.5
-    ],
-    "b": [
-     16.5,
-     -55.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     16.5,
-     -53.5
-    ],
-    "b": [
-     16.5,
-     -55.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     18.5,
-     -53.5
-    ],
-    "b": [
-     16.5,
-     -55.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -18.5,
-     53.5
-    ],
-    "b": [
-     -16.5,
-     55.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -16.5,
-     53.5
-    ],
-    "b": [
-     -16.5,
-     55.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -14.5,
-     53.5
-    ],
-    "b": [
-     -16.5,
-     55.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -10.5,
-     -56.5
-    ],
-    "b": [
-     -10.5,
-     -55.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -8.5,
-     -56.5
-    ],
-    "b": [
-     -8.5,
-     -55.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     17.5,
-     -46.5
-    ],
-    "b": [
-     17.5,
-     -45.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     16.5,
-     -45.5
-    ],
-    "b": [
-     17.5,
-     -45.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     18.5,
-     -45.5
-    ],
-    "b": [
-     17.5,
-     -45.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     16.5,
-     -44.5
-    ],
-    "b": [
-     17.5,
-     -44.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     18.5,
-     -44.5
-    ],
-    "b": [
-     17.5,
-     -44.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     16.5,
-     -43.5
-    ],
-    "b": [
-     17.5,
-     -43.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     18.5,
-     -43.5
-    ],
-    "b": [
-     17.5,
-     -43.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     16.5,
-     -42.5
-    ],
-    "b": [
-     17.5,
-     -42.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     18.5,
-     -42.5
-    ],
-    "b": [
-     17.5,
-     -42.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     17.5,
-     -41.5
-    ],
-    "b": [
-     17.5,
-     -42.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -7.5,
-     -17.5
-    ],
-    "b": [
-     -6.5,
-     -17.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     19.5,
-     -5.5
-    ],
-    "b": [
-     19.5,
-     -4.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -9.5,
-     -3.5
-    ],
-    "b": [
-     -9.5,
-     -2.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     9.5,
-     3.5
-    ],
-    "b": [
-     9.5,
-     2.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -19.5,
-     5.5
-    ],
-    "b": [
-     -19.5,
-     4.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     7.5,
-     17.5
-    ],
-    "b": [
      6.5,
-     17.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -17.5,
-     41.5
-    ],
-    "b": [
-     -17.5,
-     42.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -18.5,
-     42.5
-    ],
-    "b": [
-     -17.5,
-     42.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -16.5,
-     42.5
-    ],
-    "b": [
-     -17.5,
-     42.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -18.5,
-     43.5
-    ],
-    "b": [
-     -17.5,
-     43.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -16.5,
-     43.5
-    ],
-    "b": [
-     -17.5,
-     43.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -18.5,
-     44.5
-    ],
-    "b": [
-     -17.5,
-     44.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -16.5,
-     44.5
-    ],
-    "b": [
-     -17.5,
-     44.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -18.5,
-     45.5
-    ],
-    "b": [
-     -17.5,
-     45.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -16.5,
-     45.5
-    ],
-    "b": [
-     -17.5,
-     45.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -17.5,
-     46.5
-    ],
-    "b": [
-     -17.5,
-     45.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     8.5,
-     56.5
-    ],
-    "b": [
-     8.5,
-     55.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     10.5,
-     56.5
-    ],
-    "b": [
-     10.5,
-     55.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     -4.5,
-     -17
-    ],
-    "b": [
-     -5.5,
-     -17.5
-    ],
-    "find": false
-   },
-   {
-    "a": [
-     4.5,
-     17.1
-    ],
-    "b": [
-     5.5,
-     17.5
+     62.5
     ],
     "find": false
    }
@@ -52809,26 +50888,26 @@
   ]
  },
  "ms": {
-  "1": 1,
-  "2": 429,
-  "6": 642,
-  "8": 891,
-  "9": 932,
-  "10": 936,
-  "15": 973,
-  "16": 2902,
-  "climbHops": 619,
-  "routes": 641,
-  "7d-low": 756,
-  "7d": 891,
-  "total": 2904
+  "1": 2,
+  "2": 507,
+  "6": 914,
+  "8": 2020,
+  "9": 2073,
+  "10": 2080,
+  "15": 2138,
+  "16": 8248,
+  "climbHops": 805,
+  "routes": 911,
+  "7d-low": 1311,
+  "7d": 2019,
+  "total": 8343
  },
  "_climbHops": {
   "tried": 58,
   "made": 58,
   "proved": true,
   "trials": 89,
-  "ms": 186,
+  "ms": 293,
   "notMade": [],
   "madeAt": [
    [
@@ -52982,16 +51061,29 @@
    "i": 1,
    "check": 2,
    "at": [
+    -2.5,
+    0.1,
+    -0.5
+   ],
+   "what": "2: L 83.5 / 81.1 m (Δ 2.9 %)",
+   "look": null,
+   "move": null
+  },
+  {
+   "i": 2,
+   "check": 2,
+   "at": [
     0.3,
     1.9,
     -61.2
    ],
    "what": "the reading 5.34 m low",
    "look": null,
+   "move": null,
    "also": 5
   },
   {
-   "i": 2,
+   "i": 3,
    "check": 7,
    "at": [
     -5.7,
@@ -52999,10 +51091,22 @@
     65.1
    ],
    "what": "7c: a 3.2 m drop into the Gate's ring",
-   "look": null
+   "look": null,
+   "move": [
+    [
+     -4.5,
+     3.2,
+     66.5
+    ],
+    [
+     -5.5,
+     0,
+     64.5
+    ]
+   ]
   },
   {
-   "i": 3,
+   "i": 4,
    "check": 7,
    "at": [
     5.7,
@@ -53010,10 +51114,149 @@
     -65.1
    ],
    "what": "7c: a 3.2 m drop into the Gate's ring",
-   "look": null
+   "look": null,
+   "move": [
+    [
+     3.5,
+     3.2,
+     -66.5
+    ],
+    [
+     5.5,
+     0,
+     -65.5
+    ]
+   ]
   },
   {
-   "i": 4,
+   "i": 5,
+   "check": 7,
+   "at": [
+    -5.5,
+    0,
+    -60.5
+   ],
+   "what": "7c: a 2.9 m drop into the Gate's ring",
+   "look": null,
+   "move": [
+    [
+     -8.5,
+     2.9,
+     -66.5
+    ],
+    [
+     -5.5,
+     0,
+     -60.5
+    ]
+   ]
+  },
+  {
+   "i": 6,
+   "check": 7,
+   "at": [
+    5.5,
+    0,
+    60.5
+   ],
+   "what": "7c: a 2.9 m drop into the Gate's ring",
+   "look": null,
+   "move": [
+    [
+     8.5,
+     2.9,
+     66.5
+    ],
+    [
+     5.5,
+     0,
+     60.5
+    ]
+   ]
+  },
+  {
+   "i": 7,
+   "check": 7,
+   "at": [
+    3.5,
+    2.4,
+    -64.5
+   ],
+   "what": "7d lowGap ×11: gain 10.7–13.7 m",
+   "look": [
+    1.5,
+    2.4,
+    -62.5
+   ],
+   "move": [
+    [
+     3.5,
+     2.4,
+     -64.5
+    ],
+    [
+     1.5,
+     2.4,
+     -62.5
+    ]
+   ]
+  },
+  {
+   "i": 8,
+   "check": 7,
+   "at": [
+    0.5,
+    2,
+    -61.5
+   ],
+   "what": "7d riseGap (swim-jump) ×3: gain 17.9–20 m",
+   "look": [
+    4.5,
+    3.2,
+    -66.5
+   ],
+   "move": [
+    [
+     0.5,
+     2,
+     -61.5
+    ],
+    [
+     4.5,
+     3.2,
+     -66.5
+    ]
+   ]
+  },
+  {
+   "i": 9,
+   "check": 7,
+   "at": [
+    1.5,
+    2.4,
+    -62.5
+   ],
+   "what": "7d vault (swim-jump) ×10: gain 10–13.7 m",
+   "look": [
+    3.5,
+    2.4,
+    -64.5
+   ],
+   "move": [
+    [
+     1.5,
+     2.4,
+     -62.5
+    ],
+    [
+     3.5,
+     2.4,
+     -64.5
+    ]
+   ]
+  },
+  {
+   "i": 10,
    "check": 7,
    "at": [
     9.5,
@@ -53025,10 +51268,49 @@
     7.5,
     -1.2,
     -1.5
+   ],
+   "move": [
+    [
+     9.5,
+     -1.2,
+     -3.5
+    ],
+    [
+     7.5,
+     -1.2,
+     -1.5
+    ]
    ]
   },
   {
-   "i": 5,
+   "i": 11,
+   "check": 7,
+   "at": [
+    8.5,
+    -1.2,
+    -4.5
+   ],
+   "what": "7d vault (swim-jump) ×2: gain 10.6–11 m",
+   "look": [
+    7.5,
+    0.1,
+    -1.5
+   ],
+   "move": [
+    [
+     8.5,
+     -1.2,
+     -4.5
+    ],
+    [
+     7.5,
+     0.1,
+     -1.5
+    ]
+   ]
+  },
+  {
+   "i": 12,
    "check": 7,
    "at": [
     -7.5,
@@ -53040,10 +51322,292 @@
     -9.5,
     -1.2,
     3.5
+   ],
+   "move": [
+    [
+     -7.5,
+     -1.2,
+     1.5
+    ],
+    [
+     -9.5,
+     -1.2,
+     3.5
+    ]
    ]
   },
   {
-   "i": 6,
+   "i": 13,
+   "check": 7,
+   "at": [
+    -9.5,
+    -1.2,
+    3.5
+   ],
+   "what": "7d vault (swim-jump): gain 11 m",
+   "look": [
+    -7.5,
+    0.1,
+    1.5
+   ],
+   "move": [
+    [
+     -9.5,
+     -1.2,
+     3.5
+    ],
+    [
+     -7.5,
+     0.1,
+     1.5
+    ]
+   ]
+  },
+  {
+   "i": 14,
+   "check": 7,
+   "at": [
+    -1.5,
+    2.4,
+    62.5
+   ],
+   "what": "7d lowGap ×8: gain 10.3–12.7 m",
+   "look": [
+    -3.5,
+    2.4,
+    63.5
+   ],
+   "move": [
+    [
+     -1.5,
+     2.4,
+     62.5
+    ],
+    [
+     -3.5,
+     2.4,
+     63.5
+    ]
+   ]
+  },
+  {
+   "i": 15,
+   "check": 7,
+   "at": [
+    0.5,
+    1.6,
+    60.5
+   ],
+   "what": "7d riseGap (swim-jump) ×4: gain 11.1–26.2 m",
+   "look": [
+    -4.5,
+    3.2,
+    66.5
+   ],
+   "move": [
+    [
+     0.5,
+     1.6,
+     60.5
+    ],
+    [
+     -4.5,
+     3.2,
+     66.5
+    ]
+   ]
+  },
+  {
+   "i": 16,
+   "check": 7,
+   "at": [
+    -1.5,
+    2.4,
+    62.5
+   ],
+   "what": "7d vault (swim-jump) ×8: gain 10–13.7 m",
+   "look": [
+    -3.5,
+    2.4,
+    64.5
+   ],
+   "move": [
+    [
+     -1.5,
+     2.4,
+     62.5
+    ],
+    [
+     -3.5,
+     2.4,
+     64.5
+    ]
+   ]
+  },
+  {
+   "i": 17,
+   "check": 7,
+   "at": [
+    -6.5,
+    2.4,
+    -68.5
+   ],
+   "what": "7d longGap (swim-jump) ×2: gain 24.2–25.2 m",
+   "look": [
+    0.5,
+    1.6,
+    -60.5
+   ],
+   "move": [
+    [
+     -6.5,
+     2.4,
+     -68.5
+    ],
+    [
+     0.5,
+     1.6,
+     -60.5
+    ]
+   ]
+  },
+  {
+   "i": 18,
+   "check": 7,
+   "at": [
+    -4.5,
+    2,
+    -61.5
+   ],
+   "what": "7d longGap (swim-jump) ×8: gain 15.6–26.1 m",
+   "look": [
+    3.5,
+    2.4,
+    -65.5
+   ],
+   "move": [
+    [
+     -4.5,
+     2,
+     -61.5
+    ],
+    [
+     3.5,
+     2.4,
+     -65.5
+    ]
+   ]
+  },
+  {
+   "i": 19,
+   "check": 7,
+   "at": [
+    4.5,
+    2,
+    61.5
+   ],
+   "what": "7d longGap (swim-jump) ×9: gain 15.6–26.1 m",
+   "look": [
+    -4.7,
+    2.4,
+    64.5
+   ],
+   "move": [
+    [
+     4.5,
+     2,
+     61.5
+    ],
+    [
+     -4.7,
+     2.4,
+     64.5
+    ]
+   ]
+  },
+  {
+   "i": 20,
+   "check": 7,
+   "at": [
+    -2.5,
+    2.4,
+    68.5
+   ],
+   "what": "7d longGap: gain 15.4 m",
+   "look": [
+    0.5,
+    1.6,
+    60.5
+   ],
+   "move": [
+    [
+     -2.5,
+     2.4,
+     68.5
+    ],
+    [
+     0.5,
+     1.6,
+     60.5
+    ]
+   ]
+  },
+  {
+   "i": 21,
+   "check": 7,
+   "at": [
+    6.5,
+    2.4,
+    68.5
+   ],
+   "what": "7d longGap (swim-jump) ×4: gain 17–27.8 m",
+   "look": [
+    -1.5,
+    0,
+    61.5
+   ],
+   "move": [
+    [
+     6.5,
+     2.4,
+     68.5
+    ],
+    [
+     -1.5,
+     0,
+     61.5
+    ]
+   ]
+  },
+  {
+   "i": 22,
+   "check": 7,
+   "at": [
+    -8.2,
+    -1.2,
+    -6.5
+   ],
+   "what": "7d riseGap: gain 14.2 m",
+   "look": [
+    -13.5,
+    0,
+    -0.5
+   ],
+   "move": [
+    [
+     -8.2,
+     -1.2,
+     -6.5
+    ],
+    [
+     -13.5,
+     0,
+     -0.5
+    ]
+   ]
+  },
+  {
+   "i": 23,
    "check": 8,
    "at": [
     -6.5,
@@ -53051,10 +51615,11 @@
     66.3
    ],
    "what": "the Gate: team 0: the Gate in a free zone",
-   "look": null
+   "look": null,
+   "move": null
   },
   {
-   "i": 7,
+   "i": 24,
    "check": 8,
    "at": [
     6.5,
@@ -53062,101 +51627,35 @@
     -66.2
    ],
    "what": "the Gate: team 1: the Gate in a free zone",
-   "look": null
+   "look": null,
+   "move": null
   },
   {
-   "i": 8,
-   "check": 13,
+   "i": 25,
+   "check": 9,
    "at": [
     -2,
-    2.4,
+    1.5,
     -66
    ],
-   "what": "13: 2 ways off the deck",
-   "look": null
+   "what": "9: a zone touching team 1's Gate",
+   "look": null,
+   "move": null
   },
   {
-   "i": 9,
-   "check": 13,
+   "i": 26,
+   "check": 9,
    "at": [
     2,
-    2.4,
+    1.5,
     66
    ],
-   "what": "13: 2 ways off the deck",
-   "look": null
+   "what": "9: a zone touching team 0's Gate",
+   "look": null,
+   "move": null
   },
   {
-   "i": 10,
-   "check": 15,
-   "at": [
-    -13.5,
-    0,
-    32.5
-   ],
-   "what": "15: solid within 3 m of the weir (prop collider, 1 m)",
-   "look": null
-  },
-  {
-   "i": 11,
-   "check": 15,
-   "at": [
-    13.5,
-    0,
-    -32.5
-   ],
-   "what": "15: solid within 3 m of the weir (prop collider, 1 m)",
-   "look": null
-  },
-  {
-   "i": 12,
-   "check": 16,
-   "at": [
-    -8.5,
-    2.2,
-    -62.5
-   ],
-   "what": "16: a gap edge no kid makes",
-   "look": [
-    -11.5,
-    0,
-    -62.5
-   ],
-   "also": 3
-  },
-  {
-   "i": 13,
-   "check": 16,
-   "at": [
-    -5.5,
-    2.4,
-    -62.5
-   ],
-   "what": "16: a gap edge no kid makes",
-   "look": [
-    -4.5,
-    1.6,
-    -60.5
-   ]
-  },
-  {
-   "i": 14,
-   "check": 16,
-   "at": [
-    1.5,
-    2.4,
-    -62.5
-   ],
-   "what": "16: a gap edge no kid makes",
-   "look": [
-    0.5,
-    1.6,
-    -60.5
-   ],
-   "also": 2
-  },
-  {
-   "i": 15,
+   "i": 27,
    "check": 11,
    "at": [
     8.7,
@@ -53165,10 +51664,11 @@
    ],
    "what": "11: team 0's carry stuck (a walk edge)",
    "look": null,
+   "move": null,
    "also": 1
   },
   {
-   "i": 16,
+   "i": 28,
    "check": 11,
    "at": [
     -7.8,
@@ -53177,7 +51677,56 @@
    ],
    "what": "11: team 1's carry stuck (a walk edge)",
    "look": null,
+   "move": null,
    "also": 1
+  },
+  {
+   "i": 29,
+   "check": 13,
+   "at": [
+    -2,
+    2.4,
+    -66
+   ],
+   "what": "13: 2 ways off the deck",
+   "look": null,
+   "move": null
+  },
+  {
+   "i": 30,
+   "check": 13,
+   "at": [
+    2,
+    2.4,
+    66
+   ],
+   "what": "13: 2 ways off the deck",
+   "look": null,
+   "move": null
+  },
+  {
+   "i": 31,
+   "check": 15,
+   "at": [
+    -13.5,
+    0,
+    32.5
+   ],
+   "what": "15: solid within 3 m of the weir (prop collider, 1 m)",
+   "look": null,
+   "move": null
+  },
+  {
+   "i": 32,
+   "check": 15,
+   "at": [
+    13.5,
+    0,
+    -32.5
+   ],
+   "what": "15: solid within 3 m of the weir (prop collider, 1 m)",
+   "look": null,
+   "move": null
   }
  ],
  "carry": [
@@ -53188,6 +51737,11 @@
    "walks": {
     "retreat": {
      "ran": true,
+     "at": [
+      7.5,
+      1.46,
+      -67.5
+     ],
      "stretch": 14.8,
      "mark": -62.6,
      "on": 8.11,
@@ -53252,6 +51806,11 @@
      "plant": true,
      "tWeir": 9.7,
      "w1": {
+      "at": [
+       -13.37,
+       0,
+       30.83
+      ],
       "ok": true,
       "t": 7.8,
       "stuck": 0
@@ -53260,6 +51819,11 @@
      "knockout": true,
      "tGate": 8.7,
      "w2": {
+      "at": [
+       -7.31,
+       1.88,
+       67.22
+      ],
       "ok": true,
       "end": true,
       "t": 8.7,
@@ -53303,13 +51867,13 @@
    ],
    "events": [
     {
-     "t": 0.1,
+     "t": 0,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 5.3,
+     "t": 5.2,
      "k": "rate",
      "team": 0,
      "how": "retreat"
@@ -53321,7 +51885,7 @@
      "how": "×1 "
     },
     {
-     "t": 14.9,
+     "t": 14.8,
      "k": "rate",
      "team": 0,
      "how": "zone"
@@ -53339,25 +51903,25 @@
      "how": ""
     },
     {
-     "t": 19.4,
+     "t": 19.3,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 19.4,
+     "t": 19.3,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 23.7,
+     "t": 23.6,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 23.7,
+     "t": 23.6,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -53375,25 +51939,25 @@
      "how": ""
     },
     {
-     "t": 32.2,
+     "t": 32.1,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 32.2,
+     "t": 32.1,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 36.5,
+     "t": 36.4,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 36.5,
+     "t": 36.4,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -53411,25 +51975,25 @@
      "how": ""
     },
     {
-     "t": 45,
+     "t": 44.9,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 45,
+     "t": 44.9,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 49.3,
+     "t": 49.2,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 49.3,
+     "t": 49.2,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -53447,25 +52011,25 @@
      "how": ""
     },
     {
-     "t": 57.8,
+     "t": 57.7,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 57.8,
+     "t": 57.7,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 62.1,
+     "t": 62,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 62.1,
+     "t": 62,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -53483,25 +52047,25 @@
      "how": ""
     },
     {
-     "t": 70.6,
+     "t": 70.5,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 70.6,
+     "t": 70.5,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 74.9,
+     "t": 74.8,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 74.9,
+     "t": 74.8,
      "k": "pickup",
      "team": 0,
      "how": ""
@@ -53519,25 +52083,25 @@
      "how": ""
     },
     {
-     "t": 83.4,
+     "t": 83.3,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 83.4,
+     "t": 83.3,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 83.5,
+     "t": 83.4,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 83.5,
+     "t": 83.4,
      "k": "drop",
      "team": 0,
      "how": "splat",
@@ -53548,19 +52112,19 @@
      ]
     },
     {
-     "t": 86.8,
+     "t": 86.7,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 95,
+     "t": 94.9,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 95,
+     "t": 94.9,
      "k": "plant",
      "team": 0,
      "how": ""
@@ -53572,7 +52136,7 @@
      "how": ""
     },
     {
-     "t": 105.1,
+     "t": 105,
      "k": "end",
      "how": "knockout"
     }
@@ -53585,6 +52149,11 @@
    "walks": {
     "retreat": {
      "ran": true,
+     "at": [
+      -7.5,
+      1.46,
+      67.5
+     ],
      "stretch": 14.8,
      "mark": -65,
      "on": 8.11,
@@ -53649,6 +52218,11 @@
      "plant": true,
      "tWeir": 10.5,
      "w1": {
+      "at": [
+       13.37,
+       0,
+       -30.84
+      ],
       "ok": true,
       "t": 8.6,
       "stuck": 0
@@ -53657,6 +52231,11 @@
      "knockout": true,
      "tGate": 8.7,
      "w2": {
+      "at": [
+       7.31,
+       1.88,
+       -67.22
+      ],
       "ok": true,
       "end": true,
       "t": 8.7,
@@ -53700,217 +52279,229 @@
    ],
    "events": [
     {
-     "t": 0.1,
+     "t": 0,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 5.3,
+     "t": 5.2,
      "k": "rate",
      "team": 1,
      "how": "retreat"
     },
     {
-     "t": 15.1,
+     "t": 14.9,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 15.1,
+     "t": 15,
      "k": "rate",
      "team": 1,
      "how": "zone"
     },
     {
-     "t": 15.4,
+     "t": 15.2,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 15.4,
+     "t": 15.2,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 19.6,
+     "t": 19.5,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 19.6,
+     "t": 19.5,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 23.9,
+     "t": 23.8,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 23.9,
+     "t": 23.8,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 28.2,
+     "t": 28,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 28.2,
+     "t": 28,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 32.4,
+     "t": 32.3,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 32.4,
+     "t": 32.3,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 36.7,
+     "t": 36.6,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 36.7,
+     "t": 36.6,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 41,
+     "t": 40.8,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 41,
+     "t": 40.8,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 45.2,
+     "t": 45.1,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 45.2,
+     "t": 45.1,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 49.5,
+     "t": 49.4,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 49.5,
+     "t": 49.4,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 53.8,
+     "t": 53.6,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 53.8,
+     "t": 53.6,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 58,
+     "t": 57.9,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 58,
+     "t": 57.9,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 62.3,
+     "t": 62.2,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 62.3,
+     "t": 62.2,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 66.6,
+     "t": 66.4,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 66.6,
+     "t": 66.4,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 70.8,
+     "t": 70.7,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 70.8,
+     "t": 70.7,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 75.1,
+     "t": 75,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 75.1,
+     "t": 75,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 79.4,
+     "t": 79.2,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 79.4,
+     "t": 79.2,
+     "k": "pickup",
+     "team": 1,
+     "how": ""
+    },
+    {
+     "t": 83.5,
+     "k": "rate",
+     "team": 1,
+     "how": "×1 "
+    },
+    {
+     "t": 83.5,
      "k": "pickup",
      "team": 1,
      "how": ""
@@ -53923,18 +52514,6 @@
     },
     {
      "t": 83.6,
-     "k": "pickup",
-     "team": 1,
-     "how": ""
-    },
-    {
-     "t": 83.7,
-     "k": "rate",
-     "team": 1,
-     "how": "×1 "
-    },
-    {
-     "t": 83.7,
      "k": "drop",
      "team": 1,
      "how": "splat",
@@ -53945,31 +52524,31 @@
      ]
     },
     {
-     "t": 87,
+     "t": 86.9,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 96,
+     "t": 95.9,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 96,
+     "t": 95.9,
      "k": "plant",
      "team": 1,
      "how": ""
     },
     {
-     "t": 97.4,
+     "t": 97.3,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 106.1,
+     "t": 106,
      "k": "end",
      "how": "knockout"
     }
@@ -53995,8 +52574,7 @@
   11,
   12,
   13,
-  15,
-  16
+  15
  ],
  "skips": []
 }
