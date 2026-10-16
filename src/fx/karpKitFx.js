@@ -12,7 +12,7 @@ import { G, on } from '../core/ctx.js';
 const _c = new THREE.Color();
 // the crossed-out carp: a side-on fish (body, forked tail, fin, eye) under a red ring and bar, "NO CARP" below
 export function drawNoCarp(g, w, h, ink, opts = {}) {
-  const bg = opts.bg ?? '#efe9dc';
+  const bg = 'bg' in opts ? opts.bg : '#efe9dc';   // (bg: null = transparent: `??` turned the shimmer's null into the board's cream)
   if (bg) { g.fillStyle = bg; g.fillRect(0, 0, w, h); }
   if (opts.frame !== false) { g.strokeStyle = '#3b3631'; g.lineWidth = h * 0.05; g.strokeRect(h * 0.03, h * 0.03, w - h * 0.06, h - h * 0.06); }
   const cx = w / 2, cy = h * (opts.text === false ? 0.5 : 0.4), R = h * (opts.text === false ? 0.42 : 0.3);
