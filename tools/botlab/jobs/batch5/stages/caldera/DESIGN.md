@@ -700,47 +700,65 @@ Colour is never the only signal: the arrows, the words, the pitch direction and 
   (0.15 m) and carry their riders; nothing is ever above them (clear sky, the nearest static piece ≥ 3.7 m away).
 - **Nothing pinches:** every gap beside a rider is a ≤ 0.3 m seam (stones 0.25, columns 0.20 and 0.15) or ≥ 2.5 m of
   open lava. No leap gaps.
-- **No unplanned jumps:** the narrowest level gap between two floors across lava is 4.5 m (the south head's tip to the
-  island's SW corner); everything narrower is a seam. The dash-reach audit (§6.2) checks hop + air dash at both levels.
-- **Rule 44 as measured (the lava engine's fix round 3, the takeover; `lava-audit.js` at b8d1640f: every edge node over
-  lava in 16 headings, gaps to 11 m, every candidate tried, a kid stepped by the real physics from 2.6 m behind the edge;
-  a crossing is a flight over lava that comes down on the far floor within 1 m of its line; "saves" = the nav route the
-  other way minus the jump).** The round's first audit tried only the 260 shortest gaps, so it never saw a gap past ~6 m:
-  that is where "swim jumps cross 5.4–5.7 m" came from. **The kid's reach on flat ground** (take-off to touch-down at the
-  same level): running jump **3.9 m** (peak 1.35 m), swim jump **8.65 m** (a squid in the air keeps its 11.8 m/s; peak
-  1.70 m), run + air dash 6.9–7.1 m, swim + air dash 8.9–**10.4 m**. A drop adds to all of them.
+- **Unplanned jumps across the lava (rule 44) — not met; the lead decides.** Revision 2 said "the narrowest level gap
+  between two floors across lava is 4.5 m; everything narrower is a seam". **That is wrong:** the lake's shores come within
+  0.4 m of each other at hundreds of corners (between the copings, the causeway, the island, the Lakefronts, the Organs'
+  tops and the stones), and a plain running jump crosses them.
+- **Rule 44 as measured whole** (the lava engine's fix round 4, after review 4; `lava-audit.js` at df33ceab, code as at
+  37df2755: every nav node standing now at the lava's edge, 16 headings, the gap march in 0.1 m steps out to 11 m; **every
+  sample past a 0.35 m seam tried physically** — the kid stepped by the real physics from 2.6 m behind the edge, running,
+  then swimming out of its own ink, then with the real Dash Pellet's air dash pressed on the rise, at the apex and on the
+  fall; a crossing is a flight airborne over a lava cell that comes down alive on the far floor (within 0.3 m of its
+  height, ≥ 0.5 m past the edge) — **wherever it lands: 46 / 52 running crossings landed > 1 m off the line they were
+  aimed along and count too** (revision 3's audit tried only gaps ≥ 4.4 m and dropped those). "Saves" = the nav walk the
+  other way minus the flight; an off-line crossing's from where it landed. Round 3's audit never tried the 0.35–4.4 m
+  samples: that is where its "36 / 40 running crossings" came from.)
+  **The kid's reach on flat ground** (take-off to touch-down at one level): running jump **3.9 m** (peak 1.35 m), swim jump
+  **8.65 m** (a squid in the air keeps its 11.8 m/s; peak 1.70 m), run + air dash 6.9–7.1 m, swim + air dash 8.9–**10.4 m**.
+  A drop adds to every one of them.
 
-  | kind | LOW | HIGH | saves |
-  |---|---|---|---|
-  | plain running jump | 36 crossings, 13 places (Alpha's frame) | 40, 12 places | ≤ 12.5 m |
-  | swim / swim + dash / run + dash | 1,395 crossings; **772 save > 20 m** (220 > 40) at **51 places** | 1,537; **241 > 20 m** (31 > 40) at **37 places** | up to 57 m |
+  | | LOW | HIGH |
+  |---|---|---|
+  | **plain running jumps** | **822** crossings at 94 places (3 m cells, Alpha's frame); 754 of them over gaps < 4.4 m; 46 off their line | **1,244** at 106 places; 1,172 over gaps < 4.4 m; 52 off their line |
+  | …saving ≤ 5 m / 5–10 m / 10–20 m / > 20 m | 572 / 230 / **20** / 0 — **the most 12.5 m** | 931 / 291 / **22** / 0 — **the most 19.3 m** |
+  | **swim jumps, swim / run + air dash** | 1,716 (swim 1,088, swim + dash 427, run + dash 201) | 2,021 (swim 1,081, swim + dash 603, run + dash 337) |
+  | …saving > 20 m / > 40 m | **801** at 49 places / 243 — the most 56.9 m | **254** at 38 places / 39 — the most 52.6 m |
 
-  The running jumps are corners between floors joined by land (gains 0.8–12.5 m): the south bay's corners from the
-  Lakefront, its 1.4 kerb and the Moorings (1.8) to the south head's coping; the lookout column's LOW top (2.3) and the
-  island down onto the causeway across the pool's corner at the socket notch; the north head's corner by the Slump bay; the
-  East Pool's corners; at HIGH, off the Spillway Bridge / horn (2.3–2.5) to the Lakefront's and the Horn Step's copings.
-  The swim / dash routes saving > 20 m fill **the Slump flank at LOW** (the shelf, the heads and Race 1's corridor ↔ the
-  island's west face and its Organs, gaps 5–10 m, saves 21–57 m), **the south bay** (the south head, the Lakefront and the
-  Moorings ↔ Organ L and the island's south-west, 21–53 m), **Race 2's corridors** (north head ↔ the island's east / west
-  face, 20–34 m), and **at HIGH the East Pool and the Spillway mouth** (the Horn Step and the ford's banks ↔ the island's
-  south-east, 20–48 m) and Race 1's stones ↔ the island's south-west (20–41 m). The full list is the audit's output
-  (`rule 44 places saving > 20 m`).
+  The running jumps saving more than 10 m (all corners between floors joined by land): **at LOW** the south bay — the
+  Lakefront's 1.2–1.3 m coping and kerb onto the causeway (−8.5, 1.3, −22.5 → −4.6, −19.8: 12.5 m; −6.5, 1.3, −22.5:
+  11.0 m), the island's 2.3 m deck at the socket notch down onto the causeway (−8.5, 2.3, −14.5: 12.5 m; −8.5, 2.3, −13.5:
+  11.5 m), between the island's south-west coping and the Lakefront (−4.5, 1.2, −18.5 → −6.3, −23.0: 10.7 m), Organ L's
+  LOW top and the 1.4 m socket collar beside the Organs onto the causeway (10.0 / 10.2 m), the south head's coping (−13.5, 1.4, −22.25 → −8.6, −22.25: 10.0 m); **at HIGH** the same
+  places, plus **the East Pool by the deck stair** — from the deck stair / causeway corner at (13.5, 1.1, −6.5) across 3.5 m
+  of lava onto the island's deck stair (10.7, −9.3): **19.3 m**, (14.5, 1.4, −5.5): 17.3 m, the closest of them all to the
+  20 m bar — and Organ A's HIGH top onto the causeway (−7.5, 1.2, −9.5: 12.1 m). The bands by gap: gaps of 0.35–1 m save at
+  most 8.6 m at LOW (17.3 at HIGH), 3–4.4 m gaps up to 12.0 (19.3), gaps ≥ 4.4 m (from higher floors) up to 12.5.
+  The swim / dash routes saving more than 20 m: **at LOW the Slump flank** (the shelf, both heads and Race 1's corridor ↔
+  the island's west face and its Organs: gaps 5–10 m, saves 21–57 m — e.g. the shelf at (−24.5, 0, −5.5) east onto the
+  island's west coping, 56.9 m), **the south bay** (the south head, the Lakefront and the Moorings ↔ Organ L and the
+  island's south-west, 21–53 m: "the 45 m one" is among them) and **Race 2's corridors** (north head ↔ the island, 20–34 m);
+  **at HIGH the East Pool and the Spillway mouth** (the Ladle Gantry's stand, the Horn Step and the copings ↔ the island's
+  south-east, 20–53 m), Race 1's stones ↔ the island's south-west and the mould stacks (20–44 m). Every crossing, with its
+  take-off, heading, gap, kind, landing, floor and gain, is in `out/fix4/rule44-crossings.json` (the list for Bazookarp
+  checker #16: hop / gap pairs a kid makes over the lava; the audit prints it with `PAGE_ARGS full=1`).
 
-  **What this does to the lead's decision** (fix round 3, item 4: widen "the three running-jump corners" to ≥ 5.5 m; widen
-  "the 45 m swim route" to ≥ 6.5 m or put a rail lip on its take-off; dash jumps alike). It cannot make the gate pass: a
-  swim jump flies 8.65 m (10.4 with a dash), so ≥ 6.5 m stops nothing; a rail is no lip to a squid (squids pass rails,
-  `level.js`) and a kid stands on one; and "the 45 m one" is one of ~50 places per half where the lake's 5–10 m gaps are
-  swim-jumped for more than 20 m. Corners between two floors always have chords of every length, so "≥ 5.5 m" is not a
-  property a corner can have; 13 running places, not 3. **Not changed** (no geometry this round); both rule-44 checks fail.
-  The options, for the lead:
-  1. *Accept swim / dash jumps over the lava as skill movement* (they are Splatoon's own: a swim jump over a gap is a
-     basic skill), and judge plain running jumps by the skill-route bar (≤ 20 m saved: all 13 places pass, the most 12.5 m).
-     Bots never take them (the nav has no links over the lava), Bazookarp's checker #16 gets the list. Nothing to build.
-  2. *Make the lava unjumpable where it matters*: every gap the designed crossings don't cover ≥ 11 m between floors of one
-     level (the Slump flank, the south bay, both Race 2 corridors, the East Pools), or solid un-inkable lips ≥ 1.8 m (a swim
-     jump peaks at 1.70) on every such shore. Either is a stage revision (the lake, the Races, the Organs' sockets, the
-     zones, the tower track, Bazookarp's routes, the boss's ground, cover and sight lines), not an engine fix.
-  3. *Change the physics over lava* (a squid's air speed decays over the lava): a game-wide feel change; not recommended.
+  **The lead's round-3 decision cannot pass** (widen "the three running-jump corners" to ≥ 5.5 m; the 45 m swim route to
+  ≥ 6.5 m or a rail lip on its take-off; dash jumps alike): the running jumps are 94 / 106 places of corners whose chords
+  run from 0.4 m up, not three; a swim jump flies 8.65 m (10.4 with a dash), so ≥ 6.5 m stops nothing; a rail is no lip to
+  a squid (squids pass rails, `level.js`) and a kid stands on one (50016c5e tried it: reverted). **Not changed: no
+  geometry this round; both rule-44 checks fail.** The options, for the lead:
+  1. *Accept swim / dash jumps over the lava as skill movement* (Splatoon's own: a swim jump over a gap is a basic skill)
+     and judge plain running jumps by the same 20 m skill-route bar: **every running crossing passes, narrowly at HIGH**
+     (19.3 m at the East Pool's deck stair; the next 17.3, then ≤ 12.5). Nothing to build; bots never take them (the nav
+     has no links over the lava); checker #16 gets the list. If the lead wants margin, the one place over 15 m (the deck
+     stair corner over the East Pool, HIGH only: 2 crossings at 17.3–19.3 m) is a local fix — the corner pulled back 1 m,
+     or a solid kerb on it (either needs its own audit run).
+  2. *Make the lava unjumpable*: a plain running jump crosses no gap only if every corner's gap exceeds a running jump with
+     its drop (≈ 4–5 m level, more off the 2.3 m deck and the Organs) at ~2,000 corner samples, or solid un-inkable lips
+     ≥ 1.8 m (a swim jump peaks at 1.70 m) on every such shore. Either is a stage revision (the lake, the Races, the
+     Organs' sockets, the zones, the tower track, Bazookarp's routes, the boss's ground, cover and sight lines), not an
+     engine fix.
+  3. *Change the physics over the lava* (a squid's air speed decaying over it): a game-wide feel change; not recommended.
 - **Symmetric:** one lake, a 180° layout, both sides change at the same instant.
 - **Objectives never drown:** the Pour Floor (1.8), both Moorings (1.8), the whole tower track (≥ 1.2), the Pond, weir
   and Gates (≥ 1.2), the Ladle Gantry (1.2), every spawn (≥ 30 m from the region).
