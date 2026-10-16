@@ -43,7 +43,7 @@
 // 'glide:bounce' { pos, kind: 'wall' | 'player' | …, speed, team }, 'bomb:explode' { actor, pos, team, radius, kind: 'glide' },
 // 'device:hit' / 'device:down' (shot down), 'sub:destroyed' { kind: 'glide', pos, team }, 'glide:end' { why, pos, team }.
 import * as THREE from 'three';
-import { G, emit, on, clamp, lerp, angleDiff } from '../../core/ctx.js';
+import { G, emit, on, clamp, lerp, angleDiff, smoothstep } from '../../core/ctx.js';
 import { PLAYER, SUBS, subViewScale } from '../../config.js';
 import { SUB_KITS, KIT_GHOSTS, netRec, netId, netHurt, netMuted, ghostMute } from './registry.js';
 import { Physics, Hit } from '../physics.js';
@@ -338,9 +338,23 @@ function spawn(a, sub, p, v, air, fuse, R, cook, ghost, gid) {
     pred: { t: -9, x: 0, y: 0, z: 0, n: -1 }, floorB: null, floorId: -1, ctx: null };
   it.pos = it.p;   // (the generic name: cues, tests, liveIn)
   it.ctx = { team: it.team, kids: true, cd: it.cd, frameDt: 1 / 60 };
+  if (!air) fromHand(it, a);
   items.push(it);
   look(it, 0);
   return it;
+}
+// [b5-int3] out of the hand: the stone starts its look where the kid's fist held it (the prop's foot and size) and eases
+// onto its true spot and size over HAND_T s — the underhand roll's swing through (character.js _poseRoll) lets it go low
+// in front, so the stone is seen leaving the hand rather than appearing 0.5 m ahead while the arm is still back. The look
+// only: the slide, its trail, every record and every check go from p as before (each screen does it for its own copy)
+const HAND_T = 0.12, _hp = new V3(), _hs = new V3();
+function fromHand(it, a) {
+  const c = a.character, B = c?.bomb;
+  if (!B || B.kind !== KIND || !B.low || !B.group.visible || !B.group.parent || !c.kidForm) return;
+  B.group.getWorldPosition(_hp);
+  if (!(_hp.distanceTo(it.p) < 1.6)) return;
+  B.group.getWorldScale(_hs);
+  it.hand = _hp.sub(it.p).clone(); it.handS = clamp(_hs.x / (SUB_SCALE * it.vs), 0.2, 1);
 }
 // where a stone is set down: 0.5 m ahead of the feet along the aim's yaw (at the feet if a wall is closer); in the air:
 // the hand, to drop from
@@ -486,6 +500,8 @@ function correct(it, dt) {
 function look(it, dt) {
   const m = it.m, s = it.sub, sp = Math.hypot(it.v.x, it.v.z);
   m.outer.position.copy(it.p);
+  let hk = 0;   // [b5-int3] (fromHand: still on its way out of the hand)
+  if (it.hand) { hk = 1 - smoothstep(0, HAND_T, it.age); if (hk > 0) m.outer.position.addScaledVector(it.hand, hk); else it.hand = null; }
   it.spin += 0.8 * sp * dt;
   m.outer.rotation.y = it.spin;
   const k = clamp(it.fuse / it.fuse0, 0, 1), n = litFor(it.fuse / s.fuse);
@@ -493,7 +509,7 @@ function look(it, dt) {
   const last = it.fuse < 0.8 || it.state === 'hold';
   m.mats.on.emissiveIntensity = n <= 1 || last ? 1 + 2.6 * Math.max(0, Math.sin(it.age * (last ? 26 : 12))) : 2.2;
   it.flash = Math.max(0, it.flash - dt * 5.5);
-  const f = it.flash, base = SUB_SCALE * it.vs;
+  const f = it.flash, base = SUB_SCALE * it.vs * (hk > 0 ? lerp(1, it.handS, hk) : 1);
   m.model.scale.set(base * (1 + 0.14 * f), base * (1 - 0.1 * f), base * (1 + 0.14 * f));
   const white = f > 0.45;
   if (white !== !!it._white) { it._white = white; m.body.material = white ? flashMat(it.team) : m.mat0[0]; m.ink.material = white ? flashMat(it.team) : m.mat0[1]; }

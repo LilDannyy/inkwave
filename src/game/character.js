@@ -2566,7 +2566,10 @@ export class Character {
   }
   _poseRoll(P, tt, A) {
     const X = this.PX; X.set(P);
-    const w = win(tt, 0, 0.02, 0.4, 0.62), back = 1 - ease(tt / 0.06), thru = ease(tt / 0.13) * (1 - ease((tt - 0.13) / 0.22)), fol = ease((tt - 0.1) / 0.18);
+    // ([b5-int3] straight through from the carry — the stone leaves the hand low in front as it swings (glide.js fromHand
+    // draws it out of the fist): the back-swing used to come after the release, the arm going back while the stone was
+    // already down ahead)
+    const w = win(tt, 0, 0.02, 0.4, 0.62), back = 0, thru = ease(tt / 0.07) * (1 - ease((tt - 0.07) / 0.2)), fol = ease((tt - 0.06) / 0.16);
     this._poseLow(X, A, back + thru);
     X[UARML] += A.roll[0] * back + A.roll[1] * thru + A.roll[2] * fol * (1 - thru);
     X[FARML] += 0.25 * thru; X[SPINE] += 0.12 * thru; X[CHEST + 1] -= 0.25 * thru;

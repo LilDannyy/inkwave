@@ -3,9 +3,10 @@
 //   dash-pov-fwd     the Dash Pellet from the dasher's own camera, a forward dash ~0.1 s in: the camera-facing ribbon,
 //                    the speed lines at the edges, the FOV kick (the HUD up)
 //   dash-pov-back    the same, a backward dash
-//   glide-roll-mid   the Glide Bomb's underhand roll, side-on, mid-swing (~0.08 s into the throw pose), a Splattershot in
-//                    the other hand so the free arm reads
-//   glide-roll-leave the frame the stone leaves the hand (the release frame + 1)
+//   glide-roll-mid   the Glide Bomb's underhand roll, side-on, mid-swing (~0.03 s after the release: the arm coming through
+//                    low with the stone still at the fist), a Splattershot in the other hand so the free arm reads
+//   glide-roll-release the release frame: the stone at the fist that held it, the arm starting through
+//   glide-roll-leave the stone out of the hand and down (~0.07 s: the fist low in front, the follow-through)
 //   sentry-stencil   close on the Scrap Sentry's scrap plate: the team-ink squid stencil centred on it
 //   sentry-guide     holding the sentry beside testbox's wall: the guide's ring stops at the wall (where it will see), the
 //                    full 11 m past it faint
@@ -54,19 +55,30 @@
       // at hip height
       cam(V(S.x + 0.6, S.y + 0.85, S.z - 3.1), V(S.x + 0.6, S.y + 0.55, S.z));
       W.set(me, { sub: true }); step(8);   // (a tap: held ~0.13 s, so no cook)
-      W.set(me, {}); step(1);
+      W.set(me, {}); step(1);   // (the release frame)
       const t0 = G.time;
-      step(5);   // (~0.08–0.1 s into the throw pose: the arm swinging through low)
-      return { since: +(G.time - t0).toFixed(3), stones: SUB_KITS.glide.items.filter((x) => x.state !== 'dead').length };
+      step(2);   // ([b5-int3] ~0.03 s into the swing: the arm coming through low, the stone still at the fist — glide.js fromHand)
+      const st = SUB_KITS.glide.items.find((x) => x.state !== 'dead');
+      return { since: +(G.time - t0).toFixed(3), stone: st ? [+(st.m.outer.position.x - me.pos.x).toFixed(2), +st.m.outer.position.y.toFixed(2), +(st.p.x - me.pos.x).toFixed(2)] : null };
+    } },
+    { name: 'glide-roll-release', wait: 60, set: async () => {
+      clean(); step(30);
+      put(me, S.x, S.z, Math.PI / 2); me.ink = 100; step(20);
+      cam(V(S.x + 0.6, S.y + 0.85, S.z - 3.1), V(S.x + 0.6, S.y + 0.45, S.z));
+      W.set(me, { sub: true }); step(8);
+      W.set(me, {}); step(1);   // ([b5-int3] the release frame: the stone at the fist, the arm starting through)
+      const st = SUB_KITS.glide.items.find((x) => x.state !== 'dead');
+      return { stone: st ? [+(st.m.outer.position.x - me.pos.x).toFixed(2), +st.m.outer.position.y.toFixed(2), +(st.p.x - me.pos.x).toFixed(2)] : null };
     } },
     { name: 'glide-roll-leave', wait: 60, set: async () => {
       clean(); step(30);
       put(me, S.x, S.z, Math.PI / 2); me.ink = 100; step(20);
       cam(V(S.x + 0.6, S.y + 0.85, S.z - 3.1), V(S.x + 0.6, S.y + 0.45, S.z));
       W.set(me, { sub: true }); step(8);
-      W.set(me, {}); step(1);   // (the release frame: the stone set down by the hand)
+      W.set(me, {}); step(1);   // (the release frame)
+      step(4);   // ([b5-int3] ~0.07 s: the fist low in front, the stone just out of it, onto the floor ahead)
       const st = SUB_KITS.glide.items.find((x) => x.state !== 'dead');
-      return { stone: st ? [+(st.p.x - me.pos.x).toFixed(2), +st.p.y.toFixed(2)] : null };
+      return { stone: st ? [+(st.m.outer.position.x - me.pos.x).toFixed(2), +st.m.outer.position.y.toFixed(2), +(st.p.x - me.pos.x).toFixed(2)] : null };
     } },
     { name: 'sentry-stencil', wait: 80, set: async () => {
       clean(); step(30);
@@ -110,5 +122,6 @@
       return { detail: document.querySelector('.iw-kpick__dname')?.textContent };
     } },
   ];
+  if (window.__preArgs) window.__hudScenes = window.__hudScenes.filter((s) => window.__preArgs.split(',').includes(s.name));
   return window.__hudScenes.map((s) => ({ name: s.name }));
 })();
