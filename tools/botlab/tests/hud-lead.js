@@ -3,6 +3,7 @@
 //   MAP=testbox MODE=turf  PAGE=tools/botlab/tests/hud-lead.js tools/botlab/run.sh tools/botlab/page.cjs
 //   MAP=testbox MODE=zones PAGE=tools/botlab/tests/hud-lead.js tools/botlab/run.sh tools/botlab/page.cjs
 //   MAP=testbox MODE=tower PAGE=tools/botlab/tests/hud-lead.js tools/botlab/run.sh tools/botlab/page.cjs
+//   MAP=testbox MODE=bazookarp PAGE=tools/botlab/tests/hud-lead.js tools/botlab/run.sh tools/botlab/page.cjs   [karp-face]
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, hud = g.hud, G = __G;
   const { LEAD } = await import('./src/ui/hud-lead.js');
@@ -35,12 +36,12 @@
   // the banners (when up) must not cover the timer, the count badges, the widgets under the timer or the "you" caret
   const clear = () => {
     const tags = [...hud.el.querySelectorAll('.iw-lead.is-on .iw-lead__tag')].map(rect);
-    const others = [hud.timer, ...hud.zc, hud.zo.querySelector('.iw-zo__chip'), hud.twTrack, hud.twStatus, ...hud.el.querySelectorAll('.iw-sq.is-self .iw-sq__you'), ...hud.el.querySelectorAll('.iw-sq')]
+    const others = [hud.timer, ...hud.zc, hud.zo.querySelector('.iw-zo__chip'), hud.twTrack, hud.twStatus, hud.karp?.line, ...hud.el.querySelectorAll('.iw-sq.is-self .iw-sq__you'), ...hud.el.querySelectorAll('.iw-sq')]
       .filter((e) => e && e.offsetParent !== null).map(rect);
     return tags.length > 0 && tags.every((t) => others.every((o) => !hit(t, o)));
   };
   const mode = m.mode;
-  R(`mode: ${mode}, the lead HUD is on and everything starts normal`, S().mode === mode && sizes() === 'norm/norm' && banners() === '-/-', { st: S(), sizes: sizes(), banners: banners() });
+  R(`mode: ${mode}, the lead HUD is on and everything starts normal`, S().mode === (mode === 'bazookarp' ? 'karp' : mode) && sizes() === 'norm/norm' && banners() === '-/-', { st: S(), sizes: sizes(), banners: banners() });
 
   if (mode === 'turf') {
     const P = G.paint, N = P.turfTotal;
@@ -158,6 +159,43 @@
       S().leader === them && T.owner === them && L[1].grow && L[1].banner === 'lead' && !L[0].banner && L[0].shrink && snd.join() === 'lead_ours,lead_theirs', { score: T.scores(), s: T.s, L, snd });
     B.forEach((a, i) => park(a, i)); onTop(A[0]); step(1.5);
     R('you (behind) retake it on your half: normal again', T.owner === me && sizes() === 'norm/grow', { owner: T.owner, s: T.s, sizes: sizes() });
+  }
+
+  if (mode === 'bazookarp') {   // [karp-face]
+    const Kp = m.karp, A = m.actors.filter((a) => a.team === me), B = m.actors.filter((a) => a.team === them), P = Kp.R.pond;
+    const THREE = await import('three');
+    const spot = (x, z) => { let best = null, bd = Infinity; for (const id of G.nav.validIds) { const n = G.nav.nodes[id]; if (n.zone >= 0) continue; const d = Math.hypot(n.x - x, n.z - z); if (d < bd) { bd = d; best = n; } } return new THREE.Vector3(best.x, best.y, best.z); };
+    const put = (a, p) => { if (!a.alive) a.respawn(); a.pos.copy(p); a.vel.set(0, 0, 0); a.form = 'kid'; a.submerged = false; a.intent.squid = false; a.intent.move.set(0, 0, 0); };
+    const grab = (a) => { Kp.shell.clear(); Kp.pos.copy(a.pos); Kp._setPhase('free', 0); Kp.claims.length = 0; Kp._applyGrant(a); };
+    const release = () => { for (const a of m.actors) if (a.carry) Kp._release(a); Kp._setPhase('shielded'); Kp.shell.form(P, 1000, 0); Kp.pos.copy(P); };
+    const dz = Math.sign(Kp.gates[me].pos.z - P.z) || 1;   // (your Gate is on their half: +dz)
+    for (const a of m.actors) put(a, spot(P.x + (a.team ? 6 : -6), P.z + (a.slot % 4) * 1.5 - 2));
+    step(1);
+    R('level counts (100 / 100): nobody leads (the hidden coin never shows)', S().leader === -1 && sizes() === 'norm/norm' && banners() === '-/-', { count: Kp.count, sizes: sizes() });
+    Kp.count[me] = 88; Kp.reachT[me] = 30; step(1); await settle();
+    let L = look();
+    R('your count is lower (88 vs 100): you grow + LEAD; they stay normal (nobody carries it)', S().leader === me && L[0].grow && L[0].banner === 'lead' && !L[1].banner && L[1].size === 'norm' && near(L[0].scale, LEAD.grow), { L });
+    R('the rising sting played once; the banner is clear of the badges, the Carp Line and the timer', snd.join() === 'lead_ours' && clear(), snd);
+    put(A[0], spot(P.x, P.z + dz * 12)); grab(A[0]); step(1.2); await settle(); L = look();
+    R('your teammate carries it on their half: they shrink', S().shrink && L[1].shrink && near(L[1].scale, LEAD.shrink) && L[0].grow, { L, holder: A[0].name });
+    put(A[0], spot(P.x, P.z - dz * 12)); step(1.2);
+    R('… carried back on your own half: they\'re normal again', !S().shrink && sizes() === 'grow/norm', { sizes: sizes() });
+    release(); step(0.3);
+    Kp.count[me] = 88; Kp.count[them] = 88; Kp.reachT[me] = 30; Kp.reachT[them] = 50; step(1.4);
+    R('equal counts (88 / 88): whoever got there first leads (you: no change, no second sting)', S().leader === me && snd.length === 1, { reachT: Kp.reachT, snd });
+    Kp.reachT[me] = 30; Kp.reachT[them] = 10; step(1); await settle(); L = look();
+    R('… they got there first: they lead (LEAD moves to their side, the falling sting)', S().leader === them && L[1].grow && L[1].banner === 'lead' && !L[0].banner && snd.join() === 'lead_ours,lead_theirs', { L, snd });
+    put(B[0], spot(P.x, P.z - dz * 12)); grab(B[0]); step(1.2);
+    R('their carrier on your half: you shrink', S().shrink && sizes() === 'shrink/grow', { sizes: sizes() });
+    // it swims (hidden from your team, S31) back to its own half: the size holds while it is hidden
+    for (let z = -12; z <= 12; z += 2) G.paint.splat(new THREE.Vector3(P.x, P.y + 0.3, P.z + dz * z), 2.6, B[0].team, { seed: 40 + z });
+    B[0].intent.squid = true; step(0.4);
+    const hidNow = Kp.hidden(B[0]);
+    B[0].pos.copy(spot(P.x, P.z + dz * 12)); B[0].vel.set(0, 0, 0); step(1.2);
+    R('while their carrier swims hidden from you, your size holds (it would give away where it is)', hidNow && Kp.hidden(B[0]) && sizes() === 'shrink/grow', { hidden: [hidNow, Kp.hidden(B[0])], sizes: sizes() });
+    B[0].intent.squid = false; step(1.4);
+    R('… it surfaces on its own half: you\'re normal again', !Kp.hidden(B[0]) && sizes() === 'norm/grow', { sizes: sizes() });
+    release(); step(0.2);
   }
 
   // practice / boss: nothing (the whole feature is off)
