@@ -30,7 +30,7 @@
 //   R(N) + 0.3, lethal 2 from N = 3 (1 below), lingering (a route cost), its blast needing a sight line (cover counts),
 //   tIn 0.3 (a bot inside steps out); at most 48 discs in all (those nearest a bot of the other team).
 import * as THREE from 'three';
-import { G, clamp, angleDiff } from '../../core/ctx.js';
+import { G, clamp, angleDiff, on } from '../../core/ctx.js';
 import { TOWER, SPECIALS, PLAYER, SUBS, weaponRange } from '../../config.js';
 const SUBS_BOMB = () => SUBS.bomb || {};
 import { THREAT_STATS, zonePlan, towerPlan } from '../bots.js';
@@ -741,7 +741,7 @@ function pendingOwn(team) {
   return _pend;
 }
 const posOf = (o) => (o.state === 'fly' ? o.planned : o.spot);
-function idleNow(o, team) {
+export function idleNow(o, team) {
   if (o.state === 'live') return !!o.chain && !foeIn(o.chain, team);
   // (one on its way: idle unless a foe the team knows of stands within a lone one's reach of where it will float)
   const p = posOf(o), R = sizeOf(1).R - 0.35;
@@ -763,8 +763,13 @@ function wSpec(w) {
   }
   return o;
 }
-function holdFire(b, a) {
-  const w = a.weapon, melee = !!(MELEE[w.kind] || MAIN_KITS[w.kind]?.bot?.melee), pad = SB().hitR + 0.3;
+// [b5-int3] the Ink Jet's shots as a weapon (SPECIALS.jetpack: blaster-like blasts that burst where they meet the stage)
+let _jetW = null;
+const jetW = () => _jetW || (_jetW = (() => { const J = SPECIALS.jetpack || {}; return { kind: 'blaster', id: 'jetpack', range: J.range || 34, projSpeed: J.projSpeed || 30, splashRadius: J.splashRadius || 2.4, burstRadius: J.splashRadius || 2.4 }; })());
+function holdFire(b, a, busy = false) {
+  // ([b5-int3] riding an Ink Jet, its trigger fires the jet's blasts, not the main weapon — bobber-web clear: a teammate's
+  // jet blast blew a human's web 11 m off, judged as its Splatling's stream)
+  const w = a.specialActive?.id === 'jetpack' ? jetW() : a.weapon, melee = !!(MELEE[w.kind] || MAIN_KITS[w.kind]?.bot?.melee), pad = SB().hitR + 0.3;
   const P = pendingOwn(a.team);
   // (right by it, whatever it holds: a blade's arc, a drum or a brush, a flick's splash, a fist's burst all land within a
   // couple of metres; a melee weapon's sweep reaches 4 m ahead, 1.6 m either side — of its aim or its body's facing)
@@ -786,6 +791,24 @@ function holdFire(b, a) {
   const cp = Math.cos(b.aimPitch), ws = wSpec(w);
   const sr = ws.sr;
   _a.set(a.pos.x, a.pos.y + 1.15, a.pos.z); _d.set(fx * cp, Math.sin(b.aimPitch), fz * cp);
+  // [b5-int3] a shot flies from the muzzle to the brain's aim point (bots.js a.aimPoint; weapons.js _aimFrom), not along its
+  // pitch: painting (no foe, no threat owning the aim) that point is 6 m out along the aim and never under the bot's own
+  // feet — aimed down, the shot goes out shallower than the aim, to the floor 6 m out, not where the pitch meets it 2–4 m
+  // out (bobber-web clear: a blaster bot painting at −0.28 / −0.49 blew webs 7–8 m ahead it had in its aim)
+  if (!busy && !(b.mode === 'fight' && b.target) && b.mode !== 'refill' && _d.y < 0) {
+    const py = Math.max(a.pos.y, a.pos.y + 1.1 + Math.sin(b.aimPitch) * 6);
+    _d.set(fx * cp * 6, py - _a.y, fz * cp * 6).normalize();
+  }
+  // [b5-int3] a shot that bursts (a blaster's blob, a fist …) and meets the stage within 1.6 m — a wall right ahead — goes off
+  // there: its splash reaches round the bot, behind it too (bobber-web clear: a blaster bot facing a wall blew webs 2.0–2.2 m
+  // beside and behind it)
+  if (ws.bursts && sr >= 1) {
+    const g0 = G.physics.raycast(_a, _d, 1.6, _hh);
+    if (g0.hit) {
+      const qx = _a.x + _d.x * g0.dist, qy = _a.y + _d.y * g0.dist, qz = _a.z + _d.z * g0.dist, rr = sr + pad;
+      for (const o of near(qx - rr, qz - rr, qx + rr, qz + rr, _nr)) if (o.team === a.team && o.state === 'live' && o.chain && Math.hypot(o.spot.x - qx, o.spot.y - qy, o.spot.z - qz) < rr && idleNow(o, a.team)) return o;
+    }
+  }
   let L = Math.max(weaponRange(w), w.waveRange || 0) * 1.05;
   // (the foe it's fighting plus a miss's carry — but a shot that lodges or bursts at the end of its flight, an arrow or a
   // blaster's blob, goes off wherever a miss ends: its whole reach)
@@ -1087,7 +1110,7 @@ function stormHits(a) {
 function specialAim(a) {
   const s = a.specialActive;
   if (!s) return;
-  if (s.id === 'strike' && s.aiming && s.target && !s._webMoved) {
+  if (s.id === 'strike' && s.aiming && s.target) {   // ([b5-int3] every frame it aims, not once: a web laid while it aims)
     const R = (SPECIALS.strike?.radius || 5.5) + 0.5;
     for (let k = 0; k < 4; k++) {
       const o = webHit(a.team, s.target.x, s.target.y || a.pos.y, s.target.z, R);
@@ -1097,7 +1120,6 @@ function specialAim(a) {
       s.target.x = p.x + (dx / l) * (R + SB().hitR + 0.6); s.target.z = p.z + (dz / l) * (R + SB().hitR + 0.6);
       BOBBER_BOT.strikeMoves = (BOBBER_BOT.strikeMoves || 0) + 1;
     }
-    s._webMoved = true;
   }
   if (s.id === 'wail' && s.autoT != null && s.t >= s.autoT - 1 / 30 && s.t < (s.def?.holdTime ?? 6) - 0.5) {
     const d = SPECIALS.wail, p = clamp(a.aimPitch, -0.3, 0.3), cp = Math.cos(p), fx = Math.sin(a.aimYaw) * cp, fy = Math.sin(p), fz = Math.cos(a.aimYaw) * cp;
@@ -1111,6 +1133,16 @@ function specialAim(a) {
   }
 }
 
+// (a special pressed right by an idle web of its team's is held: a Splashdown, a Bomb Barrage, an Inkjet's first shots
+// go off around it — it waits until it has moved off)
+function specialStart(a, it) {
+  // ([b5-int3] 5 m, or a Tidal Slam's own 5.2 m blast and the 1.4 m it drifts while it rises)
+  const spR = a.specialId === 'slam' ? (SPECIALS.slam?.radius || 5.2) + 1.6 : 5;
+  for (const o of near(a.pos.x - spR, a.pos.z - spR, a.pos.x + spR, a.pos.z + spR, _nr)) if (o.team === a.team && o.state === 'live' && o.chain && Math.hypot(o.spot.x - a.pos.x, o.spot.z - a.pos.z) < spR && !foeIn(o.chain, a.team)) { it.special = false; BOBBER_BOT.spHolds = (BOBBER_BOT.spHolds || 0) + 1; break; }
+  // ([b5-int3] an Ink Tempest's cloud — thrown on the press, it rains 3.4 m round for 6.5 s drifting on 7 m along its
+  // throw: held while that strip is over an own idle web)
+  if (it.special && a.specialId === 'storm' && stormHits(a)) { it.special = false; BOBBER_BOT.spHolds = (BOBBER_BOT.spHolds || 0) + 1; BOBBER_BOT.stormHolds = (BOBBER_BOT.stormHolds || 0) + 1; }
+}
 function burstClear(a, move) {
   const L = SUB_KITS.boomerang?._items;
   if (!L || !L.length) return;
@@ -1176,6 +1208,9 @@ function exposure() {
 // [b5-int3] (tests: BOBBER_BOT.traceOn) a bot's last 90 frames as botAct saw them — its intent, its weapon's state, its aim —
 // handed to a stray's note (bobber.js strayNote) when its fire sets off an idle web of its team's
 const r2t = (x) => Math.round(x * 100) / 100;
+// ([b5-int3] tests: a stray's note names its owner's last sub throw — a blast by a bot is keyed by its weapon's kind, and a
+// Shaker's or a Pop Pellet's goes off by an owner holding anything)
+on('sub:use', (e) => { if (BOBBER_BOT.traceOn && e?.actor) { e.actor._bobSubT = G.time; e.actor._bobSubK = e.kind; } });
 function trace(b, a, it, busy) {
   const L = b._bobTr || (b._bobTr = []), wr = a.weaponRunner;
   if (L.length >= 90) L.shift();
@@ -1198,7 +1233,10 @@ export function botAct(b, dt, it, move, busy) {
   const spOn = !!a.specialActive || a.climbing;
   if (spOn) {
     b._bob = null;
-    if ((it.fire || it.special) && items.length) { const o = holdFire(b, a); if (o) { it.fire = false; BOBBER_BOT.holds++; BOBBER_BOT.spFireHolds = (BOBBER_BOT.spFireHolds || 0) + 1; } }
+    // ([b5-int3] a special pressed on a wall climb starts all the same: held by a web as on the ground — bobber-web clear: a
+    // Mitts bot's Tidal Slam, pressed climbing, came down 4.2 m from a web)
+    if (it.special && !a.specialActive && items.length) specialStart(a, it);
+    if ((it.fire || it.special) && items.length) { const o = holdFire(b, a, busy); if (TR) TR.hf = o ? 1 : 0; if (o) { it.fire = false; BOBBER_BOT.holds++; BOBBER_BOT.spFireHolds = (BOBBER_BOT.spFireHolds || 0) + 1; } }
     // ([b5-int3] a Crab Rig's cannon — its sub press — lobs a shell that blows 3 m round where it lands: held while that is by
     // one of its team's idle webs — bobber-web clear: a teammate's crab shells blew a human's webs)
     // ([b5-int3] a Kraken's jump attack — its fire — blows 2.3 m round where it lands: held while that is by an own idle web)
@@ -1255,7 +1293,7 @@ export function botAct(b, dt, it, move, busy) {
     // ([b5-int3] and fresh on the frame it looses — a press, or the let-go of a draw / charge / wind-up: what goes then goes
     // along the aim now, which may have swung since the last ask — bobber-web clear: a bow bot's draw loosed into a web)
     const looses = (it.fire && !b._bobFire0) || (going && !it.fire);
-    if (looses || !b._bobHF || G.time - b._bobHF.t >= 0.05 || G.time < b._bobHF.t) { o = holdFire(b, a); b._bobHF = { t: G.time, o }; }
+    if (looses || !b._bobHF || G.time - b._bobHF.t >= 0.05 || G.time < b._bobHF.t) { o = holdFire(b, a, busy); b._bobHF = { t: G.time, o }; }
     if (o && o.state !== 'live' && o.state !== 'open' && o.state !== 'fly') o = null;
     if (TR) TR.hf = o ? 1 : 0;
     if (o) {
@@ -1278,14 +1316,7 @@ export function botAct(b, dt, it, move, busy) {
   if (items.length) burstClear(a, move);
   // (nor a special started right by them: a Splashdown, a Bomb Barrage, an Inkjet's first shots go off around it — it
   // waits until it has moved off its team's idle chain)
-  if (it.special && !a.specialActive && items.length) {
-    // ([b5-int3] 5 m, or a Tidal Slam's own 5.2 m blast and the 1.4 m it drifts while it rises)
-    const spR = a.specialId === 'slam' ? (SPECIALS.slam?.radius || 5.2) + 1.6 : 5;
-    for (const o of near(a.pos.x - spR, a.pos.z - spR, a.pos.x + spR, a.pos.z + spR, _nr)) if (o.team === a.team && o.state === 'live' && o.chain && Math.hypot(o.spot.x - a.pos.x, o.spot.z - a.pos.z) < spR && !foeIn(o.chain, a.team)) { it.special = false; BOBBER_BOT.spHolds = (BOBBER_BOT.spHolds || 0) + 1; break; }
-    // ([b5-int3] an Ink Tempest's cloud — thrown on the press, it rains 3.4 m round for 6.5 s drifting on 7 m along its
-    // throw: held while that strip is over an own idle web)
-    if (it.special && a.specialId === 'storm' && stormHits(a)) { it.special = false; BOBBER_BOT.spHolds = (BOBBER_BOT.spHolds || 0) + 1; BOBBER_BOT.stormHolds = (BOBBER_BOT.stormHolds || 0) + 1; }
-  }
+  if (it.special && !a.specialActive && items.length) specialStart(a, it);
   const P = a.sub?.kind === 'bobber' ? planOf(b) : null, fighting = !!(b.target && b.seeTimer > 0);
   // (laying a chain it stays put, whatever else has its aim — a device to shoot, a threat — short of a fight: its links
   // were picked from here. Run dry by its last link, bots.js sends it to refill: it refills where it stands — a dive in its

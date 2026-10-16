@@ -202,7 +202,10 @@
     const by = firstTrig ? (firstTrig.e.by === me ? 'script' : firstTrig.e.by?.team === me.team ? (firstTrig.foeIn ? 'mate on a foe' : 'mate') : 'blast/other') : null;
     // ([b5-int3] every chain of the web a teammate set off with no foe in its reach — not only the first)
     // (a chain reaction — 'chain:…', another of its chains' blast — is the first chain's doing, not a decision: listed apart)
-    const mateIdle = trig.filter((x) => x.e.by && x.e.by !== me && x.e.by.team === me.team && !x.foeIn && !String(x.via).startsWith('chain:')).map((x) => ({ t: rel(x), by: x.e.by.name, w: x.e.by.weapon?.kind, sub: x.e.by.sub?.kind, n: x.e.n, via: x.via, stray: x.stray }));
+    // ([b5-int3] not a teammate's stray: a web the script laid into that teammate's standing fire already there — a Vortex
+    // Strike's vortex, an Ink Tempest's cloud, a Howl Box's beam, set off by it within 0.5 s of floating: 'sweep' at age < 0.5)
+    const laidInto = (x) => String(x.via).startsWith('sweep:') && x.stray && x.stray.age != null && x.stray.age < 0.5;
+    const mateIdle = trig.filter((x) => x.e.by && x.e.by !== me && x.e.by.team === me.team && !x.foeIn && !String(x.via).startsWith('chain:') && !laidInto(x)).map((x) => ({ t: rel(x), by: x.e.by.name, w: x.e.by.weapon?.kind, sub: x.e.by.sub?.kind, n: x.e.n, via: x.via, stray: x.stray }));
     const reactions = trig.filter((x) => String(x.via).startsWith('chain:')).length;
     const lastDis = disarms.length ? disarms[disarms.length - 1].t : null;
     const cleared = variant === 'clear' && !trig.length && expired === 0 && disarms.length === layN && layN > 0;

@@ -989,6 +989,38 @@
         parkAll();
         R('bots: the long tail — a Shaker\'s drips from the hand, a Waddle\'s chase to a foe by the web, a Vortex Strike\'s spot on it, an Ink Tempest\'s cloud, a Howl Box\'s line, a draw let go on a cached answer, a Cutlass\'s 66° crescent: each held (or moved, or put off) by an own idle web, each beside a case that goes', Object.values(res).every(Boolean), { res, info });
       }
+      // [b5-int3] the next round (bobber-web clear, its strays traced with the owner's special and last sub): each shot judged
+      // by the way it really goes
+      {
+        const res = {}, info = {};
+        const mateAt = (yaw, wid = 'shooter') => { put(mate, V(0, 0, 0), yaw); mate.setWeapon(wid); mate.setSub('shaker'); mate.bot.reset(); mate.ink = 100; mate.bot._bob = null; mate.bot._bobHF = null; mate.bot.target = null; mate.bot.mode = 'paint'; mate.bot.aimYaw = mate.aimYaw = yaw; mate.bot.aimPitch = mate.aimPitch = 0; mate.specialActive = null; mate.climbing = false; zero(mate); };
+        const act = () => K.botAct(mate.bot, DT, mate.intent, new THREE.Vector3(), false);
+        // a blaster bot painting (no foe) aimed down at −0.3: its blob goes to the brain's aim point 6 m out, never under its
+        // feet — out to the floor 6 m ahead, not where its pitch meets it 3.7 m out — and bursts there: a web 9 m ahead is in
+        // its 2.6 m splash (held), one 13 m ahead isn't
+        for (const [tag, z] of [['9m', 9], ['13m', 13]]) { reset(); drop(me, 0, z); settle(); mateAt(0, 'blaster'); mate.bot.aimPitch = mate.aimPitch = -0.3; zero(mate); mate.intent.fire = true; act(); res['paintLine:' + tag] = (!mate.intent.fire) === (tag === '9m'); }
+        // a blaster bot facing a wall 0.6 m ahead: its blob bursts on it at once, its splash round the bot — a web 2.1 m behind
+        // it is held; with the wall gone, the blob flies off and that web is clear
+        const Lv = G.level, wb = Lv.addDynamic({ tag: 'test:wall' });
+        for (const tag of ['wall', 'open']) {
+          reset(); drop(me, 0, -2.1); settle();
+          Lv.moveDynamic(wb, tag === 'wall' ? V(0, 1.5, 0.75) : V(0, -60, 0), V(1.5, 1.5, 0.15), 0); wb.dp.set(0, 0, 0);
+          mateAt(0, 'blaster'); zero(mate); mate.intent.fire = true; act(); res['burstAt:' + tag] = (!mate.intent.fire) === (tag === 'wall');
+        }
+        Lv.moveDynamic(wb, V(0, -60, 0), V(0.1, 0.1, 0.1), 0); wb.solid = false;
+        // riding an Ink Jet its trigger fires the jet's blasts (34 m, a 2.4 m splash), not its Splattershot (12.5 m): a web
+        // 22 m ahead is held; one 22 m off to the side isn't
+        for (const [tag, x, z] of [['ahead', 0, 22], ['side', 22, 0]]) { reset(); drop(me, x, z); settle(); mateAt(0, 'shooter'); mate.specialActive = { id: 'jetpack', kind: 'jetpack', t: 1 }; zero(mate); mate.intent.fire = true; act(); mate.specialActive = null; res['jet:' + tag] = (!mate.intent.fire) === (tag === 'ahead'); }
+        // a Vortex Strike's spot is checked every frame it aims: a web laid under it after its first frame is moved off
+        { reset(); drop(me, 20, 20); settle(); mateAt(0); const sp = { id: 'strike', kind: 'strike', aiming: true, target: V(0, 0, 9), t: 0.2 };   // (a web far off: the check runs from the first frame)
+          mate.specialActive = sp; act(); const t1 = sp.target.clone();
+          drop(me, 0, 9); settle(); mate.specialActive = sp; act(); mate.specialActive = null;
+          res.strikeLater = t1.distanceTo(V(0, 0, 9)) < 1e-6 && Math.hypot(sp.target.x, sp.target.z - 9) > SPECIALS.strike.radius + B.hitR; info.strikeLater = [r2(sp.target.x), r2(sp.target.z)]; }
+        // a Tidal Slam pressed on a wall climb is held by a web 3 m off as on the ground; 9 m off it goes
+        for (const [tag, z] of [['3m', 3], ['9m', 9]]) { reset(); drop(me, 0, z); settle(); mateAt(0); mate.climbing = true; const sid = mate.specialId; mate.specialId = 'slam'; zero(mate); mate.intent.special = true; act(); mate.climbing = false; mate.specialId = sid; res['slamClimb:' + tag] = (!mate.intent.special) === (tag === '3m'); }
+        parkAll();
+        R('bots: a blaster\'s painting blob judged where it goes (to the aim point 6 m out, not under the feet), its burst on a wall right ahead (splash round the bot), an Ink Jet\'s blasts as the trigger\'s, a Vortex Strike\'s spot re-checked while it aims, a Tidal Slam pressed on a climb: each held (or moved) by an own idle web, each beside a case that goes', Object.values(res).every(Boolean), { res, info });
+      }
     }
 
     // ============================================================================================ drawing, HUD, guide
