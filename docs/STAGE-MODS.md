@@ -357,7 +357,8 @@ clamp: shorten `rig.curDist` / `rig.boom.x`). The lens never dips under a module
   `location.search` itself. This is the contracts' `ERA=` / `LAVA=` (bluestone T3, caldera T1 / T2). It holds for the
   whole run (stageart loads the page once for all its `STAGES`). `ERA=1|2|3` still works as `PAGEQ='era=n'` [b5-eras];
   any other `ERA`, or one that disagrees with `PAGEQ`'s era, stops the harness at boot (a `HARNESS` line: it used to be
-  ignored silently, so a per-era run measured era 1).
+  ignored silently, so a per-era run measured era 1). `ERA_FROM=a ERA_TO=b FRONT=r` is `PAGEQ='erafrom=a&erato=b&front=r'`
+  (Bluestone's frozen front for the split-time stage art, bluestone T3): all three or none, never with `ERA`.
 - **Per-state bakes**: `W.bakePasses()` → up to three functions, each putting the world in one state (eras:
   `[() => this.apply(1, { instant: true }), () => this.apply(2, …), () => this.apply(3, …)]`). `build/bake-ao.cjs` and
   `tools/botlab/bake.cjs` then trace once per state into its own channel of an RGB PNG (colour type 2; the JSON gets
@@ -448,7 +449,7 @@ Three conventions the contracts did not use, used here:
 | H21 | Bazookarp `karpField.setState(era)` at `era:done`, `dangerAt` | the Bazookarp side listens to `era:done` and calls `G.match.stage.danger(node, 0)` itself (its SPEC §2.7): `dangerAt(pos, pad)` on R (`matchAs: 'eras'`), `R.danger` → `this.dangerAt` for the generic query. **The field's states**: `R.karpStates()` → `[{ key: 1…3, nodeOk(id) }]` (the union graph's per-era `valid`), forwarded by the registry as `G.match.stage.karpStates()` (one small [b5-eras] query in stageMods.js: the karp engine already calls it). `restMask(era)`: a node valid in the era in force and every later one; the layout's `bazookarp.statesAdvance: true` tells the field to AND its per-state rest flags the same way. Integration note: karpField builds its carrier graph from `nav.valid` at match start (era 1's): it must read `nav.anyValid` (every era's nodes) so the era-3 states hold the Halo and the floating garden. `tests/eras-karp.js` drives a stand-in field through the surface and skips the real-module part until `src/game/karpField.js` is on the branch |
 | T1 | bake ×3 into R / G / B | **served**: `W.bakePasses()` → `[() => apply(1, { instant: true }), () => apply(2, …), () => apply(3, …)]`; the bake writes an RGB PNG (channel e−1 = era e) and `channels: 3` in the JSON (the contract's `eras: 3`); `W.bakeMode(false)` returns to era 1. The loader takes an RGB PNG as it is |
 | T2 | `check-maps`: era-aware overlaps, per-era builds, the static rules | **served**: `registerStageData('eras', { overlapOk(a, b), check(layout, api) })` (`api` = `{ id, mode, defs, solids, shape, corners, overlap2D }`: build `bluestone#1…#3` there) |
-| T3 | `ERA=` in shoot / stageart / tests; `ERA_FROM` / `ERA_TO` / `FRONT` | **served**: `PAGEQ='era=2'` (or `'erafrom=1&erato=2&front=30'`), read by the module from `location.search` |
+| T3 | `ERA=` in shoot / stageart / tests; `ERA_FROM` / `ERA_TO` / `FRONT` | **served**: `PAGEQ='era=2'` (or `ERA=2`), read by the module from `location.search`. The frozen front: `PAGEQ='erafrom=1&erato=2&front=30'` (or `ERA_FROM=1 ERA_TO=2 FRONT=30`): every group in era 2 inside r 30 and era 1 outside it (solidity, the shader's front, the props, the curtain and the holograms at r), held there every frame, the clock never moving it; the sky stays era `from`'s. `StageEras.freeze({ from, to, front })` does the same from a script; `debugJump` lets it go (final review 2, issue 5: the doc said served before it was) |
 | T4 | `bazookarp-check.cjs ERA=` | the Bazookarp checker (`PAGEQ` serves it too) |
 
 Nothing by hand.

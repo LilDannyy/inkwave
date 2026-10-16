@@ -61,7 +61,9 @@ W=960 H=600 MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botl
   reads its own switch from `location.search`: `?era=`, `?lava=` …). `ERA=1|2|3` is the same as `PAGEQ='era=n'`
   (Bluestone's era audit); any other `ERA` (`all`, a typo) or one that disagrees with `PAGEQ`'s era stops the harness at
   boot with a `HARNESS` line. match.cjs / tower-match.cjs print the era a Bluestone match started in (`ERAS` line) and
-  tower-check its own `ERA` line, so a mislabelled per-era run shows in its log.
+  tower-check its own `ERA` line, so a mislabelled per-era run shows in its log. `ERA_FROM=a ERA_TO=b FRONT=r` is
+  `PAGEQ='erafrom=a&erato=b&front=r'`: Bluestone frozen mid-jump (era a outside a front stopped at r m, era b inside it)
+  for the split-time stage art, e.g. `STAGES=bluestone ERA_FROM=1 ERA_TO=2 FRONT=30 … stageart.cjs` (all three or none).
 - **Useful page-script globals:**
   - `window.__inkwave` (the game): `.match`, `.match.local`, `.debug.freeze()` / `.step(ms)` / `.freezeBots()`
   - `window.__G` (shared systems)

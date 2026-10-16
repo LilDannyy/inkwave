@@ -23,6 +23,8 @@
 // frames  no frame over 50 ms during a jump (performance.now() round each simulated, rendered frame)
 // sky     12c: the time-lapse from J to done (the sun swings, the clouds race, exposure and the grade held) and the new
 //         era's look settling at done (the env map rebuilt once)
+// freeze  T3, the split-time stage art (final review 2, issue 5): StageEras.freeze / ?erafrom=1&erato=2&front=30 (run it
+//         with PAGEQ= too: the page then loads frozen) holds every group in its era at the front, the looks and the curtain
 // modes   a Boss Battle starts in era 2 and never jumps; Practice starts in era 1 and cycles 1 → 2 → 3 → 1
 // first   (review 2, issue 1; first on a fresh page: PAGE_ARGS='only=first' or the default order) the page's first jump on
 //         the real schedule compiles no shader program from J − 20 to done + 1.5 (renderer.info.programs never grows:
@@ -36,7 +38,7 @@
   const { SUBS, PLAYER } = await import('./src/config.js');
   const { SFX } = await import('./src/audio/audio.js');
   const { Hit } = await import('./src/game/physics.js');
-  const parts = (/only=([\w,]+)/.exec(String(window.__pageArgs || ''))?.[1] || 'first,sched,flip,fall,shove,rescue,device,zip,guard,fx,frames,sky,modes').split(',');
+  const parts = (/only=([\w,]+)/.exec(String(window.__pageArgs || ''))?.[1] || 'first,sched,flip,fall,shove,rescue,device,zip,guard,fx,frames,sky,freeze,modes').split(',');
   const dbg = g.debug;
   dbg.freeze();
   const calm = () => { for (const a of g.match.actors) { if (a.bot) a.bot.update = () => {}; if (a.intent) { a.intent.move?.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.jump = a.intent.sub = a.intent.special = false; } } };
@@ -472,6 +474,33 @@
   }
 
   // ------------------------------------------------------------------------------------------- modes (last: new matches)
+  // ------------------------------------------------------------------------------------------- freeze (T3: the stage art)
+  // (final review 2, issue 5) the split-time stage art's frozen front: ?erafrom=a&erato=b&front=r (PAGEQ, or ERA_FROM /
+  // ERA_TO / FRONT on the harnesses: then the page loaded frozen, W.frozen) or StageEras.freeze(): every group inside r in
+  // era b and outside it in era a — solidity as that era's — the shader's front at r, both eras' meshes up, the curtain at
+  // r; 5 s of match clock and a clock snap move nothing (no flip, no event); debugJump lets it go
+  if (parts.includes('freeze')) {
+    const url = W.frozen, F = url || { from: 1, to: 2, front: 30 };
+    if (!url) { E.debugJump(F.from, { instant: true }); step(0.2); E.freeze(F); }
+    step(0.2);
+    const snap = () => ({ phase: E.phase, front: +E.front.toFixed(2), uEra: W.uniforms.uEra.value.toArray().map((v) => +v.toFixed(2)), eras: W.groups.map((q) => q.era).join(''), flips: E.stats.flips,
+      curtain: W.fx?.curtain ? { vis: W.fx.curtain.visible, r: +W.fx.curtain.scale.x.toFixed(1) } : null, meshes: W.meshes.filter((m) => m.visible).map((m) => m.userData.eraMask).sort().join('') });
+    const s0 = snap(), wrong = W.groups.filter((q) => q.era !== (q.rg <= F.front ? F.to : F.from)).map((q) => q.key);
+    const solid = W.groups.every((q) => q.blocks.every((id) => L.blocks[id].solid === !!has(L.blocks[id].presence || 7, q.era)));
+    const fired = []; const offEv = (await import('./src/core/ctx.js')).on('era:flip', () => fired.push('flip'));
+    g.match.time -= 5; step(5);
+    E.seek(E.tNow + 3, 'clock'); step(0.1);
+    offEv?.();
+    const s1 = snap();
+    const inside = W.groups.filter((q) => q.rg <= F.front).length, outside = W.groups.length - inside;
+    R('T3 (final review 2, issue 5): the frozen front (the split-time stage art) — inside r every group in the later era, outside it the earlier, solid as their era; the shader\'s front, both eras\' meshes and the curtain at r; 5 s of clock and a clock snap move nothing',
+      wrong.length === 0 && solid && inside > 0 && outside > 0 && s0.phase === 'jump' && Math.abs(s0.front - F.front) < 0.05 && s0.uEra[0] === 1 << (F.from - 1) && s0.uEra[1] === 1 << (F.to - 1) && Math.abs(s0.uEra[2] - F.front) < 0.05
+        && s0.curtain && s0.curtain.vis && Math.abs(s0.curtain.r - F.front) < 0.2 && JSON.stringify(s0) === JSON.stringify(s1) && fired.length === 0,
+      { fromUrl: !!url, F, inside, outside, wrong, solid, before: s0, after: s1, fired: fired.length });
+    E.debugJump(1, { instant: true }); step(0.2);
+    R('T3: … and debugJump lets it go (the world whole in era 1, no curtain)', E.phase !== 'jump' && W.groups.every((q) => q.era === 1) && !(W.fx?.curtain?.visible), { phase: E.phase, eras: W.groups.map((q) => q.era).join('').slice(0, 40) });
+  }
+
   if (parts.includes('modes')) {
     const waitPlaying = async () => { for (let i = 0; i < 300; i++) { if (g.match?.state === 'playing') return true; await new Promise((r) => setTimeout(r, 100)); } return false; };
     dbg.unfreeze?.();

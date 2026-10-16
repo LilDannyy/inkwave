@@ -59,6 +59,17 @@ function auditEra() {
   const n = v ? +v : 0;
   return n === 1 || n === 2 || n === 3 ? n : 0;
 }
+// the stage-art switch (DESIGN §5.8, ENGINE T3): ?erafrom=a&erato=b&front=r — the world frozen mid-jump, era a outside a
+// front stopped at radius r m and era b inside it (each group's solidity, the shader's front, the props, the curtain and
+// the holograms at r; the sky stays era a's); the clock never moves it. PAGEQ='erafrom=1&erato=2&front=30', or
+// ERA_FROM=1 ERA_TO=2 FRONT=30 on the botlab harnesses (stageart.cjs, shoot.cjs …)
+function auditFront() {
+  let q = null;
+  try { if (typeof location !== 'undefined' && location.search) q = new URLSearchParams(location.search); } catch (e) { /* no page */ }
+  if (!q || !q.has('erafrom')) return null;
+  const a = +q.get('erafrom'), b = +q.get('erato'), r = +q.get('front'), ok = (n) => n === 1 || n === 2 || n === 3;
+  return ok(a) && ok(b) && a !== b && Number.isFinite(r) && r >= 0 ? { from: a, to: b, front: r } : null;
+}
 
 // ================================================================================================== the world
 export class EraWorld {
@@ -67,7 +78,8 @@ export class EraWorld {
     this.names = E.names || ['1880s', 'TODAY', '3000s'];
     this.speed = E.speed || 25; this.guard = E.guard ?? 0.5; this.warn = E.warn ?? 10; this.prebell = E.prebell ?? 20;
     this.dissolve = this.speed * 0.3;   // the 0.3 s visual dissolve at a flip, in metres of front travel
-    this.audit = auditEra();
+    this.frozen = auditFront();   // (the stage art: { from, to, front } or null)
+    this.audit = this.frozen ? this.frozen.from : auditEra();
     this.mode = ctx.mode;
     this.planGroups = eraGroups(eraPieces(ctx.layout));   // (r_g for the props, before the Level exists)
     const V4 = (a = 0, b = 0, c = 0, d = 0) => new THREE.Vector4(a, b, c, d);
@@ -526,6 +538,7 @@ export class StageEras {
     else { W._setNavEra(st); W.looks(st, st, -1, 0, 0); }
     if (!m.attract) W._syncTheme();
     this.chip = m.attract ? null : new EraHud(this);   // (not `hud`: R.hud is a registry hook name)
+    if (W.frozen && !m.attract) this.freeze(W.frozen);
     emit('era:set', { era: st, instant: true, why: 'start' });
   }
   get plan() { return this.over || this.sched; }
@@ -603,6 +616,7 @@ export class StageEras {
     // (a clock easing back a little holds the world where it is: monotonic between seeks)
     const t = clockT > this._tHigh ? clockT : this._tHigh;
     this._tHigh = t;
+    if (this._frz) { this._frozenView(); return; }
     const list = this.jumps(t);
     // every group to its era at this moment (a pure function of the clock): the front flips each when it reaches r_g
     for (const g of W.groups) { const e = this.eraAt(g.rg, t, list); if (g.era !== e) this._flip(g, e, t); }
@@ -623,6 +637,7 @@ export class StageEras {
   seek(t, why = 'clock') {
     const W = this.W, list = this.jumps(t), was = this._tHigh;
     this._tHigh = t;
+    if (this._frz) { this.freeze(this._frz); return; }
     for (const [k, at] of this._fired) if (at > t) this._fired.delete(k);   // (what lies ahead again may fire again)
     for (const g of W.groups) { const e = this.eraAt(g.rg, t, list); if (g.era !== e) this._flip(g, e, t); }
     const e = this.eraInForce(t, list);
@@ -1218,6 +1233,30 @@ export class StageEras {
     } else if (U.w) { U.w = 0; W._sets(k >= 1 ? J.to : J.from); }
   }
 
+  // ---------------------------------------------------------------- the stage art's frozen front (?erafrom … : auditFront)
+  // every group in its era at the front (b inside r, a outside), the looks, the curtain and the holograms at r — held
+  // there every frame; no event, flip or jump runs (the clock never moves it). Also callable from a test or a shot script
+  freeze({ from, to, front }) {
+    const W = this.W;
+    this._frz = { from, to, front };
+    this.over = { start: from, jumps: [] };
+    this._release();
+    for (const g of W.groups) { const e = g.rg <= front ? to : from; if (g.era !== e) { W._setGroup(g, e); W._flipCells(g); } }
+    W._setNavEra(from);
+    this._frzJ = null;
+    this._frozenView();
+    return this.state();
+  }
+  _frozenView() {
+    const W = this.W, F = this._frz, t = this.tNow;
+    const J = this._info({ from: F.from, to: F.to, at: +(t - F.front / W.speed).toFixed(4) });
+    this.phase = 'jump'; this.cur = J; W.jumping = true;
+    if (!this._frzJ) { W.fx?.setJump(J); this._frzJ = J; }
+    W.looks(F.from, F.to, F.front, 0, 0, F.from, F.to);
+    W.fx?.update(1 / 60, { t, jump: J, phase: 'jump', front: F.front, warnK: 0, warnIn: 1, ring: 0, pickup: 0, beam: 0, pulse: 0 });
+    this.chip?.update({ era: F.front > 30 ? F.to : F.from, phase: 'jump', next: null, prog: 1 });
+  }
+
   // ---------------------------------------------------------------- queries
   // on / in a piece that changes in the coming or running jump (from the warning to done)
   dangerAt(pos, pad = 0.5) {
@@ -1258,6 +1297,7 @@ export class StageEras {
   // tests and audits only: a jump to `to` starting inS seconds from now (the warning and the pre-bell run if inS allows),
   // or the world put in `to` at once (instant)
   debugJump(to, { inS = 0, instant = false } = {}) {
+    if (this._frz) { this._frz = null; this._frzJ = null; this.W.fx?.setJump(null); }
     const t = this.tNow, from = this.era;
     if (instant) { this.over = { start: to, jumps: [] }; this.seek(t, 'debug'); return null; }
     const j = { from, to, at: +(t + inS).toFixed(4) };
