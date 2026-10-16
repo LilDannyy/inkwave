@@ -10,8 +10,8 @@
 //   fish     four instanced meshes (blacktip sharks, rays, the sea turtle, small fish — reef fish, garibaldi, a silver
 //            school), every one swimming its own path in the vertex shader (a circle, or to and fro along an arc), its tail
 //            (or a ray's wings) flexing: one draw call per kind, no per-frame upload
-//   jellies  the moon-jelly columns: milky glass lit from inside (warm white / pale lilac), the jellies drawn in its shader,
-//            drifting up and pulsing
+//   jellies  the moon-jelly columns: dark glossy glass, the inside traced in its shader — deep water lit from the lid, soft
+//            light shafts, moon jellies on two sheets round the axis (near and far: parallax), drifting up and pulsing
 //   bubbles  the Shark Arch's bubble columns: glass, water, a stream of bubbles (one mesh for both)
 //   penguins the colony in both coves (instanced, waddling, a few swimming in the pool)
 //   bathysphere  the steel ball, its lit portholes, bolts and cables (a group of its own, so it can bob)
@@ -257,42 +257,89 @@ export function buildPenguins(T, rnd, U, toWorld, spots, pool) {
 // ------------------------------------------------------------------------------------------------ the moon-jelly columns
 // cols: [[x, z, r, y0, y1], …] — a lit milky cylinder with the jellies in its shader
 export function buildJellies(T, U, cols) {
-  const geos = cols.map(([x, z, r, y0, y1]) => { const g = new T.CylinderGeometry(r, r, y1 - y0, 40, 1, true).toNonIndexed(); g.translate(x, (y0 + y1) / 2, z); return g; });
+  // (each column carries its axis and radius on its vertices: the shader traces the eye ray into it)
+  const geos = cols.map(([x, z, r, y0, y1]) => { const g = new T.CylinderGeometry(r, r, y1 - y0, 40, 1, true).toNonIndexed(); g.translate(x, (y0 + y1) / 2, z); const n = g.attributes.position.count, a = new Float32Array(n * 3); for (let i = 0; i < n; i++) a.set([x, z, r], i * 3); g.setAttribute('aJC', new T.BufferAttribute(a, 3)); return g; });
   let n = 0; for (const g of geos) n += g.attributes.position.count;
-  const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2); let o = 0;
-  for (const g of geos) { const gg = g.index ? g.toNonIndexed() : g; pos.set(gg.attributes.position.array, o * 3); nor.set(gg.attributes.normal.array, o * 3); uv.set(gg.attributes.uv.array, o * 2); o += gg.attributes.position.count; }
+  const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), jc = new Float32Array(n * 3); let o = 0;
+  for (const g of geos) { pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3); jc.set(g.attributes.aJC.array, o * 3); o += g.attributes.position.count; }
   const geo = new T.BufferGeometry();
-  geo.setAttribute('position', new T.BufferAttribute(pos, 3)); geo.setAttribute('normal', new T.BufferAttribute(nor, 3)); geo.setAttribute('uv', new T.BufferAttribute(uv, 2));
-  const mat = new T.MeshStandardMaterial({ color: '#e9e4ef', roughness: 0.2, metalness: 0.0, emissive: '#000000' });
+  geo.setAttribute('position', new T.BufferAttribute(pos, 3)); geo.setAttribute('normal', new T.BufferAttribute(nor, 3)); geo.setAttribute('aJC', new T.BufferAttribute(jc, 3));
+  const [y0, y1] = [cols[0][3], cols[0][4]];
+  // the glass: dark and glossy (the light we see comes from inside: emissive), milky only at grazing angles
+  const mat = new T.MeshStandardMaterial({ color: '#ffffff', roughness: 0.08, metalness: 0.0, emissive: '#000000', envMapIntensity: 1.2 });
   mat.onBeforeCompile = (sh) => {
     sh.uniforms.uFT = U.uFT; sh.uniforms.uNightJ = U.uNight;
-    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vJ;').replace('#include <uv_vertex>', '#include <uv_vertex>\nvJ = uv;');
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec3 aJC; varying vec3 vWJ; varying vec3 vJC;')
+      .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWJ = (modelMatrix * vec4(transformed, 1.0)).xyz; vJC = aJC;');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
-varying vec2 vJ; uniform float uFT; uniform float uNightJ;
-float jh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }`).replace('#include <color_fragment>', `#include <color_fragment>
-  // jellies: a grid of cells round the column (8 across, 5 up), each with one bell drifting up and pulsing
-  vec2 q = vec2(vJ.x * 8.0, vJ.y * 4.0 + uFT * 0.06);
-  vec2 ci = floor(q), cf = fract(q) - 0.5;
-  float r0 = jh(ci), r1 = jh(ci + 7.3);
-  vec2 c = vec2((r0 - 0.5) * 0.35, (r1 - 0.5) * 0.3);
-  float pulse = 0.85 + 0.15 * sin(uFT * 2.0 + r0 * 6.28);
-  vec2 d = (cf - c) / vec2(0.28 * pulse, 0.2);
-  float bell = smoothstep(1.0, 0.55, length(d)) * step(-0.12, d.y);
-  float rim = smoothstep(0.7, 0.95, length(d)) * smoothstep(1.05, 0.95, length(d)) * step(-0.12, d.y);
-  float tent = smoothstep(0.05, 0.0, abs(cf.x - c.x + 0.05 * sin(cf.y * 18.0 + uFT))) * step(cf.y, c.y) * step(c.y - 0.42, cf.y) * (0.35 + 0.5 * smoothstep(c.y - 0.42, c.y, cf.y));
-  float tent2 = smoothstep(0.04, 0.0, abs(cf.x - c.x - 0.09 + 0.04 * sin(cf.y * 15.0 + uFT * 1.3))) * step(cf.y, c.y) * step(c.y - 0.34, cf.y) * 0.4;
-  float j = clamp(bell * 0.5 + rim * 0.75 + tent + tent2, 0.0, 1.0) * step(0.25, r0);
-  // a deep blue-black interior behind milky glass: the glass milkier toward the column's edges (the eye's grazing angle),
-  // the water lit from the top; the jellies soft translucent bells with trailing tentacles (art round 1: paper lanterns)
-  float fresJ = pow(1.0 - abs(dot(normalize(vNormal), normalize(vViewPosition))), 1.6);
-  float glowJ = smoothstep(-0.1, 1.0, vJ.y);
-  vec3 deepJ = vec3(0.025, 0.04, 0.06) * (0.8 + 0.7 * glowJ), milkJ = vec3(0.72, 0.72, 0.8);
-  diffuseColor.rgb = mix(deepJ, milkJ, 0.16 + 0.5 * fresJ);
-  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.94, 0.93, 1.0), j * 0.85);
-  vec3 jellyE = vec3(0.3, 0.27, 0.38) * (0.05 + 0.5 * uNightJ) * glowJ * (1.0 - 0.5 * fresJ) + vec3(0.95, 0.9, 1.0) * j * (0.16 + 0.55 * uNightJ);`).replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+varying vec3 vWJ; varying vec3 vJC; uniform float uFT; uniform float uNightJ;
+float jh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+// one sheet of moon jellies on a cylinder of radius rr round the column's axis c, seen at the point h: rgb + alpha. Cells
+// round the circumference (whole cells: the pattern closes) and up the column, a jelly in most, drifting up and swaying;
+// each a soft saucer bell (its margin hangs, its middle lifts: no hard cut), four faint gonads, a fine fringe and three
+// wavy oral arms, pulsing
+vec4 jSheet(vec3 h, vec2 c, float rr, float seed) {
+  float th = atan(h.z - c.y, h.x - c.x);
+  float n = max(3.0, floor(6.2832 * rr / 0.62)), cw = 6.2832 * rr / n, ch = 0.82;
+  vec2 g = vec2(th / 6.2832 * n, (h.y + uFT * (0.05 + 0.025 * seed)) / ch + seed * 0.37);
+  vec2 ci = floor(g); ci.x = mod(ci.x, n);
+  vec2 f = (fract(g) - 0.5) * vec2(cw, ch);
+  float r0 = jh(ci + seed * 13.1), r1 = jh(ci + 7.3 + seed), r2 = jh(ci + 3.7 - seed);
+  if (r0 < 0.36) return vec4(0.0);
+  float s = 0.7 + 0.5 * r1, pulse = sin(uFT * (1.5 + 0.7 * r2) + r0 * 6.28);
+  vec2 p = f - vec2((r1 - 0.5) * max(0.0, cw - 0.46 * s), 0.14 + (r2 - 0.5) * 0.12);
+  p.x += 0.03 * sin(uFT * 0.7 + r0 * 9.0 + p.y * 3.0);
+  vec2 q = p / vec2(0.17 * s * (1.0 + 0.07 * pulse), 0.115 * s * (1.0 - 0.09 * pulse));
+  float yb = -0.25 + 0.45 * (1.0 - min(1.0, q.x * q.x)), lq = length(q), under = q.y - yb;
+  float bell = smoothstep(1.0, 0.78, lq) * smoothstep(-0.14, 0.12, under);
+  float rim = bell * smoothstep(0.5, 0.95, lq);
+  float gon = smoothstep(0.1, 0.0, abs(length((q - vec2(0.0, 0.3)) / vec2(1.0, 0.65)) - 0.32)) * bell;
+  float fringe = smoothstep(1.02, 0.9, abs(q.x)) * smoothstep(0.02, -0.06, under) * smoothstep(-0.85, -0.1, under) * (0.45 + 0.55 * sin(q.x * 29.0 + uFT * 2.0));
+  float arms = 0.0;
+  for (int k = 0; k < 3; k++) {
+    float x0 = (float(k) - 1.0) * 0.21 + 0.11 * sin(q.y * 2.1 + uFT * 1.3 + float(k) * 2.0 + r0 * 5.0);
+    arms = max(arms, smoothstep(0.12, 0.0, abs(q.x - x0)) * smoothstep(0.05, -0.15, under) * smoothstep(-3.3, -0.5, q.y));
+  }
+  float al = clamp(bell * (0.3 + 0.5 * rim) + gon * 0.22 + fringe * 0.2 + arms * 0.3, 0.0, 0.85);
+  return vec4(mix(vec3(0.93, 0.92, 1.0), vec3(0.86, 0.74, 0.95), gon * 0.8), al);
+}
+vec2 jHit(vec2 pp, vec2 d2, float rr) {   // the ray's two crossings of a cylinder (t near, t far); (-1, -1) if it misses
+  float A = max(dot(d2, d2), 1e-5), Bq = dot(pp, d2), D = Bq * Bq - A * (dot(pp, pp) - rr * rr);
+  if (D <= 0.0) return vec2(-1.0);
+  float sq = sqrt(D); return vec2((-Bq - sq) / A, (-Bq + sq) / A);
+}`).replace('#include <color_fragment>', `#include <color_fragment>
+  // the column's inside, traced (LEAD-REVIEW art round 2: it read as a printed drum): deep blue-black water lit from the lamp
+  // in its lid, light falling down it in soft shafts, and jellies on two sheets round the axis (each seen twice, near and
+  // far): real depth and parallax as the eye moves, the far ones dimmer through the water
+  vec3 jIn = vec3(0.0);
+  {
+    vec3 ro = cameraPosition, rd = normalize(vWJ - cameraPosition);
+    vec2 c = vJC.xy, pp = ro.xz - c, d2 = rd.xz; float R = vJC.z, t0 = length(vWJ - ro);
+    float Y0 = ${y0.toFixed(3)}, Y1 = ${y1.toFixed(3)};
+    vec2 hb = jHit(pp, d2, R * 0.97); vec3 b = ro + rd * hb.y;
+    float yb = clamp((b.y - Y0) / (Y1 - Y0), 0.0, 1.0), thb = atan(b.z - c.y, b.x - c.x);
+    vec3 col = mix(vec3(0.004, 0.012, 0.026), vec3(0.03, 0.075, 0.115), smoothstep(0.0, 1.0, yb)) + vec3(0.07, 0.1, 0.12) * smoothstep(0.72, 1.0, yb);
+    col += vec3(0.02, 0.035, 0.045) * pow(0.5 + 0.5 * sin(thb * 7.0 + 1.7 * sin(thb * 3.0) + uFT * 0.15), 4.0) * smoothstep(0.1, 1.0, yb);
+    vec2 hi = jHit(pp, d2, R * 0.42), ho = jHit(pp, d2, R * 0.72);
+    for (int k = 0; k < 4; k++) {
+      float t = k == 0 ? ho.y : k == 1 ? hi.y : k == 2 ? hi.x : ho.x;
+      if (t <= t0) continue;
+      vec3 h = ro + rd * t;
+      if (h.y < Y0 + 0.08 || h.y > Y1 - 0.06) continue;
+      vec4 j = jSheet(h, c, k == 1 || k == 2 ? R * 0.42 : R * 0.72, float(k));
+      float lit = 0.3 + 0.7 * smoothstep(0.0, 1.0, (h.y - Y0) / (Y1 - Y0));
+      // (a sheet seen edge-on smears its jellies into streaks: faded where the eye ray grazes it)
+      float graze = abs(dot(normalize(h.xz - c), normalize(d2)));
+      col = mix(col, j.rgb * lit, j.a * exp(-0.5 * (t - t0)) * smoothstep(0.18, 0.5, graze));
+    }
+    jIn = col;
+  }
+  float fresJ = pow(1.0 - abs(dot(normalize(vNormal), normalize(vViewPosition))), 2.0);
+  diffuseColor.rgb = mix(vec3(0.012, 0.016, 0.022), vec3(0.62, 0.64, 0.7), 0.04 + 0.4 * fresJ);
+  vec3 jellyE = jIn * mix(vec3(1.0), vec3(1.0, 0.94, 1.08), uNightJ) * (0.9 + 0.45 * uNightJ) * (1.0 - 0.6 * fresJ);`).replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
   totalEmissiveRadiance += jellyE;`);
   };
-  mat.customProgramCacheKey = () => 'aq-jelly2';
+  mat.customProgramCacheKey = () => 'aq-jelly3';
   const m = new T.Mesh(geo, mat); m.name = 'aq-jellies'; m.frustumCulled = false;
   return m;
 }
