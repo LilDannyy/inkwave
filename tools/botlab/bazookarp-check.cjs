@@ -172,7 +172,7 @@ app.on('browser-window-created', (_, win) => {
       } else if (SELF) {
         const box = `import('./tools/botlab/karp-check-box.js')`;
         await boot('');
-        const cases = await js(`${box}.then((m) => m.CASES.map((c) => ({ id: c.id, check: c.check, what: c.what, expect: c.expect || null, notFail: c.notFail || null, expect16: c.expect16 || null, also: c.also || null, phys: !!c.phys, carry: !!c.carry, allStates: !!c.allStates, reach: !!c.reach })))`);
+        const cases = await js(`${box}.then((m) => m.CASES.map((c) => ({ id: c.id, check: c.check, what: c.what, expect: c.expect || null, notFail: c.notFail || null, expect16: c.expect16 || null, also: c.also || null, phys: !!c.phys, carry: !!c.carry, allStates: !!c.allStates, reach: c.reach || false })))`);
         const want = process.env.CASES ? process.env.CASES.split(',') : null;
         const res = [];
         for (const c of cases.filter((q) => !want || want.includes(q.id))) {
@@ -182,11 +182,12 @@ app.on('browser-window-created', (_, win) => {
           const sts = await listStates();
           if (c.reach) {
             // [fix2] the windows' calibration: #16's kid on every REACH row, set against the probes' windows (reachCalib)
-            const r = await js(`${box}.then((b) => b.reachRows()).then((rows) => ${mod}.then((m) => m.reachCalib(rows)))`);
-            for (const q of r.byDy) console.log(`  REACH dy ${String(q.dy).padStart(4)}: made ${q.made}/${q.of}, last made air ${q.lastAir ?? '–'} m (first not made beyond it ${q.firstNot ?? '–'}), worst-aligned node flat ${q.worstFlat ?? '–'} m vs the windows ${q.winOn} (field) / ${q.winOff} (off-field) → ${q.inside && q.edgeOk ? 'inside' : q.inside ? 'BEYOND THE WINDOW (worst alignment)' : 'MADE OUTSIDE THE WINDOW'}`);
+            // ([fix3] reach: 'swim' — the swimming rows, inkable near platforms: the swimming carrier's windows)
+            const r = await js(`${box}.then((b) => b.${c.reach === 'swim' ? 'swimRows' : 'reachRows'}()).then((rows) => ${mod}.then((m) => m.reachCalib(rows)))`);
+            for (const q of r.byDy) console.log(`  REACH${q.swim ? ' (swim)' : ''} dy ${String(q.dy).padStart(4)}: made ${q.made}/${q.of}${q.swimMade ? ` (${q.swimMade} by the swim-jump)` : ''}, last made air ${q.lastAir ?? '–'} m (first not made beyond it ${q.firstNot ?? '–'}), worst-aligned node flat ${q.worstFlat ?? '–'} m vs the windows ${q.winOn} (field) / ${q.winOff} (off-field) → ${q.inside && q.edgeOk ? 'inside' : q.inside ? 'BEYOND THE WINDOW (worst alignment)' : 'MADE OUTSIDE THE WINDOW'}`);
             for (const q of r.rows) if (q.err || (q.made && (q.flat > q.winOn || q.flat > q.winOff))) console.log(`    ${q.err ? 'ERROR ' + q.err : 'outside'}: dy ${q.dy} air ${q.air} ${JSON.stringify(q.from)} → ${JSON.stringify(q.to)} flat ${q.flat}${q.how ? ' (' + q.how + ')' : ''}`);
             res.push({ ...c, pass: r.pass, reachRows: r.rows, byDy: r.byDy });
-            fs.writeFileSync(path.join(OUT, 'self-reach.json'), JSON.stringify(r, null, 1));
+            fs.writeFileSync(path.join(OUT, `self-${c.id}.json`), JSON.stringify(r, null, 1));
             console.log(`SELFTEST ${c.id.padEnd(10)} every made jump inside the probes' windows, each window's edge beyond the last made gap (worst grid alignment) → ${r.pass ? 'PASS' : 'FAIL'}`);
             continue;
           }
@@ -245,13 +246,13 @@ app.on('browser-window-created', (_, win) => {
         }
         if (table.length > 1) {
           console.log('\n== all stages');
-          console.log('| stage | L (m) | weir counts | result | failing checks | hop + gap edges | #16 made / not made (hopVeto) | #16 walks: routes, entrances | beyond the rules made | rising gaps: tried / made | climbs ≤ 1.8 m hopped | #7d finds (gain > 10 m) | entrances A/B | s |');
-          console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+          console.log('| stage | L (m) | weir counts | result | failing checks | hop + gap edges | #16 made / not made (hopVeto) | #16 walks: routes, entrances | beyond the rules made | rising gaps: tried / made | vaults: tried / made | made only by the swimming carrier | climbs ≤ 1.8 m hopped | #7d finds (gain > 10 m) | entrances A/B | s |');
+          console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
           for (const r of table) {
             if (r.err) { console.log(`| ${r.id} | error: ${r.err} |`); continue; }
             const c = r.j.checks, n16 = c[16]?.nums || {}, n7 = c[7]?.nums || {};
             const finds = (n7.d || []).length, ents = (n7.teams || []).map((t) => t.entrances.length).join('/');
-            console.log(`| ${r.id}${r.j.placeholder ? ' (placeholder)' : ''} | ${r.j.L.join(' / ')} | ${(c[3]?.nums?.teams?.[0]?.weirs || []).map((w) => w.count).join(', ')} | ${r.j.result} | ${r.j.fails.map((n) => '#' + n).join(' ')} | ${c[2]?.nums?.hops} + ${c[2]?.nums?.gaps} | ${n16.tried != null ? `${n16.tried - n16.failed} / ${n16.failed}${n16.failed ? ` (h ${n16.failedBy.hop}, g ${n16.failedBy.gapLevel}, g↓ ${n16.failedBy.gapDown})` : ''}` : '–'} | ${n16.walkRoutes ? `${n16.walkRoutes[0]}/${n16.walkRoutes[1]}, ${n16.walkEntrances[0]}/${n16.walkEntrances[1]}` : '–'} | ${n16.beyondMade ?? '–'} of ${n16.beyond ?? '–'} | ${n16.rise ? `${n16.rise.tried} / ${n16.rise.made}` : '–'} | ${n16.climbHops ? `${n16.climbHops.made} of ${n16.climbHops.tried}` : '–'} | ${finds}${finds ? ': ' + Object.entries((n7.d || []).reduce((m, f) => ({ ...m, [f.probe]: (m[f.probe] || 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ') : ''} | ${ents} | ${r.s} |`);
+            console.log(`| ${r.id}${r.j.placeholder ? ' (placeholder)' : ''} | ${r.j.L.join(' / ')} | ${(c[3]?.nums?.teams?.[0]?.weirs || []).map((w) => w.count).join(', ')} | ${r.j.result} | ${r.j.fails.map((n) => '#' + n).join(' ')} | ${c[2]?.nums?.hops} + ${c[2]?.nums?.gaps} | ${n16.tried != null ? `${n16.tried - n16.failed} / ${n16.failed}${n16.failed ? ` (h ${n16.failedBy.hop}, g ${n16.failedBy.gapLevel}, g↓ ${n16.failedBy.gapDown})` : ''}` : '–'} | ${n16.walkRoutes ? `${n16.walkRoutes[0]}/${n16.walkRoutes[1]}, ${n16.walkEntrances[0]}/${n16.walkEntrances[1]}` : '–'} | ${n16.beyondMade ?? '–'} of ${n16.beyond ?? '–'} | ${n16.rise ? `${n16.rise.tried} / ${n16.rise.made}` : '–'} | ${n16.vault ? `${n16.vault.tried} / ${n16.vault.made}` : '–'} | ${n16.swim ? `${n16.swim.made} (${n16.swim.edges} edges, ${n16.swim.beyond} beyond, ${n16.swim.off} off-field)` : '–'} | ${n16.climbHops ? `${n16.climbHops.made} of ${n16.climbHops.tried}` : '–'} | ${finds}${finds ? ': ' + Object.entries((n7.d || []).reduce((m, f) => ({ ...m, [f.probe]: (m[f.probe] || 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ') : ''} | ${ents} | ${r.s} |`);
           }
           fs.writeFileSync(path.join(OUT, 'all-stages.json'), JSON.stringify(table.map((r) => ({ id: r.id, err: r.err, result: r.j?.result, fails: r.j?.fails, L: r.j?.L, s: r.s, c2: r.j?.checks?.[2]?.nums, c16: r.j?.checks?.[16]?.nums, c7: r.j?.checks?.[7]?.nums })), null, 1));
         }
