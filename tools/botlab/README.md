@@ -164,8 +164,12 @@ Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/j
   kit-weapon carriers fire nothing of their own, the ×3 fallback (a sea-to-sea zone; G(b): a pocket of its own zone open
   behind it — the retreat mask's own case), out of a Big Burst ≥ 16 of 20 (a breaker standing on its spot, from 18 m;
   12 and 15 m reported), the keeper at the Gate and the weir on the route, no wall-hack and the 20 m wake, the knockback
-  push, our carrier's fuse danger, the layout's route hints, super jumps to the carrier, the fuse → over the halfway line,
-  walkers round the shell (`PAGE_ARGS='only=A,…'`; `hRange=12,15` other ranges for H).
+  push, our carrier's fuse danger (a guest carrier's too), the layout's route hints, super jumps to the carrier, the fuse →
+  over the halfway line, walkers round the shell; the other roles (R: escorts, the perch, the free phase's fighters,
+  re-forming), the specials' rules (S), the difficulty rows (Y), no wall-hack in the defending plan (W: a hidden carrier
+  never seen moves nothing), refills in the band and the 50 % keep-out (B(b2), B(d)), the swell seen coming (A(d))
+  (`PAGE_ARGS='only=A,…'`; `teeth=1` runs each newer check again with its feature off and requires it to fail;
+  `hwhat=1` H's 15 m what-ifs: a longer swell, a smaller Big Burst).
 - Pictures: tools/botlab/scenes/karp.js through hud-shots.cjs.
 
 Stage set pieces:

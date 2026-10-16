@@ -18,5 +18,6 @@ for s in ${@:-burst weir keeper wake}; do
   ( cd "$ROOT" && MAP=$MP MODE=bazookarp ACTORS=1 PLAY=1 PRE="$HERE/shots-pre.js" PRE_ARGS="$s" OUT="$TMP" SHOTS="$(cam "$s")" \
       tools/botlab/run.sh tools/botlab/shoot.cjs ) | grep -E '^(PRE|shot|SHOT|REPORT|CONSOLE|WATCHDOG|MAP)' | cut -c1-600
   f="$TMP/$MP-bazookarp-day-$s.png"; o="$HERE/out/karp-bots-$s.jpg"; [ "$s" = match ] && o="$HERE/out/karp-bots-$MP-burst.jpg"
-  [ -f "$f" ] && q=72; [ "$s" = match ] && q=55; sips -s format jpeg -s formatOptions $q -Z 1440 "$f" --out "$o" > /dev/null && ls -l "$o"
+  q=72; [ "$s" = match ] && q=55   # (a real stage's busier picture: under 300 KB)
+  [ -f "$f" ] && sips -s format jpeg -s formatOptions $q -Z 1440 "$f" --out "$o" > /dev/null && ls -l "$o"
 done
