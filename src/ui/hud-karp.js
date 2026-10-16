@@ -192,6 +192,8 @@ const CSS = `
    height as they fade: WIPEOUT!'s ribbon covered FREE — GRAB IT!), and anchor no higher than the status pill's bottom
    (--kst-b) plus that */
 .iw-hud.is-karp .iw-call { animation-name: iw-call-karp; }
+.iw-hud.is-karp .iw-zcall { animation-name: iw-zcall-karp; }   /* (and ours: the stock one drifts up into the kill call-out above it) */
+@keyframes iw-zcall-karp { 0% { opacity: 0; scale: 2.2; } 10% { opacity: 1; scale: .9; } 16% { scale: 1.05; } 22% { scale: 1; } 80% { opacity: 1; scale: 1; translate: 0 0; } 100% { opacity: 0; scale: 1; translate: 0 -14%; } }
 @keyframes iw-call-karp { 0% { opacity: 0; scale: 2.2; } 10% { opacity: 1; scale: .9; } 16% { scale: 1.05; } 22% { scale: 1; } 80% { opacity: 1; scale: 1; translate: -50% -50%; } 100% { opacity: 0; scale: 1; translate: -50% -64%; } }
 .iw-hud.is-karp .iw-callouts { top: max(27%, calc(var(--kst-b, 0px) + var(--u) * 5 + 4px)); }
 .iw-hud.is-karp.has-jal .iw-callouts { top: max(27%, calc(var(--jal-b, 0px) + var(--u) * 3.7 + 4px), calc(var(--kst-b, 0px) + var(--u) * 5 + 4px)); }
