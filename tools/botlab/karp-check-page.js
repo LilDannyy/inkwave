@@ -955,7 +955,8 @@ export async function runChecks(o = {}) {
         });
       }
       list.sort((p2, q2) => q2.gain - p2.gain);
-      for (const c of list) { const a = nodes[c.from], b = nodes[c.to]; if (cand.tube.some((v) => hd(nodes[v.from], a) < 1.5 && hd(nodes[v.to], b) < 1.5)) continue; cand.tube.push(c); nums.tube.tried++; }
+      // (the ones thinned out wait in tubeRest: a kept tube the squid doesn't get through has its neighbours tried after it, in #16)
+      for (const c of list) { const a = nodes[c.from], b = nodes[c.to], k = cand.tube.find((v) => hd(nodes[v.from], a) < 1.5 && hd(nodes[v.to], b) < 1.5); if (k) { (k.rest || (k.rest = [])).push(c); continue; } cand.tube.push(c); nums.tube.tried++; }
     }
     // hops onto off-field ground: a 0.5–2.25 m hop from the field onto nodes the field doesn't hold (nav-invalid: a top only
     // a hop reaches) up to two cells out (≤ 2.3 m flat, diagonals too: nav's 0.46 m clearance from a face leaves no node
@@ -1341,6 +1342,13 @@ export async function runChecks(o = {}) {
     const n7 = out._7nums, HC = out._climbHops;
     let res = null;
     if (o.phys !== false) res = proveEdges(C, [...tests, ...beyond.map((b) => ({ kind: b.kind, from: b.from, to: b.to, beyond: true, gain: b.gain })), ...offAll.map((b) => ({ kind: b.kind, from: b.from, to: b.to, beyond: true }))], o);
+    // ([fix4] a squid tube the squid didn't get through: the candidates thinned out beside it are tried in its place, up to
+    // 300 in all — crossmarket's six kept tubes were all not made)
+    if (res) {
+      const retry = [];
+      for (const r of res.list) if (r.kind === 'squid tube' && !r.ok) { const c = cand.tube.find((v) => v.from === r.from && v.to === r.to); for (const q of c?.rest || []) if (retry.length < 300) retry.push({ kind: q.kind, from: q.from, to: q.to, beyond: true, gain: q.gain }); }
+      if (retry.length) { const r2x = proveEdges(C, retry, o); res.list.push(...r2x.list); res.trials += r2x.trials; res.swimTrials += r2x.swimTrials; res.squidTrials += r2x.squidTrials; res.ms += r2x.ms; res.tubeRetry = retry.length; }
+    }
     const fails = [], made = [], fl = [];
     if (res) {
       for (const r of res.list) {
@@ -1434,7 +1442,7 @@ export async function runChecks(o = {}) {
     const climbTxt = !HC.tried ? '; no climb of ≤ 1.8 m to try as a hop' : `; climbs of ≤ 1.8 m tried as hops: ${HC.made} of ${HC.tried} ${HC.proved ? 'made' : 'pass the hop rule (unproven: PHYS=0)'} (hops, not climbs, in the no-climb searches)`;
     chk(16, 'The hop and gap edges, proved physically', !ran ? 'SKIP' : fails.length || walkBad.length ? 'FAIL' : 'OK',
       !ran ? `PHYS=0: not run (a RESULT ok needs it)${climbTxt}` : `${tests.length} added edges tried (${F.stats.hops} hops, ${F.stats.gaps} gaps): ${tests.length - fails.length} made, ${fails.length} not${fails.length ? ` (${byKind.hop} hops, ${byKind.gapLevel} gaps up / level, ${byKind.gapDown} gaps down)` : ''}${fails.length ? ' → hopVeto ' + JSON.stringify(veto.slice(0, 6)) + (veto.length > 6 ? ` … ${veto.length}` : '') : ''}; ${beyond.length} moves beyond the rules worth trying (> 10 m or into a ring; ${cand.high.length} high hops, ${cand.long.length} long gaps, ${cand.rise.length} rising gaps, ${cand.vault.length} vaults, ${cand.step.length} steps off the grid, ${cand.tube.length} squid tubes, out to ${n7.window?.kid ?? '?'} m from dry floor and ${n7.window?.swim ?? '?'} m from floor that takes ink): ${made.length} made (${madeK('high hop')} / ${madeK('long gap')} / ${madeK('rise gap')} / ${madeK('vault')} / ${madeK('step')} / ${madeK('squid tube')}: to #7d, and #7a when into a ring); ${offAll.length} moves onto off-field ground worth trying (${cand.off.length} hops of ${n7.offHop?.cand ?? 0} from up to two cells out, ${cand.offGap.length} jumps across air): ${offMade.length} made (to #7d / #7a)` + swimTxt + climbTxt + walkTxt + (res ? ` · ${res.trials} trials, ${Math.round(res.ms / 1000)} s; walks ${Math.round((walkRes?.ms || 0) / 1000)} s; climb hops ${HC.trials} trials` : ''),
-      { tried: tests.length, failed: fails.length, failedBy: byKind, hopVeto: veto, beyond: beyond.length, beyondMade: made.length, rise: { tried: cand.rise.length, made: madeK('rise gap') }, high: { tried: cand.high.length, made: madeK('high hop') }, long: { tried: cand.long.length, made: madeK('long gap') }, vault: { cand: n7.vault?.cand ?? 0, tried: cand.vault.length, made: madeK('vault') }, step: { cand: n7.step?.cand ?? 0, tried: cand.step.length, made: madeK('step') }, tube: { cand: n7.tube?.cand ?? 0, tried: cand.tube.length, made: madeK('squid tube'), squidTrials: res?.squidTrials ?? 0 }, swimMode: C.swim, swim: res ? { takeoffs: res.list.filter((r) => r.swimOk).length, made: swimMade.length, edges: swimK(res.list.filter((r) => r.ok && !r.beyond)), beyond: swimK(made), off: swimK(res.list.filter((r) => r.ok && OFF_KINDS.has(r.kind))), trials: res.swimTrials } : null, lowGap: n7.lowGap, offHops: { cand: n7.offHop?.cand ?? 0, tried: cand.off.length }, offGaps: { tried: cand.offGap.length }, offMadeN: offMade.length, coyote: res ? res.list.filter((r) => r.ok && /coyote|at the rim/.test(r.how || '')).length : 0, offMade: out._offMade, trials: res?.trials, ms: res?.ms,
+      { tried: tests.length, failed: fails.length, failedBy: byKind, hopVeto: veto, beyond: beyond.length, beyondMade: made.length, rise: { tried: cand.rise.length, made: madeK('rise gap') }, high: { tried: cand.high.length, made: madeK('high hop') }, long: { tried: cand.long.length, made: madeK('long gap') }, vault: { cand: n7.vault?.cand ?? 0, tried: cand.vault.length, made: madeK('vault') }, step: { cand: n7.step?.cand ?? 0, tried: cand.step.length, made: madeK('step') }, tube: { cand: n7.tube?.cand ?? 0, tried: cand.tube.length + (res?.tubeRetry || 0), retried: res?.tubeRetry || 0, made: madeK('squid tube'), squidTrials: res?.squidTrials ?? 0 }, swimMode: C.swim, swim: res ? { takeoffs: res.list.filter((r) => r.swimOk).length, made: swimMade.length, edges: swimK(res.list.filter((r) => r.ok && !r.beyond)), beyond: swimK(made), off: swimK(res.list.filter((r) => r.ok && OFF_KINDS.has(r.kind))), trials: res.swimTrials } : null, lowGap: n7.lowGap, offHops: { cand: n7.offHop?.cand ?? 0, tried: cand.off.length }, offGaps: { tried: cand.offGap.length }, offMadeN: offMade.length, coyote: res ? res.list.filter((r) => r.ok && /coyote|at the rim/.test(r.how || '')).length : 0, offMade: out._offMade, trials: res?.trials, ms: res?.ms,
         climbHops: { tried: HC.tried, made: HC.made, proved: HC.proved, trials: HC.trials, madeAt: HC.madeAt, notMade: HC.notMade },
         walks: wl.map((w) => ({ ...w, path: undefined })), walkRoutes: walkRes ? [wOk(wR), wR.length] : null, walkEntrances: walkRes ? [wOk(wE), wE.length] : null, walkFailed: walkBad.length, made: made.map((r) => ({ kind: r.kind, a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(gainR(r)), how: r.how, by: r.by })) }, fl);
   }
@@ -1704,6 +1712,9 @@ export function proveEdges(C, list, o = {}) {
     // coyote jump 0.25 / 0.45 m past it: what a player running off the edge does; the field's own edges keep SPEC's five)
     const gapBeyond = e.beyond && GAPLIKE.has(e.kind);
     const swimOk = !o.kidOnly && inkFloor(C, e.from);
+    // ([fix4] a step is also jumped 1.7 and 2.0 m before its face: run at it on a slant, a 1.2 m step wants the early jump —
+    // review 4's terraces pair (14.5, 0, −47.5) → (12.5, 1.2, −48.5), its face 0.3 m short of the top node, was made by
+    // the kid only from 1.6 m before it)
     // ([fix4] a squid tube: a squid crawling it on dry floor, then swimming it in its own ink)
     const tube = e.kind === 'squid tube';
     const modes = tube ? ['squid', ...(swimOk ? ['squidInk'] : [])] : ['kid', ...(swimOk ? ['swim', ...(b.y - a.y >= 1.4 ? ['swimRel'] : [])] : [])];
@@ -1727,7 +1738,7 @@ export function proveEdges(C, list, o = {}) {
         // (a swim's run-up in its own ink, from the start to the edge and a step past it)
         if (swim) inkLine(C, kid.team, st, { x: edgeP.x + dir.x * 0.3, y: a.y, z: edgeP.z + dir.z * 0.3 }, 0.75, undo);
         // a down move is tried running off the edge first (no jump), then with the jump at the five distances
-        for (const j of [...(!swim && (b.y < a.y - 0.6 || (e.kind === 'step' && b.y < a.y)) ? [null] : []), 0.2, 0.5, 0.8, 1.1, 1.4, ...coyote]) { if (one(a, b, st, j, edgeP, dir, mode)) { ok = true; by = mode; how = (swim ? (mode === 'swimRel' ? 'swim-jump, letting go at the top, ' : 'swim-jump ') : '') + (j == null ? 'run-off' : j > 0 ? `jump ${j} m before the rim` : j === 0 ? 'jump at the rim' : `coyote jump ${-j} m past the rim`); break; } }
+        for (const j of [...(!swim && (b.y < a.y - 0.6 || (e.kind === 'step' && b.y < a.y)) ? [null] : []), 0.2, 0.5, 0.8, 1.1, 1.4, ...(e.kind === 'step' ? [1.7, 2.0] : []), ...coyote]) { if (one(a, b, st, j, edgeP, dir, mode)) { ok = true; by = mode; how = (swim ? (mode === 'swimRel' ? 'swim-jump, letting go at the top, ' : 'swim-jump ') : '') + (j == null ? 'run-off' : j > 0 ? `jump ${j} m before the rim` : j === 0 ? 'jump at the rim' : `coyote jump ${-j} m past the rim`); break; } }
         if (ok) break;
       }
       if (ok) break;
