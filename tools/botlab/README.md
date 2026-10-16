@@ -149,6 +149,45 @@ Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/j
   §10.3's numbers, a `RESULT karp …` line; env `DUR`, `OTMAX`, `DIFF`, `HUMAN=still|carry`, `KARP_DEF`, `OUT=file.json`),
   and `python3 tools/botlab/karp-agg.py *.json` (the §9.1 rows, INFO below 16 matches, a SUMMARY line).
 - Pictures: tools/botlab/scenes/karp.js through hud-shots.cjs.
+- **The stage checker** (`[b5-karp-checker]`, SPEC §4.4): `MAP=<id> tools/botlab/run.sh tools/botlab/bazookarp-check.cjs`
+  checks a stage's `LAYOUT.bazookarp` against SPEC §9.1 — sixteen checks on the carrier graph (hop and gap edges in),
+  #16 with a kid stepped through `actor.update` with the carrier's rules (every hop / gap edge tried, every route and
+  every entrance into a Gate's ring walked), #11 with a scripted carrier on both teams — and
+  prints a line per check and `RESULT <id> ok|fail …`, writes `<id>-karp.json` and pictures (the top-down with the field,
+  routes, entrances, zones and flags; the Pond; each weir and the Gate from both sides; each zone; each flag). `MAP=all`
+  runs every shipped stage in one go and prints a table (`WIP=1` adds the stages under construction); env `OUT`,
+  `KARP_DEF`, `SHOTS=0`, `CARRY=0`, `PHYS=0`, `DEVSTAGE=1` (Cargo), `ERA=` / `LAVA=` / `KSTATE=` (one stage state; a stage
+  module offers its states through `G.match.stage.karpStates()`, each with the page query of its audit switch),
+  `PROBE='[x,y,z,x,y,z]'` (one move traced: #16's kid frame by frame, and what it stopped against). #7 also finds the
+  moves no edge holds that #16's kid really makes (rising gaps across air, jumps onto ground off the field, hops / gaps
+  just beyond the rules, vaults over a low wall or a railing): a find when worth > 10 m, an entrance (with its own line
+  of sight) when it lands inside a Gate's ring from outside it; an inkable step of ≤ 1.8 m the kid hops counts as a hop,
+  not a climb, in every no-climb search. #16 moves the carrier both ways SPEC §2.4 allows: running as a kid, and swimming
+  in its own ink (9.44 m/s, the swim-jump: about twice the kid's reach, onto ledges up to 2.2 m when it lets go of squid form at the top; 2.25 m never) from any takeoff whose floor
+  takes ink — the probes' windows are the measured reach of each (`REACH`, the self-test's `reach` / `reachs` rows). A
+  squid gap (lowGap) passes grates and rails, as a squid does. **[fix4]** Also: steps off the grid (a 0.3–1.8 m step up or
+  0.3–3.4 m down whose face misses the 1 m grid, so nav joins nothing across it) and squid tubes (3–8 m of low passage a
+  kid can't use: #16 crawls a squid through each). `KARP_SWIM=fail|warn|off` judges what only the swimming carrier makes
+  (D34: default `fail`); the RESULT line prints `swim=` and splits #7d's finds by cause, `7d=<layout>/<field rule>/<swim-jump>`.
+  A `waive` entry for #7d waives its whole numbered flag (`probe` and `r` optional).
+  The flagged places are numbered once — the top-down's discs and its key, the `-flag-<n>` pictures, the console and the
+  JSON's `flags`. The checks live in `tools/botlab/karp-check-page.js`. Self-test: `KARP_SELFTEST=1 tools/botlab/run.sh
+  tools/botlab/bazookarp-check.cjs` (karpbox's clean case must pass every check, and each planted fault of
+  `tools/botlab/karp-check-box.js` must FAIL its own check for its own reason, and each `notFail` case must leave its
+  checks unfailed; `CASES=clean,f7,…`). The per-stage builders' brief:
+  `tools/botlab/jobs/batch5/karp-stages/BUILDER.md`.
+- **The Bazookarp regression set** — run it (one at a time locally, or as a job on the Mac mini's runner when
+  tools/botlab/jobs/batch5/COMMON.md says it is up) after any change to the
+  mode, the Carp Field, the kit, the stage data or a stage's layout:
+  - `DEVSTAGE=1 MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/karp-field.js tools/botlab/run.sh tools/botlab/page.cjs`
+    (the field on karpbox and every stage: L, holes, hop / gap edges, the reading sweep, the load cost; `PAGE_ARGS='only=<id>'`
+    for one stage);
+  - `bazookarp-rules.js`, `karp-gun.js`, `karp-loop.js` on karpbox (above) when the engine moved;
+  - `KARP_SELFTEST=1 … bazookarp-check.cjs` when the checker moved, and `MAP=<id> … bazookarp-check.cjs` on every stage
+    whose data or layout moved;
+  - the other modes unchanged: `node build/check-maps.mjs` (every stage, and `<id>.bazookarp` for a stage with data) and
+    `node tools/botlab/karp-layout-diff.mjs <base tree>` (Turf War / Zone Control / Tower Command / Boss Battle builds and
+    the stage cards byte-identical).
 
 Stage set pieces:
 - Movers (Calamari County's railcars): `MAP=calamari MODE=turf PAGE=tools/botlab/tests/movers.js tools/botlab/run.sh

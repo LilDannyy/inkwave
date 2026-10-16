@@ -1,0 +1,1407 @@
+{
+ "pass": true,
+ "rows": [
+  {
+   "dy": 2,
+   "air": 0.2,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 2,
+   "dyN": 2,
+   "from": [
+    20.5,
+    0.6,
+    -54.5
+   ],
+   "to": [
+    22.5,
+    2.6,
+    -54.5
+   ],
+   "winOn": 2.4,
+   "winOff": 2.4
+  },
+  {
+   "dy": 2,
+   "air": 0.5,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 2,
+   "dyN": 2,
+   "from": [
+    20.5,
+    0.6,
+    -51.5
+   ],
+   "to": [
+    22.5,
+    2.6,
+    -51.5
+   ],
+   "winOn": 2.4,
+   "winOff": 2.4
+  },
+  {
+   "dy": 1.9,
+   "air": 0.3,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 2,
+   "dyN": 1.9,
+   "from": [
+    20.5,
+    0.6,
+    -48.5
+   ],
+   "to": [
+    22.5,
+    2.5,
+    -48.5
+   ],
+   "winOn": 4.199999999999996,
+   "winOff": 4.199999999999996
+  },
+  {
+   "dy": 1.9,
+   "air": 1,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 2,
+   "dyN": 1.9,
+   "from": [
+    20.5,
+    0.6,
+    -45.5
+   ],
+   "to": [
+    22.5,
+    2.5,
+    -45.5
+   ],
+   "winOn": 4.199999999999996,
+   "winOff": 4.199999999999996
+  },
+  {
+   "dy": 1.9,
+   "air": 1.7,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 3,
+   "dyN": 1.9,
+   "from": [
+    20.5,
+    0.6,
+    -42.5
+   ],
+   "to": [
+    23.5,
+    2.5,
+    -42.5
+   ],
+   "winOn": 4.199999999999996,
+   "winOff": 4.199999999999996
+  },
+  {
+   "dy": 1.9,
+   "air": 2.4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 4,
+   "dyN": 1.9,
+   "from": [
+    20.5,
+    0.6,
+    -39.5
+   ],
+   "to": [
+    24.5,
+    2.5,
+    -39.5
+   ],
+   "winOn": 4.199999999999996,
+   "winOff": 4.199999999999996
+  },
+  {
+   "dy": 1.8,
+   "air": 0.3,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 2,
+   "dyN": 1.8,
+   "from": [
+    20.5,
+    0.6,
+    -36.5
+   ],
+   "to": [
+    22.5,
+    2.4,
+    -36.5
+   ],
+   "winOn": 4.9,
+   "winOff": 4.9
+  },
+  {
+   "dy": 1.8,
+   "air": 0.9,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 2,
+   "dyN": 1.8,
+   "from": [
+    20.5,
+    0.6,
+    -33.5
+   ],
+   "to": [
+    22.5,
+    2.4,
+    -33.5
+   ],
+   "winOn": 4.9,
+   "winOff": 4.9
+  },
+  {
+   "dy": 1.8,
+   "air": 1.5,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 3,
+   "dyN": 1.8,
+   "from": [
+    20.5,
+    0.6,
+    -30.5
+   ],
+   "to": [
+    23.5,
+    2.4,
+    -30.5
+   ],
+   "winOn": 4.9,
+   "winOff": 4.9
+  },
+  {
+   "dy": 1.8,
+   "air": 2.1,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 4,
+   "dyN": 1.8,
+   "from": [
+    20.5,
+    0.6,
+    -27.5
+   ],
+   "to": [
+    24.5,
+    2.4,
+    -27.5
+   ],
+   "winOn": 4.9,
+   "winOff": 4.9
+  },
+  {
+   "dy": 1.8,
+   "air": 2.7,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 4,
+   "dyN": 1.8,
+   "from": [
+    20.5,
+    0.6,
+    -24.5
+   ],
+   "to": [
+    24.5,
+    2.4,
+    -24.5
+   ],
+   "winOn": 4.9,
+   "winOff": 4.9
+  },
+  {
+   "dy": 1.5,
+   "air": 1.4,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 3,
+   "dyN": 1.5,
+   "from": [
+    20.5,
+    0.6,
+    -21.5
+   ],
+   "to": [
+    23.5,
+    2.1,
+    -21.5
+   ],
+   "winOn": 5.6,
+   "winOff": 5.6
+  },
+  {
+   "dy": 1.5,
+   "air": 2.2,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 4,
+   "dyN": 1.5,
+   "from": [
+    20.5,
+    0.6,
+    -18.5
+   ],
+   "to": [
+    24.5,
+    2.1,
+    -18.5
+   ],
+   "winOn": 5.6,
+   "winOff": 5.6
+  },
+  {
+   "dy": 1.5,
+   "air": 2.6,
+   "made": true,
+   "how": "jump at the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 4,
+   "dyN": 1.5,
+   "from": [
+    20.5,
+    0.6,
+    -15.5
+   ],
+   "to": [
+    24.5,
+    2.1,
+    -15.5
+   ],
+   "winOn": 5.6,
+   "winOff": 5.6
+  },
+  {
+   "dy": 1.5,
+   "air": 3,
+   "made": true,
+   "how": "coyote jump 0.45 m past the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 4,
+   "dyN": 1.5,
+   "from": [
+    20.5,
+    0.6,
+    -12.5
+   ],
+   "to": [
+    24.5,
+    2.1,
+    -12.5
+   ],
+   "winOn": 5.6,
+   "winOff": 5.6
+  },
+  {
+   "dy": 1.5,
+   "air": 3.4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 5,
+   "dyN": 1.5,
+   "from": [
+    20.5,
+    0.6,
+    -9.5
+   ],
+   "to": [
+    25.5,
+    2.1,
+    -9.5
+   ],
+   "winOn": 5.6,
+   "winOff": 5.6
+  },
+  {
+   "dy": 1.2,
+   "air": 2.2,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 4,
+   "dyN": 1.2,
+   "from": [
+    20.5,
+    0.6,
+    -6.5
+   ],
+   "to": [
+    24.5,
+    1.8,
+    -6.5
+   ],
+   "winOn": 5.6,
+   "winOff": 5.6
+  },
+  {
+   "dy": 1.2,
+   "air": 2.6,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 4,
+   "dyN": 1.2,
+   "from": [
+    20.5,
+    0.6,
+    -3.5
+   ],
+   "to": [
+    24.5,
+    1.8,
+    -3.5
+   ],
+   "winOn": 5.6,
+   "winOff": 5.6
+  },
+  {
+   "dy": 1.2,
+   "air": 3,
+   "made": true,
+   "how": "coyote jump 0.25 m past the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 4,
+   "dyN": 1.2,
+   "from": [
+    20.5,
+    0.6,
+    -0.5
+   ],
+   "to": [
+    24.5,
+    1.8,
+    -0.5
+   ],
+   "winOn": 5.6,
+   "winOff": 5.6
+  },
+  {
+   "dy": 1.2,
+   "air": 3.4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 5,
+   "dyN": 1.2,
+   "from": [
+    20.5,
+    0.6,
+    2.5
+   ],
+   "to": [
+    25.5,
+    1.8,
+    2.5
+   ],
+   "winOn": 5.6,
+   "winOff": 5.6
+  },
+  {
+   "dy": 1.2,
+   "air": 3.8,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 5,
+   "dyN": 1.2,
+   "from": [
+    20.5,
+    0.6,
+    5.5
+   ],
+   "to": [
+    25.5,
+    1.8,
+    5.5
+   ],
+   "winOn": 5.6,
+   "winOff": 5.6
+  },
+  {
+   "dy": 0.9,
+   "air": 2.4,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 4,
+   "dyN": 0.9,
+   "from": [
+    20.5,
+    0.6,
+    24.5
+   ],
+   "to": [
+    24.5,
+    1.5,
+    24.5
+   ],
+   "winOn": 6.199999999999999,
+   "winOff": 6.199999999999999
+  },
+  {
+   "dy": 0.9,
+   "air": 2.8,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 4,
+   "dyN": 0.9,
+   "from": [
+    20.5,
+    0.6,
+    27.5
+   ],
+   "to": [
+    24.5,
+    1.5,
+    27.5
+   ],
+   "winOn": 6.199999999999999,
+   "winOff": 6.199999999999999
+  },
+  {
+   "dy": 0.9,
+   "air": 3.2,
+   "made": true,
+   "how": "coyote jump 0.25 m past the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 5,
+   "dyN": 0.9,
+   "from": [
+    20.5,
+    0.6,
+    30.5
+   ],
+   "to": [
+    25.5,
+    1.5,
+    30.5
+   ],
+   "winOn": 6.199999999999999,
+   "winOff": 6.199999999999999
+  },
+  {
+   "dy": 0.9,
+   "air": 3.6,
+   "made": true,
+   "how": "coyote jump 0.45 m past the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 5,
+   "dyN": 0.9,
+   "from": [
+    20.5,
+    0.6,
+    33.5
+   ],
+   "to": [
+    25.5,
+    1.5,
+    33.5
+   ],
+   "winOn": 6.199999999999999,
+   "winOff": 6.199999999999999
+  },
+  {
+   "dy": 0.9,
+   "air": 4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 5,
+   "dyN": 0.9,
+   "from": [
+    20.5,
+    0.6,
+    36.5
+   ],
+   "to": [
+    25.5,
+    1.5,
+    36.5
+   ],
+   "winOn": 6.199999999999999,
+   "winOff": 6.199999999999999
+  },
+  {
+   "dy": 0.6,
+   "air": 2.8,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 4,
+   "dyN": 0.6,
+   "from": [
+    20.5,
+    0.6,
+    39.5
+   ],
+   "to": [
+    24.5,
+    1.2,
+    39.5
+   ],
+   "winOn": 6.199999999999999,
+   "winOff": 6.199999999999999
+  },
+  {
+   "dy": 0.6,
+   "air": 3.2,
+   "made": true,
+   "how": "jump at the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 5,
+   "dyN": 0.6,
+   "from": [
+    20.5,
+    0.6,
+    42.5
+   ],
+   "to": [
+    25.5,
+    1.2,
+    42.5
+   ],
+   "winOn": 6.199999999999999,
+   "winOff": 6.199999999999999
+  },
+  {
+   "dy": 0.6,
+   "air": 3.6,
+   "made": true,
+   "how": "coyote jump 0.45 m past the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 5,
+   "dyN": 0.6,
+   "from": [
+    20.5,
+    0.6,
+    45.5
+   ],
+   "to": [
+    25.5,
+    1.2,
+    45.5
+   ],
+   "winOn": 6.199999999999999,
+   "winOff": 6.199999999999999
+  },
+  {
+   "dy": 0.6,
+   "air": 4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 5,
+   "dyN": 0.6,
+   "from": [
+    20.5,
+    0.6,
+    48.5
+   ],
+   "to": [
+    25.5,
+    1.2,
+    48.5
+   ],
+   "winOn": 6.199999999999999,
+   "winOff": 6.199999999999999
+  },
+  {
+   "dy": 0.6,
+   "air": 4.4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 6,
+   "dyN": 0.6,
+   "from": [
+    20.5,
+    0.6,
+    51.5
+   ],
+   "to": [
+    26.5,
+    1.2,
+    51.5
+   ],
+   "winOn": 6.199999999999999,
+   "winOff": 6.199999999999999
+  },
+  {
+   "dy": 0,
+   "air": 3.2,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 5,
+   "dyN": 0,
+   "from": [
+    20.5,
+    0.6,
+    54.5
+   ],
+   "to": [
+    25.5,
+    0.6,
+    54.5
+   ],
+   "winOn": 6.6,
+   "winOff": 6.6
+  },
+  {
+   "dy": 0,
+   "air": 3.6,
+   "made": true,
+   "how": "jump at the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 5,
+   "dyN": 0,
+   "from": [
+    -20.5,
+    0.6,
+    30.5
+   ],
+   "to": [
+    -25.5,
+    0.6,
+    30.5
+   ],
+   "winOn": 6.6,
+   "winOff": 6.6
+  },
+  {
+   "dy": 0,
+   "air": 4,
+   "made": true,
+   "how": "coyote jump 0.45 m past the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 5,
+   "dyN": 0,
+   "from": [
+    -20.5,
+    0.6,
+    33.5
+   ],
+   "to": [
+    -25.5,
+    0.6,
+    33.5
+   ],
+   "winOn": 6.6,
+   "winOff": 6.6
+  },
+  {
+   "dy": 0,
+   "air": 4.4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 6,
+   "dyN": 0,
+   "from": [
+    -20.5,
+    0.6,
+    36.5
+   ],
+   "to": [
+    -26.5,
+    0.6,
+    36.5
+   ],
+   "winOn": 6.6,
+   "winOff": 6.6
+  },
+  {
+   "dy": 0,
+   "air": 4.8,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 6,
+   "dyN": 0,
+   "from": [
+    -20.5,
+    0.6,
+    39.5
+   ],
+   "to": [
+    -26.5,
+    0.6,
+    39.5
+   ],
+   "winOn": 6.6,
+   "winOff": 6.6
+  },
+  {
+   "dy": -0.6,
+   "air": 3.6,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 5,
+   "dyN": -0.6,
+   "from": [
+    -20.5,
+    1.2,
+    42.5
+   ],
+   "to": [
+    -25.5,
+    0.6,
+    42.5
+   ],
+   "winOn": 6.6,
+   "winOff": 6.6
+  },
+  {
+   "dy": -0.6,
+   "air": 4,
+   "made": true,
+   "how": "coyote jump 0.25 m past the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 5,
+   "dyN": -0.6,
+   "from": [
+    -20.5,
+    1.2,
+    45.5
+   ],
+   "to": [
+    -25.5,
+    0.6,
+    45.5
+   ],
+   "winOn": 6.6,
+   "winOff": 6.6
+  },
+  {
+   "dy": -0.6,
+   "air": 4.4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 6,
+   "dyN": -0.6,
+   "from": [
+    -20.5,
+    1.2,
+    48.5
+   ],
+   "to": [
+    -26.5,
+    0.6,
+    48.5
+   ],
+   "winOn": 6.6,
+   "winOff": 6.6
+  },
+  {
+   "dy": -0.6,
+   "air": 4.8,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 6,
+   "dyN": -0.6,
+   "from": [
+    -20.5,
+    1.2,
+    51.5
+   ],
+   "to": [
+    -26.5,
+    0.6,
+    51.5
+   ],
+   "winOn": 6.6,
+   "winOff": 6.6
+  },
+  {
+   "dy": -0.6,
+   "air": 5.2,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 7,
+   "dyN": -0.6,
+   "from": [
+    -20.5,
+    1.2,
+    54.5
+   ],
+   "to": [
+    -27.5,
+    0.6,
+    54.5
+   ],
+   "winOn": 6.6,
+   "winOff": 6.6
+  },
+  {
+   "dy": -1.2,
+   "air": 3.8,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 5,
+   "dyN": -1.2,
+   "from": [
+    -20.5,
+    1.8,
+    0.5
+   ],
+   "to": [
+    -25.5,
+    0.6,
+    0.5
+   ],
+   "winOn": 6.799999999999999,
+   "winOff": 6.799999999999999
+  },
+  {
+   "dy": -1.2,
+   "air": 4.2,
+   "made": true,
+   "how": "coyote jump 0.25 m past the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 6,
+   "dyN": -1.2,
+   "from": [
+    -20.5,
+    1.8,
+    3.5
+   ],
+   "to": [
+    -26.5,
+    0.6,
+    3.5
+   ],
+   "winOn": 6.799999999999999,
+   "winOff": 6.799999999999999
+  },
+  {
+   "dy": -1.2,
+   "air": 4.6,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 6,
+   "dyN": -1.2,
+   "from": [
+    -20.5,
+    1.8,
+    -54.5
+   ],
+   "to": [
+    -26.5,
+    0.6,
+    -54.5
+   ],
+   "winOn": 6.799999999999999,
+   "winOff": 6.799999999999999
+  },
+  {
+   "dy": -1.2,
+   "air": 5,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 6,
+   "dyN": -1.2,
+   "from": [
+    -20.5,
+    1.8,
+    -51.5
+   ],
+   "to": [
+    -26.5,
+    0.6,
+    -51.5
+   ],
+   "winOn": 6.799999999999999,
+   "winOff": 6.799999999999999
+  },
+  {
+   "dy": -1.2,
+   "air": 5.4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 7,
+   "dyN": -1.2,
+   "from": [
+    -20.5,
+    1.8,
+    -48.5
+   ],
+   "to": [
+    -27.5,
+    0.6,
+    -48.5
+   ],
+   "winOn": 6.799999999999999,
+   "winOff": 6.799999999999999
+  },
+  {
+   "dy": -2.2,
+   "air": 4.2,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 6,
+   "dyN": -2.2,
+   "from": [
+    -20.5,
+    2.8,
+    -45.5
+   ],
+   "to": [
+    -26.5,
+    0.6,
+    -45.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": -2.2,
+   "air": 4.6,
+   "made": true,
+   "how": "coyote jump 0.25 m past the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 6,
+   "dyN": -2.2,
+   "from": [
+    -20.5,
+    2.8,
+    -42.5
+   ],
+   "to": [
+    -26.5,
+    0.6,
+    -42.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": -2.2,
+   "air": 5,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 6,
+   "dyN": -2.2,
+   "from": [
+    -20.5,
+    2.8,
+    -39.5
+   ],
+   "to": [
+    -26.5,
+    0.6,
+    -39.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": -2.2,
+   "air": 5.4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 7,
+   "dyN": -2.2,
+   "from": [
+    -20.5,
+    2.8,
+    -36.5
+   ],
+   "to": [
+    -27.5,
+    0.6,
+    -36.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": -2.2,
+   "air": 5.8,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 7,
+   "dyN": -2.2,
+   "from": [
+    -20.5,
+    2.8,
+    -33.5
+   ],
+   "to": [
+    -27.5,
+    0.6,
+    -33.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": -3.4,
+   "air": 4.6,
+   "made": true,
+   "how": "jump 0.2 m before the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 6,
+   "dyN": -3.4,
+   "from": [
+    -20.5,
+    4,
+    -30.5
+   ],
+   "to": [
+    -26.5,
+    0.6,
+    -30.5
+   ],
+   "winOn": 7.6,
+   "winOff": 7.6
+  },
+  {
+   "dy": -3.4,
+   "air": 5,
+   "made": true,
+   "how": "coyote jump 0.25 m past the rim",
+   "by": "kid",
+   "swim": false,
+   "flat": 6,
+   "dyN": -3.4,
+   "from": [
+    -20.5,
+    4,
+    -27.5
+   ],
+   "to": [
+    -26.5,
+    0.6,
+    -27.5
+   ],
+   "winOn": 7.6,
+   "winOff": 7.6
+  },
+  {
+   "dy": -3.4,
+   "air": 5.4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 7,
+   "dyN": -3.4,
+   "from": [
+    -20.5,
+    4,
+    -24.5
+   ],
+   "to": [
+    -27.5,
+    0.6,
+    -24.5
+   ],
+   "winOn": 7.6,
+   "winOff": 7.6
+  },
+  {
+   "dy": -3.4,
+   "air": 5.8,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 7,
+   "dyN": -3.4,
+   "from": [
+    -20.5,
+    4,
+    -5.5
+   ],
+   "to": [
+    -27.5,
+    0.6,
+    -5.5
+   ],
+   "winOn": 7.6,
+   "winOff": 7.6
+  },
+  {
+   "dy": -3.4,
+   "air": 6.2,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": false,
+   "flat": 8,
+   "dyN": -3.4,
+   "from": [
+    -20.5,
+    4,
+    -2.5
+   ],
+   "to": [
+    -28.5,
+    0.6,
+    -2.5
+   ],
+   "winOn": 7.6,
+   "winOff": 7.6
+  }
+ ],
+ "byDy": [
+  {
+   "dy": 2,
+   "made": 0,
+   "of": 2,
+   "swimMade": 0,
+   "swim": false,
+   "lastAir": null,
+   "firstNot": 0.2,
+   "worstFlat": null,
+   "winOn": 2.4,
+   "winOff": 2.4,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 1.9,
+   "made": 0,
+   "of": 4,
+   "swimMade": 0,
+   "swim": false,
+   "lastAir": null,
+   "firstNot": 0.3,
+   "worstFlat": null,
+   "winOn": 4.199999999999996,
+   "winOff": 4.199999999999996,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 1.8,
+   "made": 4,
+   "of": 5,
+   "swimMade": 0,
+   "swim": false,
+   "lastAir": 2.1,
+   "firstNot": 2.7,
+   "worstFlat": 4,
+   "winOn": 4.9,
+   "winOff": 4.9,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 1.5,
+   "made": 4,
+   "of": 5,
+   "swimMade": 0,
+   "swim": false,
+   "lastAir": 3,
+   "firstNot": 3.4,
+   "worstFlat": 4.9,
+   "winOn": 5.6,
+   "winOff": 5.6,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 1.2,
+   "made": 3,
+   "of": 5,
+   "swimMade": 0,
+   "swim": false,
+   "lastAir": 3,
+   "firstNot": 3.4,
+   "worstFlat": 4.9,
+   "winOn": 5.6,
+   "winOff": 5.6,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 0.9,
+   "made": 4,
+   "of": 5,
+   "swimMade": 0,
+   "swim": false,
+   "lastAir": 3.6,
+   "firstNot": 4,
+   "worstFlat": 5.5,
+   "winOn": 6.199999999999999,
+   "winOff": 6.199999999999999,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 0.6,
+   "made": 3,
+   "of": 5,
+   "swimMade": 0,
+   "swim": false,
+   "lastAir": 3.6,
+   "firstNot": 4,
+   "worstFlat": 5.5,
+   "winOn": 6.199999999999999,
+   "winOff": 6.199999999999999,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 0,
+   "made": 3,
+   "of": 5,
+   "swimMade": 0,
+   "swim": false,
+   "lastAir": 4,
+   "firstNot": 4.4,
+   "worstFlat": 5.9,
+   "winOn": 6.6,
+   "winOff": 6.6,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": -0.6,
+   "made": 2,
+   "of": 5,
+   "swimMade": 0,
+   "swim": false,
+   "lastAir": 4,
+   "firstNot": 4.4,
+   "worstFlat": 5.9,
+   "winOn": 6.6,
+   "winOff": 6.6,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": -1.2,
+   "made": 2,
+   "of": 5,
+   "swimMade": 0,
+   "swim": false,
+   "lastAir": 4.2,
+   "firstNot": 4.6,
+   "worstFlat": 6.1,
+   "winOn": 6.799999999999999,
+   "winOff": 6.799999999999999,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": -2.2,
+   "made": 2,
+   "of": 5,
+   "swimMade": 0,
+   "swim": false,
+   "lastAir": 4.6,
+   "firstNot": 5,
+   "worstFlat": 6.5,
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": -3.4,
+   "made": 2,
+   "of": 5,
+   "swimMade": 0,
+   "swim": false,
+   "lastAir": 5,
+   "firstNot": 5.4,
+   "worstFlat": 6.9,
+   "winOn": 7.6,
+   "winOff": 7.6,
+   "inside": true,
+   "edgeOk": true
+  }
+ ]
+}

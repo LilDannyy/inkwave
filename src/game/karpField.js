@@ -340,6 +340,10 @@ export class KarpField {
           if (level && mid < i) continue;
           if (!openAir(n, m, flat, dy)) continue;
           if (nav._blocked(n, m, Math.max(n.y, m.y))) continue;
+          // [b5-karp-checker] a one-way gap down lands only where nothing hangs over the landing below the ledge it leaves
+          // (nav's drop edges ask the same): without it a deck's top got a "gap" down to the floor under that same deck
+          // (crossmarket's verandas: 272 such edges no kid makes, bazookarp-check #16), reading the top too close
+          if (dy < -Gp.upMax && !nav._openAbove(m, n.y)) continue;
           gapEdge(i, mid, flat, dy);
           if (level) later.push(mid, i, flat);
         }
