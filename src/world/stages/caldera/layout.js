@@ -464,7 +464,11 @@ const LAYOUT_CALDERA = {
   bazookarp: BAZOOKARP,
   // (the lava fix round 2: headroom — the Surge Gauge's tie girders at 6.0 m stand 4.8 m over the island, over the boss's
   // ~4.5 m shell; counted as walls they cut its home ground in two: 222 m² of half the island and one causeway)
-  boss: { floorY: 1.2, headroom: 4.6 },
+  // (fix round 3: maxRise — the terraces stand 1.2 m over the boss's tier, inside its 1.35 m stride: it walked up the Lower
+  // Surge Steps toward the squad and stuck between the parapets. The Pour Floor and the Moorings, 0.6 up, stay its ground)
+  // roamAfter (bossBrain._roam): with the squad on the terraces over its Lakefront wedges it settled at its preferred
+  // distance and played its moves from one spot for the rest of the round
+  boss: { floorY: 1.2, headroom: 4.6, maxRise: 0.65, roamAfter: 12 },
   single: SINGLE,
   half: HALF,
   decor: { lamps: [], palms: [], flags: [] },

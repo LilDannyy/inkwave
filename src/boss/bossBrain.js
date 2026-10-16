@@ -57,6 +57,7 @@ export class BossBrain {
     if (b.anim === 2 && b.bt - b.animT0 >= BOSS.roarLen) { b.anim = 0; b.invuln = false; this.cool = Math.min(this.cool, 0.9 * this.pace); }
     if (!b.dead && b.visible) {
       if (st === 'playing') {
+        this._roam();   // [b5-caldera]
         this._crabs(dt);
         if (b.move) this._runMove(dt);
         else if (b.anim === 2) { /* roaring */ }
@@ -130,6 +131,13 @@ export class BossBrain {
       if (this.pi >= this.path.length - 1 && d < 1.1) this.pi = this.path.length;
       else { want = Math.atan2(wp[0] - b.pos.x, wp[1] - b.pos.z); go = true; }
     }
+    // [b5-caldera] on a detour (below) until a step straight at the waypoint fits again
+    const DT = this._detour;
+    if (DT && go) {
+      const sw = Math.sin(want), cw = Math.cos(want);
+      if (b.bt > DT.until || (nav.turnOk(b.pos.x, b.pos.z, want) && nav.poseOk(b.pos.x + sw * 0.6, b.pos.z + cw * 0.6, want))) this._detour = null;
+      else want = DT.yaw;
+    } else if (DT && !go) this._detour = null;
     if (!go && t) want = Math.atan2(t.pos.x - b.pos.x, t.pos.z - b.pos.z);   // arrived: face its mark
     const dy = angleDiff(b.yaw, want);
     this._turn(want, dt);
@@ -138,7 +146,21 @@ export class BossBrain {
     if (this.speed > 0.01) {
       const nx = b.pos.x + Math.sin(b.yaw) * this.speed * dt, nz = b.pos.z + Math.cos(b.yaw) * this.speed * dt;
       if (nav.poseOk(nx, nz, b.yaw)) { b.pos.x = nx; b.pos.z = nz; this.stuckT = 0; }
-      else { this.speed = 0; this.stuckT += dt; if (this.stuckT > 0.8) { this.stuckT = 0; this.goalT = 0; this.path = null; } }
+      else {
+        this.speed = 0; this.stuckT += dt;
+        // [b5-caldera] no pose fits a step straight at its waypoint (a charge left it off-centre on a 10 m causeway: its
+        // ends hang over the edge at any slant, so only along the causeway fits — it turned toward the waypoint, could not
+        // step, picked another goal the same way, and stood 80 s): it walks the heading a pose fits that best closes on the
+        // waypoint, until a step straight at it fits (≤ 5 s) — turning back and forth between the two cost it
+        // ~2.5 s a time at 1.25 rad/s
+        if (this.stuckT > 0.3 && !this._detour && this.path && this.pi < this.path.length) {
+          const wp = this.path[this.pi], tx = wp[0] - b.pos.x, tz = wp[1] - b.pos.z, tl = Math.hypot(tx, tz) || 1;
+          let by = null, bd = 0.1;
+          for (let k = 0; k < 16; k++) { const y = (k / 16) * Math.PI * 2, sy = Math.sin(y), cy = Math.cos(y), d = (sy * tx + cy * tz) / tl; if (d > bd && nav.turnOk(b.pos.x, b.pos.z, y) && nav.poseOk(b.pos.x + sy * 0.6, b.pos.z + cy * 0.6, y) && nav.poseOk(b.pos.x + sy * 1.5, b.pos.z + cy * 1.5, y)) { bd = d; by = y; } }
+          if (by !== null) { this._detour = { yaw: by, until: b.bt + 5 }; this.stuckT = 0; }
+        }
+        if (this.stuckT > 0.8) { this.stuckT = 0; this.goalT = 0; this.path = null; }
+      }
     }
   }
   // turn toward yaw at the phase's rate, only through headings its body fits. Hemmed in (a claw would meet a wall), it
@@ -163,6 +185,17 @@ export class BossBrain {
     return true;
   }
 
+  // [b5-caldera] a stage can ask the boss to roam (layout.boss.roamAfter, s): one that has stood within 5 m of one spot
+  // that long picks its next goal ≥ 9 m from it. Highmark Foundry: with the squad on the terraces over its Lakefront
+  // wedges it settled at its preferred distance and played its moves from one spot (boss-check: 45–49 m walked in 120 s)
+  _roam() {
+    const b = this.b, RA = b.nav.level?.layout?.boss?.roamAfter;
+    if (!(RA > 0)) return;
+    const A = this._anchor || (this._anchor = { x: b.pos.x, z: b.pos.z, t: b.bt, camped: false });
+    if (Math.hypot(b.pos.x - A.x, b.pos.z - A.z) > 5) { A.x = b.pos.x; A.z = b.pos.z; A.t = b.bt; A.camped = false; }
+    else if (!A.camped && b.bt - A.t > RA) { A.camped = true; this.goalT = 0; }
+  }
+
   _pickGoal(t) {
     const b = this.b, nav = b.nav, pad = nav.pads[0];
     this.goalT = 3 + this.rnd() * 2.5;
@@ -174,6 +207,7 @@ export class BossBrain {
       if (t) s -= Math.abs(Math.hypot(x - t.pos.x, z - t.pos.z) - PREF[b.phase]);
       else s -= Math.hypot(x - b.home.x, z - b.home.z) * 0.2;
       if (Math.hypot(x - pad.x, z - pad.z) < 18) s -= 12;   // never camps the squad's spawn
+      if (this._anchor?.camped && Math.hypot(x - this._anchor.x, z - this._anchor.z) < 9) s -= 8;   // [b5-caldera] (_roam)
       if (s > bs) { bs = s; best = [x, z]; }
     }
     if (!best) return;

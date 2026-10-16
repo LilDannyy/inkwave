@@ -50,6 +50,11 @@ export class BossNav {
     // [b5-caldera] a stage can give the boss headroom (layout.boss.headroom, m over its floor): a piece wholly above it is
     // overhead, not a wall — Highmark's Surge Gauge tie girders at 4.8 m over the island clear its ~4.5 m shell, and as
     // walls they cut the island (its home ground) in two
+    // [b5-caldera] and the most its floor may rise under it (layout.boss.maxRise, m over its floor): higher ground is no
+    // floor to it (kept 1.8 m clear of, like a deck's edge; a wall's 2.9 m cut its Lakefront wedges off, 775 m² left). Highmark's terraces stand only 1.2 m over the boss's tier, within its 1.35 m stride: its home ground ran up the
+    // Lower Surge Steps, it walked up them toward the squad on the terrace and stuck between the parapets (boss-check: 29 m
+    // walked in 120 s, parked at the steps' foot, two runs in five)
+    const MR = Number.isFinite(L.layout?.boss?.maxRise) ? L.layout.boss.maxRise : Infinity;
     const HR = Number.isFinite(L.layout?.boss?.headroom) ? L.layout.boss.headroom : null, HS = HR ? [STRIDE + 0.1, 2.6, 3.8, HR].filter((h) => h <= HR) : [STRIDE + 0.1, 2.6, 3.8, 5.2];
     for (let i = 0; i < N; i++) {
       const [x, z] = this.xz(i);
@@ -61,6 +66,7 @@ export class BossNav {
       else {
         this.floor[i] = g;
         for (const h of HS) if (L.pointInside(_p.set(x, best + h, z), 0)) { k = 1; break; }
+        if (!k && g - best > MR) k = 2;   // [b5-caldera] (layout.boss.maxRise: no floor for it, as the edge of a deck)
       }
       if (k !== 1) this.pads.forEach((pd, t) => { if (Math.hypot(x - pd.x, z - pd.z) < pd.r + PAD_MARGIN[t]) k = 3; });
       this.kind[i] = k;
