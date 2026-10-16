@@ -1002,7 +1002,7 @@ export function dangerOf(it) {
 // gives a foe two seconds), and a cooking bot hit hard (under 55 hp, ≥ 0.4 s of cook to go) drops the cook to fight back
 // (abort); a hold cut short under half its plan's cook is let go unthrown, not sent on past the foe uncooked (drop).
 // Knobs for the balance pass (calm: no fight throw within that many s of being hit; off).
-export const GLIDE_BOT = { fight: 0.06, near: 7, mid: 9, far: 11, wMid: 0.5, wFar: 0.25, wOut: 0.08, committed: 2, slow: 1.5, fast: 4.5, lead: 0.5, paint: 0.0004, paintInk: 25, paintFoe: 24,
+export const GLIDE_BOT = { fight: 0.06, near: 7, mid: 9, far: 11, wMid: 0.5, wFar: 0.25, wOut: 0.08, committed: 2, slow: 1.5, fast: 4.5, lead: 0.5, paint: 0.0004, paintZones: 0.25, paintInk: 25, paintFoe: 24,
   duel: 0.05, plantedC: 0, calm: 0, abort: 1, minD: 5, maxD: 11, drop: 1,
   // (others: the throw may go at another foe this bot sees than the one it fights, when that one is committed and its own
   // isn't — fighting, or painting with a foe in sight; mateAim: a foe aiming within 25° of one of our teammates (and not
@@ -1107,7 +1107,10 @@ function paint(brain) {
     const o = committedFoe(brain);
     if (o && fightAt(brain, o, Math.hypot(o.pos.x - a.pos.x, o.pos.z - a.pos.z), s)) { GLIDE_STATS.botPaintFight = (GLIDE_STATS.botPaintFight || 0) + 1; return true; }
   }
-  if (Math.random() > GLIDE_BOT.paint || a.ink < s.inkCost + GLIDE_BOT.paintInk) return false;   // ([b5-int3] was 0.008, inkCost + 8; then 0.0012 — the lead: fight throws a majority)
+  // ([b5-int3] was 0.008, inkCost + 8; then 0.0012 — the lead: fight throws a majority. 0.0004, and a quarter of that in
+  // Zone Control (paintZones): at 0.0004 its guards made four paint throws a match to one fight throw; at 0.0001 in Turf
+  // halyard and saltpan made no throw at all in 180 s)
+  if (Math.random() > GLIDE_BOT.paint * (G.match?.zones ? GLIDE_BOT.paintZones : 1) || a.ink < s.inkCost + GLIDE_BOT.paintInk) return false;
   // ([b5-int3] a foe the team knows near: the stone is kept for them)
   for (const e of G.actors) { if (e.team === a.team || !e.alive) continue; const k = teamKnown(a.team, e, 2.0); if (k && Math.hypot(k.pos.x - a.pos.x, k.pos.z - a.pos.z) < GLIDE_BOT.paintFoe) { GLIDE_STATS.botPaintKept = (GLIDE_STATS.botPaintKept || 0) + 1; return false; } }
   const fx = Math.sin(a.aimYaw), fz = Math.cos(a.aimYaw);

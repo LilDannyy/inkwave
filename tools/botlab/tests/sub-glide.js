@@ -612,15 +612,18 @@
             if (done && ++after > 45) return false;   // (0.75 s on: a stone let go at the hold's end is out by then)
           });
           stub(B);
-          return { cooking, cookAt, ended: done, thrown: !!stone, stoneCook: stone && r2(stone.cook), fizzles: GLIDE_STATS.fizzles - f0, aborts: (GLIDE_STATS.botAbort || 0) - a0, drops: (GLIDE_STATS.botDrop || 0) - d0 };
+          // ([b5-int3] the step-back trial: where that stone stops, from T — the cook it needs depends on where B stands at the release)
+          let stopOff = null; const relB = [r2(B.pos.x), r2(B.pos.z)];
+          if (what === 'back' && stone) { const bb = stone.state !== 'dead' ? runOut(stone, 4) : null; stopOff = bb ? r2(Math.hypot(bb.x - T.pos.x, bb.z - T.pos.z)) : null; }
+          return { cooking, cookAt, ended: done, thrown: !!stone, stoneCook: stone && r2(stone.cook), fizzles: GLIDE_STATS.fizzles - f0, aborts: (GLIDE_STATS.botAbort || 0) - a0, drops: (GLIDE_STATS.botDrop || 0) - d0, stopOff, B: relB };
         };
         const tHit = trial('hit'), tFar = trial('far'), tBack = trial('back');
         R(`a cooking bot hit hard (50 hp, ${tHit.cookAt} s cooked of ~1.2) drops the cook unthrown (${tHit.fizzles} fizzle, ${tHit.thrown ? 'a stone thrown' : 'no stone'}); a hold cut short under half its plan (the foe 25 m off at ${tFar.cookAt} s cooked) is let go unthrown (${tFar.thrown ? 'a stone at ' + tFar.stoneCook + ' s' : 'no stone'})`,
           tHit.cooking && tHit.ended && !tHit.thrown && tHit.aborts >= 1 && tFar.cooking && tFar.ended && !tFar.thrown && tFar.drops >= 1, { tHit, tFar });
         // ([b5-int3] but a foe stepping back mid-cook (10 → 14.5 m, still in the slide's reach) needs less cook, and a hold
         // that ends on that is thrown — it stops on them; the drop rule dropped it: under half the plan's first cook)
-        R(`a foe stepping back mid-cook (10 → 14.5 m, ${tBack.cookAt} s cooked) gets the stone: thrown at ${tBack.stoneCook} s (the cook it needs there, ~0.4), not dropped (${tBack.drops})`,
-          tBack.cooking && tBack.thrown && tBack.stoneCook >= 0.25 && tBack.stoneCook <= 0.8 && tBack.drops === 0, tBack);
+        R(`a foe stepping back mid-cook (10 → 14.5 m, ${tBack.cookAt} s cooked) gets the stone: thrown at ${tBack.stoneCook} s (the cook it needs from where the bot stands), not dropped (${tBack.drops}), stopping ${tBack.stopOff} m from them (≤ 2.5)`,
+          tBack.cooking && tBack.thrown && tBack.drops === 0 && tBack.stopOff != null && tBack.stopOff <= 2.5, tBack);
         B.setSub(B.subId); delete B.bot._glide; B.setWeapon(bw0);
       }
       // a bot in a predicted stop disc: out of it before the blast (botSpecials' escape: hard, its awareness on), or it
