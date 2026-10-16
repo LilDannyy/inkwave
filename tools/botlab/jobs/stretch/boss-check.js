@@ -16,10 +16,14 @@
   const step = (s) => { const n = Math.max(1, Math.round(s * 60)); for (let i = 0; i < n; i++) dbg.step(1000 / 60); };
   const seen = new Set(), trail = []; let dist = 0, still = 0, maxStill = 0, prev = boss.pos.clone();
   const moves = {}; let stuns = 0, lastStun = false;
+  // (fix round 4, caldera review 4: the seconds on each half — z < 0 / z ≥ 0 — and the longest spell within 6 m of one spot)
+  const half = [0, 0]; let camp = null, campMax = 0, campAt = null;
   for (let t = 0; t < 120; t++) {
     step(1);
     const p = boss.pos; dist += Math.hypot(p.x - prev.x, p.z - prev.z);
     if (Math.hypot(p.x - prev.x, p.z - prev.z) < 0.15 && !boss.move) { still++; maxStill = Math.max(maxStill, still); } else still = 0;
+    half[p.z < 0 ? 0 : 1]++;
+    if (!camp || Math.hypot(p.x - camp.x, p.z - camp.z) > 6) camp = { x: p.x, z: p.z, n: 0 }; else if (++camp.n > campMax) { campMax = camp.n; campAt = [+camp.x.toFixed(1), +camp.z.toFixed(1)]; }
     prev = p.clone(); seen.add(Math.round(p.x / 4) + ':' + Math.round(p.z / 4)); if (t % 10 === 0) trail.push([+p.x.toFixed(1), +p.z.toFixed(1)]);
     if (boss.move && boss.move.id) moves[boss.move.id] = (moves[boss.move.id] || 0) + (boss.moveT < 1 ? 1 : 0);
     if (boss.stunned && !lastStun) stuns++; lastStun = boss.stunned;
@@ -28,6 +32,7 @@
   const played = boss.log.moves.reduce((o, mv) => { o[mv[1]] = (o[mv[1]] || 0) + 1; return o; }, {});
   R('it roams (distance walked, 4 m cells visited)', dist > 50 && seen.size > 8, { dist_m: Math.round(dist), cells4m: seen.size, trail });
   R('it never stands idle for long (outside a move)', maxStill < 12, { maxIdle_s: maxStill });
+  R('(information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot', true, { halves_s: half, longestSpell_s: campMax, at: campAt, camps: boss.brain?._camps ?? null });
   R('it plays its moves (charges included)', Object.keys(played).length >= 3, { played, stuns, hp: +(boss.hp / boss.maxHp).toFixed(2), dead: boss.dead });
   return out;
 })();

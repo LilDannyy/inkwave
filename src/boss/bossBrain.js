@@ -87,7 +87,7 @@ export class BossBrain {
     this.retarget -= dt; this.goalT -= dt; this.cool -= dt;
     if (this.retarget <= 0 || !b.targetActor()) this._pickTarget();
     const t = b.targetActor();
-    if (this.cool <= 0 && t) {
+    if (this.cool <= 0 && t && !(this._reloc && !this.plan)) {   // [b5-caldera] fix round 4 (_roam: relocating, no new move)
       if (!this.plan) { this.plan = this._choose(t); if (this.plan) this.plan.t = 0; }
       const P = this.plan;
       if (P) {
@@ -185,15 +185,28 @@ export class BossBrain {
     return true;
   }
 
-  // [b5-caldera] a stage can ask the boss to roam (layout.boss.roamAfter, s): one that has stood within 5 m of one spot
-  // that long picks its next goal ≥ 9 m from it. Highmark Foundry: with the squad on the terraces over its Lakefront
+  // [b5-caldera] a stage can ask the boss to roam (layout.boss.roamAfter, s): one that has stood within 8 m (was 5) of one
+  // spot that long picks its next goal ≥ 9 m from it. Highmark Foundry: with the squad on the terraces over its Lakefront
   // wedges it settled at its preferred distance and played its moves from one spot (boss-check: 45–49 m walked in 120 s)
   _roam() {
     const b = this.b, RA = b.nav.level?.layout?.boss?.roamAfter;
     if (!(RA > 0)) return;
     const A = this._anchor || (this._anchor = { x: b.pos.x, z: b.pos.z, t: b.bt, camped: false });
-    if (Math.hypot(b.pos.x - A.x, b.pos.z - A.z) > 5) { A.x = b.pos.x; A.z = b.pos.z; A.t = b.bt; A.camped = false; }
-    else if (!A.camped && b.bt - A.t > RA) { A.camped = true; this.goalT = 0; }
+    // (fix round 4, review 4: camped twice without getting 12 m away, its next goals favour the far side — up to 30 m from
+    // the camp: a boss playing its moves at one Lakefront wedge re-picked goals 9 m off, at the same wedge, for 80 s)
+    // (each further roamAfter there counts again: one that never left its spot camped once and was never counted twice —
+    // boss-check: 95 s at Alpha's causeway end, 38 m walked; and from the second count it walks to a far goal before its
+    // next move, for up to 8 s: back-to-back moves left it no time to walk)
+    // (an anchor 8 m round, not 5: a boss charging and slamming to and fro round one wedge left a 5 m anchor every few
+    // seconds and was never counted as camped — boss-check: 66 s within 6 m of one spot, no camp)
+    if (Math.hypot(b.pos.x - A.x, b.pos.z - A.z) > 8) {
+      if (this._campAt && Math.hypot(b.pos.x - this._campAt.x, b.pos.z - this._campAt.z) > 12) { this._camps = 0; this._reloc = null; }
+      A.x = b.pos.x; A.z = b.pos.z; A.t = b.bt; A.camped = false; A.n = 0;
+    } else if (b.bt - A.t > RA * ((A.n || 0) + 1)) {
+      A.n = (A.n || 0) + 1; A.camped = true; this.goalT = 0; this._camps = (this._camps || 0) + 1; this._campAt = { x: A.x, z: A.z };
+      if (this._camps >= 2) this._reloc = { t: b.bt };
+    }
+    if (this._reloc && b.bt - this._reloc.t > 8) this._reloc = null;
   }
 
   _pickGoal(t) {
@@ -204,10 +217,11 @@ export class BossBrain {
       const [x, z] = nav.randomPoint(this.rnd);
       const ci = nav.cell(x, z);
       let s = Math.min(nav.Dw[ci], 6) * 0.7 + Math.min(nav.Dv[ci], 4) * 0.4 - Math.hypot(x - b.pos.x, z - b.pos.z) * 0.07 + this.rnd() * 1.5;
-      if (t) s -= Math.abs(Math.hypot(x - t.pos.x, z - t.pos.z) - PREF[b.phase]);
+      if (t) s -= (this._camps >= 2 ? 0.3 : 1) * Math.abs(Math.hypot(x - t.pos.x, z - t.pos.z) - PREF[b.phase]);   // [b5-caldera] fix round 4 (camped twice: its fight distance matters less than getting away)
       else s -= Math.hypot(x - b.home.x, z - b.home.z) * 0.2;
       if (Math.hypot(x - pad.x, z - pad.z) < 18) s -= 12;   // never camps the squad's spawn
       if (this._anchor?.camped && Math.hypot(x - this._anchor.x, z - this._anchor.z) < 9) s -= 8;   // [b5-caldera] (_roam)
+      if (this._camps >= 2 && this._campAt) s += Math.min(Math.hypot(x - this._campAt.x, z - this._campAt.z), 30) * 0.5 + (Math.sign(z) !== Math.sign(this._campAt.z) ? 8 : 0);   // [b5-caldera] fix round 4 (_roam: camped twice — far, and the other half: the stages are 180° turns)
       if (s > bs) { bs = s; best = [x, z]; }
     }
     if (!best) return;
