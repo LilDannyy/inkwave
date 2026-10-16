@@ -49,6 +49,12 @@ export const KARP_CAUSES = {
 };
 
 const CSS = `
+/* the TAB map's jump bubble of the carrier: the carp rides on it (the bubble covers the map's carp icon) */
+.iw-bcn__karp { display: none; position: absolute; left: calc(var(--bs) * -.05); top: calc(var(--bs) * -1.12); width: calc(var(--bs) * .78); height: calc(var(--bs) * .78); color: #ffd27a; pointer-events: none;
+  filter: drop-shadow(0 0 2px #15121c) drop-shadow(0 2px 0 rgba(0,0,0,.35)); animation: iw-bcn-karp 1.1s ease-in-out infinite alternate; }
+.iw-bcn__karp svg { width: 100%; height: 100%; }
+.iw-bcn.is-karp .iw-bcn__karp { display: block; }
+@keyframes iw-bcn-karp { to { translate: 0 -12%; rotate: -8deg; } }
 .iw-hud.is-karp .iw-zc { display: block; }
 .iw-hud.is-karp .iw-timer__drip { display: none; }
 .iw-hud.is-karp .iw-hud__top { gap: calc(var(--u) * 1.05); }
@@ -295,11 +301,12 @@ export class KarpHud {
       }
     }
     this._line(f, me, them);
+    this._beacons();
     // ---- the status pill
-    const tn = (t) => (t === me ? 'US' : 'THEM');
+    const tn = (t) => (t === me ? 'OURS' : 'THEIRS');   // (the pause strip's and the meter tag's words)
     let st = '', fast = false;
     if (f.phase === 'carried' && f.holder) { const s = Math.max(0, Math.ceil(f.carrying ? f.fuseShown : f.fuse)); fast = f.rate > 1; st = `${f.carrying ? 'YOU CARRY' : f.holder.team === me ? 'WE CARRY' : 'THEY CARRY'} · ${s} s${fast ? ' ×3' : ''}`; }
-    else if (f.phase === 'shielded') { const k = f.hp > 0 ? f.meter / f.hp : 0, lead = k > 0.004 ? 0 : k < -0.004 ? 1 : -1; st = lead < 0 ? 'SHELL' : `SHELL ${Math.round(Math.abs(k) * 100)}% ${tn(lead)}`; }
+    else if (f.phase === 'shielded') { const k = f.hp > 0 ? f.meter / f.hp : 0, lead = k > 0.004 ? 0 : k < -0.004 ? 1 : -1; st = lead < 0 ? 'SHELL' : `SHELL · ${Math.round(Math.abs(k) * 100)}% ${tn(lead)}`; }
     else if (f.phase === 'reforming') st = 'SHELL RE-FORMING';
     else if (f.phase === 'free') st = 'FREE — GRAB IT!';
     else if (f.phase === 'resetting') st = 'BACK TO THE POND';
@@ -366,6 +373,11 @@ export class KarpHud {
       const d = cp ? Math.hypot(cp.x - f.shellC[0], cp.y - f.shellC[1], cp.z - f.shellC[2]) : 99;
       const p = d <= 45 ? this._proj(f.shellC[0], f.shellC[1] + f.shellR + 0.55, f.shellC[2]) : null;
       if (p && !p.behind && p.x > 0 && p.x < p.W && p.y > 0 && p.y < p.H) {
+        // (never up in the top bar: below the Carp Line's status pill — a raised Pond put it over the line)
+        if (!(this._topT > 0)) { let r = this.status.getBoundingClientRect(); if (!(r.height > 0)) r = this.line.getBoundingClientRect(); this._topY = r.height > 0 ? r.bottom : 0; this._topT = 30; }
+        this._topT--;
+        const u = Math.min(p.W / 100, (p.H * 1.7778) / 100);
+        if (this._topY > 0) p.y = Math.max(p.y, this._topY + 2.9 * u);
         const k = f.hp > 0 ? f.meter / f.hp : 0, mine = me === 0 ? k : -k;   // > 0: your team's way
         const m = 0.5 + 0.5 * Math.max(-1, Math.min(1, mine)), sc = Math.max(0.6, Math.min(1.15, 22 / Math.max(1, d)));
         this.shellTag.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) scale(${sc.toFixed(3)})`;
@@ -415,7 +427,7 @@ export class KarpHud {
       this._lT = 0.1;
       const Kp = G.match?.karp, F = Kp?.field;
       const P = Kp?.holder ? Kp.holder.pos : Kp?.pos;
-      if (F && P && f.phase !== 'resetting') {
+      if (F && P && f.phase !== 'resetting' && !(f.holder && f.holder.hidden && f.holder.team !== me)) {   // ([karp-face] held still while their carrier swims hidden, S31)
         const rm = F.fieldAt(me, P), rt = F.fieldAt(them, P);
         if (rm && rt && Number.isFinite(rm.d) && Number.isFinite(rt.d)) {
           const pm = f.len[me] - rm.d, pt = f.len[them] - rt.d;
@@ -440,6 +452,18 @@ export class KarpHud {
     if (win) this.lWin.style.setProperty('--w', Math.max(0, Math.min(1, f.window / K.otPick)).toFixed(3));
     Object.assign(S, { carp: +cx.toFixed(3), best: [+xThem.toFixed(3), +xMe.toFixed(3)], held, secs, ot: !!f.overtime, win: win ? +f.window.toFixed(2) : -1, gates: [!!f.gates[them]?.up, !!f.gates[me]?.up],
       weirs: [...this.lWeirs.children].map((d) => ({ mine: d._t === me, x: +d.style.getPropertyValue('--x'), low: d.classList.contains('is-low') })) });
+  }
+  // [karp-face] the TAB map's jump bubbles: the carrier's wears the carp (an ally carrier's bubble sits on its map icon)
+  _beacons() {
+    const H = this.hud, bs = H.beacons;
+    if (!bs) return;
+    const open = H.el.classList.contains('is-mapopen'), Kh = G.match?.karp?.holder || null;
+    const tg = open && Kh ? H._beaconTargets?.() : null;
+    for (let i = 0; i < bs.length; i++) {
+      const on = !!(tg && tg[i] && tg[i].actor === Kh), el = bs[i];
+      if (on && !el._karp) { el._karp = h('i', { class: 'iw-bcn__karp', html: KARP_GLYPH }); el.appendChild(el._karp); }
+      if (el.classList.contains('is-karp') !== on) el.classList.toggle('is-karp', on);
+    }
   }
   _tags(want, me) {
     const box = this.tags;
@@ -494,6 +518,7 @@ export function drawKarpMap(c, mm, tc, s, hex, t, layer = 'under') {
   const Kp = G.match && !G.match.attract ? G.match.karp : null;
   if (!Kp) return;
   const TAU = Math.PI * 2;
+  const big = G.game?.hud?.el?.classList.contains('is-mapopen') ? 1.3 : 1;   // ([karp-face] the TAB map's marks a touch bigger)
   c.save();
   if (layer === 'under') {
     // free zones
@@ -510,22 +535,22 @@ export function drawKarpMap(c, mm, tc, s, hex, t, layer = 'under') {
       c.globalAlpha = 0.55; c.fillStyle = hatch(c, hex[tm]); c.fill(p);
       c.globalAlpha = 0.9; c.lineWidth = 0.4 * s; c.strokeStyle = hex[tm]; c.setLineDash([0.9 * s, 0.6 * s]); c.stroke(p); c.setLineDash([]);
     }
-    if (G.game?.hud?.el?.classList.contains('is-mapopen') && mm._kHalf?.length) {
-      c.globalAlpha = 0.65; c.fillStyle = '#ffffff';
-      const r = Math.max(1, 0.32 * s);
+    if (big > 1 && mm._kHalf?.length) {
+      c.globalAlpha = 0.75; c.fillStyle = '#ffffff';
+      const r = Math.max(1.2, 0.42 * s);
       for (let i = 0; i < mm._kHalf.length; i += 2) { c.beginPath(); c.arc(mm._kHalf[i], mm._kHalf[i + 1], r, 0, TAU); c.fill(); }
     }
     // weirs: diamonds in the attacking team's ink, grey once lowered
     for (const list of Kp.weirs) for (const w of list) {
       mm.toCanvas(w.pos.x, w.pos.z, tc);
-      const r = 1.05 * s;
+      const r = 1.05 * s * big;
       c.globalAlpha = 1; c.fillStyle = Kp.lowered[w.team] ? '#8a8d96' : hex[w.team]; c.strokeStyle = '#15121c'; c.lineWidth = 0.4 * s;
       c.beginPath(); c.moveTo(tc.x, tc.y - r); c.lineTo(tc.x + r, tc.y); c.lineTo(tc.x, tc.y + r); c.lineTo(tc.x - r, tc.y); c.closePath(); c.fill(); c.stroke();
     }
     // Gates: a ring; a padlock while sealed; filled and pulsing once risen
     for (const g of Kp.gates) {
       mm.toCanvas(g.pos.x, g.pos.z, tc);
-      const up = Kp.gateUp[g.team], R = 1.7 * s, pulse = 0.5 + 0.5 * Math.sin(t * 4 + g.team);
+      const up = Kp.gateUp[g.team], R = 1.7 * s * big, pulse = 0.5 + 0.5 * Math.sin(t * 4 + g.team);
       if (up) { c.globalAlpha = 0.3 + 0.3 * pulse; c.fillStyle = hex[g.team]; c.beginPath(); c.arc(tc.x, tc.y, R * (1.4 + 0.3 * pulse), 0, TAU); c.fill(); }
       c.globalAlpha = 1; c.lineWidth = 0.75 * s; c.strokeStyle = '#15121c'; c.beginPath(); c.arc(tc.x, tc.y, R, 0, TAU); c.stroke();
       c.lineWidth = 0.4 * s; c.strokeStyle = up ? '#ffffff' : hex[g.team]; c.stroke();

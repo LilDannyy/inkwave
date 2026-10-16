@@ -251,15 +251,18 @@ export class BazookarpFx {
       const cur = noAO(new THREE.Mesh(new THREE.PlaneGeometry(4.9, 2.3), new THREE.ShaderMaterial({ uniforms: U, vertexShader: CURTAIN_VS, fragmentShader: CURTAIN_FS, transparent: true, depthWrite: false, side: THREE.DoubleSide })));
       cur.position.set(w.pos.x, w.pos.y + 1.2, w.pos.z); cur.rotation.y = w.yaw;
       const ax = Math.cos(w.yaw), az = -Math.sin(w.yaw);
-      const caps = [-1, 1].map((s) => {
+      // ([karp-face] each cap sits on its own post's top, read from the level: the weir's floor can be its sill's top)
+      const tops = [-1, 1].map((s) => { const t = G.level.groundHeight(w.pos.x + ax * 2.7 * s, w.pos.z + az * 2.7 * s, w.pos.y + 4); return Number.isFinite(t) && t > w.pos.y + 1.2 ? t - 0.05 : w.pos.y + 2.35; });
+      const capY = Math.max(...tops);
+      const caps = [-1, 1].map((s, i) => {
         const g = this._capMesh(this._col(w.team));
-        g.position.set(w.pos.x + ax * 2.7 * s, w.pos.y + 2.4, w.pos.z + az * 2.7 * s); g.rotation.y = w.yaw + (s > 0 ? Math.PI / 2 : -Math.PI / 2);
+        g.position.set(w.pos.x + ax * 2.7 * s, tops[i], w.pos.z + az * 2.7 * s); g.rotation.y = w.yaw + (s > 0 ? Math.PI / 2 : -Math.PI / 2);
         root.add(g); return g;
       });
       const lip = noAO(new THREE.Mesh(new THREE.PlaneGeometry(4.9, 0.8), glow(this._col(w.team), 0.35, { side: THREE.DoubleSide })));
       lip.position.set(w.pos.x, w.pos.y + 0.08, w.pos.z); lip.rotation.set(-Math.PI / 2, 0, -w.yaw); lip.rotation.order = 'YXZ'; lip.rotation.y = w.yaw;
       root.add(cur, lip);
-      this.weirs.push({ w, cur, U, caps, lip, low: Kp.lowered[w.team] ? 1.2 : -1, y0: w.pos.y + 2.4 });
+      this.weirs.push({ w, cur, U, caps, lip, low: Kp.lowered[w.team] ? 1.2 : -1, y0: capY });
     }
     // ---- Dragon Gates: the lid, the arch, the column, a floor ring
     this.gates = Kp.gates.map((g) => {

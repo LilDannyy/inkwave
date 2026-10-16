@@ -2896,11 +2896,11 @@ export class Menus {
       ['contest', 'Both on it? It stops', 'With both teams aboard the tower won’t move. Leave it empty for 5 s and it goes neutral and rolls back to the middle — on your own half, yours rolls home by itself meanwhile.'],
     ];
     // [karp-face] Bazookarp (SPEC §6.6's four cards and two notes)
-    const karpRules = [
-      ['burst', 'Burst the shell', 'Shoot the Roe Shell in the middle. When your team\u2019s ink bursts it, any of them close by is splatted. Touching it stings.'],
-      ['carry', 'Carry it', 'Run into it to pick it up: you\u2019re 20% slower and can\u2019t super jump, enter a spawn or use your kit — but it lobs huge ink bombs. Fully charged, they splat.'],
-      ['weir', 'Take the weir', 'Your count drops as you carry it toward their base, but not past their weir until you land it on one. That opens their Dragon Gate: carry it in for a knockout.'],
-      ['fuse', 'Mind the fuse', 'You have 60 s with it. Retreat on your half or step into your own Carp-Free Zone and the fuse burns 3× as fast. If it runs out on your half, you fall off your half, or you\u2019re splatted in your own Carp-Free Zone, it goes back to the middle.'],
+    const karpRules = [   // (as short as Tower Command's, so the four cards and the notes fit the screen)
+      ['burst', 'Burst the shell', 'Shoot the Roe Shell in the middle. When your team\u2019s ink bursts it, any foe close by is splatted. Touching it stings.'],
+      ['carry', 'Carry it', 'Run into it to grab it: you\u2019re 20% slower and can\u2019t super jump, enter a spawn or use your kit — but it lobs huge ink bombs. Fully charged, they splat.'],
+      ['weir', 'Take the weir', 'Your count drops as you carry it toward their base, but not past their weir until you land it on one. That opens their Dragon Gate: carry it in to knock out.'],
+      ['fuse', 'Mind the fuse', 'You have 60 s. Retreating on your half or standing in your own Carp-Free Zone burns it 3× as fast. Blow up or fall off on your half — or go down in your zone — and it\u2019s back to the middle.'],
     ];
     const karpNotes = () => h('div', { class: 'iw-howto__notes iw-in iw-in--up' },
       h('div', { class: 'iw-hnote' }, h('i', { html: GLYPHS.bolt }), h('span', null, h('b', null, 'Specials charge'), ' while the other team holds it, and for the team behind while nobody does.')),
@@ -2924,13 +2924,14 @@ export class Menus {
     const renderRules = (anim) => {
       const [list, notes] = RULESETS[rulesMode];
       rulesEl.replaceChildren(...list.map((r, i) => card(r, i, rulesMode)));
+      rulesEl.classList.toggle('is-karp', rulesMode === 'bazookarp');   // [karp-face] (its longer cards, a touch more compact)
       notesSlot.replaceChildren(...(notes ? [notes()] : []));
       if (headSub) headSub.textContent = `${MODE_INFO[rulesMode].name} in 30 seconds`;
       if (anim) restartAnim(rulesEl, 'is-swap');
     };
     const rOpts = BATTLE_MODES.map((mi) => [mi.id, h('span', { class: 'iw-segico' }, h('i', { html: mi.icon }), mi.label)]);
     const rSeg = this._seg(rOpts, rulesMode, (v) => { rulesMode = RULESETS[v] ? v : 'turf'; renderRules(true); });
-    const rulesRow = h('div', { class: 'iw-ctl-switch iw-howto__modes iw-in' }, rSeg.el);
+    const rulesRow = h('div', { class: 'iw-ctl-switch iw-howto__modes iw-in' + (BATTLE_MODES.length > 3 ? ' is-four' : '') }, rSeg.el);   // [karp-face] (four tabs once Bazookarp is listed)
     this._bind(rulesRow, { id: 'rules', type: 'row', adjust: rSeg.adjust, accept: rSeg.cycle });
     let headSub = null;
     let mode = this._input;

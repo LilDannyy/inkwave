@@ -130,10 +130,11 @@ function buildKarp() {
   // ---- the eyes: big glossy cartoon eyes, a gill line behind each
   for (const s of [1, -1]) {
     const a = s > 0 ? 0.32 : Math.PI - 0.32, ze = 0.462, p = surf(ze, a, -0.004), n = surf(ze, a, 1).sub(surf(ze, a, 0)).normalize();
-    P.add(orient(superEllipsoid(0.03, 0.013, 0.03, 0.9, 1, 18, 10), n, p), EYE_W, M.gloss);
-    const pk = p.clone().addScaledVector(n, 0.0095).add(new V3(0, 0.004, 0.006));
-    P.add(orient(superEllipsoid(0.0165, 0.006, 0.0175, 0.9, 1, 14, 8), n, pk), EYE_K, M.gloss);
-    P.add(orient(superEllipsoid(0.0052, 0.002, 0.0052, 1, 1, 8, 5), n, pk.clone().addScaledVector(n, 0.0045).add(new V3(0, 0.0065, 0.004))), EYE_W, M.led);
+    // ([karp-face] the eyes a third bigger than the first cut: at play distance they read as the carp's face)
+    P.add(orient(superEllipsoid(0.04, 0.016, 0.04, 0.9, 1, 18, 10), n, p), EYE_W, M.gloss);
+    const pk = p.clone().addScaledVector(n, 0.012).add(new V3(0, 0.005, 0.008));
+    P.add(orient(superEllipsoid(0.022, 0.0075, 0.0235, 0.9, 1, 14, 8), n, pk), EYE_K, M.gloss);
+    P.add(orient(superEllipsoid(0.007, 0.0025, 0.007, 1, 1, 8, 5), n, pk.clone().addScaledVector(n, 0.0055).add(new V3(0, 0.0085, 0.005))), EYE_W, M.led);
     const gill = [];
     for (let i = 0; i <= 10; i++) { const aa = s > 0 ? -0.75 + i * 0.16 : Math.PI + 0.75 - i * 0.16; gill.push(surf(0.405 - 0.012 * Math.sin(i / 10 * Math.PI), aa, 0.0016)); }
     P.add(sweep(gill, { seg: 20, radial: 5, capSteps: 2, radius: (t) => 0.0034 * Math.sin(Math.PI * Math.min(1, Math.max(0.08, t))) }).geo, '#d8c6a6', M.satin);

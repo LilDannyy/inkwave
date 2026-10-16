@@ -17,6 +17,18 @@
   const P = Kp.R.pond, W0 = Kp.weirs[0][0], G0 = Kp.gates[0], dz = Math.sign(G0.pos.z) || 1;
   // the nav node nearest (x, z) with its floor near y: somewhere a kid can stand
   const spot = (x, z, y = null) => { let best = null, bd = Infinity; for (const id of G.nav.validIds) { const n = G.nav.nodes[id]; if (n.zone >= 0) continue; const d = Math.hypot(n.x - x, n.z - z) + (y == null ? 0 : Math.abs(n.y - y) * 0.6); if (d < bd) { bd = d; best = n; } } return best ? V(best.x, best.y, best.z) : V(x, y ?? 0, z); };
+  // [karp-face] a spot near (x, z) whose follow camera (behind it along yaw, up 2.4 m) sees the kid's head clearly: HUD
+  // pictures with the camera inside a wall are no use
+  const clearSpot = (x, z, y = null, yaw = 0, R = 9) => {
+    const bx = -Math.sin(yaw), bz = -Math.cos(yaw); let best = null, bd = Infinity;
+    for (const id of G.nav.validIds) { const n = G.nav.nodes[id]; if (n.zone >= 0) continue;
+      const d = Math.hypot(n.x - x, n.z - z) + (y == null ? 0 : Math.abs(n.y - y) * 0.6); if (d > R || d >= bd) continue;
+      const head = V(n.x, n.y + 1.4, n.z);
+      let ok = true; for (const k of [3.2, 4.6]) if (!G.physics.los(V(n.x + bx * k, n.y + 2.4, n.z + bz * k), head)) { ok = false; break; }
+      if (ok) for (const sd of [-1.2, 1.2]) if (!G.physics.los(V(n.x + bx * 4.6 - bz * sd, n.y + 2.4, n.z + bz * 4.6 + bx * sd), head)) { ok = false; break; }
+      if (ok) { bd = d; best = n; } }
+    return best ? V(best.x, best.y, best.z) : spot(x, z, y);
+  };
   const put = (a, p, yaw = 0) => { if (!a.alive) a.respawn(); a.pos.copy(p); a.vel.set(0, 0, 0); a.yaw = a.aimYaw = yaw; a.aimPitch = 0; a.invuln = 0; a.hp = 100; a.form = 'kid'; a.submerged = false; zero(a); };
   const park = () => m.actors.forEach((a, i) => { const p = G.level.spawnPads[a.team]; put(a, V(p.x + ((i % 4) - 1.5) * 1.6, p.y, p.z + (a.team ? 2 : -2) * (p.z > 0 ? 1 : -1)), a.team ? Math.PI : 0); });
   const yawTo = (a, p) => Math.atan2(p.x - a.pos.x, p.z - a.pos.z);
@@ -33,7 +45,7 @@
   };
   const cine = (from, look, fov = 58) => { g.settings.fov = fov; g.rig.cinematic(from, from, look, look, 99, () => {}); for (let i = 0; i < 2; i++) dbg.step(1000 / 6000); };
   const follow = (a = me) => { g.settings.fov = fov0; g.rig.follow(a, true); g.rig.yaw = a.yaw; g.rig.pitch = -0.2; dbg.step(1000 / 60); if (g.rig.blend) g.rig.blend.active = false; g.rig.follow(a, true); };
-  const calm = () => { if (g.hud.zcalls) [...g.hud.zcalls.children].forEach((el) => el.remove()); if (g.hud.karp) g.hud.karp._sayT = -1e9; };
+  const calm = () => { if (g.hud.zcalls) [...g.hud.zcalls.children].forEach((el) => el.remove()); if (g.hud.karp) g.hud.karp._sayT = -1e9; g.hud.bannerLayer?.querySelectorAll('.iw-bn').forEach((b) => b.remove()); };   // (and the big banners: an OVERTIME! left over from the scene before)
   const reset = () => {
     m.local = me; window.__tab = false;
     for (const a of m.actors) if (a.carry) Kp._release(a);
@@ -49,7 +61,7 @@
   // the TAB map: the HUD's big map for one scene
   if (!g.hud._karpTabHook) { const u = g.hud.update.bind(g.hud); g.hud.update = (dt, f) => { if (window.__tab && f && f.map) f.map.expanded = true; return u(dt, f); }; g.hud._karpTabHook = true; }
   const S = [];
-  const add = (name, set, moment, wait = 90) => { if (ONLY && !ONLY.split(',').includes(name)) return; S.push({ name, set: async () => { await set(); return { phase: Kp.phase, meter: Math.round(Kp.shell.meter), count: Kp.count, holder: Kp.holder?.name, hud: g.hud.karp?.state() }; }, moment, wait }); };
+  const add = (name, set, moment, wait = 90) => { if (ONLY && !ONLY.split(',').includes(name)) return; S.push({ name, set: async () => { g.hud.setVisible?.(!name.startsWith('look-')); if (name !== 'map-tab') window.__tab = false; await set(); return { phase: Kp.phase, meter: Math.round(Kp.shell.meter), count: Kp.count, holder: Kp.holder?.name, hud: g.hud.karp?.state() }; }, moment, wait }); };
   const side = (p, k) => V(p.x, p.y, p.z - dz * k);   // k m back toward Alpha's side
 
   // ================================================================ the HUD
@@ -82,7 +94,7 @@
   });
   add('hud-carry', () => {
     reset(); m.time = 262;
-    put(me, spot(P.x, P.z + dz * 4, P.y), dz > 0 ? 0 : Math.PI); grab(me); step(0.1);
+    put(me, clearSpot(P.x, P.z + dz * 13, null, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI); grab(me); step(0.1);
     Kp.fuse = 42.4; Kp.hud.fuseShown = 42.4; Kp.count[0] = 88;
     me.aimPitch = 0.1; me.intent.fire = true; step(1.0); calm(); follow(); step(1 / 60);
   });
@@ -102,19 +114,19 @@
   add('hud-foe', () => {
     reset(); m.time = 220;
     const b = B[0]; put(b, spot(P.x + 0.5, P.z - dz * 5, P.y), dz > 0 ? Math.PI : 0); grab(b); step(0.1);
-    put(me, spot(P.x - 0.5, P.z - dz * 13, P.y), dz > 0 ? 0 : Math.PI); me.yaw = me.aimYaw = yawTo(me, b.pos);
+    put(me, clearSpot(P.x - 0.5, P.z - dz * 13, P.y, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI); me.yaw = me.aimYaw = yawTo(me, b.pos);
     Kp.fuse = 47.3; Kp.count[1] = 93; step(0.1); calm(); follow();
   });
   add('hud-foe-pin', () => {
     reset(); m.time = 214;
     const b = B[0]; put(b, spot(P.x + 3, P.z - dz * 8, P.y)); grab(b); step(0.1);
-    put(me, spot(P.x, P.z + dz * 6, P.y), dz > 0 ? 0 : Math.PI);
+    put(me, clearSpot(P.x, P.z + dz * 13, null, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI);
     Kp.fuse = 8.6; Kp.count[1] = 74; step(0.1); calm(); follow();
   });
   add('hud-ally', () => {
     reset(); m.time = 205;
     const a = A[0]; put(a, spot(P.x + 1.5, P.z + dz * 9, P.y), dz > 0 ? 0 : Math.PI); grab(a); step(0.1);
-    put(me, spot(P.x - 1, P.z + dz * 1, P.y), dz > 0 ? 0 : Math.PI); me.yaw = me.aimYaw = yawTo(me, a.pos);
+    put(me, clearSpot(P.x - 1, P.z + dz * 1, P.y, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI); me.yaw = me.aimYaw = yawTo(me, a.pos);
     Kp.fuse = 51.2; Kp.count[0] = 78; step(0.1); calm(); follow();
   });
   add('hud-weir', () => {
@@ -131,26 +143,26 @@
     reset(); m.time = 140;
     Kp.lowered[0] = true; Kp.gateUp[0] = true; Kp.count[0] = 44; step(1.6);
     const gp = G0.pos;
-    put(me, spot(gp.x, gp.z - dz * 9, gp.y), dz > 0 ? 0 : Math.PI); grab(me); step(0.1); me.yaw = me.aimYaw = yawTo(me, gp);
+    put(me, clearSpot(gp.x, gp.z - dz * 9, gp.y, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI); grab(me); step(0.1); me.yaw = me.aimYaw = yawTo(me, gp);
     Kp.count[0] = 12; Kp.fuse = Kp.hud.fuseShown = 19.4; calm(); follow(); step(1 / 60);
   });
   add('hud-ot', async () => {
     reset(); m.time = 0.05;
     Kp.count = [41, 63]; Kp.reachT = [120, 90]; Kp.touched = true; Kp.lastCarrier = { team: 0, how: 'splat', left: 6 };
-    put(me, spot(P.x - 1, P.z + dz * 3, P.y), dz > 0 ? 0 : Math.PI);
+    put(me, clearSpot(P.x - 1, P.z + dz * 9, null, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI);
     B.forEach((b, i) => put(b, spot(P.x + (i - 1.5) * 3, P.z + dz * 7, P.y)));
     step(0.05); step(3.2); follow(); calm();
     g.hud.karp._say('OVERTIME!', { team: 0, sub: 'Stop them — 10 s to hold!', icon: (await import('./src/ui/hud-karp.js')).KARP_GLYPH });
   });
   add('hud-fuse-low', () => {
     reset(); m.time = 120;
-    put(me, spot(P.x, P.z + dz * 12, P.y), dz > 0 ? 0 : Math.PI); grab(me); step(0.1);
+    put(me, clearSpot(P.x, P.z + dz * 12, P.y, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI); grab(me); step(0.1);
     A.forEach((a, i) => put(a, spot(me.pos.x + (i - 1) * 2.4, me.pos.z - dz * 2.5, me.pos.y)));
     Kp.fuse = Kp.hud.fuseShown = 2.4; step(0.1); calm(); follow(); step(1 / 60);
   });
   add('hud-sunset-carry', () => {   // (the same HUD, the stage's evening light: set by the run's TIME)
     reset(); m.time = 150;
-    put(me, spot(P.x + 1, P.z + dz * 10, P.y), dz > 0 ? 0 : Math.PI); grab(me); step(0.1);
+    put(me, clearSpot(P.x + 1, P.z + dz * 10, P.y, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI); grab(me); step(0.1);
     Kp.fuse = Kp.hud.fuseShown = 28; Kp.count[0] = 71; me.aimPitch = 0.15; me.intent.fire = true; step(0.7); calm(); follow(); step(1 / 60);
   });
   // ================================================================ the maps
@@ -242,6 +254,20 @@
     const c = Kp.shell.center();
     cine(camAt(c, 6, 1.2, dz > 0 ? Math.PI * 0.8 : -Math.PI * 0.2), V(c.x, c.y - 0.3, c.z), 50);
   });
+  // the carrierBlock shimmer (a stage with one: karpbox) — a carrier pressed against its edge, a teammate walking in
+  add('look-carrierblock', () => {
+    reset();
+    const v = (Kp.R.carrierBlock || [])[0];
+    if (!v) return;
+    const cx = v.poly.reduce((a, q) => a + q[0], 0) / v.poly.length, cz = v.poly.reduce((a, q) => a + q[1], 0) / v.poly.length;
+    const xs = v.poly.map((q) => q[0]), x1 = Math.max(...xs);
+    put(me, spot(x1 + 1.2, cz, v.y0 + 0.3), -Math.PI / 2); grab(me); step(0.1);
+    me.intent.move.set(-1, 0, 0); step(0.8); zero(me);
+    if (A[0]) { put(A[0], spot(cx, cz + 0.8, v.y0 + 0.3)); }
+    step(0.2);
+    const lk = V(cx + 1, (v.y0 + v.y1) / 2 + 0.8, cz);
+    cine(V(lk.x + 6.5, lk.y + 3.2, lk.z - 5.5), lk, 56);
+  });
   // ================================================================ the menus (over the match)
   const menu = async (id, prep) => { g.menus.show(null); await new Promise((r) => setTimeout(r, 50)); prep?.(); g.menus.show(id); for (let i = 0; i < 40; i++) await new Promise((r) => requestAnimationFrame(r)); await new Promise((r) => setTimeout(r, 900)); };
   add('menu-pause', async () => {
@@ -263,6 +289,22 @@
       mapName: g.mapDef?.name, mode: 'bazookarp', karp: { counts: [0, 37], best: [55, 34], len: [55, 55], winner: 0, reason: 'knockout', overtime: false } });
     void names;
     g.menus.show('results'); for (let i = 0; i < 40; i++) await new Promise((r) => requestAnimationFrame(r)); await new Promise((r) => setTimeout(r, 6500));
+  }, null, 600);
+  // the stage select in this mode (DECISIONS #10: only stages with a Bazookarp layout; ?wipstages adds the rest, PREVIEW)
+  add('menu-setup', async () => {
+    g.menus.show(null); g.menus._setup = { mode: 'bazookarp', times: {} };
+    g.menus.show('setup'); for (let i = 0; i < 40; i++) await new Promise((r) => requestAnimationFrame(r)); await new Promise((r) => setTimeout(r, 1200));
+  }, null, 500);
+  // the online lobby: the offline stand-in hosting a Bazookarp room with two friends in it
+  add('menu-lobby', async () => {
+    g.menus.show(null);
+    const { MockNet } = await import('./src/net/mock.js');
+    const mk = new MockNet(); mk._auto = false; mk._lat = 0; mk._fill = 0;
+    G.net = mk; await mk.create('Danny');
+    const lm = (/lobbymap=(\w+)/.exec(window.__preArgs || '') || [])[1] || 'lockgate';   // (PRE_ARGS lobbymap=kelpline with WIPSTAGES=1: a PREVIEW stage)
+    mk.setSettings({ mode: 'bazookarp', map: lm, time: 'day', botCount: -1 });
+    try { mk.fill?.(2); } catch (e) { /* */ }
+    g.menus.show('lobby'); for (let i = 0; i < 40; i++) await new Promise((r) => requestAnimationFrame(r)); await new Promise((r) => setTimeout(r, 1500));
   }, null, 600);
   window.__hudScenes = S;
   return S.map((s) => ({ name: s.name }));
