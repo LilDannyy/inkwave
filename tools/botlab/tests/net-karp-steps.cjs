@@ -80,8 +80,11 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
     const wins = { bot: 0, guest: 0, none: 0 }, dec = [];
     for (let k = 0; k < N; k++) {
       await toPond();
-      await A.js(`(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); b.pos.set(3, 0, 0); b.vel.set(0, 0, 0); b.yaw = b.aimYaw = -Math.PI / 2; b.intent.move.set(0, 0, 0); return 1; })()`);
-      await put(B, -3, 0, 0, Math.PI / 2);
+      // (3 m either side of where it really rests — the Pond's resting point isn't exactly x 0: at ±3 from x 0, B stood
+      // 0.3 m nearer and won every race in race3 once the race was fair)
+      const kp5 = (await info(A)).pos;
+      await A.js(`(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); b.pos.set(${kp5[0]} + 3, 0, ${kp5[2]}); b.vel.set(0, 0, 0); b.yaw = b.aimYaw = -Math.PI / 2; b.intent.move.set(0, 0, 0); return 1; })()`);
+      await put(B, kp5[0] - 3, 0, kp5[2], Math.PI / 2);
       await A.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const b = __G.match.actors.find((o) => o.nid === ${bot}); b.intent.move.set(-1, 0, 0); __simAfter(0.9, () => b.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
       await B.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const a = __G.match.local; a.intent.move.set(1, 0, 0); __simAfter(0.9, () => a.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
       await wait(250);
@@ -94,7 +97,7 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
       await wait(300);
     }
     const wpn = await J(A, `(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}), g = __G.match.actors.find((o) => o.nid === ${bNid}); return { bot: b.weaponId, guest: g.weaponId }; })()`);
-    R(`5. grab share over ${N} bursts, a host bot vs guest B at equal distance (reported; no threshold)`, wins.bot + wins.guest >= N - 2, { wins, wpn, dec });
+    R(`5. grab share over ${N} bursts, a host bot vs guest B at equal distance (reported; no threshold)`, wins.bot + wins.guest >= N - 2, { wins, wpn, at: (await info(A)).pos, dec });
 
   };
 
@@ -369,7 +372,7 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
       !!cl && cl.at != null && cl.at - cl.closeT >= 0.25 && c15a.holder === bNid && c15b.holder === bNid && c15a.winner == null && c15a.overtime, { host: { holder: c15a.holder, winner: c15a.winner, reason: c15a.reason, ot: c15a.overtime }, guest: c15b.holder, closed: cl });
   }
 
-  if (part === 'race') { await zeroB(); await put(A, 0, 0, -14); await grabShare(16); }   // ([karp-face] the grab share alone)
+  if (part === 'race') { await zeroB(); await put(A, 0, 0, -14); await grabShare(16); await toPond(); }   // ([karp-face] the grab share alone)
 
   if (part === 'snap') {
     // [karp-face] review round 1 (the blocker and its twin): a snapshot the host took BEFORE a discrete record plays on a

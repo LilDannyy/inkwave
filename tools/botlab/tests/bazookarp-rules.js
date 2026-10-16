@@ -87,8 +87,12 @@
     Kp.shell.m = 0; const c = Kp.shell.center();
     G.projectiles._explodeBomb({ pos: V(c.x, c.y, c.z - 1.6), team: 0, owner: a0, sp: false, kind: 'bomb' });
     const bomb = Kp.shell.meter;
+    // ([karp-face] a barrage's bomb: its thrower's Bomb Barrage running — a sub's sp flag alone, thrown by hand during
+    // some other special, counts whole now: M6)
+    G.specials.start(a0, 'barrage');
     Kp.shell.m = 0; G.projectiles._explodeBomb({ pos: V(c.x, c.y, c.z - 1.6), team: 0, owner: a0, sp: true, kind: 'bomb' });
     const bar = Kp.shell.meter;
+    G.specials.end(a0, 'test');
     R('B3 §2.2: a Splat Bomb at the surface counts its player damage (180), not the device number (60)', Math.abs(bomb - SUB.bomb.damageMax) < 1, { bomb, max: SUB.bomb.damageMax });
     R('B4 §2.2: a Bomb Barrage\'s bomb (its sp flag) counts × 0.5', Math.abs(bar - SUB.bomb.damageMax * 0.5) < 1, { bar });
     Kp.shell.m = 0; O.hit(a0, 500, 'charger'); const cap = Kp.shell.meter;
