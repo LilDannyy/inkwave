@@ -82,7 +82,7 @@ the load averages). Pictures: `tools/botlab/jobs/batch5/stages/bluestone/out/eng
   2.5 s is down the next frame. The negative control fails all three (hang still 0.52 s after the flip; the re-hung
   tether at 1.37 s).
 
-### Issue 4 (minor) — the lagged run was never part of the tests; at 150 ms the follower's clock sat 0.37–0.45 s behind; the device check was flaky. **Fixed.**
+### Issue 4 (minor) — the lagged run was never part of the tests; at 150 ms the follower's clock sat 0.37–0.45 s behind; the device check was flaky. **Fixed: the lagged run, the clock, the device check. The < 0.4 s flip contract held where the frames held and missed at a load of ~400 (below): it needs the quiet machine.**
 - **The margin taken back (`src/net/netmatch.js`, [b5-eras]):** the host's clock tick (`msg.c`, twice a second) now
   carries its match clock (and Practice's stage clock) as they will be when the tick reaches the relay: half the host's
   round trip taken off `time`. Each follower takes off its own half on arrival and moves halfway to that past a 0.05 s
@@ -454,6 +454,11 @@ carrying this report and `local-logs/fr1/`. **The second half:** 5aa9068b, 59789
   every deterministic half passed.
 - **Rule 22's accepted exception** (the Halo's 225° side 3.66 m over the balcony stair's corner) is the lead's to keep or
   lever away.
+- **The online clock under lag** (issue 4): flips within 0.08–0.2 s at loads of 130–280, 0.5 s at ~400 where both pages
+  lost half their clock time to stalled frames. The compensation removes the follower's old trailing cushion, so a host
+  stall now shows as the follower briefly ahead instead of always behind. JOB-6's lagged run on a quiet machine decides
+  it; the next lever is the clock tick at 20 Hz.
+- **Two eras-hud layout checks from review 2** fail intermittently at loads of 300–450 (§0); unchanged code.
 - **One era shove** in five Turf Wars this round (§0, "Found while testing"); the next balance pass's `ERAS` lines name
   who and how.
 - **Bazookarp part B has never run**; the karp package needs `karp-anyValid.patch`.
