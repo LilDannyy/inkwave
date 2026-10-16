@@ -5,7 +5,8 @@
 // Lane's wall before its mural, the wire pulses), J + 1.5 (the knee, the quay, the time-lapse sky), the front crossing
 // Hoki Lane, done + 1 (the knee, the quay, the mural painted in), then jump 2 to the 3000s on the same clock; the minimap
 // and the TAB map in each era; a bot standing on the Halo; the rescue over the river in Practice's rewind; the lightmap
-// probe (once bluestone.png is baked: the R and G channels of the street beside the era-1 crates).
+// probe (once bluestone.png is baked: the R and G channels of the street beside the era-1 crates). ONLY=fr1: the final
+// review's done + 0.5 pictures (the opened lane and the wagon's footprint outlined on the floor, the minimap's ping).
 const { app } = require('electron');
 const fs = require('fs');
 require(process.env.S + '/offscreen-boot.cjs');
@@ -26,6 +27,8 @@ const CAM = {
   halo: { from: [-21, 7.2, -21], look: [-8, 5.0, -8], fov: 56 },             // the Halo's south-west side from the knee
   rescue: { from: [-8.6, 2.8, -44.5], look: [2.5, -0.2, -36.5], fov: 62 },   // the quay over the floating garden
   probe: { from: [-18.25, 7.5, -36], look: [-12.25, 0.4, -26], fov: 55 },    // the era-1 crates from above
+  lane: { from: [-19.5, 4.2, -33], look: [-12.2, 0.2, -26], fov: 62 },       // (final review, issue 7) Degrayling Lane where the crates stood, from Swimston
+  wagon: { from: [-10.7, 5.2, -57], look: [-10.7, 0.6, -47.5], fov: 60 },   // (final review, issue 7) Customs Lane where the goods wagon stood, from the forecourt terrace
 };
 const pre = `const g = window.__inkwave, E = g.match.eras, W = __G.eraWorld, P = __G.paint, THREE = window.__THREE;
   const step = (s) => { const n = Math.max(1, Math.round(s * 60)); for (let i = 0; i < n; i++) g.debug.step(1000 / 60); };
@@ -120,6 +123,10 @@ app.on('browser-window-created', (_, win) => {
     await at(63.0);
     await shot('timelapse-sky-J+3.0', CAM.sky);
     const done1 = await js(`(() => { ${pre} return 60 + W.doneOff; })()`);
+    // (the final review, issue 7: done + 0.5 — the opened lane outlined on the floor, the new pieces pulsing, the minimap's ping)
+    await at(done1 + 0.5);
+    await shot('fr1-jump1-lane-done+0.5', CAM.lane, { hud: true });
+    await minimap('fr1-minimap-done+0.5');
     await at(done1 + 1.0);
     await shot('jump1-knee-done+1', CAM.knee, { hud: true });
     await shot('jump1-quay-done+1', CAM.quay, { hud: true });
@@ -131,6 +138,9 @@ app.on('browser-window-created', (_, win) => {
     await shot('jump2-quay-J-10', CAM.quay, { hud: true });
     await at(122.0);
     await shot('jump2-quay-J+2', CAM.quay, { hud: true });
+    await at(120 + done1 - 60 + 0.5);
+    await shot('fr1-jump2-wagon-done+0.5', CAM.wagon, { hud: true });
+    await minimap('fr1-minimap-era3-done+0.5');
     await at(120 + done1 - 60 + 1.0);
     await shot('jump2-quay-done+1', CAM.quay, { hud: true });
     await shot('mural-seams-era3', { from: [-23.4, 3.4, -45.5], look: [-26, 4.4, -37.5], fov: 56 });
