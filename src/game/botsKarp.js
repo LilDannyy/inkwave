@@ -629,10 +629,12 @@ export function karpFightNav(b, P) {
 }
 
 // ================================================================================================ the carrier
-// the arc solver: the aim pitch that lobs a Carp Shot of charge c from the muzzle to a point d m out, dy above the feet
-function lobPitch(c, d, dy) {
+// the arc solver: the aim pitch that lobs a Carp Shot of charge c from the muzzle to a point d m out, dy above the feet.
+// The low arc (the quickest: a lob that hangs ~2 s in the air is a lob anyone walks out of), the high one with high
+// (over cover, at a foe out of sight)
+function lobPitch(c, d, dy, high = false) {
   const s = speedOf(c), g = K.gun.gravity, y0 = K.gun.muzzleUp - dy;
-  let best = null, be = Infinity;
+  let best = null, be = Infinity, lo = null, hi = null;
   for (let p = -0.7; p <= 0.8; p += 0.02) {
     const th = p + (K.gun.lob * Math.PI) / 180, vx = Math.cos(th) * s, vy = Math.sin(th) * s;
     const disc = vy * vy + 2 * g * y0;
@@ -640,7 +642,9 @@ function lobPitch(c, d, dy) {
     const t = (vy + Math.sqrt(disc)) / g, x = vx * t;
     const e = Math.abs(x - (d - K.gun.muzzleFwd));
     if (e < be) { be = e; best = p; }
+    if (e < 0.35) { if (lo === null) lo = p; hi = p; }
   }
+  if (lo !== null) return high ? hi : lo;
   return be < 2.5 ? best : null;
 }
 const _cg = new V3();
@@ -739,8 +743,9 @@ export function karpCarrierAct(b, P, { dt, it, move }) {
   if (tgt) {
     const want = df.full ? 1 : near(6).length ? 0.5 : 1;
     let px = tgt.pos.x, pz = tgt.pos.z;
-    let pitch = lobPitch(want, tgt.d, tgt.pos.y - a.pos.y);
-    if (pitch !== null && df.lead && tgt.vel) { const ft = flightT(want, tgt.d, pitch) + K.gun.swell * 0.5; px += tgt.vel.x * ft; pz += tgt.vel.z * ft; pitch = lobPitch(want, Math.hypot(px - a.pos.x, pz - a.pos.z), tgt.pos.y - a.pos.y) ?? pitch; }
+    const over = !tgt.seen;   // (out of sight, at where it was: lobbed high, over the cover)
+    let pitch = lobPitch(want, tgt.d, tgt.pos.y - a.pos.y, over);
+    if (pitch !== null && df.lead && tgt.vel) { const ft = flightT(want, tgt.d, pitch) + K.gun.swell * 0.5; px += tgt.vel.x * ft; pz += tgt.vel.z * ft; pitch = lobPitch(want, Math.hypot(px - a.pos.x, pz - a.pos.z), tgt.pos.y - a.pos.y, over) ?? pitch; }
     if (pitch !== null) return shoot(want, Math.atan2(px - a.pos.x, pz - a.pos.z), pitch, tgt.d, 'foe');
   }
   // 5. a Waddle Bomb / Torpedo coming at it within 8 m: a Splash at it (the gate skips _threatCtl)
@@ -1029,19 +1034,30 @@ export function karpShellAvoid(b = null) {
 //   shakes and hisses) · the shell while the other team's side of the meter is ≥ the threatened team's threshold (70 %
 //   normal, 60 % hard, none easy): 5.5 m, big, lingering (routes go round it)
 const _pp = new V3(), _pq = new V3(), _ph = new Hit();
+// (also where it comes down past head height: lx / lz / lt — a body in its way there is where it lands, SPEC §2.5)
+const _sw = [];
 function predictShot(s) {
-  const now = G.time, P = s._kp || (s._kp = { t: -9, ok: false, x: 0, y: 0, z: 0, at: 0 });
+  const now = G.time, P = s._kp || (s._kp = { t: -9, ok: false, x: 0, y: 0, z: 0, at: 0, lx: 0, lz: 0, lt: 0 });
   if (now - P.t < 0.1 && now >= P.t) return P.ok ? P : null;
   P.t = now; P.ok = false;
   let x = s.pos.x, y = s.pos.y, z = s.pos.z, vx = s.vel.x, vy = s.vel.y, vz = s.vel.z;
   const dt = 0.05, g = K.gun.gravity, H = _ph;
+  _sw.length = 0; _sw.push(x, y, z, 0);
   for (let tt = dt; tt <= 3; tt += dt) {
     const nx = x + vx * dt, ny = y + vy * dt - 0.5 * g * dt * dt, nz = z + vz * dt;
     vy -= g * dt;
     const r = G.physics.segment(_pp.set(x, y, z), _pq.set(nx, ny, nz), H, true);
-    if (r && r.hit) { P.x = r.point.x; P.y = r.point.y; P.z = r.point.z; P.at = now + tt - dt * 0.5; P.ok = true; return P; }
+    if (r && r.hit) {
+      P.x = r.point.x; P.y = r.point.y; P.z = r.point.z; P.at = now + tt - dt * 0.5; P.ok = true;
+      // the last stretch of its fall lower than a kid's head over where it lands (+ the ball)
+      let k = _sw.length - 4;
+      while (k > 0 && _sw[k + 1] < P.y + PLAYER.height + 0.25) k -= 4;
+      P.lx = _sw[k]; P.lz = _sw[k + 2]; P.lt = now + _sw[k + 3];
+      return P;
+    }
     if (ny < PLAYER.waterY - 1.5) return null;
     x = nx; y = ny; z = nz;
+    _sw.push(x, y, z, tt);
   }
   return null;
 }
@@ -1055,9 +1071,23 @@ export function karpDangers(A) {
     if (s.phase === 'fly') {
       const p = predictShot(s); if (!p) continue;
       const d = A.D(A.keyOf(s, 0), 'karp', s.team, s.owner);
-      A.disc(d, p.x, p.y, p.z, R + 0.6, Math.min(R, K.gun.fullKillR));
+      // (its centre drawn 0.8 m back toward where it comes from, the disc 0.8 m bigger: the way out from under it is then
+      // sideways or on beyond — back toward the shooter runs under the ball, which lands on a body in its way)
+      const hv = Math.hypot(s.vel.x, s.vel.z) || 1, bx = -s.vel.x / hv * 0.8, bz = -s.vel.z / hv * 0.8;
+      A.disc(d, p.x + bx, p.y, p.z + bz, R + 0.6 + 0.8, Math.min(R, K.gun.fullKillR));
       d.tIn = Math.max(0, p.at - now) + K.gun.swell; d.tOut = d.tIn + 0.1; d.lethal = lethal; d.los = true; d.losY = 0.35; d.vis = 'near'; d.hit = 'karp';
       A.see(d, s.pos.x, s.pos.y, s.pos.z);
+      // its way in, the last metres below head height (short of the last one, where it lands anyway): a body there is
+      // where it lands, the blast on top of it. Not a reason to run by itself (dodge: only in its last 0.05 s) — an
+      // obstacle for the way out of the disc: out sideways or beyond, never back up along it under the ball
+      const lx = p.x - p.lx, lz = p.z - p.lz, ll = Math.hypot(lx, lz) - 1.0;
+      if (ll > 0.3 && A.line) {
+        const q = A.D(A.keyOf(s, 2), 'karp', s.team, s.owner);
+        A.line(q, p.lx, p.y, p.lz, lx, lz, ll, PLAYER.radius + 0.22 + 0.25);
+        q.speed = (ll + 1) / Math.max(0.05, p.at - p.lt); q.delay = Math.max(0, p.lt - now); q.back = 0.2; q.dodge = 0.05;
+        q.tIn = q.delay; q.tOut = Math.max(0, p.at - now) + 0.05; q.lethal = lethal; q.vis = 'near'; q.hit = 'karp-way'; q.with = d.key;
+        A.see(q, s.pos.x, s.pos.y, s.pos.z);
+      }
     } else if (s.phase === 'swell' && s.land) {
       const d = A.D(A.keyOf(s, 1), 'karp', s.team, s.owner);
       A.disc(d, s.land.x, s.land.y, s.land.z, R + 0.6, Math.min(R, K.gun.fullKillR));

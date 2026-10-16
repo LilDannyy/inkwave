@@ -106,7 +106,7 @@ function D(key, src, team, owner) {
   d.shape = 0; d.x = 0; d.y = 0; d.z = 0; d.dx = 0; d.dz = 1; d.len = 0; d.d3 = false; d.ux = 0; d.uy = 0; d.uz = 1; d.back = 0.4;
   d.r = 1; d.core = 1; d.yLo = -1e9; d.yHi = 1e9; d.vx = 0; d.vz = 0; d.vt = 0; d.tIn = 0; d.tOut = 60; d.lethal = 2;
   d.los = false; d.losY = 0.35; d.vis = 'near'; d.sx = 0; d.sy = 0; d.sz = 0; d.linger = false; d.actor = null;
-  d.speed = 0; d.delay = 0; d.dodge = 0; d.shot = false; d.hear = 0; d.imm = null; d.fast = false; d.obj = null; d.pop = false; d.jump = false; d.turret = false; d.not = null;   // ([b5-karp-bots] not: the one actor it's no danger to)
+  d.speed = 0; d.delay = 0; d.dodge = 0; d.shot = false; d.hear = 0; d.imm = null; d.fast = false; d.obj = null; d.pop = false; d.jump = false; d.turret = false; d.not = null; d.with = null;   // ([b5-karp-bots] not: the one actor it's no danger to; with: noticed with that one's key)
   _list.push(d);
   return d;
 }
@@ -141,7 +141,7 @@ function predict(d, pos, vel, g, maxT) {
   d.px = x; d.py = y; d.pz = z; d.pAt = now + maxT;   // (still in the air at the end: where it'll be)
   return false;
 }
-const DANGER_API = { D, keyOf, disc, see };   // [b5-subs] (what a kit's dangers hook builds its areas with)
+const DANGER_API = { D, keyOf, disc, see, line };   // [b5-subs] (what a kit's dangers hook builds its areas with) [b5-karp-bots] line
 const _barEnd = new WeakMap();
 const _fresh = [];   // [b5-deploy] (_scan: the dangers new to this bot this look)
 const barrage = (a) => !!a && (a.specialActive?.kind === 'barrage' || G.time - (_barEnd.get(a) ?? -99) < 3.5);
@@ -660,6 +660,8 @@ export class SpecialSense {
       const at = now + b.diff.reaction * (0.6 + Math.random() * 0.4) + (fighting && !watching ? 0.05 + Math.random() * 0.1 : 0) + (inCone || watching ? 0 : 0.2);
       let at2 = at;
       for (const q of this.gone) if (q.src === d.src && now - q.t < 1 && Math.hypot(q.x - d.x, q.z - d.z) < 2.5) { at2 = Math.min(at, Math.max(now, q.at)); break; }
+      const rw = d.with && this.recs.get(d.with);   // [b5-karp-bots] one thing seen, two areas (a Carp Shot's blast and its way in): noticed together
+      if (rw) { this.recs.set(d.key, { key: d.key, d, at: rw.at, miss: rw.miss, lastT: now, live: true, t0: now, noted: false, wasIn: false, cover: false, backed: false, rayT: -9, jit: rw.jit }); continue; }
       const miss = at2 === at && d.fast && Math.random() < (MISS[b.diff.id] ?? 0.18);
       if (miss) SPECIAL_STATS.missed++;
       // (jit: how far off its read of a zooka's rhythm is — a hard bot within ~0.05 s, an easy one ~0.2 s)

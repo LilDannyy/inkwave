@@ -270,30 +270,49 @@
 
   // ============================================================================ H. out of a Big Burst's disc
   if (want('H')) {
-    const res = [];
-    for (let k = 0; k < 20; k++) {
-      fresh();
-      const v = B[k % 4], s = A[2];
-      v.setWeapon(['shooter', 'blaster', 'bucket', 'twins'][k % 4]); wake(v, 'normal');
-      // the victim settles at its spot (a breaker on its side of the shell), then a Big Burst comes in from in front of it
-      step(2.5, () => { v.hp = PLAYER.hp; });
-      const vp = v.pos.clone(), fy = v.bot.aimYaw, side = k % 2 ? 0.6 : -0.6;
-      const sx = vp.x + Math.sin(fy + side) * 15, sz = vp.z + Math.cos(fy + side) * 15;
-      put(s, sx, sz);
-      const d = hd(s.pos, vp), dy = vp.y - s.pos.y;
-      // the aim that lobs a full charge onto it
-      let best = 0, be = 1e9;
-      for (let p = -0.7; p <= 0.8; p += 0.005) { const th = p + (K.gun.lob * Math.PI) / 180, sp = speedOf(1), vx = Math.cos(th) * sp, vy = Math.sin(th) * sp, disc = vy * vy + 2 * K.gun.gravity * (K.gun.muzzleUp - dy); if (disc < 0) continue; const x = (vx * (vy + Math.sqrt(disc))) / K.gun.gravity; if (Math.abs(x - (d - K.gun.muzzleFwd)) < be) { be = Math.abs(x - (d - K.gun.muzzleFwd)); best = p; } }
-      s.aimYaw = Math.atan2(vp.x - s.pos.x, vp.z - s.pos.z); s.aimPitch = best;
-      const shot = KARP_GUN._fire(s, 1);
-      let hurt = false, land = null, blowD = null;
-      const off = on('damage', (e) => { if (e.victim === v && e.source === 'karp') hurt = true; });
-      step(2.2, () => { if (shot.land && !land) land = shot.land.clone(); if (shot.phase === 'done' && blowD === null) blowD = land ? hd(v.pos, land) : null; });
-      off();
-      res.push({ ok: !hurt, landOff: land ? +hd(land, vp).toFixed(2) : null, blowD });
-    }
+    // trials at range HR: a breaker settled on its spot (clean ground, a kid), a full charge lobbed onto it from HR m in
+    // front of it (±0.6 rad); ok = not hurt at all (out of the 4.0 m blast when it blows)
+    const trials = (HR, N) => {
+      const res = [];
+      for (let k = 0; k < N; k++) {
+        fresh();
+        const v = B[k % 4], s = A[2];
+        v.setWeapon(['shooter', 'blaster', 'bucket', 'twins'][k % 4]); wake(v, 'normal');
+        // (placed by its spot: after 2.5 s from its deck it was still walking in — a lob aimed at it then lands behind it and
+        // it walks on under the arc; it has to be standing)
+        put(v, ((k % 3) - 1) * 2.5, 7.5); Kp.shell.add = () => {};
+        let vs = 0; step(4, () => { v.hp = PLAYER.hp; if (Math.hypot(v.vel.x, v.vel.z) < 1.2) vs++; else vs = 0; if (vs > 30) return false; });
+        const vp = v.pos.clone(), fy = v.bot.aimYaw, side = k % 2 ? 0.6 : -0.6;
+        put(s, vp.x + Math.sin(fy + side) * HR, vp.z + Math.cos(fy + side) * HR);
+        const d = hd(s.pos, vp), dy = vp.y - s.pos.y;
+        // the aim that lobs a full charge onto it
+        // (the low arc: the first pitch from below that lands within 0.1 m — a high lob would hang in the air for 2 s)
+        let best = 0, be = 1e9;
+        for (let p = -0.7; p <= 0.8; p += 0.005) { const th = p + (K.gun.lob * Math.PI) / 180, sp = speedOf(1), vx = Math.cos(th) * sp, vy = Math.sin(th) * sp, disc = vy * vy + 2 * K.gun.gravity * (K.gun.muzzleUp - dy); if (disc < 0) continue; const x = (vx * (vy + Math.sqrt(disc))) / K.gun.gravity, e = Math.abs(x - (d - K.gun.muzzleFwd)); if (e < be) { be = e; best = p; } if (be < 0.1) break; }
+        s.aimYaw = Math.atan2(vp.x - s.pos.x, vp.z - s.pos.z); s.aimPitch = best;
+        const shot = KARP_GUN._fire(s, 1);
+        let hurt = false, land = null, blowD = null, knowT = null, landT = null;
+        const off = on('damage', (e) => { if (e.victim === v && e.source === 'karp') hurt = true; });
+        const t0 = G.time; let fr2 = 0; const trH = [];
+        step(2.2, () => {
+          if (shot.land && !land) { land = shot.land.clone(); landT = G.time - t0; }
+          if (shot.phase === 'done' && blowD === null) blowD = land ? hd(v.pos, land) : null;
+          if (knowT === null && v.bot.sp.known.some((r) => r.d.src === 'karp')) knowT = G.time - t0;
+          if ((fr2++ % 6) === 0 && trH.length < 12) { const ux = vp.x - s.pos.x, uz = vp.z - s.pos.z, ul = Math.hypot(ux, uz) || 1, rx = v.pos.x - vp.x, rz = v.pos.z - vp.z, E = v.bot.sp.esc; trH.push([+(G.time - t0).toFixed(2), +((rx * ux + rz * uz) / ul).toFixed(2), +((rx * uz - rz * ux) / ul).toFixed(2), v.bot.sp.known.filter((r) => r.d.src === 'karp').map((r) => r.d.shape).join(''), E ? E.r.d.shape : '-', shot.phase[0], E ? +(((E.yaw - Math.atan2(-ux, -uz)) + 9 * Math.PI) % (2 * Math.PI) - Math.PI).toFixed(2) : null, +shot.pos.y.toFixed(1)]); }
+        });
+        off();
+        res.push({ ok: !hurt, landOff: land ? +hd(land, vp).toFixed(2) : null, blowD, knowT, landT, tr: hurt && HR >= 18 ? trH : undefined });
+      }
+      return res;
+    };
+    const res = trials(18, 20);
     const n = res.filter((r) => r.ok).length, onIt = res.filter((r) => r.landOff !== null && r.landOff < radiusOf(1) * 0.6).length;
-    R(`H a bot standing where a Big Burst lands leaves its disc before it blows (normal): ${n} of 20 (≥ 16), ${onIt} shots landed within 2.4 m of it`, n >= 16 && onIt >= 16, res);
+    R(`H a bot standing where a Big Burst lands leaves its disc before it blows (normal, from 18 m): ${n} of 20 (≥ 16), ${onIt} shots landed within 2.4 m of it`, n >= 16 && onIt >= 16, res);
+    // (report: closer in, the flight + the 0.45 s swell is 0.9–1.1 s against a 0.2–0.45 s reaction and 4 m to run at 5.3 m/s
+    // on dry ground — a coin flip at 15 m, a kill at 12 m, by the numbers rather than the bots)
+    const rep = {};
+    for (const HR of [12, 15]) { const r = trials(HR, 10); rep[HR + ' m'] = { escaped: r.filter((q) => q.ok).length + ' of 10', meanNotice: +(r.reduce((a, q) => a + (q.knowT ?? 1), 0) / 10).toFixed(2), meanLand: +(r.reduce((a, q) => a + (q.landT ?? 0), 0) / 10).toFixed(2) }; }
+    R('H (report) the same from 12 m and 15 m (no threshold: physics, see the note)', true, rep);
   }
 
   // ============================================================================ I. the keeper
