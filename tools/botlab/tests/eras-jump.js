@@ -420,27 +420,36 @@
       //  frame (the sim, the HUD), so a spike on a loaded machine shows whose it is)
       const Rr = g.R, rend0 = Rr.render.bind(Rr), upd0 = E.update.bind(E);
       let fu = 0, fren = 0;
-      const jumpRun = (label, prep) => {
+      const jumpRun = async (label, prep) => {
         const b0 = W.stats.baseBuilds.length, info = prep();
         const before = W.stats.baseBuilds.slice(b0), missing = W._basesMissing();
+        // (final review 2, issue 4: 1 s of play and 1.5 s of wall time between the set-up and the jump. The set-up rebuilds
+        //  the minimap's era bases (~0.1 s of 2D raster each) and the jump used to start in the same breath, with no
+        //  warning: the GPU process was still drawing those canvases, and one draw call of the jump — any object — blocked
+        //  behind them for 20–600 ms at J + 0.25–0.45 or J + 1.0–1.5 in 3 of 4 runs; settled, no frame passed 11.2 ms in
+        //  4 of 4 (probe-spike.js). In a match the bases are rebuilt while it loads — 'modes' and the check below hold it
+        //  to that — and every jump comes after a 20 s pre-bell)
+        step(1); await new Promise((r) => setTimeout(r, 1500));
         const to = E.era === 3 ? 1 : E.era + 1, Jx = E.debugJump(to, { inS: 0 }), b1 = W.stats.baseBuilds.length, fr = [];
         Rr.render = (...a) => { const r0 = performance.now(); try { return rend0(...a); } finally { fren += performance.now() - r0; } };
         E.update = (dt, t) => { const u0 = performance.now(); try { return upd0(dt, t); } finally { fu += performance.now() - u0; } };
         let uMax = 0;
+        const progs = () => __G.renderer.info.programs?.length || 0, pj = progs();
         while (E.S.clock.t < Jx.doneAt + 1.0) {
           fu = 0; fren = 0;
-          const t0 = performance.now(); dbg.step(1000 / 60); const ms = performance.now() - t0;
+          const mem = __G.renderer.info.memory, pr = progs(), tx = mem.textures, gm = mem.geometries, t0 = performance.now(); dbg.step(1000 / 60); const ms = performance.now() - t0;
           if (fu > uMax) uMax = fu;
-          // [total, J + s, era update, render, the rest]
-          fr.push([+ms.toFixed(1), +(E.S.clock.t - Jx.at).toFixed(2), +fu.toFixed(2), +fren.toFixed(1), +(ms - fu - fren).toFixed(1)]);
+          // [total, J + s, era update, render, the rest, programs compiled, textures and geometries uploaded in the frame]
+          fr.push([+ms.toFixed(1), +(E.S.clock.t - Jx.at).toFixed(2), +fu.toFixed(2), +fren.toFixed(1), +(ms - fu - fren).toFixed(1), progs() - pr, mem.textures - tx, mem.geometries - gm]);
         }
+        info.programsCompiled = progs() - pj;
         Rr.render = rend0; E.update = upd0;
         const during = W.stats.baseBuilds.slice(b1);
         fr.sort((a, b) => b[0] - a[0]);
         rows.push({ label, ...info, rebuiltBefore: before.map((x) => `${x.e}:${x.why} ${x.ms} ms`), missingAtJ: missing, jump: `${Jx.from}>${Jx.to}`, buildsJtoDone1: during, worst: fr.slice(0, 3), eraUpdateMaxMs: +uMax.toFixed(2), frames: fr.length });
       };
-      jumpRun('bravo', () => { mm.setViewerTeam(1); return { flip: mm.flip, cached: [...(mm._bases?.keys() || [])].sort().join('') }; });
-      jumpRun('theme', () => { mm.setViewerTeam(0); step(0.1); g.theme = th0 === 'sunset' ? 'golden' : 'sunset'; __G.env.setTheme?.(g.theme); step(4 / 60); return { theme: g.theme, mmTheme: mm._theme, cached: [...(mm._bases?.keys() || [])].sort().join('') }; });
+      await jumpRun('bravo', () => { mm.setViewerTeam(1); return { flip: mm.flip, cached: [...(mm._bases?.keys() || [])].sort().join('') }; });
+      await jumpRun('theme', () => { mm.setViewerTeam(0); step(0.1); g.theme = th0 === 'sunset' ? 'golden' : 'sunset'; __G.env.setTheme?.(g.theme); step(4 / 60); return { theme: g.theme, mmTheme: mm._theme, cached: [...(mm._bases?.keys() || [])].sort().join('') }; });
       g.theme = th0; __G.env.setTheme?.(th0); step(0.1);
       R('step 8 (review fix 1): a viewer on Bravo (the minimap\'s side flip drops its cached era bases) and a match at another time of day (the theme drops them): the bases are rebuilt before the jump, and none is built between J and done + 1',
         rows.length === 2 && rows.every((r) => !r.missingAtJ && r.cached === '123' && r.buildsJtoDone1.length === 0) && rows[0].flip === true && rows[0].rebuiltBefore.length === 2 && rows[1].rebuiltBefore.length >= 2,
