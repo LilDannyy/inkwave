@@ -536,6 +536,11 @@ and fills its own players' gauges. The start config carries `mode: 'tower'` and 
   for an adopted actor's queued Carp Shots, `lastCarrier` / `lastPlant` in `S` (a new host's S38 decision at time-up
   uses what its follower saw), the fuse hold for a remote carrier's Carp Blast, the HUD fuse's correction under lag,
   the latency steps (`netlag`), three-client rooms beyond the migration test, the results' per-player columns on screen.
+- **bots ([b5-karp-bots]).** No record of their own: bots run on the host (src/game/botsKarp.js), and know an enemy
+  carrier only as a player could — seen, located (its kid-form marker is a reveal), its wake within 20 m with a line,
+  remembered, or where it was picked up (the Bazookarp lay in plain view) — never its live position. A guest's Carp Shot
+  is a danger to them from the ghost the host already flies (`G.karpGun.shots`). A remote (guest) carrier's last 3 s of
+  fuse are a danger to the host's bots on its team, from the host's own fuse and the rate its `kr` sent.
 - Tested by `CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' NET=tools/botlab/tests/net-karp.cjs
   tools/botlab/run.sh tools/botlab/netpage.cjs` (19 checks: the host's view of a guest carrier, ghost landings, the
   victim-judged blast and `[3]`, `kr`, `kd`, `kx` inside an S39 overtime, the same result) and

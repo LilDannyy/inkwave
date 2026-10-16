@@ -53,6 +53,16 @@ def main():
     print(f'   overtime {len(ots)}/{n} by start {dict((w, sum(1 for o in ots if o["why"] == w)) for w in ("held", "dropped", "planted"))} ends {dict((e, sum(1 for o in ots if o["end"] == e)) for e in set(o["end"] for o in ots))} | losing team won {len(lateWon)}/{len(late)} of S38a/S38c')
     print(f'   stuck mean {st.mean(stuck):.1f}% | carrier > 3 s episodes {sum(cst)} | clamp rejections {sum(clamped)} | carrierRetreatFallback {st.mean(fallback):.2f}/match | console lines {sum(cons)}')
     print(f'   knockouts within 8 s of a shared Bubble Guard {koBub}/{len(ko)}')
+    # [b5-karp-bots] the bots' carries and the shell: carries ending in a splat within 2.5 s, carries that made no new ground,
+    # the ×3 retreat seconds, the fallbacks (and the dips the engine forgives), who the bursts caught
+    C = [c for r in R for c in (r.get('carries') or [])]
+    short = sum(1 for c in C if c.get('how') == 'splat' and (c.get('dur') or 0) < 2.5)
+    flat = sum(1 for c in C if not ((c.get('m') or 0) > 0))
+    ret = [r.get('fastT', {}).get('retreat', 0) for r in R]
+    soft = [r.get('fbSoft', 0) for r in R]
+    bv = [v for r in R for v in (r.get('burstV') or [])]
+    melee = sum(1 for v in bv if v.get('w') in ('roller', 'brush', 'blade', 'mitts'))
+    print(f'   bots: carries {len(C)} — {short} ({100 * short / max(1, len(C)):.0f}%) a splat within 2.5 s, {flat} ({100 * flat / max(1, len(C)):.0f}%) no new ground | ×3 retreat s/match {[round(x, 1) for x in ret]} | fallback/match {fallback} (forgiven dips {soft}) | burst victims {len(bv)} ({melee} melee) {[(v.get("w"), v.get("role"), v.get("mode"), v.get("d")) for v in bv][:8]}')
     small = n < 16
     def row(name, ok, info):
         tag = 'INFO' if small else ('PASS' if ok else 'FAIL')

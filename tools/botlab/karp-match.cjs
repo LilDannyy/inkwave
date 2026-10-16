@@ -74,7 +74,7 @@ app.on('browser-window-created', (_, win) => {
       if (HUMAN === 'still' && me) { me.bot = null; me.intent.move.set(0, 0, 0); me.intent.fire = me.intent.squid = me.intent.jump = me.intent.sub = me.intent.special = false; }
       g.debug.freeze();
       const clock = () => +(m.duration - m.time + (Kp.overtime ? Kp.overtimeT : 0)).toFixed(1);
-      const X = { pops: [], pickups: [], carries: [], plants: [], gates: [], blasts: [], resets: [], moves: 0, drops: [], ot: null, end: null, specials: 0, jumps: 0, jumpsToCarrier: 0, bubbleOnCarrier: [], kos: [], splats: 0, burstSplats: 0, fuseSplats: 0, arrive: [null, null] };
+      const X = { pops: [], pickups: [], carries: [], plants: [], gates: [], blasts: [], resets: [], moves: 0, drops: [], ot: null, end: null, specials: 0, jumps: 0, jumpsToCarrier: 0, bubbleOnCarrier: [], kos: [], splats: 0, burstSplats: 0, fuseSplats: 0, arrive: [null, null], burstV: [], dangerT: [null, null] };
       let cur = null;   // the carry in progress
       const offs = [
         on('karp:burst', (e) => X.pops.push({ t: clock(), team: e.team })),
@@ -89,7 +89,9 @@ app.on('browser-window-created', (_, win) => {
         on('special:use', () => X.specials++),
         on('superjump', (e) => { if (e.phase === 'charge') { X.jumps++; const tg = e.actor.superJumpState && e.actor.superJumpState.target; if (tg && tg === Kp.holder) X.jumpsToCarrier++; } }),
         on('special:shield', (e) => { if (e.actor === Kp.holder) X.bubbleOnCarrier.push(clock()); }),
-        on('splatted', (e) => { X.splats++; if (e.cause === 'karp-burst') X.burstSplats++; if (e.cause === 'karp-fuse') X.fuseSplats++; }),
+        on('splatted', (e) => { X.splats++; if (e.cause === 'karp-burst') { X.burstSplats++; const v = e.victim, b = v && v.bot;   // [b5-karp-bots] who a burst caught, and why it was still there
+          if (b && X.burstV.length < 12) X.burstV.push({ t: clock(), w: v.weaponId, role: b.kRole || '-', mode: b.mode, d: +Math.hypot(v.pos.x - Kp.pos.x, v.pos.z - Kp.pos.z).toFixed(2), esc: !!b.sp.esc, knew: b.sp.known.some((r) => r.d.src === 'karpshell'), dangerFor: X.dangerT[v.team] != null ? +(window.__G.time - X.dangerT[v.team]).toFixed(2) : null, shellHp: Kp.shell.hp || null }); }
+          if (e.cause === 'karp-fuse') X.fuseSplats++; }),
         on('karp:rate', () => {}),
       ];
       const closeCarry = (how) => { if (!cur) return; cur.dur = +(clock() - cur.t0).toFixed(1); cur.m = +(Kp.bestM[cur.team] - cur.best0).toFixed(1); cur.how = cur.how || how; X.carries.push(cur); cur = null; };
@@ -106,6 +108,8 @@ app.on('browser-window-created', (_, win) => {
         g._skipRender = false;
         simT += CH * DT;
         if (m.state !== 'playing') continue;
+        // [b5-karp-bots] since when the shell's danger stands for each team (the other side of the meter ≥ 70 %: normal's row)
+        { const S0 = Kp.shell, f = S0.state === 'intact' ? S0.meter / (S0.hp || 1) : 0; for (let t = 0; t < 2; t++) { const th = (t === 0 ? -f : f) >= 0.7; if (th && X.dangerT[t] == null) X.dangerT[t] = window.__G.time; else if (!th) X.dangerT[t] = null; } }
         // [b5-karp-bots] each team's first bot within 9 m of the Pond (the walk in: the floor under the first pop)
         if (X.arrive[0] === null || X.arrive[1] === null) for (const a of m.actors) if (a.alive && X.arrive[a.team] === null && Math.hypot(a.pos.x - Kp.R.pond.x, a.pos.z - Kp.R.pond.z) < 9) X.arrive[a.team] = +simT.toFixed(1);
         // bots stuck (as tower-match: < 1 m over 3 s while wanting to move; not while charging); the carrier's own episodes
@@ -156,7 +160,7 @@ app.on('browser-window-created', (_, win) => {
         pickups: S.pickups, carries: X.carries, blasts: S.blasts, resets: S.resets, moves: S.moves, plants: X.plants, gates: X.gates,
         ot: X.ot ? { why: X.ot.why, losing: X.ot.losing, len: +((X.end ? X.end.t : clock()) - X.ot.t).toFixed(1), end: Kp.reason, windows: S.windows } : null,
         fastT: { retreat: +(S.fastT.retreat || 0).toFixed(1), zone: +(S.fastT.zone || 0).toFixed(1) },
-        clamped: S.clamped, clampLog: S.clampLog || [], retreatFallback: KARP_BOT.stats.retreatFallback, carrierShots: KARP_BOT.stats.carrierShots, breakT: +KARP_BOT.stats.breakT.toFixed(0),
+        clamped: S.clamped, clampLog: S.clampLog || [], retreatFallback: KARP_BOT.stats.retreatFallback, fbSoft: KARP_BOT.stats.fbSoft || 0, carrierShots: KARP_BOT.stats.carrierShots, breakT: +KARP_BOT.stats.breakT.toFixed(0),
         stuckPct: +(100 * stuckS / botS).toFixed(1), holdPct: +(100 * holdS / botS).toFixed(1), eps: eps.sort((a, b) => b.dur - a.dur).slice(0, 6), carrierStuck: { s: cStuck, eps: cEps.filter((e) => e.dur > 3).slice(0, 6) },
         shots: KG.stats, splats: X.splats, fuseSplats: X.fuseSplats, specials: X.specials, jumps: X.jumps, jumpsToCarrier: X.jumpsToCarrier,
         bubbleOnCarrier: X.bubbleOnCarrier.length, koBubble, frameErr, grants: S.grants, refused: S.refused,
@@ -166,7 +170,7 @@ app.on('browser-window-created', (_, win) => {
         // the known carrier, super jumps to the carrier, specials by the karp rules
         routes: KARP_BOT.stats.routes, picks: KARP_BOT.stats.picks, caughtNoticed: (SPECIAL_STATS.bySrc || {}).karp || { caught: 0, evaded: 0 }, shellDanger: (SPECIAL_STATS.bySrc || {}).karpshell || null, fuseDanger: (SPECIAL_STATS.bySrc || {}).karpfuse || null,
         kShots: { push: KARP_BOT.stats.push, dodge: KARP_BOT.stats.dodges, splash: KARP_BOT.stats.splashes, ink: KARP_BOT.stats.routeInk }, roles: Object.fromEntries(Object.entries(roleS).map(([k, v]) => [k, Math.round(v)])),
-        fbAt: KARP_BOT.stats.fbAt || [], keeperT: +KARP_BOT.stats.keeperT.toFixed(0), icptT: +KARP_BOT.stats.icptT.toFixed(0), botJumps: KARP_BOT.stats.jumps, kSpecials: KARP_BOT.stats.specials, ai: KARP_AI.enabled,
+        burstV: X.burstV, fbAt: KARP_BOT.stats.fbAt || [], keeperT: +KARP_BOT.stats.keeperT.toFixed(0), icptT: +KARP_BOT.stats.icptT.toFixed(0), botJumps: KARP_BOT.stats.jumps, kSpecials: KARP_BOT.stats.specials, ai: KARP_AI.enabled,
       };
     })()`);
     const wallS = ((Date.now() - t0) / 1000).toFixed(0);
@@ -178,14 +182,16 @@ app.on('browser-window-created', (_, win) => {
     console.log(`   shell: pops A ${r.pops[0]} B ${r.pops[1]} | first pop ${r.firstPop ?? '-'} s (first bots by the Pond at ${JSON.stringify(r.arrive)} s) | pops at ${JSON.stringify(r.popT)} | burst splats ${r.burstSplats} | re-formed ${r.reforms} | devices crushed ${r.crushes}`);
     console.log(`   pick-ups A ${r.pickups[0]} B ${r.pickups[1]} | carries ${r.carries.length}: ${r.carries.map((c) => `${W(c.team)}:${c.how}/${c.dur}s/${c.m}m`).join(' ')}`);
     console.log(`   plants ${JSON.stringify(r.plants)} | gates ${JSON.stringify(r.gates)} | Carp Blasts own ${r.blasts.own} enemy ${r.blasts.enemy} | resets ${JSON.stringify(r.resets)} | moved ${r.moves}`);
-    console.log(`   fast fuse (s): retreat ${r.fastT.retreat} zone ${r.fastT.zone} | clamp rejections ${r.clamped} | carrierRetreatFallback ${r.retreatFallback} | carrier stuck ${r.carrierStuck.s} s (> 3 s episodes ${r.carrierStuck.eps.length}) | bots stuck ${r.stuckPct}% (holding on purpose ${r.holdPct}%)`);
+    console.log(`   fast fuse (s): retreat ${r.fastT.retreat} zone ${r.fastT.zone} | clamp rejections ${r.clamped} | carrierRetreatFallback ${r.retreatFallback} (a dip the engine forgives, no ×3: ${r.fbSoft}) | carrier stuck ${r.carrierStuck.s} s (> 3 s episodes ${r.carrierStuck.eps.length}) | bots stuck ${r.stuckPct}% (holding on purpose ${r.holdPct}%)`);
     console.log(`   Carp Shots by tier [splash, burst, big] ${JSON.stringify(r.shots.fired)} landed ${r.shots.landed} blasts ${r.shots.blasts} hits ${r.shots.hits} splats ${r.shots.splats} | carrier shot decisions ${r.carrierShots} | breakers at the shell ${r.breakT} bot-s`);
     console.log(`   specials ${r.specials} | super jumps ${r.jumps} (to the carrier ${r.jumpsToCarrier}) | Bubble Guards on the carrier ${r.bubbleOnCarrier}, a knockout within 8 s of one: ${r.koBubble ? 'yes' : 'no'} | splats ${r.splats} (fuse ${r.fuseSplats}) | grants ${r.grants} refused ${r.refused}`);
     console.log(`   field: ${r.fieldMs} ms at load ${JSON.stringify(r.fieldSplit)}, hop edges ${r.hops}, gap edges ${r.gaps} | sim ${r.simT} s in ${(r.simMs / 1000).toFixed(0)} s (wall ${wallS} s)`);
     console.log(`   bots [${r.ai ? 'WP3' : 'WP1 minimal'} ${DIFF}]: route picks ${r.picks} shares ${JSON.stringify(r.routes)} | Carp Shots noticed: escaped ${r.caughtNoticed.evaded} caught ${r.caughtNoticed.caught} | carrier shots ${JSON.stringify(r.kShots)} | keepers on spot ${r.keeperT} s, interceptors on the carrier ${r.icptT} s | jumps to the carrier ${r.botJumps} | karp specials ${r.kSpecials}`);
     console.log(`   roles (bot-s): ${JSON.stringify(r.roles)} | shell danger ${JSON.stringify(r.shellDanger)} | fuse danger ${JSON.stringify(r.fuseDanger)}`);
     for (const e of r.clampLog) console.log('   clamp ' + JSON.stringify(e));
-    if (r.fbAt && r.fbAt.length) console.log('   carrierRetreatFallback at [x, y, z, level] ' + JSON.stringify(r.fbAt));
+    if (r.fbAt && r.fbAt.length) console.log('   carrierRetreatFallback at [x, y, z, level, team, P, mark, slack] ' + JSON.stringify(r.fbAt));
+    if (r.burstV && r.burstV.length) console.log('   burst victims ' + JSON.stringify(r.burstV));
+    { const C = r.carries || [], q = C.filter((c) => c.how === 'splat' && c.dur < 2.5).length, z = C.filter((c) => !(c.m > 0)).length; console.log(`   carries: ${q} of ${C.length} ended in a splat within 2.5 s; ${z} made no new ground`); }
     for (const e of r.eps) console.log('   stuck ' + JSON.stringify(e));
     for (const e of r.carrierStuck.eps) console.log('   carrier-stuck ' + JSON.stringify(e));
     if (r.frameErr.n) console.log(`   FRAME ERRORS ${r.frameErr.n}: ${r.frameErr.msg}`);
