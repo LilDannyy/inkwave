@@ -1,0 +1,3 @@
+grid-low.json floor 4716 band |z|<20: 1600
+grid-high.json floor 4380 band |z|<20: 1324
+fg-halyard.json floor 4666 band |z|<20: 1312

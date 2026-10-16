@@ -12,7 +12,7 @@
 import * as THREE from 'three';
 import { G, clamp, angleDiff } from '../core/ctx.js';
 import { PLAYER, DIFFICULTY, SUB, SPECIALS, TOWER, weaponRange } from '../config.js';
-import { Hit } from './physics.js';
+import { Hit, GroundHit, makeContacts } from './physics.js';   // [b5-caldera] GroundHit, makeContacts: _flight
 import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
 import { Sight, SIGHT, SIGHT_STATS, teamKnown } from './botSight.js';
 import { SpecialSense, SPECIAL_AI, SPECIAL_STATS } from './botSpecials.js';   // enemy specials: dangers, the untouchable
@@ -23,6 +23,7 @@ import { karpPlan, karpSync, karpEngage, karpGoal, karpFightNav, karpCarrierAct,
 export { SIGHT, SIGHT_STATS, teamKnown, SPECIAL_AI, SPECIAL_STATS };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
+const _wv = new THREE.Vector3();   // [b5-caldera] (_wetHi's probe)
 const _walkHit = new Hit();
 const _stats = { own: 0, enemy: 0, empty: 0, n: 0 };
 const _down = new THREE.Vector3(0, -1, 0), _stepHit = new Hit();
@@ -1055,6 +1056,11 @@ export class BotBrain {
         } else if (inkFrac > 0.03) {
           it.squid = false; it.fire = !CHARGES[w.kind] || a.weaponRunner.charging || this.aimPitch < -0.7;
           wantPitch = -1.0;
+        } else if (!this._refillBad || this.t - this._refillBad.t > 6) {
+          // [b5-caldera] fix round 4: too dry to paint and no own ink to step onto here (the patch it was sent to is a level
+          // off, behind a wall or across a gap): it looks elsewhere for 6 s instead of standing ~10 s for the kid's slow
+          // refill (lava-match: refilling bots stood 11–13.5 s on the Lakefront corner and on a lookout's top)
+          this._refillBad = { x: a.pos.x, z: a.pos.z, t: this.t }; this.repath = 0; this.path = null;
         }
       }
     }
@@ -1069,7 +1075,7 @@ export class BotBrain {
     // ---------------- sprout pods (pods.js StagePods.bot): ink a pod between us and a foe to grow cover and fight from
     // behind it; our team's hedge: swim up an inked column of it and fight from its top
     if (!thrAim && G.match?.pods && !carry) thrAim = G.match.pods.bot(this, dt, it, move, enemyVisible) || null;   // [b5-karp] carry
-    if (!thrAim && G.match?.stage) thrAim = G.match.stage.botAct(this, dt, it, move, enemyVisible) || null;   // [b5-stagehooks] (escape the lava …)
+    if (G.match?.stage && (!thrAim || this.stageUrgent)) thrAim = G.match.stage.botAct(this, dt, it, move, enemyVisible) || thrAim || null;   // [b5-stagehooks] (escape the lava …) [b5-caldera] stageUrgent: a module's escape outranks a threat's footwork
     // [b5-deploy] nothing else to shoot: an enemy device in sight (its footwork goes first: the tower's, the climb's and
     // the danger guard's below have the last word) [b5-int2: after the stage module's botAct, which outranks it]
     if (!thrAim && this.sp.on() && !carry) thrAim = devShootAim(this.sp, dt, it, move, tp, onT, zp);   // [b5-karp] carry
@@ -1141,7 +1147,16 @@ export class BotBrain {
     }
 
     // ---------------- never walk, strafe or swim off into the sea; stay a kid over grates spanning water
-    if (!this._clMove) this._avoidWater(move);   // (a climb's step to its spot in front of the wall: picked clear of the sea)
+    // [b5-caldera] guardOff: a stage module steers it straight at a step up this frame (the lava's hop out): no guard
+    const gOff = !!this.guardOff; this.guardOff = false;
+    // [b5-caldera] fix round 4: hopAt — the node a stage module's hop ask (_needJump) is for this frame (the lava's escape up
+    // a step): the hop is judged by the flight steered at it and flown at it (lava-bots edges: an escaper's hop off Race 7
+    // was judged by the ballistic arc along its slide beside the island's face, refused, and it slid off the stone)
+    const hopAt = this.hopAt || null; this.hopAt = null;
+    // (and hopCheck: that hop is judged even with the guards off — a lookout claimant's column hop; an escape's straight run
+    // at a step keeps its unchecked hop)
+    const hopChk = !!this.hopCheck; this.hopCheck = false;
+    if (!this._clMove && !gOff) this._avoidWater(move);   // (a climb's step to its spot in front of the wall: picked clear of the sea)
     if (it.squid && (this._squidWouldDrop(move) || (a.grounded && this._swimDrop(move)))) it.squid = false;
 
     // ---------------- smooth the move command: heading slews (no twitch at waypoint switches / strafe flips)
@@ -1158,7 +1173,9 @@ export class BotBrain {
     // edge guard (after the smoothing, which can swing the heading past what _avoidWater checked): never steer off a
     // deck into the sea. Probe the ground a stopping distance ahead; if it's water, slide along the edge (whichever
     // diagonal is safe) or stop.
-    if (this.mvMag > 0.05 && a.grounded && !a.climbing) this._edgeGuard(a, it.move);
+    // [b5-caldera] also with no move asked (momentum), and a frame or two off the ground stepping down a lip (a 0.1 m coping)
+    const gNear = a.grounded || (a.vel.y <= 0.8 && a.pos.y - G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.05) < 0.35);   // (a rising Organ, a step-up's tiny hop)
+    if ((this.mvMag > 0.05 || Math.hypot(a.vel.x, a.vel.z) > 1.0) && gNear && !a.climbing && !gOff) this._edgeGuard(a, it.move);
     // stuck recovery, based on progress toward the current waypoint: hop → skip the waypoint → replan
     const trying = this.path && wantMove && !a.specialActive?.pin && !(CHARGES[w.kind] && (a.weaponRunner.charging || a.weaponRunner.burstT > 0));   // ([b5-zipcheer] pin: a Cheer Orb's lift holds us)
     if (!trying) this.noProg = 0;
@@ -1172,7 +1189,58 @@ export class BotBrain {
     }
     if (this.noProg === 0) this._skipped = false;
     this.stuck = this.noProg;
-    if (this._needJump && this.jumpCd <= 0 && a.grounded) { it.jump = true; this.jumpCd = 0.6; this._needJump = false; }
+    let pathHop = false;   // [b5-caldera] (a route's own hop up a step: only the arc check below)
+    // [b5-caldera] fix round 3 (lava.js F8: a bow claimant hopped off a Pumice stone into the lava): a hop asked for and not
+    // made within 0.5 s is dropped (one asked for at a column's foot was made 13 s later from a stone, steered at that
+    // column across the lake), and a climb's top-strip hop is one only while the climb drives it (after a hop onto the top
+    // the flag stayed set, and every later hop — a duel's, a stuck one, a route's — skipped the lava check below)
+    if (this._needJump) { if (!this._njT) this._njT = G.time; else if (G.time - this._njT > 0.5) { this._needJump = false; this._njT = 0; } } else this._njT = 0;
+    if (a.grounded && !this._climbAim) this._clHop = false;
+    // [b5-caldera] fix round 4: an ask goes ahead whatever cool-down a REFUSED press left (_jRef: the guards below took it back,
+    // no jump was made) — refused stuck / route hops burned 0.6–1.0 s each, and an escaper at the step of a head held still
+    // 0.6 s at a time until its stone slid it off (lava-bots edges, probe-esc)
+    if (this._needJump && (this.jumpCd <= 0 || this._jRef) && a.grounded) { it.jump = true; this.jumpCd = 0.6; pathHop = this._needJump === true; this._needJump = false; }   // [b5-caldera] ('wiggle': a stuck hop)
+    // [b5-caldera] no hop that comes down in the sea or the lava: at run speed a hop (a duel's dodge, a stuck hop, a kit's
+    // own) flies 4–6 m, far past what the edge guard looks ahead (lava-bots.js: blaster / twins / brolly bots hopped off
+    // the causeway into the drowning Casting Floor mid-fight); a route's hop up a step lands on dry ground and passes
+    // — and none at all for a dodge, a stuck hop or a kit's own within 3 m of the sea or the lava: air control bends the
+    // flight, so a predicted landing is only a guess there
+    // (a twins / dualies jump while firing is a dodge roll along the move: a route's hop lets go of the trigger; any other
+    // roll only where its whole slide stays on dry floor)
+    if (it.jump && pathHop && it.fire && w.rollDist && !this._climbAim) it.fire = false;
+    const rolls = it.jump && it.fire && w.rollDist && !pathHop;
+    // [b5-caldera] fix round 3: a jump while firing (twins, dualies, the Cutlass) is checked as a roll AND as a hop — a
+    // Twinfire press in its roll lockout (or short of ink, or barely moving) is a plain hop, and its arc went unchecked
+    // (lava-bots edges: a twins bot hopped off the Horn Step's 1.2 m edge into the lava); a route's own hop with the sea or
+    // the lava within 1.5 m only where its flight, steered at the route's node as the brain steers it, comes down on that
+    // node's top (a Cutlass bot's hop up to the Ladle Road slid along the road's face and dropped into the lava beside it)
+    if (it.jump && a.grounded && !a.climbing && !this._clHop && !this._climbAim && (!gOff || (hopChk && pathHop && hopAt))) {   // [b5-caldera] fix round 4: hopChk
+      let bad;
+      if (rolls) bad = !this._rollSafe(a, it.move, w.rollDist) || !this._hopSafe(a, it.move) || this._nearWetHi(a, 3.0);
+      // (fix round 3: near the lava a route's hop is judged by the flight it will fly, steered at its node — the ballistic
+      // arc along the velocity refused a lookout claimant's hop onto the next column whenever it still drifted the other
+      // way, and with the climb's hop flag no longer left set, chargers and bows stopped getting up)
+      else if (pathHop && hopAt) bad = !this._hopLands(a, hopAt);   // [b5-caldera] fix round 4 (a module's ask: its node)
+      // (fix round 4: an escaper's route hop too — judged along its velocity and flown at the route's node, a bot escaping
+      // off a stone hopped at an Organ top across the lava and drowned: lava.js F8b with the escape left on)
+      else if (pathHop && this.path && this.pi < this.path.length && this._wetWithin(a, 1.5)) bad = !this._hopLands(a, G.nav.nodes[this.path[this.pi]]);
+      else bad = !this._hopSafe(a, it.move) || (!pathHop && this._nearWetHi(a, 3.0));
+      if (bad) { it.jump = false; this._jRef = true; }   // [b5-caldera] fix round 4 (_jRef: refused, no jump made)
+    }
+    if (it.jump) this._jRef = false;
+    // [b5-caldera] in the air: never let the flight come down on the sea or the lava — when the arc as it flies now would
+    // land there, steer back the way it came (air control pulls it back over the floor it left)
+    // (not in a route's own hop — up the Organ columns the arc meets the next column's face and the model drops it into the
+    // seam: it pulled the lookout claimants back off every hop)
+    if (it.jump && pathHop) { this._hopPath = true; this._hopTo = hopAt || (this.path && this.pi < this.path.length ? G.nav.nodes[this.path[this.pi]] : null); } else if (a.grounded) { this._hopPath = false; this._hopTo = null; }   // [b5-caldera] fix round 4: hopAt
+    // [b5-caldera] fix round 3: a route's own hop is flown at the node it was made for (as a player commits to a jump): a
+    // goal picked again mid-air turned a hop off the Casting Floor round toward the next goal and dropped it into the lake
+    if (this._hopPath && this._hopTo && !a.grounded && !gOff && !this._climbAim) { const n = this._hopTo, dx = n.x - a.pos.x, dz = n.z - a.pos.z, d = Math.hypot(dx, dz); if (d > 0.3) it.move.set(dx / d, 0, dz / d); }
+    if (!a.grounded && !gNear && !a.climbing && !gOff && !this._hopPath && !a.superJumpState && (this._arcWet(a, a.vel.x, a.vel.z) || this._flightWet(a, it.move))) {   // (fix round 3: a climb's own hop too, while not on the wall — a squid climb up the Ladle Road's face let go and flew off the Horn Step into the arm)   // [b5-caldera] fix round 3: _flightWet (air control keeps pulling it the brain's way: a twins hop drifted 1.3 m off the edge at 3 m/s while the ballistic arc still read the floor it left)
+      const bx = (this._lastFoot?.x ?? a.pos.x) - a.pos.x, bz = (this._lastFoot?.z ?? a.pos.z) - a.pos.z, bl = Math.hypot(bx, bz);
+      if (bl > 0.05) it.move.set(bx / bl, 0, bz / bl); else if (Math.hypot(a.vel.x, a.vel.z) > 0.05) it.move.set(-a.vel.x, 0, -a.vel.z).normalize();
+    }
+    if (a.grounded) (this._lastFoot ||= new THREE.Vector3()).copy(a.pos);
     // displacement watchdog: asking to move for 1.5 s but covering < 0.4 m means something the waypoint logic can't
     // see is holding us (re-plans reset its progress timer, so it can't catch this). Duels are exempt: strafing
     // back and forth is meant to stay put.
@@ -1395,14 +1463,181 @@ export class BotBrain {
     for (let k = 0; k < 8; k++) { const t = (k / 8) * Math.PI * 2; if (this._wet(a.pos.x + Math.cos(t) * r, a.pos.z + Math.sin(t) * r, a.pos.y)) return true; }
     return false;
   }
+  // [b5-caldera] a hop's flight, stepped as a ballistic arc (PLAYER.jumpVel, gravity) along where it is carried (its
+  // velocity, else the move at run speed): it lands where the arc first meets a top under it (a step up, the next
+  // column, the floor beyond a gap) — safe unless that is the sea or the lava, or nothing is under it within 1.4 s
+  _hopSafe(a, mv) {
+    const vx = a.vel.x, vz = a.vel.z, sp = Math.hypot(vx, vz), ml = Math.hypot(mv.x, mv.z);
+    let ux, uz, s;
+    if (sp > 1) { ux = vx / sp; uz = vz / sp; s = Math.max(sp, ml * PLAYER.runSpeed); } else if (ml > 0.05) { ux = mv.x / ml; uz = mv.z / ml; s = ml * PLAYER.runSpeed; } else return true;
+    const L = G.level, SM = G.match?.stage, g = PLAYER.gravity, vy0 = PLAYER.jumpVel, y0 = a.pos.y;
+    let px = a.pos.x, pz = a.pos.z, ox = 0, oz = 0;
+    for (let t = 0.05; t <= 1.4; t += 0.05) {
+      let x = a.pos.x + ux * s * t + ox, z = a.pos.z + uz * s * t + oz;
+      const y = y0 + vy0 * t - 0.5 * g * t * t, down = vy0 - g * t <= 0;
+      let gh = down ? L.groundHeight(x, z, y + 0.3) : -Infinity;
+      // (into a wall or a higher column's side: the body stops there and drops — it lands under where it was)
+      if (!(gh > -Infinity && y <= gh + 0.05) && L.pointInside(_wv.set(x, y + 0.25, z), 0)) { ox += px - x; oz += pz - z; x = px; z = pz; if (down) gh = L.groundHeight(x, z, y + 0.3); }
+      px = x; pz = z;
+      if (!down) continue;   // (still rising)
+      if (gh > -Infinity && y <= gh + 0.05) {
+        if (SM && SM.wet(x, z, gh, 0.5)) return false;
+        // (up onto something: only a top a route can stand on — a roof-flagged stub slides you off into whatever is below)
+        if (gh > y0 + 0.3 && G.nav && !this._standable(x, gh, z)) return false;
+        return true;
+      }
+    }
+    return false;
+  }
+  // [b5-caldera] fix round 3: a flight as the body flies it — actor.js's air rules (gravity with its fall and apex factors;
+  // air control toward the move at the kit's speed, airMinSpeed at least; a squid's own), the body pushed out of what it
+  // meets (the velocity into a face taken off: it slides along it) and the landing probe with the ledge assist — at 20 Hz
+  // from the body as it is with velocity (vx, vy, vz). steer(x, y, z) → [ux, uz] (the move this step) or null (none).
+  // → { x, y, z, gy (the top it lands on; −Infinity: nothing within maxT), wall (a face pushed it), t }
+  _flight(a, vx, vy, vz, steer, maxT = 1.5) {
+    const P = PLAYER, ph = G.physics, dt = 0.05, sq = a.form === 'squid';
+    const c = (this._flC ||= makeContacts()), gh = (this._flG ||= new GroundHit()), p = (this._flP ||= new THREE.Vector3());
+    const spd = sq ? null : Math.max(a.carry ? P.runSpeed * 0.8 : a.weaponRunner?.moveSpeed?.() ?? P.runSpeed, P.airMinSpeed);
+    const acc = sq ? P.squidAirAccel : P.airAccel, dec = sq ? P.squidAirDecel : P.airDecel;
+    const lift = sq ? P.squidBodyLift : P.stepUp, height = sq ? P.squidHeight : P.height, assist = sq ? P.squidStepUp : P.ledgeAssist;
+    p.copy(a.pos);
+    let wall = false;
+    const out = this._flO || (this._flO = { x: 0, y: 0, z: 0, gy: -Infinity, wall: false, t: 0 });
+    for (let t = dt; t <= maxT + 1e-6; t += dt) {
+      const u = steer ? steer(p.x, p.y, p.z) : null, sp = Math.hypot(vx, vz);
+      const tgt = sq ? Math.max(P.squidDrySpeed, sp) : spd, tvx = u ? u[0] * tgt : 0, tvz = u ? u[1] * tgt : 0;
+      const ex = tvx - vx, ez = tvz - vz, el = Math.hypot(ex, ez), r = (u ? acc : dec) * dt;
+      if (el <= r) { vx = tvx; vz = tvz; } else { vx += (ex / el) * r; vz += (ez / el) * r; }
+      let g = P.gravity; if (vy < 0) g *= P.fallGravityMul; if (Math.abs(vy) < P.apexBand) g *= P.apexGravityMul;
+      vy = Math.max(-P.maxFall, vy - g * dt);
+      const y0 = p.y;
+      p.x += vx * dt; p.y += vy * dt; p.z += vz * dt;
+      ph.collideBody(p, P.radius, lift, height, c, false, sq);
+      if (c.ceiling && vy > 0) vy = 0;
+      if (c.wall) { const n = c.wallNormal, vn = vx * n.x + vz * n.z; if (vn < 0) { vx -= n.x * vn; vz -= n.z * vn; wall = true; } }
+      if (vy <= 0.5) {
+        const top = Math.max(y0, p.y);
+        ph.groundProbe(p.x, p.y, p.z, top - p.y + assist, 0.02, P.footRadius, gh, sq);
+        if (gh.hit && gh.y >= p.y - 0.02 && vy <= 0) { out.x = p.x; out.y = gh.y; out.z = p.z; out.gy = gh.y; out.wall = wall; out.t = t; return out; }
+      }
+      if (p.y < PLAYER.waterY) break;
+    }
+    out.x = p.x; out.y = p.y; out.z = p.z; out.gy = -Infinity; out.wall = wall; out.t = maxT;
+    return out;
+  }
+  // [b5-caldera] fix round 3: a route's own hop onto node n — the take-off velocity as it is (vy: the jump's), the brain
+  // steering at n all the way (its look-ahead holds n until it is within reach): it comes down on n's top (within 0.35 m
+  // of its height, 1.2 m of it across) and on nothing the sea or the lava takes
+  _hopLands(a, n) {
+    if (!n) return false;
+    const vy0 = (a.submerged ? PLAYER.swimJumpVel : PLAYER.jumpVel) * (a.groundTeam === 2 ? 0.72 : 1);
+    const st = (x, y, z) => { const dx = n.x - x, dz = n.z - z, d = Math.hypot(dx, dz); return d > 0.3 ? [dx / d, dz / d] : null; };
+    const f = this._flight(a, a.vel.x, vy0, a.vel.z, st, 1.4);
+    // (on n's top: n's height, and a route's node there — an Organ column's top is a 2–5 m hexagon on a 1 m lattice, the
+    // landing rarely within a metre of the one node the route names)
+    if (!(f.gy > -Infinity) || Math.abs(f.gy - n.y) > 0.35 || Math.hypot(f.x - n.x, f.z - n.z) > 2.6 || !this._standable(f.x, f.gy, f.z)) return false;
+    const SM = G.match?.stage;
+    return !(SM && SM.wet(f.x, f.z, f.gy, 0.5));
+  }
+  // [b5-caldera] fix round 3: in the air, the flight as the brain steers it now (the move held): does it come down on the
+  // sea or the lava, or on nothing within 1.5 s? (no move: the ballistic _arcWet answers)
+  // (asked again at most every 0.1 s of the flight, or at once when the move turns by more than ~25°: the answer is kept)
+  _flightWet(a, mv) {
+    const ml = Math.hypot(mv.x, mv.z);
+    if (ml < 0.05) return false;
+    const ux = mv.x / ml, uz = mv.z / ml, K = (this._fwK ||= { t: -1, ux: 0, uz: 0, v: false });
+    if (this.t - K.t < 0.1 && ux * K.ux + uz * K.uz > 0.9) return K.v;
+    const u = [ux, uz], f = this._flight(a, a.vel.x, a.vel.y, a.vel.z, () => u, 1.5), SM = G.match?.stage;
+    K.t = this.t; K.ux = ux; K.uz = uz;
+    return (K.v = !(f.gy > -Infinity) || !!(SM && SM.wet(f.x, f.z, f.gy, 0.5)));
+  }
+  // [b5-caldera] a nav node (any: rider nodes too) within 1.5 m of (x, z) standing within 0.35 m of y
+  _standable(x, y, z) {
+    const N = G.nav, ix = Math.round((x - N.x0) / N.step), iz = Math.round((z - N.z0) / N.step);
+    for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) {
+      const jx = ix + dx, jz = iz + dz;
+      if (jx < 0 || jz < 0 || jx >= N.nx || jz >= N.nz) continue;
+      for (const id of N.cells[jz * N.nx + jx]) { const n = N.nodes[id]; if (Math.abs(n.y - y) <= 0.35 && Math.hypot(n.x - x, n.z - z) <= 1.5) return true; }
+    }
+    return false;
+  }
+  // [b5-caldera] a dodge roll's slide straight along the move for its distance (+0.6 m): dry floor all the way
+  _rollSafe(a, mv, dist) {
+    const ml = Math.hypot(mv.x, mv.z); if (ml < 0.05) return true;
+    const ux = mv.x / ml, uz = mv.z / ml;
+    for (let d = 0.4; d <= dist + 0.6 + 1e-6; d += 0.4) if (this._wetHi(a.pos.x + ux * d, a.pos.z + uz * d, a.pos.y)) return false;
+    return true;
+  }
+  // [b5-caldera] the arc from where the body is now with velocity (vx, vy, vz): does it come down on the sea or the lava
+  // (or on nothing within 1.5 s)?
+  _arcWet(a, vx, vz) {
+    const L = G.level, SM = G.match?.stage, g = PLAYER.gravity, vy0 = a.vel.y;
+    let px = a.pos.x, pz = a.pos.z, ox = 0, oz = 0;
+    for (let t = 0.05; t <= 1.5; t += 0.05) {
+      let x = a.pos.x + vx * t + ox, z = a.pos.z + vz * t + oz;
+      const y = a.pos.y + vy0 * t - 0.5 * g * t * t, down = vy0 - g * t <= 0;
+      let gh = down ? L.groundHeight(x, z, y + 0.3) : -Infinity;
+      if (!(gh > -Infinity && y <= gh + 0.05) && L.pointInside(_wv.set(x, y + 0.25, z), 0)) { ox += px - x; oz += pz - z; x = px; z = pz; if (down) gh = L.groundHeight(x, z, y + 0.3); }   // (a wall stops it: it drops where it was)
+      px = x; pz = z;
+      if (!down) continue;
+      if (gh > -Infinity && y <= gh + 0.05) return !!(SM && SM.wet(x, z, gh, 0.5));
+    }
+    return true;
+  }
+  // [b5-caldera] fix round 3: the sea or the lava anywhere within r of the actor (rings 0.5 m apart, 12 directions): a 0.4 m
+  // lava seam between the Casting Floor and a coping slips between the 1.5 m ring's samples
+  _wetWithin(a, r) {
+    for (let d = 0.5; d <= r + 1e-6; d += 0.5) for (let k = 0; k < 12; k++) { const t = (k * Math.PI) / 6; if (this._wetHi(a.pos.x + Math.cos(t) * d, a.pos.z + Math.sin(t) * d, a.pos.y)) return true; }
+    return false;
+  }
+  // [b5-caldera] the sea or the lava anywhere on rings 1.5 m and r round the actor (16 samples)
+  _nearWetHi(a, r) {
+    for (const d of [1.5, r]) for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4; if (this._wetHi(a.pos.x + Math.cos(t) * d, a.pos.z + Math.sin(t) * d, a.pos.y)) return true; }
+    return false;
+  }
+  // [b5-caldera] _wet with a step or a wall there counting as ground (solid at knee height: the body bumps it, it doesn't
+  // fall) — but not a bridge deck over the lava with open air under it
+  _wetHi(x, z, y) {
+    if (!this._wet(x, z, y)) return false;
+    return !G.level.pointInside(_wv.set(x, y + 0.3, z), 0);
+  }
   // final move command: if the ground a stopping distance ahead is water, slide along the edge or stop
   _edgeGuard(a, mv) {
+    const px = a.pos.x, py = a.pos.y, pz = a.pos.z;
+    // [b5-caldera] momentum first: where the body is carried in the next 0.3 s (+0.3 m) — a slide along a lava lip with
+    // speed toward it went over (lava-bots.js trails) — brake against it
+    const vx = a.vel.x, vz = a.vel.z, sp = Math.hypot(vx, vz);
+    // (fix round 3: also from 0.25 m/s when the move points away from the drift — a duel's strafe reversing on a lava lip
+    // drifted over it at 0.7–1.0 m/s while the move pointed back inland; never against a slow walk the move itself asks
+    // for: from stone to stone across a seam the brake held escapers still until the stone sank; a squid's carry 0.45 s)
+    const ct = a.form === 'squid' ? 0.45 : 0.3, away = mv.x * vx + mv.z * vz < 0;
+    if ((sp > 1.0 || (sp > 0.25 && away)) && this._wetHi(px + vx * ct + (vx / sp) * 0.3, pz + vz * ct + (vz / sp) * 0.3, py)) { mv.set(-vx / sp, 0, -vz / sp); return; }
+    // [b5-caldera] standing on a lip with the body's middle over the sea or the lava (the foot holds it): back onto the floor
+    // (fix round 3: onto open floor at its own level — the mean of those directions, never into a wall: on the north head's
+    // coping sliver between the lake and the Ladle Road's face the first dry direction was the face, and pushed into it at
+    // a slant the body slid along it to the sliver's tip and off it: three bots in four lava-bots runs)
+    // (and of those the one nearest the way it wants to go — an escaper off a sinking stone onto a head's coping was turned
+    // back toward the stone, the first dry direction, and went in with it)
+    if (a.grounded && this._wet(px, pz, py)) {
+      let sx = 0, sz = 0, bx = 0, bz = 0, bd = -2;
+      const ml = Math.hypot(mv.x, mv.z), ux = ml > 0.05 ? mv.x / ml : 0, uz = ml > 0.05 ? mv.z / ml : 0;
+      for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t), x = px + cx * 0.45, z = pz + cz * 0.45; if (!this._wet(x, z, py) && !G.level.pointInside(_wv.set(x, py + 0.3, z), 0)) { sx += cx; sz += cz; const d = cx * ux + cz * uz; if (d > bd) { bd = d; bx = cx; bz = cz; } } }
+      const sl = Math.hypot(sx, sz);
+      if (ml > 0.05 && bd > -2) { mv.set(bx * 0.8, 0, bz * 0.8); return; }
+      if (sl > 0.1) { mv.set((sx / sl) * 0.8, 0, (sz / sl) * 0.8); return; }
+      for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t); if (!this._wet(px + cx * 0.45, pz + cz * 0.45, py)) { mv.set(cx * 0.8, 0, cz * 0.8); return; } }
+    }
     const m = Math.hypot(mv.x, mv.z); if (m < 1e-4) return;
     const dx = mv.x / m, dz = mv.z / m;
     const look = 0.6 + Math.hypot(a.vel.x, a.vel.z) * 0.17;
-    const px = a.pos.x, py = a.pos.y, pz = a.pos.z;
     const bad = (ux, uz) => this._wet(px + ux * 0.45, pz + uz * 0.45, py) || this._wet(px + ux * look, pz + uz * look, py);
     if (!bad(dx, dz)) return;
+    // [b5-caldera] on a tip (half or more of a 0.55 m ring round it over the sea or the lava — a coping wedge's point):
+    // back toward the floor (the dry samples' mean), not along the edge to the point
+    { let wn = 0, sx = 0, sz = 0;
+      for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t), x = px + cx * 0.55, z = pz + cz * 0.55; if (this._wetHi(x, z, py)) wn++; else if (!G.level.pointInside(_wv.set(x, py + 0.3, z), 0)) { sx += cx; sz += cz; } }   // (a column or a wall beside it is no drop: _wetHi — nor a way back: fix round 3)
+      const sl = Math.hypot(sx, sz);
+      if (wn >= 4 && sl > 0.1) { mv.set((sx / sl) * m, 0, (sz / sl) * m); return; } }
     for (const ang of [0.8, -0.8, 1.45, -1.45]) {
       const c = Math.cos(ang), s = Math.sin(ang), nx = dx * c + dz * s, nz = -dx * s + dz * c;
       if (!bad(nx, nz)) { mv.set(nx * m, 0, nz * m); return; }
@@ -1419,6 +1654,11 @@ export class BotBrain {
     // (a swimmer carries on a couple of metres after it surfaces: the faster it goes, the further ahead it looks)
     const look = 0.6 + Math.hypot(a.vel.x, a.vel.z) * 0.22;
     for (const d of look > 1.5 ? [1.2, look] : [1.2]) if (!dry(a.pos.x + (move.x / l) * d, a.pos.z + (move.z / l) * d)) return true;
+    // [b5-caldera] fix round 3: and where its momentum carries it (the edge guard's look-ahead at swim-speed reach: 0.3 s
+    // + 0.3 m along the velocity) — a squid strafing a duel at 6–7 m/s along a 1.4 m lava lip swam over it while the move
+    // pointed back along the lip (lava-bots ledges); `dry` reads the lava with its look-ahead (wet … 0.5 → 8 s near it)
+    const sp = Math.hypot(a.vel.x, a.vel.z);
+    if (sp > 2 && G.match?.stage) { const ux = a.vel.x / sp, uz = a.vel.z / sp; for (const d of [0.6, 0.3 + sp * 0.3]) if (!dry(a.pos.x + ux * d, a.pos.z + uz * d)) return true; }
     return false;
   }
 
@@ -1428,6 +1668,12 @@ export class BotBrain {
     const a = this.a, l = Math.hypot(move.x, move.z);
     if (l < 0.05) return false;
     const ux = move.x / l, uz = move.z / l, gy = G.level.groundHeight(a.pos.x + ux * 1.1, a.pos.z + uz * 1.1, a.pos.y + 0.6);
+    // [b5-caldera] fix round 3: along its momentum too, at swim speed (a drop beside the lava the move doesn't point at)
+    const sp = Math.hypot(a.vel.x, a.vel.z);
+    if (sp > 2 && G.match?.stage) {
+      const vx = a.vel.x / sp, vz = a.vel.z / sp, gv = G.level.groundHeight(a.pos.x + vx * 1.1, a.pos.z + vz * 1.1, a.pos.y + 0.6);
+      if (gv > -Infinity && gv <= a.pos.y - 0.5) for (const d of [2.2, 3.4]) if (this._wet(a.pos.x + vx * d, a.pos.z + vz * d, gv)) return true;
+    }
     if (gy === -Infinity || gy > a.pos.y - 0.5) return false;   // level ahead (the open sea ahead: _avoidWater / _squidWouldDrop)
     for (const d of [2.2, 3.4, 4.6]) if (this._wet(a.pos.x + ux * d, a.pos.z + uz * d, gy)) return true;
     return false;
@@ -1593,9 +1839,35 @@ export class BotBrain {
         it.fire = fighting && vis && dist < 30;
         break;
       case 'zipcaster':
-        if (fighting && vis && dist > 6 && dist < 18 && Math.random() < dt * 0.6) it.sub = true;
+        if (fighting && vis && dist > 6 && dist < 18 && Math.random() < dt * 0.6 && this._zipDry(s)) it.sub = true;   // [b5-caldera] _zipDry
         break;
     }
+  }
+  // [b5-caldera] fix round 4: a Zipline zip only where nothing of it comes down on what the stage calls wet (the lava) within
+  // 4 s (the zip ≤ 0.7 s, the 1.4 s hang, the fall): the tether's line as it would fire now (the aim, its range), the
+  // floor under its end and under every 2 m of the line (an enemy met mid-zip stops the body there and it drops), and for a
+  // wall the floor its let-go flies onto (pushed off at 4 m/s for ~1.2 s, air control: up to ~6 m out, ±45°) — lava-bots: two zips
+  // up a wall over a drowning Casting Floor came down in the lava just after it turned deadly
+  _zipDry(s) {
+    const a = this.a, SM = G.match?.stage, L = G.level;
+    if (!SM) return true;
+    const from = _v.set(a.pos.x, a.pos.y + 1.2, a.pos.z), dir = _v2.copy(a.aimPoint).sub(from);
+    if (dir.lengthSq() < 1e-6) return false;
+    dir.normalize();
+    const h = this._zh || (this._zh = new Hit()), g = G.physics.raycast(from, dir, s.def?.range ?? 21, h, true);
+    if (!g.hit) return true;   // (a miss: no zip)
+    const n = g.normal, wall = Math.abs(n.y) < 0.55, ex = g.point.x + n.x * 0.5, ez = g.point.z + n.z * 0.5, ey = g.point.y;
+    // (the stage's own wet only — a floor the lava takes, open lava (no floor: −Infinity) — not the sea round other
+    // stages: bots' zips there are as they were)
+    const wet = (x, z, y) => SM.wet(x, z, L.groundHeight(x, z, y + 0.3), 4);
+    const len = g.dist;
+    for (let d = 2; d < len; d += 2) if (wet(from.x + dir.x * d, from.z + dir.z * d, from.y + dir.y * d)) return false;
+    if (wet(ex, ez, ey)) return false;
+    if (wall) {
+      const hl = Math.hypot(n.x, n.z) || 1, nx = n.x / hl, nz = n.z / hl;
+      for (const t of [0, 0.8, -0.8]) { const c = Math.cos(t), sn = Math.sin(t), ux = nx * c - nz * sn, uz = nx * sn + nz * c; for (const k of [1.5, 3, 4.5, 6]) if (wet(g.point.x + ux * k, g.point.z + uz * k, ey)) return false; }
+    }
+    return true;
   }
 
   _fightSub(dist) {
@@ -3062,9 +3334,11 @@ export class BotBrain {
     { const kpR = G.match?.karp ? karpPlan() : null, kr = kpR ? karpRefillSpot(this, kpR) : null; if (kr && this._pathTo(kr, 0.6)) { this.repath = 1.2; return; } }
     // search nearby for own ink
     let bestP = null, bd = Infinity;
+    const RB = this._refillBad && this.t - this._refillBad.t < 6 ? this._refillBad : null;   // [b5-caldera] fix round 4 (not the patch it couldn't use)
     for (let i = 0; i < 14; i++) {
       const ang = Math.random() * Math.PI * 2, r = 1 + Math.random() * 7;
       _v.set(a.pos.x + Math.cos(ang) * r, a.pos.y, a.pos.z + Math.sin(ang) * r);
+      if (RB && Math.hypot(_v.x - RB.x, _v.z - RB.z) < 3) continue;
       const st = G.paint.regionStats(_v.x, _v.y, _v.z, 1.2, this.inkTeam, _stats);
       if (st.n && st.own > 0.6 && r < bd) { bd = r; bestP = _v.clone(); }
     }
@@ -3072,6 +3346,7 @@ export class BotBrain {
     for (let i = 0; i < 16 && !bestP; i++) {
       const ang = Math.random() * Math.PI * 2, r = 8 + Math.random() * 14;
       _v.set(a.pos.x + Math.cos(ang) * r, a.pos.y, a.pos.z + Math.sin(ang) * r);
+      if (RB && Math.hypot(_v.x - RB.x, _v.z - RB.z) < 3) continue;
       const st = G.paint.regionStats(_v.x, _v.y, _v.z, 1.5, this.inkTeam, _stats);
       if (st.n && st.own > 0.6) bestP = _v.clone();
     }
@@ -3111,7 +3386,7 @@ export class BotBrain {
   _wiggle(t) {
     this.wiggleT = t; this.wiggleYaw = Math.random() * Math.PI * 2;
     this.path = null; this.goalTimer = 0; this.repath = 0;
-    if (this.a.grounded) this._needJump = true;
+    if (this.a.grounded) this._needJump = 'wiggle';   // [b5-caldera] (a stuck hop, not a route's own: the hop guards' ring applies — lava-bots: a wiggle's random heading flew a blade off the Race head into the lava)
   }
   _unstick(dt, move) {
     const a = this.a;

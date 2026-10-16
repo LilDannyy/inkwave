@@ -633,7 +633,7 @@ function update(r, dt, inp, w) {
     const wallThere = G.physics.raycast(_v2, _v3, PLAYER.radius + 0.5, _hitC, false).hit;
     if (a.ink <= 0) dropCling(r, k, 'empty');
     else if (a.grounded || !wallThere || !a.alive) dropCling(r, k, 'lost');
-    else if (a.isBot && (k.botHold -= dt) < -0.6) dropCling(r, k, 'jump');   // (bot code leaps / lets go at 0; this is the backstop)
+    else if (a.isBot && (k.botHold -= dt) < -0.6) botLetGo(a.bot, a, r, k);   // (bot code leaps / lets go at 0; this is the backstop) [b5-caldera] botLetGo
   }
 
   // ---- punches (not while charging or mid-leap; from the wall only the right glove is free)
@@ -697,6 +697,13 @@ function landingOk(a, P) {
   const b = P.block >= 0 ? G.level.blocks[P.block] : null;
   if (b && (b.roof || b.perch || b.rail)) return false;
   if (Math.abs(P.pos.y - a.pos.y) > 4) return false;
+  if (G.match?.stage?.wet(P.pos.x, P.pos.z, P.pos.y, 2)) return false;   // [b5-caldera] never onto floor a stage hazard takes (lava)
+  // [b5-caldera] fix round 3: … nor where it slides on into one — a leap lands at up to 11 m/s and carries on along its line
+  // (a bot's pounce onto the island's narrow SE coping slid off into the lake: lava-bots ledges)
+  if (G.match?.stage) {
+    const dx = P.pos.x - a.pos.x, dz = P.pos.z - a.pos.z, d = Math.hypot(dx, dz) || 1, SM = G.match.stage;
+    for (const k of [0.8, 1.6, 2.4]) { const x = P.pos.x + (dx / d) * k, z = P.pos.z + (dz / d) * k, gy = G.level.groundHeight(x, z, P.pos.y + 0.5); if (gy === -Infinity || SM.wet(x, z, gy, 2)) return false; }
+  }
   if (!G.nav) return true;
   const id = G.nav.nearest(P.pos, 0.6);
   if (id < 0) return false;
@@ -712,7 +719,23 @@ function botLeap(r, k, c, yaw, pitch, kind = 'ground') {
 // at release: does the leap still come down where the bot planned (it may have been nudged while crouching)?
 function botReleaseOk(a, k) {
   predictLeap(a.pos, leapVelocity(a, k, k.charge, _bv), _bp, null);
-  return k.botKind === 'wall' ? _bp.kind === 'wall' && !SUB_KITS.bobber?.webHit?.(a.team, _bp.pos.x, _bp.pos.y, _bp.pos.z, W().landRadius) : landingOk(a, _bp);   // ([b5-int3] a wall landing smashes too)
+  return k.botKind === 'wall' ? _bp.kind === 'wall' && !SUB_KITS.bobber?.webHit?.(a.team, _bp.pos.x, _bp.pos.y, _bp.pos.z, W().landRadius) && !wallOverHazard(_bp.pos) : landingOk(a, _bp);   // ([b5-int3] a wall landing smashes too)
+}
+// [b5-caldera] fix round 3: a wall to cling to only where the floor under it isn't one a stage hazard takes (the lava): its
+// let-go drops the kid there (lava-bots: a bot clinging over the Slump bay dropped into the lake)
+function wallOverHazard(p) {
+  const SM = G.match?.stage; if (!SM) return false;
+  const gy = G.level.groundHeight(p.x, p.z, p.y);
+  return gy === -Infinity ? !!SM.under?.({ x: p.x, y: -50, z: p.z }) : SM.wet(p.x, p.z, gy, 2);
+}
+// [b5-caldera] fix round 3: a bot lets go of a wall with a hop only where that hop comes down dry (the brain's flight model);
+// over the lava it leaps for dry floor away from the wall instead, or hangs on a moment longer
+function botLetGo(brain, a, r, k) {
+  const n = k.clingN, SM = G.match?.stage, f = SM && brain?._flight ? brain._flight(a, n.x * 3.4, 4.6, n.z * 3.4, null, 1.6) : null;
+  if (!f || (f.gy > -Infinity && !SM.wet(f.x, f.z, f.gy, 0.5))) { dropCling(r, k, 'jump'); return; }
+  const out = Math.atan2(n.x, n.z);
+  for (const dy of [0, 0.6, -0.6, 1.2, -1.2]) { const yaw = out + dy, c = botPlan(a, k, yaw, 0.05, 9); if (landingOk(a, _bp) && botLeap(r, k, c, yaw, 0.05)) return; }
+  k.botHold = 0.4;
 }
 // a wall near the fight worth sticking to: probe round the bot at chest and head height
 function botFindWall(a, target) {
@@ -783,7 +806,7 @@ const bot = {
           const c = botPlan(a, k, yaw, -0.1, dist);
           if (landingOk(a, _bp) && botLeap(r, k, c, yaw, -0.1)) { B.leapCd = 3 + Math.random() * 3; return false; }
         }
-        dropCling(r, k, 'jump');
+        botLetGo(brain, a, r, k);   // [b5-caldera] (was dropCling 'jump': never into the lava)
       }
       return inReach;
     }
@@ -829,7 +852,7 @@ const bot = {
     const r = a.weaponRunner, k = K(r), B = botState(brain);
     B.travelCd -= dt;
     if (k.charging || k.leaping) return false;
-    if (k.cling) { if (k.botHold <= 0 || inkFrac < 0.15) dropCling(r, k, 'jump'); return inkFrac > 0.1; }   // hang a moment, ink the wall + the ground below
+    if (k.cling) { if (k.botHold <= 0 || inkFrac < 0.15) botLetGo(brain, a, r, k); return inkFrac > 0.1; }   // [b5-caldera] botLetGo   // hang a moment, ink the wall + the ground below
     // cover ground: a long pounce along the path (paints the landing), with plenty of ink and a long way to go
     if (B.travelCd <= 0 && a.grounded && inkFrac > 0.7 && wantMove && brain._pathRemaining && brain._pathRemaining() > 14 && Math.random() < dt * 0.8) {
       B.travelCd = 6 + Math.random() * 6;

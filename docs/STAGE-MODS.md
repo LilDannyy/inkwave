@@ -45,11 +45,11 @@ registerCause('lava', { name: 'Burned in the lava', knocked: 'Knocked into the l
 - `G.stageWorld`: the `StageWorld` (all modules' W for the current world), or `null`.
 - `G.match.stage`: the `StageRun` (all modules' R for the current match, plus `S.clock`), or `null`.
 - `G.<worldAs>` / `G.match.<matchAs>`: your own W / R. **Keep the contracts' names on them**: other packages call them
-  directly — the subs read `G.match.lava.surfaceAt / under / covers`, Bazookarp reads `G.match.eras.dangerAt` and
-  `G.match.lava.restMask`, both read the actor field `a.pipe` (the [subs / Bazookarp table](#the-subs-spec-and-bazookarp-interfaces-one-home-each)).
+  directly — the subs read `G.match.lava.surfaceAt / under / covers`, Bazookarp reads `G.match.eras.dangerAt`,
+  `G.match.lava.restMask` and (b5-int3's field) `G.match.stage.karpStates()`, both read the actor field `a.pipe` (the [subs / Bazookarp table](#the-subs-spec-and-bazookarp-interfaces-one-home-each)).
 - Every hook below is **optional**: implement a method of that name on W or R and the registry calls it.
 - Code that must not know any stage asks the registry's queries (`G.level.liquidY`, `G.level.noPlace`,
-  `G.match.stage.restMask(...)`, `.danger(...)`, `.under(...)`, `.sink(...)`).
+  `G.match.stage.restMask(...)`, `.karpStates()`, `.danger(...)`, `.under(...)`, `.sink(...)`).
 
 ## Lifecycle
 
@@ -307,7 +307,7 @@ clone with the era vertex collapse). Untagged placements are merged exactly as t
 | `botHold(b)` | `BotBrain.update`'s super-jump early return | true = the bot does nothing this frame (riding) |
 | `edgeTypes: ['pipe']` + `botSteer(b, edge, out)` | `_steer`, after the waypoint advance, when the next edge's type is yours (and the ledge-replan exception) | return `out` (the move) or null |
 | `beforePath(b)` | `_pathTo`, before `nav.path` | set your per-bot nav rule state (`this.botX = …`) |
-| `botAct(b, dt, it, move, vis)` | after the pods' bot hook | an aim (Vector3) to take over, or null |
+| `botAct(b, dt, it, move, vis)` | after the pods' bot hook | an aim (Vector3) to take over, or null. Bot fields it may set for this frame ([b5-caldera]): `b.stageUrgent` (run it ahead of a threat's footwork), `b.guardOff` (a straight run at a step: no edge / water guard), `b._needJump = true` (ask for a hop) with `b.hopAt` (fix round 4: the `{ x, y, z }` the hop is for — `_tail` judges it by the flight steered at that spot, `_hopLands`, and flies it there; a refused ask's press costs no cool-down) |
 | `wet(x, z, gy, ahead)` | `_wet`, `_avoidWater`, `_squidWouldDrop` (ahead 0.5), `stageKit.floorFor` (ahead 1) | true = feet on that floor would be in your hazard (now or within `ahead` s) |
 | `goalWeight(id)` | `_pickPaintGoal` | × on a paint goal's score (eras' fresh nodes ×2) |
 | `sightLanding(e)` | `botSight` `check` / `recheck` | a Vector3: remember this enemy there (`src: 'jump'`), never target it |
@@ -345,9 +345,8 @@ clamp: shorten `rig.curDist` / `rig.boom.x`). The lens never dips under a module
 | `G.match.stage?.sink(p, what)` | R `under`, then R `fizzle(p, what)` | false (shots, bombs, thrown subs, the buoy, the Shaker / Torpedo / Tracer / Waddle sink there: no splat, no blast) |
 | `G.match.stage?.sweeps(out)` | R `sweeps(out)` | [] (Bazookarp rest flags: the boxes a module's moving pieces cover over their whole travel) |
 | `G.match.stage?.restMask(state)` | R `restMask` | null (Bazookarp: `Uint8Array` over nav nodes, 1 = standable in that state) |
-| `G.match.stage?.karpStates()` | R `karpStates` ([b5-eras]) | [] (Bazookarp's carrier field: the stage's route states `[{ key, nodeOk(id) }]` — bluestone: one per era, keys 1–3; the field precomputes them all at load and switches at `era:done`) |
-| `G.match.stage?.danger(pos, pad)` | R `danger` | false (Bazookarp drop spot, bots) |
-| `G.match.stage?.karpStates()` | R `karpStates` (the first module with any) | [] ([b5-karp-checker] Bazookarp's field states, SPEC §3.2 step 6: `[{ key, nodeOk(id), query }]` — `key` what `era:done` / `lava:warn` name, `nodeOk` the nav nodes standing in that state, `query` the page query of your audit switch that shows the world in that state (`'era=2'`, `'lava=high'`): `tools/botlab/bazookarp-check.cjs` checks each state on a page loaded with it; `ERA=` / `LAVA=` pick one) |
+| `G.match.stage?.karpStates()` | R `karpStates` (every module's, in order) | [] (Bazookarp Carp Field states: `[{ key, nodeOk(id), query? }]`; `query` is the audit page state (`era=2`, `lava=high`). The field builds all states at load and switches with `field.stateOf(key)` at `era:done { era }` / `lava:warn { to }`. Bluestone has one per era; Caldera has `low` / `high` from `restMask`) |
+| `G.match.stage?.danger(pos, pad)` | R `danger` | false (Bazookarp drop spot, bots; on a liquid stage, lava covers floors it may reach within 10 s) |
 | `G.match.stage?.crushIn(shape, how)` | `G.deploy.crushIn` (subs SPEC §0.3), looked up at each call | [b5-subs] the real one (deployables.js): `{ blocks, rider }` (the user's list — a Lurk Mine is pushed aside, not crushed: the lead's rule), `{ sphere }`, `{ where }`, `{ standingOn }`, `{ liquid }` → the count destroyed, each with one `'device:down'` { how }; the tower's `crush(T)` is now a call of it. The page test proves the forwarding with a stand-in; `tests/sub-sentry.js` 'crush' runs the real one |
 | `G.match.stage?.state()` | R `state` | `{ t, keys }` (tests) |
 
@@ -505,7 +504,7 @@ either way (`W.noPlace` → `G.level.noPlace`), and the device code now calls it
 | H14 | `minimap` | **served**: `R.drawMap` |
 | H15 | `mapThumb` | **served**: `registerStageData('lava', { thumbBelow })` |
 | H16 | `weapons.js` projectiles / bombs | **served**: `R.under` + `R.fizzle` (`sink`) |
-| H17 | `subs._fly`; the device sweep | **served**: `sink` for thrown subs. The device sweep is **module-private until the subs package adds `G.deploy.crushIn`**: the module's own 4 Hz sweep walks `G.subs.items` (`!it.ghost && it.state !== 'dead'`, placed or stuck, `R.under(it.pos, -0.05)`) → `G.subs._destroy(it)` (the owner's end record ends the ghosts); the buoy is `H18`. After that: `S.crushIn({ where: (p) => R.under(p, -0.05) }, 'lava')`, which also ends the sentries and bobbers with `'device:down'` |
+| H17 | `subs._fly`; the device sweep | **served**: `sink` for thrown subs. The device sweep (4 Hz while the lava moves or a rider changes, on the owner's screen): `S.crushIn({ where: (p) => R.under(p, -0.05) }, 'lava')` — b5-int3's `G.deploy.crushIn`: placed devices, the kits' devices (the Scrap Sentry, Chain Bobbers by their sphere's bottom) and the buoy, each with `'device:down'` how `lava` and no blast — then the module's own walk for a device riding a socketed Organ below its rim (how `crush`). A Chain Bobber floats 1.0 m over the lava and rides it up and down; `R.noPlace` never refuses a spot with no floor under it (a floating device's base over open lava), a drowned floor still counts as floor (fix round 3; lava.js E1b) |
 | H18 | `sp-surf.js` the buoy | **served**: `under` → `'lost'` |
 | H19 | kits: torpedo, waddle, shaker, tracer (mandatory), Glide | **served**: `sink` beside each sea test (done, the mandatory ones). Not hooked: the optional cosmetic ones (`bow.js`, `boomerang.js`, `brolly.js`, `mitts.js`: the paint clip already stops their ink). The batch-5 subs read `G.match.lava.surfaceAt / under / covers` (subs SPEC rev 3 §0.5–0.6): keep those names and signatures on R |
 | H20 | `check-maps` lava section | **served**: `registerStageData('lava', { check })` |
@@ -530,7 +529,7 @@ Nothing by hand.
 | subs §0.5 / DECISIONS #24: `G.level.noPlace` (aquarium device aprons) | `G.level.noPlace(p, r)`, answered by `W.noPlace` / `R.noPlace` (false on every other stage). Whether the aquarium uses it and the subs call it: the lead's (see the pipes table) |
 | subs §0.2 / §0.4 (deployables, `F.dash` bit 23) | not stage-side; `F.stage` keeps bit 22 |
 | Bazookarp §5.5 bluestone: one union nav with `e.em`, per-era `valid`, `era:warn` / `era:done { era }`, `G.match.eras.dangerAt(pos)` | the eras module: `nav.edgeMask`; per-era `valid` on its W; the events; `dangerAt` on R (`G.match.eras`); generic `G.match.stage.danger(pos, pad)` / `restMask(era)` for stage-agnostic code |
-| Bazookarp §5.5 caldera: merged LOW + HIGH nav, `reach`, `G.match.lava.restMask(level)` (pure, callable at match start), `lava:warn { to }` | `restMask(level)` on R (`G.match.lava`; `G.match.stage.restMask(state)` asks the same); `reach` on R; the event |
+| Bazookarp §5.5 caldera: merged LOW + HIGH nav, `reach`, `G.match.lava.restMask(level)` (pure, callable at match start), `lava:warn { to }` | `restMask(level)` on R (`G.match.lava`; `G.match.stage.restMask(state)` asks the same); **`karpStates()`** on R (fix round 3: what b5-int3's Bazookarp reads — `G.match.stage.karpStates()` → `[{ key: 'low', nodeOk }, { key: 'high', nodeOk }]` from `restMask`; `field.stateOf(to)` at `lava:warn`); `reach` on R; the event; `sweeps(out)` (the riders' whole travel, `{ x, z, hx, hz, yaw, y0, y1 }` boxes — karpField reads both that and its old `[x0, z0, x1, z1]`) |
 | Bazookarp §5.5 aquarium: `modes.bazookarp.carp`, `'pipe'` edges with `len`, riders `a.pipe` | edges keep every extra field of `W.navEdges` specs (`len`, `key`, `leg`); `a.pipe` on the actor; carp refusal in the module's `canEnter` |
 | Bazookarp: movers' whole paths | the railcars: `movers.js sweepRect(car)` (Bazookarp's own hook); stage modules' moving pieces: `G.match.stage.sweeps(out)` |
 | Bazookarp: the mode's own setup | build it in `match.js` **after** `this.stage = StageRun.create(this)` (as Zone Control / Tower Command are), so `restMask` / `dangerAt` exist at its load |

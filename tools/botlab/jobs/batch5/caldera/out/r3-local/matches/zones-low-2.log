@@ -1,0 +1,29 @@
+== caldera [zones]: winner Bravo (time) | final 50 vs 44 (penalty +31.8/+38.5) | OT no
+   held A 107s B 69.8s neutral 123s | captures 7 (takeovers 3), control events 13, first capture @23.8s | rotations 6
+   teams: A [blaster/zipcaster bucket/barrage_burst twins/crab bow/stamp] far 45%, near 40%, dead 13%, jump 1% | B [bucket/blower roller/zooka blade/blower blaster/zipcaster] far 51%, near 23%, dead 22%, jump 3%
+   bot-time: {"far":48,"near":32,"dead":17,"jump":2} (far by mode {"paint":2860,"refill":202,"fight":1060,"retreat":524}) | specials ready 29
+   bots in the active zone 67.6% of the time | avg inside A 0.63 B 0.43 | within 12 m A 1.44 B 0.84
+   roles (% of bot-time) {"paint":55,"push":12,"guard":1,"watch":4,"stage":10} | holding on purpose 5.5%
+   per bot: turf 2011p, on-zone ink 447p, splats 9.1 → XP beyond the win/lose base ≈ 2018
+   stuck 0.1% | splats 76 (water 3) | specials 24 | super jumps 24 | turf 26.6/28.5 | sim 300s in 66s (wall 66s) | {"cpuSimMs":1.47}
+   penalties [{"team":0,"p":39,"start":100,"end":49.5},{"team":1,"p":39,"start":100,"end":49.5},{"team":0,"p":20,"start":88.5,"end":61.3}]
+   control log 23.8:A@center 59:N@sideA 68.3:A@sideA 98.9:N@center 107.8:B@center 151.4:N@center 163.9:B@sideB 189.9:N@center 210.7:A@center 223.8:N@sideA 241.8:A@sideA 270:N@center 299.5:B@center
+   best shares per activation center@0-59s A100/B37 | sideA@59-99s A100/B0 | center@99-155s A92/B100 | sideB@155-190s A20/B100 | center@190-224s A100/B22 | sideA@224-270s A100/B23 | center@270-300s A79/B100
+   reachable cells center0:1520/1520 R6.9 nodes84 side1:1546/1546 R7.5 nodes91 side2:1546/1546 R7.5 nodes91 | retake pushes A 2 B 4
+   loadouts A:blaster+burst A:bucket+sprinkler A:twins+seeker A:bow+waddle B:bucket+sprinkler B:roller+sprinkler B:blade+tracer B:blaster+seeker
+   by weapon (players, splats dealt, deaths, avg turf) blaster×2 27/23 1819p · bucket×2 9/16 1482p · twins×1 16/7 2946p · bow×1 10/4 1986p · roller×1 4/14 2088p · blade×1 7/12 2466p
+   splats by cause {"shot":8,"bow":9,"blaster":4,"blast":23,"crab":7,"slosh":6,"water":3,"blower":2,"zooka":4,"tracer":1,"blade":5,"stamp":1,"burst":1,"seeker":1,"sprinkler":1}
+   special uses A {"crab":4,"stamp":3,"barrage":3,"zipcaster":3} B {"zipcaster":3,"blower":5,"zooka":3}
+   SURF uses 0 thrown 0 anchored 0 lost 0 popped 0 | rings 0 hits 0 (marks 0, ring splats 0) dodged 0 | ink 0 m² in 0 splats | turf from it A 0 of 8115 · B 0 of 7972 | assists A 11 B 2 {"jumps":0,"byDamage":13,"byJump":0,"credited":13} | bots {"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0}
+   enemy specials AI on | splatted by specials: A 6 {"blower":2,"zooka":4} · B 9 {"crab":7,"stamp":1,"barrage":1} | K/D A 45/29 B 28/47 | {"noticed":112,"missed":9,"escapes":60,"evaded":16,"caught":4,"avoidedPath":32,"goalMoved":44,"guard":7,"backedOff":12,"retargeted":16,"heldFire":2.7666666666666617,"knockShots":0,"reengaged":10,"bubbleHold":11.433333333333481,"popShots":1,"hops":0,"hunted":8,"splattedBy":{"crab":7,"blower":2,"zooka":4,"stamp":1,"barrage":1}}
+   sight: fighting 513 bot-s, trigger held 161 s | foe out of sight 17.1% of fight time, aim still on it 88.3% of that | shooting at nothing 12.6% of trigger time (12% straight at the hidden foe; 2.2% while it still thinks it sees it, 9.8% a charge held, 0.6% shots) | bots 22.42 ms per sim s (looking 1.08) | {"checks":9259,"rays":13699,"deferred":0,"seen":1013,"lost":518,"cleared":17,"expired":21,"located":1035,"jumps":78,"hits":2,"sprays":10,"memBombs":6,"hunts":122}
+   wall climbs (at the wall): {"tries":0,"done":0,"stalled":0,"dry":0,"long":0}
+   stuck {"t":40,"name":"Marlo","w":"bow","mode":"fight","role":"watch","pos":[6.3,2.4,-5.8],"path":false,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":31.8,"name":"Suki","w":"blaster","mode":"paint","role":"stage","pos":[7.5,2.93,42.9],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":46.5,"name":"Inky Vee","w":"blade","mode":"paint","role":"paint","pos":[8.6,1.2,30.8],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":48,"name":"Marlo","w":"bow","mode":"refill","role":"watch","pos":[0.1,1.2,-9.7],"path":true,"hold":true,"pod":"-","dur":0.25}
+   stuck {"t":54.5,"name":"Drip","w":"bucket","mode":"retreat","role":"paint","pos":[3.1,1.8,3.4],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":120.5,"name":"Drip","w":"bucket","mode":"paint","role":"stage","pos":[-6.8,2.4,-35.5],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":300,"simMs":65981,"state":"finish","stuckPct":0.1,"splats":76,"water":3,"specials":24,"jumps":24,"cov":[26.6,28.5],"teamKD":[{"k":45,"d":29,"sp":6,"by":{"blower":2,"zooka":4}},{"k":28,"d":47,"sp":9,"by":{"crab":7,"stamp":1,"barrage":1}}],"spUses":[{"crab":4,"stamp":3,"barrage":3,"zipcaster":3},{"zipcaster":3,"blower":5,"zooka":3}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":112,"missed":9,"escapes":60,"evaded":16,"caught":4,"avoidedPath":32,"goalMoved":44,"guard":7,"backedOff":12,"retargeted":16,

@@ -830,7 +830,9 @@ function holdFire(b, a, busy = false) {
   let L = Math.max(weaponRange(w), w.waveRange || 0) * 1.05;
   // (the foe it's fighting plus a miss's carry — but a shot that lodges or bursts at the end of its flight, an arrow or a
   // blaster's blob, goes off wherever a miss ends: its whole reach)
-  if (b.mode === 'fight' && b.target && !ws.bursts) L = Math.min(L, Math.hypot(b.target.pos.x - a.pos.x, b.target.pos.z - a.pos.z) + 2.5 + sr);
+  // [b5-caldera] Boss targets are body parts with shape.pos rather than target.pos.
+  const tgp = b.target && (b.target.pos || b.target.shape?.pos);
+  if (b.mode === 'fight' && tgp && !ws.bursts) L = Math.min(L, Math.hypot(tgp.x - a.pos.x, tgp.z - a.pos.z) + 2.5 + sr);
   // ([b5-int3] aimed down, the shot ends where the aim meets the stage — off a ledge that is the floor below, not the bot's
   // own floor 1.3 m under its eye: a bucket bot painting down off a ledge blew a web 7 m out and 2.6 m below it)
   if (_d.y < -0.05) { const gh = G.physics.raycast(_a, _d, L, _hh); L = Math.min(L, (gh.hit ? gh.dist : L) + sr); }
@@ -1413,7 +1415,7 @@ export function botAct(b, dt, it, move, busy) {
     }
   }
   // (a fight's pair: its second straight after the first — bots.js asks a fighting bot's sub only with 8 ink to spare)
-  if (!S && P?.fight && fighting && b.bombCd <= 0 && a.ink >= a.sub.inkCost + 2 && !b._bombAim && !b._releaseBomb && !a.weaponRunner?.aimingSub
+  if (!S && P?.fight && fighting && b.target.pos && b.bombCd <= 0 && a.ink >= a.sub.inkCost + 2 && !b._bombAim && !b._releaseBomb && !a.weaponRunner?.aimingSub   // [b5-caldera] (.pos: a boss part has none)
     && botKit.fight(b, Math.hypot(b.target.pos.x - a.pos.x, b.target.pos.z - a.pos.z))) { b._bombAim = true; return null; }
   // setting one up outside the paint branch too (an escort by the tower, a guard on its zone, a bot on its way, the next
   // link of a burst): the same rules as bot.paint, never mid-fight, refilling, on the tower or with a throw under way

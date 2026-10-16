@@ -36,6 +36,13 @@ export function inPoly(poly, x, z) {
   }
   return inside;
 }
+// [b5-caldera] a node inside a stage module's swept box { x, z, hx, hz, yaw, y0, y1 } (+ 0.4 m across: a body on its rim; its
+// floor from 0.3 m under y0 to 0.3 m over y1)
+function sweptBox(b, n) {
+  if (n.y < (b.y0 ?? -50) - 0.3 || n.y > (b.y1 ?? 50) + 0.3) return false;
+  const c = Math.cos(b.yaw || 0), s = Math.sin(b.yaw || 0), dx = n.x - b.x, dz = n.z - b.z;
+  return Math.abs(dx * c - dz * s) <= b.hx + 0.4 && Math.abs(dx * s + dz * c) <= b.hz + 0.4;
+}
 // a node (its floor height y) inside a { poly, y0, y1 } volume
 const volNode = (v, x, y, z) => y >= (v.y0 ?? -50) - 0.25 && y <= (v.y1 ?? 50) + 0.25 && inPoly(v.poly, x, z);
 // a player's feet inside one (a hop above the floor still counts)
@@ -502,7 +509,9 @@ export class KarpField {
     // whole mover corridors (every node a car can ever cover) and pod plots (+ 1 m)
     const swept = new Uint8Array(N);
     for (const car of G.match?.movers?.cars || []) for (const [, id] of car.nodes || []) swept[id] = 1;
-    { const out = []; try { G.match?.stage?.sweeps?.(out); } catch { /* */ } for (const b of out) for (let i = 0; i < N; i++) { const n = nodes[i]; if (n.x >= b[0] && n.x <= b[2] && n.z >= b[1] && n.z <= b[3]) swept[i] = 1; } }
+    // ([b5-caldera] the registry's boxes are { x, z, hx, hz, yaw, y0, y1 } — docs/STAGE-MODS.md, the lava's riders' whole
+    // travel; [x0, z0, x1, z1] rects as before)
+    { const out = []; try { G.match?.stage?.sweeps?.(out); } catch { /* */ } for (const b of out) for (let i = 0; i < N; i++) { const n = nodes[i]; if (Array.isArray(b) ? n.x >= b[0] && n.x <= b[2] && n.z >= b[1] && n.z <= b[3] : sweptBox(b, n)) swept[i] = 1; } }
     for (const p of G.match?.pods?.pods || []) for (const id of p.nav || []) {
       const n = nodes[id];
       for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {

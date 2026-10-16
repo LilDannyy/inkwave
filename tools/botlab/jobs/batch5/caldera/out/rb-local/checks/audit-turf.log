@@ -1,0 +1,5 @@
+FAIL lightmap applied (baked for this build, not stale)  {"id":"caldera","mode":"turf"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[5.79,6.12],"avg":5.96,"straight":64.8}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+console errors: none

@@ -1,0 +1,3 @@
+== low exit 0 REPORT {"map":"caldera","mode":"turf","time":"day","loadMs":6901,"blocks":1735,"solidBlocks":1735,"propMeshes":6,"navNodes":4570,"bounds":{"minX":-44,"maxX":44,"minZ":-76,"maxZ":76},"perf":{"calls":122,"tris":358563,"cpuRenderMs":1.81,"cpuSimMs":1.87},"coverage":[2.9,2.8]}
+== high exit 0 REPORT {"map":"caldera","mode":"turf","time":"day","loadMs":6754,"blocks":1613,"solidBlocks":1613,"propMeshes":6,"navNodes":4230,"bounds":{"minX":-44,"maxX":44,"minZ":-76,"maxZ":76},"perf":{"calls":125,"tris":369514,"cpuRenderMs":2.26,"cpuSimMs":2.46},"coverage":[2.4,3.7]}
+RESULT pics done

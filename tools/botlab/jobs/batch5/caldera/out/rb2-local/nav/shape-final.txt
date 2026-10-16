@@ -1,0 +1,12 @@
+cal-low   floor  4642  footprint  5982  solidity 0.789  holes(lake)   622
+cal-high  floor  4306  footprint  5846  solidity 0.771  holes(lake)   862
+halyard   floor  4666  footprint  6494  solidity 0.980  holes(lake)  1360
+craters   floor  5664  footprint  6790  solidity 0.921  holes(lake)    50
+aquarium  floor  5240  footprint  5972  solidity 0.833  holes(lake)     0
+cal-low IoU halyard 0.527  craters 0.595  aquarium 0.406
+cal-high IoU halyard 0.529  craters 0.578  aquarium 0.392
+aquarium IoU halyard 0.714  craters 0.654  aquarium 1.000
+craters IoU halyard 0.727  craters 1.000  aquarium 0.654
+cal-low -70:0 -65:28 -60:35 -55:34 -50:25 -45:25 -40:34 -35:37 -30:43 -25:60 -20:57 -15:58 -10:62 -5:63 0:72 5:63 10:62 15:57 20:58 25:61 30:44 35:37 40:33 45:25 50:32 55:34 60:36 65:27 70:0
+cal-high -70:0 -65:28 -60:35 -55:34 -50:25 -45:25 -40:34 -35:37 -30:43 -25:60 -20:57 -15:53 -10:56 -5:59 0:72 5:59 10:56 15:53 20:58 25:61 30:44 35:37 40:33 45:25 50:32 55:34 60:36 65:27 70:0
+halyard -70:0 -65:39 -60:48 -55:48 -50:48 -45:48 -40:48 -35:48 -30:48 -25:48 -20:48 -15:48 -10:48 -5:48 0:48 5:48 10:48 15:48 20:48 25:48 30:48 35:48 40:48 45:48 50:48 55:48 60:48 65:34 70:0
