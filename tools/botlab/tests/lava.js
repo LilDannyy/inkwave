@@ -533,6 +533,52 @@
       k8.push([kk < 4 ? 'A' : 'B', r.id, og.id, +od.toFixed(1), hop, died]);
     }
     R('F8b no route hop from a stone at a column across the lava: asked now with the climb\'s hop flag left set (A), or asked 5 s before (B) — 4 stones each: not made (no hop in its first 0.3 s), no death in 2 s', k8.every((x) => !(x[4] !== null && x[4] < 0.3) && !x[5]), { cases: k8 });
+    // (fix round 4, review 4 issue 1: in a rise a charger fighting on Race 7 was sent off it — its stone 0.6 m under the
+    // island's coping — ran at the coping at a slant, never hopped, slid along the face at 5.7 m/s and off the stone's end;
+    // its route's next node was a node of its own stone, at the stone's HIGH height, read as a step up; refused presses had
+    // burned its jump cool-down)
+    // F8c: on every stone of Alpha's that meets a head or the island (race1, race5, race6, race7), in the rise with the
+    // stone 0.45–0.75 m under it (t 39.6 / 40.4), each stone node within 2.6 m of the dry floor sent off it (the stone step)
+    // running in at ±40° at 5.5 m/s with its cool-down left by a refused press: up on the dry floor within 4 s, no death
+    const k8c = [], fc = bots[1] || bots[0], FC = fc.bot;
+    { const heads = nav.nodes.filter((q) => nav.valid[q.id] && M.kind[q.id] === 0 && q.y > 1.0 && q.y < 1.6);
+      const headOf = (q) => { let best = null, bd = 2.6; for (const h of heads) { const d = Math.hypot(h.x - q.x, h.z - q.z); if (d < bd) { bd = d; best = h; } } return best; };
+      for (const sid of ['race1', 'race5', 'race6', 'race7']) {
+        const r = W.riders.find((x) => x.id === sid), ri = W.riders.indexOf(r), ns = nav.nodes.filter((q) => M.rider[q.id] === ri && M.pose[q.id] === 1 && headOf(q));
+        for (const t0 of [39.6, 40.4]) for (const sn of ns) for (const sl of [0.7, -0.7]) {
+          setT(t0); freezeBots();
+          put(fc, V(sn.x, rid(sid).top + 0.02, sn.z)); fc.invuln = 1e6; fc._lavaFoot = null; step(0.05);
+          FC.update = idle.get(fc); FC.path = null; FC.repath = 0; FC.goalTimer = 0; FC._look = null; FC._lavaEsc = true; FC._stoneStep = true; FC._lavaT = 0; FC.goal = -1;
+          const h = headOf(sn), dx = h.x - fc.pos.x, dz = h.z - fc.pos.z, dl = Math.hypot(dx, dz) || 1, c = Math.cos(sl), s2 = Math.sin(sl), ux = (dx * c - dz * s2) / dl, uz = (dx * s2 + dz * c) / dl;
+          fc.vel.set(ux * 5.5, 0, uz * 5.5); FC.mvYaw = Math.atan2(ux, uz); FC.mvMag = 1; FC.jumpCd = 0.8; FC._jRef = true;
+          let died = null, up = null; const o8 = on('splatted', (e) => { if (e.victim === fc && !died) died = [e.cause, r3(Lv.clock.t)]; });
+          for (let i = 0; i < 30 * 4 && !died && up === null; i++) { dbg.step(1000 / 30); const gb = fc.ground?.block >= 0 ? lvl.blocks[fc.ground.block] : null; if (fc.grounded && !gb?.lavaRider && fc.pos.y > 1.0) up = r3(Lv.clock.t - t0); }
+          o8(); freezeBots();
+          k8c.push([sid, t0, sn.id, sl, up, died]);
+        }
+      } }
+    R('F8c escapes off a rising stone up the step at its end (race1 / 5 / 6 / 7, the stone 0.45–0.75 m under it): each node within 2.6 m of the floor, run in at ±40° at 5.5 m/s, its jump cool-down left by a refused press — up within 4 s, no death',
+      k8c.length >= 40 && k8c.every((x) => x[4] !== null && !x[5]), { n: k8c.length, died: k8c.filter((x) => x[5]).length, notUp: k8c.filter((x) => x[4] === null).length, bad: k8c.filter((x) => x[4] === null || x[5]).slice(0, 8), slowest: Math.max(...k8c.map((x) => x[4] ?? 0)) });
+    // (fix round 4, review 4 issue 1: a spinner's Zipline zip from the gauge deck went up a wall over Bravo's Casting Floor
+    // in the rise warning and its let-go came down in the lava 0.27 s after the floor turned deadly; a bucket's the same)
+    // F8d: a bot's Zipline zip (bots.js _zipDry) from spots on the island, every aim (yaw 10°, pitch 0–0.6): the same aims
+    // judged at LOW with no rise near (t 10) and in the rise warning (t 36, the ledges deadly at 38.8) — some refused only in
+    // the warning (their line, end or let-go over a floor the lava takes within 4 s), most still allowed
+    { const { SPECIALS } = await import('./src/config.js'), { Hit } = await import('./src/game/physics.js');
+      const zb = bots[2] || bots[0], ZB = zb.bot, zdef = SPECIALS.zipcaster, zh = new Hit(), zr = { n: 0, ok10: 0, ok36: 0, refusedNow: 0, eg: [] };
+      for (const [x, z] of [[-10, 3.5], [0, 4.5], [8, 4.5], [-4, 6], [4, -6]]) {
+        const y = lvl.groundHeight(x, z, 10); if (!(y > -Infinity)) continue;
+        for (let yaw = 0; yaw < 360; yaw += 10) for (const pitch of [0, 0.3, 0.6]) {
+          const yw = (yaw * Math.PI) / 180, ok = [];
+          for (const t of [10, 36]) { setT(t); freezeBots(); put(zb, V(x, y + 0.02, z)); zb.aimPoint.set(x + Math.sin(yw) * Math.cos(pitch) * 10, y + 1.2 + Math.sin(pitch) * 10, z + Math.cos(yw) * Math.cos(pitch) * 10); ok.push(typeof ZB._zipDry === 'function' ? ZB._zipDry({ def: zdef }) : true); }
+          const from = V(x, y + 1.2, z), hit = __G.physics.raycast(from, zb.aimPoint.clone().sub(from).normalize(), zdef.range, zh, true);
+          if (!hit.hit) continue;
+          zr.n++; zr.ok10 += ok[0] ? 1 : 0; zr.ok36 += ok[1] ? 1 : 0;
+          if (ok[0] && !ok[1]) { zr.refusedNow++; if (zr.eg.length < 4) zr.eg.push([x, z, yaw, pitch, r3(hit.point.x), r3(hit.point.y), r3(hit.point.z)]); }
+        }
+      }
+      R('F8d a bot\'s Zipline zip only where its line, its end and its let-go stay off a floor the lava takes within 4 s: from the island, the same aims at LOW (t 10) and in the rise warning (t 36) — some refused only in the warning, most allowed', zr.refusedNow >= 3 && zr.ok36 > zr.n * 0.6, zr);
+    }
   }
   // (fix round 1) the lookout claim: from the rise each team's best long-range bot goes up its own side's lookout and
   // holds it until the fall warning; every bot from its pad, brains on, a normal fight

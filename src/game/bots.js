@@ -1139,6 +1139,10 @@ export class BotBrain {
     // ---------------- never walk, strafe or swim off into the sea; stay a kid over grates spanning water
     // [b5-caldera] guardOff: a stage module steers it straight at a step up this frame (the lava's hop out): no guard
     const gOff = !!this.guardOff; this.guardOff = false;
+    // [b5-caldera] fix round 4: hopAt — the node a stage module's hop ask (_needJump) is for this frame (the lava's escape up
+    // a step): the hop is judged by the flight steered at it and flown at it (lava-bots edges: an escaper's hop off Race 7
+    // was judged by the ballistic arc along its slide beside the island's face, refused, and it slid off the stone)
+    const hopAt = this.hopAt || null; this.hopAt = null;
     if (!this._clMove && !gOff) this._avoidWater(move);   // (a climb's step to its spot in front of the wall: picked clear of the sea)
     if (it.squid && (this._squidWouldDrop(move) || (a.grounded && this._swimDrop(move)))) it.squid = false;
 
@@ -1179,7 +1183,10 @@ export class BotBrain {
     // the flag stayed set, and every later hop — a duel's, a stuck one, a route's — skipped the lava check below)
     if (this._needJump) { if (!this._njT) this._njT = G.time; else if (G.time - this._njT > 0.5) { this._needJump = false; this._njT = 0; } } else this._njT = 0;
     if (a.grounded && !this._climbAim) this._clHop = false;
-    if (this._needJump && this.jumpCd <= 0 && a.grounded) { it.jump = true; this.jumpCd = 0.6; pathHop = this._needJump === true; this._needJump = false; }   // [b5-caldera] ('wiggle': a stuck hop)
+    // [b5-caldera] fix round 4: an ask goes ahead whatever cool-down a REFUSED press left (_jRef: the guards below took it back,
+    // no jump was made) — refused stuck / route hops burned 0.6–1.0 s each, and an escaper at the step of a head held still
+    // 0.6 s at a time until its stone slid it off (lava-bots edges, probe-esc)
+    if (this._needJump && (this.jumpCd <= 0 || this._jRef) && a.grounded) { it.jump = true; this.jumpCd = 0.6; pathHop = this._needJump === true; this._needJump = false; }   // [b5-caldera] ('wiggle': a stuck hop)
     // [b5-caldera] no hop that comes down in the sea or the lava: at run speed a hop (a duel's dodge, a stuck hop, a kit's
     // own) flies 4–6 m, far past what the edge guard looks ahead (lava-bots.js: blaster / twins / brolly bots hopped off
     // the causeway into the drowning Casting Floor mid-fight); a route's hop up a step lands on dry ground and passes
@@ -1200,15 +1207,17 @@ export class BotBrain {
       // (fix round 3: near the lava a route's hop is judged by the flight it will fly, steered at its node — the ballistic
       // arc along the velocity refused a lookout claimant's hop onto the next column whenever it still drifted the other
       // way, and with the climb's hop flag no longer left set, chargers and bows stopped getting up)
+      else if (pathHop && hopAt) bad = !this._hopLands(a, hopAt);   // [b5-caldera] fix round 4 (a module's ask: its node)
       else if (pathHop && !this._lavaEsc && this.path && this.pi < this.path.length && this._wetWithin(a, 1.5)) bad = !this._hopLands(a, G.nav.nodes[this.path[this.pi]]);
       else bad = !this._hopSafe(a, it.move) || (!pathHop && this._nearWetHi(a, 3.0));
-      if (bad) it.jump = false;
+      if (bad) { it.jump = false; this._jRef = true; }   // [b5-caldera] fix round 4 (_jRef: refused, no jump made)
     }
+    if (it.jump) this._jRef = false;
     // [b5-caldera] in the air: never let the flight come down on the sea or the lava — when the arc as it flies now would
     // land there, steer back the way it came (air control pulls it back over the floor it left)
     // (not in a route's own hop — up the Organ columns the arc meets the next column's face and the model drops it into the
     // seam: it pulled the lookout claimants back off every hop)
-    if (it.jump && pathHop) { this._hopPath = true; this._hopTo = this.path && this.pi < this.path.length ? G.nav.nodes[this.path[this.pi]] : null; } else if (a.grounded) { this._hopPath = false; this._hopTo = null; }
+    if (it.jump && pathHop) { this._hopPath = true; this._hopTo = hopAt || (this.path && this.pi < this.path.length ? G.nav.nodes[this.path[this.pi]] : null); } else if (a.grounded) { this._hopPath = false; this._hopTo = null; }   // [b5-caldera] fix round 4: hopAt
     // [b5-caldera] fix round 3: a route's own hop is flown at the node it was made for (as a player commits to a jump): a
     // goal picked again mid-air turned a hop off the Casting Floor round toward the next goal and dropped it into the lake
     if (this._hopPath && this._hopTo && !a.grounded && !gOff && !this._climbAim) { const n = this._hopTo, dx = n.x - a.pos.x, dz = n.z - a.pos.z, d = Math.hypot(dx, dz); if (d > 0.3) it.move.set(dx / d, 0, dz / d); }
@@ -1813,9 +1822,35 @@ export class BotBrain {
         it.fire = fighting && vis && dist < 30;
         break;
       case 'zipcaster':
-        if (fighting && vis && dist > 6 && dist < 18 && Math.random() < dt * 0.6) it.sub = true;
+        if (fighting && vis && dist > 6 && dist < 18 && Math.random() < dt * 0.6 && this._zipDry(s)) it.sub = true;   // [b5-caldera] _zipDry
         break;
     }
+  }
+  // [b5-caldera] fix round 4: a Zipline zip only where nothing of it comes down on what the stage calls wet (the lava) within
+  // 4 s (the zip ≤ 0.7 s, the 1.4 s hang, the fall): the tether's line as it would fire now (the aim, its range), the
+  // floor under its end and under every 2 m of the line (an enemy met mid-zip stops the body there and it drops), and for a
+  // wall the floor its let-go flies onto (pushed off at 4 m/s for ~1.2 s, air control: up to ~6 m out, ±45°) — lava-bots: two zips
+  // up a wall over a drowning Casting Floor came down in the lava just after it turned deadly
+  _zipDry(s) {
+    const a = this.a, SM = G.match?.stage, L = G.level;
+    if (!SM) return true;
+    const from = _v.set(a.pos.x, a.pos.y + 1.2, a.pos.z), dir = _v2.copy(a.aimPoint).sub(from);
+    if (dir.lengthSq() < 1e-6) return false;
+    dir.normalize();
+    const h = this._zh || (this._zh = new Hit()), g = G.physics.raycast(from, dir, s.def?.range ?? 21, h, true);
+    if (!g.hit) return true;   // (a miss: no zip)
+    const n = g.normal, wall = Math.abs(n.y) < 0.55, ex = g.point.x + n.x * 0.5, ez = g.point.z + n.z * 0.5, ey = g.point.y;
+    // (the stage's own wet only — a floor the lava takes, open lava (no floor: −Infinity) — not the sea round other
+    // stages: bots' zips there are as they were)
+    const wet = (x, z, y) => SM.wet(x, z, L.groundHeight(x, z, y + 0.3), 4);
+    const len = g.dist;
+    for (let d = 2; d < len; d += 2) if (wet(from.x + dir.x * d, from.z + dir.z * d, from.y + dir.y * d)) return false;
+    if (wet(ex, ez, ey)) return false;
+    if (wall) {
+      const hl = Math.hypot(n.x, n.z) || 1, nx = n.x / hl, nz = n.z / hl;
+      for (const t of [0, 0.8, -0.8]) { const c = Math.cos(t), sn = Math.sin(t), ux = nx * c - nz * sn, uz = nx * sn + nz * c; for (const k of [1.5, 3, 4.5, 6]) if (wet(g.point.x + ux * k, g.point.z + uz * k, ey)) return false; }
+    }
+    return true;
   }
 
   _fightSub(dist) {

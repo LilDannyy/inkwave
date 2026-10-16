@@ -1360,15 +1360,19 @@ export class StageLava {
       // above it within 1.2 m (its slip rule), so that last metre is steered here, never left to _steer
       const ex = b.goal >= 0 ? nav.nodes[b.goal] : null;
       let nx = b.path && b.pi < b.path.length ? nav.nodes[b.path[b.pi]] : (b._escNx || ex);
+      // (fix round 4: a rider's node stands at its pose's height, its floor where the rider is now — a node on the stone
+      // under its feet read as a 0.7 m step up in a rise, the bot ran and hopped at it, out along the stone's edge beside the
+      // island's face, and slid off the end: lava-bots edges trial 18, probe-esc)
+      const ry = (q) => (q && M.kind[q.id] === 2 && this.riders[M.rider[q.id]] ? this.riders[M.rider[q.id]].top : q ? q.y : 0);
       // (a next node beyond a hop's reach — the route's waypoint advance skipped the 1.1 m coping before the 1.5 m kerb: the
       // bot hopped at the kerb until the lava had it — steps back to the node on the way that a hop reaches)
-      if (nx && nx.y - a.pos.y > 1.3 && b.path && b.pi > 0) for (let j = Math.min(b.pi, b.path.length) - 1; j >= Math.max(0, b.pi - 4); j--) { const q = nav.nodes[b.path[j]], dy = q.y - a.pos.y; if (dy > 0.4 && dy <= 1.3 && Math.hypot(q.x - a.pos.x, q.z - a.pos.z) < 2.5) { b.pi = j; nx = q; break; } }
-      const dh = nx ? Math.hypot(nx.x - a.pos.x, nx.z - a.pos.z) : Infinity;
+      if (nx && ry(nx) - a.pos.y > 1.3 && b.path && b.pi > 0) for (let j = Math.min(b.pi, b.path.length) - 1; j >= Math.max(0, b.pi - 4); j--) { const q = nav.nodes[b.path[j]], dy = ry(q) - a.pos.y; if (dy > 0.4 && dy <= 1.3 && Math.hypot(q.x - a.pos.x, q.z - a.pos.z) < 2.5) { b.pi = j; nx = q; break; } }
+      const dh = nx ? Math.hypot(nx.x - a.pos.x, nx.z - a.pos.z) : Infinity, ny = ry(nx);
       // (the straight run at it from 2–3 m out only where that line is floor all the way: across the lake corner's gap
       // between Race 5 and the north head a bot hopped in place until the stone sank; the route goes round by the link)
       let lineOk = true;
-      if (nx && nx.y - a.pos.y > 0.4 && dh < 3.0) for (let d = 0.3; d < dh - 0.8 && lineOk; d += 0.3) { const gx = a.pos.x + ((nx.x - a.pos.x) * d) / dh, gz = a.pos.z + ((nx.z - a.pos.z) * d) / dh; if (!(G.level.groundHeight(gx, gz, a.pos.y + 0.5) > a.pos.y - 0.5)) lineOk = false; }
-      if (nx && nx.y - a.pos.y > 0.4 && dh < 3.0 && (dh < 2.0 || lineOk)) {
+      if (nx && ny - a.pos.y > 0.4 && dh < 3.0) for (let d = 0.3; d < dh - 0.8 && lineOk; d += 0.3) { const gx = a.pos.x + ((nx.x - a.pos.x) * d) / dh, gz = a.pos.z + ((nx.z - a.pos.z) * d) / dh; if (!(G.level.groundHeight(gx, gz, a.pos.y + 0.5) > a.pos.y - 0.5)) lineOk = false; }
+      if (nx && ny - a.pos.y > 0.4 && dh < 3.0 && (dh < 2.0 || lineOk)) {
         b._escNx = nx;
         if (dh > 0.05) move.set((nx.x - a.pos.x) / dh, 0, (nx.z - a.pos.z) / dh);
         // (standing in enemy ink a jump reaches 0.73 m, not the step's 1.2: a roller escaping off the Casting Floor hopped
@@ -1379,8 +1383,21 @@ export class StageLava {
         // in and out of enemy ink every few frames, the count restarted each time, and it stood there inking until the lava
         // had it: lava-bots ledges)
         if (b._inkFor !== nx) { b._inkFor = nx; b._inkT = 0; }
-        if (a.groundTeam === 2 && nx.y - a.pos.y > 0.6 && dh < 1.6 && (b._inkT = (b._inkT || 0) + dt) < 1.5 && (a.ink ?? 100) > 8) { b._needJump = false; it.fire = inkTrigger(a); it.squid = false; move.set(0, 0, 0); b.guardOff = true; return { yaw: Math.atan2(a.pos.x - nx.x, a.pos.z - nx.z), pitch: -1.1, dist: 0.8 }; }
-        b._needJump = true;
+        if (a.groundTeam === 2 && ny - a.pos.y > 0.6 && dh < 1.6 && (b._inkT = (b._inkT || 0) + dt) < 1.5 && (a.ink ?? 100) > 8) { b._needJump = false; it.fire = inkTrigger(a); it.squid = false; move.set(0, 0, 0); b.guardOff = true; return { yaw: Math.atan2(a.pos.x - nx.x, a.pos.z - nx.z), pitch: -1.1, dist: 0.8 }; }
+        // (fix round 4: pressed against the step's face at a slant, actor.js keeps the run speed along the face — a charger
+        // run into the island's face off Race 7 at ~40° slid along it at 5.7 m/s and off the stone's end into the lava,
+        // lava-bots edges — so against that face its hop goes straight across it, to the top 1 m in (a route node can sit
+        // on the face's very edge, where a flight steered at it rose along the face and came down beside it, probe-esc):
+        // pushed straight into the face, it hops, and flies there; the ask names that spot, bots.js judges the hop by the
+        // flight steered at it, and a refused press costs no cool-down)
+        { const c = a.contacts, wb = c.wall && c.wallBlock >= 0 ? G.level.blocks[c.wallBlock] : null, n = c.wallNormal;
+          if (wb && a.grounded && Math.abs(wb.aabbMax.y - ny) < 0.45 && n.x * move.x + n.z * move.z < -0.2) {
+            const px = a.pos.x - n.x * 1.0, pz = a.pos.z - n.z * 1.0, gy = G.level.groundHeight(px, pz, ny + 0.5);
+            if (Math.abs(gy - ny) < 0.4 && !this.wet(px, pz, gy, 2)) b._escHop = { x: px, y: gy, z: pz, t: this.clock.t, nx };
+          } }
+        const H = b._escHop && b._escHop.nx === nx && this.clock.t - b._escHop.t < 1.2 ? b._escHop : null;
+        if (H) { const hx = H.x - a.pos.x, hz = H.z - a.pos.z, hl = Math.hypot(hx, hz); if (hl > 0.05) move.set(hx / hl, 0, hz / hl); }
+        b._needJump = true; b.hopAt = H || (ny === nx.y ? nx : { x: nx.x, y: ny, z: nx.z });
         // (straight at a step up, nothing to fall off: bots.js's edge and water guards sit this frame out — the floor under
         // the step's coping reads as lava in the last seconds, a sunk stone's seam as void, and they stopped it at the foot —
         // when the straight line there is floor under its feet all the way, but for the step's own last 0.8 m)
