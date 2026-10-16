@@ -271,7 +271,8 @@ export function lobAim(from, P, team, speed, out = { yaw: 0, pitch: 0, miss: Inf
     _lv.set(Math.sin(yaw) * cp * speed, Math.sin(tp) * speed + 1.5, Math.cos(yaw) * cp * speed);
     const s = predictFrom(_lo, _lv, team, _ls);
     if (!s || s.refused) break;
-    const miss = Math.hypot(s.x - P.x, s.z - P.z) + Math.max(0, Math.abs(s.base - P.y) - 0.6);   // (and not up on a ledge above it, nor down below)
+    const miss = Math.hypot(s.x - P.x, s.z - P.z) + Math.max(0, Math.abs(s.base - P.y) - 0.6)   // (and not up on a ledge above it, nor down below)
+      + Math.max(0, Math.abs(s.y - (P.y + SB().floatH)) - 0.5);   // [b5-int3] (nor floating up a wall's face it struck: a ledgy zone's links landed on two levels and didn't tether)
     if (miss < out.miss) { out.miss = miss; out.yaw = yaw; out.pitch = pitch; }
     if (miss < 0.5) break;
     // (short or long: ask for the distance it's off by; off to a side: turn by the angle it's off by)
