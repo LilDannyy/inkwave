@@ -1,0 +1,48 @@
+JOB-5 (aquarium) — perf6.js fixed-view probe, aquarium vs halyard, at botlab-b5-aquarium-src cc989bd0; the Mac mini (b5-runner,
+2026-10-17 03:39–03:46), one Electron at a time, the stages alternating, fresh profiles (game defaults: quality high, shadows
+on, fov 82), 1600×900, pixel ratio 1, shoot.cjs with no pictures. Probe A = perf6.js as written (it sets fov 75 for its
+views); probe B = the same with the profile's fov (82, confirmed in every run). 24 of 24 runs read.
+
+VERDICT: Aquarium is level with Halyard on draw calls (×0.93–1.03) and cpuRender (×0.93–0.98), and UNDER it on triangles
+(×0.81–0.83: about 2.7 M against 3.3 M per view), day and dusk, at either fov.
+
+probe A (as written: fov 75 for its views): medians of 3 runs (the runs in brackets); aquarium ÷ halyard
+  day  aquarium: calls 257 [265, 257, 244] | tris 2711968 [2735126, 2711968, 2706102] | ms 7.51 [7.61, 7.48, 7.51]
+  day  halyard:  calls 256 [256, 262, 255] | tris 3346100 [3354313, 3336550, 3346100] | ms 7.69 [7.57, 7.69, 8.21]
+  day  ratio:    calls ×1.00 | tris ×0.81 | cpuRender ×0.98   (settings seen: quality high, shadows true, pr 1)
+  dusk aquarium: calls 248 [268, 248, 248] | tris 2709453 [2736702, 2709453, 2670782] | ms 7.79 [7.52, 7.79, 7.89]
+  dusk halyard:  calls 266 [266, 245, 279] | tris 3313766 [3313766, 3278963, 3337691] | ms 7.98 [8.63, 7.59, 7.98]
+  dusk ratio:    calls ×0.93 | tris ×0.82 | cpuRender ×0.98   (settings seen: quality high, shadows true, pr 1)
+probe B (the profile fov, default 82): medians of 3 runs (the runs in brackets); aquarium ÷ halyard
+  day  aquarium: calls 251 [251, 244, 271] | tris 2679314 [2679314, 2650630, 2722407] | ms 7.46 [7.46, 7.27, 7.52]
+  day  halyard:  calls 271 [271, 240, 275] | tris 3314999 [3292855, 3314999, 3360921] | ms 8.00 [8.19, 7.87, 8.00]
+  day  ratio:    calls ×0.93 | tris ×0.81 | cpuRender ×0.93   (settings seen: quality high, shadows true, pr 1, fov 82)
+  dusk aquarium: calls 259 [259, 278, 244] | tris 2725796 [2727270, 2725796, 2668585] | ms 7.72 [7.81, 7.72, 7.67]
+  dusk halyard:  calls 252 [250, 268, 252] | tris 3289428 [3289428, 3311078, 3288186] | ms 8.06 [8.06, 7.75, 8.60]
+  dusk ratio:    calls ×1.03 | tris ×0.83 | cpuRender ×0.96   (settings seen: quality high, shadows true, pr 1, fov 82)
+
+## every run (load average before each is in JOB-5.raw.txt)
+== A-aquarium-day-1: "quality":"high" "pr":1 "avg":{"calls":265,"tris":2735126,"ms":7.61}  
+== A-halyard-day-1: "quality":"high" "pr":1 "avg":{"calls":256,"tris":3354313,"ms":7.57}  
+== A-aquarium-dusk-1: "quality":"high" "pr":1 "avg":{"calls":268,"tris":2736702,"ms":7.52}  
+== A-halyard-dusk-1: "quality":"high" "pr":1 "avg":{"calls":266,"tris":3313766,"ms":8.63}  
+== A-aquarium-day-2: "quality":"high" "pr":1 "avg":{"calls":257,"tris":2711968,"ms":7.48}  
+== A-halyard-day-2: "quality":"high" "pr":1 "avg":{"calls":262,"tris":3336550,"ms":7.69}  
+== A-aquarium-dusk-2: "quality":"high" "pr":1 "avg":{"calls":248,"tris":2709453,"ms":7.79}  
+== A-halyard-dusk-2: "quality":"high" "pr":1 "avg":{"calls":245,"tris":3278963,"ms":7.59}  
+== A-aquarium-day-3: "quality":"high" "pr":1 "avg":{"calls":244,"tris":2706102,"ms":7.51}  
+== A-halyard-day-3: "quality":"high" "pr":1 "avg":{"calls":255,"tris":3346100,"ms":8.21}  
+== A-aquarium-dusk-3: "quality":"high" "pr":1 "avg":{"calls":248,"tris":2670782,"ms":7.89}  
+== A-halyard-dusk-3: "quality":"high" "pr":1 "avg":{"calls":279,"tris":3337691,"ms":7.98}  
+== B-aquarium-day-1: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":251,"tris":2679314,"ms":7.46}  
+== B-halyard-day-1: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":271,"tris":3292855,"ms":8.19}  
+== B-aquarium-dusk-1: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":259,"tris":2727270,"ms":7.81}  
+== B-halyard-dusk-1: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":250,"tris":3289428,"ms":8.06}  
+== B-aquarium-day-2: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":244,"tris":2650630,"ms":7.27}  
+== B-halyard-day-2: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":240,"tris":3314999,"ms":7.87}  
+== B-aquarium-dusk-2: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":278,"tris":2725796,"ms":7.72}  
+== B-halyard-dusk-2: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":268,"tris":3311078,"ms":7.75}  
+== B-aquarium-day-3: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":271,"tris":2722407,"ms":7.52}  
+== B-halyard-day-3: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":275,"tris":3360921,"ms":8}  
+== B-aquarium-dusk-3: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":244,"tris":2668585,"ms":7.67}  
+== B-halyard-dusk-3: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":252,"tris":3288186,"ms":8.6}  
