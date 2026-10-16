@@ -1,0 +1,75 @@
+JOB-4 (aquarium) — pipes on / off at e1169a39, the Mac mini (b5-runner, 2026-10-16 23:56 – 10-17 00:06). 24 of 24 matches;
+every 'off' match ran with match.pipes.off true, every 'on' one false; console lines other than [pipes] STATS 0, frame errors 0.
+
+CAMPING (DESIGN §6.2(d), cap 2×; deaths within 2 s of a touchdown per landing ÷ deaths per 2 s per actor; 95 % Poisson range):
+  Turf War, pipes on:      16 of 91 landings → 2.99× base (range 1.7–4.9×)
+  Zone Control, pipes on:   5 of 140 landings → 0.74× base (range 0.2–1.7×)
+  both modes pooled:       21 of 231 landings → 1.74× base (range 1.1–2.7×)
+  the hot mouths (Turf War): kelp:B 5/9, kelp~:B 3/6, gulper:B 4/9, kelp:A 2/7 — the Kelp Lines' B ends and the Gulper's B end;
+  every Arch Line exit 0 deaths in 29 landings; the Express 1 in 16.
+
+RIDES / HIGH GROUND (§6.2(e): ≥ 0.3 rides per bot-minute; 10–35 % of high-ground arrivals by pipe):
+  Turf War 0.65 rides per bot-minute, 17.0 % by pipe; Zone Control 0.61, 23.3 %.
+
+ON vs OFF (§6.2(f): turf %, splats, lead changes within ±10 %):
+  Turf War: inked 72.4 vs 72.0 %, splats 42.3 vs 43.5 — within.
+  Zone Control: inked 53.6 vs 55.2 %, splats 52.8 vs 66.5 (−21 %; without on-4 below: 62.0, −7 %), lead changes 0.67 vs 0.50.
+
+STUCK (≤ 1 %, no episode > 10 s): Turf War 0.13 / 0.03 % (longest 3.5 / 0.5 s). Zone Control ON 2.05 % (longest 20.25 s), OFF 0.50 % (11.5 s).
+  16 of Zone Control ON's 18 episodes of 2 s or more are at the Great Tank, none in the 18 other matches:
+  - zones-on-4 (knockout for Alpha at 130 s, Bravo 100 never moved, 7 splats, stuck 9.6 %): 15 episodes at (±1.1…1.7, y −0.6…0.5, z ≈ −6.8),
+    the tank's rim / sand bed, every one on a 'jump' edge up to the Feeding Deck node (±1.5, 2.4, −7.5) (DIAG: noProg 0.1–1.3);
+  - zones-on-5: Juno (roller) 20.25 s idle ON the deck at (1.54, 2.4, −3.04), path done, goal (1.5, 2.4, −3.5) 0.5 m away, ink 85 → 100.
+  With the pipes off, no episode there in 6 Zone Control matches (the longest, 11.5 s, at (16, 0, 12.4) in retreat).
+
+## the tables
+== turf, pipes ON (match.pipes.off 000000)
+  # | turf % A / B | splats | lead ch. | stuck % (longest s) | rides (per bot-min) | landings | deaths ≤2 s after one | per landing | base /2 s/actor | ×base | high ground: by pipe / arrivals | other console / frame
+  1  36.1 / 35.3  45   -   0 (0.25)   21 (0.88)   20   3   0.150  0.063  2.40  10 / 35   0 / 0
+  2  45.4 / 27.3  29   -   0.2 (1.5)  15 (0.63)   14   1   0.071  0.040  1.76  4 / 40    0 / 0
+  3  30 / 44.7    45   -   0 (0)      15 (0.63)   15   2   0.133  0.063  2.13  7 / 46    0 / 0
+  4  33.9 / 38.4  43   -   0.1 (0.25) 15 (0.63)   15   4   0.267  0.060  4.47  7 / 35    0 / 0
+  5  24 / 44.6    47   -   0.1 (1)    9 (0.38)    9    2   0.222  0.065  3.40  3 / 32    0 / 0
+  6  31.3 / 43.2  45   -   0.4 (3.5)  18 (0.75)   18   4   0.222  0.063  3.55  7 / 36    0 / 0
+  POOLED (n 6): turf 72.4 % inked | splats 42.3 | lead changes - | stuck 0.13 % (longest 3.5 s) | rides per bot-minute 0.65
+    camping: 16 deaths within 2 s of 91 touchdowns = 0.176 per landing; base 0.059 per 2 s per actor (254 deaths) → 2.99× the base rate (DESIGN §6.2(d) cap: 2×)
+    high ground: 38 of 224 arrivals by pipe = 17.0 % (§6.2(e): 10–35 %)
+    per exit (landings, deaths ≤ 2 s, ×base): arch:A 6/0 0.00× · arch:B 10/0 0.00× · arch~:A 9/0 0.00× · arch~:B 4/0 0.00× · express:B 8/1 2.13× · express~:B 8/0 0.00× · gulper:A 8/1 2.13× · gulper:B 9/4 7.56× · kelp:A 7/2 4.86× · kelp:B 9/5 9.45× · kelp~:A 7/0 0.00× · kelp~:B 6/3 8.50×
+    other console lines 0, frame errors 0, results 6/6
+== turf, pipes OFF (match.pipes.off 111111)
+  # | turf % A / B | splats | lead ch. | stuck % (longest s) | rides (per bot-min) | landings | deaths ≤2 s after one | per landing | base /2 s/actor | ×base | high ground: by pipe / arrivals | other console / frame
+  1  33.4 / 34.4  35   -   0.1 (0.5)  0 (0.00)    0    0   0.000  0.049  -     0 / 32    0 / 0
+  2  29.8 / 43.6  53   -   0 (0.25)   0 (0.00)    0    0   0.000  0.074  -     0 / 32    0 / 0
+  3  42.4 / 31.7  34   -   0 (0)      0 (0.00)    0    0   0.000  0.047  -     0 / 34    0 / 0
+  4  29.7 / 42.1  47   -   0.1 (0.5)  0 (0.00)    0    0   0.000  0.065  -     0 / 30    0 / 0
+  5  39.2 / 32.1  46   -   0 (0)      0 (0.00)    0    0   0.000  0.064  -     0 / 46    0 / 0
+  6  27.8 / 45.9  46   -   0 (0.5)    0 (0.00)    0    0   0.000  0.064  -     0 / 34    0 / 0
+  POOLED (n 6): turf 72.0 % inked | splats 43.5 | lead changes - | stuck 0.03 % (longest 0.5 s) | rides per bot-minute 0.00
+    camping: 0 deaths within 2 s of 0 touchdowns = 0.000 per landing; base 0.060 per 2 s per actor (261 deaths) → - (no landings) (DESIGN §6.2(d) cap: 2×)
+    high ground: 0 of 208 arrivals by pipe = 0.0 % (§6.2(e): 10–35 %)
+    other console lines 0, frame errors 0, results 6/6
+== zones, pipes ON (match.pipes.off 000000)
+  # | turf % A / B | splats | lead ch. | stuck % (longest s) | rides (per bot-min) | landings | deaths ≤2 s after one | per landing | base /2 s/actor | ×base | high ground: by pipe / arrivals | other console / frame
+  1  22.4 / 37.2  64   2   0.3 (1)    29 (0.72)   29   1   0.034  0.053  0.64  18 / 80   0 / 0
+  2  23.7 / 28.5  67   0   0.3 (0.75) 29 (0.72)   29   0   0.000  0.056  0.00  23 / 96   0 / 0
+  3  29 / 28.2    48   0   0.7 (2.5)  28 (0.70)   27   1   0.037  0.040  0.92  18 / 57   0 / 0
+  4  31 / 6.9     7    0   9.6 (4)    4 (0.23)    4    0   0.000  0.013  0.00  2 / 21    0 / 0
+  5  23.9 / 33.7  76   2   1 (20.25)  20 (0.47)   20   2   0.100  0.060  1.66  15 / 74   0 / 0
+  6  27.8 / 29.1  55   0   0.4 (0.75) 31 (0.80)   31   1   0.032  0.048  0.67  24 / 101  0 / 0
+  POOLED (n 6): turf 53.6 % inked | splats 52.8 | lead changes 0.67 | stuck 2.05 % (longest 20.25 s) | rides per bot-minute 0.61
+    camping: 5 deaths within 2 s of 140 touchdowns = 0.036 per landing; base 0.048 per 2 s per actor (317 deaths) → 0.74× the base rate (DESIGN §6.2(d) cap: 2×)
+    high ground: 100 of 429 arrivals by pipe = 23.3 % (§6.2(e): 10–35 %)
+    per exit (landings, deaths ≤ 2 s, ×base): arch:A 1/0 0.00× · arch:B 8/1 2.58× · arch~:A 3/0 0.00× · arch~:B 9/0 0.00× · express:B 39/0 0.00× · express~:B 29/0 0.00× · gulper:A 7/1 2.95× · gulper:B 12/0 0.00× · kelp:A 4/1 5.16× · kelp:B 12/0 0.00× · kelp~:A 5/2 8.25× · kelp~:B 11/0 0.00×
+    other console lines 0, frame errors 0, results 6/6
+== zones, pipes OFF (match.pipes.off 111111)
+  # | turf % A / B | splats | lead ch. | stuck % (longest s) | rides (per bot-min) | landings | deaths ≤2 s after one | per landing | base /2 s/actor | ×base | high ground: by pipe / arrivals | other console / frame
+  1  30.6 / 20.3  42   0   1.2 (11.5) 0 (0.00)    0    0   0.000  0.042  -     0 / 63    0 / 0
+  2  32.1 / 18.3  76   2   0.4 (2.5)  0 (0.00)    0    0   0.000  0.063  -     0 / 69    0 / 0
+  3  32.5 / 25    72   0   0.2 (0.75) 0 (0.00)    0    0   0.000  0.057  -     0 / 98    0 / 0
+  4  30.9 / 29.9  70   1   0.2 (0.75) 0 (0.00)    0    0   0.000  0.052  -     0 / 108   0 / 0
+  5  25.7 / 26.2  70   0   0.4 (0.5)  0 (0.00)    0    0   0.000  0.057  -     0 / 75    0 / 0
+  6  40.4 / 19.2  69   0   0.6 (1.25) 0 (0.00)    0    0   0.000  0.058  -     0 / 61    0 / 0
+  POOLED (n 6): turf 55.2 % inked | splats 66.5 | lead changes 0.50 | stuck 0.50 % (longest 11.5 s) | rides per bot-minute 0.00
+    camping: 0 deaths within 2 s of 0 touchdowns = 0.000 per landing; base 0.055 per 2 s per actor (399 deaths) → - (no landings) (DESIGN §6.2(d) cap: 2×)
+    high ground: 0 of 474 arrivals by pipe = 0.0 % (§6.2(e): 10–35 %)
+    other console lines 0, frame errors 0, results 6/6
