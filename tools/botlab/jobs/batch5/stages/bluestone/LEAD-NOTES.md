@@ -49,3 +49,26 @@ Decisions on the review's open items:
   one key; the full nine-pass bake belongs to the art phase, when the stage is final.
 - Bots and online are not optional (COMMON.md). Locally: 2–4 bot matches per era schedule and mode, not the Mac mini's
   six.
+
+## The era engine PASSED its final review (2026-10-17, head 2833d04b). What carries forward
+
+The engine is accepted: both halves built, the final review found no era shove, no splat caused by a jump in a match,
+no desync, no doubled or skipped jump, no floating device, no stuck bot; the jump reads in order. The reviewer's six
+minors go to these owners:
+1. **The art phase's first commit (an engine item, small):** `superJumpLanding(a, s)` in StageEras: at launch, if the
+   group under the landing will be absent at touchdown and the floor below is then water or a bare roof, move the
+   landing to the rescue's own choice (the nearest node valid in the era in force); a check in eras-jump with the
+   reviewer's probe (Practice rewind, bridge-2 / bridge-3 / garden-11, touchdown 0.3 s after the flip: 3 of 3 died).
+2. **The art phase also:** per-era lamp colours (ENGINE rule 42, `eras.look[e].lamps` applied to `decor.lamps` and
+   blended in the time-lapse) once lamps exist; Tartar ringing once in the intro fly-in (DESIGN §3.5); a pixel check
+   on the warning's sepia flicker; the rule-22 accept text to the measured 3.75 m; every jump picture re-shot with
+   eras-shots2.cjs so the set the user sees shows the current HUD. And the art's real job, the reviewer's words: "the
+   shared city barely changes as the front passes" and "the 20 cm blocky dissolve still reads as a digital glitch":
+   the era re-skins, props, murals and tint must make the front rewrite the city, not only the skyline.
+3. **The Mac mini:** the frame budget on a quiet machine (the branch's JOB-6 with a real-time rAF-paced frame check
+   beside the stepped one), and the bots' use of jump 1's new ground per mode (the balance pass; the lever is
+   `_pickPaintGoal` drawing from `E.fresh` for 30 s after done).
+4. **The integrator:** the karp `anyValid` one-liner (`tools/botlab/jobs/batch5/bluestone/karp-anyValid.patch`) when
+   b5-stage-bluestone merges with the Bazookarp packages, then `eras-karp.js` part B and `bazookarp-check.cjs
+   ERA=1/2/3` on the merged head.
+The art phase waits for the weekly usage reset (Friday 2026-10-23 06:00).
