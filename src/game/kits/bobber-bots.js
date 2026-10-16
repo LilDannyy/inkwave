@@ -14,8 +14,7 @@
 //     someone else, painting, charging elsewhere), aimed at for its last 0.3 s of flight while
 //     nothing hits this bot, and shot the moment it floats with that foe where the shot will find it in its reach — the
 //     foes' bots notice a floated web 0.3–0.5 s after it opens and step out; a link run out onto a foe standing just
-//     outside a team web (extendSpot); a fight's pair. Turf's standing webs are rarer (TURF_WEB): they had a foe in reach
-//     0.1–1 % of their chain-seconds.
+//     outside a team web (extendSpot); a fight's pair. Turf's standing webs: TURF_WEB (a knob, as built).
 // SETTING THEM OFF (botAct, every bot, on its team's bobbers — the trigger): scanned every 0.1 s (staggered), nothing
 //   else owning the aim (busy): a foe it sees within R(N) − 0.3 m of a bobber of a chain (±1.6 m in height), a line to a
 //   bobber of that chain within its reach, and no better shot under way (its own target not in its sights) → it turns to
@@ -447,7 +446,10 @@ function extendSpot(b, t) {
 // whose shot gets there within `arrive` s; `wait`: how long after it floats the bot watches for its foe to be in reach
 // (fighting on meanwhile); `lead`: the share of the foe's run carried on to where it will be (bots strafe and turn back
 // every 0.6–1.8 s); `short`: m short of it toward us
-export const TURF_WEB = { p: 0.012, ink: 80 };   // [b5-int3] (paint: a new Turf web's chance a frame — was 0.02 — and the ink it waits for — was 72)
+// [b5-int3] (paint: a new Turf web's chance a frame and the ink it waits for — as built: 0.02 and 72. Made rarer (0.008 / 85,
+// then 0.012 / 80), the Turf matches set off no chain at all: the webs were most of Turf's few catches, and the snaps — never
+// at a foe duelling us — are rare there. A knob for the lead's balance pass)
+export const TURF_WEB = { p: 0.02, ink: 72 };
 export const SNAP = { min: 4.0, max: 9.5, ink: 20, p: 0.35, cd: [4, 2], wait: 0.6, lead: 0.4, short: 0.5, arrive: 0.3, away: 1.05, preAim: 0.3, calm: 0.6 };
 // where to float it: the foe's feet in (the lob's flight + the 0.35 s it takes to open), `short` m toward us — clear of
 // our own swing / splash, a floor that stands, the lob landing there → V3 | null
@@ -611,8 +613,7 @@ export const botKit = {
       BOBBER_BOT.tripsDone = (BOBBER_BOT.tripsDone || 0) + 1;
       return startChain(b, T.A, L);
     }
-    // [b5-int3] Turf: a standing web far less often, and only on a full tank — in the matches Turf's webs had a foe in reach
-    // 0.1–0.3 % of their chain-seconds and cost most of the bobbers thrown; the ink goes to the snaps (fight) instead
+    // [b5-int3] Turf: TURF_WEB (the knob)
     const turf = !zonePlan() && !tp;
     if (a.ink < (turf ? TURF_WEB.ink : 72)) { W.ink++; return false; }
     if (turf && Math.random() > TURF_WEB.p / 0.02) return false;
