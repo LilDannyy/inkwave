@@ -148,6 +148,28 @@ Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/j
 - Bot matches: `MAP=<id> tools/botlab/run.sh tools/botlab/karp-match.cjs` (an all-bot match stepped at 60 Hz: SPEC
   §10.3's numbers, a `RESULT karp …` line; env `DUR`, `OTMAX`, `DIFF`, `HUMAN=still|carry`, `KARP_DEF`, `OUT=file.json`),
   and `python3 tools/botlab/karp-agg.py *.json` (the §9.1 rows, INFO below 16 matches, a SUMMARY line).
+  [b5-karp-bots] `KARP_AI=0` plays WP1's minimal bots (the A/B baseline); the report adds the bots' route shares, the Carp
+  Shots they noticed (escaped / caught), the carrier's shots by kind, roles, keepers on their spot and holds (bots
+  standing on purpose are not "stuck"), each team's first bot by the Pond (the walk in: the floor under the first pop) and
+  where a carrierRetreatFallback happened (with the team, P there and the retreat mark). `PLAN='karpbox:normal:4,
+  halyard:hard:2'` plays several matches in one instance (one slot; `OUT=dir/x.json` → `x-<map>-<diff>-<i>.json`);
+  what-ifs for the balance pass, never saved: `KARP_TUNE='{"jumpR":30}'` (botsKarp's `KARP_AI`) and
+  `KARP_CFG='{"shell":{"reformHp":600}}'` (`BAZOOKARP`, deep; the opening shell is re-formed with its hp). The Mac mini JOB
+  template: `tools/botlab/jobs/batch5/karp-bots/JOB-1.sh` (`STAGES`, `HARD`, `TOTAL` — 8 matches a difficulty summed over
+  its stages, COMMON's cap — `SUBS`; `N` a stage is the lead's consolidated pass only). A stage builder copies it into its
+  own key's folder.
+- The bots (SPEC §8, src/game/botsKarp.js): `MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/karp-bots.js
+  tools/botlab/run.sh tools/botlab/page.cjs` — WP3's scenarios: breakers out of the burst at ≥ 70 % (60 % hard), melee
+  breakers' ring, no touch damage in 20 bursts, the grabber's 3.0–3.2 m wait and grab, an autopilot carrier's 3 carries,
+  kit-weapon carriers fire nothing of their own, the ×3 fallback (a sea-to-sea zone; G(b): a pocket of its own zone open
+  behind it — the retreat mask's own case), out of a Big Burst ≥ 16 of 20 (a breaker standing on its spot, from 18 m;
+  12 and 15 m reported), the keeper at the Gate and the weir on the route, no wall-hack and the 20 m wake, the knockback
+  push, our carrier's fuse danger (a guest carrier's too), the layout's route hints, super jumps to the carrier, the fuse →
+  over the halfway line, walkers round the shell; the other roles (R: escorts, the perch, the free phase's fighters,
+  re-forming), the specials' rules (S), the difficulty rows (Y), no wall-hack in the defending plan (W: a hidden carrier
+  never seen moves nothing), refills in the band and the 50 % keep-out (B(b2), B(d)), the swell seen coming (A(d))
+  (`PAGE_ARGS='only=A,…'`; `teeth=1` runs each newer check again with its feature off and requires it to fail;
+  `hwhat=1` H's 15 m what-ifs: a longer swell, a smaller Big Burst).
 - Pictures: tools/botlab/scenes/karp.js through hud-shots.cjs.
 - **The stage checker** (`[b5-karp-checker]`, SPEC §4.4): `MAP=<id> tools/botlab/run.sh tools/botlab/bazookarp-check.cjs`
   checks a stage's `LAYOUT.bazookarp` against SPEC §9.1 — sixteen checks on the carrier graph (hop and gap edges in),

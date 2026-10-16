@@ -669,6 +669,27 @@ tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
   screens, back to the lobby, the old host joins again). The narrowed flush's regression for the other modes:
   `tools/botlab/tests/net-tower.cjs` and `net-zones.cjs` (`CLIENTS=3`: the host flips control and leaves 60 ms later; both
   remaining screens agree on the owner, the new host runs the rules, the same result).
+- **host migration (built here: the new host takes over the rules).** `netmatch.onLeave` calls
+  `match.karp.onHostChange(isHost)` once `match.follower` is false: the new host's records carry on from the old host's
+  `q` (the other guests drop anything at or below the last `q` they applied), a holder that is gone (a humans-only
+  stage removed it while this screen was still a follower) or dead is lost as `left` at its last real sample, an adopted
+  carrier (a stage with bots) keeps carrying with its own screen's judgement read afresh, the clamp's baseline resets,
+  the window carries on (followers keep `otWin.open` from snapshots), and a full `S` goes out at once. A carrying guest
+  re-sends `kr` / `kf` to the new host. **Left for WP2:** §7.6's narrowed flush of the departed host's queued `'ks'`
+  and the reordered `onLeave` (today's order works because `onHostChange` handles the removed holder), the `'k'` case
+  for an adopted actor's queued Carp Shots, `lastCarrier` / `lastPlant` in `S` (a new host's S38 decision at time-up
+  uses what its follower saw), the fuse hold for a remote carrier's Carp Blast, the HUD fuse's correction under lag,
+  the latency steps (`netlag`), three-client rooms beyond the migration test, the results' per-player columns on screen.
+- **bots ([b5-karp-bots]).** No record of their own: bots run on the host (src/game/botsKarp.js), and know an enemy
+  carrier only as a player could — seen, located (its kid-form marker is a reveal), its wake within 20 m with a line,
+  remembered, or where it was picked up (the Bazookarp lay in plain view) — never its live position. A guest's Carp Shot
+  is a danger to them from the ghost the host already flies (`G.karpGun.shots`). A remote (guest) carrier's last 3 s of
+  fuse are a danger to the host's bots on its team, from the host's own fuse and the rate its `kr` sent.
+- Tested by `CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' NET=tools/botlab/tests/net-karp.cjs
+  tools/botlab/run.sh tools/botlab/netpage.cjs` (19 checks: the host's view of a guest carrier, ghost landings, the
+  victim-judged blast and `[3]`, `kr`, `kd`, `kx` inside an S39 overtime, the same result) and
+  `tools/botlab/tests/net-karp-host.cjs` (`CLIENTS=3 NET_ARGS='part=bots'`: the host leaves mid-carry; `CLIENTS=2
+  NET_ARGS='part=cargo'`: a humans-only room).
 
 **Relay (server/).** One Durable Object per room code: membership, host election, join refusal (unknown / full /
 match running) and blind fan-out of `b|` / `s|to|` payloads. Clients send `"ping"` every 2 s, answered by the runtime

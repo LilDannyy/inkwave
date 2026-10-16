@@ -36,6 +36,7 @@ export const SIGHT = {
   swimNotice: 0.45,    // s of looking before a swimmer is noticed
   swimTrackR: 15,      // a swimmer already in sight (within swimFollow s) is followed this far while it moves
   swimFollow: 0.6,
+  karpWakeR: 20,       // [b5-karp-bots] a submerged Bazookarp carrier's wake glow: noticed out to this with a clear line (SPEC §8.6)
   fresh: 1.2,          // s: a memory this young is pre-aimed / sprayed / chased
   keep: 6,             // s: forgotten after this (could be anywhere by now)
   spray: 0.6,          // s after losing sight a bot may still spray the spot
@@ -223,6 +224,8 @@ export class Sight {
       else if (was) reach = SIGHT.swimTrackR;
       else { reach = Math.max(SIGHT.stillR, Math.min(SIGHT.swimR, (hs - SIGHT.stillSpeed) * SIGHT.swimK)); notice = reach > SIGHT.stillR ? SIGHT.swimNotice : 0; }
       reach = Math.min(reach, range);
+      // [b5-karp-bots] the Bazookarp carrier swimming hidden: its wake glow shows, in place of a swimmer's ripples
+      if (e.carry && G.match?.karp?.holder === e) { reach = Math.max(reach, Math.min(SIGHT.karpWakeR, range)); if (!was) notice = SIGHT.swimNotice; }   // (never past the bot's own awareness: easy 16 m)
     }
     if (d > reach) { this.glim.delete(e); return false; }
     if (!located && d > nearR && hd > 0.3 && (dx * fx + dz * fz) / hd < cone) { this.glim.delete(e); return false; }

@@ -25,6 +25,7 @@ import { Physics, Hit } from '../physics.js';
 import { superEllipsoid } from '../character-geo.js';
 import { MAIN_KITS, SUB_KITS, netRec } from './registry.js';
 import { MELEE } from '../bots.js';
+import { karpShellIn } from '../botsKarp.js';   // [b5-karp-bots] (bots keep their lunges / leaps off the Roe Shell)
 import './mitts-model.js';
 import './mitts-assets.js';
 
@@ -692,6 +693,7 @@ function botPlan(a, k, yaw, pitch, dist) {
 function landingOk(a, P) {
   if (P.kind !== 'ground') return false;
   if (SUB_KITS.bobber?.webHit?.(a.team, P.pos.x, P.pos.y, P.pos.z, W().landRadius)) return false;   // [b5-int3] its smash would set off an own idle Chain Bobber web
+  if (karpShellIn(a, P.pos.x, P.pos.z, P.pos.x, P.pos.z, 0.6)) return false;   // [b5-karp-bots] nor a landing on the Roe Shell's sting
   const b = P.block >= 0 ? G.level.blocks[P.block] : null;
   if (b && (b.roof || b.perch || b.rail)) return false;
   if (Math.abs(P.pos.y - a.pos.y) > 4) return false;
