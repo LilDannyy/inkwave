@@ -117,3 +117,39 @@ if (set === 'C2') {
   }
   if (M.base && M.head) console.log(`  head vs base: roller turf ×lobby ${f2(M.base.k)} → ${f2(M.head.k)}; rolling ${f1(M.base.rp)} % → ${f1(M.head.rp)} %; roller splats ${f2(M.base.sp)} → ${f2(M.head.sp)}`);
 }
+// ---- JOB-7: A3 = Zone Control at n 16 per code with the count every 30 s and every take of the objective.
+//   node agg-int3.cjs A3 <dir>    the per-match rows and the means
+//   node agg-int3.cjs A3T <dir>   each match's timeline (A-B count and penalties at every 30 s mark)
+//   node agg-int3.cjs A3F <dir>   each match's takes
+if (/^A3[TF]?$/.test(set)) {
+  const pre = 'A3-';
+  const L3 = fs.readdirSync(dir).filter((f) => f.startsWith(pre) && f.endsWith('.json')).sort().map((f) => ({ k: f.slice(3, -5).split('-'), r: load(f) })).filter((x) => x.r);
+  const codes = [...new Set(L3.map((x) => x.k[0]))];
+  for (const code of codes) {
+    const L = L3.filter((x) => x.k[0] === code);
+    if (set === 'A3T') {
+      console.log(`A3 timeline ${code}: count A-B (penalty A/B when not 0) at each 30 s mark; | = the end`);
+      for (const x of L) { const c = x.r.countAt30 || {}; console.log(`  ${P(x.k[1] + '-' + x.k[2], 13)} ` + Object.keys(c).map(Number).sort((a, b) => a - b).map((t) => `${t}:${c[t][0]}-${c[t][1]}${c[t][2] || c[t][3] ? '(+' + c[t][2] + '/+' + c[t][3] + ')' : ''}`).join(' ') + ` | ${x.r.reason} ${x.r.counts.join('-')} @${f1(x.r.simT)}s`); }
+      continue;
+    }
+    if (set === 'A3F') {
+      console.log(`A3 takes ${code}: time obj taker←(prev state, last holder) penalty-to-loser counts-then [role]`);
+      for (const x of L) console.log(`  ${P(x.k[1] + '-' + x.k[2], 13)} ` + (x.r.flips || []).map((f) => `${f1(f.t)}s ${f.obj} ${'AB'[f.to]}←(${f.prev < 0 ? 'N' : 'AB'[f.prev]},${f.from < 0 ? '-' : 'AB'[f.from]}) +${f.pen} ${f.c[0]}-${f.c[1]} [${f.role}]`).join(' · '));
+      continue;
+    }
+    console.log(`A3 ${code}: map | winner (reason, KO at) | final | margin | lead changes, last at | takes (off the other team) | after 180 s: by leader / trailer / level | penalty per take off the other team | err`);
+    const R = L.map((x) => { const r = x.r, F = r.flips || [], off = F.filter((f) => f.from === 1 - f.to), late = F.filter((f) => f.t >= 180), ko = r.reason === 'knockout';
+      const by = (role) => late.filter((f) => f.role === role).length, pen = off.reduce((s, f) => s + f.pen, 0);
+      console.log(`  ${P(x.k[1] + '-' + x.k[2], 13)} ${P('AB'[r.winner] || '-', 2)}(${P(r.reason + (ko ? ' ' + f1(r.simT) + 's' : ''), 17)}) ${P(r.counts.join('-'), 7)} ${P(Math.abs(r.counts[0] - r.counts[1]), 4)} ${P(r.leadChanges + (r.lastLeadT != null ? ' @' + f1(r.lastLeadT) : ''), 9)} ${P(F.length + ' (' + off.length + ')', 8)} ${P(by('leader') + ' / ' + by('trailer') + ' / ' + by('level'), 11)} ${P(off.length ? f1(pen / off.length) : '-', 5)} ${err(r)}`);
+      return { r, F, off, late, ko, pen }; });
+    // the gap at each 30 s mark (matches still on), the last lead change, the late takes, the penalties
+    const marks = [...new Set(R.flatMap((x) => Object.keys(x.r.countAt30 || {}).map(Number)))].sort((a, b) => a - b);
+    console.log('  gap |A − B| at each 30 s mark (matches still on): ' + marks.map((t) => { const g = R.filter((x) => x.r.countAt30?.[t]).map((x) => Math.abs(x.r.countAt30[t][0] - x.r.countAt30[t][1])); return `${t}s ${f1(mean(g))} (n ${g.length})`; }).join(' · '));
+    const lc = R.filter((x) => x.r.lastLeadT != null);
+    const late = R.flatMap((x) => x.late), off = R.flatMap((x) => x.off);
+    const cnt = (A, role) => A.filter((f) => f.role === role).length;
+    console.log(`  MEAN (n ${R.length}): knockouts ${R.filter((x) => x.ko).length}/${R.length} | margin ${f1(mean(R.map((x) => Math.abs(x.r.counts[0] - x.r.counts[1]))))} | last lead change at ${f1(mean(lc.map((x) => x.r.lastLeadT)))} s (${lc.length} matches had one; ${R.length - lc.length} never changed leader)`);
+    console.log(`    takes ${R.reduce((s, x) => s + x.F.length, 0)} (${off.length} off the other team) | after 180 s: ${late.length} takes — by the leader ${cnt(late, 'leader')}, the trailer ${cnt(late, 'trailer')}, level ${cnt(late, 'level')}; off the other team after 180 s: leader ${cnt(late.filter((f) => f.from === 1 - f.to), 'leader')}, trailer ${cnt(late.filter((f) => f.from === 1 - f.to), 'trailer')}`);
+    console.log(`    penalty per take off the other team ${f2(off.reduce((s, f) => s + f.pen, 0) / Math.max(1, off.length))} (all takes: ${f2(off.reduce((s, f) => s + f.pen, 0) / Math.max(1, R.reduce((s, x) => s + x.F.length, 0)))}) | by the taker's role: leader took ${f2(off.filter((f) => f.role === 'leader').reduce((s, f) => s + f.pen, 0) / Math.max(1, cnt(off, 'leader')))} per take (${cnt(off, 'leader')}), trailer ${f2(off.filter((f) => f.role === 'trailer').reduce((s, f) => s + f.pen, 0) / Math.max(1, cnt(off, 'trailer')))} (${cnt(off, 'trailer')})`);
+  }
+}

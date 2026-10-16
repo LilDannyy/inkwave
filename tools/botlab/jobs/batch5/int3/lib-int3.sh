@@ -28,3 +28,15 @@ runs2() {
   xargs -P 3 -L 1 bash -c 'n=$0; d=$1; shift; (cd "$d" && env "$@" DIAG=1 WATCHDOG=1500000 OUT="$JOB_OUT/m/$n.json" tools/botlab/run.sh tools/botlab/match-int3.cjs > "$JOB_OUT/m/$n.log" 2>&1);
     echo "### $n: $(grep -E "^== " "$JOB_OUT/m/$n.log" | head -1 | cut -c1-160) | $(grep -E "^CONSOLE|FRAME ERRORS|WATCHDOG|HARNESS" "$JOB_OUT/m/$n.log" | tr "\n" " " | cut -c1-200)"' < "$1"
 }
+# patch_match3 <dir>: on top of patch_match (run it first), for JOB-7: the counts every 30 s to the end (countAt30:
+# [count A, count B, penalty A, penalty B] at each mark), a log of every take of the objective (flips: time, objective,
+# taker, previous state, the last team that held it, the penalty its loser got, both counts then, and whether the taker
+# was the leader, the trailer or level), and the time of the last lead change (lastLeadT)
+patch_match3() {
+  perl -0pi -e '
+    s{(      const eps = \[\]; let holdS = 0;)}{      const cT30 = {}; const flipLog = []; let lastSeen = -1, pendPen = null;\n      offs.push(on("zones:penalty", (e) => { pendPen = { team: e.team, p: e.penalty }; }), on("zones:control", (e) => { if (e.owner < 0) return; const c0 = Math.ceil(Z.count[0] - 1e-6), c1 = Math.ceil(Z.count[1] - 1e-6), ld = c0 < c1 ? 0 : c1 < c0 ? 1 : -1; flipLog.push({ t: +simT.toFixed(2), obj: e.objective, to: e.owner, prev: e.prev, from: lastSeen, pen: pendPen && pendPen.team === 1 - e.owner ? pendPen.p : 0, c: [c0, c1], pn: [Math.round(Z.penalty[0]), Math.round(Z.penalty[1])], role: ld < 0 ? "level" : ld === e.owner ? "leader" : "trailer" }); pendPen = null; lastSeen = e.owner; }));\n$1} or die "anchor 3.1";
+    s{(        if \(m\.state === "playing"\) \{ rollSample\(\);)}{        if (Z && m.state === "playing") { const T = 30 * Math.floor(simT / 30 + 1e-9); if (T >= 30 && cT30[T] === undefined) cT30[T] = [Math.ceil(Z.count[0] - 1e-6), Math.ceil(Z.count[1] - 1e-6), Math.round(Z.penalty[0]), Math.round(Z.penalty[1])]; }\n$1} or die "anchor 3.2";
+    s{if \(zLead\.cur >= 0\) zLead\.changes\+\+;}{if (zLead.cur >= 0) { zLead.changes++; zLead.lastT = +simT.toFixed(1); }} or die "anchor 3.3";
+    s{(        countAt: cT, rollers:)}{        countAt30: cT30, flips: flipLog, lastLeadT: zLead.lastT ?? null,\n$1} or die "anchor 3.4";
+  ' "$1/tools/botlab/match-int3.cjs"
+}
