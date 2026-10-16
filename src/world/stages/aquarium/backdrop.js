@@ -34,11 +34,16 @@ export function buildBackdrop(kit, data = {}) {
   const buckets = { glass: [], water: [], clear: [] };
   const put = (k, g) => buckets[k].push(g.index ? g.toNonIndexed() : g);
   // ---- glass panels and water volumes (from the layout's hidden glass pieces, both halves)
+  // (every pane is drawn GI = 1.5 cm in from its collider on all sides: the panes' faces lay exactly on the walls, lids and
+  // kerbs they meet — the Arch Tank's sides on the hall's pylon walls at x ±6, its top on the gatehouse lid's underside at
+  // 9.0, the Great Tank's panes on their granite kerbs — and a transparent face coplanar with an opaque one z-fights:
+  // the hatched staircase overhead in the shark tunnel and the streaks down its walls, LEAD-REVIEW art round 2)
+  const GI = 0.015, inset = (v) => (v > 0.2 ? v - 2 * GI : v);
   for (const d of data.glass || []) {
     if (OWN.has(d.tag)) continue;
     let g;
-    if (d.kind === 'box') { g = new T.BoxGeometry(d.max[0] - d.min[0], d.max[1] - d.min[1], d.max[2] - d.min[2]); g.translate((d.min[0] + d.max[0]) / 2, (d.min[1] + d.max[1]) / 2, (d.min[2] + d.max[2]) / 2); }
-    else if (d.kind === 'obox') { g = new T.BoxGeometry(d.size[0], d.size[1], d.size[2]); g.rotateY(d.rotY * DEG); g.translate(d.center[0], d.center[1], d.center[2]); }
+    if (d.kind === 'box') { g = new T.BoxGeometry(inset(d.max[0] - d.min[0]), inset(d.max[1] - d.min[1]), inset(d.max[2] - d.min[2])); g.translate((d.min[0] + d.max[0]) / 2, (d.min[1] + d.max[1]) / 2, (d.min[2] + d.max[2]) / 2); }
+    else if (d.kind === 'obox') { g = new T.BoxGeometry(inset(d.size[0]), inset(d.size[1]), inset(d.size[2])); g.rotateY(d.rotY * DEG); g.translate(d.center[0], d.center[1], d.center[2]); }
     else continue;
     // (the water inside its glass, a few cm in from every face — scaled about the box's own centre: scaled about the
     // origin it stood 13 cm out through the gatehouse fascias and 24 cm down into the hall, a dark pane over the letters)
@@ -148,34 +153,60 @@ export function buildBackdrop(kit, data = {}) {
   return { static: far.static, plain: far.plain, terrain: [], instances: [], objects, animate };
 }
 
-// a giant-kelp frond: a thin stipe and blade leaves on short stalks up it (alternating, a golden-angle turn each), from y 0
-// to h + 0.4, leaves within 0.26 m of the stipe (tests/pipes.js's frond model: 0.28 m from the centre); non-indexed
+// a giant-kelp frond: a thin stipe and, every 0.3 m up it (a golden-angle turn each), a gas bladder on a short stalk and
+// a blade rising from it: an oval leaf, rounded at both ends (round round 2: still "pointed chevrons" — the blades were
+// straight trapezoids tilted up, which read as arrow fletching), curling out and a little sideways, its edges ruffled,
+// its colour olive at the stalk to gold at the tip. From y 0 to h + 0.4 (as before); every point within 0.255 m of the stipe's axis
+// (tests/pipes.js's frond model: 0.28 m from the centre); non-indexed, per-vertex normals and colours
 function frondGeo(T, h, rnd) {
-  const P = [], N = [];
-  const quad = (a, b, c, d, n) => { for (const v of [a, b, c, a, c, d]) { P.push(...v); N.push(...n); } };
-  // the stipe: a square rod 6 cm
-  const r = 0.03, seg = 8;
+  const P = [], N = [], C = [];
+  const tri = (a, b, c) => { for (const v of [a, b, c]) { P.push(v.p[0], v.p[1], v.p[2]); N.push(v.n[0], v.n[1], v.n[2]); C.push(v.c, v.c * 0.98, v.c * 0.86); } };
+  const V = (p, n, c) => ({ p, n, c });
+  // the stipe: a square rod, 6 cm at its foot to 4 cm at its top, olive-brown
+  const seg = 8;
   for (let i = 0; i < seg; i++) {
-    const y0 = (h * i) / seg, y1 = (h * (i + 1)) / seg;
+    const y0 = (h * i) / seg, y1 = (h * (i + 1)) / seg, r0 = 0.03 - 0.01 * (i / seg), r1 = 0.03 - 0.01 * ((i + 1) / seg);
     for (const [nx, nz] of [[1, 0], [0, 1], [-1, 0], [0, -1]]) {
-      const tx = -nz, tz = nx;
-      quad([nx * r + tx * r, y0, nz * r + tz * r], [nx * r - tx * r, y0, nz * r - tz * r], [nx * r - tx * r, y1, nz * r - tz * r], [nx * r + tx * r, y1, nz * r + tz * r], [nx, 0, nz]);
+      const tx = -nz, tz = nx, n = [nx, 0, nz];
+      const a = V([nx * r0 + tx * r0, y0, nz * r0 + tz * r0], n, 0.62), b = V([nx * r0 - tx * r0, y0, nz * r0 - tz * r0], n, 0.62);
+      const c = V([nx * r1 - tx * r1, y1, nz * r1 - tz * r1], n, 0.66), d = V([nx * r1 + tx * r1, y1, nz * r1 + tz * r1], n, 0.66);
+      tri(a, b, c); tri(a, c, d);
     }
   }
-  // the blades: 0.55 long, 0.17 wide, tilted up, every 0.42 m
-  let a = rnd() * 6.28;
-  for (let y = 0.45; y < h - 0.2; y += 0.3) {
-    a += 2.4;
-    const c = Math.cos(a), sn = Math.sin(a), L = 0.2 * (0.8 + 0.4 * rnd()), up = 0.3, w = 0.12;
-    const ox = c * L, oz = sn * L, px = -sn * w, pz = c * w;
-    quad([px, y, pz], [-px, y, -pz], [ox - px * 0.6, y + up, oz - pz * 0.6], [ox + px * 0.6, y + up, oz + pz * 0.6], [-sn, 0.3, c]);
-    // a rounded tip (art round 1: the fronds were spiky arrowheads): a fan round its middle, shoulder → shoulder
-    const tip = [[0.6, 0], [0.55, 0.11], [0.36, 0.2], [0, 0.25], [-0.36, 0.2], [-0.55, 0.11], [-0.6, 0]].map(([k, h]) => [ox * (1 + 0.2 * h) + px * k, y + up + h, oz * (1 + 0.2 * h) + pz * k]);
-    const mid = [ox * 1.02, y + up + 0.1, oz * 1.02];
-    for (let t = 0; t < tip.length - 1; t++) { for (const v of [mid, tip[t], tip[t + 1]]) { P.push(...v); N.push(-sn, 0.3, c); } }
+  let ang = rnd() * 6.28;
+  for (let y = 0.4; y < h - 0.1; y += 0.3) {
+    ang += 2.4;
+    const ca = Math.cos(ang), sa = Math.sin(ang), rad = [ca, sa], tan = [-sa, ca];
+    const at = (r, t, yy) => [rad[0] * r + tan[0] * t, yy, rad[1] * r + tan[1] * t];
+    // the gas bladder: a small spindle (an elongated octahedron) on the stipe
+    { const r = 0.065, yb = y + 0.04, L = 0.06, w = 0.028;
+      const top = at(r, 0, yb + L), bot = at(r, 0, yb - L), ring = [at(r + w, 0, yb), at(r, w, yb), at(r - w, 0, yb), at(r, -w, yb)];
+      const nr = [[rad[0], 0, rad[1]], [tan[0], 0, tan[1]], [-rad[0], 0, -rad[1]], [-tan[0], 0, -tan[1]]];
+      for (let k = 0; k < 4; k++) { const k2 = (k + 1) % 4, n = [(nr[k][0] + nr[k2][0]) / 2, 0, (nr[k][2] + nr[k2][2]) / 2]; tri(V(top, [0, 1, 0], 1.25), V(ring[k], nr[k], 1.15), V(ring[k2], nr[k2], 1.15)); tri(V(bot, [0, -1, 0], 1.05), V(ring[k2], nr[k2], 1.15), V(ring[k], nr[k], 1.15)); void n; }
+    }
+    // the blade: its centreline from the bladder up and out (r 0.08 → 0.23), curling a little sideways; an oval outline
+    const L = Math.min(0.5 + 0.22 * rnd(), h + 0.3 - y), Wd = 0.06 + 0.02 * rnd(), curl = (rnd() - 0.5) * 0.08, ns = 10;
+    if (L < 0.25) continue;
+    const cl = (t) => [0.08 + 0.15 * Math.pow(t, 0.85), curl * Math.sin(Math.PI * t), y + 0.1 + L * t];
+    const rows = [];
+    for (let k = 0; k <= ns; k++) {
+      // (rows closer together toward both ends, a superellipse outline: blunt, rounded ends — no point)
+      const t = 0.5 - 0.5 * Math.cos((Math.PI * k) / ns), [r, tc, yy] = cl(t), w = Wd * Math.pow(Math.max(0, 1 - Math.abs(2 * t - 1) ** 2.4), 1 / 2.4) + (k === 0 || k === ns ? 0.004 : 0);
+      const ruff = 0.018 * Math.sin(t * 9 + ang * 3);
+      const col = 0.82 + 0.4 * t;
+      // the surface faces out (radially) and a little down; the ruffled edges tilt their normals
+      const n0 = [rad[0] * 0.9, -0.3, rad[1] * 0.9];
+      rows.push([
+        V(at(r + ruff, tc - w, yy + 0.02 * Math.cos(t * 7)), [n0[0] - tan[0] * 0.35, n0[1], n0[2] - tan[1] * 0.35], col * 0.96),
+        V(at(r, tc, yy), n0, col),
+        V(at(r - ruff, tc + w, yy - 0.02 * Math.cos(t * 7)), [n0[0] + tan[0] * 0.35, n0[1], n0[2] + tan[1] * 0.35], col * 0.96),
+      ]);
+    }
+    for (let k = 0; k < ns; k++) for (let e = 0; e < 2; e++) { const a = rows[k][e], b = rows[k][e + 1], c = rows[k + 1][e + 1], d = rows[k + 1][e]; tri(a, b, c); tri(a, c, d); }
   }
   const g = new T.BufferGeometry();
   g.setAttribute('position', new T.BufferAttribute(new Float32Array(P), 3)); g.setAttribute('normal', new T.BufferAttribute(new Float32Array(N), 3));
+  g.setAttribute('color', new T.BufferAttribute(new Float32Array(C), 3));
   return g;
 }
 
@@ -188,19 +219,19 @@ function tideDrums(T, kelp, bubbles, uNight = { value: 0 }) {
   const U = { uTime: { value: 0 }, uStream: { value: 1 }, uPhase: { value: 0 }, uBurst: { value: 0 }, uNightK: uNight };
   // the fronds: aK (0 at the root … 1 at the tip), aS (a seed), aA (how far this one may move), aC (its drum's centre)
   let n = 0; for (const f of kelp) n += f.g.attributes.position.count;
-  const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), aK = new Float32Array(n), aS = new Float32Array(n), aA = new Float32Array(n), aC = new Float32Array(n * 2);
+  const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), col = new Float32Array(n * 3), aK = new Float32Array(n), aS = new Float32Array(n), aA = new Float32Array(n), aC = new Float32Array(n * 2);
   let o = 0;
   for (const f of kelp) {
     const P = f.g.attributes.position.array, N = f.g.attributes.normal.array, c = P.length / 3;
-    pos.set(P, o * 3); nor.set(N, o * 3);
+    pos.set(P, o * 3); nor.set(N, o * 3); col.set(f.g.attributes.color.array, o * 3);
     for (let i = 0; i < c; i++) { aK[o + i] = Math.max(0, Math.min(1, (P[i * 3 + 1] - f.base) / f.h)); aS[o + i] = f.seed; aA[o + i] = f.amp; aC[(o + i) * 2] = f.cx; aC[(o + i) * 2 + 1] = f.cz; }
     o += c;
   }
   const kg = new T.BufferGeometry();
-  kg.setAttribute('position', new T.BufferAttribute(pos, 3)); kg.setAttribute('normal', new T.BufferAttribute(nor, 3));
+  kg.setAttribute('position', new T.BufferAttribute(pos, 3)); kg.setAttribute('normal', new T.BufferAttribute(nor, 3)); kg.setAttribute('color', new T.BufferAttribute(col, 3));
   kg.setAttribute('aK', new T.BufferAttribute(aK, 1)); kg.setAttribute('aS', new T.BufferAttribute(aS, 1)); kg.setAttribute('aA', new T.BufferAttribute(aA, 1)); kg.setAttribute('aC', new T.BufferAttribute(aC, 2));
   kg.computeBoundingSphere(); kg.boundingSphere.radius += 2;
-  const km = new T.MeshStandardMaterial({ color: '#8a8238', roughness: 0.7, metalness: 0.0, side: T.DoubleSide, emissive: '#1d1b08' });
+  const km = new T.MeshStandardMaterial({ color: '#8a8238', vertexColors: true, roughness: 0.62, metalness: 0.0, side: T.DoubleSide, emissive: '#1d1b08' });
   km.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, U);
     // (white-lit kelp at dusk: the drum's light from below, DESIGN.md §5.7)
