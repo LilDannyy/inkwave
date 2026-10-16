@@ -49,6 +49,12 @@ export const KARP_AI = {
   fuseDanger: 3,           // s: our carrier's last seconds are a danger to its teammates
   wakeR: 20,               // m (botSight SIGHT.karpWakeR mirrors it)
   escortR: 20,             // escorts don't chase further than this from the carrier
+  lead: 11, flank: 5, anchor: 9,   // m: the lead's spot ahead on the carrier's route, the flank's beside it, the anchor's behind it
+  fightR: 5.5,             // m: the free phase's fighters round the Bazookarp, on their side
+  spShell: 0.4,            // our side of the meter from which breakers throw a bomb-type special at the shell (SPEC §8.6)
+  spThreat: 15,            // m: a known foe this close to our carrier is a threat (escorts' specials, the Bubble Guard's share)
+  // (switches for the karp-bots checks' "teeth" runs: each check is shown to fail with its feature off)
+  perch: true, keepOut: true, refillBand: true, reformOut: true,
   jumpR: 35,               // a respawned bot super jumps to the carrier this far off
   diff: {
     easy:   { id: 'easy',   full: true,  lob: false, lead: false, push: 0, repick: 3,   danger: null, icpt: 1, grab: 0.6 },
@@ -216,7 +222,7 @@ class KarpPlan {
       const c = this.restPos();
       // the grabber: the bot nearest the shell, no special running (its own Bubble Guard is fine), hp ≥ 60
       // (the perch first — a charger, while there's another bot to grab — then the grabber among the breakers)
-      const ch = ubots.length > 1 ? ubots.filter((a) => a.weapon.kind === 'charger').sort((x, y) => keep(x, 'perch') - keep(y, 'perch'))[0] : null;
+      const ch = ubots.length > 1 && KARP_AI.perch ? ubots.filter((a) => a.weapon.kind === 'charger').sort((x, y) => keep(x, 'perch') - keep(y, 'perch'))[0] : null;
       if (ch) set(ch, 'perch');
       const brk = ubots.filter((a) => a !== ch), ok = brk.filter((a) => !busy(a) && a.hp >= 60);
       const g = (ok.length ? ok : brk).slice().sort((x, y) => hd(x.pos, c) + keep(x, 'grab') - hd(y.pos, c) - keep(y, 'grab'))[0];
@@ -225,14 +231,16 @@ class KarpPlan {
     } else if (sit === 'free') {
       const p = Kp.pos;
       const ok = ubots.filter((a) => !busy(a));
-      let g = (ok.length ? ok : ubots).slice().sort((x, y) => hd(x.pos, p) - hd(y.pos, p))[0];
+      let g = (ok.length ? ok : ubots).slice().sort((x, y) => hd(x.pos, p) + keep(x, 'grab') - hd(y.pos, p) - keep(y, 'grab'))[0];
       // (a human teammate within 3 m and closer gets it: SPEC §8.3)
       if (g && humans.some((h) => hd(h.pos, p) < 3 && hd(h.pos, p) < hd(g.pos, p))) g = null;
       if (g) set(g, 'grab', 1);
-      let i = 0; for (const a of ubots) if (!out.has(a)) set(a, hd(a.pos, p) < 6 ? 'grab' : 'fight', i++);
+      // (anyone within 6 m of it as it comes free makes for it too; a fighter stays a fighter — on its way round to their
+      // side it passes close by, and every fighter had become a grabber at the next deal)
+      let i = 0; for (const a of ubots) if (!out.has(a)) set(a, prev.get(a) !== 'fight' && hd(a.pos, p) < 6 ? 'grab' : 'fight', i++);
     } else if (sit === 'ours') {
       if (isBot(H)) set(H, 'carry');
-      const pts = { lead: this.ahead(t, 11, _v.set(0, 0, 0)).clone(), flank: H.pos.clone(), anchor: this.ahead(t, -9, _v.set(0, 0, 0)).clone() };
+      const pts = { lead: this.ahead(t, KARP_AI.lead, _v.set(0, 0, 0)).clone(), flank: H.pos.clone(), anchor: this.ahead(t, -KARP_AI.anchor, _v.set(0, 0, 0)).clone() };
       const want = ['lead', 'flank', 'anchor'];
       // (humans: the role whose spot is nearest them)
       for (const h of humans) { if (h === H || !want.length) continue; const r = want.slice().sort((x, y) => hd(h.pos, pts[x]) - hd(h.pos, pts[y]))[0]; want.splice(want.indexOf(r), 1); }
@@ -254,7 +262,7 @@ class KarpPlan {
       const rest = ubots.slice();
       const take = (n, r, at, x) => { for (let k = 0; k < n && rest.length; k++) { const b = rest.sort((p, q) => hd(p.pos, at) + keep(p, r) * 2 - hd(q.pos, at) - keep(q, r) * 2)[0]; set(b, r, x(k)); rest.splice(rest.indexOf(b), 1); } };
       take(nk, 'keeper', kp, (k) => k);
-      const ch = rest.find((a) => a.weapon.kind === 'charger');
+      const ch = KARP_AI.perch ? rest.find((a) => a.weapon.kind === 'charger') : null;
       if (ch && !near) { set(ch, 'perch'); rest.splice(rest.indexOf(ch), 1); }
       take(ni, 'intercept', cp, (k) => (k % 2 ? 1 : -1));
       for (const a of rest) set(a, df.id === 'easy' ? 'keeper' : 'intercept', df.id === 'easy' ? out.size % 2 : (out.size % 2 ? 1 : -1));
@@ -489,8 +497,10 @@ class KarpPlan {
 
 // ================================================================================================ per bot
 export function karpSync(b, P) {
-  const r = P.roleOf(b.a);
+  const r = P.roleOf(b.a), sit = P.sit[b.a.team];
   if (r !== b.kRole) { b.kRole = r; b.goalTimer = 0; b.repath = 0; b.kGoalAt = 0; b.kSpot = null; b.kExp = null; }
+  // (a new situation: a perch's spot over the shell is no perch over their carrier — picked again at once)
+  if (sit !== b.kSit) { b.kSit = sit; b.kPerch = null; b.kPerchT = 0; if (r === 'perch') b.kGoalAt = 0; }
 }
 const meleeOf = (a) => MELEE.has(a.weapon.kind);
 // take the fight? (else the objective first)
@@ -558,21 +568,21 @@ export function karpGoal(b, P) {
     if (role === 'grab') { if (grabWait(b, P) > 0) { b.path = null; return; } go(Kp.pos, 1.2, 0.4); return; }
     // fight round it: 4–7 m out toward their side
     const pad = G.level.spawnPads[1 - a.team], ang = Math.atan2(pad.x - Kp.pos.x, pad.z - Kp.pos.z) + ((P.auxOf(a) % 3) - 1) * 0.8;
-    const id = G.nav.nearest(_v.set(Kp.pos.x + Math.sin(ang) * 5.5, Kp.pos.y + 0.5, Kp.pos.z + Math.cos(ang) * 5.5), 1.2);
+    const id = G.nav.nearest(_v.set(Kp.pos.x + Math.sin(ang) * KARP_AI.fightR, Kp.pos.y + 0.5, Kp.pos.z + Math.cos(ang) * KARP_AI.fightR), 1.2);
     go(id >= 0 ? G.nav.nodes[id] : Kp.pos, 1.0, 1.2);
     return;
   }
   const H = Kp.holder;
   if (sit === 'ours' && H) {
     const t = a.team;
-    if (role === 'lead') { go(P.ahead(t, 11, _e), 1.0, 0.8); return; }
-    if (role === 'anchor') { go(P.ahead(t, -9, _e), 1.0, 1.0); return; }
+    if (role === 'lead') { go(P.ahead(t, KARP_AI.lead, _e), 1.0, 0.8); return; }
+    if (role === 'anchor') { go(P.ahead(t, -KARP_AI.anchor, _e), 1.0, 1.0); return; }
     // flank: beside it, on the side the known threat is (else its own side)
     const d = P.dirAt(t, _q), px = -d.z, pz = d.x;
     let sx = 0, sz = 0, n = 0;
     for (const f of P.foes[t]) if (hd(f.pos, H.pos) < 25) { sx += f.pos.x - H.pos.x; sz += f.pos.z - H.pos.z; n++; }
     const sg = n ? (sx * px + sz * pz >= 0 ? 1 : -1) : P.auxOf(a) || 1;
-    const id = G.nav.nearest(_e.set(H.pos.x + px * sg * 5 + d.x * 2, H.pos.y + 0.5, H.pos.z + pz * sg * 5 + d.z * 2), 1.5);
+    const id = G.nav.nearest(_e.set(H.pos.x + px * sg * KARP_AI.flank + d.x * 2, H.pos.y + 0.5, H.pos.z + pz * sg * KARP_AI.flank + d.z * 2), 1.5);
     go(id >= 0 ? G.nav.nodes[id] : H.pos, 1.0, 0.8);
     return;
   }
@@ -619,20 +629,71 @@ export function karpGoal(b, P) {
 // what a breaker's spot depends on (a change re-picks it at once)
 function shellKey(b, P, role) {
   const t = b.a.team, our = P.side(t), df = DF(b), c = P.restPos();
-  return `${role}|${our >= KARP_AI.grabAt ? 1 : 0}|${-our >= KARP_AI.meleeOut ? 1 : 0}|${df.danger != null && -our >= df.danger ? 1 : 0}|${c.x.toFixed(0)},${c.z.toFixed(0)}`;
+  const out = P.Kp.phase === 'reforming' || P.Kp.phase === 'resetting' ? 1 : 0;   // (the shell standing again: the close-in spots back)
+  return `${role}|${our >= KARP_AI.grabAt ? 1 : 0}|${-our >= KARP_AI.meleeOut ? 1 : 0}|${df.danger != null && -our >= df.danger ? 1 : 0}|${c.x.toFixed(0)},${c.z.toFixed(0)}|${out}`;
 }
-// the shell phase's stand spot by role → a nav node
-function shellSpot(b, P, role) {
+// how far from the shell's centre a breaker stands by role (SPEC §8.2) → { want, slot, close }: the grabber 3.12 m at ≥ 85 %
+// of ours, a melee breaker max(2.5, r' + 0.88) + 0.3 m while the other side is under 50 % (close in), else the 7 m ring
+function shellWant(b, P, role) {
   const a = b.a, t = a.team, our = P.side(t), their = -our, df = DF(b), R = P.Kp.shell.radius() || K.shell.r;
   const danger = df.danger != null && their >= df.danger;
-  if (role === 'perch') return perchSpot(b, P) || P.breakSpot(a, 7, P.auxOf(a));   // (no high ground with a line on it: the ring)
   let want, slot = P.auxOf(a);
-  if (role === 'grab' && our >= KARP_AI.grabAt) { want = KARP_AI.grabR; slot = 1.5; }
+  // (re-forming or resetting — SPEC §8.1: everyone repositions 6–8 m from the resting spot, outside the burst radius; the
+  // close-in and the grab spots wait for the shell to stand)
+  const out = KARP_AI.reformOut && (P.Kp.phase === 'reforming' || P.Kp.phase === 'resetting');
+  if (out) want = 7;
+  else if (role === 'grab' && our >= KARP_AI.grabAt) { want = KARP_AI.grabR; slot = 1.5; }
   else if (meleeOf(a)) want = their >= KARP_AI.meleeOut || danger ? 7 : Math.max(2.5, Math.max(R, K.shell.r + (K.shell.rMax - K.shell.r) * Math.min(1, Math.abs(our) + 0.15) ** 2) + PLAYER.radius + 0.5) + 0.3;   // (r a little ahead of the meter: it swells)
   else want = 7;
   if (danger) want = Math.max(want, KARP_AI.dangerR + 0.7);
   if (role === 'grab' && slot !== 1.5) slot = 1.5 + (meleeOf(a) ? 0 : 1);
+  return { want, slot, close: want < 4.5 };
+}
+// the shell phase's stand spot by role → a nav node
+function shellSpot(b, P, role) {
+  const a = b.a;
+  if (role === 'perch') return perchSpot(b, P) || P.breakSpot(a, 7, P.auxOf(a));   // (no high ground with a line on it: the ring)
+  const { want, slot } = shellWant(b, P, role);
   return P.breakSpot(a, want, slot);
+}
+// a breaker's band round the shell (m from its centre): close in, the stand spot … 4.5 m (in reach: B's ≤ 5 m); the grabber
+// at ≥ 85 % of ours 2.95–3.4 m; on the ring 5.8–9 m → [lo, hi] | null (not a breaker by the shell)
+function shellBand(b, P) {
+  const a = b.a, role = b.kRole, Kp = P.Kp;
+  if (!KARP_AI.enabled || a.carry || P.sit[a.team] !== 'shell' || Kp.shell.state === 'none' || (role !== 'break' && role !== 'grab')) return null;
+  if (hd(a.pos, P.restPos()) > 18) return null;
+  const { want, close } = shellWant(b, P, role);
+  if (role === 'grab' && P.side(a.team) >= KARP_AI.grabAt) return [KARP_AI.grabR - 0.17, KARP_AI.grabR + 0.28];
+  return close ? [want - 0.2, 4.5] : [KARP_AI.ring[0] + 0.3, KARP_AI.ring[1]];
+}
+// a breaker's refill by the shell (bots.js _pickRefill): inside its own band — never by the shell where a burst would catch
+// it (the ring's bots) nor walking off to its spawn (melee ones closing in: B saw a brush 13 m out, refilling): our ink in the
+// band nearest it, else its own stand spot (bots.js paints a puddle there to swim in) → V3 | null (null: the usual search)
+const _rf = new V3();
+export function karpRefillSpot(b, P) {
+  const band = KARP_AI.refillBand ? shellBand(b, P) : null;
+  if (!band) return null;
+  const a = b.a, c = P.restPos(), st = b._kst || (b._kst = { own: 0, enemy: 0, empty: 0, n: 0 });
+  const [lo, hi] = band, base = Math.atan2(a.pos.x - c.x, a.pos.z - c.z);
+  let best = null, bd = Infinity;
+  for (let k = 0; k < 16; k++) {
+    const ang = base + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.39;
+    for (const u of [0.25, 0.75]) {
+      const r = lo + (hi - lo) * u;
+      _v.set(c.x + Math.sin(ang) * r, a.pos.y + 0.5, c.z + Math.cos(ang) * r);
+      const id = G.nav.nearest(_v, 0.8);
+      if (id < 0) continue;
+      const n = G.nav.nodes[id], h = hd(n, c);
+      if (h < lo || h > hi || Math.abs(n.y - a.pos.y) > 1.2 || n.zone >= 0) continue;
+      const d = hd(n, a.pos);
+      if (d >= bd) continue;
+      G.paint.regionStats(n.x, n.y, n.z, 1.0, b.inkTeam, st);
+      if (st.n && st.own > 0.6) { bd = d; best = n; }
+    }
+  }
+  if (best) return _rf.set(best.x, best.y, best.z);
+  const n = shellSpot(b, P, b.kRole);
+  return n ? _rf.set(n.x, n.y, n.z) : null;
 }
 // what a perch watches: the shell (shell phase); the enemy carrier while we know where it is, else 10 m along the route we
 // expect it to take from its last known spot (SPEC §8.5) — never its live position nor its own route → V3 | null
@@ -647,9 +708,11 @@ export function karpPerchLook(b, P) {
 // a perch: high ground with a line over the shell (shell phase) or the enemy carrier / its route (they carry)
 function perchSpot(b, P) {
   const a = b.a, now = G.time;
-  if (b.kPerch && now < b.kPerchT) return b.kPerch;
   const at = karpPerchLook(b, P);
   if (!at) return b.kPerch || null;
+  // (what it watches moved — their carrier seen somewhere else: a new perch at once)
+  if (b.kPerch && now < b.kPerchT && b.kPerchAt && hd(b.kPerchAt, at) > 6) b.kPerchT = 0;
+  if (b.kPerch && now < b.kPerchT) return b.kPerch;
   const nav = G.nav;
   let best = null, bs = -Infinity;
   for (let i = 0; i < 40; i++) {
@@ -661,7 +724,7 @@ function perchSpot(b, P) {
     if (!G.physics.los(_v.set(n.x, n.y + 1.3, n.z), _v2.set(at.x, at.y + 1.0, at.z))) continue;
     bs = sc; best = n;
   }
-  b.kPerch = best || b.kPerch; b.kPerchT = now + (best ? 6 : 1.5);
+  b.kPerch = best || b.kPerch; b.kPerchT = now + (best ? 6 : 1.5); (b.kPerchAt || (b.kPerchAt = new V3())).copy(at);
   return b.kPerch;
 }
 // the grabber's wait after a burst (s left before it starts its run in), so that it gets there as the hold (+ its
@@ -928,6 +991,14 @@ export function karpMove(b, P, dt, move, it) {
       if (b._nearWater?.(a, 1.2)) move.set(0, 0, 0);
     }
   }
+  // (a melee bot once the other side is ≥ 50 % — SPEC §8.2: it moves out to the ring and guards it — never back in past the
+  // burst's 4.5 m + 0.6: fighting a foe that stands by the shell (theirs, safe from its own burst), refilling, walking by, it
+  // stops at the edge; a burst splatted melee breakers 3.2–3.7 m out in matches. Not the grabber at ≥ 85 % of ours)
+  if (KARP_AI.keepOut && !esc && S.state === 'intact' && meleeOf(a) && -P.side(a.team) >= KARP_AI.meleeOut && Math.abs(a.pos.y - Kp.pos.y) < 2.5 && !(b.kRole === 'grab' && P.side(a.team) >= KARP_AI.grabAt)) {
+    const RO = K.shell.burstR + 0.6, inward = -(move.x * nx + move.z * nz);
+    if (h < RO - 0.2) { move.set(nx, 0, nz); it.squid = false; }
+    else if (h < RO + 0.4 && inward > 0) { move.x += inward * nx; move.z += inward * nz; }
+  }
   // the shell guard: never a step into touch range (the body's closest point to its centre within r + 0.38 + margin)
   const by = clamp(c.y, a.pos.y + 0.3, a.pos.y + 1.2), d3 = Math.hypot(h, by - c.y), reach = R + PLAYER.radius;
   // (judged where it will be in 0.3 s at its speed toward the centre: a swimming squid covers 3.5 m in that)
@@ -976,12 +1047,12 @@ export function karpSpecial(b, P, fighting, dist, vis) {
   // breakers: a bomb-type special onto the shell once our side is ≥ 40 %
   if ((role === 'break' || role === 'grab' || role === 'perch') && P.sit[a.team] === 'shell' && P.Kp.shell.state === 'intact' && SHELL_SP.has(id)) {
     const d = hd(a.pos, P.Kp.shell.center());
-    if (P.side(a.team) >= 0.4 && (id === 'strike' ? d < 40 : d < 14)) { KARP_BOT.stats.specials++; return true; }
+    if (P.side(a.team) >= KARP_AI.spShell && (id === 'strike' ? d < 40 : d < 14)) { KARP_BOT.stats.specials++; return true; }
     return false;   // (saved for the shell)
   }
   if (H && H.team === a.team && (role === 'lead' || role === 'flank' || role === 'anchor')) {
     // escorts clear the carrier's way when it's threatened; a Bubble Guard goes to the carrier (sprules' pass-on)
-    const thr = P.foes[a.team].some((f) => hd(f.pos, H.pos) < 15);
+    const thr = P.foes[a.team].some((f) => hd(f.pos, H.pos) < KARP_AI.spThreat);
     if (!thr) return false;
     if (id === 'bubbler') { if (hd(a.pos, H.pos) < 5) { KARP_BOT.stats.specials++; return true; } return false; }
     return null;

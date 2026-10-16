@@ -19,6 +19,11 @@
 //   N  a respawned bot super jumps to our carrier ≥ 35 m off; defenders stay home
 //   O  a fuse that can't make it: over the halfway line first
 //   P  walkers (Skitter, Waddle) go round the shell to a foe behind it
+//   R  the other roles: escorts (lead / flank / anchor), the perch (both phases), the free phase's fighters, re-forming
+//   S  specials (SPEC §8.6): breakers' bombs at ≥ 40 %, escorts' only under threat, interceptors' at the known carrier,
+//      the Bubble Guard's share
+//   Y  difficulty (SPEC §8.8): interceptors by difficulty, easy / hard grab delays, easy's no-lob, hard's lead, re-pick periods
+//   PAGE_ARGS 'teeth=1' also runs each newer check with its feature switched off (KARP_AI / difficulty rows): it must fail
 //   W  no wall-hack in the defending plan: a hidden enemy carrier's live spot never moves the defended weir, the perch's look,
 //      the interceptor choice or a fight's pull — only what the team saw (its pick-up, a look) does
 (async () => {
@@ -81,6 +86,14 @@
   const ev = []; const offs = ['karp:burst', 'karp:pickup', 'karp:plant', 'karp:end', 'damage', 'weapon:fire', 'sub:use', 'sub:cantuse', 'special:use', 'mitts:leap', 'weapon:dodge', 'actor:dodge', 'hit'].map((k) => on(k, (e) => ev.push([k, e, G.time, !!e?.actor?.carry])));   // (carrying at the moment it happened)
   const evs = (k) => ev.filter((e) => e[0] === k);
   const keepAlive = (list) => { for (const a of list) { if (!a.alive) { a.respawn(); if (a.bot) a.bot._wasDead = false; } a.hp = PLAYER.hp; } };
+  // the checks' teeth (PAGE_ARGS teeth=1): run the scenario again with its feature off — it must fail then
+  const TEETH = /teeth=1/.test(window.__pageArgs || '');
+  const check = (name, fn, off) => {
+    const r = fn(); R(name, r.ok, r.info);
+    if (TEETH && off) { const undo = off(); let r2; try { r2 = fn(); } finally { undo(); } R('(teeth) ' + name.split(' ')[0] + ' fails with its feature off', !r2.ok, r2.info); }
+  };
+  const flip = (obj, kv) => () => { const old = {}; for (const k in kv) { old[k] = obj[k]; obj[k] = kv[k]; } return () => Object.assign(obj, old); };
+  const track = (e, t = 0) => { e.status.track = 99; e.status.trackTeam = t; };   // (located by team t: the map shows it)
   // a team round the shell at r m on its own side (spread)
   const ring = (list, r) => list.forEach((a, i) => { const t = a.team, ang = (t ? 0 : Math.PI) + (i - (list.length - 1) / 2) * 0.5; put(a, Math.sin(ang) * r, Math.cos(ang) * r); });
 
@@ -102,6 +115,22 @@
       const shoot = KARP_BOT.stats.breakT;
       R(`A ${diff}: with Bravo's side at ${frac * 100} % the Alpha bots placed 4.2 m out leave the burst (4.5 m) and keep the 5.5 m ring from 1.5 s on (0.2 m of slack), still shooting it`, minA >= 5.3 && minA < 12 && n > 0 && shoot > 1, { minA, samples: n, breakT: shoot, dangerKnown: KARP_AI.diff[diff].danger, dbg: dbgA.slice(-6) });
     }
+    // (c) the danger is what keeps a bot that only walks by out: Alpha's ranged bots start on Bravo's side of the shell
+    // (6.5 m out), noticing the danger first, then walk round to their own ring spots with Bravo's side at 72 % — round
+    // outside 5.3 m (the full swell's 2.9 m otherwise)
+    check('A(c) with Bravo\'s side at 72 % Alpha\'s ranged bots on the far side of the shell walk round it to their own ring outside 5.3 m (the danger area: without it they cut round the full swell)', () => {
+      fresh();
+      for (const a of m.actors) a.setWeapon(['shooter', 'blaster', 'spinner', 'bucket'][a.slot % 4]);
+      for (const a of A) wake(a, 'normal');
+      const st = A.map((a, i) => { const ang = (i - 1.5) * 0.45; return [Math.sin(ang) * 6.5, Math.cos(ang) * 6.5]; });
+      A.forEach((a, i) => put(a, ...st[i]));
+      Kp.shell.add = () => {};
+      step(0.8, () => { pinMeter(-0.72); A.forEach((a, i) => { a.pos.set(st[i][0], floorY(...st[i]), st[i][1]); a.vel.set(0, 0, 0); a.invuln = 2; }); });
+      let minA = Infinity; const c = Kp.shell.center();
+      step(6, () => { pinMeter(-0.72); for (const a of m.actors) { a.invuln = 2; a.hp = PLAYER.hp; } for (const a of A) minA = Math.min(minA, hd(a.pos, c)); });
+      const home = A.filter((a) => a.pos.z < -1).length;
+      return { ok: minA >= 5.3 && home >= 3, info: { minA, home } };
+    }, flip(KARP_AI.diff.normal, { danger: null }));
     // easy ignores the meter (the danger area is off for an easy team)
     fresh();
     for (const a of m.actors) wake(a, 'easy');
@@ -130,6 +159,32 @@
     // (c) neutral: close in to break it (2.5 m)
     let near = 0; step(4, (i) => { pinMeter(0); keepAlive(A); if (i > 180) for (const a of A) if (hd(a.pos, Kp.shell.center()) < 4.6) near++; });
     R('B melee breakers (placed 2.9 m out): at 55 % of theirs out on the ring (5.5–9 m); at 75 % of ours ≥ 2.9 m from the centre and still close (≤ 5 m: in reach to hit it)', minOut >= 5.3 && maxOut <= 10 && minIn >= 2.9 && maxIn <= 5, { minOut, maxOut, minIn, maxIn, neutralCloseFrames: near, shellR: Kp.shell.radius() });
+    // (b2) refills stay in the band: our side 75 %, the melee breakers' tanks emptied — they refill by their close spot (a
+    // puddle they paint, or our ink in the band), never off at the ring or their spawn (B failed most runs on this)
+    check('B(b2) melee breakers closing in at 75 % of ours refill inside their band (≤ 5 m from the centre): never walking off to the ring or the spawn for ink', () => {
+      fresh();
+      for (const a of A) a.setWeapon(mel[a.slot % 4]);
+      for (const a of A) wake(a, 'normal');
+      ring(A, 3.6); Kp.shell.add = () => {};
+      step(1.5, () => { pinMeter(0.75); keepAlive(A); for (const a of m.actors) a.invuln = 2; });
+      let maxR = 0, refill = 0, minR = Infinity;
+      step(5, (i) => { pinMeter(0.75); keepAlive(A); for (const a of m.actors) a.invuln = 2; if (i % 60 === 0) for (const a of A) a.ink = Math.min(a.ink, PLAYER.inkMax * 0.08); for (const a of A) { const d = hd(a.pos, Kp.shell.center()); maxR = Math.max(maxR, d); minR = Math.min(minR, d); if (a.bot.mode === 'refill') refill++; } });
+      return { ok: maxR <= 5 && minR >= 2.9 && refill > 60, info: { maxR, minR, refillFrames: refill } };
+    }, flip(KARP_AI, { refillBand: false }));
+    // (d) the other side at 60 % (out on the ring, no danger yet): a foe of theirs stands by the shell (3.4 m out on our side
+    // — safe from its own team's burst); our melee breakers right by it fight it, but never follow it in past 4.8 m
+    check('B(d) at 60 % of theirs a melee breaker fights a foe standing by the shell from the ring\'s edge, never in past 4.8 m (their burst would splat it there)', () => {
+      fresh();
+      for (const a of A) a.setWeapon(mel[a.slot % 4]);
+      for (const a of A) wake(a, 'normal');
+      Kp.shell.add = () => {};
+      const foe = B[0], fz = -3.4;
+      A.forEach((a, i) => { const ang = Math.PI + (i - 1.5) * 0.3; put(a, Math.sin(ang) * 5.4, Math.cos(ang) * 5.4); });
+      put(foe, 0, fz);
+      let minD = Infinity, fight = 0;
+      step(4, (i) => { pinMeter(-0.6); keepAlive(A); foe.hp = PLAYER.hp; foe.invuln = 99; foe.pos.set(0, floorY(0, fz), fz); foe.vel.set(0, 0, 0); for (const a of A) a.invuln = 2; if (i > 20) for (const a of A) { minD = Math.min(minD, hd(a.pos, Kp.shell.center())); if (a.bot.mode === 'fight' && a.bot.target === foe) fight++; } });
+      return { ok: minD >= 4.8 && fight > 30, info: { minD, fightFrames: fight } };
+    }, flip(KARP_AI, { keepOut: false }));
   }
 
   // ============================================================================ C. no touch damage in 20 bursts
@@ -310,12 +365,18 @@
     };
     const res = trials(18, 20);
     const n = res.filter((r) => r.ok).length, onIt = res.filter((r) => r.landOff !== null && r.landOff < radiusOf(1) * 0.6).length;
-    R(`H a bot standing where a Big Burst lands leaves its disc before it blows (normal, from 18 m): ${n} of 20 (≥ 16), ${onIt} shots landed within 2.4 m of it`, n >= 16 && onIt >= 16, res);
+    R(`H a bot standing where a Big Burst lands leaves its disc before it blows (normal) — from 18 m, the range it passes at (§11 names none; from the carrier's usual 12–15 m it does not: the report rows below): ${n} of 20 (≥ 16), ${onIt} shots landed within 2.4 m of it`, n >= 16 && onIt >= 16, res);
     // (report: closer in, the flight + the 0.45 s swell is 0.9–1.1 s against a 0.2–0.45 s reaction and 4 m to run at 5.3 m/s
     // on dry ground — a coin flip at 15 m, a kill at 12 m, by the numbers rather than the bots)
     const rep = {};
     for (const HR of [12, 15]) { const r = trials(HR, 10); rep[HR + ' m'] = { escaped: r.filter((q) => q.ok).length + ' of 10', meanNotice: +(r.reduce((a, q) => a + (q.knowT ?? 1), 0) / 10).toFixed(2), meanLand: +(r.reduce((a, q) => a + (q.landT ?? 0), 0) / 10).toFixed(2) }; }
     R('H (report) the same from 12 m and 15 m (no threshold: physics, see the note)', true, rep);
+    // (PAGE_ARGS hwhat=1: what it would take at 15 m — a longer swell, or a smaller Big Burst; the lead's balance decision)
+    if (/hwhat=1/.test(window.__pageArgs || '')) {
+      const what = {};
+      for (const [k, v] of [['swell', 0.6], ['swell', 0.75], ['fullRadius', 3.5]]) { const o = K.gun[k]; K.gun[k] = v; try { const r = trials(15, 10); what[`${k} ${o} → ${v}`] = r.filter((q) => q.ok).length + ' of 10'; } finally { K.gun[k] = o; } }
+      R('H (what-if, report) from 15 m with a longer swell or a smaller Big Burst disc', true, what);
+    }
   }
 
   // ============================================================================ I. the keeper
@@ -529,6 +590,228 @@
     }
     R('P walkers treat the shell as an obstacle: a Skitter and a Waddle sent at a foe right behind the shell go round it (never inside, pressed against it under a quarter of the walk) and reach the foe', Object.values(res).every((r) => r.walkFrames > 20 && r.inside === 0 && r.contactFrames <= r.walkFrames * 0.25 && r.closestToFoe < 1.6), res);
   }
+  // ============================================================================ R. the other roles
+  if (want('R')) {
+    // (a) escorts: our carrier still at the Pond (its route: the line to its weir), a Bravo foe located off to the west
+    // (20.4 m from it: outside the escorts' fights) — lead 8–14 m ahead on the route inking it, flank 3–8 m beside it on the
+    // foe's side, anchor within 15 m
+    check('R(a) escorts: the lead 8–14 m ahead on the carrier\'s route inking it, the flank 3–8 m beside it on the known threat\'s side, the anchor within 15 m', () => {
+      fresh();
+      const c = A[0], foe = B[0]; c.setWeapon('shooter'); put(c, 0, -2); step(1 / 60); grant(c);
+      ['shooter', 'blaster', 'shooter'].forEach((w, i) => { A[i + 1].setWeapon(w); });
+      for (const a of A.slice(1)) wake(a, 'normal');
+      A.slice(1).forEach((a, i) => put(a, -2 + i * 2, -5));
+      const fp = [-20, 2];
+      const hold = () => { c.hp = PLAYER.hp; c.pos.set(0, floorY(0, -2), -2); c.vel.set(0, 0, 0); foe.hp = PLAYER.hp; foe.invuln = 99; foe.pos.set(fp[0], floorY(...fp), fp[1]); foe.vel.set(0, 0, 0); track(foe, 0); };
+      step(6, hold);
+      const P = karpPlan(), T = Kp.weirs[0][0].pos, dx = T.x - c.pos.x, dz = T.z - c.pos.z, l = Math.hypot(dx, dz), ux = dx / l, uz = dz / l;
+      const off = (a) => { const rx = a.pos.x - c.pos.x, rz = a.pos.z - c.pos.z; return { along: rx * ux + rz * uz, side: rx * uz - rz * ux }; };
+      const by = (r) => A.find((a) => P.roleOf(a) === r);
+      const L = by('lead'), F = by('flank'), N = by('anchor');
+      const fs = (fp[0] - c.pos.x) * uz - (fp[1] - c.pos.z) * ux;   // (the foe's side of the route)
+      const st = { own: 0, enemy: 0, empty: 0, n: 0 }; let ink = 0, n = 0;
+      for (const mm of [6, 9, 12]) { const q = P.ahead(0, mm, V(0, 0, 0)); G.paint.regionStats(q.x, q.y, q.z, 1.4, 0, st); if (st.n) { ink += st.own; n++; } }
+      const lo = L && off(L), fo = F && off(F), no = N && hd(N.pos, c.pos);
+      return { ok: !!L && !!F && !!N && lo.along >= 8 && lo.along <= 14 && Math.abs(lo.side) < 4 && n > 0 && ink / n > 0.25 && Math.sign(fo.side) === Math.sign(fs) && Math.abs(fo.side) >= 3 && Math.abs(fo.side) <= 8 && no <= 15,
+        info: { lead: lo, flank: fo, foeSide: Math.sign(fs), anchorD: no, routeInk: n ? ink / n : null, known: P.foes[0].length } };
+    }, flip(KARP_AI, { lead: 0, flank: 0, anchor: 30 }));
+    // (b) the perch: a charger, shell phase — on a spot 10–22 m from the shell with a line on it; they carry — 10–22 m from
+    // the known carrier with a line on it
+    check('R(b) the perch: a charger holds a spot 10–22 m from the shell with a line on it (shell phase), and 10–22 m from the known enemy carrier with a line on it (they carry)', () => {
+      fresh();
+      A.forEach((a, i) => { a.setWeapon(i === 1 ? 'charger' : 'shooter'); wake(a, 'normal'); });
+      Kp.shell.add = () => {};
+      const ch = A[1], sc = Kp.shell.center();
+      step(5, () => { for (const a of m.actors) a.invuln = 2; });
+      const P = karpPlan(), r1 = P.roleOf(ch), s1 = ch.bot.kSpot ? V(ch.bot.kSpot.x, ch.bot.kSpot.y, ch.bot.kSpot.z) : null;
+      const d1 = s1 ? hd(s1, sc) : null, los1 = s1 ? G.physics.los(V(s1.x, s1.y + 1.3, s1.z), sc) : false;
+      // they carry: Bravo's carrier in kid form (its marker: located), held
+      const c = B[0]; put(c, 0, -14); step(1 / 60); grant(c);
+      step(5, () => { c.hp = PLAYER.hp; c.invuln = 99; c.pos.set(0, floorY(0, -14), -14); c.vel.set(0, 0, 0); for (const a of A) a.invuln = 2; });
+      const P2 = karpPlan(), r2 = P2.roleOf(ch), kq = ch.bot.kPerch, s2 = kq ? V(kq.x, kq.y, kq.z) : null;   // (a nav node)
+      const d2 = s2 ? hd(s2, c.pos) : null, los2 = s2 ? G.physics.los(V(s2.x, s2.y + 1.3, s2.z), V(c.pos.x, c.pos.y + 1.0, c.pos.z)) : false;
+      return { ok: r1 === 'perch' && d1 >= 10 && d1 <= 22 && los1 && r2 === 'perch' && d2 >= 10 && d2 <= 22 && los2, info: { shell: { role: r1, d: d1, los: los1 }, theirs: { role: r2, d: d2, los: los2 } } };
+    }, flip(KARP_AI, { perch: false }));
+    // (c) the free phase's fighters: the Bazookarp free at the Pond (held untouchable), Alpha's grabber makes for it, the rest
+    // fight round it 3–8 m out on Bravo's side
+    check('R(c) the free phase: the grabber makes for the Bazookarp, the rest fight round it 3–8 m out on the other team\'s side', () => {
+      fresh();
+      for (const a of A) { a.setWeapon('shooter'); wake(a, 'normal'); }
+      ring(A, 7);
+      Kp.shell.clear(); Kp.pos.copy(Kp.R.pond); Kp.restNode = -1; Kp._setPhase('free', 99);
+      step(4, () => { Kp.phaseT = 99; for (const a of m.actors) a.invuln = 2; });
+      const P = karpPlan(), pad = G.level.spawnPads[1], kp = Kp.pos, ex = pad.x - kp.x, ez = pad.z - kp.z;
+      const rows = A.map((a) => ({ role: P.roleOf(a), d: +hd(a.pos, kp).toFixed(2), their: (a.pos.x - kp.x) * ex + (a.pos.z - kp.z) * ez > 0 }));
+      const grab = rows.filter((r) => r.role === 'grab'), fight = rows.filter((r) => r.role === 'fight');
+      return { ok: grab.length >= 1 && grab.some((r) => r.d < 2) && fight.length >= 2 && fight.every((r) => r.d >= 3 && r.d <= 8 && r.their), info: rows };
+    }, flip(KARP_AI, { fightR: 15 }));
+    // (d) re-forming / resetting: melee breakers close in on a standing shell; the Bazookarp resets (flies back) and re-forms —
+    // meanwhile they stand 6–8 m out (outside the burst), then close in again once it stands
+    check('R(d) re-forming / resetting: the breakers reposition to the ring (spots 5.8–9.6 m: SPEC 6–8 m, the ring\'s nodes) from the resting spot (outside the burst) while it flies back and re-forms, and close in again once it stands', () => {
+      fresh();
+      const mel = ['roller', 'blade', 'mitts', 'brush'];
+      for (const a of A) { a.setWeapon(mel[a.slot % 4]); wake(a, 'normal'); }
+      ring(A, 6); Kp.shell.add = () => {};
+      step(3, () => { keepAlive(A); for (const a of m.actors) a.invuln = 2; });
+      const before = A.map((a) => a.bot.kSpot ? +hd(a.bot.kSpot, Kp.R.pond).toFixed(2) : null);
+      Kp._reset(Kp.R.pond.clone(), 'none');
+      const during = []; let minD = Infinity, fr = 0;
+      step(2.2, (i) => { keepAlive(A); for (const a of m.actors) a.invuln = 2; if (Kp.phase !== 'resetting' && Kp.phase !== 'reforming') return; fr++; if (i > 20) for (const a of A) if (a.bot.kSpot) during.push(hd(a.bot.kSpot, Kp.R.pond)); if (i > 70) for (const a of A) minD = Math.min(minD, hd(a.pos, Kp.R.pond)); });
+      Kp.shell.add = () => {};
+      step(3, () => { keepAlive(A); for (const a of m.actors) a.invuln = 2; });
+      const after = A.map((a) => a.bot.kSpot ? +hd(a.bot.kSpot, Kp.R.pond).toFixed(2) : null);
+      return { ok: during.length > 20 && Math.min(...during) >= 5.8 && Math.max(...during) <= 9.6 && minD >= 4.5 && after.filter((d) => d !== null && d < 4.5).length >= 3, info: { before, duringMin: Math.min(...during), duringMax: Math.max(...during), minD, after, frames: fr, phase: Kp.phase } };
+    }, flip(KARP_AI, { reformOut: false }));
+  }
+
+  // ============================================================================ S. specials (SPEC §8.6)
+  if (want('S')) {
+    const { karpSpecial } = await import('./src/game/botsKarp.js');
+    // (a) a breaker with a bomb-type special (a barrage) keeps it for the shell: not below 40 % of ours, thrown above
+    check('S(a) a breaker keeps a bomb-type special (barrage) for the shell: held at 30 % of ours, thrown at 45 % (special:use)', () => {
+      fresh();
+      const a0 = A[0]; a0.setWeapon('shooter'); a0.setSpecial('barrage'); wake(a0, 'normal'); put(a0, 0, -7);
+      Kp.shell.add = () => {};
+      step(0.5, () => { pinMeter(0.3); a0.special = a0.specialCost(); a0.invuln = 2; });
+      const P = karpPlan(), lo = karpSpecial(a0.bot, P, false, 0, false);
+      const e0 = ev.length; let used = false;
+      step(2.5, () => { pinMeter(0.3); a0.invuln = 2; if (!used && ev.slice(e0).some((e) => e[0] === 'special:use' && e[1].actor === a0)) used = true; });
+      const usedLo = used;
+      a0.special = a0.specialCost();
+      const hi = (pinMeter(0.45), karpSpecial(a0.bot, P, false, 0, false));
+      const e1 = ev.length; used = false;
+      step(2.5, () => { pinMeter(0.45); a0.invuln = 2; if (!used && ev.slice(e1).some((e) => e[0] === 'special:use' && e[1].actor === a0)) used = true; });
+      return { ok: lo === false && !usedLo && hi === true && used, info: { at30: lo, used30: usedLo, at45: hi, used45: used } };
+    }, flip(KARP_AI, { spShell: 2 }));
+    // (b) escorts fire specials only while our carrier is threatened (a known foe within 15 m of it); (d) a Bubble Guard
+    // holder within 5 m pops it then and the carrier gets it (sprules' pass-on)
+    check('S(b) an escort\'s special waits while nobody threatens our carrier (karpSpecial false), and is free to go once a known foe is within 15 m of it', () => {
+      fresh();
+      const c = A[0], e = A[1], foe = B[0]; c.setWeapon('shooter'); put(c, 0, -2); step(1 / 60); grant(c);
+      e.setWeapon('shooter'); e.setSpecial('strike'); wake(e, 'normal'); put(e, 2, -4);
+      step(0.6, () => { e.special = e.specialCost(); c.hp = PLAYER.hp; });
+      const P = karpPlan(), role = P.roleOf(e), calm = karpSpecial(e.bot, P, false, 0, false);
+      put(foe, 6, 8);
+      step(0.8, () => { track(foe, 0); foe.invuln = 99; e.special = e.specialCost(); c.hp = PLAYER.hp; });
+      const thr = karpSpecial(e.bot, karpPlan(), false, 0, false);
+      return { ok: ['lead', 'flank', 'anchor'].includes(role) && calm === false && thr !== false, info: { role, calm, threatened: thr } };
+    }, flip(KARP_AI, { spThreat: 0 }));
+    check('S(c) an interceptor fires its Vortex Strike at the known enemy carrier (karpSpecial true), and holds it while the carrier is unknown', () => {
+      fresh();
+      const c = B[0], w = A[2]; w.setWeapon('shooter'); w.setSpecial('strike'); put(w, 0, -8);
+      [A[0], A[1], A[3]].forEach((a, i) => put(a, -3 + i * 3, -29));   // (asleep by the weirs: the keeper is one of them)
+      // (picked up under its ink, w still asleep: never a look at it in kid form — its marker would be one)
+      put(c, -10, -12); step(1 / 60); grant(c);
+      const cu = c.update; c.update = () => { c.anim.time = G.time; };   // (its form is the test's)
+      c.form = 'squid'; c.submerged = true; c.anim.form = 'swim'; c.grounded = true;
+      wake(w, 'normal');
+      // unknown: hidden in the alley, never seen — the special held (karpSpecial false, no special:use)
+      const used = (e0) => ev.slice(e0).some((q) => q[0] === 'special:use' && q[1].actor === w);
+      let e0 = ev.length;
+      step(1.2, () => { c.pos.set(-10, floorY(-10, -12), -12); c.form = 'squid'; c.submerged = true; c.anim.form = 'swim'; c.invuln = 99; if (!w.specialActive) w.special = w.specialCost(); });
+      const P = karpPlan(), r0 = P.roleOf(w), hid = karpSpecial(w.bot, P, false, 0, false), usedHid = used(e0);
+      // known: in kid form (its marker) — fired at it (special:use)
+      e0 = ev.length; let kn = null;
+      step(1.5, () => { c.pos.set(0, floorY(0, -14), -14); c.form = 'kid'; c.submerged = false; c.anim.form = 'kid'; c.invuln = 99; if (!w.specialActive) w.special = w.specialCost(); w.invuln = 2; if (kn === null && karpPlan().foes[0].some((f) => f.e === c) && w.specialReady()) kn = karpSpecial(w.bot, karpPlan(), false, 0, false); });
+      const r1 = karpPlan().roleOf(w), usedKn = used(e0);
+      c.update = cu;
+      return { ok: r1 === 'intercept' && hid === false && !usedHid && kn === true && usedKn, info: { roleHidden: r0, hidden: hid, usedHidden: usedHid, roleKnown: r1, known: kn, usedKnown: usedKn } };
+    });
+    check('S(d) the Bubble Guard\'s share: an escort holding one beside our carrier keeps it while nobody threatens the carrier, pops it once a known foe is within 15 m (special:use) and the carrier ends up inside a Bubble Guard', () => {
+      fresh();
+      const c = A[0], e = A[1], foe = B[0]; c.setWeapon('shooter'); put(c, 0, -2); step(1 / 60); grant(c);
+      e.setWeapon('shooter'); e.setSpecial('bubbler'); wake(e, 'normal'); put(e, 1.5, -3);
+      const hold = () => { c.hp = PLAYER.hp; c.pos.set(0, floorY(0, -2), -2); c.vel.set(0, 0, 0); };
+      const used = (e0) => ev.slice(e0).some((q) => q[0] === 'special:use' && q[1].actor === e);
+      // no threat: held
+      let e0 = ev.length;
+      step(1.2, () => { hold(); if (!e.specialActive) e.special = e.specialCost(); });
+      const P = karpPlan(), role = P.roleOf(e), calm = karpSpecial(e.bot, P, false, 0, false), usedCalm = used(e0);
+      // a known foe 11.7 m from the carrier: popped, and the carrier gets it
+      put(foe, 6, 8); e0 = ev.length; let shield = 0;
+      step(3, () => { hold(); track(foe, 0); foe.invuln = 99; if (c.status.shield > 0) shield++; });
+      return { ok: ['lead', 'flank', 'anchor'].includes(role) && calm === false && !usedCalm && used(e0) && shield > 0, info: { role, calm, usedCalm, usedThreatened: used(e0), carrierShieldFrames: shield } };
+    }, flip(KARP_AI, { spThreat: 0 }));
+  }
+
+  // ============================================================================ Y. difficulty (SPEC §8.8)
+  if (want('Y')) {
+    // (a) interceptors: easy 1 (the rest keep), normal 2 + the leftover, hard the same from two sides
+    check('Y(a) interceptors by difficulty: easy 1 (the rest keep), normal ≥ 2, hard ≥ 2 approaching from both sides', () => {
+      const res = {};
+      for (const diff of ['easy', 'normal', 'hard']) {
+        fresh();
+        for (const a of A) { a.setWeapon('shooter'); a.bot.setDifficulty(diff); }
+        const c = B[0]; put(c, 0, -10); step(1 / 60); grant(c);
+        const P = karpPlan(); P.roles[0] = new Map(); P.dirty = true; P.tick();
+        const ic = A.filter((a) => P.roleOf(a) === 'intercept');
+        res[diff] = { icpt: ic.length, keep: A.filter((a) => P.roleOf(a) === 'keeper').length, sides: [...new Set(ic.map((a) => P.auxOf(a)))].sort() };
+      }
+      return { ok: res.easy.icpt === 1 && res.easy.keep === 3 && res.normal.icpt >= 2 && res.hard.icpt >= 2 && res.hard.sides.includes(-1) && res.hard.sides.includes(1), info: res };
+    }, flip(KARP_AI.diff.easy, { icpt: 2 }));
+    // (b) the grab delay after the burst (on top of the 0.25 s hold): easy 0.6 s, hard 0 s (normal: D)
+    check('Y(b) the grab after the burst\'s hold: easy within 0.6 s and not before 0.3 s, hard within 0.1 s', () => {
+      const res = [];
+      for (const [diff, k] of [['easy', 0], ['easy', 1], ['hard', 0], ['hard', 1]]) {
+        fresh();
+        const gA = A[k]; gA.setWeapon('shooter'); gA.setSub('bomb'); wake(gA, diff); put(gA, 0, -9);
+        restAt(Kp.R.pond.clone(), 500);
+        const add0 = Kp.shell.add; Kp.shell.add = () => {};
+        step(3.5, () => { pinMeter(0.9); gA.hp = PLAYER.hp; });
+        Kp.shell.add = add0;
+        const t0 = G.time; let tp = null;
+        const at = { d: +hd(gA.pos, Kp.shell.center()).toFixed(2), mode: gA.bot.mode, role: gA.bot.kRole, esc: !!gA.bot.sp.esc };
+        Kp.shell.add(0, Kp.shell.hp * 2, gA);
+        step(2, () => { if (Kp.holder === gA && tp === null) tp = G.time - t0; if (tp !== null) return false; });
+        res.push({ diff, role: gA.bot.kRole, after: tp === null ? null : +(tp - K.pickHold).toFixed(3), atBurst: at, phase: Kp.phase, holder: Kp.holder?.name || null, d: +hd(gA.pos, Kp.pos).toFixed(2), mode: gA.bot.mode });
+      }
+      const ok = res.every((r) => r.after !== null && (r.diff === 'easy' ? r.after >= 0.3 && r.after <= 0.6 + 1 / 60 : r.after >= -1e-6 && r.after <= 0.1));
+      return { ok, info: res };
+    }, flip(KARP_AI.diff.easy, { grab: 0 }));
+    // (c) easy never lobs at a foe it can't see; normal does (over the Pond's wall at a located foe 10 m off)
+    check('Y(c) easy carriers never lob at a foe out of sight (always full charge, only with a line); normal ones lob over cover', () => {
+      const res = {};
+      for (const diff of ['easy', 'normal']) {
+        fresh();
+        const c = A[0], foe = B[0]; c.setWeapon('shooter'); wake(c, diff); put(c, -6, 0); step(1 / 60); grant(c);
+        put(foe, 4, 0);
+        let foeShots = 0;
+        step(3, () => { c.hp = PLAYER.hp; c.pos.set(-6, floorY(-6, 0), 0); c.vel.set(0, 0, 0); foe.pos.set(4, floorY(4, 0), 0); foe.vel.set(0, 0, 0); foe.invuln = 99; track(foe, 0); if (c.bot.kc && c.bot.kc.kind === 'foe' && c.intent.fire) foeShots++; });
+        res[diff] = { foeShotFrames: foeShots, seen: !!c.bot.sight.sees?.(foe) };
+      }
+      return { ok: res.easy.foeShotFrames === 0 && res.normal.foeShotFrames > 0, info: res };
+    }, flip(KARP_AI.diff.easy, { lob: true }));
+    // (d) hard leads a moving target; normal aims at where it is
+    check('Y(d) hard carriers lead a foe crossing in the open at 4 m/s (the aim ahead of it), normal ones aim at where it is', () => {
+      const res = {};
+      for (const diff of ['hard', 'normal']) {
+        fresh();
+        const c = A[0], foe = B[0]; c.setWeapon('shooter'); wake(c, diff); put(c, 0, -14); step(1 / 60); grant(c);
+        let fx = -8; put(foe, fx, 0); const offs = [];
+        step(3, () => { c.hp = PLAYER.hp; c.pos.set(0, floorY(0, -14), -14); c.vel.set(0, 0, 0); fx = fx + 4 / 60; if (fx > 8) fx = -8; foe.pos.set(fx, floorY(fx, 0), 0); foe.vel.set(4, 0, 0); foe.invuln = 99;
+          const S = c.bot.kc; if (S && S.kind === 'foe') { const by = Math.atan2(foe.pos.x - c.pos.x, foe.pos.z - c.pos.z); offs.push(((S.yaw - by + 9 * Math.PI) % (2 * Math.PI)) - Math.PI); } });
+        const mean = offs.length ? offs.reduce((s2, v) => s2 + v, 0) / offs.length : null;
+        res[diff] = { n: offs.length, meanLead: mean };
+      }
+      // (+x motion seen from the south: a lead turns the aim toward +x — a positive yaw offset)
+      return { ok: res.hard.n > 20 && res.normal.n > 20 && res.hard.meanLead > 0.08 && Math.abs(res.normal.meanLead) < 0.05, info: res };
+    }, flip(KARP_AI.diff.hard, { lead: false }));
+    // (e) the route re-pick period: easy 3 s, normal 1.5 s, hard 1 s
+    check('Y(e) the carrier\'s route re-pick period: easy 3 s, normal 1.5 s, hard 1 s', () => {
+      const res = {};
+      for (const diff of ['easy', 'normal', 'hard']) {
+        fresh();
+        const c = A[0]; c.setWeapon('shooter'); wake(c, diff); put(c, -4, -22); step(1 / 60); grant(c);
+        const ts = []; let last = null;
+        step(7, () => { c.hp = PLAYER.hp; const RT = karpPlan().route[0]; if (RT && RT.t !== last) { last = RT.t; ts.push(RT.t); } });
+        const iv = ts.slice(1).map((t, i) => t - ts[i]).filter((d) => d > 0.05).sort((x, y) => x - y);
+        res[diff] = { med: iv.length ? +iv[iv.length >> 1].toFixed(2) : null, n: iv.length };
+      }
+      const near = (v, w) => v !== null && Math.abs(v - w) <= 0.12;
+      return { ok: near(res.easy.med, 3) && near(res.normal.med, 1.5) && near(res.hard.med, 1), info: res };
+    }, flip(KARP_AI.diff.normal, { repick: 3 }));
+  }
+
   // ============================================================================ W. no wall-hack in the defending plan
   if (want('W')) {
     // Bravo's two weirs on Alpha's half: w10 (0, 1.2, −28) and w11 (−9, 2.5, −28). Two hiding places, out of sight of both:

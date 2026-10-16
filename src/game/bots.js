@@ -19,7 +19,7 @@ import { SpecialSense, SPECIAL_AI, SPECIAL_STATS } from './botSpecials.js';   //
 import { surfWant } from './sp-surf-bots.js';   // Surf N' Turf: when to pop it (the throw itself: botSpecials act → surfOwnAim)
 import { devShootAim } from './deployables-bots.js';   // [b5-deploy] nothing better to shoot: enemy beacons / sprinklers / buoys
 import { karpPlan, karpSync, karpEngage, karpGoal, karpFightNav, karpCarrierAct, karpAim, karpPathArgs, karpPathFallback, karpShellAvoid, KARP_W,
-  karpMove, karpPaintAim, karpSpecial, karpStrikeAt, karpJump, karpShields, karpSteerOk } from './botsKarp.js';   // [b5-karp] [b5-karp-bots]
+  karpMove, karpPaintAim, karpSpecial, karpStrikeAt, karpJump, karpShields, karpSteerOk, karpRefillSpot } from './botsKarp.js';   // [b5-karp] [b5-karp-bots]
 export { SIGHT, SIGHT_STATS, teamKnown, SPECIAL_AI, SPECIAL_STATS };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
@@ -3042,6 +3042,8 @@ export class BotBrain {
       this.repath = 0.5;
       return;
     }
+    // [b5-karp-bots] a breaker by the Roe Shell refills inside its band (never by the shell, nor off at its spawn)
+    { const kpR = G.match?.karp ? karpPlan() : null, kr = kpR ? karpRefillSpot(this, kpR) : null; if (kr && this._pathTo(kr, 0.6)) { this.repath = 1.2; return; } }
     // search nearby for own ink
     let bestP = null, bd = Infinity;
     for (let i = 0; i < 14; i++) {
