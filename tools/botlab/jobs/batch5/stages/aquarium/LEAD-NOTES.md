@@ -73,3 +73,34 @@ complete eye-level sweep by the builder, then one review that repeats the sweep.
 6. **Triangles** +6–12 % over Halyard with level draw calls and render time: accepted by the lead.
 7. **The boss** off its planned cells by ≤ 1.5 m in the ring's necks: accepted as fight variance; the home ground on
    Bravo's ferry plaza stands.
+
+## The Mac mini's pipes on / off set (2026-10-17, 24 matches at e1169a39; `aquarium/results/JOB-4.txt` on botlab-b5-aquarium)
+
+- **Camping:** pooled over both modes 1.74× the base (cap 2×), but Turf War alone 2.99× [1.7–4.9], concentrated at
+  the Kelp Lines' B ends and the Gulper's B end; Zone Control 0.74×; every Arch end 0/29. **Decision:** the design's
+  one step, exit cooldown 2.5 → 3.5 s, in every mode, applied at integration (not in the art round); the B-end
+  asymmetry (why Bravo's kelp and gulper exits are the camped ones) is a question for the consolidated pass.
+- **Rides** 0.65 / 0.61 per bot-minute and **high-ground arrivals by pipe** 17 / 23 %: within target. Turf and splats
+  on vs off within ±10 % except one knockout match.
+- **A real bot bug, pipes on only, Zone Control:** stuck 2.05 % (bar 1 %), longest 20.25 s (bar 10 s); 16 of 18
+  episodes ≥ 2 s at the Great Tank: bots on the tank's rim / sand bed at (±1.1–1.7, y −0.6…0.5, z ≈ −6.8) whose next
+  nav edge is a 'jump' up to the Feeding Deck node (±1.5, 2.4, −7.5) they cannot make (noProg 0.1–1.3); and a roller
+  idle on the deck 20 s with its goal 0.5 m away (goal tolerance at the deck node). With the pipes off: no episode
+  there in 6 matches. **To fix before the stage merges** (a small bots round after the art round; the Mac mini re-runs
+  6 Zone Control matches to prove it): the impossible jump edge (a pipe-module nav edge or a stale one at the tank),
+  and the deck goal tolerance.
+
+## After review 6 (2026-10-17): the stage waits for the weekly usage reset; review 6's list is THE list
+
+Review 6 swept every tag of Alpha's half (121 tags, 164 views) and found what round 5's sweep passed over: the
+Feeding Step's two sides and top (mid's main hop-up), the Kelp Ramps' parapets, the whale-tail benches, the Penguin
+Steps' head teeth (one line: the nosing to r 31.4 + re-bake), the trolley stack, the lectern, four weak large faces
+(the pylon's radial face, the plant room's face, the deep Kelp stop's panels, the ice-cream cart's back), the topiary
+seam, the pavilion ink proof. Everything else is dressed and accepted. **The next round (after Friday 2026-10-23 06:00,
+when the weekly usage resets) does exactly that list, one fix + one review, and nothing else.** Two items go elsewhere:
+- `tests/pipes.js` 'cam' fails on the shared slot profile's saved fov 50 / quality low: a harness fix for the
+  integrator (reset `g.settings` to DEFAULT_SETTINGS for the ride check), not the stage's.
+- Performance: the shoot.cjs REPORT numbers are not like-for-like (each stage's own load camera, a loaded Mac). The
+  lead has sent the fixed-view probe (`tools/perf6.js`, default settings, day and dusk, both stages) to the Mac mini.
+  If triangles stay over +12 % or cpuRender is not level there, the next round also turns the plates' lettering into
+  murals / a texture (about 29 k triangles), starting with the eight biggest plates.
