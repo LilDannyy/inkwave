@@ -36,7 +36,7 @@ function boardTexture(ink) {
 }
 function glyphTexture() {
   const c = document.createElement('canvas'); c.width = 256; c.height = 256;
-  drawNoCarp(c.getContext('2d'), 256, 256, '#ffffff', { bg: null, frame: false, text: false });
+  drawNoCarp(c.getContext('2d'), 256, 256, '#4a3d6b', { bg: null, frame: false, text: false });   // (a dark carp: it reads on pale floor and sky)
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
@@ -46,7 +46,7 @@ void main() {
   float band = 0.5 + 0.5 * sin((vUv.x * uLen * 2.2 + vUv.y * 5.0 - uT * 2.4));
   float fade = smoothstep(1.0, 0.0, vH) * 0.85 + 0.15;
   float edge = smoothstep(0.0, 0.06, vUv.x) * smoothstep(1.0, 0.94, vUv.x);
-  float a = (0.07 + 0.16 * pow(band, 6.0)) * fade * edge;
+  float a = (0.10 + 0.22 * pow(band, 6.0)) * fade * edge;
   gl_FragColor = vec4(uCol, a);
 }`;
 
@@ -102,7 +102,7 @@ export class KarpKitFx {
         wall.onBeforeRender = () => { mat.uniforms.uT.value = G.time || 0; };
         root.add(wall);
         if (len >= 1.6) {
-          const gm = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), new THREE.MeshBasicMaterial({ map: glyph, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
+          const gm = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), new THREE.MeshBasicMaterial({ map: glyph, transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
           gm.position.set(wall.position.x, fy + 1.3, wall.position.z); gm.rotation.y = wall.rotation.y; gm.renderOrder = 4;
           root.add(gm);
         }
