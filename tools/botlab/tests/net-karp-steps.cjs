@@ -161,6 +161,7 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
     await zeroB();
 
     await grabShare(10);
+    const bot = await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);   // (the Bravo host bot: step 11)
 
     // ---- 6. B carries: × 0.8 on B's screen, no super jump, B's own Bubble Guard gone on both screens, counts agree
     await toPond();
