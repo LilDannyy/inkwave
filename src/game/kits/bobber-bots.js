@@ -749,7 +749,10 @@ function holdFire(b, a) {
   let L = Math.max(weaponRange(w), w.waveRange || 0) * 1.05;
   // (the foe it's fighting plus a miss's carry — but a shot that lodges or bursts at the end of its flight, an arrow or a
   // blaster's blob, goes off wherever a miss ends: its whole reach)
-  if (b.mode === 'fight' && b.target && !ws.bursts) L = Math.min(L, Math.hypot(b.target.pos.x - a.pos.x, b.target.pos.z - a.pos.z) + 2.5 + sr);
+  // [b5-caldera] (in Boss Battle the target is a part of the boss, { shape }, with no pos of its own: it threw here every
+  // frame a squad bot carrying a Chain Bobber shot the boss — boss-check on Highmark: TypeError, the match step aborted)
+  const tgp = b.target && (b.target.pos || b.target.shape?.pos);
+  if (b.mode === 'fight' && tgp && !ws.bursts) L = Math.min(L, Math.hypot(tgp.x - a.pos.x, tgp.z - a.pos.z) + 2.5 + sr);
   if (_d.y < -0.05) L = Math.min(L, (1.15 + 0.15) / -_d.y + sr);
   // (as wide as the gun's spread now, its pellets' or arrows' fan, the side-by-side arrows' gap)
   const spr = Math.tan((((a.weaponRunner?.spread || 0) + ws.cone) * Math.PI) / 180), W = pad + sr + ws.gap + spr * L;
@@ -1032,7 +1035,7 @@ export function botAct(b, dt, it, move, busy) {
     }
   }
   // (a fight's pair: its second straight after the first — bots.js asks a fighting bot's sub only with 8 ink to spare)
-  if (!S && P?.fight && fighting && b.bombCd <= 0 && a.ink >= a.sub.inkCost + 2 && !b._bombAim && !b._releaseBomb && !a.weaponRunner?.aimingSub
+  if (!S && P?.fight && fighting && b.target.pos && b.bombCd <= 0 && a.ink >= a.sub.inkCost + 2 && !b._bombAim && !b._releaseBomb && !a.weaponRunner?.aimingSub   // [b5-caldera] (.pos: a boss part has none)
     && botKit.fight(b, Math.hypot(b.target.pos.x - a.pos.x, b.target.pos.z - a.pos.z))) { b._bombAim = true; return null; }
   // setting one up outside the paint branch too (an escort by the tower, a guard on its zone, a bot on its way, the next
   // link of a burst): the same rules as bot.paint, never mid-fight, refilling, on the tower or with a throw under way
