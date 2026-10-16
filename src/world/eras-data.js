@@ -281,8 +281,162 @@ export function stripCheck(pieces, era, bounds, lim = 25) {
   return rows.filter((r) => (seen.has(r.key) ? false : (seen.add(r.key), true)));
 }
 
+// ------------------------------------------------------------------------------------------------ objectives, water, reach
+// ENGINE §5 rules 14–17 (nothing changes near a spawn, a zone, the tower's swept volume or a Bazookarp objective), 36 (no
+// era-only waterline deck slab), 37 (the arena's reach from Tartar) and the river rails' ends (T2: a rail that borders
+// water ends on land or on another rail), on one mode build's pieces. Each returns problem strings.
+const segDist = (px, pz, ax, az, bx, bz) => { const dx = bx - ax, dz = bz - az, t = Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / (dx * dx + dz * dz || 1))); return Math.hypot(px - ax - t * dx, pz - az - t * dz); };
+function pointPolyDist(P, x, z) { if (inPoly(P, x, z)) return 0; let m = Infinity; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; m = Math.min(m, segDist(x, z, a[0], a[1], b[0], b[1])); } return m; }
+function segsCross(a, b, c, d) {
+  const o = (p, q, r) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]));
+  return o(a, b, c) !== o(a, b, d) && o(c, d, a) !== o(c, d, b);
+}
+// the xz distance between two convex polygons (0 when they touch or overlap)
+export function polyPolyDist(A, B) {
+  for (const [x, z] of A) if (inPoly(B, x, z)) return 0;
+  for (const [x, z] of B) if (inPoly(A, x, z)) return 0;
+  let m = Infinity;
+  for (let i = 0; i < A.length; i++) for (let j = 0; j < B.length; j++) {
+    const a = A[i], b = A[(i + 1) % A.length], c = B[j], d = B[(j + 1) % B.length];
+    if (segsCross(a, b, c, d)) return 0;
+    m = Math.min(m, segDist(a[0], a[1], c[0], c[1], d[0], d[1]), segDist(b[0], b[1], c[0], c[1], d[0], d[1]), segDist(c[0], c[1], a[0], a[1], b[0], b[1]), segDist(d[0], d[1], a[0], a[1], b[0], b[1]));
+  }
+  return m;
+}
+const mirP = ([x, z]) => [-x, -z];
+const xz = (p) => (p.length === 3 ? [p[0], p[2]] : [p[0], p[1]]);
+const TOWER_HALF = 1.25, TOWER_HEAD = 3.72;          // config TOWER.platformR; ENGINE rule 16's headroom over the track
+const WATER_TOP = -1.0;                             // a top below this is no floor (rule 36's slab line; the river is open)
+// the floor a kid stands on at (x, z) among `pcs` (solid, not a rail, not a roof / hidden top): its top, or −Infinity
+function floorAt(pcs, x, z, maxY = Infinity) {
+  let best = -Infinity;
+  for (const q of pcs) { if (!q.solid || q.rail || q.roof || q.hidden) continue; if (!inPoly(q.poly, x, z)) continue; const [t] = topAt(q, x, z); if (t > WATER_TOP && t <= maxY && t > best) best = t; }
+  return best;
+}
+// any solid non-rail piece covers (x, z) with its top above the water line (land, a deck, a building, a boat)
+const landAt = (pcs, x, z) => pcs.some((q) => q.solid && !q.rail && q.y1 > WATER_TOP && inPoly(q.poly, x, z));
+
+export function objectiveCheck(layout, pieces, mode) {
+  const out = [], era = pieces.filter((p) => p.mask !== 7), info = {};
+  const near = (k, v, msg) => { if (!(k in info) || v < info[k].d) info[k] = { d: +v.toFixed(2), msg }; };
+  // rule 14: 12 m (xz) of a spawn pad, and never on the spawn deck the pad stands on
+  const pads = (layout.spawnPads || []).map((p) => [p[0], p[2]]);
+  const decks = pieces.filter((q) => q.mask === 7 && /spawn-deck/.test(q.tag));
+  for (const p of era) {
+    for (const [px, pz] of pads) { const d = pointPolyDist(p.poly, px, pz); near('spawn', d, p.tag); if (d < 12) out.push(`[${mode}] ${p.tag} [${p.key}] changes ${d.toFixed(2)} m from the spawn pad at (${px}, ${pz}) (rule 14: ≥ 12)`); }
+    for (const q of decks) if (polyPolyDist(p.poly, q.poly) === 0 && p.y1 > q.y1 - 0.05) out.push(`[${mode}] ${p.tag} [${p.key}] changes on the spawn deck (rule 14)`);
+  }
+  // rule 15: 2 m (xz, at any height) of every zone outline — the Zone Control build
+  if (mode === 'zones' && layout.zones) {
+    const Z = layout.zones, polys = [...(Z.center || []).map((z) => z.poly)];
+    if (Z.side) for (const s of [].concat(Z.side)) polys.push(s.poly, s.poly.map(mirP));
+    for (const p of era) for (const P of polys) { const d = polyPolyDist(p.poly, P); near('zone', d, p.tag); if (d < 2) out.push(`[${mode}] ${p.tag} [${p.key}] changes ${d.toFixed(2)} m from a zone outline (rule 15: ≥ 2)`); }
+  }
+  // rule 16: 1 m of the tower's swept platform (half-width 1.25) plus its 3.72 m headroom — the Tower Command build
+  if (mode === 'tower' && layout.tower?.path) {
+    const path = layout.tower.path.map((q) => ({ p: xz(q), y: q.length === 3 ? q[1] : null }));
+    const halves = [path, path.map((q) => ({ p: mirP(q.p), y: q.y }))], floors = pieces.filter((q) => q.mask === 7);
+    for (const p of era) {
+      let worst = null;
+      for (const H of halves) for (let i = 0; i + 1 < H.length; i++) {
+        const a = H[i].p, b = H[i + 1].p, L = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.ceil(L / 0.5));
+        for (let k = 0; k <= n; k++) {
+          const x = a[0] + ((b[0] - a[0]) * k) / n, z = a[1] + ((b[1] - a[1]) * k) / n, d = pointPolyDist(p.poly, x, z);
+          if (d >= TOWER_HALF + 1.0) continue;
+          const fy = k === 0 && H[i].y !== null ? H[i].y : floorAt(floors, x, z, 2.0), gy = Number.isFinite(fy) ? fy : 0;
+          // (the clearance to the swept volume: xz beyond its half-width, or the gap over its headroom / under its floor)
+          const gap = Math.max(d - TOWER_HALF, p.y0 - (gy + TOWER_HEAD), gy - p.y1);
+          near('tower', Math.max(0, gap), `${p.tag}${gap === p.y0 - (gy + TOWER_HEAD) ? ' over the headroom' : ''}`);
+          if (p.y1 > gy - 1.0 && p.y0 < gy + TOWER_HEAD + 1.0) { if (!worst || d < worst.d) worst = { d, x, z, gy }; }
+        }
+      }
+      if (worst) out.push(`[${mode}] ${p.tag} [${p.key}] (y ${p.y0.toFixed(2)}–${p.y1.toFixed(2)}) changes ${worst.d.toFixed(2)} m from the tower's track at (${worst.x.toFixed(1)}, ${worst.z.toFixed(1)}), inside its swept platform + headroom (floor ${worst.gy.toFixed(2)}; rule 16: 1 m clear of ±${TOWER_HALF} m, floor − 1 … floor + ${TOWER_HEAD} + 1)`);
+    }
+  }
+  // rule 17: 3 m of the Pond, every weir and the Gate — the Bazookarp build. Measured as the Bazookarp SPEC measures its
+  // own clearances: the Pond from its start (plus a raised plinth's radius), a weir from its centre (SPEC §4.3: "3 m of
+  // clear room round each one", its own posts at 2.7 m excepted), the Gate from its plinth's edge (3.4 m across, §4.2)
+  if (mode === 'bazookarp' && layout.bazookarp) {
+    const K = layout.bazookarp, obj = [['the Pond', xz(K.start || [0, 0]), K.pondPlinth?.r || 0]];
+    for (const w of K.weirs || []) { obj.push(['a weir', xz(w.at), 0]); obj.push(['a weir', mirP(xz(w.at)), 0]); }
+    if (K.gate) { obj.push(['the Gate', xz(K.gate.at), 1.7]); obj.push(['the Gate', mirP(xz(K.gate.at)), 1.7]); }
+    for (const p of era) for (const [name, [ox, oz], r] of obj) {
+      const d = Math.max(0, pointPolyDist(p.poly, ox, oz) - r);
+      near('karp', d, `${p.tag} / ${name}`);
+      if (d < 3) out.push(`[${mode}] ${p.tag} [${p.key}] changes ${d.toFixed(2)} m from ${name} at (${ox}, ${oz}) (rule 17: ≥ 3)`);
+    }
+  }
+  // rule 36: no era-only waterline deck slab (top ≤ 0.01 and bottom < −1.0: environment.js _footprint would foam it in
+  // every era)
+  for (const p of era) if (p.solid && p.y1 <= 0.01 && p.y0 < -1.0) out.push(`[${mode}] ${p.tag} [${p.key}] is an era-only deck slab: top ${p.y1}, bottom ${p.y0} (rule 36: bottom ≥ −1.0)`);
+  // rule 37: the arena reaches ≤ 85 m from Tartar (0, 0): a sweep takes ≤ 3.4 s
+  let rmax = 0, far = null;
+  for (const p of pieces) for (const [x, z] of p.poly) { const r = Math.hypot(x, z); if (r > rmax) { rmax = r; far = p.tag; } }
+  info.reach = { d: +rmax.toFixed(2), msg: far };
+  if (rmax > 85) out.push(`[${mode}] ${far} reaches ${rmax.toFixed(2)} m from (0, 0) (rule 37: ≤ 85)`);
+  return { problems: out, info };
+}
+// The river rails (T2), per era of one mode build: a rail that borders water (open water along one long side) must not
+// leave the water's edge open past either end — beyond the end the land side is floor and the water side open water,
+// with no other rail (or solid piece) taking over within 0.1 m. A rail that ends on land (the edge turns away, a deck
+// or a bridge continues) or meets another rail passes.
+export function railCheck(pieces, era, mode) {
+  const out = [], pcs = pieces.filter((p) => hasEra(p.mask, era) && p.solid), list = [];
+  let rails = 0;
+  for (const r of pcs) {
+    if (!r.rail || r.k !== 'b' || r.poly.length !== 4) continue;
+    const P = r.poly, e0 = Math.hypot(P[1][0] - P[0][0], P[1][1] - P[0][1]), e1 = Math.hypot(P[2][0] - P[1][0], P[2][1] - P[1][1]);
+    // the long axis: the ends are the short sides' midpoints
+    const [a0, a1, b0, b1] = e0 >= e1 ? [P[1], P[2], P[3], P[0]] : [P[0], P[1], P[2], P[3]];
+    const E1 = [(a0[0] + a1[0]) / 2, (a0[1] + a1[1]) / 2], E2 = [(b0[0] + b1[0]) / 2, (b0[1] + b1[1]) / 2];
+    const len = Math.hypot(E2[0] - E1[0], E2[1] - E1[1]);
+    if (len < 0.6) continue;
+    const u = [(E2[0] - E1[0]) / len, (E2[1] - E1[1]) / len], n = [-u[1], u[0]], hw = Math.min(e0, e1) / 2;
+    // which side is water (most of five probes 0.35 m out from the long side)
+    let wSide = 0;
+    for (const s of [1, -1]) {
+      let w = 0;
+      for (let i = 1; i <= 5; i++) { const t = (i / 6) * len, x = E1[0] + u[0] * t + n[0] * s * (hw + 0.35), z = E1[1] + u[1] * t + n[1] * s * (hw + 0.35); if (!landAt(pcs, x, z)) w++; }
+      if (w >= 3) { wSide = s; break; }
+    }
+    if (!wSide) continue;
+    rails++; list.push(r.name);
+    for (const [E, d] of [[E1, [-u[0], -u[1]]], [E2, u]]) {
+      const at = (along, side) => [E[0] + d[0] * along + n[0] * side, E[1] + d[1] * along + n[1] * side];
+      const [lx, lz] = at(0.3, -wSide * (hw + 0.25)), [wx, wz] = at(0.3, wSide * (hw + 0.35));
+      if (!(floorAt(pcs, lx, lz) > -Infinity) || landAt(pcs, wx, wz)) continue;   // ends on land (or nothing to walk on past it)
+      const [cx, cz] = at(0.08, 0);
+      const joined = pcs.some((q) => q !== r && (q.rail || q.y1 - Math.max(0, floorAt(pcs, lx, lz)) >= 0.9) && pointPolyDist(q.poly, cx, cz) <= 0.1);
+      if (!joined) out.push(`[${mode}] #${era} the rail ${r.tag}${r.key ? ' [' + r.key + ']' : ''} (${r.name}) ends at (${E[0].toFixed(2)}, ${E[1].toFixed(2)}) with the water's edge open past it (T2: a river rail ends on land or on another rail)`);
+    }
+  }
+  return { problems: out, rails, list };
+}
+
+// The turf rules (ENGINE §5 rules 11–13) on the per-era turf areas (m²) and the turf area live in a jump's era before and
+// gone in its era after: era 2 within ±10 % of era 1; era 3 ≥ era 2 and ≤ 1.25 × era 2; what vanishes in one jump
+// ≤ 8 % of that era's turf. `area` = [a1, a2, a3]; `gone` = { '1>2': m², '2>3': m² }. Problems as strings.
+export function turfRules(area, gone) {
+  const out = [], [a1, a2, a3] = area, pc = (x) => (x * 100).toFixed(1) + ' %';
+  if (!(Math.abs(a2 - a1) <= 0.1 * a1)) out.push(`era 2's turf ${a2.toFixed(0)} m² is ${pc(a2 / a1 - 1)} off era 1's ${a1.toFixed(0)} (rule 11: within ±10 %)`);
+  if (!(a3 >= a2)) out.push(`era 3's turf ${a3.toFixed(0)} m² is below era 2's ${a2.toFixed(0)} (rule 12: era 3 never takes turf away)`);
+  if (!(a3 <= 1.25 * a2)) out.push(`era 3's turf ${a3.toFixed(0)} m² is ${pc(a3 / a2 - 1)} over era 2's (rule 12: ≤ +25 %)`);
+  for (const [k, v] of Object.entries(gone || {})) {
+    const e = +k[0], base = area[e - 1];
+    if (!(v <= 0.08 * base)) out.push(`jump ${k}: ${v.toFixed(0)} m² of era ${e}'s turf vanishes, ${pc(v / base)} (rule 13: ≤ 8 %)`);
+  }
+  return out;
+}
+
 // ------------------------------------------------------------------------------------------------ the registry hooks
 const filterMode = (src, mode) => ({ single: src.single.filter((d) => inMode(d, mode)), half: src.half.filter((d) => inMode(d, mode)) });
+// every mode build of a stage with eras that the static rules look at: [[mode, pieces]] (the turf build as given, then
+// the tower / bazookarp / boss / zones builds from the layout's full source lists)
+export function eraBuilds(layout, mode = 'turf') {
+  const out = [[mode, eraPieces(layout)]], E = layout.eras;
+  if (mode === 'turf' && E?.source) for (const m of ['tower', 'bazookarp', 'boss', 'zones']) out.push([m, eraPieces({ ...layout, ...filterMode(E.source, m) })]);
+  return out;
+}
 registerStageData('eras', {
   // the thumbnail: era 1 as usual; a piece that only exists later is left to `thumb` (dashed, the layout's colours)
   thumbBlock(d) { return d.eras && !hasEra(eraMask(d.eras), 1) ? 'skip' : null; },
@@ -306,12 +460,17 @@ registerStageData('eras', {
     out.push(...gc.problems);
     out.push(...appearCheck(pieces), ...vanishCheck(pieces));
     // the other mode variants of the same stage (rules 19–22 and 27 hold in every mode's build)
-    if (api.mode === 'turf' && E?.source) {
-      for (const m of ['tower', 'bazookarp', 'boss', 'zones']) {
-        const v = eraPieces({ ...layout, ...filterMode(E.source, m) });
-        for (const s of [...appearCheck(v), ...vanishCheck(v)]) out.push(`[${m}] ${s}`);
-      }
+    const builds = eraBuilds(layout, api.mode || 'turf');
+    for (const [m, v] of builds.slice(1)) for (const s of [...appearCheck(v), ...vanishCheck(v)]) out.push(`[${m}] ${s}`);
+    // objectives (rules 14–17), waterline slabs (36), the reach (37) and the river rails' ends, in each mode's build
+    const nearest = {}; let railsSeen = 0;
+    for (const [m, v] of builds) {
+      const oc = objectiveCheck(layout, v, m);
+      out.push(...oc.problems);
+      for (const [k, x] of Object.entries(oc.info)) if (!(k in nearest) || x.d < nearest[k].d || (k === 'reach' && x.d > nearest[k].d)) nearest[k] = { ...x, mode: m };
+      for (const e of [1, 2, 3]) { const rc = railCheck(v, e, m); out.push(...rc.problems); railsSeen = Math.max(railsSeen, rc.rails); }
     }
+    console.log(`   eras objectives (nearest era piece): ${Object.entries(nearest).map(([k, x]) => `${k} ${x.d} m (${x.msg}${k === 'reach' ? '' : ', ' + x.mode})`).join('; ')}; ${railsSeen} river rails checked per era`);
     const strips = [];
     for (const e of [1, 2, 3]) {
       const S = stripCheck(pieces, e, layout.bounds);
