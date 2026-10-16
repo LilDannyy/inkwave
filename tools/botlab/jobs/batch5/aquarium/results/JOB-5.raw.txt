@@ -1,0 +1,87 @@
+JOB-5 raw results — automatic, by the Mac mini's b5-runner, 2026-10-17 03:46:33
+branch botlab-b5-aquarium, ran at f56f8b02, exit code 0, wall time 7min
+(a written-up JOB-5.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+# probe B patched lines: 1
+# A-aquarium-day-1 load { 2.46 2.13 1.96 }
+== A-aquarium-day-1: "quality":"high" "pr":1 "avg":{"calls":265,"tris":2735126,"ms":7.61}  
+# A-halyard-day-1 load { 2.40 2.14 1.96 }
+== A-halyard-day-1: "quality":"high" "pr":1 "avg":{"calls":256,"tris":3354313,"ms":7.57}  
+# A-aquarium-dusk-1 load { 2.52 2.18 1.98 }
+== A-aquarium-dusk-1: "quality":"high" "pr":1 "avg":{"calls":268,"tris":2736702,"ms":7.52}  
+# A-halyard-dusk-1 load { 2.78 2.25 2.01 }
+== A-halyard-dusk-1: "quality":"high" "pr":1 "avg":{"calls":266,"tris":3313766,"ms":8.63}  
+# A-aquarium-day-2 load { 2.83 2.30 2.03 }
+== A-aquarium-day-2: "quality":"high" "pr":1 "avg":{"calls":257,"tris":2711968,"ms":7.48}  
+# A-halyard-day-2 load { 3.07 2.39 2.07 }
+== A-halyard-day-2: "quality":"high" "pr":1 "avg":{"calls":262,"tris":3336550,"ms":7.69}  
+# A-aquarium-dusk-2 load { 2.99 2.40 2.08 }
+== A-aquarium-dusk-2: "quality":"high" "pr":1 "avg":{"calls":248,"tris":2709453,"ms":7.79}  
+# A-halyard-dusk-2 load { 3.15 2.47 2.11 }
+== A-halyard-dusk-2: "quality":"high" "pr":1 "avg":{"calls":245,"tris":3278963,"ms":7.59}  
+# A-aquarium-day-3 load { 3.02 2.49 2.12 }
+== A-aquarium-day-3: "quality":"high" "pr":1 "avg":{"calls":244,"tris":2706102,"ms":7.51}  
+# A-halyard-day-3 load { 2.94 2.50 2.13 }
+== A-halyard-day-3: "quality":"high" "pr":1 "avg":{"calls":255,"tris":3346100,"ms":8.21}  
+# A-aquarium-dusk-3 load { 2.82 2.50 2.14 }
+== A-aquarium-dusk-3: "quality":"high" "pr":1 "avg":{"calls":248,"tris":2670782,"ms":7.89}  
+# A-halyard-dusk-3 load { 3.23 2.61 2.19 }
+== A-halyard-dusk-3: "quality":"high" "pr":1 "avg":{"calls":279,"tris":3337691,"ms":7.98}  
+# B-aquarium-day-1 load { 3.23 2.65 2.21 }
+== B-aquarium-day-1: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":251,"tris":2679314,"ms":7.46}  
+# B-halyard-day-1 load { 3.20 2.67 2.23 }
+== B-halyard-day-1: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":271,"tris":3292855,"ms":8.19}  
+# B-aquarium-dusk-1 load { 3.37 2.74 2.26 }
+== B-aquarium-dusk-1: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":259,"tris":2727270,"ms":7.81}  
+# B-halyard-dusk-1 load { 3.66 2.83 2.30 }
+== B-halyard-dusk-1: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":250,"tris":3289428,"ms":8.06}  
+# B-aquarium-day-2 load { 3.48 2.84 2.32 }
+== B-aquarium-day-2: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":244,"tris":2650630,"ms":7.27}  
+# B-halyard-day-2 load { 3.38 2.85 2.33 }
+== B-halyard-day-2: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":240,"tris":3314999,"ms":7.87}  
+# B-aquarium-dusk-2 load { 3.34 2.87 2.35 }
+== B-aquarium-dusk-2: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":278,"tris":2725796,"ms":7.72}  
+# B-halyard-dusk-2 load { 2.86 2.80 2.33 }
+== B-halyard-dusk-2: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":268,"tris":3311078,"ms":7.75}  
+# B-aquarium-day-3 load { 3.07 2.86 2.36 }
+== B-aquarium-day-3: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":271,"tris":2722407,"ms":7.52}  
+# B-halyard-day-3 load { 2.79 2.80 2.35 }
+== B-halyard-day-3: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":275,"tris":3360921,"ms":8}  
+# B-aquarium-dusk-3 load { 3.05 2.85 2.38 }
+== B-aquarium-dusk-3: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":244,"tris":2668585,"ms":7.67}  
+# B-halyard-dusk-3 load { 3.13 2.87 2.40 }
+== B-halyard-dusk-3: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":252,"tris":3288186,"ms":8.6}  
+
+## last 15 lines of job.log
+== B-halyard-dusk-3: "quality":"high" "fov0":82 "pr":1 "avg":{"calls":252,"tris":3288186,"ms":8.6}  
+probe A (as written: fov 75 for its views): medians of 3 runs (the runs in brackets); aquarium ÷ halyard
+  day  aquarium: calls 257 [265, 257, 244] | tris 2711968 [2735126, 2711968, 2706102] | ms 7.51 [7.61, 7.48, 7.51]
+  day  halyard:  calls 256 [256, 262, 255] | tris 3346100 [3354313, 3336550, 3346100] | ms 7.69 [7.57, 7.69, 8.21]
+  day  ratio:    calls ×1.00 | tris ×0.81 | cpuRender ×0.98   (settings seen: quality high, shadows true, pr 1)
+  dusk aquarium: calls 248 [268, 248, 248] | tris 2709453 [2736702, 2709453, 2670782] | ms 7.79 [7.52, 7.79, 7.89]
+  dusk halyard:  calls 266 [266, 245, 279] | tris 3313766 [3313766, 3278963, 3337691] | ms 7.98 [8.63, 7.59, 7.98]
+  dusk ratio:    calls ×0.93 | tris ×0.82 | cpuRender ×0.98   (settings seen: quality high, shadows true, pr 1)
+probe B (the profile fov, default 82): medians of 3 runs (the runs in brackets); aquarium ÷ halyard
+  day  aquarium: calls 251 [251, 244, 271] | tris 2679314 [2679314, 2650630, 2722407] | ms 7.46 [7.46, 7.27, 7.52]
+  day  halyard:  calls 271 [271, 240, 275] | tris 3314999 [3292855, 3314999, 3360921] | ms 8.00 [8.19, 7.87, 8.00]
+  day  ratio:    calls ×0.93 | tris ×0.81 | cpuRender ×0.93   (settings seen: quality high, shadows true, pr 1, fov 82)
+  dusk aquarium: calls 259 [259, 278, 244] | tris 2725796 [2727270, 2725796, 2668585] | ms 7.72 [7.81, 7.72, 7.67]
+  dusk halyard:  calls 252 [250, 268, 252] | tris 3289428 [3289428, 3311078, 3288186] | ms 8.06 [8.06, 7.75, 8.60]
+  dusk ratio:    calls ×1.03 | tris ×0.83 | cpuRender ×0.96   (settings seen: quality high, shadows true, pr 1, fov 82)
+
+## perf.txt
+probe A (as written: fov 75 for its views): medians of 3 runs (the runs in brackets); aquarium ÷ halyard
+  day  aquarium: calls 257 [265, 257, 244] | tris 2711968 [2735126, 2711968, 2706102] | ms 7.51 [7.61, 7.48, 7.51]
+  day  halyard:  calls 256 [256, 262, 255] | tris 3346100 [3354313, 3336550, 3346100] | ms 7.69 [7.57, 7.69, 8.21]
+  day  ratio:    calls ×1.00 | tris ×0.81 | cpuRender ×0.98   (settings seen: quality high, shadows true, pr 1)
+  dusk aquarium: calls 248 [268, 248, 248] | tris 2709453 [2736702, 2709453, 2670782] | ms 7.79 [7.52, 7.79, 7.89]
+  dusk halyard:  calls 266 [266, 245, 279] | tris 3313766 [3313766, 3278963, 3337691] | ms 7.98 [8.63, 7.59, 7.98]
+  dusk ratio:    calls ×0.93 | tris ×0.82 | cpuRender ×0.98   (settings seen: quality high, shadows true, pr 1)
+probe B (the profile fov, default 82): medians of 3 runs (the runs in brackets); aquarium ÷ halyard
+  day  aquarium: calls 251 [251, 244, 271] | tris 2679314 [2679314, 2650630, 2722407] | ms 7.46 [7.46, 7.27, 7.52]
+  day  halyard:  calls 271 [271, 240, 275] | tris 3314999 [3292855, 3314999, 3360921] | ms 8.00 [8.19, 7.87, 8.00]
+  day  ratio:    calls ×0.93 | tris ×0.81 | cpuRender ×0.93   (settings seen: quality high, shadows true, pr 1, fov 82)
+  dusk aquarium: calls 259 [259, 278, 244] | tris 2725796 [2727270, 2725796, 2668585] | ms 7.72 [7.81, 7.72, 7.67]
+  dusk halyard:  calls 252 [250, 268, 252] | tris 3289428 [3289428, 3311078, 3288186] | ms 8.06 [8.06, 7.75, 8.60]
+  dusk ratio:    calls ×1.03 | tris ×0.83 | cpuRender ×0.96   (settings seen: quality high, shadows true, pr 1, fov 82)
