@@ -1192,14 +1192,17 @@ export class BotBrain {
       let bad;
       if (rolls) bad = !this._rollSafe(a, it.move, w.rollDist) || !this._hopSafe(a, it.move) || this._nearWetHi(a, 3.0);
       else bad = !this._hopSafe(a, it.move) || (!pathHop && this._nearWetHi(a, 3.0));
-      if (!bad && pathHop && !this._lavaEsc && this.path && this.pi < this.path.length && this._nearWetHi(a, 1.5) && !this._hopLands(a, G.nav.nodes[this.path[this.pi]])) bad = true;
+      if (!bad && pathHop && !this._lavaEsc && this.path && this.pi < this.path.length && this._wetWithin(a, 1.5) && !this._hopLands(a, G.nav.nodes[this.path[this.pi]])) bad = true;
       if (bad) it.jump = false;
     }
     // [b5-caldera] in the air: never let the flight come down on the sea or the lava — when the arc as it flies now would
     // land there, steer back the way it came (air control pulls it back over the floor it left)
     // (not in a route's own hop — up the Organ columns the arc meets the next column's face and the model drops it into the
     // seam: it pulled the lookout claimants back off every hop)
-    if (it.jump && pathHop) this._hopPath = true; else if (a.grounded) this._hopPath = false;
+    if (it.jump && pathHop) { this._hopPath = true; this._hopTo = this.path && this.pi < this.path.length ? G.nav.nodes[this.path[this.pi]] : null; } else if (a.grounded) { this._hopPath = false; this._hopTo = null; }
+    // [b5-caldera] fix round 3: a route's own hop is flown at the node it was made for (as a player commits to a jump): a
+    // goal picked again mid-air turned a hop off the Casting Floor round toward the next goal and dropped it into the lake
+    if (this._hopPath && this._hopTo && !a.grounded && !gOff && !this._climbAim) { const n = this._hopTo, dx = n.x - a.pos.x, dz = n.z - a.pos.z, d = Math.hypot(dx, dz); if (d > 0.3) it.move.set(dx / d, 0, dz / d); }
     if (!a.grounded && !gNear && !a.climbing && !gOff && !this._climbAim && !this._hopPath && !a.superJumpState && (this._arcWet(a, a.vel.x, a.vel.z) || this._flightWet(a, it.move))) {   // [b5-caldera] fix round 3: _flightWet (air control keeps pulling it the brain's way: a twins hop drifted 1.3 m off the edge at 3 m/s while the ballistic arc still read the floor it left)
       const bx = (this._lastFoot?.x ?? a.pos.x) - a.pos.x, bz = (this._lastFoot?.z ?? a.pos.z) - a.pos.z, bl = Math.hypot(bx, bz);
       if (bl > 0.05) it.move.set(bx / bl, 0, bz / bl); else if (Math.hypot(a.vel.x, a.vel.z) > 0.05) it.move.set(-a.vel.x, 0, -a.vel.z).normalize();
@@ -1545,6 +1548,12 @@ export class BotBrain {
       if (gh > -Infinity && y <= gh + 0.05) return !!(SM && SM.wet(x, z, gh, 0.5));
     }
     return true;
+  }
+  // [b5-caldera] fix round 3: the sea or the lava anywhere within r of the actor (rings 0.5 m apart, 12 directions): a 0.4 m
+  // lava seam between the Casting Floor and a coping slips between the 1.5 m ring's samples
+  _wetWithin(a, r) {
+    for (let d = 0.5; d <= r + 1e-6; d += 0.5) for (let k = 0; k < 12; k++) { const t = (k * Math.PI) / 6; if (this._wetHi(a.pos.x + Math.cos(t) * d, a.pos.z + Math.sin(t) * d, a.pos.y)) return true; }
+    return false;
   }
   // [b5-caldera] the sea or the lava anywhere on rings 1.5 m and r round the actor (16 samples)
   _nearWetHi(a, r) {

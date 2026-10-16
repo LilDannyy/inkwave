@@ -153,8 +153,10 @@
         else bad.push({ at: [r2(x), r2(z)], open: true });
       }
     }
-    R('rule 45: the region\'s outline lies ≥ 0.5 m inside every bank it meets (never along a face), in bank ≥ HIGH + 0.3; open only at the lips, into a falls polygon (every 2nd outline texel)', n > 500 && !bad.length && lips.length > 0,
-      { outline: n, lips: lips.length, minInsetM: r2(minIn), bad: bad.slice(0, 12), nBad: bad.length });
+    // (fix round 3: one fitted half turned 180° — the whole mask is its own 180° twin)
+    let asym = 0; for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) if (Mk[j * nx + i] !== Mk[(nz - 1 - j) * nx + (nx - 1 - i)]) asym++;
+    R('rule 45: the region\'s outline lies ≥ 0.5 m inside every bank it meets (never along a face), in bank ≥ HIGH + 0.3; open only at the lips, into a falls polygon (every 2nd outline texel); one fitted half, turned 180° (the mask is its own twin)', n > 250 && !bad.length && lips.length > 0 && asym === 0 && W.fitTwin,
+      { outline: n, lips: lips.length, minInsetM: r2(minIn), bad: bad.slice(0, 12), nBad: bad.length, asymTexels: asym, fitTwin: !!W.fitTwin, twinChanged: W.fitTwinChanged, fitAdded: W.fitAdded });
   } catch (e) { R('rule 45: the outline: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
   // ---------------------------------------------------------------------------------------------- rule 42: views out

@@ -208,6 +208,21 @@ export class LavaWorld {
       for (const [k, q] of grow) { M[k] = 1; via[k] = q; }
       added += grow.length;
     }
+    // (fix round 3, rule 45) both halves share one fit: Bravo's half (z > 0; on z = 0, x > 0) turned 180° onto Alpha's.
+    // The stage is a 180° turn of itself and the raster's box is centred on the origin, so texel (i, j)'s twin is
+    // (nx − 1 − i, nz − 1 − j); fitted half by half, the outline stood 0.2 m from the Rim Ridge's face on Alpha's side
+    // only (its twin passed)
+    this.fitTwin = false;
+    if (this.def.mirror && Math.abs(B.x0 + (nx * RES) / 2) < 1e-6 && Math.abs(B.z0 + (nz * RES) / 2) < 1e-6) {
+      let changed = 0;
+      for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+        const x = B.x0 + (i + 0.5) * RES, z = B.z0 + (j + 0.5) * RES;
+        if (z > 1e-6 || (Math.abs(z) <= 1e-6 && x > 0)) continue;   // (Bravo's: the fit kept)
+        const k = j * nx + i, v = M[(nz - 1 - j) * nx + (nx - 1 - i)];
+        if (M[k] !== v) { M[k] = v; changed++; }
+      }
+      this.fitTwin = true; this.fitTwinChanged = changed;
+    } else if (this.def.mirror) console.warn('[lava] the region raster is not centred on the origin: the halves are fitted apart');
     const data = this.map.image.data;
     for (let k = 0; k < nx * nz; k++) data[k * 4] = M[k] * 255;
     this.map.needsUpdate = true;
