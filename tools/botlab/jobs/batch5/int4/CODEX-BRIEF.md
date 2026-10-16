@@ -55,3 +55,13 @@ Resolve by understanding both sides; never by dropping one. Say in the report wh
 - Commit small and often, messages ending with a `Co-Authored-By:` line naming your model.
 - Final report in COMMON.md's format to `tools/botlab/jobs/batch5/int4/LEAD-REPORT.md` (the merge log with every
   conflict, every test with its result, the match table, what is still open). The lead reviews it on Friday.
+
+## Known issue to fix on the way (found by the lead's verification of `b5-int3`, 2026-10-17)
+In a Turf War with every bot on the new subs (crossmarket, `SUBS='glide,sentry,bobber,dash,…'`), stuck time was 2 %
+(bar ≤ 1 %): five episodes of 2.5–6.5 s, every one a bot in paint mode with `path: true, hold: true` standing still
+(Moxie / brush at (1.8, 0, −36.1) for 6.5 s; Suki / bucket at (8.2, 0, 31.7) for 5 s): a held sub press (the polish's
+hold-fire near an own idle Chain Bobber web, or a Glide cook) that never times out, so the bot waits instead of moving.
+Mixed lobbies read 0–0.8 %. Fix: a held press times out (about 1.5 s) and the bot moves on or re-plans; prove it with
+the same match reading ≤ 1 % stuck and no `hold: true` episode over 2 s.
+Note: `new-stages` is now a9974492 (= b5-int3 merged); start by merging it into `b5-int4` (it only adds the merge commit
+and scratch docs on top of what this branch already has).
