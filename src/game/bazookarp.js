@@ -388,7 +388,7 @@ export class Bazookarp {
     this.holder = a; this.holderTeam = a.team; this.grantT = this.clock;
     this._hr = a.remote; this._sampQ = null; this.blastHold = null;   // [karp-face]
     // ([karp-face] a fresh fuse: a follower reads it on from the grant, never from an older snapshot's)
-    this.fuse = K.fuse; this.rate = 1; this.rateWhy = null; this._fz = { fuse: K.fuse, rate: 1, t: this.wire.hostNow(), from: null };
+    this.fuse = K.fuse; this.rate = 1; this.rateWhy = null; this._fz = { fuse: K.fuse, rate: 1, t: this.wire.hostNow(), from: this.wire.hostId?.() ?? null };
     this.remote = { half: -1, zone: false, rate: 1, why: null, foot: null, sampleT: -1 };
     this.base = null;
     this.touched = true;
@@ -832,6 +832,7 @@ export class Bazookarp {
     // (a knockout's 0 went back up to the host's pre-'e' count), not the fuse (a fresh carrier's ring took the last
     // carry's leftover), not the overtime clock. After the end, nothing at all
     if (q < this.lastQ || this.winner != null) return;
+    this._sn = { t, from: from ?? this.wire.hostId?.() ?? null, otT, win };   // ([karp-face] a new host reads these forward: onHostChange)
     this.count = [c0, c1];
     if (this.overtime) this.overtimeT = otT;
     this.otWin.open = !!this.overtime && win >= 0;   // (a new host's window carries on from here: onHostChange)
@@ -850,7 +851,7 @@ export class Bazookarp {
     if (this.holder && (this.holder.nid ?? -1) === hn) {
       this.fuse = fuse; this.rate = rate; this.rateWhy = why === 1 ? 'retreat' : why === 2 ? 'zone' : null;
       const age = this.wire.hostNow(from) - t;
-      if (age > -0.05 && age < 1.5) { this._fz = { fuse, rate, t, from }; this._fuseSync(fuse, rate, t, from); }
+      if (age > -0.05 && age < 1.5) { this._fz = { fuse, rate, t, from: this._sn.from }; this._fuseSync(fuse, rate, t, from); }
     }
     if (phase !== this.phase) {
       if ((phase === 'shielded' || phase === 'reforming') && this.shell.state === 'none') this.shell.form(_v.set(x, y, z), K.shell.reformHp, phase === 'reforming' ? 0.4 : 0);
@@ -942,6 +943,24 @@ export class Bazookarp {
     const H = this.holder;
     // (a remote carrier's half / zone / rate / last footing: the old host's word from its last 'S', until the carrier's
     // own re-sent kr / kf arrive — SPEC §7.6 step 5)
+    // ([karp-face] review round 2: what this screen holds from the old host's snapshots are their RAW values — a follower
+    // reads a remote carrier's fuse forward each frame, its own carrier's ring runs apart, and the narrowed flush has just
+    // played the newest raw — so the fuse, the overtime clock and the window are read forward to now, on the old host's
+    // clock: they stepped UP by the snapshot's age × the rate at the takeover (rv2-mig3lag: +0.34 s; a carrier who became
+    // the host rewound its own ring 0.2 s). A carrier on this screen never gets back time its ring has already shown spent)
+    const ageOf = (z) => (z ? Math.min(0.6, Math.max(0, this.wire.hostNow(z.from) - z.t)) : 0);
+    if (H && this._fz && this.match.actors.includes(H) && H.alive) {
+      let f = Math.max(0, this._fz.fuse - this._fz.rate * ageOf(this._fz));
+      if (H === G.local) f = Math.min(f, this.hud.fuseShown);
+      this.fuse = Math.min(this.fuse, f);
+    }
+    const sn = this._sn, W = this.otWin;
+    if (this.overtime && sn) {
+      this.overtimeT = Math.max(this.overtimeT, sn.otT + ageOf(sn));
+      const touchable = this.phase === 'shielded' || this.phase === 'free';
+      if (W.open && W.closeT == null && sn.win >= 0 && touchable && !(H && this.holderTeam === this.otLosing)) W.left = Math.max(0, Math.min(W.left, sn.win - ageOf(sn)));
+    }
+    this.stats.takeover = { fuse: +this.fuse.toFixed(2), shown: +this.hud.fuseShown.toFixed(2), age: sn ? +ageOf(sn).toFixed(3) : null, overtimeT: +this.overtimeT.toFixed(2), win: W.open ? +W.left.toFixed(2) : -1 };
     if (H && (!this.match.actors.includes(H) || !H.alive)) this._lose(H, 'left');
     else if (H) {
       this.remote.sampleT = this._newestT(H);

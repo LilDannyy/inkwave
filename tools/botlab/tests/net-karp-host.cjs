@@ -16,12 +16,15 @@
 //     screens the swell lasts 0.45 ± 0.05 s, the other guest's kid standing in it is splatted on its own screen, and a
 //     Bravo bot the new host now owns standing in it is splatted on the new host's. 'part=guestleave' (CLIENTS=2, step
 //     15): guest B carries and B's client leaves — the host adopts B's kid as a bot, it keeps carrying, the fuse runs on.
+//   [karp-face] review round 2: 'part=ring;who=1|2' (CLIENTS=3): a guest carries when host A leaves (who=1: B, the new
+//     host; who=2: C, still a guest) — neither the new host's fuse nor the carrier's ring steps up across the takeover;
+//     part=bots checks the new host's fuse for the adopted carrier the same way. Run them under URLQ netlag 100 + jitter 40.
 //   CLIENTS=3 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' Q2='autopilot&wipmodes' NET_ARGS='part=bots' NET=tools/botlab/tests/net-karp-host.cjs tools/botlab/run.sh tools/botlab/netpage.cjs
 //   CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' NET_ARGS='part=cargo' NET=tools/botlab/tests/net-karp-host.cjs tools/botlab/run.sh tools/botlab/netpage.cjs
 module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   const opt = Object.fromEntries((args || '').split(/[;&]/).filter(Boolean).map((kv) => kv.split('=')));
   const part = opt.part || (clients.length >= 3 ? 'bots' : 'cargo');
-  const n = part === 'bots' || part === 'plant' || part === 'shot' ? 3 : 2;
+  const n = part === 'bots' || part === 'plant' || part === 'shot' || part === 'ring' ? 3 : 2;
   for (const c of clients.slice(0, n)) {
     if (/[?&]wipmodes(&|=|$)/.test(c.url || '') && /[?&]autopilot(&|=|$)/.test(c.url || '')) continue;
     await open(c.i, 'autopilot&wipmodes');
@@ -47,7 +50,7 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   const info = async (c) => J(c, `(() => { const K = __G.match && __G.match.karp; if (!K) return null; const s = K.state(); return { host: __G.net.isHost, follower: K.follower, phase: s.phase, holder: s.holder && s.holder.nid, holderRemote: K.holder ? !!K.holder.remote : null, holderBot: K.holder ? !!K.holder.bot : null, holderIn: K.holder ? __G.match.actors.includes(K.holder) : null, count: s.count, fuse: +s.fuse.toFixed(2), pos: s.pos.map((x) => +x.toFixed(2)), q: K.q, lastQ: K.lastQ, hostChanges: K.stats.hostChanges || 0, winner: s.winner, reason: s.reason, actors: __G.match.actors.length }; })()`);
   const aNid = await J(A, `__G.match.local.nid`);
   await wait(1200);
-  if (part === 'plant' || part === 'shot' || part === 'guestleave') return more({ cs, A, J, info, R, wait, say, close, part, aNid });
+  if (part === 'plant' || part === 'shot' || part === 'guestleave' || part === 'ring') return more({ cs, A, J, info, R, wait, say, close, part, aNid, opt });
   // A's kid grabs it at the Pond (the host's own burst) and carries toward Bravo's half for 2 s
   await A.js(`(() => { const K = __G.match.karp, a = __G.match.local; a.pos.set(0, 0, -1.2); a.vel.set(0, 0, 0); K.shell.add(0, 2000, a); return 1; })()`);
   await A.until(`__G.match.karp.holder === __G.match.local`, 4000, 50);
@@ -60,6 +63,7 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   const aLast = (await info(A)).pos;
   R(`${part}: before the leave, every screen has A's kid as the carrier`, pre.every((p) => p && p.holder === aNid && p.phase === 'carried'), pre.map((p) => p && { holder: p.holder, phase: p.phase, q: p.q, lastQ: p.lastQ }));
   const preQ = pre[0].q;
+  if (part === 'bots') for (const c of cs.slice(1)) await c.js(SAMPLER);
   say('host A leaves');
   await close(0);
   const rest = cs.slice(1);
@@ -79,6 +83,10 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   } else {
     await wait(1200);
     const nb = await info(N);
+    // [karp-face] review round 2: the new host's own fuse for the adopted carrier never steps up across the takeover (it
+    // took the old host's last snapshot raw: +0.34 s under netlag 100 + jitter 40)
+    { const sN = await J(N, `window.__fzs || []`), up = upAt(sN, 'fuse', true), tk = await J(N, `__G.match.karp.stats.takeover || null`);
+      R('bots: across the takeover the new host\'s fuse for the adopted carrier never steps up (> 0.05 s between frames)', !!up && up.max <= 0.05 && up.n > 10, { up, takeover: tk }); }
     R('bots: the new host runs the rules (onHostChange: not a follower) and A\'s kid, adopted as its bot, still carries — nothing dropped; the new host scores it', !nb.follower && nb.hostChanges === 1 && nb.holder === aNid && nb.holderRemote === false && nb.holderBot && nb.phase === 'carried' && nb.count[0] <= pre[1].count[0], { ...nb, before: pre[1].count });
     // (the adopted bot stands still, so both screens can be compared once a snapshot has played)
     await N.js(`(() => { const h = __G.match.karp.holder; if (h && h.bot) { h.bot.update = () => {}; const it = h.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.jump = false; } return 1; })()`);
@@ -104,11 +112,56 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   R('no page errors on the remaining screens', errs.length === 0, errs.slice(0, 4));
 };
 
+// [karp-face] review round 2: every frame's fuse on a page — [t, K.fuse, K.hud.fuseShown, host?, holder nid] — from now
+const SAMPLER = `(() => { window.__fzs = []; const go = () => { const K = __G.match && __G.match.karp; if (K) window.__fzs.push([performance.now(), K.fuse, K.hud.fuseShown, __G.net.isHost ? 1 : 0, K.holder ? K.holder.nid : -1]); if (window.__fzs.length < 4000) requestAnimationFrame(go); }; requestAnimationFrame(go); return 1; })()`;
+// the biggest rise between two frames of one carrier's fuse (k: 'fuse' or 'shown'; hostOnly: from the frame before this
+// page became the host)
+function upAt(rows, k, hostOnly) {
+  const ix = k === 'fuse' ? 1 : 2;
+  let from = 1;
+  if (hostOnly) { const i0 = rows.findIndex((r) => r[3]); if (i0 < 0) return null; from = Math.max(1, i0); }
+  let max = -1e9, at = -1, n = 0;
+  for (let i = from; i < rows.length; i++) { if (rows[i][4] < 0 || rows[i][4] !== rows[i - 1][4]) continue; const d = rows[i][ix] - rows[i - 1][ix]; n++; if (d > max) { max = d; at = i; } }
+  const hostAt = rows.findIndex((r) => r[3]);
+  return { max: +max.toFixed(3), n, at: at >= 0 ? { ms: Math.round(rows[at][0] - (hostAt >= 0 ? rows[hostAt][0] : rows[0][0])), before: +rows[at - 1][ix].toFixed(2), after: +rows[at][ix].toFixed(2) } : null };
+}
+
 // [karp-face] SPEC §10.2 steps 13, 13b and 15
-async function more({ cs, A, J, info, R, wait, say, close, part, aNid }) {
+async function more({ cs, A, J, info, R, wait, say, close, part, aNid, opt = {} }) {
   const rest = cs.slice(1);
   const newHost = async () => { for (let k = 0; k < 120; k++) { for (const c of rest) if (await c.js(`!!(__G.net && __G.net.isHost)`)) return c; await wait(250); } return null; };
   const errs = () => { const e = []; for (const c of rest) e.push(...(c.log || []).filter((l) => /TypeError|ReferenceError|Uncaught/.test(l))); return e; };
+  // [karp-face] review round 2: NET_ARGS='part=ring;who=1|2' (CLIENTS=3): a guest carries (who=1: B, who becomes the new
+  // host; who=2: C, who stays a guest) and host A leaves — neither the new host's own fuse nor the carrier's ring steps up
+  // across the takeover (the reviewer's rv2-gcB2: B's ring rewound 0.2 s; run it under netlag 100 + jitter 40)
+  if (part === 'ring') {
+    const who = +(opt.who || 1), Cr = cs[who], crNid = await J(Cr, `__G.match.local.nid`);
+    await Cr.js(`(() => { const a = __G.match.local; a.pos.set(0, 0, 1.0); a.vel.set(0, 0, 0); return 1; })()`);
+    await wait(600);
+    await A.js(`(() => { const K = __G.match.karp; K.shell.add(1, 3000, __G.match.actors.find((o) => o.nid === ${crNid})); return 1; })()`);
+    for (const c of cs) await c.until(`__G.match.karp.holder && __G.match.karp.holder.nid === ${crNid}`, 6000, 30).catch(() => {});
+    await Cr.js(`(() => { const a = __G.match.local; a.aimYaw = a.yaw = Math.PI; a.intent.move.set(0, 0, -1); return 1; })()`);
+    await wait(1200);
+    await Cr.js(`(() => { __G.match.local.intent.move.set(0, 0, 0); return 1; })()`);
+    await wait(800);
+    for (const c of rest) await c.js(SAMPLER);
+    await wait(900);
+    const pre = await info(Cr);
+    say(`host A leaves while c${who}'s kid carries`);
+    await close(0);
+    const N = await newHost();
+    if (!N) { R('ring: a guest becomes the host', false, {}); return; }
+    await wait(2500);
+    const sN = await J(N, `window.__fzs || []`), sC = await J(Cr, `window.__fzs || []`);
+    const upN = upAt(sN, 'fuse', true), upC = upAt(sC, 'shown', false), tk = await J(N, `__G.match.karp.stats.takeover || null`);
+    const post = await info(N), ring = await J(Cr, `+__G.match.karp.hud.fuseShown.toFixed(2)`);
+    R(`ring (who=${who}: the carrier ${N === Cr ? 'is' : 'is not'} the new host): across the takeover neither the new host's fuse nor the carrier's ring steps up (> 0.05 s between frames); they agree within 0.5 s after`,
+      pre.holder === crNid && post.holder === crNid && post.phase === 'carried' && !!upN && upN.max <= 0.05 && upN.n > 10 && !!upC && upC.max <= 0.05 && upC.n > 30 && Math.abs(post.fuse - ring) < 0.5,
+      { newHost: `c${N.i}`, carrier: `c${Cr.i}`, upHost: upN, upRing: upC, takeover: tk, hostFuse: post.fuse, ring });
+    const e = errs();
+    R('no page errors on the remaining screens', e.length === 0, e.slice(0, 4));
+    return;
+  }
   if (part === 'guestleave') {
     const B = cs[1], bNid = await J(B, `__G.match.local.nid`);
     await B.js(`(() => { const a = __G.match.local; a.pos.set(0, 0, 1.0); a.vel.set(0, 0, 0); return 1; })()`);

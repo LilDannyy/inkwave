@@ -21,6 +21,8 @@ export class KarpWire {
   now() { return performance.now() / 1000; }
   // [karp-face] the host's clock now (snapshots are stamped with it): offline and on the host, its own
   hostNow() { return this.now(); }
+  // [karp-face] review round 2: the host's id (a clock read from it stays that host's clock after a migration)
+  hostId() { return null; }
   record() { this.log.rec++; }
   snapshot() { this.log.snap++; }
   toGuest() {}
@@ -53,6 +55,7 @@ export class NetWire extends KarpWire {
   get isHost() { return !!this.nm?.isHost; }
   now() { return performance.now() / 1000; }
   _hostId() { return this.nm?.s?.hostId; }
+  hostId() { return this._hostId() || null; }
   record(rec) { super.record(); if (this.nm && G.netm === this.nm && this.nm.isHost) this.nm._sendNow({ k: 'bk', e: rec }); }
   snapshot(rec) { super.snapshot(); if (this.nm && G.netm === this.nm && this.nm.isHost) this.nm._rec(['ks', rec]); }
   toGuest(nid, msg) { const a = this.nm?.byNid.get(nid); if (a && a.owner) this.nm.s.tr?.sendTo(a.owner, { k: 'kd', nid, ...msg }); }
