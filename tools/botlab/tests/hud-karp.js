@@ -15,6 +15,9 @@
 //   I (review round 1) the GATE tag never rides up into the top bar; a weir tag on a live call-out fades out of its way;
 //     the meter tag isn't drawn right under the status pill that already says the same; our call-out sits under a live
 //     kill call-out (WIPEOUT!); the carrier's last 10 s in big beating digits — run it at W=960 H=600 too
+//   J (review round 2) all four "Can't use" lines (the TAB map's super jump, the spawn barrier at most once per 3 s, a
+//     special); OVERTIME!'s instruction readable in real time with the stock centre banner left in; the call-outs' wait
+//     on play time (a stale kill call-out never holds ours)
 //   MAP=testbox MODE=bazookarp PAGE=tools/botlab/tests/hud-karp.js tools/botlab/run.sh tools/botlab/page.cjs
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = __G, Kp = m.karp, H = g.hud;
@@ -169,7 +172,7 @@
     const wait = (ms) => new Promise((q) => setTimeout(q, ms));
     const er = () => H.el.getBoundingClientRect();
     const topY = () => H.karp.status.getBoundingClientRect().bottom - er().top;
-    const clearCalls = () => { if (H.zcalls) [...H.zcalls.children].forEach((e) => e.remove()); H.callouts?.querySelectorAll('.iw-call').forEach((e) => e.remove()); H.karp._sayT = -1e9; };
+    const clearCalls = () => { if (H.zcalls) [...H.zcalls.children].forEach((e) => e.remove()); H.callouts?.querySelectorAll('.iw-call').forEach((e) => e.remove()); H.karp._sayT = -1e9; H.karp._pend = null; H.karp._hold = 0; };
     clearCalls(); release(); step(0.1);
     // I1. our Gate up, the carrier 9 m before it: tilt the camera until the GATE tag's own point projects above the
     // status pill's bottom (in the top bar, where the timer is); the tag is drawn below it
@@ -215,15 +218,16 @@
     clearCalls();
     // (a burst's WIPEOUT! and SHELL BURST! come in the same frame: ours waits out the kill call-out's pop-in, then sits
     // under it — the two popped in on top of each other at 960×600)
+    // (review round 2: the wait is counted in play time — the stepped sim here — so the test steps a frame and lets a
+    // frame's worth of wall time pass, in turn, the way play does; tz: the play time until ours was up, tw the wall time)
     H._callout('WIPEOUT!', 'The whole team is splatted', true); const t4 = performance.now();
     H.karp._say('SHELL BURST!', { sub: 'GRAB THE BAZOOKARP!', icon: null });
-    step(1 / 60);
-    let tz = null; for (let k = 0; k < 80 && tz == null; k++) { await wait(15); if (H.zcalls.firstElementChild) tz = Math.round(performance.now() - t4); }
+    let tz = null, tw4 = null; for (let k = 1; k <= 80 && tz == null; k++) { step(1 / 60); await wait(17); if (H.zcalls.firstElementChild) { tz = Math.round((k / 60) * 1000); tw4 = Math.round(performance.now() - t4); } }
     step(1 / 60); await wait(400); step(1 / 60);
     const kcEl = H.callouts.querySelector('.iw-call'), zcEl = H.zcalls.firstElementChild;
     const kr = kcEl && kcEl.getBoundingClientRect(), zr4 = zcEl && zcEl.getBoundingClientRect();
     const subR = kcEl && kcEl.querySelector('.iw-call__sub')?.getBoundingClientRect();
-    R('I4. a kill call-out (WIPEOUT!) and our SHELL BURST! at once: ours waits out its pop-in (≥ 0.3 s), then sits wholly below it (its sub line too)', tz != null && tz >= 300 && !!kr && !!zr4 && zr4.top >= Math.max(kr.bottom, subR ? subR.bottom : 0) - 1, { after: tz, kill: kr && { t: Math.round(kr.top), b: Math.round(kr.bottom) }, sub: subR && Math.round(subR.bottom), ours: zr4 && { t: Math.round(zr4.top), b: Math.round(zr4.bottom) }, size: [innerWidth, innerHeight] });
+    R('I4. a kill call-out (WIPEOUT!) and our SHELL BURST! at once: ours waits out its pop-in (≥ 0.3 s), then sits wholly below it (its sub line too)', tz != null && tz >= 300 && tw4 >= 300 && !!kr && !!zr4 && zr4.top >= Math.max(kr.bottom, subR ? subR.bottom : 0) - 1, { after: tz, wall: tw4, kill: kr && { t: Math.round(kr.top), b: Math.round(kr.bottom) }, sub: subR && Math.round(subR.bottom), ours: zr4 && { t: Math.round(zr4.top), b: Math.round(zr4.bottom) }, size: [innerWidth, innerHeight] });
     // I6. the kill call-out, through its whole life until it has faded: never up on the Carp Line's status pill (its
     // stock exit drifts up 60 % of its height: WIPEOUT!'s ribbon covered FREE — GRAB IT! at 1920×1080)
     let minTop = 1e9, seen6 = 0;
@@ -241,6 +245,114 @@
     const u5 = Math.min(H.el.clientWidth / 100, (H.el.clientHeight * 1.7778) / 100);
     R('I5. the carrier\'s last 10 s: the reticle\'s seconds in big digits (≥ 3 u, nearly 3× the usual) that beat each second', red && beat && bEl.textContent === '9' && f8 >= 2.6 * f30 && f8 >= 3 * u5 - 0.5, { f30, f8, u: +u5.toFixed(2), beat, red, txt: bEl.textContent });
     release(); step(0.1);
+  }
+
+  // ---- J. [karp-face] review round 2: the "Can't use" lines (all four of SPEC §1.1's), the OVERTIME! instruction in
+  // real time against the stock centre banner, and the call-outs' wait counted in play time
+  {
+    const wait = (ms) => new Promise((q) => setTimeout(q, ms));
+    const { on: onEv, emit: emit2 } = await import('./src/core/ctx.js');
+    const refs = []; const offR = onEv('karp:refuse', (e) => refs.push([e.why, e.actor === me, Kp.clock]));
+    const clearAll = () => { if (H.zcalls) [...H.zcalls.children].forEach((e) => e.remove()); H.callouts?.querySelectorAll('.iw-call').forEach((e) => e.remove()); H.bannerLayer?.querySelectorAll('.iw-bn').forEach((b) => b.remove()); H.karp._sayT = -1e9; H.karp._pend = null; H.karp._hold = 0; };
+    const noteOff = () => { H.karp._noT = 0; H.karp.no.classList.remove('is-on'); H.karp.show.no = null; };
+    clearAll(); release(); step(0.1);
+    // J1. a carrier picks a teammate on the TAB map (a click on its row: hud._jumpTo), then presses the map's number key
+    put(me, spot(P.x, P.z + dz * 1, P.y)); put(ally, spot(P.x + 3, P.z - dz * 3, P.y)); grab(me); step(0.05); noteOff(); refs.length = 0;
+    const sj0 = me.superJumpState;
+    H._jumpTo(0); const n1 = S().no, r1 = refs.slice();
+    noteOff(); refs.length = 0;
+    // (the page runs ?autopilot, which has no PlayerController: a real one drives the kid for these frames)
+    const { PlayerController } = await import('./src/game/player.js'); const pc0 = m.controller; m.controller = new PlayerController(me, g.rig, g.input);
+    dbg.key('Tab', true); step(2 / 60); dbg.key('Digit1', true); step(1 / 60); dbg.key('Digit1', false); step(1 / 60); dbg.key('Tab', false); step(2 / 60);
+    m.controller = pc0; zero(me);
+    const n1k = S().no, r1k = refs.slice();
+    R('J1. a carrier\'s super jump from the TAB map — a teammate\'s row clicked, or the map\'s number key — shows "Can\'t super jump with the Bazookarp" (no jump)',
+      n1 === "Can't super jump with the Bazookarp" && n1k === "Can't super jump with the Bazookarp" && r1.some((r) => r[0] === 'jump' && r[1]) && r1k.some((r) => r[0] === 'jump' && r[1]) && !sj0 && !me.superJumpState && Kp.holder === me,
+      { click: n1, key: n1k, refs: [r1, r1k], jumping: !!me.superJumpState });
+    // J2. the carrier on its own spawn deck, 0.4 m inside the barrier, pressing inward for 4 s: the barrier shoves it out
+    // and keeps it out; the note at most once per 3 s; a player without it on the same spot: no note (it walks in).
+    // (testbox's spawn deck stands 2.4 m up and ends at the barrier's radius: the carrier starts on it)
+    // (two phases: 1 s pressing inward — the note, never let in; then 4 s held 0.3 m inside it every frame — the note's
+    // limit: twice, 3 s apart. The other players are moved off the deck first: their soft push moved the carrier)
+    const pad = G.level.spawnPads[me.team], Rb = G.level.spawnBarrier, toP = Math.atan2(P.x - pad.x, P.z - pad.z);
+    const onDeck = V(pad.x + Math.sin(toP) * (Rb - 0.4), pad.y, pad.z + Math.cos(toP) * (Rb - 0.4)), inward = V(-Math.sin(toP), 0, -Math.cos(toP));
+    const inside = V(pad.x + Math.sin(toP) * (Rb - 0.3), pad.y, pad.z + Math.cos(toP) * (Rb - 0.3));
+    for (const a of m.actors) if (a !== me) put(a, spot(P.x + (a.slot % 4) * 2 - 3, P.z + (a.team === me.team ? -dz : dz) * 14, P.y));
+    const kev = []; const offK = ['karp:drop', 'karp:reset', 'karp:explode', 'splatted'].map((k) => onEv(k, (e) => kev.push([k, +Kp.clock.toFixed(2), e.how || e.why || e.cause || null])));
+    put(me, spot(P.x, P.z + dz * 1, P.y)); grab(me); step(0.05);
+    put(me, onDeck); noteOff(); refs.length = 0; Kp._refT = null;
+    let minD = 1e9;
+    for (let i = 0; i < 60; i++) { me.intent.move.copy(inward); dbg.step(1000 / 60); if (i >= 2) minD = Math.min(minD, Math.hypot(me.pos.x - pad.x, me.pos.z - pad.z)); }
+    const n2a = S().no;
+    zero(me); noteOff(); refs.length = 0; Kp._refT = null; const t0 = Kp.clock;
+    for (let i = 0; i < 240; i++) { me.pos.copy(inside); me.vel.set(0, 0, 0); dbg.step(1000 / 60); }
+    zero(me); step(2 / 60);
+    offK.forEach((f) => f());
+    const n2 = S().no, sp = refs.filter((r) => r[0] === 'spawn' && r[1]).map((r) => +(r[2] - t0).toFixed(2)), held2 = Kp.holder === me;
+    release(); step(0.1); put(me, onDeck); noteOff(); refs.length = 0;
+    let minDB = 1e9; for (let i = 0; i < 90; i++) { me.intent.move.copy(inward); dbg.step(1000 / 60); minDB = Math.min(minDB, Math.hypot(me.pos.x - pad.x, me.pos.z - pad.z)); }
+    zero(me); step(2 / 60);
+    const n2b = S().no, spB = refs.filter((r) => r[0] === 'spawn').length;
+    R('J2. a carrier shoved by its spawn\'s barrier: "You can\'t take it into a spawn", at most once per 3 s (4 s of pushing: twice); without it: no note',
+      n2a === "You can't take it into a spawn" && n2 === "You can't take it into a spawn" && held2 && sp.length === 2 && sp[1] - sp[0] >= 3 - 1e-6 && minD >= Rb - 0.3 && spB === 0 && n2b == null && minDB < Rb - 1,
+      { walkIn: { note: n2a, minD: +minD.toFixed(2) }, held4s: { note: n2, at: sp, held: held2 }, barrier: Rb, kev, without: { refs: spB, note: n2b, minD: +minDB.toFixed(2) } });
+    // J3. touching the free Bazookarp mid-special (an Ink Jet): "Finish your special first"
+    put(me, spot(P.x + 0.5, P.z + 0.5, P.y)); step(0.05); noteOff(); refs.length = 0;
+    me.special = me.specialCost(); G.specials.start(me, 'jetpack'); Kp.shell.clear(); Kp.pos.copy(me.pos); Kp._setPhase('free', 0); Kp.claims.length = 0; step(0.3);
+    const n3 = S().no, r3 = refs.filter((r) => r[0] === 'special' && r[1]).length, h3 = Kp.holder;
+    G.specials.end(me, 'test'); step(0.1); release(); step(0.1);
+    R('J3. touching the free Bazookarp mid-special: "Finish your special first" (not picked up)', n3 === 'Finish your special first' && r3 >= 1 && h3 !== me, { note: n3, refs: r3, holder: h3?.name || null });
+    offR();
+    // J4. OVERTIME!, in real time (the clock running: the banner's CSS and the HUD's play clock both move): the stock
+    // centre banner and its sound stay; its instruction is readable from the start and for ≥ 3 s of the first 6 s, in the
+    // banner under the word and then in our call-out, which never comes up under the opaque banner
+    // (our team behind, 80 to 60: losing — 'Grab it within 10 s!' — and not yet past them, or the engine ends it as a
+    // comeback at once)
+    clearAll(); release(); put(me, spot(P.x, P.z - dz * 8, P.y)); facePond(me); follow(); step(0.1);
+    Kp.count = me.team === 0 ? [80, 60] : [60, 80]; Kp.overtime = true; Kp.otLosing = me.team; Kp.otWin = { left: 30, open: true, closeT: null, grace: 0 };
+    const live4 = m.state === 'playing' && Kp.winner == null;
+    const want4 = 'Grab it within 10 s!';
+    const eff = (el) => { let o = 1; for (let e = el; e && e !== document.documentElement; e = e.parentElement) o *= +getComputedStyle(e).opacity; return o; };
+    const box = (el) => { const r = el.getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top, b: r.bottom, w: r.width, h: r.height }; };
+    const cover = (a, b) => (a.w * a.h > 0 ? Math.max(0, Math.min(a.r, b.r) - Math.max(a.l, b.l)) * Math.max(0, Math.min(a.b, b.b) - Math.max(a.t, b.t)) / (a.w * a.h) : 0);
+    const rows = [];
+    dbg.unfreeze();
+    const tw0 = performance.now(), sounds0 = H.karp.cues.played.length;
+    emit2('karp:overtime', { losing: me.team, why: 'dropped' });
+    while (performance.now() - tw0 < 7000) {
+      await wait(40);
+      const ms = Math.round(performance.now() - tw0), row = { ms };
+      const bn = H.bannerLayer.querySelector('.iw-bn--ot'), bt = bn?.querySelector('.iw-bn__text'), bsub = bn?.querySelector('.iw-kbn-sub');
+      const bo = bt ? eff(bt) : 0, bBox = bt ? box(bt) : null, sBox = bsub ? box(bsub) : null;
+      const tags = [...H.karp.tags.children].filter((e) => e.classList.contains('is-on') && !e.classList.contains('is-under') && eff(e) > 0.3).map((e) => box(e.firstChild));
+      row.banner = bn ? +bo.toFixed(2) : null;
+      row.inBanner = !!bsub && bsub.textContent.includes(want4) && eff(bsub) >= 0.6 && !tags.some((t) => cover(sBox, t) > 0.05);
+      const z = [...H.zcalls.children].find((e) => /OVERTIME!/.test(e.textContent)), zt = z?.querySelector('.iw-zcall__txt'), zs = z?.querySelector('.iw-zcall__sub');
+      if (z) {
+        const zo = eff(z), zb = box(zt), zsb = zs ? box(zs) : null, under = bn && bo >= 0.3 && (cover(zb, bBox) > 0.05 || (zsb && (cover(zsb, bBox) > 0.05 || (sBox && cover(zsb, sBox) > 0.05))));
+        row.call = +zo.toFixed(2); row.under = !!under;
+        row.inCall = !!zs && zs.textContent === want4 && zo >= 0.6 && !under && !tags.some((t) => cover(zsb, t) > 0.05);
+      }
+      rows.push(row);
+    }
+    dbg.freeze();
+    const dur = (k) => rows.reduce((s, r, i) => s + (r[k] ? (i ? r.ms - rows[i - 1].ms : r.ms) : 0), 0);
+    const first = rows.find((r) => r.inBanner || r.inCall), readMs = rows.reduce((s, r, i) => s + ((r.inBanner || r.inCall) ? (i ? r.ms - rows[i - 1].ms : r.ms) : 0), 0);
+    const underVis = rows.filter((r) => r.call != null && r.call >= 0.3 && r.under);
+    const snd = H.karp.cues.played.length >= sounds0;   // (the stock banner's own sound is hud._snd('zone_overtime'): unchanged code)
+    R('J4. OVERTIME! with the stock banner left in (real time): the instruction is readable within 0.5 s and for ≥ 3 s of the first 7 s — under the banner\'s word, then in our call-out (≥ 1 s), which never comes up under the opaque banner',
+      live4 && Kp.winner == null && !!first && first.ms <= 500 && readMs >= 3000 && dur('inBanner') >= 900 && dur('inCall') >= 1000 && underVis.length === 0 && rows.some((r) => r.banner != null),
+      { live: live4, winner: Kp.winner, first: first && first.ms, readMs, inBanner: dur('inBanner'), inCall: dur('inCall'), underVis: underVis.slice(0, 3), snd, fps: g.fps, rows: rows.filter((r, i) => i % 6 === 0) });
+    Kp.overtime = false; Kp.otLosing = -1; Kp.otWin = { left: 10, open: false, closeT: null, grace: 0 }; Kp.count = [100, 100]; G.music?.setOvertime?.(false); clearAll(); step(0.1);
+    // J5. the wait is counted in play time: a kill call-out made 0.6 s of play ago — with no frame painted since, as in
+    // the stepped rules test (its CSS clock still at 0) — doesn't hold ours back; one made this frame holds it ~0.38 s
+    clearAll(); step(2 / 60);
+    H._callout('FIRST SPLAT!', null, false); step(0.6);
+    H.karp._say('SHELL BURST!', { sub: 'GRAB THE BAZOOKARP!', icon: null }); const stale = H.zcalls.children.length;
+    clearAll(); H._callout('WIPEOUT!', 'The whole team is splatted', true); H.karp._say('SHELL BURST!', { sub: 'GRAB THE BAZOOKARP!', icon: null });
+    step(0.3); const at03 = H.zcalls.children.length; step(0.12); const at042 = H.zcalls.children.length;
+    R('J5. the call-outs\' wait runs on play time: a stale kill call-out (0.6 s of play, no frame painted) doesn\'t hold ours; a fresh one holds it past 0.3 s and lets it up by 0.42 s', stale === 1 && at03 === 0 && at042 === 1 && m.state === 'playing', { stale, at03, at042, state: m.state });
+    clearAll(); step(0.1);
   }
 
   // ---- H. the results screen

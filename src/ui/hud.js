@@ -2162,6 +2162,7 @@ export class HUD {
   }
 
   _jumpTo(i) {
+    const k0 = this.lab ? null : this._local(); if (k0?.carry && G.match?.karp) { G.match.karp.refuse(k0, 'jump'); return; }   // [karp-face] "Can't super jump with the Bazookarp" (its note and bonk: hud-karp)
     const tg = this._beaconTargets()[i];
     if (!tg || !tg.ok) { this._snd('ui_error', { volume: 0.5 }); return; }
     this._restart(this.beacons[i], 'is-press');

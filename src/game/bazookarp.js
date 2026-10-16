@@ -49,6 +49,7 @@ const REASONS = ['knockout', 'time', 'untouched', 'comeback', 'retake', 'no-pick
 const OT_WHYS = ['held', 'dropped', 'planted'];
 const LC_HOWS = ['splat', 'fall', 'fuse', 'left', 'plant', null];   // [karp-face] lastCarrier.how on the wire ('S')
 const FALLS = new Set(['water', 'lava', 'void', 'fall', 'sea']);
+const REFUSE_GAP = { special: 2, spawn: 3, jump: 0 };   // [karp-face] karp:refuse at most once per … s, per kind (SPEC §1.1)
 const _v = new V3(), _v2 = new V3();
 
 // the carrier counts as revealed to the enemy (the marker through walls, the map, bots) while in kid form, not
@@ -266,7 +267,15 @@ export class Bazookarp {
       else if (a === G.local && (this.claimT -= 1 / 60) <= 0) { this.claimT = K.claimRetry; this.lockT = K.claimLockMax; this.wire.claim(a.nid, this.wire.now(), since); }
     }
   }
-  _noteRefuse(a, why) { if (!this._refT || this.clock - this._refT > 2) { this._refT = this.clock; emit('karp:refuse', { actor: a, why }); } }
+  // "Can't use" (SPEC §1.1, karp:refuse → the HUD's note): 'special' touching it mid-special (at most once per 2 s),
+  // [karp-face] review round 2: 'jump' a carrier's super jump from the TAB map (hud.js _jumpTo, player.js's map keys:
+  // every press) and 'spawn' the spawn barrier shoving a carrier (actor.js _spawnBarrier: at most once per 3 s)
+  refuse(a, why) {
+    const gap = REFUSE_GAP[why] ?? 2, T = this._refT || (this._refT = {});
+    if (T[why] != null && this.clock - T[why] < gap) return;
+    T[why] = this.clock; emit('karp:refuse', { actor: a, why });
+  }
+  _noteRefuse(a, why) { this.refuse(a, why); }
   // a guest's claim (the wire): ts is its send time on our clock
   _claim(a, ts, since) {
     if (this.follower || !a) return;

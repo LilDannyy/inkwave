@@ -22,7 +22,7 @@
 //                   Pond), the halfway line (the TAB map only)
 //   sound           the KarpCues director (src/audio/sfx-karp.js)
 // hud.karp.state() reports what is showing (tests).
-import { h } from './ui-util.js';
+import { h, colorVars } from './ui-util.js';
 import { G, on } from '../core/ctx.js';
 import { BAZOOKARP as K } from '../config.js';
 import { SPECIAL_ICONS } from './ui-icons.js';
@@ -35,6 +35,13 @@ const KP = {
 };
 export const KARP_GLYPH = `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="${KP.tail}" fill="currentColor" stroke="#15121c" stroke-width="2" stroke-linejoin="round"/><path d="${KP.fin}" fill="currentColor" stroke="#15121c" stroke-width="2" stroke-linejoin="round"/><path d="${KP.body}" fill="currentColor" stroke="#15121c" stroke-width="2.2" stroke-linejoin="round"/><path d="M21.6 11.6 Q19.6 16 21.6 20.4" fill="none" stroke="#15121c" stroke-width="1.6" stroke-linecap="round"/><circle cx="25.6" cy="14.2" r="1.7" fill="#15121c"/><path d="M29.6 17.6 Q30.8 20.2 28.6 21.8" fill="none" stroke="#15121c" stroke-width="1.4" stroke-linecap="round"/></svg>`;
 const LOCK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 7 V5 a3.5 3.5 0 0 1 7 0 V7" fill="none" stroke="currentColor" stroke-width="2.2"/><rect x="2.5" y="6.8" width="11" height="8" rx="2" fill="currentColor"/></svg>';
+
+// [karp-face] SPEC §1.1's "Can't use" lines for the engine's refusals (karp:refuse; the kit's own is sub:cantuse)
+const REFUSE = { special: 'Finish your special first', jump: "Can't super jump with the Bazookarp", spawn: "You can't take it into a spawn" };
+// [karp-face] call-out timing (s of play): a kill call-out's pop-in, which ours waits out; the stock OVERTIME! banner's
+// life (hud.css iw-bn-go over 2.3 s: opaque to 72 %, a quarter left at 2.0 s), which ours waits out (the banner carries
+// the instruction meanwhile; at 1.7 s ours popped in under the banner at 0.65)
+const KPOP = 0.38, OT_BANNER = 2.0;
 
 // the carp on a carrier's special gauge (S35: frame.specialId is 'karp' while carrying)
 SPECIAL_ICONS.karp = KARP_GLYPH;
@@ -197,6 +204,13 @@ const CSS = `
 @keyframes iw-call-karp { 0% { opacity: 0; scale: 2.2; } 10% { opacity: 1; scale: .9; } 16% { scale: 1.05; } 22% { scale: 1; } 80% { opacity: 1; scale: 1; translate: -50% -50%; } 100% { opacity: 0; scale: 1; translate: -50% -64%; } }
 .iw-hud.is-karp .iw-callouts { top: max(27%, calc(var(--kst-b, 0px) + var(--u) * 5 + 4px)); }
 .iw-hud.is-karp.has-jal .iw-callouts { top: max(27%, calc(var(--jal-b, 0px) + var(--u) * 3.7 + 4px), calc(var(--kst-b, 0px) + var(--u) * 5 + 4px)); }
+/* [karp-face] review round 2: the OVERTIME! centre banner carries the instruction under the word, on the losing team's
+   ribbon (our call-out waits until the banner fades: it covered the call-out for its whole life) */
+.iw-bn--ot.is-karp .iw-bn__text { margin-bottom: calc(var(--u) * -.6); }
+.iw-kbn-sub { position: relative; display: flex; align-items: center; gap: calc(var(--u) * .55); padding: calc(var(--u) * .45) calc(var(--u) * 1.6) calc(var(--u) * .55); rotate: -4deg; isolation: isolate;
+  font: 400 calc(var(--u) * 2.25) / 1 'Titan One', 'Rubik', sans-serif; color: #fff; -webkit-text-stroke: .12em #15121c; paint-order: stroke fill; letter-spacing: .02em; }
+.iw-kbn-sub::before { content: ''; position: absolute; z-index: -1; inset: 0; background: var(--zk); clip-path: polygon(2% 8%, 100% 0, 98% 92%, 0 100%); box-shadow: inset 0 -.3em 0 rgba(0, 0, 0, .15); }
+.iw-kbn-sub i { display: block; width: 1.15em; height: 1.15em; color: #fff; flex: none; } .iw-kbn-sub i svg { width: 100%; height: 100%; }
 /* the carrier's squad badge */
 .iw-sq.is-karp::after { content: ''; position: absolute; right: -16%; bottom: -10%; width: 52%; height: 52%; border-radius: 50%; pointer-events: none; z-index: 2;
   background: #ffd27a url("data:image/svg+xml;utf8,${encodeURIComponent(KARP_GLYPH.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ').replace(/currentColor/g, '#ffffff'))}") center / 86% no-repeat;
@@ -236,24 +250,44 @@ export class KarpHud {
     this.tags = h('div', { class: 'iw-ktags' });
     hud.el.append(this.mk, this.bot, this.no, this.shellTag, this.tags);
     this.on = false; this._noT = 0; this._tagEls = [];
+    // ([karp-face] review round 2: call-out timing runs on the HUD's own play clock — update()'s dt — never on wall-clock
+    // timers or a CSS animation's age, which stand still in a stepped test and drift on a hitch: _clk the clock, _hold how
+    // long a call-out still waits, _pend the newest one waiting, _kcSeen / _kcAge the kill call-out and how long it's up)
+    this._clk = 0; this._hold = 0; this._pend = null; this._kcSeen = null; this._kcAge = 0;
     this.show = { status: '', marker: null, bottom: null, no: null, call: null, line: null, reticle: null, shell: null, tags: [] };
     this.cues = new KarpCues();
     const me = () => G.match?.local?.team ?? 0;
     this._unsubs = [
       on('sub:cantuse', ({ actor, kind }) => { if (kind === 'karp' && actor === G.match?.local) this._note("Can't use your kit while carrying"); }),
-      on('karp:refuse', ({ actor, why }) => { if (actor === G.match?.local && why === 'special') this._note('Finish your special first'); }),
+      // ([karp-face] review round 2: all four of SPEC §1.1's "Can't use" lines — the TAB map's super jump and the spawn
+      // barrier's shove were silent; the engine's refuse() limits each kind: the spawn at most once per 3 s)
+      on('karp:refuse', ({ actor, why }) => {
+        if (actor !== G.match?.local || !REFUSE[why]) return;
+        this._note(REFUSE[why]);
+        if (why !== 'special') this.hud._snd?.('sub_cantuse', { volume: 0.6 });
+      }),
       on('karp:burst', ({ team }) => this._call(team, 'SHELL BURST!', 'GRAB THE BAZOOKARP!', 'THEY BURST THE SHELL!', 'STOP THE GRAB!')),
       on('karp:pickup', ({ actor, team }) => { if (actor === G.match?.local) this._call(team, "YOU'VE GOT THE BAZOOKARP!", '60 s to land it — go!'); else this._call(team, "WE'VE GOT THE BAZOOKARP!", null, "THEY'VE GOT THE BAZOOKARP!", 'SPLAT THE CARRIER!'); }),
       on('karp:drop', ({ team, how }) => { if (how !== 'moved' && team >= 0 && !this._boomed(how)) this._call(team, 'WE LOST THE BAZOOKARP!', null, 'CARRIER DOWN!', null); }),
       on('karp:plant', ({ team }) => this._call(team, 'WEIR DOWN!', 'Their Dragon Gate is open!', 'THEY TOOK A WEIR!', 'Our Dragon Gate is open — defend it!')),
       // the Carp Blast's banner says where it goes next; the drop / reset that follows it at once no longer replaces it
-      on('karp:explode', ({ actor, own }) => { if (!actor) return; this._boomT = performance.now(); this._call(actor.team, 'IT BLEW UP ON US!', own ? 'Back to the Pond' : 'It lies where it blew — get it back!', 'THEIR BAZOOKARP BLEW UP!', own ? 'Back to the Pond' : 'It lies where it blew — grab it!'); }),
+      on('karp:explode', ({ actor, own }) => { if (!actor) return; this._boomT = this._clk; this._call(actor.team, 'IT BLEW UP ON US!', own ? 'Back to the Pond' : 'It lies where it blew — get it back!', 'THEIR BAZOOKARP BLEW UP!', own ? 'Back to the Pond' : 'It lies where it blew — grab it!'); }),
       on('karp:reset', ({ why }) => this.hud._zLive?.() && !this._boomed(why) && this._say('BACK TO THE POND!', { small: true, icon: KARP_GLYPH })),
+      // ([karp-face] review round 2: the stock OVERTIME! centre banner covered our call-out for its whole life — nobody
+      // read the instruction. The banner now carries it under the word, and our call-out follows as the banner fades)
       on('karp:overtime', ({ losing }) => {
         if (!this.hud._zLive?.()) return;
-        this.hud._zOvertime?.();
         const held = !!G.match?.karp?.holder && G.match.karp.holderTeam === losing;
-        this._say('OVERTIME!', { team: me() === losing ? me() : 1 - me(), sub: me() === losing ? (held ? 'Carry it past their count!' : 'Grab it within 10 s!') : 'Stop them — 10 s to hold!', icon: KARP_GLYPH });
+        const sub = me() === losing ? (held ? 'Carry it past their count!' : 'Grab it within 10 s!') : 'Stop them — 10 s to hold!';
+        this.hud._zOvertime?.();
+        const bn = this.hud.bannerLayer?.lastElementChild;
+        if (bn && bn.classList.contains('iw-bn--ot')) {
+          const el = h('span', { class: 'iw-kbn-sub' }, h('i', { html: KARP_GLYPH }), h('b', null, sub));
+          colorVars(el, 'zk', this.hud._zHex?.(losing) || '#ffd27a');
+          bn.classList.add('is-karp'); bn.appendChild(el);
+        }
+        this._hold = Math.max(this._hold, OT_BANNER);
+        this._say('OVERTIME!', { team: losing, sub, icon: KARP_GLYPH });
       }),
       on('karp:end', ({ reason }) => this.hud._zEnd?.({ reason })),
       on('karp:full', ({ actor }) => { if (actor === G.match?.local) this.hud._restart?.(this.ret, 'is-flash'); }),
@@ -266,7 +300,7 @@ export class KarpHud {
   }
   _note(t) { this.no.textContent = t; this.no.classList.remove('is-on'); void this.no.offsetWidth; this.no.classList.add('is-on'); this._noT = 1.6; this.show.no = t; }
   // a drop / reset the fuse caused, right after the Carp Blast's own banner (which already says where it went)
-  _boomed(why) { return why === 'fuse' && performance.now() - (this._boomT ?? -1e9) < 1500; }
+  _boomed(why) { return why === 'fuse' && this._clk - (this._boomT ?? -1e9) < 1.5; }
   // a call-out: ours (us) / theirs (them) by the event's team
   _call(team, us, usSub, them, themSub) {
     if (!this.hud._zLive?.()) return;
@@ -277,13 +311,19 @@ export class KarpHud {
   // Bazookarp's events come in bursts (SHELL BURST! then YOU'VE GOT THE BAZOOKARP! 0.25 s later; a plant's WEIR DOWN!
   // with the re-form): a call-out within 1.5 s of the last one replaces it instead of stacking under it
   _say(text, opts) {
-    const H = this.hud, now = performance.now();
+    const H = this.hud;
     // ([karp-face] a kill call-out still popping in — a burst's WIPEOUT! comes the same frame as its SHELL BURST! — goes
-    // first: ours follows once its pop is over, below it — has-kcall — so neither is drawn over the other)
-    const kc = H.callouts?.querySelector('.iw-call'), kAge = kc ? kc.getAnimations?.()[0]?.currentTime ?? 1e9 : 1e9;
-    if (kAge < 380) { this.show.call = text; clearTimeout(this._sayLater); this._sayLater = setTimeout(() => this._say(text, opts), 380 - kAge); return; }
-    if (now - (this._sayT || -1e9) < 1500 && H.zcalls) for (const el of [...H.zcalls.children]) el.remove();
-    this._sayT = now; this.show.call = text;
+    // first: ours follows once its pop is over, below it — has-kcall — so neither is drawn over the other. Review round
+    // 2: its age is counted in play time from the frame the HUD first saw it (one made this frame: 0), and ours waits
+    // in _pend, released by update() — the CSS animation's clock and a setTimeout stood still in the stepped rules test,
+    // so a stale kill call-out from an earlier check held ours back past the read: L11 / L11b, 1 run in 2. A call-out
+    // that comes while one waits (the OVERTIME! banner's, or this) replaces it: the newest news wins.)
+    const kc = H.callouts?.querySelector('.iw-call') || null, kAge = !kc ? 1e9 : kc === this._kcSeen ? this._kcAge : 0;
+    const wait = Math.max(this._hold, KPOP - kAge);
+    if (wait > 0) { this._hold = wait; this._pend = { text, opts }; this.show.call = text; return; }
+    this._pend = null;
+    if (this._clk - (this._sayT ?? -1e9) < 1.5 && H.zcalls) for (const el of [...H.zcalls.children]) el.remove();
+    this._sayT = this._clk; this.show.call = text;
     H._zCall(text, opts);
   }
   // screen point of a world point (null off the camera's front), in CSS px
@@ -298,6 +338,13 @@ export class KarpHud {
 
   update(dt, f) {
     const on = !!f, el = this.hud.el;
+    // ([karp-face] the call-outs' play clock: the kill call-out's age since this HUD first saw it; a waiting call-out
+    // goes up once its wait is over)
+    this._clk += dt;
+    const kc = this.hud.callouts?.querySelector('.iw-call') || null;
+    if (kc !== this._kcSeen) { this._kcSeen = kc; this._kcAge = 0; } else this._kcAge += dt;
+    if (this._hold > 0) this._hold = Math.max(0, this._hold - dt);
+    if (this._pend && this._hold <= 0) { const p = this._pend; this._pend = null; this._say(p.text, p.opts); }
     if (on !== this.on) { this.on = on; el.classList.toggle('is-karp', on); if (on) { this.hud._L.zc0 = this.hud._L.zc1 = null; this._weirKey = null; } }
     if (this._noT > 0 && (this._noT -= dt) <= 0) { this.no.classList.remove('is-on'); this.show.no = null; }
     this.cues.update(dt, f);
@@ -515,6 +562,12 @@ export class KarpHud {
     }
     if (kc) out.push({ l: this._kcR.l - 4, r: this._kcR.r + 4, t: this._kcR.t - 4, b: this._kcR.b + 4 });
     // (each with its ribbon — it reaches past the text's box — and a few px round it: a weir's 45 sat on the ribbon's edge)
+    // ([karp-face] review round 2: and the centre banner — OVERTIME! with its instruction: a weir's 45 sat on the word)
+    if (H.bannerLayer) for (const b of H.bannerLayer.children) {
+      if (b.dataset.g !== 'center') continue;
+      const r = b.getBoundingClientRect(); if (!(r.width > 0)) continue;
+      out.push({ l: r.left - 4 - (this._ox || 0), r: r.right + 4 - (this._ox || 0), t: r.top - 4 - (this._oy || 0), b: r.bottom + 4 - (this._oy || 0) });
+    }
     if (H.zcalls) for (const z of H.zcalls.children) {
       const r = z.getBoundingClientRect(); if (!(r.width > 0)) continue;
       const rb = z.querySelector('.iw-zcall__ribbon')?.getBoundingClientRect(), pad = 4;
@@ -555,8 +608,8 @@ export class KarpHud {
     this.show.tags = shown;
     if (this.show.tagBoxes) this.show.tagBoxes.length = shown.length;
   }
-  state() { return { on: this.on, ...this.show, cues: this.cues.played.slice(-12) }; }
-  dispose() { clearTimeout(this._sayLater); this._unsubs.forEach((u) => u()); this.cues.dispose(); for (const e of [this.line, this.mk, this.ret, this.bot, this.no, this.shellTag, this.tags]) e.remove(); }
+  state() { return { on: this.on, ...this.show, pend: this._pend ? this._pend.text : null, hold: +this._hold.toFixed(3), cues: this.cues.played.slice(-12) }; }
+  dispose() { this._pend = null; this._unsubs.forEach((u) => u()); this.cues.dispose(); for (const e of [this.line, this.mk, this.ret, this.bot, this.no, this.shellTag, this.tags]) e.remove(); }
 }
 
 // ================================================================================================ the maps (minimap.js)
