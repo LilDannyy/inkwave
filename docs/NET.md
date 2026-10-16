@@ -531,7 +531,11 @@ tools/botlab/jobs/batch5/bazookarp/SPEC.md §7):
   (6 m), at most `claimWait` (0.3 s); none near → at once (offline,
   lone grabs). Then the valid claim with the smallest `since` wins (a touch inside the 0.25 s hold counts as the hold's
   end), equal → the nearest (SPEC §7.3). When an S39b window's grace runs out with a grant still held open, it is
-  decided then. Measured: net-karp face 5.
+  decided then. A touch is timed where the positions are (the end of the last frame: the engine runs before the actors
+  move), less the overshoot past `pickR` at the toucher's speed; a fresh free phase lets a guest claim at once (its
+  re-send clock from its last claim used to hold it back up to 0.3 s). The host keeps its last 40 decisions in
+  `karp.stats.grantLog`. Measured: net-karp `part=race` / `part=racekid` (a host bot / the host's own player against
+  the guest, 16 rounds each).
 - **devices and subs at the shell (fix round 2).** No new record. Every screen grows its own copy of a re-forming
   shell from the `d` / `r` / `w` records and, every frame it grows and while it stands, crushes **its own** devices
   inside it (`G.deploy.crushIn({ sphere }, 'shell')`: a sprinkler, beacon, Drip Curtain, Lurk Mine, stuck Cling Charge,
