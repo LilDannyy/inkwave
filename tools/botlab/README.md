@@ -150,14 +150,20 @@ Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/j
   and `python3 tools/botlab/karp-agg.py *.json` (the §9.1 rows, INFO below 16 matches, a SUMMARY line).
   [b5-karp-bots] `KARP_AI=0` plays WP1's minimal bots (the A/B baseline); the report adds the bots' route shares, the Carp
   Shots they noticed (escaped / caught), the carrier's shots by kind, roles, keepers on their spot and holds (bots
-  standing on purpose are not "stuck"). The shared balance pass: `tools/botlab/jobs/batch5/karp-bots/JOB-1.sh` (the Mac
-  mini template: `STAGES`, `HARD`, `N`).
+  standing on purpose are not "stuck"), each team's first bot by the Pond (the walk in: the floor under the first pop) and
+  where a carrierRetreatFallback happened (with the team, P there and the retreat mark). `PLAN='karpbox:normal:4,
+  halyard:hard:2'` plays several matches in one instance (one slot; `OUT=dir/x.json` → `x-<map>-<diff>-<i>.json`);
+  what-ifs for the balance pass, never saved: `KARP_TUNE='{"jumpR":30}'` (botsKarp's `KARP_AI`) and
+  `KARP_CFG='{"shell":{"reformHp":600}}'` (`BAZOOKARP`, deep; the opening shell is re-formed with its hp). The shared balance
+  pass: `tools/botlab/jobs/batch5/karp-bots/JOB-1.sh` (the Mac mini template: `STAGES`, `HARD`, `N`).
 - The bots (SPEC §8, src/game/botsKarp.js): `MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/karp-bots.js
   tools/botlab/run.sh tools/botlab/page.cjs` — WP3's scenarios: breakers out of the burst at ≥ 70 % (60 % hard), melee
   breakers' ring, no touch damage in 20 bursts, the grabber's 3.0–3.2 m wait and grab, an autopilot carrier's 3 carries,
-  kit-weapon carriers fire nothing of their own, the ×3 fallback, out of a Big Burst ≥ 16 of 20, the keeper at the Gate
-  and the weir on the route, no wall-hack and the 20 m wake, the knockback push, the layout's route hints
-  (`PAGE_ARGS='only=A,…'`).
+  kit-weapon carriers fire nothing of their own, the ×3 fallback (a sea-to-sea zone; G(b): a pocket of its own zone open
+  behind it — the retreat mask's own case), out of a Big Burst ≥ 16 of 20 (a breaker standing on its spot, from 18 m;
+  12 and 15 m reported), the keeper at the Gate and the weir on the route, no wall-hack and the 20 m wake, the knockback
+  push, our carrier's fuse danger, the layout's route hints, super jumps to the carrier, the fuse → over the halfway line,
+  walkers round the shell (`PAGE_ARGS='only=A,…'`; `hRange=12,15` other ranges for H).
 - Pictures: tools/botlab/scenes/karp.js through hud-shots.cjs.
 
 Stage set pieces:
