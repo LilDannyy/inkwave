@@ -62,8 +62,14 @@
   const paintAround = (team, c, r, n = 10) => { for (let k = 0; k < n; k++) { const a = (k / n) * Math.PI * 2; G.paint.splat(V(c.x + Math.cos(a) * r * 0.6, c.y + 0.3, c.z + Math.sin(a) * r * 0.6), r * 0.55, team, { seed: k + 3 }); } G.paint.splat(V(c.x, c.y + 0.3, c.z), r * 0.6, team, { seed: 1 }); };
   // the TAB map: the HUD's big map for one scene
   if (!g.hud._karpTabHook) { const u = g.hud.update.bind(g.hud); g.hud.update = (dt, f) => { if (window.__tab && f && f.map) f.map.expanded = true; return u(dt, f); }; g.hud._karpTabHook = true; }
+  // ([karp-face] review round 2: the LEAD badge as the scene's counts have it — its state machine waits LEAD.hold before
+  // a change shows, and the scenes step only 0.1 s after setting the counts, so the last scene's leader was still up:
+  // 1080 hud-ally / hud-foe-pin had LEAD on the team behind)
+  const settleLead = () => { const L = g.hud.lead; if (!L || L.mode !== 'karp') return; const c = Kp.count, rt = Kp.reachT;
+    L.leader.set(c[0] !== c[1] ? (c[0] < c[1] ? 0 : 1) : c[0] >= 100 ? -1 : rt[0] <= rt[1] ? 0 : 1);
+    const k = { ...Kp.state(), viewer: me.team }; L._karp(k, 1); L._karp(k, 1); L._show(); };
   const S = [];
-  const add = (name, set, moment, wait = 90) => { if (ONLY && !ONLY.split(',').includes(name)) return; S.push({ name, set: async () => { g.hud.setVisible?.(!name.startsWith('look-')); if (name !== 'map-tab') window.__tab = false; await set(); return { phase: Kp.phase, meter: Math.round(Kp.shell.meter), count: Kp.count, holder: Kp.holder?.name, hud: g.hud.karp?.state() }; }, moment, wait }); };
+  const add = (name, set, moment, wait = 90) => { if (ONLY && !ONLY.split(',').includes(name)) return; S.push({ name, set: async () => { g.hud.setVisible?.(!name.startsWith('look-')); if (name !== 'map-tab') window.__tab = false; await set(); if (name.startsWith('hud-')) settleLead(); return { phase: Kp.phase, meter: Math.round(Kp.shell.meter), count: Kp.count, holder: Kp.holder?.name, lead: g.hud.lead?.leader?.v, hud: g.hud.karp?.state() }; }, moment, wait }); };
   const side = (p, k) => V(p.x, p.y, p.z - dz * k);   // k m back toward Alpha's side
 
   // ================================================================ the HUD
@@ -152,15 +158,21 @@
     put(me, clearSpot(gp.x, gp.z - dz * 9, gp.y, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI); grab(me); step(0.1); me.yaw = me.aimYaw = yawTo(me, gp);
     Kp.count[0] = 12; Kp.fuse = Kp.hud.fuseShown = 19.4; calm(); follow(); step(1 / 60);
   });
-  add('hud-ot', async () => {
-    reset(); m.time = 0.05;
+  // ([karp-face] review round 2: overtime as the engine calls it at time-up — the stock OVERTIME! centre banner left in
+  // (the old scene removed it with calm() and called _say itself: a frame no player sees). hud-ot: 0.6 s in, the banner
+  // carrying the instruction; hud-ot-after: 2.9 s in, the banner gone and our call-out up (its wait — 2.0 s — runs on play
+  // time: the sim is stepped 2.05 s at the moment the wall clock gets there). Alpha leads 41 / 63 and lost it in the last
+  // 15 s (S39b): the window opens for Bravo; we are Alpha — 'Stop them — 10 s to hold!')
+  const otStage = () => {
+    reset(); m.time = 9;
     Kp.count = [41, 63]; Kp.reachT = [120, 90]; Kp.touched = true; Kp.lastCarrier = { team: 0, how: 'splat', left: 6 };
     put(me, clearSpot(P.x - 1, P.z + dz * 9, null, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI);
     B.forEach((b, i) => put(b, spot(P.x + (i - 1.5) * 3, P.z + dz * 7, P.y)));
-    step(0.05); step(3.2); follow(); calm(); g.hud.countLayer?.replaceChildren();   // ([karp-face] the last-ten count's "1": the stepped clock made it fresh; in play it has faded by then)
-    g.hud.karp._say('OVERTIME!', { team: 0, sub: 'Stop them — 10 s to hold!', icon: (await import('./src/ui/hud-karp.js')).KARP_GLYPH });
-    step(1 / 60);
-  });
+    step(0.05); follow(); m.time = 0.05; dbg.step(1000 / 60); calm();
+  };
+  const otGo = () => { step(0.05); g.hud.countLayer?.replaceChildren(); };   // (time's up: the engine's timeUp() → overtime; the last-ten count's digit cleared, as the stepped clock left it fresh)
+  add('hud-ot', otStage, otGo, 600);
+  add('hud-ot-after', otStage, () => { otGo(); setTimeout(() => dbg.step(2050), 2000); }, 2900);
   add('hud-fuse-low', () => {
     reset(); m.time = 120;
     put(me, clearSpot(P.x, P.z + dz * 12, P.y, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI); grab(me); step(0.1);
@@ -179,6 +191,21 @@
     paintAround(0, a.pos, 4); paintAround(1, side(P, -16), 4);
     put(me, spot(P.x - 2, P.z - dz * 4, P.y)); Kp.fuse = 36;
     window.__tab = true; step(0.6); follow();
+  });
+  // ([karp-face] review round 2: the carrier picks a teammate on the TAB map — "Can't super jump with the Bazookarp";
+  // and the carrier pushed back by its own spawn's barrier — "You can't take it into a spawn")
+  add('hud-nojump', () => {
+    reset(); m.time = 166;
+    put(A[0], spot(P.x + 2, P.z - dz * 12, P.y)); put(me, clearSpot(P.x, P.z + dz * 8, P.y, dz > 0 ? 0 : Math.PI), dz > 0 ? 0 : Math.PI); grab(me); step(0.1);
+    Kp.fuse = Kp.hud.fuseShown = 38; window.__tab = true; step(0.6); follow(); g.hud._jumpTo(0); step(1 / 60);
+  });
+  add('hud-nospawn', () => {
+    reset(); m.time = 160; window.__tab = false;
+    const pad = G.level.spawnPads[0], Rb = G.level.spawnBarrier, toP = Math.atan2(P.x - pad.x, P.z - pad.z);
+    for (const a of A) put(a, spot(pad.x + Math.sin(toP) * 12, pad.z + Math.cos(toP) * 12, pad.y));
+    put(me, spot(P.x, P.z + dz, P.y)); grab(me); step(0.05);
+    const inside = V(pad.x + Math.sin(toP) * (Rb - 0.3), pad.y, pad.z + Math.cos(toP) * (Rb - 0.3));
+    put(me, inside, toP + Math.PI); Kp._refT = null; step(2 / 60); Kp.fuse = Kp.hud.fuseShown = 26; follow(); step(1 / 60);
   });
   add('map-mini', () => {
     window.__tab = false;
