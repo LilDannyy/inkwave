@@ -231,7 +231,7 @@ export const PLACEMENTS = [
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_walls', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false, list: GANTRY_RAILS, onlyIn: 'bazookarp' },
-  { type: 'caldera_surge_gauge', pos: [0, 0, 0], mirror: false },
+  { type: 'caldera_surge_gauge', pos: [0, 0, 0], mirror: false, notIn: 'boss' },   // (the lava fix round 3: Boss Battle's variant has no gauge — its piers stood in the boss's ground)
   { type: 'caldera_highmark', pos: [0, 0, 0] },
   { type: 'caldera_hall_roof', pos: [0, 0, 0] },
   { type: 'caldera_cupola_hood', pos: [-3.2, 0, -64.3] },

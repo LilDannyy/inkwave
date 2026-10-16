@@ -180,7 +180,7 @@ export function expandLava(def, inMode = () => true) {
   for (const s of def.steps || []) { if (!inMode(s)) continue; for (const twin of mir ? [0, 1] : [0]) steps.push({ a: end(s[0], twin), b: end(s[1], twin), twin }); }
   const twinPos = (p, twin) => (twin ? [-p[0], p[1], -p[2]] : [...p]);
   const gauges = [];
-  for (const g of def.gauges || []) for (const twin of mir && !g.single ? [0, 1] : [0]) gauges.push({ ...g, pos: twinPos(g.pos, twin), yaw: (g.yaw || 0) + (twin ? Math.PI : 0), twin });
+  for (const g of def.gauges || []) { if (!inMode(g)) continue; for (const twin of mir && !g.single ? [0, 1] : [0]) gauges.push({ ...g, pos: twinPos(g.pos, twin), yaw: (g.yaw || 0) + (twin ? Math.PI : 0), twin }); }
   const cascades = [];
   for (const c of def.cascades || []) for (const twin of mir && !c.single ? [0, 1] : [0]) cascades.push({ ...c, lip: c.lip.map((p) => (twin ? rot(p) : [...p])), twin });
   const vents = [];

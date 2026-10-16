@@ -886,7 +886,21 @@ export class StageLava {
   botHold(b) { this._wb = b; return false; }
   burns(a) { return !!a && a.alive && !a.superJumpState && this.under(a.pos); }
   // no device is placed where the lava will be within the next warning + move (the rising surface's reach)
-  noPlace(p, r = 0) { if (!this.W.inRegion(p.x, p.z)) return false; const T = this.sched.T; return p.y < this.maxOver(this.clock.t, this.clock.t + T.warn + T.rise + 1) + LAVA.kill + 0.05; }
+  // (fix round 3) a spot with no floor under it — the base of a device that floats on the liquid (b5-int3's Chain Bobber
+  // asks at max(floor, liquid): 1.0 m over the lava it rides a rise up, ENGINE §4.2) — is no no-place: every bobber over
+  // the lake was refused, even at LOW with no rise coming. The sweep ends whatever the lava does reach
+  noPlace(p, r = 0) {
+    if (!this.W.inRegion(p.x, p.z)) return false;
+    const L = G.level, gh = L ? L.groundHeight(p.x, p.z, p.y + 0.05) : p.y;
+    if (!(gh > p.y - 0.3) && !(L && this._drownedUnder(L, p))) return false;
+    const T = this.sched.T; return p.y < this.maxOver(this.clock.t, this.clock.t + T.warn + T.rise + 1) + LAVA.kill + 0.05;
+  }
+  // a drowned floor (its collider off while the lava covers it) under p within 0.3 m (noPlace: it is still a floor)
+  _drownedUnder(L, p) {
+    const ids = L.queryBlocks(p.x - 0.01, p.z - 0.01, p.x + 0.01, p.z + 0.01, (this._dq ||= []));
+    for (const id of ids) { const b = L.blocks[id]; if (!b.lavaDrown) continue; const top = b.center.y + b.half.y; if (top > p.y - 0.3 && top <= p.y + 0.05 && L.pointInBlock(b, _v.set(p.x, top - 0.02, p.z), 0.001)) return true; }
+    return false;
+  }
   danger(pos, pad = 0.5) { return this.covers(pos.x, pos.z, pos.y - pad * 0.2, 10); }
   // the height below which ink may not land in the region, for a splat painted at stage time et
   // (now: the furthest stage time reached — the burn's tMax — so a clock easing back never lets ink under the line)

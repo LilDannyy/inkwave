@@ -143,6 +143,11 @@ const groundOf = (id) => (GROUNDS[id] ? [...GROUNDS[id].cols, ...GROUNDS[id].led
 const HALF = [];
 const SINGLE = [];
 const add = (...p) => HALF.push(...p.flat());
+// (the lava fix round 3, the lead's decision: Boss Battle's own variant — HULLBREAKER needs 2.9 m from any wall and its
+// home ground was the island and both causeways, cut up by the Surge Gauge's piers and the island's dressing (463 m²).
+// In Boss Battle the gauge, the island's stacks, plinths and deck and the Lakefronts' dressing in its clearance ring are
+// not built, so its ground is one piece over the island, both causeways and both Lakefronts. Every other mode unchanged)
+const noBoss = (p) => (Array.isArray(p) ? p.flat(Infinity).map(noBoss) : { ...p, notIn: 'boss' });
 const RAILS = [];   // [x0, z0, x1, z1, y, h]: every railing's line (props.js draws them; the colliders are below)
 const railSeg = (a, b, y, h = 1.0, t = 0.25, o = {}) => {
   const dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz);
@@ -160,17 +165,18 @@ SINGLE.push(B(-0.37, 0.41, -1.2, 0, -0.43, 0.39, { hidden: true, paint: false, t
 // ---------------------------------------------------------------------------------------- mid: Gauge Island
 // the Pour Floor (cast-iron plates, 1.8): the plinth under the Surge Gauge; the centre zone, the Pond, the tower's start
 SINGLE.push(B(-5, 5, 1.2, 1.8, -5, 5, iron({ tag: 'pour-floor', color: '#7f8389' })));
+// (Boss Battle: none of the gauge — noBoss)
 // the Surge Gauge: four basalt piers to 7 m (off the diagonals: the Pond is seen from all 8 directions), two tie girders
 // at 6.0–6.9 m (they cut the spawn-to-spawn sightline), the upper works solid to 22 m (props.js draws them)
-for (const [px, pz] of [[4.2, 1.75], [4.2, -1.75], [-4.2, 1.75], [-4.2, -1.75]]) SINGLE.push(B(px - 0.6, px + 0.6, 1.8, 7.0, pz - 0.6, pz + 0.6, rock({ tag: 'gauge-pier', roof: true, color: K.basaltDk })));
-for (const s of [-1, 1]) SINGLE.push(B(-4.75, 4.75, 6.0, 6.9, s * 1.75 - 0.2, s * 1.75 + 0.2, { color: K.green, pattern: PATTERN.metal, roof: true, tag: 'tie-girder' }));
+for (const [px, pz] of [[4.2, 1.75], [4.2, -1.75], [-4.2, 1.75], [-4.2, -1.75]]) SINGLE.push(noBoss(B(px - 0.6, px + 0.6, 1.8, 7.0, pz - 0.6, pz + 0.6, rock({ tag: 'gauge-pier', roof: true, color: K.basaltDk }))));
+for (const s of [-1, 1]) SINGLE.push(noBoss(B(-4.75, 4.75, 6.0, 6.9, s * 1.75 - 0.2, s * 1.75 + 0.2, { color: K.green, pattern: PATTERN.metal, roof: true, tag: 'tie-girder' })));
 const GAUGE_HIDDEN = (o) => ({ hidden: true, roof: true, paint: false, color: '#888888', tag: 'gauge-works', ...o });
-SINGLE.push(
+SINGLE.push(...noBoss([
   B(-4.8, 4.8, 7.0, 12.0, -2.35, 2.35, GAUGE_HIDDEN()), B(-1.8, 1.8, 12.0, 17.0, -1.8, 1.8, GAUGE_HIDDEN()),
   B(-1.5, 1.5, 17.0, 18.5, -1.5, 1.5, GAUGE_HIDDEN()), B(-1.5, 1.5, 18.5, 20.5, -1.5, 1.5, GAUGE_HIDDEN()),
   B(-1.2, 1.2, 20.5, 22.0, -1.2, 1.2, GAUGE_HIDDEN()),
   B(-1.2, 1.2, 8.0, 15.0, -2.65, -2.35, GAUGE_HIDDEN({ tag: 'gauge-board' })), B(-1.2, 1.2, 8.0, 15.0, 2.35, 2.65, GAUGE_HIDDEN({ tag: 'gauge-board' })),
-);
+]));
 // helpers: a run of O-boxes along a polyline (parapets): tops alternate 0 / +0.1 so overlapping corners never z-fight;
 // a stair standing on the lower tier in front of a chord of the face it climbs; cover stacks
 function segsAlong(pts, t, y0, y1, o, side = 0) {
@@ -212,7 +218,7 @@ function cone(cx, cz, rTop, yTop, rBase, yBase, tag) {
 add(B(-G.CW, G.CW, -1.1, 1.2, G.r3(G.CAUSE_Z), -11.5, tuff({ tag: 'causeway', color: '#aaa59c' })));
 // (the lava phase: the plinths 1 m in from the edges — at x ±4 they left a 0.55 m strip, no landing for the 1.2 m hop up
 // from the Casting Floor beside them, and a bot escaping the rise died there; ≥ 0.8 m from the tower's lane still)
-for (const [x, z] of [[3.0, -14.5], [-3.0, -14.5], [3.0, -19.5], [-3.0, -19.5]]) add(B(x - 0.45, x + 0.45, 1.2, 2.5, z - 0.45, z + 0.45, cover(K.basaltDk, { tag: 'lamp-plinth' })));
+for (const [x, z] of [[3.0, -14.5], [-3.0, -14.5], [3.0, -19.5], [-3.0, -19.5]]) add(noBoss(B(x - 0.45, x + 0.45, 1.2, 2.5, z - 0.45, z + 0.45, cover(K.basaltDk, { tag: 'lamp-plinth' }))));
 // the Organ Pipes and (at HIGH) both Pumice Races: static stand-ins at this build's level until the lava engine lands
 if (BLOCKOUT_LAVA) {
   add(riderStandIns((what, o) => (what === 'stone' ? { color: K.pumice, pattern: PATTERN.rubber, ...o }
@@ -225,12 +231,12 @@ if (BLOCKOUT_LAVA) {
 // and of the Pond's 8 sightlines (the 7 m viewpoints). The island's west face (r 16.2) is the second Race's landing:
 // 4 m of floor between it and the deck, the machine house and a stump beside it
 const DECK = { x0: -12.0, x1: -5.4, z0: -0.6, z1: 6.6 };
-add(B(DECK.x0, DECK.x1, 1.2, 2.4, DECK.z0, DECK.z1, { color: '#7b7e84', pattern: PATTERN.yard, tag: 'gauge-deck' }));
-add(R([-8.7, 1.2, 9.3], [-8.7, 2.4, DECK.z1], 4, steps({ tag: 'deck-stair' })));             // up from the island's NW toward Bravo's causeway
-add(B(-12.0, -9.0, 2.4, 4.6, 2.6, 6.6, white({ tag: 'gauge-machine-house', color: '#dcd6c8' })));
-add(B(-6.9, DECK.x1, 2.4, 3.4, DECK.z0, DECK.z0 + 1.2, cover(K.ironDk, { tag: 'valve-chest' })));
-for (const [x, z, r, top] of [[-6.4, -8.6, 0.9, 2.1], [-12.9, -2.4, 0.9, 2.4], [-7.0, -3.6, 0.8, 1.8]]) add(OCT(x, z, r, 1.2, top, rock({ tag: 'organ-stump', color: K.basaltDk })));
-add(stack(2.9, -9.3, 1.2, 1.2, 1.1, 1.2, 'ingot-stack'), drum(7.6, -6.3, 1.0, 1.4, 1.2, 'stilling-drum', '#5d6268'), stack(11.6, 0.8, 1.4, 1.8, 1.4, 1.2, 'ladle-stand', K.ironDk));
+add(noBoss(B(DECK.x0, DECK.x1, 1.2, 2.4, DECK.z0, DECK.z1, { color: '#7b7e84', pattern: PATTERN.yard, tag: 'gauge-deck' })));
+add(noBoss(R([-8.7, 1.2, 9.3], [-8.7, 2.4, DECK.z1], 4, steps({ tag: 'deck-stair' }))));             // up from the island's NW toward Bravo's causeway
+add(noBoss(B(-12.0, -9.0, 2.4, 4.6, 2.6, 6.6, white({ tag: 'gauge-machine-house', color: '#dcd6c8' }))));
+add(noBoss(B(-6.9, DECK.x1, 2.4, 3.4, DECK.z0, DECK.z0 + 1.2, cover(K.ironDk, { tag: 'valve-chest' }))));
+for (const [x, z, r, top] of [[-6.4, -8.6, 0.9, 2.1], [-12.9, -2.4, 0.9, 2.4], [-7.0, -3.6, 0.8, 1.8]]) add(noBoss(OCT(x, z, r, 1.2, top, rock({ tag: 'organ-stump', color: K.basaltDk }))));
+add(noBoss([stack(2.9, -9.3, 1.2, 1.2, 1.1, 1.2, 'ingot-stack'), drum(7.6, -6.3, 1.0, 1.4, 1.2, 'stilling-drum', '#5d6268'), stack(11.6, 0.8, 1.4, 1.8, 1.4, 1.2, 'ladle-stand', K.ironDk)]));
 
 // ---------------------------------------------------------------------------------------- Alpha's base: the gallery
 // the spawn gallery (4.8): the Casting Hall's gable balcony, open to the sky. Pad (−17, 4.8, −62.5). Three exits: the
@@ -342,19 +348,19 @@ add(B(-14.15, -12.95, 2.4, 4.0, -37.95, -37.05, cover('#6b5f55', { tag: 'flask-s
   add(frameBox(e, u, [0.02, 3.25], [-0.05, 2.3], 2.4, 5.9, { color: K.brick, pattern: PATTERN.brick, roof: true, tag: 'firebrick-store' })); }
 
 // ---------------------------------------------------------------------------------------- the Lakefront (1.2), the Moorings (1.8)
-add(ob([-7.8, -23.4], 2.4, 0.6, 1.2, 3.4, 0, cover('#e6dfcd', { tag: 'tide-board' })));   // the Tide Board by the causeway's foot, clear of the tower's run and the weir's room
-add(stack(-4.0, -23.2, 1.0, 1.0, 1.1, 1.2, 'mooring-bollard', K.ironDk));
+add(noBoss(ob([-7.8, -23.4], 2.4, 0.6, 1.2, 3.4, 0, cover('#e6dfcd', { tag: 'tide-board' }))));   // the Tide Board by the causeway's foot, clear of the tower's run and the weir's room
+add(noBoss(stack(-4.0, -23.2, 1.0, 1.0, 1.1, 1.2, 'mooring-bollard', K.ironDk)));
 // the Lakefront east of the causeway: a ladle cradle (1.6) at the terrace face's foot, between the weir's 3 m room and
 // the East Steps' west side
-add(polBox(G.RT(-75.95) - 0.52, -75.95, 1.3, 1.0, 1.2, 2.8, cover(K.ironDk, { tag: 'ladle-cradle' })));
+add(noBoss(polBox(G.RT(-75.95) - 0.52, -75.95, 1.3, 1.0, 1.2, 2.8, cover(K.ironDk, { tag: 'ladle-cradle' }))));
 // and a chain bin at the face's foot beside the Lower Surge Steps (3.3 m from the weir)
 add(stack(1.8, -29.3, 1.0, 0.8, 1.1, 1.2, 'chain-bin', '#4f5a52'));
 // the Moorings (the side zone): the capstan, a chain bollard (off the tower's climb lane, x ≥ −17.75), the spare-stone
 // crate and a mooring bollard on its lake edge (north of the tower's run, z ≥ −24.25). Their colliders start 0.2 m down
 // in the Moorings' deck (1.6): the same on screen and to every player, and the cover rule's Lakefront-level measure
 // (bare.mjs reads the Moorings at 1.2) sees them as the pieces they are
-add(stack(-14.4, -29.8, 1.4, 1.2, 1.5, 1.6, 'capstan', '#4f5a52'), stack(-17.2, -28.6, 1.0, 1.0, 1.2, 1.6, 'chain-bollard', K.ironDk),
-  stack(-22.7, -26.6, 1.2, 1.2, 1.2, 1.6, 'stone-crate', K.pumice), stack(-13.6, -23.4, 1.0, 0.9, 1.3, 1.6, 'mooring-bollard', K.ironDk));
+add(noBoss([stack(-14.4, -29.8, 1.4, 1.2, 1.5, 1.6, 'capstan', '#4f5a52'), stack(-17.2, -28.6, 1.0, 1.0, 1.2, 1.6, 'chain-bollard', K.ironDk),
+  stack(-22.7, -26.6, 1.2, 1.2, 1.2, 1.6, 'stone-crate', K.pumice), stack(-13.6, -23.4, 1.0, 0.9, 1.3, 1.6, 'mooring-bollard', K.ironDk)]));
 // the south Slump head: a chain bollard back from the Race's landing; the winch house against the Rim Head's face
 { const [x, z] = G.sp(G.S0, -2.4, -1.4); add(O(x, z, 1.0, 1.0, 1.2, 2.3, 19, cover(K.ironDk, { tag: 'chain-bollard' }))); }
 { const [x, z] = P(30.4, -139.5); add(O(x, z, 2.4, 2.4, 1.2, 4.0, 139.5, white({ tag: 'winch-house' }))); }
@@ -368,7 +374,7 @@ add(stack(12.0, -18.4, 1.4, 1.4, 1.8, 0, 'mould-stack', K.ironDk), stack(14.0, -
 { const [s0, s1] = G.BR_S, w = s1 - s0;
   add(armBox((s0 + s1) / 2, 0, w, 2 * G.AW + 1.0, 1.95, 2.3, iron({ tag: 'spillway-bridge', color: '#56685e' })));
   for (const s of [s0 + 0.125, s1 - 0.125]) add(railSeg(G.A(s, -G.AW + 0.15), G.A(s, G.AW - 0.15), 2.3));
-  add(armBox((s0 + s1) / 2, -1.6, 1.0, 1.2, 2.3, 3.4, cover(K.ironDk, { tag: 'slag-pot' }))); }   // a slag pot on the deck (cover; 2.4 m lanes beside it)
+  add(noBoss(armBox((s0 + s1) / 2, -1.6, 1.0, 1.2, 2.3, 3.4, cover(K.ironDk, { tag: 'slag-pot' })))); }   // a slag pot on the deck (cover; 2.4 m lanes beside it)
 // the Gauge Post (Bravo's, on its horn's point beside the bridge's landing; Alpha's is its turn at the NW): a squat
 // basalt blockhouse whose flat roof (3.6) is a hop from the horn — a lookout over the other works' bay and quay — with a
 // parapet on its outer sides

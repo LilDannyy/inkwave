@@ -71,8 +71,8 @@ export const LAVA = {
     [P(21.75, RACE2_A), 'race6'], ['race6', 'race7'], ['race7', P(15.9, RACE2_A)],
   ],
   gauges: [
-    { kind: 'bar', pos: [0, 8.0, -2.5], yaw: Math.PI, h: 7.0, single: true },    // the Surge Gauge's south board (to Alpha)
-    { kind: 'bar', pos: [0, 8.0, 2.5], yaw: 0, h: 7.0, single: true },           //   and its north board (to Bravo)
+    { kind: 'bar', pos: [0, 8.0, -2.5], yaw: Math.PI, h: 7.0, single: true, notIn: 'boss' },    // the Surge Gauge's south board (to Alpha)
+    { kind: 'bar', pos: [0, 8.0, 2.5], yaw: 0, h: 7.0, single: true, notIn: 'boss' },           //   and its north board (to Bravo) (no gauge in Boss Battle)
     { kind: 'bar', pos: [-31.15, 5.3, -46.5], yaw: Math.PI / 2, h: 1.8 },        // the Surge Board on the Surge Office's east face, toward the yard (twin; pos y = its foot)
   ],
   // (each Spillway is a lava arm from the mouth into its bay at both levels — at LOW only its ford (s ≤ 3, joined to the
