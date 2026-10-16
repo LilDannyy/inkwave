@@ -1,0 +1,158 @@
+JOB-4 raw results — automatic, by the Mac mini's b5-runner, 2026-10-16 14:10:11
+branch botlab-b5-int3, ran at 57e41a1, exit code 0, wall time 20min
+(a written-up JOB-4.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### E-zones-bomb-halyard-1: == halyard [zones]: winner Bravo (time) | final 98 vs 3 (penalty +3/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-glide-halyard-1: == halyard [zones]: winner Bravo (time) | final 86 vs 58 (penalty +10.5/+11.6) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-sentry-halyard-1: == halyard [zones]: winner Alpha (time) | final 63 vs 95 (penalty +10.7/+5) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bomb-halyard-2: == halyard [zones]: winner Bravo (knockout) | final 74 vs 0 (penalty +16.7/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-dash-halyard-1: == halyard [zones]: winner Alpha (time) | final 33 vs 94 (penalty +51/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bobber-halyard-1: == halyard [zones]: winner Bravo (time) | final 98 vs 85 (penalty +3/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-glide-halyard-2: == halyard [zones]: winner Alpha (knockout) | final 0 vs 99 (penalty +0/+2) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-sentry-halyard-2: == halyard [zones]: winner Bravo (knockout) | final 86 vs 0 (penalty +4/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bobber-halyard-2: == halyard [zones]: winner Bravo (time) | final 95 vs 83 (penalty +5/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-dash-halyard-2: == halyard [zones]: winner Bravo (time) | final 88 vs 48 (penalty +10.8/+2.5) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-glide-saltpan-1: == saltpan [zones]: winner Bravo (time) | final 100 vs 65 (penalty +1/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bomb-saltpan-1: == saltpan [zones]: winner Bravo (neutralised) | final 59 vs 41 (penalty +0/+32) | OT 44.3s | CONSOLE 0 unique warning/error line(s) 
+### E-zones-sentry-saltpan-1: == saltpan [zones]: winner Alpha (time) | final 63 vs 90 (penalty +0/+8) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-dash-saltpan-1: == saltpan [zones]: winner Bravo (time) | final 87 vs 87 (penalty +7/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bobber-saltpan-1: == saltpan [zones]: winner Alpha (time) | final 85 vs 100 (penalty +0/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bomb-saltpan-2: == saltpan [zones]: winner Alpha (comeback) | final 49 vs 49 (penalty +0/+14) | OT 1.7s | CONSOLE 0 unique warning/error line(s) 
+### E-zones-glide-saltpan-2: == saltpan [zones]: winner Bravo (time) | final 81 vs 23 (penalty +15/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-sentry-saltpan-2: == saltpan [zones]: winner Bravo (time) | final 86 vs 85 (penalty +0/+8.7) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bobber-saltpan-2: == saltpan [zones]: winner Bravo (time) | final 75 vs 73 (penalty +10/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-dash-saltpan-2: == saltpan [zones]: winner Bravo (neutralised) | final 73 vs 49 (penalty +0/+6.4) | OT 22.9s | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bomb-calamari-1: == calamari [zones]: winner Alpha (time) | final 48 vs 83 (penalty +25.1/+9.9) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-glide-calamari-1: == calamari [zones]: winner Bravo (knockout) | final 100 vs 0 (penalty +0/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bobber-calamari-1: == calamari [zones]: winner Bravo (time) | final 100 vs 7 (penalty +0/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-sentry-calamari-1: == calamari [zones]: winner Bravo (comeback) | final 32 vs 32 (penalty +49.7/+0) | OT 27.7s | CONSOLE 0 unique warning/error line(s) 
+### E-zones-dash-calamari-1: == calamari [zones]: winner Alpha (comeback) | final 51 vs 51 (penalty +0/+32.1) | OT 5.7s | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bomb-calamari-2: == calamari [zones]: winner Alpha (time) | final 30 vs 66 (penalty +0/+24) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-glide-calamari-2: == calamari [zones]: winner Bravo (time) | final 66 vs 34 (penalty +26.7/+29.2) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-sentry-calamari-2: == calamari [zones]: winner Alpha (time) | final 39 vs 76 (penalty +3/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bobber-calamari-2: == calamari [zones]: winner Bravo (time) | final 72 vs 39 (penalty +17.6/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-dash-calamari-2: == calamari [zones]: winner Bravo (retake) | final 65 vs 59 (penalty +22/+25) | OT 23.6s | CONSOLE 0 unique warning/error line(s) 
+### E-zones-glide-treehills-1: == treehills [zones]: winner Bravo (knockout) | final 89 vs 0 (penalty +7/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bomb-treehills-1: == treehills [zones]: winner Bravo (retake) | final 50 vs 47 (penalty +27/+27) | OT 28.1s | CONSOLE 0 unique warning/error line(s) 
+### E-zones-sentry-treehills-1: == treehills [zones]: winner Bravo (comeback) | final 53 vs 53 (penalty +12.1/+0) | OT 18.6s | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bomb-treehills-2: == treehills [zones]: winner Alpha (time) | final 11 vs 68 (penalty +0/+26) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bobber-treehills-1: == treehills [zones]: winner Bravo (time) | final 87 vs 42 (penalty +7.8/+30.4) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-dash-treehills-1: == treehills [zones]: winner Alpha (comeback) | final 61 vs 61 (penalty +0/+26) | OT 33.9s | CONSOLE 0 unique warning/error line(s) 
+### E-zones-sentry-treehills-2: == treehills [zones]: winner Bravo (time) | final 76 vs 54 (penalty +12/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### E-zones-glide-treehills-2: == treehills [zones]: winner Alpha (retake) | final 35 vs 69 (penalty +17/+14) | OT 6.6s | CONSOLE 0 unique warning/error line(s) 
+### E-zones-bobber-treehills-2: == treehills [zones]: winner Alpha (neutralised) | final 55 vs 64 (penalty +14/+0) | OT 17.9s | CONSOLE 0 unique warning/error line(s) 
+### E-zones-dash-treehills-2: == treehills [zones]: winner Alpha (retake) | final 37 vs 75 (penalty +38/+17) | OT 14.9s | CONSOLE 0 unique warning/error line(s) 
+## set E (Zone Control)
+SUMMARY 40 of 40 matches wrote a result
+
+## last 15 lines of job.log
+  saltpan-2     66   0    0   0.00  0.00  -      blasts 65 hits 0 | cooked 9 | popped 1 sunk 0 smashed 0 bounces 120 | 0/0
+  treehills-1   67   0    0   0.00  0.00  -      blasts 67 hits 0 | cooked 3 | popped 0 sunk 0 smashed 0 bounces 103 | 0/0
+  treehills-2   82   0    0   0.00  0.00  -      blasts 82 hits 0 | cooked 3 | popped 0 sunk 0 smashed 0 bounces 133 | 0/0
+  MEAN (n 8): uses 68.1/match | hits per use 0.00 | splats per use 0.00 | ink per splat -
+E zones sentry: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    20   11   3   0.55  0.15  433    rounds 68 hits 11 | locked on 9.9 % of its life (18.3 / 185.2 s) | ends {"replaced":2,"shot":4,"time":7,"owner":6} | 0/0
+  calamari-2    11   8    1   0.73  0.09  715    rounds 29 hits 8 | locked on 3.9 % of its life (5.3 / 137.1 s) | ends {"owner":5,"time":6} | 0/0
+  halyard-1     3    0    0   0.00  0.00  -      rounds 3 hits 0 | locked on 1.7 % of its life (0.4 / 24.4 s) | ends {"time":1,"owner":2} | 0/0
+  halyard-2     10   4    0   0.40  0.00  -      rounds 12 hits 4 | locked on 2.5 % of its life (2.3 / 89.8 s) | ends {"owner":5,"shot":1,"time":4} | 0/0
+  saltpan-1     17   18   4   1.06  0.24  276    rounds 64 hits 18 | locked on 9.9 % of its life (14.8 / 149.2 s) | ends {"shot":2,"time":4,"owner":8,"replaced":1} | 0/0
+  saltpan-2     14   13   3   0.93  0.21  303    rounds 67 hits 13 | locked on 12.1 % of its life (15.9 / 131.2 s) | ends {"time":6,"shot":2,"owner":5,"replaced":1} | 0/0
+  treehills-1   12   4    0   0.33  0.00  -      rounds 22 hits 4 | locked on 3.9 % of its life (5.2 / 135.3 s) | ends {"time":8,"owner":3,"shot":1} | 0/0
+  treehills-2   18   19   2   1.06  0.11  585    rounds 46 hits 19 | locked on 6.5 % of its life (11.3 / 173.0 s) | ends {"shot":2,"owner":6,"time":9} | 0/0
+  MEAN (n 8): uses 13.1/match | hits per use 0.73 | splats per use 0.12 | ink per splat 525 | locked on 6.3 % of its life
+SUMMARY 40 of 40 matches wrote a result
+
+## E.txt
+E zones bobber: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    137  1    0   0.01  0.00  -      chains set off 6 / expired 81 / disarmed 28 (caught a foe 1, wasted 5) | splats per chain set off 0.00 | 0/0
+  calamari-2    144  1    0   0.01  0.00  -      chains set off 4 / expired 90 / disarmed 22 (caught a foe 1, wasted 3) | splats per chain set off 0.00 | 0/0
+  halyard-1     118  3    1   0.03  0.01  4720   chains set off 6 / expired 77 / disarmed 18 (caught a foe 3, wasted 3) | splats per chain set off 0.17 | 0/0
+  halyard-2     101  5    1   0.05  0.01  4040   chains set off 9 / expired 54 / disarmed 17 (caught a foe 4, wasted 5) | splats per chain set off 0.11 | 0/0
+  saltpan-1     131  0    0   0.00  0.00  -      chains set off 3 / expired 79 / disarmed 37 (caught a foe 0, wasted 3) | splats per chain set off 0.00 | 0/0
+  saltpan-2     111  0    0   0.00  0.00  -      chains set off 0 / expired 64 / disarmed 37 (caught a foe 0, wasted 0) | splats per chain set off 0.00 | 0/0
+  treehills-1   132  1    1   0.01  0.01  5280   chains set off 7 / expired 88 / disarmed 20 (caught a foe 1, wasted 6) | splats per chain set off 0.14 | 0/0
+  treehills-2   114  1    0   0.01  0.00  -      chains set off 4 / expired 59 / disarmed 36 (caught a foe 1, wasted 3) | splats per chain set off 0.00 | 0/0
+  MEAN (n 8): uses 123.5/match | hits per use 0.01 | splats per use 0.00 | ink per splat 13173 | chains set off 39 / expired 592 / disarmed 215 (4.6 % set off) | splats per chain set off 0.08
+E zones bomb: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    63   1    0   0.02  0.00  -       | 0/0
+  calamari-2    80   0    0   0.00  0.00  -       | 0/0
+  halyard-1     58   0    0   0.00  0.00  -       | 0/0
+  halyard-2     59   2    1   0.03  0.02  4130    | 0/0
+  saltpan-1     55   2    1   0.04  0.02  3850    | 0/0
+  saltpan-2     69   3    2   0.04  0.03  2415    | 0/0
+  treehills-1   68   4    1   0.06  0.01  4760    | 0/0
+  treehills-2   45   1    1   0.02  0.02  3150    | 0/0
+  MEAN (n 8): uses 62.1/match | hits per use 0.03 | splats per use 0.01 | ink per splat 5798
+E zones dash: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    28   1    0   0.04  0.00  -      dashes 28 (ground 24, air 4) | bots' reasons {"dodge":6,"breakOff":8,"close":13,"rush":1} | sea deaths soon after 0 | streak splats 161 | 0/0
+  calamari-2    23   1    0   0.04  0.00  -      dashes 23 (ground 13, air 10) | bots' reasons {"dodge":8,"breakOff":10,"close":5,"rush":0} | sea deaths soon after 0 | streak splats 99 | 0/0
+  halyard-1     32   6    2   0.19  0.06  880    dashes 32 (ground 29, air 3) | bots' reasons {"dodge":4,"breakOff":12,"close":14,"rush":2} | sea deaths soon after 0 | streak splats 210 | 0/0
+  halyard-2     16   2    1   0.13  0.06  880    dashes 16 (ground 11, air 5) | bots' reasons {"dodge":3,"breakOff":10,"close":3,"rush":0} | sea deaths soon after 0 | streak splats 80 | 0/0
+  saltpan-1     36   3    0   0.08  0.00  -      dashes 36 (ground 15, air 21) | bots' reasons {"dodge":9,"breakOff":13,"close":14,"rush":0} | sea deaths soon after 0 | streak splats 107 | 0/0
+  saltpan-2     28   2    0   0.07  0.00  -      dashes 28 (ground 17, air 11) | bots' reasons {"dodge":8,"breakOff":7,"close":13,"rush":0} | sea deaths soon after 0 | streak splats 114 | 0/0
+  treehills-1   33   4    0   0.12  0.00  -      dashes 33 (ground 22, air 11) | bots' reasons {"dodge":4,"breakOff":17,"close":12,"rush":0} | sea deaths soon after 0 | streak splats 149 | 0/0
+  treehills-2   13   0    0   0.00  0.00  -      dashes 13 (ground 13, air 0) | bots' reasons {"dodge":5,"breakOff":2,"close":5,"rush":1} | sea deaths soon after 0 | streak splats 71 | 0/0
+  MEAN (n 8): uses 26.1/match | hits per use 0.09 | splats per use 0.01 | ink per splat 3832 | dodges 47 (5.88/match) | sea deaths soon after a dash 0
+E zones glide: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    75   0    0   0.00  0.00  -      blasts 75 hits 0 | cooked 4 | popped 0 sunk 0 smashed 0 bounces 128 | 0/0
+  calamari-2    84   0    0   0.00  0.00  -      blasts 83 hits 0 | cooked 4 | popped 0 sunk 0 smashed 0 bounces 125 | 0/0
+  halyard-1     54   0    0   0.00  0.00  -      blasts 54 hits 0 | cooked 6 | popped 0 sunk 0 smashed 0 bounces 80 | 0/0
+  halyard-2     46   0    0   0.00  0.00  -      blasts 46 hits 0 | cooked 3 | popped 0 sunk 0 smashed 0 bounces 57 | 0/0
+  saltpan-1     71   1    0   0.01  0.00  -      blasts 69 hits 1 | cooked 10 | popped 2 sunk 0 smashed 0 bounces 129 | 0/0
+  saltpan-2     66   0    0   0.00  0.00  -      blasts 65 hits 0 | cooked 9 | popped 1 sunk 0 smashed 0 bounces 120 | 0/0
+  treehills-1   67   0    0   0.00  0.00  -      blasts 67 hits 0 | cooked 3 | popped 0 sunk 0 smashed 0 bounces 103 | 0/0
+  treehills-2   82   0    0   0.00  0.00  -      blasts 82 hits 0 | cooked 3 | popped 0 sunk 0 smashed 0 bounces 133 | 0/0
+  MEAN (n 8): uses 68.1/match | hits per use 0.00 | splats per use 0.00 | ink per splat -
+E zones sentry: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    20   11   3   0.55  0.15  433    rounds 68 hits 11 | locked on 9.9 % of its life (18.3 / 185.2 s) | ends {"replaced":2,"shot":4,"time":7,"owner":6} | 0/0
+  calamari-2    11   8    1   0.73  0.09  715    rounds 29 hits 8 | locked on 3.9 % of its life (5.3 / 137.1 s) | ends {"owner":5,"time":6} | 0/0
+  halyard-1     3    0    0   0.00  0.00  -      rounds 3 hits 0 | locked on 1.7 % of its life (0.4 / 24.4 s) | ends {"time":1,"owner":2} | 0/0
+  halyard-2     10   4    0   0.40  0.00  -      rounds 12 hits 4 | locked on 2.5 % of its life (2.3 / 89.8 s) | ends {"owner":5,"shot":1,"time":4} | 0/0
+  saltpan-1     17   18   4   1.06  0.24  276    rounds 64 hits 18 | locked on 9.9 % of its life (14.8 / 149.2 s) | ends {"shot":2,"time":4,"owner":8,"replaced":1} | 0/0
+  saltpan-2     14   13   3   0.93  0.21  303    rounds 67 hits 13 | locked on 12.1 % of its life (15.9 / 131.2 s) | ends {"time":6,"shot":2,"owner":5,"replaced":1} | 0/0
+  treehills-1   12   4    0   0.33  0.00  -      rounds 22 hits 4 | locked on 3.9 % of its life (5.2 / 135.3 s) | ends {"time":8,"owner":3,"shot":1} | 0/0
+  treehills-2   18   19   2   1.06  0.11  585    rounds 46 hits 19 | locked on 6.5 % of its life (11.3 / 173.0 s) | ends {"shot":2,"owner":6,"time":9} | 0/0
+  MEAN (n 8): uses 13.1/match | hits per use 0.73 | splats per use 0.12 | ink per splat 525 | locked on 6.3 % of its life
+
+## lines.txt
+E-zones-bomb-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=halyard MODE=zones SUBS=all=bomb
+E-zones-glide-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=halyard MODE=zones SUBS=all=glide
+E-zones-sentry-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=halyard MODE=zones SUBS=all=sentry
+E-zones-bobber-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=halyard MODE=zones SUBS=all=bobber
+E-zones-dash-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=halyard MODE=zones SUBS=all=dash
+E-zones-bomb-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=halyard MODE=zones SUBS=all=bomb
+E-zones-glide-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=halyard MODE=zones SUBS=all=glide
+E-zones-sentry-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=halyard MODE=zones SUBS=all=sentry
+E-zones-bobber-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=halyard MODE=zones SUBS=all=bobber
+E-zones-dash-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=halyard MODE=zones SUBS=all=dash
+E-zones-bomb-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=saltpan MODE=zones SUBS=all=bomb
+E-zones-glide-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=saltpan MODE=zones SUBS=all=glide
+E-zones-sentry-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=saltpan MODE=zones SUBS=all=sentry
+E-zones-bobber-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=saltpan MODE=zones SUBS=all=bobber
+E-zones-dash-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=saltpan MODE=zones SUBS=all=dash
+E-zones-bomb-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=saltpan MODE=zones SUBS=all=bomb
+E-zones-glide-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=saltpan MODE=zones SUBS=all=glide
+E-zones-sentry-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=saltpan MODE=zones SUBS=all=sentry
+E-zones-bobber-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=saltpan MODE=zones SUBS=all=bobber
+E-zones-dash-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=saltpan MODE=zones SUBS=all=dash
+E-zones-bomb-calamari-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=calamari MODE=zones SUBS=all=bomb
+E-zones-glide-calamari-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=calamari MODE=zones SUBS=all=glide
+E-zones-sentry-calamari-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=calamari MODE=zones SUBS=all=sentry
+E-zones-bobber-calamari-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=calamari MODE=zones SUBS=all=bobber
+E-zones-dash-calamari-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=calamari MODE=zones SUBS=all=dash
+E-zones-bomb-calamari-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=calamari MODE=zones SUBS=all=bomb
+E-zones-glide-calamari-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=calamari MODE=zones SUBS=all=glide
+E-zones-sentry-calamari-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=calamari MODE=zones SUBS=all=sentry
+E-zones-bobber-calamari-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=calamari MODE=zones SUBS=all=bobber
+E-zones-dash-calamari-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=calamari MODE=zones SUBS=all=dash
+E-zones-bomb-treehills-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=treehills MODE=zones SUBS=all=bomb
+E-zones-glide-treehills-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=treehills MODE=zones SUBS=all=glide
+E-zones-sentry-treehills-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=treehills MODE=zones SUBS=all=sentry
+E-zones-bobber-treehills-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=treehills MODE=zones SUBS=all=bobber
+E-zones-dash-treehills-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=treehills MODE=zones SUBS=all=dash
+E-zones-bomb-treehills-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=treehills MODE=zones SUBS=all=bomb
+E-zones-glide-treehills-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=treehills MODE=zones SUBS=all=glide
+E-zones-sentry-treehills-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=treehills MODE=zones SUBS=all=sentry
+E-zones-bobber-treehills-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=treehills MODE=zones SUBS=all=bobber
+E-zones-dash-treehills-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-4-1016-1349/head MAP=treehills MODE=zones SUBS=all=dash
