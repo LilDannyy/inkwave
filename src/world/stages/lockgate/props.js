@@ -2275,7 +2275,7 @@ export function register(D, H) {
         B.tor(NS('metal'), K.iron, 0.09, 0.02, 0.3, Hh + 0.42, 2.45, { rs: 4, ts: 8, arc: PI * 1.3, rz: -0.6 });
       });
       // the open door leaf stands out across the bay's back (collides: cover on the bay)
-      B.col(-W / 2 - 1.72, bt, 1.98, -W / 2, bt + 2.85, 2.1);
+      B.col(-W / 2 - 1.72, bt, 1.98, -W / 2, bt + 2.85, 2.1, ROOF);   // [b5-int3] (its top, 0.12 m thin and 0.15 m over the canopy's, held a kid sliding off the canopy — dash-reach.js: off-limits)
       // the bay's canopy (boarded lean-to off the wall) on two posts at the bay's outer edge
       const cx0 = -W / 2 - bay + 0.15;
       B.push((cx0 - W / 2) / 2, 3.72, 0, 0, 0, 0.09);

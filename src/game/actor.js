@@ -22,6 +22,7 @@ import { sjFlightDur } from './jumpMarks.js';   // [b5-jumpui] the flight time t
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _fwd = new THREE.Vector3();
 const DOWN = new THREE.Vector3(0, -1, 0);
 const TAU = Math.PI * 2;
+const _rxO = new THREE.Vector3(), _rxD = new THREE.Vector3(), _rxH = new Hit();   // [b5-int3] (_roofExitDist)
 const _ZERO_MOVE = Object.freeze(new THREE.Vector3());   // move input while planted after a dualies dodge roll
 
 // Local-player gamepad rumble (subtle, scaled by settings.rumble, no-op without a pad).
@@ -677,6 +678,11 @@ export class Actor {
   // Standing on a roof block: pushed toward its nearest edge (a pitched top: downhill), picking up speed until you drop
   // off. The direction sticks for the whole slide (adjacent roof boxes would otherwise push back and forth at a seam);
   // blocked by a wall for a moment → turn 90° and try the next way out. Input still steers across the slide.
+  // [b5-int3] the way off: the block's nearest edge (a pitched top: downhill) unless that way doesn't get off the roof within
+  // 8 m (a wall, or another roof block running on) and another does sooner — then that one (_roofExit). Blocked for a
+  // moment: the next nearest way off, else a quarter turn. (dash-reach.js, calamari: a kid on the 2 m wide hill-wall top
+  // slid its 'nearest edge' onto the next roof block, into the hill, a quarter turn into a building, then 16 m along the
+  // wall — still on it after 3 s; the way off, a 1 m step to the street below, was never tried)
   _roofSlide(b, dt) {
     const n = b.axes[1];
     if (!this.roofDir || !this.roofT) {
@@ -688,16 +694,52 @@ export class Actor {
         const s = (b.half.x - Math.abs(lx) < b.half.z - Math.abs(lz)) ? [ax, Math.sign(lx) || 1] : [az, Math.sign(lz) || 1];
         this.roofDir.set(s[0].x * s[1], 0, s[0].z * s[1]);
       }
+      if (this._roofExitDist(this.roofDir.x, this.roofDir.z) === Infinity) this._roofExit(b, null, this.roofDir);   // [b5-int3]
     }
     const d = this.roofDir;
     this.roofT = (this.roofT || 0) + dt;
     const moved = (this.pos.x - this.roofP.x) * d.x + (this.pos.z - this.roofP.z) * d.z;
     this.roofP.copy(this.pos);
     this.roofStall = this.roofT > 0.1 && moved < 0.3 * dt ? this.roofStall + dt : 0;
-    if (this.roofStall > 0.25) { d.set(-d.z, 0, d.x); this.roofStall = 0; }
+    if (this.roofStall > 0.25) { if (!this._roofExit(b, d, d)) d.set(-d.z, 0, d.x); this.roofStall = 0; }   // [b5-int3] (the next way off)
     const want = Math.min(9, 3 + 14 * this.roofT);
     const along = this.vel.x * d.x + this.vel.z * d.z;
     if (along < want) { this.vel.x += d.x * (want - along); this.vel.z += d.z * (want - along); }
+  }
+
+  // [b5-int3] how far along (dx, dz) a kid sliding from here gets off the roof it's on: the first 0.3 m step whose floor is
+  // a drop (over 0.6 m down, or none) or a top that isn't off-limits for it — Infinity when a wall (knee or chest high)
+  // shuts that way first, or none within 8 m
+  _roofExitDist(dx, dz, maxD = 8) {
+    const y = this.pos.y, O = _rxO, D = _rxD, H = _rxH, L = G.level;
+    let px = this.pos.x, pz = this.pos.z;
+    D.set(dx, 0, dz);
+    for (let s = 0.3; s <= maxD + 1e-6; s += 0.3) {
+      for (const h of [0.5, 1.1]) if (G.physics.raycast(O.set(px, y + h, pz), D, 0.3 + PLAYER.radius, H).hit && Math.abs(H.normal.y) < 0.5) return Infinity;
+      px += dx * 0.3; pz += dz * 0.3;
+      D.set(0, -1, 0);
+      const g = G.physics.raycast(O.set(px, y + 0.3, pz), D, 8, H);
+      D.set(dx, 0, dz);
+      if (!g.hit || H.point.y < y - 0.6) return s;
+      const gb = L.blocks[H.block];
+      if (!gb || !this.isRoofFor(gb)) return s;
+    }
+    return Infinity;
+  }
+  // the way off that gets there soonest, of the block's four sides and four corners (not `not`, the way just blocked) →
+  // into `out`, true; false when none does within 8 m
+  _roofExit(b, not, out) {
+    const ax = b.axes[0], az = b.axes[2];
+    let best = Infinity, bx = 0, bz = 0;
+    for (const [u, w] of [[1, 0], [-1, 0], [0, 1], [0, -1], [0.7071, 0.7071], [0.7071, -0.7071], [-0.7071, 0.7071], [-0.7071, -0.7071]]) {
+      const x = ax.x * u + az.x * w, z = ax.z * u + az.z * w, l = Math.hypot(x, z) || 1, dx = x / l, dz = z / l;
+      if (not && dx * not.x + dz * not.z > 0.95) continue;
+      const e = this._roofExitDist(dx, dz);
+      if (e < best - 1e-6) { best = e; bx = dx; bz = dz; }
+    }
+    if (best === Infinity) return false;
+    out.set(bx, 0, bz);
+    return true;
   }
 
   // Body (walls/ceilings) then feet (ground stick / landing). `stick` = we were grounded and did not jump.
