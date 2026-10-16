@@ -28,7 +28,7 @@ export const CK = {
   padGate: [12, 20], padUp: 0.2, cone: 40, plateauUp: 1.4, plateauR: 3, kidV: 6, kidClimb: 7.5, signR: 2, wideEnt: 8, nrGap: 3,
   dip: 6, deckWays: 3, apron: 2, apronH: 1.2, apronR: 4, pondRing: [4.5, 10], pondCover: 0.7, pondSeen: 6, weirRoom: 3.0, weirSeen: 3,
   dropNear: 12, hopHigh: [1.8, 2.25], gapLong: [3.0, 3.8],
-  // [fix2] review 2: a hop onto ground off the field from up to two cells out (0.5–2.2 m up, ≤ 2.3 m flat), and the
+  // [fix2] review 2: a hop onto ground off the field from up to two cells out (0.5–2.25 m up, ≤ 2.3 m flat), and the
   // deepest drop any probe follows (as longDrop)
   offRise: 0.5, offFlat: 2.3, dropMax: 20,
   // [fix3] review 3: (hopHigh[1] 2.1 → 2.25: a carrier's swim-jump from its own ink, letting go of squid form at the top,
@@ -811,8 +811,8 @@ export async function runChecks(o = {}) {
     // them, level.js; squids pass them, lowGap above). nav drops a walk edge for anything at waist height (nav._blocked)
     // and the field adds none over it, so a 1.4 m wall or a 1.2 m railing across a way in reads as a wall. Candidates: two
     // field nodes ≤ 3.5 m apart (flat), from the drop rule's 3.4 m down to the hop rule's 1.8 m up, not joined by 6 m of
-    // walking, the waist line blocked, the obstacle's top along the line ≤ 2.2 m above the higher end (a kid's 1.8 m, a
-    // swim-jump's ~2.0 m) with 1.5 m of air above it, and floor under the whole line (else it is a gap: the gap probes'
+    // walking, the waist line blocked, the obstacle's top along the line ≤ CK.vault.top (2.25 m) above the higher end (a kid's 1.8 m, a
+    // swim-jump's 2.2 m) with 1.5 m of air above it, and floor under the whole line (else it is a gap: the gap probes'
     // business). Tried when it can matter, at most two per takeoff (the best gains) and one per 1.5 m of the same place;
     // a made one is a #7d find (vault) or, from outside a Gate's ring to inside it, a #7a entrance with its own sight line
     {
@@ -845,7 +845,7 @@ export async function runChecks(o = {}) {
       kept.sort((p2, q2) => q2.gain - p2.gain);
       for (const c of kept) { const a = nodes[c.from], b = nodes[c.to]; if (cand.vault.some((v) => hd(nodes[v.from], a) < 1.5 && hd(nodes[v.to], b) < 1.5)) continue; cand.vault.push(c); nums.vault.tried++; }
     }
-    // hops onto off-field ground: a 0.5–2.2 m hop from the field onto nodes the field doesn't hold (nav-invalid: a top only
+    // hops onto off-field ground: a 0.5–2.25 m hop from the field onto nodes the field doesn't hold (nav-invalid: a top only
     // a hop reaches) up to two cells out (≤ 2.3 m flat, diagonals too: nav's 0.46 m clearance from a face leaves no node
     // beside a ledge whose face falls just past a cell centre, and its jump edges, like the field's hops, join orthogonal
     // neighbours only), with the hop rule's waist and head tests; tried when its ground's exits can matter, the two nearest
