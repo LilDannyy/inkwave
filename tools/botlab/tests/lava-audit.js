@@ -2,6 +2,7 @@
 // (C) ones check-maps cannot see without the built level; ENGINE §6 step 12):
 //   MAP=caldera MODE=turf PAGE=tools/botlab/tests/lava-audit.js WATCHDOG=900000 tools/botlab/run.sh tools/botlab/page.cjs
 //   rule 14  every drowning floor is ≤ 12 m walking from floor that never drowns, and the way never drops below it
+//   rule 21  (fix round 4) no pinch beside a Pumice stone at HIGH: a static top beside one is a seam ≤ 0.3 m or ≥ 2.5 m away
 //   rule 22  clear sky over every rider: nothing static over its travel or within 2.2 m over its HIGH top
 //   rule 25  a lookout: cover ≤ 1.0 m tall along ≤ half its edge, ≥ 2 open sides, ≤ 22 m from both teams' dry floor at
 //            HIGH, its HIGH top ≤ 4.6 m over the floor its climb starts from
@@ -74,6 +75,38 @@
     }
     R('rule 22: clear sky over every rider — nothing static anywhere over its travel or within 2.2 m over its HIGH top (columns sampled every 0.3 m, 0.1 m up)', !bad.length, { bad: bad.slice(0, 10), riders: W.riders.length });
   } catch (e) { R('rule 22: clear sky: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
+
+  // ---------------------------------------------------------------------------------------------- rule 21: no pinch beside a stone
+  // (fix round 4: ENGINE rule 21 — every gap beside a rider is a seam ≤ 0.3 m or open lava ≥ 2.5 m wide — was never audited.
+  // At HIGH, each Pumice stone's outline every 0.25 m, marched straight out: the first static top within 0.4 m of the stone's
+  // top; another stone first is walkable (no gap); a static top 0.3–2.5 m out over lava is a pinch a foot can drop into —
+  // a bot fell into such a notch at the north head's lake corner in a Zone Control match)
+  try {
+    setT(50);
+    const pinch = [], per = {};
+    for (const RR of Lv.riders.filter((q) => q.r.sink && q.solid)) {
+      const r = RR.r, top = RR.top;
+      for (const p of r.parts) {
+        if (!p.body) continue;
+        const q = C.partPose(r, p, top, {}), c = Math.cos(q.yaw), sn = Math.sin(q.yaw);
+        const edges = [[q.hx, null, c, -sn], [-q.hx, null, -c, sn], [null, q.hz, sn, c], [null, -q.hz, -sn, -c]];
+        for (const [u0, v0, nx, nz] of edges) {
+          const L = u0 === null ? q.hx : q.hz;
+          for (let t = -L + 0.1; t <= L - 0.1 + 1e-6; t += 0.25) {
+            const u = u0 === null ? t : u0, v = v0 === null ? t : v0, ex = q.cx + u * c + v * sn, ez = q.cz - u * sn + v * c;
+            let hit = null;
+            for (let d = 0.05; d <= 2.5 && !hit; d += 0.05) {
+              const x = ex + nx * d, z = ez + nz * d;
+              if (Lv.riders.some((o) => o !== RR && o.solid && C.inRider(o.r, x, z, 0) && Math.abs(o.top - top) < 0.4)) { hit = 'rider'; break; }
+              for (let y = top + 0.35; y >= top - 0.4; y -= 0.05) { const b = solidAt(x, y, z); if (b) { hit = [d, b.tag || '#' + b.id, y]; break; } }
+            }
+            if (Array.isArray(hit) && hit[0] > 0.3 && hit[0] < 2.5) { const k = r.id; per[k] = Math.max(per[k] || 0, hit[0]); if (pinch.length < 40) pinch.push([r.id, r2(ex), r2(ez), r2(hit[0]), hit[1]]); }
+          }
+        }
+      }
+    }
+    R('rule 21: no pinch beside a Pumice stone at HIGH — every static top beside one is a seam (≤ 0.3 m) or ≥ 2.5 m away across open lava (each outline every 0.25 m, marched straight out)', !pinch.length, { pinches: pinch.length, widestByStone: Object.fromEntries(Object.entries(per).map(([k, v]) => [k, r2(v)])), eg: pinch.slice(0, 16) });
+  } catch (e) { R('rule 21: no pinch beside a stone: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
   // ---------------------------------------------------------------------------------------------- rule 25: the lookout
   try {
