@@ -43,8 +43,8 @@
   for (const [k, t] of [[1, 37.6], [2, 38.0], [3, 38.6]]) cam('eng-stones-surfacing-' + k, t, [-17.0, 3.2, -16.0], [-22, 0.4, -3], 65);
   cam('eng-race-high', 52, [-17.0, 3.2, -16.0], [-22, 0.4, -3], 65);
   for (const [k, t, nm] of [[1, 15, 'low'], [2, 38, 'rising'], [3, 42, 'rising'], [4, 52, 'high'], [5, 75, 'falling']]) cam(`eng-organs-${k}-${nm}`, t, [-1, 4.5, -20], [-10, 3, -9], 60);
-  cam('eng-organs-island-low', 15, [0.5, 5.5, 2.0], [-10, 2.5, -9.5], 55);
-  cam('eng-organs-island-high', 52, [0.5, 5.5, 2.0], [-10, 2.5, -9.5], 55);
+  cam('eng-organs-island-low', 15, [2.5, 6.5, -6.0], [-10, 2.5, -9.5], 55);   // (south of the gauge's piers: from the island's middle a pier stood in the way)
+  cam('eng-organs-island-high', 52, [2.5, 6.5, -6.0], [-10, 2.5, -9.5], 55);
   cam('eng-stain-line-causeway-low', 15, [-9, 1.6, -19.5], [-5.2, 0.5, -16.5], 60);
   cam('eng-stain-line-cliff-low', 15, [-21.5, 2.5, -12], [-28, 1.0, -6], 60);
   cam('eng-stain-line-pulse-warning', 27, [-21.5, 2.5, -12], [-28, 1.0, -6], 60);
