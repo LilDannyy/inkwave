@@ -1,9 +1,11 @@
 #!/bin/bash
 # kind: tests
 # push: tools/botlab/jobs/batch5/bluestone/out/mm4-*.jpg
-# Bluestone Junction blockout, fix round 1 (2026-10-09): the page tests in every era at the fix head (ERA=n → ?era=n, the
-# blockout's era filter), Halyard's cover map beside them, the era-2 Boss Battle check, the Halo's dominance (Zone
-# Control locked to era 3 against era 2: centre hold time, splats from the Halo), perf beside Halyard.
+# Bluestone Junction blockout, fix round 1 (2026-10-09): the page tests in every era at the fix head, Halyard's cover map
+# beside them, the era-2 Boss Battle check, the Halo's dominance (Zone Control locked to era 3 against era 2: centre hold
+# time, splats from the Halo), perf beside Halyard. Each era through PAGEQ='era=n', the era engine's audit switch (the
+# match held in era n; the final review's issue 2: the merge 82d191da had dropped the old ERA= mapping, so ERA= ran era 1 —
+# offscreen-boot.cjs maps ERA=1|2|3 again and stops the harness on anything else).
 #   (JOB-2 and JOB-3 never ran: the runner was down from 10-04; this job and JOB-5 replace them.)
 R=tools/botlab/run.sh
 J="$JOB_OUT"
@@ -11,7 +13,7 @@ D=tools/botlab/jobs/batch5/bluestone
 O=$D/out
 mkdir -p "$O"
 pt() { # name era map mode page
-  WATCHDOG=900000 ERA=$2 MAP=$3 MODE=$4 PAGE=$5 $R tools/botlab/page.cjs > "$J/$1.log" 2>&1
+  WATCHDOG=900000 PAGEQ="era=$2" MAP=$3 MODE=$4 PAGE=$5 $R tools/botlab/page.cjs > "$J/$1.log" 2>&1
 }
 for e in 1 2 3; do
   echo "== era $e: spawn-mid, size-budget, climb-audit"
@@ -37,8 +39,8 @@ for f in cover1 cover3 coverhalyard; do
 done
 echo "== perf: Halyard and Bluestone eras 1/2/3, same machine, one after the other"
 MAP=halyard TIME=day MODE=turf OUT="$J/perf" SHOTS='top' $R tools/botlab/shoot.cjs > "$J/perf-halyard.log" 2>&1
-for e in 1 2 3; do ERA=$e MAP=bluestone TIME=day MODE=turf OUT="$J/perf" SHOTS='top' $R tools/botlab/shoot.cjs > "$J/perf-bluestone$e.log" 2>&1; done
-ERA=1 MAP=bluestone TIME=day MODE=tower OUT="$J/perf" SHOTS='top' $R tools/botlab/shoot.cjs > "$J/perf-bluestone1-tower.log" 2>&1
+for e in 1 2 3; do PAGEQ="era=$e" MAP=bluestone TIME=day MODE=turf OUT="$J/perf" SHOTS='top' $R tools/botlab/shoot.cjs > "$J/perf-bluestone$e.log" 2>&1; done
+PAGEQ='era=1' MAP=bluestone TIME=day MODE=tower OUT="$J/perf" SHOTS='top' $R tools/botlab/shoot.cjs > "$J/perf-bluestone1-tower.log" 2>&1
 MAP=halyard TIME=day MODE=turf OUT="$J/perf" SHOTS='top' $R tools/botlab/shoot.cjs > "$J/perf-halyard2.log" 2>&1
 { for n in halyard bluestone1 bluestone2 bluestone3 bluestone1-tower halyard2; do echo "### perf $n"; grep -E '^REPORT|^CONSOLE' "$J/perf-$n.log" | cut -c1-600; done; } > "$J/perf.txt"
 grep REPORT "$J/perf.txt" | cut -c1-300

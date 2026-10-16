@@ -921,7 +921,9 @@ export class StageEras {
       return { jump: V.jump, doneAt: V.doneAt, bots: V.bots.length, visited: ts.length, within20: ts.filter((x) => x <= 20).length, median: med === Infinity ? null : med, times: ts };
     });
     return { eraShoves: this.stats.eraShoves, rescues: this.stats.rescues, flips: this.stats.flips, onVanish: S.onVanish, onVanishWho: S.onVanishWho.slice(-6), inAppear: S.inAppear, loiterS: +S.loiterS.toFixed(2), loiterWho: S.loiterWho,
-      envSplats: S.envSplats, envOther: S.envOther || 0, envSplatWho: S.envSplatWho.slice(-6), replans: S.replans, prepos: S.prepos, preposHeld: S.preposHeld, visits, era: this.era };
+      envSplats: S.envSplats, envOther: S.envOther || 0, envSplatWho: S.envSplatWho.slice(-6), replans: S.replans, prepos: S.prepos, preposHeld: S.preposHeld, visits, era: this.era,
+      // (the era the match started in and whether the audit held it there, ?era=n: a mislabelled per-era run shows in its log)
+      start: this.sched.start, held: this.W.audit || 0, fixed: this.sched.fixed || 0, jumpsPlanned: this.sched.jumps.length, cycle: this.sched.cycle || 0, devices: this.stats.devices, zipEnds: (this.stats.zipEnds || []).length };
   }
 
   // one group to era e (at its flip): blocks, cells, devices, shoves, rescues, the event

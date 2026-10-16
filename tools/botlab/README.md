@@ -58,7 +58,10 @@ W=960 H=600 MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botl
   check: `MAP=bluestone PAGE=tools/botlab/tests/wip-stages.js tools/botlab/run.sh tools/botlab/page.cjs`, and the same
   with `WIPSTAGES=1` (then every picker must list them).
 - **A stage module's audit switch:** `PAGEQ='era=2'` (any query) boots every harness page with it as well (a module
-  reads its own switch from `location.search`: `?era=`, `?lava=` …).
+  reads its own switch from `location.search`: `?era=`, `?lava=` …). `ERA=1|2|3` is the same as `PAGEQ='era=n'`
+  (Bluestone's era audit); any other `ERA` (`all`, a typo) or one that disagrees with `PAGEQ`'s era stops the harness at
+  boot with a `HARNESS` line. match.cjs / tower-match.cjs print the era a Bluestone match started in (`ERAS` line) and
+  tower-check its own `ERA` line, so a mislabelled per-era run shows in its log.
 - **Useful page-script globals:**
   - `window.__inkwave` (the game): `.match`, `.match.local`, `.debug.freeze()` / `.step(ms)` / `.freezeBots()`
   - `window.__G` (shared systems)

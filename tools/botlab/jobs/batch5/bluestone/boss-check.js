@@ -1,6 +1,6 @@
 // Bluestone Junction — Boss Battle check, era 2 (DESIGN.md §4.5; copied from the Craters check, fix round 1; the overhang
 // test made pose-based in fix round 2):
-//   ERA=2 MAP=bluestone MODE=boss PAGE=…/boss-check.js tools/botlab/run.sh tools/botlab/page.cjs
+//   PAGEQ=era=2 MAP=bluestone MODE=boss PAGE=…/boss-check.js tools/botlab/run.sh tools/botlab/page.cjs
 // HULLBREAKER's home ground on this stage (the nav plan), then 120 s of a stepped bot match: where it walks, how far,
 // which moves it plays (charges that hit a wall → stuns), and whether it ever sits still for long.
 (async () => {

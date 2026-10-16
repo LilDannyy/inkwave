@@ -1,7 +1,7 @@
 // Bluestone fix round 3 (scratch): where do the bots choose to go, and do they get there? An all-bot Turf War (180 s,
 // stepped as match.cjs); every paint goal a bot picks is logged by region, then whether the bot reached it before it
 // picked again, and the bot-seconds spent in each region. Read-only: the bots' code is wrapped, never changed.
-//   ERA=3 MAP=bluestone MODE=turf PAGE=…/goal-diag.js tools/botlab/run.sh tools/botlab/page.cjs
+//   PAGEQ=era=3 MAP=bluestone MODE=turf PAGE=…/goal-diag.js tools/botlab/run.sh tools/botlab/page.cjs
 (async () => {
   const g = window.__inkwave, m = g.match, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });

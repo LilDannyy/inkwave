@@ -27,7 +27,16 @@ const DEVSTAGE = process.env.DEVSTAGE === '1', WIPSTAGES = process.env.WIPSTAGES
 const addFlag = (u, on, flag) => (on && typeof u === 'string' && u.startsWith('app://inkwave/index.html') && !new RegExp(`[?&]${flag}\\b`).test(u)
   ? u.replace(/^([^#]*?)(\?[^#]*)?(#.*)?$/, (_, p, q, h) => `${p}${q ? q + '&' : '?'}${flag}${h || ''}`) : u);
 // PAGEQ='era=2' / 'lava=high' …: every game page loads with that query too (a stage module's audit switch) [b5-stagehooks]
-const PAGEQ = process.env.PAGEQ || '';
+// [b5-eras] ERA=1|2|3 is the same as PAGEQ='era=n' (Bluestone's era audit: start in era n, never jump), so the older job
+// scripts and tools that still say ERA= measure what they say; anything else in ERA (all, 0, a typo) or an ERA that
+// disagrees with PAGEQ's era stops the harness at boot with a HARNESS line, instead of silently running era 1
+const ERA = process.env.ERA || '', PQE = /(?:^|&)era=([^&]*)/.exec(process.env.PAGEQ || '');
+if (ERA && (!/^[123]$/.test(ERA) || (PQE && PQE[1] !== ERA))) {
+  console.log(`HARNESS ERA=${ERA} ${/^[123]$/.test(ERA) ? `disagrees with PAGEQ's era=${PQE[1]}` : 'is not 1, 2 or 3'}: use ERA=1|2|3 or PAGEQ='era=n' (Bluestone's audit switch), not both`);
+  process.exit(2);
+}
+const PAGEQ = [process.env.PAGEQ || '', ERA && !PQE ? `era=${ERA}` : ''].filter(Boolean).join('&');
+if (ERA) console.log(`HARNESS ERA=${ERA}: every game page loads with ?${PAGEQ}`);
 const devURL = (u) => addFlag(addFlag(addFlag(u, DEVSTAGE, 'devstage'), WIPSTAGES, 'wipstages'), !!PAGEQ, PAGEQ);
 class OffscreenBW extends electron.BrowserWindow {
   constructor(opts = {}) {

@@ -355,7 +355,9 @@ clamp: shorten `rig.curDist` / `rig.boom.x`). The lens never dips under a module
 - `PAGEQ='era=2'` (or `'lava=high'` …) on any botlab harness (page, shoot, stageart, match, bake, tower-check, netpage):
   every game page loads with that query too (`tools/botlab/offscreen-boot.cjs`). A module reads its audit switch from
   `location.search` itself. This is the contracts' `ERA=` / `LAVA=` (bluestone T3, caldera T1 / T2). It holds for the
-  whole run (stageart loads the page once for all its `STAGES`).
+  whole run (stageart loads the page once for all its `STAGES`). `ERA=1|2|3` still works as `PAGEQ='era=n'` [b5-eras];
+  any other `ERA`, or one that disagrees with `PAGEQ`'s era, stops the harness at boot (a `HARNESS` line: it used to be
+  ignored silently, so a per-era run measured era 1).
 - **Per-state bakes**: `W.bakePasses()` → up to three functions, each putting the world in one state (eras:
   `[() => this.apply(1, { instant: true }), () => this.apply(2, …), () => this.apply(3, …)]`). `build/bake-ao.cjs` and
   `tools/botlab/bake.cjs` then trace once per state into its own channel of an RGB PNG (colour type 2; the JSON gets

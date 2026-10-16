@@ -1,5 +1,5 @@
 // Bluestone Junction — where do the bots ink? (fix round 1, review issue 1: the stage's size)
-//   ERA=1|2|3 MAP=bluestone MODE=turf PAGE=…/ink-regions.js tools/botlab/run.sh tools/botlab/page.cjs
+//   PAGEQ=era=1|2|3 MAP=bluestone MODE=turf PAGE=…/ink-regions.js tools/botlab/run.sh tools/botlab/page.cjs
 // An all-bot Turf War, 180 s stepped at 60 Hz in sim time (as match.cjs); then every live turf cell of the paint grid by
 // region (Bravo's half folded onto Alpha's): its floor area and the share inked by either team. A region the bots leave
 // bare is floor the stage pays for without play.

@@ -1,5 +1,5 @@
 // Bluestone Junction — does the Halo dominate the 3000s? (DESIGN.md §6.2 #1; fix round 1, review issue 8)
-//   ERA=3 MAP=bluestone MODE=zones PAGE=…/halo-dominance.js tools/botlab/run.sh tools/botlab/page.cjs   (and ERA=2)
+//   PAGEQ=era=3 MAP=bluestone MODE=zones PAGE=…/halo-dominance.js tools/botlab/run.sh tools/botlab/page.cjs   (and PAGEQ=era=2)
 // An all-bot Zone Control match stepped at 60 Hz in sim time (as match.cjs) on one era, locked (the blockout's era
 // filter): the centre objective's hold time, every splat with where its attacker stood (on the Halo: y > 4.8 and 11 m
 // < r < 15.5 m; high: y > 4.8 anywhere within 22 m of the centre), and the bot-seconds spent on the Halo. Compare era 3
