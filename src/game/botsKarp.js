@@ -44,7 +44,7 @@ export const KARP_AI = {
   enabled: true,
   ring: [5.5, 9],          // m from the shell's centre: the ranged breakers' ring (the burst 4.5 + 1 m)
   meleeOut: 0.5,           // the other team's side of the meter at which melee breakers move out to the ring
-  grabAt: 0.85, grabR: 3.1,   // our side at which the grabber closes in, and to how far (touch at full swell: 2.68 m)
+  grabAt: 0.85, grabR: 3.12,  // our side at which the grabber closes in, and to how far (touch at full swell: 2.68 m)
   dangerR: 5.5,            // the shell's danger disc (≥ the threshold of the other team's side)
   fuseDanger: 3,           // s: our carrier's last seconds are a danger to its teammates
   wakeR: 20,               // m (botSight SIGHT.karpWakeR mirrors it)
@@ -99,7 +99,20 @@ class KarpPlan {
       }
       return m;
     });
-    this.shellMask = new Uint8Array(N); this.shellKey = '';
+    // (shellMask: the shell's radius now + 0.6 m — the melee breakers' and anyone's already close; shellWide: its full swell,
+    // rMax + 0.6 m — everyone else: a big hit swells it 0.5 m in a frame onto a bot walking past just outside its reach)
+    // (zoneEdge: nodes just outside its own free zone, within 0.7 m of it — a carrier's route costs there, so a corner is
+    // rounded a node further out: the body cuts a waypoint by up to 0.6 m)
+    this.zoneEdge = [0, 1].map((t) => {
+      const m = new Uint8Array(N), Z = this.zoneN[t], q = _v2;
+      for (let i = 0; i < N; i++) {
+        if (Z[i] || this.avoidBase[t][i]) continue;
+        const n = G.nav.nodes[i];
+        for (const [dx, dz] of [[0.7, 0], [-0.7, 0], [0, 0.7], [0, -0.7], [0.5, 0.5], [-0.5, 0.5], [0.5, -0.5], [-0.5, -0.5]]) if (F.inFreeZone(t, q.set(n.x + dx, n.y, n.z + dz)) >= 0) { m[i] = 1; break; }
+      }
+      return m;
+    });
+    this.shellMask = new Uint8Array(N); this.shellWide = new Uint8Array(N); this.shellKey = '';
     this.route = [null, null];      // per team: { cands, pick, i (the carrier's index on it), t, from, key }
     this.foes = [[], []];           // per team: the foes it knows of ({ e, pos, seen, t }) — teamKnown, no wall-hacks
     this.burstT = -9; this.burstTeam = -1;
@@ -118,8 +131,9 @@ class KarpPlan {
     // the shell's footprint (nobody routes through it): its current radius + 0.6 m (SPEC §8.2)
     const R = Kp.shell.radius() + 0.6, key = Kp.shell.state === 'none' ? '' : `${Kp.pos.x.toFixed(1)},${Kp.pos.z.toFixed(1)},${R.toFixed(1)}`;
     if (key !== this.shellKey) {
-      this.shellKey = key; this.shellMask.fill(0);
-      if (key) { const c = Kp.shell.center(); for (let i = 0; i < this.N; i++) { const n = G.nav.nodes[i]; if (Math.hypot(n.x - c.x, n.z - c.z) < R && Math.abs(n.y - Kp.pos.y) < 2) this.shellMask[i] = 1; } }
+      this.shellKey = key; this.shellMask.fill(0); this.shellWide.fill(0);
+      const RW = Math.max(R, K.shell.rMax + 0.6);
+      if (key) { const c = Kp.shell.center(); for (let i = 0; i < this.N; i++) { const n = G.nav.nodes[i], h = Math.hypot(n.x - c.x, n.z - c.z); if (h < RW && Math.abs(n.y - Kp.pos.y) < 2) { this.shellWide[i] = 1; if (h < R) this.shellMask[i] = 1; } } }
     }
     for (let t = 0; t < 2; t++) {
       // the foes this team knows of (seen / located / remembered ≤ 4 s)
@@ -562,7 +576,7 @@ function shellSpot(b, P, role) {
   if (role === 'perch') return perchSpot(b, P);
   let want, slot = P.auxOf(a);
   if (role === 'grab' && our >= KARP_AI.grabAt) { want = KARP_AI.grabR; slot = 1.5; }
-  else if (meleeOf(a)) want = their >= KARP_AI.meleeOut || danger ? 7 : Math.max(2.5, R + PLAYER.radius + 0.5) + 0.2;
+  else if (meleeOf(a)) want = their >= KARP_AI.meleeOut || danger ? 7 : Math.max(2.5, Math.max(R, K.shell.r + (K.shell.rMax - K.shell.r) * Math.min(1, Math.abs(our) + 0.15) ** 2) + PLAYER.radius + 0.5) + 0.3;   // (r a little ahead of the meter: it swells)
   else want = 7;
   if (danger) want = Math.max(want, KARP_AI.dangerR + 0.7);
   if (role === 'grab' && slot !== 1.5) slot = 1.5 + (meleeOf(a) ? 0 : 1);
@@ -629,6 +643,7 @@ function lobPitch(c, d, dy) {
   }
   return be < 2.5 ? best : null;
 }
+const _cg = new V3();
 const flightT = (c, d, p) => d / Math.max(1, speedOf(c) * Math.cos(p + (K.gun.lob * Math.PI) / 180));
 // the carrier's route and goal (paint and fight alike)
 function carryGoal(b, P) {
@@ -636,6 +651,9 @@ function carryGoal(b, P) {
   const RT = P.pickRoute(t, a, df.repick, b.sp.cost(), !!df.threat);
   const R = RT && RT.pick;
   let goal = R ? R.T.pos : P.targets(t)[0].pos;
+  // (the picked route itself: its node 12 m on from the carrier, the target in the last 12 m — a path straight to the
+  // target would cut the corner of a longer route it picked round known foes; _pathTo's corridor cost keeps it close)
+  if (R && R.cum[RT.i] + 12 < R.len - 1) goal = P.ahead(t, 12, _cg);
   // the fuse can't make it at this pace: over the halfway line first, so the blast drops it forward (§8.4)
   const J = a.carry.j, F = P.Kp.field;
   if (R && J && J.half === t && P.Kp.fuse * PLAYER.runSpeed * K.speedMul * 0.85 < R.len - R.cum[RT.i]) {
@@ -761,6 +779,8 @@ export function karpAim(b, P, dt, it) {
   const c = Kp.shell.center(), d = Math.hypot(c.x - a.pos.x, c.z - a.pos.z), w = a.weapon;
   const melee = meleeOf(a);
   if (d > (melee ? 4.5 : Math.min(b._range() * 1.05, 18))) return null;
+  // (a melee swing, roll or lunge carries the body on: none from closer than 0.6 m outside touch range — step back first)
+  if (melee && d - (Kp.shell.radius() + PLAYER.radius) < 0.6) return null;
   // (the grabber closing to its 3.0–3.2 m at ≥ 85 % of ours: in position first — a charge weapon walks slowly while it charges)
   if (b.kRole === 'grab' && P.side(a.team) >= KARP_AI.grabAt && d > KARP_AI.grabR + 0.35) return null;
   _v.set(a.pos.x, a.pos.y + 1.1, a.pos.z);
@@ -798,7 +818,9 @@ export function karpMove(b, P, dt, move, it) {
   }
   const S = Kp.shell;
   if (S.state === 'none') return;
-  const c = S.center(), R = S.radius() + 0.08;
+  // (melee kits: their rolls and lunges carry on; everyone else keeps clear of the full swell — a big hit grows it 0.5 m
+  // in a frame onto a bot passing just outside its reach)
+  const c = S.center(), R = meleeOf(a) ? S.radius() + 0.3 : Math.max(S.radius(), K.shell.rMax) + 0.08;
   const dx = a.pos.x - c.x, dz = a.pos.z - c.z, h = Math.hypot(dx, dz) || 1e-3, nx = dx / h, nz = dz / h;
   if (!esc && sit === 'shell' && Math.abs(a.pos.y - Kp.pos.y) < 1.5) {
     if (b.kRole === 'grab' && P.side(a.team) >= KARP_AI.grabAt && h < 5) {
@@ -816,12 +838,14 @@ export function karpMove(b, P, dt, move, it) {
   }
   // the shell guard: never a step into touch range (the body's closest point to its centre within r + 0.38 + margin)
   const by = clamp(c.y, a.pos.y + 0.3, a.pos.y + 1.2), d3 = Math.hypot(h, by - c.y), reach = R + PLAYER.radius;
-  if (d3 < reach + 0.6) {
-    const inward = -(move.x * nx + move.z * nz), vin = -(a.vel.x * nx + a.vel.z * nz);
-    if (d3 < reach + 0.15) move.set(nx, 0, nz);
-    else if (inward > 0 && d3 < reach + 0.35) { move.x += inward * nx; move.z += inward * nz; }
-    // (still coming in fast — momentum would carry it into range: lean out)
-    if (d3 < reach + 0.6 && vin > 2) { move.x += nx * 0.6; move.z += nz * 0.6; }
+  // (judged where it will be in 0.3 s at its speed toward the centre: a swimming squid covers 3.5 m in that)
+  const vin = -(a.vel.x * nx + a.vel.z * nz), dp = d3 - Math.max(0, vin) * 0.3;
+  if (dp < reach + 0.6) {
+    const inward = -(move.x * nx + move.z * nz);
+    if (d3 < reach + 0.15 || dp < reach) { move.set(nx, 0, nz); it.squid = false; it.fire = false; }   // (no charge: out at full speed)
+    else if (inward > 0 && dp < reach + 0.35) { move.x += inward * nx; move.z += inward * nz; }
+    // (still coming in fast — momentum would carry it into range: up as a kid, lean out)
+    if (vin > 1.5) { it.squid = false; move.x += nx * 0.6; move.z += nz * 0.6; }
   }
 }
 // the route / approach a lead escort or a keeper inks (paint mode) → { x, y, z, d } | null
@@ -910,6 +934,18 @@ export function karpShields(b, S) {
   S.push(d);
 }
 
+// a bot's lunge / leap from (x0, z0) to (x1, z1) passing within touch range of the Roe Shell's full swell (+ pad)? The
+// melee kits ask it (kits/blade.js lungeSafe, kits/mitts.js landingOk): bots never step into its sting this way — the
+// footwork guard (karpMove) can't stop a move the weapon itself makes
+export function karpShellIn(a, x0, z0, x1, z1, pad = 0.4) {
+  const S = G.match?.karp?.shell;
+  if (!S || S.state === 'none' || !a.bot || a.isLocal || !KARP_AI.enabled) return false;
+  const c = S.center(), R = Math.max(S.radius(), K.shell.rMax) + PLAYER.radius + pad;
+  if (Math.abs(a.pos.y + 0.8 - c.y) > R + 1) return false;
+  const dx = x1 - x0, dz = z1 - z0, L2 = dx * dx + dz * dz, u = L2 > 1e-6 ? clamp(((c.x - x0) * dx + (c.z - z0) * dz) / L2, 0, 1) : 0;
+  return Math.hypot(x0 + dx * u - c.x, z0 + dz * u - c.z) < R;
+}
+
 // ================================================================================================ route rules (_pathTo)
 // the carrier's route rules for _pathTo (built at most twice a second): { avoid, cost, noClimb } — the avoid mask (both
 // spawn zones, its own free zones, carrierBlock, the shell, and on its own half nodes 6 m behind its retreat mark) and a
@@ -930,6 +966,7 @@ export function karpPathArgs(b) {
   const C = b.sp.cost();
   if (C) for (let i = 0; i < N; i++) cost[i] = C[i]; else cost.fill(0);
   if (inZone) for (let i = 0; i < N; i++) if (Z[i]) cost[i] += 6;
+  { const E = P.zoneEdge[a.team]; for (let i = 0; i < N; i++) if (E[i]) cost[i] += 1.5; }
   const RT = P.route[a.team];
   if (KARP_AI.enabled && RT && RT.pick) {
     // off the picked route's corridor (2 m round its nodes from the carrier on): + 1.2 a node
@@ -962,8 +999,27 @@ export function karpPathFallback(b, level = 1) {
   if (level >= 2) { const c = b.kFbC && b.kFbC.length === N ? b.kFbC : (b.kFbC = new Float32Array(N)); for (let i = 0; i < N; i++) c[i] = (cost ? cost[i] : 0) + (Z[i] ? 6 : 0); cost = c; }
   return { avoid, cost, noClimb: true };
 }
-// everyone else in a Bazookarp match: no route through the shell
-export function karpShellAvoid() { const P = karpPlan(); return P && P.shellKey ? P.shellMask : null; }
+// a carrier's look-ahead (bots.js _steer cuts corners in straight lines): never across its own free zone or a
+// carrierBlock — they are no walls, so the line probes don't see them (unless it's in that zone already: out the shortest way)
+export function karpSteerOk(b, x0, y0, z0, x1, z1) {
+  const a = b.a, Kp = G.match?.karp;
+  if (!a.carry || !Kp || !KARP_AI.enabled) return true;
+  const F = Kp.field, L = Math.hypot(x1 - x0, z1 - z0), n = Math.ceil(L / 0.5), inZ = F.inFreeZone(a.team, a.pos) >= 0;
+  for (let k = 1; k <= n; k++) {
+    const u = k / n; _v.set(x0 + (x1 - x0) * u, y0, z0 + (z1 - z0) * u);
+    if ((F.inFreeZone(a.team, _v) >= 0 && !(inZ && u * L < 0.8)) || F.inCarrierBlock(_v)) return false;   // (in one already: out of it within the first 0.8 m)
+  }
+  return true;
+}
+// everyone else in a Bazookarp match: no route through the shell — nor, for a bot with no business that close (not a melee
+// breaker, not already inside it), within its full swell (b: the bot; none: a walker — the full swell)
+export function karpShellAvoid(b = null) {
+  const P = karpPlan();
+  if (!P || !P.shellKey) return null;
+  if (!b || !KARP_AI.enabled) return KARP_AI.enabled ? P.shellWide : P.shellMask;
+  const a = b.a, c = P.Kp.shell.center();
+  return meleeOf(a) || Math.hypot(a.pos.x - c.x, a.pos.z - c.z) < K.shell.rMax + 0.9 ? P.shellMask : P.shellWide;
+}
 
 // ================================================================================================ dangers (botSpecials.js)
 // SPEC §8.6, built from what a player could see (G.karpGun.shots, ghosts included; no walls seen through):

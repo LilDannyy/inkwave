@@ -19,7 +19,7 @@ import { SpecialSense, SPECIAL_AI, SPECIAL_STATS } from './botSpecials.js';   //
 import { surfWant } from './sp-surf-bots.js';   // Surf N' Turf: when to pop it (the throw itself: botSpecials act → surfOwnAim)
 import { devShootAim } from './deployables-bots.js';   // [b5-deploy] nothing better to shoot: enemy beacons / sprinklers / buoys
 import { karpPlan, karpSync, karpEngage, karpGoal, karpFightNav, karpCarrierAct, karpAim, karpPathArgs, karpPathFallback, karpShellAvoid, KARP_W,
-  karpMove, karpPaintAim, karpSpecial, karpStrikeAt, karpJump, karpShields } from './botsKarp.js';   // [b5-karp] [b5-karp-bots]
+  karpMove, karpPaintAim, karpSpecial, karpStrikeAt, karpJump, karpShields, karpSteerOk } from './botsKarp.js';   // [b5-karp] [b5-karp-bots]
 export { SIGHT, SIGHT_STATS, teamKnown, SPECIAL_AI, SPECIAL_STATS };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
@@ -2982,7 +2982,7 @@ export class BotBrain {
     G.match?.stage?.beforePath(this);   // [b5-stagehooks] (a module's per-bot nav rule: pipe costs …)
     // [b5-karp] a carrier plans with its own rules (no climbs, its avoid mask: spawns, own free zones, carrierBlock, the
     // shell, the retreat mark); everyone else in a Bazookarp match routes round the shell
-    const KA = this.a.carry ? karpPathArgs(this) : null, SA = KA ? null : G.match?.karp ? karpShellAvoid() : null;
+    const KA = this.a.carry ? karpPathArgs(this) : null, SA = KA ? null : G.match?.karp ? karpShellAvoid(this) : null;
     let p = KA ? nav.path(s, g, this.a.team, undefined, true, KA.avoid, KA.cost) : nav.path(s, g, this.a.team, undefined, rule, SA, this.sp.cost());   // (… and round those areas; climbs: _climbRule) [b5-karp-bots] KA.cost: dangers + its route's corridor
     if (!p && KA) { const F = karpPathFallback(this); if (F) p = nav.path(s, g, this.a.team, undefined, true, F.avoid, F.cost); if (!p) { const F2 = karpPathFallback(this, 2); if (F2) p = nav.path(s, g, this.a.team, undefined, true, F2.avoid, F2.cost); } }   // [b5-karp] (no forward path: a short ×3 beats standing still) [b5-karp-bots] level 2: through its own free zone
     // climbs are off after a failed one and there's no way there without one (a pit whose only way out is up a wall): up
@@ -3202,6 +3202,7 @@ export class BotBrain {
         if (nav.edgeType(this.path[k - 1], this.path[k]) !== 'walk') break;
         if (!this._fatLos(a.pos.x, a.pos.y, a.pos.z, n.x, n.y, n.z)) break;
         if (!this._dryLine(a.pos.x, a.pos.y, a.pos.z, n.x, n.z)) break;   // never cut a corner across water
+        if (a.carry && !karpSteerOk(this, a.pos.x, a.pos.y, a.pos.z, n.x, n.z)) break;   // [b5-karp-bots] nor a carrier's across its own free zone
         ti = k;
       }
       this._laT = 0.1; this._laPi = this.pi; this._laPath = this.path; this._laTi = ti;

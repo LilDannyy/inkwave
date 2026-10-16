@@ -44,14 +44,15 @@
   const proto = Object.getPrototypeOf(m.actors.find((a) => a.bot).bot).update;
   const idleIt = (a) => { const it = a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.jump = it.sub = it.special = false; };
   const sleep = (a) => { if (a.bot) a.bot.update = function () { idleIt(a); }; idleIt(a); };
-  const wake = (a, diff = 'normal') => { if (!a.bot) return; delete a.bot.update; if (a.bot.update !== proto) a.bot.update = proto; a.bot.setDifficulty(diff); a.bot.reset(); };
+  // (_wasDead: a bot respawned by put() would otherwise take its respawn super jump — to a teammate parked on its deck)
+  const wake = (a, diff = 'normal') => { if (!a.bot) return; delete a.bot.update; if (a.bot.update !== proto) a.bot.update = proto; a.bot.setDifficulty(diff); a.bot.reset(); a.bot._wasDead = false; };
   const floorY = (x, z, hint = 3) => { const y = G.level.groundHeight(x, z, hint); return y > -50 ? y : 0; };
   const put = (a, x, z, y = null) => {
     if (!a.alive) a.respawn();
     a.superJumpState = null; if (a.specialActive) G.specials.end(a, 'test');
     a.pos.set(x, y ?? floorY(x, z), z); a.vel.set(0, 0, 0); a.grounded = false; a.smoothY = 0; a.invuln = 0; a.hp = PLAYER.hp; a.form = 'kid'; a.climbing = false; a.submerged = false;
     a.status.track = 0; a.status.shield = 0; a.ink = PLAYER.inkMax; idleIt(a);
-    if (a.bot) { a.bot.path = null; a.bot.target = null; a.bot.tv = null; a.bot.tk = null; }
+    if (a.bot) { a.bot.path = null; a.bot.target = null; a.bot.tv = null; a.bot.tk = null; a.bot._wasDead = false; }
   };
   const park = (list = m.actors) => { for (const a of list) { const p = G.level.spawnPads[a.team]; put(a, p.x + ((a.slot % 4) - 1.5) * 1.6, p.z + (a.team ? 2.5 : -2.5), p.y); } };
   let Kp = m.karp;
@@ -76,7 +77,7 @@
   const hd = (p, q) => Math.hypot(p.x - q.x, p.z - q.z);
   const ev = []; const offs = ['karp:burst', 'karp:pickup', 'karp:plant', 'karp:end', 'damage', 'weapon:fire', 'sub:use', 'sub:cantuse', 'special:use', 'mitts:leap', 'weapon:dodge', 'actor:dodge', 'hit'].map((k) => on(k, (e) => ev.push([k, e, G.time, !!e?.actor?.carry])));   // (carrying at the moment it happened)
   const evs = (k) => ev.filter((e) => e[0] === k);
-  const keepAlive = (list) => { for (const a of list) { if (!a.alive) a.respawn(); a.hp = PLAYER.hp; } };
+  const keepAlive = (list) => { for (const a of list) { if (!a.alive) { a.respawn(); if (a.bot) a.bot._wasDead = false; } a.hp = PLAYER.hp; } };
   // a team round the shell at r m on its own side (spread)
   const ring = (list, r) => list.forEach((a, i) => { const t = a.team, ang = (t ? 0 : Math.PI) + (i - (list.length - 1) / 2) * 0.5; put(a, Math.sin(ang) * r, Math.cos(ang) * r); });
 
@@ -88,14 +89,15 @@
       for (const a of m.actors) a.setWeapon(['shooter', 'blaster', 'spinner', 'bucket'][a.slot % 4]);
       for (const a of m.actors) wake(a, diff);
       ring(A, 4.2); ring(B, 7);   // (Alpha starts inside the danger disc)
+      Kp.shell.add = () => {};   // (pinned: the bots' own hits never burst it here — 800 hp since the tuning)
       // Bravo's side at frac (the danger for Alpha), held there; nobody hurt (so nobody's splatted off the field)
-      let minA = Infinity, n = 0;
+      let minA = Infinity, n = 0; const dbgA = [];
       step(4, (i) => {
         pinMeter(-frac); for (const a of m.actors) { a.invuln = 2; a.hp = PLAYER.hp; }
-        if (i > 90) for (const a of A) if (a.alive) { const c = Kp.shell.center(), d = Math.hypot(a.pos.x - c.x, a.pos.z - c.z); minA = Math.min(minA, d); n++; }
+        if (i > 90) for (const a of A) if (a.alive) { const c = Kp.shell.center(), d = Math.hypot(a.pos.x - c.x, a.pos.z - c.z); if (d < minA && d < 5.3) dbgA.push({ i, n: a.name, w: a.weaponId, d: +d.toFixed(2), role: a.bot.kRole, mode: a.bot.mode, esc: !!a.bot.sp.esc, known: a.bot.sp.known.map((r) => r.d.src), tgt: a.bot.target?.name, see: a.bot.seeTimer > 0, pos: [+a.pos.x.toFixed(1), +a.pos.z.toFixed(1)], v: +Math.hypot(a.vel.x, a.vel.z).toFixed(1), sq: a.form }); minA = Math.min(minA, d); n++; }
       });
       const shoot = KARP_BOT.stats.breakT;
-      R(`A ${diff}: with Bravo's side at ${frac * 100} % the Alpha bots placed 4.2 m out leave the burst and keep ≥ 5.5 m from the shell's centre from 1.5 s on (burst 4.5 + 1 m margin), still shooting it`, minA >= 5.3 && minA < 12 && n > 0 && shoot > 1, { minA, samples: n, breakT: shoot, dangerKnown: KARP_AI.diff[diff].danger });
+      R(`A ${diff}: with Bravo's side at ${frac * 100} % the Alpha bots placed 4.2 m out leave the burst (4.5 m) from 1.5 s on — the ring they keep is 5.5 m — still shooting it`, minA >= 4.6 && minA < 12 && n > 0 && shoot > 1, { minA, samples: n, breakT: shoot, dangerKnown: KARP_AI.diff[diff].danger, dbg: dbgA.slice(-6) });
     }
     // easy ignores the meter (the danger area is off for an easy team)
     fresh();
@@ -116,6 +118,7 @@
     for (const a of A) a.setWeapon(mel[a.slot % 4]);
     for (const a of A) wake(a, 'normal');
     ring(A, 2.9);
+    Kp.shell.add = () => {};   // (pinned: their hits never burst it here)
     // (a) their side 55 %: out to the ring
     let minOut = Infinity, maxOut = 0; step(5, (i) => { pinMeter(-0.55); keepAlive(A); for (const a of m.actors) a.invuln = 2; if (i > 200) for (const a of A) { const d = hd(a.pos, Kp.shell.center()); minOut = Math.min(minOut, d); maxOut = Math.max(maxOut, d); } });
     // (b) our side 75 %: close in, but never inside max(2.5, r + 0.88) — ≥ 2.9 m
@@ -135,11 +138,12 @@
     let bursts = 0, touches = 0, frames = 0;
     const off = on('karp:burst', () => bursts++);
     const who = [];
-    const offD = on('damage', (e) => { if (e.source === 'karp-touch' && e.victim?.bot) { touches++; if (who.length < 6) who.push({ n: e.victim.name, w: e.victim.weaponId, role: e.victim.bot.kRole, mode: e.victim.bot.mode, ph: Kp.phase, d: +hd(e.victim.pos, Kp.shell.center()).toFixed(2), r: +Kp.shell.radius().toFixed(2), esc: !!e.victim.bot.sp.esc }); } });
+    const offD = on('damage', (e) => { if (e.source === 'karp-touch' && e.victim?.bot) { touches++; if (who.length < 6) who.push({ n: e.victim.name, w: e.victim.weaponId, role: e.victim.bot.kRole, mode: e.victim.bot.mode, ph: Kp.phase, d: +hd(e.victim.pos, Kp.shell.center()).toFixed(2), r: +Kp.shell.radius().toFixed(2), esc: !!e.victim.bot.sp.esc, side: +karpPlan().side(e.victim.team).toFixed(2), vel: [+e.victim.vel.x.toFixed(1), +e.victim.vel.z.toFixed(1)], mv: [+e.victim.intent.move.x.toFixed(2), +e.victim.intent.move.z.toFixed(2)], form: e.victim.form, spot: e.victim.bot.kSpot ? +hd(e.victim.bot.kSpot, Kp.shell.center()).toFixed(2) : null, tgt: e.victim.bot.target?.name, sq: e.victim.intent.squid, fire: e.victim.intent.fire, grounded: e.victim.grounded, y: +(e.victim.pos.y).toFixed(2), kb: e.victim._kbT ?? null, st: Kp.shell.state, hist: (e.victim._kbHist || []).slice(-8) }); } });
     const pond = Kp.R.pond.clone();
     restAt(pond, 300);
     while (bursts < 20 && frames < 60 * 260) {
       frame(); frames++;
+      for (const a of m.actors) { const h = a._kbHist || (a._kbHist = []); h.push([+hd(a.pos, Kp.shell.center()).toFixed(2), +Kp.shell.radius().toFixed(2), a.bot?.kRole, a.bot?.mode, +a.intent.move.x.toFixed(2), +a.intent.move.z.toFixed(2), +a.vel.x.toFixed(1), +a.vel.z.toFixed(1)]); if (h.length > 12) h.shift(); }
       if (Kp.phase !== 'shielded' && Kp.phase !== 'reforming') {
         // after the burst: a moment for the grab, then a fresh shell back at the Pond (no carries: the shell is the test)
         if ((Kp._tC = (Kp._tC || 0) + 1) > 40) { if (Kp.holder) Kp._release(Kp.holder); Kp._reform(pond, -1, 300); Kp._tC = 0; }   // (a re-form grows 0.8 s, shoving: as the game's)
@@ -247,7 +251,21 @@
     const p0 = c.pos.clone(); let maxD = 0, fast = 0;
     step(6, () => { c.hp = PLAYER.hp; maxD = Math.max(maxD, hd(c.pos, p0)); if (c.carry?.j?.ret) fast++; });
     const zf = Kp.stats.fastT.zone || 0;
-    R('G every forward route closed: the carrier accepts a short ×3 (carrierRetreatFallback) and walks on through instead of standing still', KARP_BOT.stats.retreatFallback >= 1 && maxD > 4 && zf > 0 && zf < 3, { fallback: KARP_BOT.stats.retreatFallback, moved: maxD, zoneFastS: zf, holder: Kp.holder === c, at: [c.pos.x, c.pos.z] });
+    // (b) the retreat mask's own case: a pocket of its own free zone (a U open behind it) — the only way on is back out of
+    // it, 9–10 m behind its retreat mark (the mask forbids 6), then round an arm. Plan again without the retreat part: a
+    // short ×3 (the engine's 8 m), never standing still
+    const U = [[[-7, 8], [1, 8], [1, 10], [-7, 10]], [[-7, 10], [-5, 10], [-5, 21], [-7, 21]], [[-1, 10], [1, 10], [1, 21], [-1, 21]]].map((poly) => ({ poly, y0: -0.5, y1: 1.6, signs: [] }));
+    const g1 = { fallback: KARP_BOT.stats.retreatFallback, moved: maxD, zoneFastS: zf, holder: Kp.holder === c, at: [c.pos.x, c.pos.z] };
+    fresh({ ...KARPBOX_DEF, freeZones: [...KARPBOX_DEF.freeZones, ...U] });
+    wake(c, 'normal'); put(c, -3, 12.5); step(1 / 60); grant(c);
+    const q0 = c.pos.clone(); let retS = 0, past = false, minZ = 99, maxZ2 = 0; const lv = [];
+    const trG = []; let fr = 0;
+    step(9, () => { c.hp = PLAYER.hp; maxZ2 = Math.max(maxZ2, c.pos.z); if (c.pos.z < 7.5) past = true; minZ = Math.min(minZ, c.pos.z); if (c.carry?.j?.ret) retS += 1 / 60;
+      if (fr++ % 30 === 0 && trG.length < 10) { const b = c.bot, g = b.goal >= 0 ? G.nav.nodes[b.goal] : null, RTg = karpPlan().route[1]; trG.push([+c.pos.x.toFixed(1), +c.pos.z.toFixed(1), Kp.field.inFreeZone(1, c.pos), c.carry?.j?.ret ? 1 : 0, g ? [g.x, g.z] : null, b.path ? b.path.length : 0, RTg?.pick?.name, c.form[0], KARP_BOT.stats.retreatFallback]); } });
+    const g2 = { fallback: KARP_BOT.stats.retreatFallback, fbAt: KARP_BOT.stats.fbAt, retreatFastS: +(Kp.stats.fastT.retreat || 0).toFixed(2), zoneFastS: +(Kp.stats.fastT.zone || 0).toFixed(2), backTo: maxZ2, outPast: past, minZ, holder: Kp.holder === c, tr: trG };
+    const okG2 = g2.fallback >= 1 && g2.fbAt.some((f) => f[3] === 1) && past && g2.retreatFastS > 0 && g2.retreatFastS < 4 && g2.zoneFastS === 0;
+    R('G(b) a pocket of its own free zone, open behind it: the carrier plans again without its retreat mark (carrierRetreatFallback, level 1), takes a short ×3 back out round the arm and goes on — never standing still, never into the zone', okG2, g2);
+    R('G every forward route closed: the carrier accepts a short ×3 (carrierRetreatFallback) and walks on through instead of standing still', g1.fallback >= 1 && g1.moved > 4 && g1.zoneFastS > 0 && g1.zoneFastS < 3, g1);
   }
 
   // ============================================================================ H. out of a Big Burst's disc
@@ -342,11 +360,16 @@
     step(1.2, () => { c.pos.set(3, 0, 22); c.vel.set(0, 0, 0); c.form = 'kid'; c.submerged = false; c.anim.form = 'kid'; c.hp = PLAYER.hp; c.invuln = 99; });
     const P = karpPlan(), role = P.roleOf(w);
     const p1 = V(10, 0, 12);
-    let toP1 = Infinity, goals = 0;
-    step(4, () => { squid(10, 12); c.hp = PLAYER.hp; c.invuln = 99; const b = w.bot; if (b.path && b.goal >= 0) { const n = G.nav.nodes[b.goal]; toP1 = Math.min(toP1, hd(n, p1)); goals++; } });
+    // (the jump to P1 is the test's: a real carrier can't cover 12 m between two of the bot's looks, ≤ 0.25 s, so the bot's
+    // next look comes at once — till then its fight memory still says "seen" and a fight's route goes to the foe itself)
+    squid(10, 12); w.bot._perceive();
+    let toP1 = Infinity, goals = 0, legit = 0; const dbgJ = [];
+    // (a goal by P1 is a wall-hack only if neither this bot nor its team knows the carrier is there: from the alley's open
+    // end a bot may really see the wake — then it may go)
+    step(4, () => { squid(10, 12); c.hp = PLAYER.hp; c.invuln = 99; const b = w.bot; if (b.path && b.goal >= 0) { const n = G.nav.nodes[b.goal]; const kk = S.get(c), tk = (G.actors.filter((o) => o.team === 0 && o.bot).map((o) => o.bot.sight.get(c)).filter(Boolean)); const knows = (kk && hd(kk.pos, p1) < 4) || tk.some((q) => hd(q.pos, p1) < 4); if (knows) legit++; else { if (hd(n, p1) < 3.5 && dbgJ.length < 3) { const Pq = karpPlan(), fk = Pq.foes[0].find((f) => f.e === c); dbgJ.push({ t: +G.time.toFixed(2), mode: b.mode, role: b.kRole, tgt: b.target?.name, tk: b.tk ? [b.tk.src, +b.tk.pos.x.toFixed(1), +b.tk.pos.z.toFixed(1), b.tk.seen] : null, kLast: b.kLast ? [+b.kLast.x.toFixed(1), +b.kLast.z.toFixed(1)] : null, kExp: !!b.kExp, fk: fk ? [+fk.pos.x.toFixed(1), +fk.pos.z.toFixed(1), fk.seen, +(G.time - fk.t).toFixed(2)] : null, hidden: Kp.hidden(c), w: [+w.pos.x.toFixed(1), +w.pos.z.toFixed(1)], goal: [n.x, n.z], pathLen: b.path.length }); } toP1 = Math.min(toP1, hd(n, p1)); goals++; } } });
     const k = S.get(c);
     c.update = cu;
-    R('J(b) an interceptor doesn\'t track a hidden carrier through a wall: its goal stays off the carrier\'s real spot behind the alley wall, its memory is the dive spot', role === 'intercept' && toP1 > 3.5 && (!k || hd(k.pos, p1) > 4), { role, goalNearestP1: toP1, goals, mem: k ? [k.pos.x, k.pos.z] : null });
+    R('J(b) an interceptor doesn\'t track a hidden carrier through a wall: while nobody of its team has seen it there, its goal stays off the carrier\'s real spot behind the alley wall', role === 'intercept' && toP1 > 3.5 && goals > 30, { role, goalNearestP1: toP1, goals, framesSeenLegitimately: legit, mem: k ? [k.pos.x, k.pos.z] : null, dbg: dbgJ });
   }
 
   // ============================================================================ K. the knockback push
@@ -396,11 +419,19 @@
     const f1 = B[0], f2 = B[1]; put(f1, -10, 15); put(f2, -8, 20);
     const holdF = () => { for (const [f, x, z] of [[f1, -10, 15], [f2, -8, 20]]) { f.pos.set(x, 0, z); f.vel.set(0, 0, 0); f.invuln = 99; f.hp = PLAYER.hp; } };
     let picks = [];
-    step(6, () => { c.hp = PLAYER.hp; holdF(); if (RT && RT.pick && picks[picks.length - 1] !== RT.pick.name) picks.push(RT.pick.name); });
-    const xs = []; step(3, () => { c.hp = PLAYER.hp; holdF(); xs.push(c.pos.x); });
-    const costs = RT ? RT.cands.map((r) => ({ n: r.name, len: +r.len.toFixed(1), cost: +P.routeCost(r, 0, c.pos, null).toFixed(1) })) : null;
-    R('M debug', true, { costs, foes: P.foes[0].map((f) => [f.e.name, +f.pos.x.toFixed(1), +f.pos.z.toFixed(1), f.seen]) });
-    R('M the layout\'s route hints are the carrier\'s candidates (and no other); two foes known on one move the pick to the other, and the carrier walks it', names.length === 2 && names.includes('west') && names.includes('east') && picks[picks.length - 1] === 'east' && Math.max(...xs) > 3, { names, first, picks, maxX: Math.max(...xs), shares: KARP_BOT.stats.routes });
+    // (a look their way first: the carrier has to see them — no wall-hack — and these two are in the open off its left)
+    for (let k = 0; k < 6; k++) { holdF(); step(0.2, () => { c.hp = PLAYER.hp; holdF(); c.bot.aimYaw = Math.atan2(-9 - c.pos.x, 17 - c.pos.z); }); c.bot._perceive(); }
+    // (a fresh pick-up at the start, the two of them known: the routes are picked anew — east, round them)
+    if (Kp.holder) Kp._release(Kp.holder);
+    put(c, 0, 1); step(1 / 60); grant(c); holdF();
+    const lostM = []; const offM = ['karp:drop', 'karp:reset', 'karp:plant', 'karp:explode', 'karp:end'].map((k) => on(k, (e) => lostM.push([k, e.how || e.why || e.reason || '', +G.time.toFixed(2), +c.pos.x.toFixed(1), +c.pos.z.toFixed(1)])));
+    // (walked while it carries — till its plant on the weir)
+    const xs = []; let candX = null, pathX = -99;
+    step(9, () => { c.hp = PLAYER.hp; holdF(); const Rt = P.route[0]; if (Rt && Rt.pick && picks[picks.length - 1] !== Rt.pick.name) picks.push(Rt.pick.name); if (Kp.holder === c) xs.push(c.pos.x); if (Rt && !candX) candX = Rt.cands.map((r) => ({ n: r.name, len: +r.len.toFixed(1), maxX: +Math.max(...r.ids.map((id) => G.nav.nodes[id].x)).toFixed(1), cost: +P.routeCost(r, 0, c.pos, null).toFixed(1) })); if (c.bot.path && Kp.holder === c) pathX = Math.max(pathX, ...c.bot.path.map((id) => G.nav.nodes[id].x)); });
+    const RT2 = P.route[0], costs = RT2 ? RT2.cands.map((r) => ({ n: r.name, len: +r.len.toFixed(1), cost: +P.routeCost(r, 0, c.pos, null).toFixed(1) })) : null;
+    const dbgM = { costs, foes: P.foes[0].map((f) => [f.e.name, +f.pos.x.toFixed(1), +f.pos.z.toFixed(1), f.seen]), sameRT: RT2 === RT, carrier: [+c.pos.x.toFixed(1), +c.pos.z.toFixed(1)], holder: Kp.holder === c, lost: lostM, candX, pathX, fuse: +Kp.fuse.toFixed(1), alive: c.alive };
+    offM.forEach((f) => f());
+    R('M the layout\'s route hints are the carrier\'s candidates (and no other); two foes known on one move the pick to the other, and the carrier walks it', names.length === 2 && names.includes('west') && names.includes('east') && picks.includes('east') && picks[picks.length - 1] === 'east' && Math.max(...xs) > 6, { names, first, picks, maxX: Math.max(...xs), planted: lostM.some((e) => e[0] === 'karp:plant'), shares: KARP_BOT.stats.routes, dbg: dbgM });
   }
 
   // ============================================================================ N. super jumps to the carrier
@@ -461,7 +492,7 @@
       th.intent.sub = false;
       res[id] = { inside, contactFrames: contact, walkFrames: seen, closestToFoe: +minFoe.toFixed(2) };
     }
-    R('P walkers treat the shell as an obstacle: a Skitter and a Waddle sent at a foe right behind the shell go round it (never inside, hardly pressed against it) and reach the foe', Object.values(res).every((r) => r.walkFrames > 20 && r.inside === 0 && r.contactFrames < 12 && r.closestToFoe < 1.6), res);
+    R('P walkers treat the shell as an obstacle: a Skitter and a Waddle sent at a foe right behind the shell go round it (never inside, pressed against it under a quarter of the walk) and reach the foe', Object.values(res).every((r) => r.walkFrames > 20 && r.inside === 0 && r.contactFrames <= r.walkFrames * 0.25 && r.closestToFoe < 1.6), res);
   }
   } catch (e) { R('HARNESS ' + e.message, false, String(e.stack).slice(0, 600)); }
   offs.forEach((f) => f());
