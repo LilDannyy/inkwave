@@ -76,7 +76,8 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
 
   // ---- 5. grab share: N bursts, a Bravo host bot and B each 3 m from it, both running in on hearing the burst
   // (kid = true: the host's OWN player races B instead of a host bot)
-  const grabShare = async (N = 10, kid = false) => {
+  const grabShare = async (N = 10, kid = false, swap = false) => {
+    const sg = swap ? -1 : 1;   // (swap: the host's racer on the −x side, B on the +x side)
     const bot = kid ? aNid : await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
     const wins = { bot: 0, guest: 0, none: 0 }, dec = [];
     // (each page's frame rate and sim speed meanwhile: a touch is timed on its own screen's simulation, so a page running
@@ -89,13 +90,13 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
       // (3 m either side of where it really rests — the Pond's resting point isn't exactly x 0: at ±3 from x 0, B stood
       // 0.3 m nearer and won every race in race3 once the race was fair)
       const kp5 = (await info(A)).pos;
-      await A.js(`(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); b.pos.set(${kp5[0]} + 3, 0, ${kp5[2]}); b.vel.set(0, 0, 0); b.yaw = b.aimYaw = -Math.PI / 2; b.intent.move.set(0, 0, 0); return 1; })()`);
-      await put(B, kp5[0] - 3, 0, kp5[2], Math.PI / 2);
+      await A.js(`(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); b.pos.set(${kp5[0]} + ${3 * sg}, 0, ${kp5[2]}); b.vel.set(0, 0, 0); b.yaw = b.aimYaw = ${-sg} * Math.PI / 2; b.intent.move.set(0, 0, 0); return 1; })()`);
+      await put(B, kp5[0] - 3 * sg, 0, kp5[2], sg * Math.PI / 2);
       // (a burst splats the other team's players close by, so the host's own player — an Alpha kid — races B for a
       // Bazookarp set free without one: the host's 'u' frees it on every screen; each side starts on hearing it)
       const ev = kid ? `'karp:phase', (e) => { if (e.phase !== 'free') return;` : `'karp:burst', () => {`;
-      await A.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on(${ev} off(); const b = __G.match.actors.find((o) => o.nid === ${bot}); b.intent.move.set(-1, 0, 0); __simAfter(0.9, () => b.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
-      await B.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on(${ev} off(); const a = __G.match.local; a.intent.move.set(1, 0, 0); __simAfter(0.9, () => a.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
+      await A.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on(${ev} off(); const b = __G.match.actors.find((o) => o.nid === ${bot}); b.intent.move.set(${-sg}, 0, 0); __simAfter(0.9, () => b.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
+      await B.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on(${ev} off(); const a = __G.match.local; a.intent.move.set(${sg}, 0, 0); __simAfter(0.9, () => a.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
       await wait(250);
       if (kid) await A.js(`(() => { const K = __G.match.karp; K.shell.clear(); K._rec(['u', -1, +K.pos.x.toFixed(2), +K.pos.y.toFixed(2), +K.pos.z.toFixed(2)]); K._setPhase('free', 0); return 1; })()`);
       else await burst(1);
@@ -411,6 +412,8 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
     R(`5f. the race's rule: the claimant that touched it first on its own screen wins, host bot or guest alike (each steps on 0.30 s / 0.36 s after it went free on its own screen; ${N} rounds, alternating)`, right >= N - 1, { right, N, rows });
   }
 
+  if (part === 'raceswap') { await zeroB(); await put(A, 0, 0, -14); await grabShare(12, false, true); await toPond(); }   // (sides swapped)
+
   if (part === 'racekid') { await zeroB(); await grabShare(16, true); await toPond(); }   // ([karp-face] the host's own player vs the guest)   // ([karp-face] the grab share alone)
 
   if (part === 'snap') {
@@ -501,7 +504,7 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
   await wait(800);
   const end = async (c) => J(c, `(() => { const r = __G.match.result; return r ? { mode: r.mode, winner: r.winner, reason: r.reason, counts: r.counts, st: __G.match.actors.map((a) => [a.nid, Math.round(a.stats.karpM || 0), a.stats.karpPops || 0]).sort((x, y) => x[0] - y[0]) } : null; })()`);
   const ea = await end(A), eb = await end(B);
-  R(`${part === 'lag' ? 'lag ' : ''}16. both screens show the same result: mode, winner, reason, counts and every player's karpM / karpPops`, !!ea && !!eb && ea.mode === 'bazookarp' && JSON.stringify(ea) === JSON.stringify(eb) && (part === 'racekid' || part === 'racefair' || ea.st.some((q) => q[1] > 0 || q[2] > 0)), { host: ea, guest: eb });   // (racekid: no burst, no carry made progress)
+  R(`${part === 'lag' ? 'lag ' : ''}16. both screens show the same result: mode, winner, reason, counts and every player's karpM / karpPops`, !!ea && !!eb && ea.mode === 'bazookarp' && JSON.stringify(ea) === JSON.stringify(eb) && (part === 'racekid' || part === 'racefair' || part === 'raceswap' || ea.st.some((q) => q[1] > 0 || q[2] > 0)), { host: ea, guest: eb });   // (racekid: no burst, no carry made progress)
   const errs = [];
   for (const c of [A, B]) errs.push(...(c.log || []).filter((l) => /TypeError|ReferenceError|Uncaught/.test(l)));
   R('no page errors on either screen', errs.length === 0, errs.slice(0, 4));
