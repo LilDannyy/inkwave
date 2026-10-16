@@ -242,6 +242,24 @@ function groups(pts, r) {
     return { pts: g, c, w, ends };
   });
 }
+// [fix1] #7a's entrances: the graph's crossings grouped single-linkage within r as before; each move #16's kid makes into
+// the ring joins the group with a crossing nearest it within r, else groups with the other moves — so a move's landing
+// never chains two separate entrances into one (tidewater's Bravo side lost one so, 7 → 6)
+function entGroups(cross, r) {
+  const gs = groups(cross.filter((p) => !p.phys), r).map((g) => g.pts), rest = [];
+  for (const p of cross.filter((q) => q.phys)) {
+    let best = -1, bd = Infinity;
+    gs.forEach((pts, i) => { for (const q of pts) { const d = Math.hypot(q.x - p.x, q.z - p.z); if (d < bd) { bd = d; best = i; } } });
+    if (best >= 0 && bd <= r) gs[best].push(p); else rest.push(p);
+  }
+  for (const g of groups(rest, r)) gs.push(g.pts);
+  return gs.map((pts) => {
+    let w = 0, ends = [pts[0], pts[0]];
+    for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) { const d = Math.hypot(pts[i].x - pts[j].x, pts[i].z - pts[j].z); if (d > w) { w = d; ends = [pts[i], pts[j]]; } }
+    const c = pts.reduce((s2, p) => ({ x: s2.x + p.x / pts.length, y: s2.y + p.y / pts.length, z: s2.z + p.z / pts.length }), { x: 0, y: 0, z: 0 });
+    return { pts, c, w, ends };
+  });
+}
 // a carrier-graph walk (no climbs) of at most `lim` m from a: the set reached (cached per start)
 function walkSet(C, a, lim = 6) {
   const cache = C._ws || (C._ws = new Map());
@@ -1088,7 +1106,7 @@ export async function runChecks(o = {}) {
     for (const t of [0, 1]) {
       const g = gates[t].pos, deck = deckOf(C, 1 - t), cross = out._aCross[t];
       const see = (p) => seenFrom(G, deck.eyes, new V3(p.x, p.y + 1, p.z));
-      const ents = groups(cross, CK.entGroup).map((e) => {
+      const ents = entGroups(cross, CK.entGroup).map((e) => {
         const types = [...new Set(e.pts.map((p) => TYPE_NAME[p.type] || 'ride'))];
         const plain = e.pts.filter((p) => !p.phys), phys = e.pts.filter((p) => p.phys);
         const plainSeen = !plain.length || plain.some(see);
