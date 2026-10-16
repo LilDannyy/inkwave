@@ -225,6 +225,7 @@
     }
     R('I3. the meter tag isn\'t drawn right under the status pill (which already says SHELL · 40% OURS); lower on the screen it is', !!tuck && tuck.shown == null && !!low && !!low.shown, { tuck, low, tried: tuck && low ? undefined : tr3 });
     Kp.shell.m = 0; g.rig.pitch = -0.15;
+    const restBox = async (el, max = 2500) => { let h0 = -1; const t0 = performance.now(); while (el && el.isConnected && performance.now() - t0 < max) { const h1 = el.getBoundingClientRect().height; if (Math.abs(h1 - h0) < 0.5) break; h0 = h1; await new Promise((q) => setTimeout(q, 60)); } };   // ([karp-face] review round 3, 2nd fixer: a pop-in's scale settled — its box the same height twice 60 ms apart; on a page that drew its first frame ~1 s late a fixed wait read it mid pop-in, twice its size)
     // I4. a kill call-out (WIPEOUT!) and ours at once: ours sits wholly under it
     clearCalls();
     // (a burst's WIPEOUT! and SHELL BURST! come in the same frame: ours waits out the kill call-out's pop-in, then sits
@@ -234,7 +235,7 @@
     H._callout('WIPEOUT!', 'The whole team is splatted', true); const t4 = performance.now();
     H.karp._say('SHELL BURST!', { sub: 'GRAB THE BAZOOKARP!', icon: null });
     let tz = null, tw4 = null; for (let k = 1; k <= 80 && tz == null; k++) { step(1 / 60); await wait(17); if (H.zcalls.firstElementChild) { tz = Math.round((k / 60) * 1000); tw4 = Math.round(performance.now() - t4); } }
-    step(1 / 60); await wait(400); step(1 / 60);
+    step(1 / 60); await wait(400); await restBox(H.zcalls.firstElementChild); step(1 / 60);
     const kcEl = H.callouts.querySelector('.iw-call'), zcEl = H.zcalls.firstElementChild;
     const kr = kcEl && kcEl.getBoundingClientRect(), zr4 = zcEl && zcEl.getBoundingClientRect();
     const subR = kcEl && kcEl.querySelector('.iw-call__sub')?.getBoundingClientRect();
@@ -375,6 +376,7 @@
   // up) and fades out of the way of a live call-out (OVERTIME!'s sub line) and the centre banner, as the world tags do
   {
     const wait = (ms) => new Promise((q) => setTimeout(q, ms));
+    const restBox = async (el, max = 2500) => { let h0 = -1; const t0 = performance.now(); while (el && el.isConnected && performance.now() - t0 < max) { const h1 = el.getBoundingClientRect().height; if (Math.abs(h1 - h0) < 0.5) break; h0 = h1; await wait(60); } };   // (as in I: the pop-in settled)
     const er = () => H.el.getBoundingClientRect();
     const topY = () => H.karp.status.getBoundingClientRect().bottom - er().top;
     const rel = (r) => { const o = er(); return { l: r.left - o.left, r: r.right - o.left, t: r.top - o.top, b: r.bottom - o.top }; };
@@ -413,7 +415,7 @@
     const home = foe.pos.clone();
     g.rig.pitch = -0.15; step(2 / 60); H.karp._topT = 0; step(1 / 60);
     H._zCall('OVERTIME!', { team: foe.team, sub: 'Stop them — 10 s to hold!', icon: null });
-    await wait(650);   // (its pop-in over: the box at its resting size)
+    await wait(650); await restBox(H.zcalls.firstElementChild);   // (its pop-in over: the box at its resting size)
     const sub2 = H.zcalls.firstElementChild?.querySelector('.iw-zcall__sub'), sb2 = sub2 ? rel(sub2.getBoundingClientRect()) : null;
     const mk2 = sb2 ? placeOn(sb2) : null, cls2 = H.karp.mk.classList.contains('is-under');
     const hit2 = !!mk2 && !!sb2 && mk2.onScreen && ov(mk2.box || { l: mk2.x - 25, r: mk2.x + 25, t: mk2.y - 25, b: mk2.y }, sb2) > 0;
@@ -425,7 +427,7 @@
     // K3. the stock OVERTIME! centre banner: the marker on its word
     clearAll(); g.rig.pitch = -0.15; step(2 / 60);
     H._zBanner('OVERTIME!');
-    await wait(700);
+    await wait(700); await restBox(H.bannerLayer.querySelector('.iw-bn[data-g="center"] .iw-bn__text'));
     const bt3 = H.bannerLayer.querySelector('.iw-bn[data-g="center"] .iw-bn__text'), bb3 = bt3 ? rel(bt3.getBoundingClientRect()) : null;
     const mk3 = bb3 ? placeOn(bb3) : null, cls3 = H.karp.mk.classList.contains('is-under');
     const hit3 = !!mk3 && !!bb3 && mk3.onScreen && ov(mk3.box || { l: mk3.x - 25, r: mk3.x + 25, t: mk3.y - 25, b: mk3.y }, bb3) > 0;
