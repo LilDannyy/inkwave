@@ -374,21 +374,31 @@ function planOf(b) {
 function growPlan(b, tp) { return lobBudget(12, () => growPlan0(b, tp)); }
 function growPlan0(b, tp) {
   const a = b.a;
-  let nw = null;
-  for (const it of items) if (it.owner === a && !it.ghost && it.state === 'live' && it.chain && (!nw || it.seq > nw.seq)) nw = it;
-  if (!nw || nw.chain.n >= 3) return null;
-  const C = nw.chain.items.filter((o) => o.state === 'live'), need = 3 - C.length, pts = [];
-  for (const o of C) {
-    for (let k = 0; k < 8 && pts.length < need; k++) {
-      const th = (k * Math.PI) / 4 + Math.random() * 0.4, rr = 3.2 + Math.random(), x = o.spot.x + Math.cos(th) * rr, z = o.spot.z + Math.sin(th) * rr;
-      if (C.some((q) => Math.hypot(q.spot.x - x, q.spot.z - z) < 2.4) || pts.some((q) => Math.hypot(q.x - x, q.z - z) < 2.4)) continue;
-      if (items.some((q) => q.team === a.team && (q.state === 'live' || q.state === 'open') && !C.includes(q) && Math.hypot(q.spot.x - x, q.spot.z - z) < 3.4)) continue;
-      const at = okSpot(a, x, z, tp);
-      if (!at || Math.abs(at.y + 1.0 - o.spot.y) > 2.0 || !G.physics.los(o.spot, _v.set(at.x, at.y + 1.0, at.z))) continue;
-      pts.push(at);
+  // ([b5-int3] each of its own chains still short of three, the biggest first — not only the newest: on a ledgy zone a burst
+  // can land as two 2-chains a step apart, and the newest alone had nowhere to grow (only=zone). A spot by its own other
+  // bobbers is fine — it tethers them in too; only another owner's web is kept 3.4 m off)
+  const own = [];
+  for (const it of items) if (it.owner === a && !it.ghost && it.state === 'live' && it.chain && it.chain.n < 3 && !own.includes(it.chain)) own.push(it.chain);
+  let nwSeq = -1;
+  for (const it of items) if (it.owner === a && !it.ghost && it.state === 'live' && it.seq > nwSeq) nwSeq = it.seq;
+  const newest = items.find((it) => it.owner === a && it.seq === nwSeq);
+  if (!newest || newest.chain?.n >= 3) return null;   // (its newest chain made three: nothing to grow)
+  own.sort((p, q) => q.n - p.n || (q.items.includes(newest) ? 1 : 0) - (p.items.includes(newest) ? 1 : 0));
+  for (const ch of own) {
+    const C = ch.items.filter((o) => o.state === 'live'), need = 3 - C.length, pts = [];
+    for (const o of C) {
+      for (let k = 0; k < 8 && pts.length < need; k++) {
+        const th = (k * Math.PI) / 4 + Math.random() * 0.4, rr = 3.2 + Math.random(), x = o.spot.x + Math.cos(th) * rr, z = o.spot.z + Math.sin(th) * rr;
+        if (C.some((q) => Math.hypot(q.spot.x - x, q.spot.z - z) < 2.4) || pts.some((q) => Math.hypot(q.x - x, q.z - z) < 2.4)) continue;
+        if (items.some((q) => q.team === a.team && (q.state === 'live' || q.state === 'open') && !C.includes(q) && Math.hypot(q.spot.x - x, q.spot.z - z) < (q.owner === a ? 2.4 : 3.4))) continue;
+        const at = okSpot(a, x, z, tp);
+        if (!at || Math.abs(at.y + 1.0 - o.spot.y) > 2.0 || !G.physics.los(o.spot, _v.set(at.x, at.y + 1.0, at.z))) continue;
+        pts.push(at);
+      }
     }
+    if (pts.length >= need) return pts;
   }
-  return pts.length >= need ? pts : null;
+  return null;
 }
 // (a burst's next link whose planned spot no longer stands) a spot near it, or 3.2–4.2 m from one of the burst's links,
 // that stands from here, ≥ 2.4 m from the burst's other links, within 4.6 m of one of them with a clear line (they
