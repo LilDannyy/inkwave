@@ -73,7 +73,7 @@ scratch only). Review 3's JSON is in the session scratchpad (`cal-review3.json`)
   `DOCKS.bazookarp = 'karpDock'` stays pre-wired (`out/fix3/fix3-karp-chip-under-status.jpg`).
 - **Found by the boss gate, a b5-int3 bug (fixed, c689911f)**: in Boss Battle a squad bot's target is a part of the boss
   (`{ shape }`, no `pos`); bobber-bots.js `holdFire` and its fight pair read `target.pos` and threw every frame a bot
-  carrying a Chain Bobber shot the boss (the match step aborted: 4 of my first 11 boss runs). Any stage's Boss Battle.
+  carrying a Chain Bobber shot the boss (the match step aborted: 4 of my first 18 boss runs). Any stage's Boss Battle.
 
 **3. The boss — DONE: boss-check 3 consecutive passes at the final code (96 / 55 / 69 m walked).**
 - The first fixer built Boss Battle's own variant (`notIn: 'boss'`: no Surge Gauge, none of the island's dressing or the
@@ -89,9 +89,11 @@ scratch only). Review 3's JSON is in the session scratchpad (`cal-review3.json`)
   800); `layout.boss.roamAfter` (bossBrain; caldera 12 s: having stood within 5 m of one spot that long it picks its next
   goal ≥ 9 m away); and in the shared brain, a walk blocked straight at its waypoint takes the heading a pose fits that best
   closes on it until the straight step fits (≤ 5 s).
-- boss-check runs: before (both fixers, 9 runs over the last code states): 5 pass. During the fixes: maxRise alone 2 of 4;
-  + roam 1 of 4 (the causeway trap); + the detour 3 of 4, then 4 in a row of 5 (the fifth: 35 m — the squad held it in
-  back-to-back slams at the causeway's foot). **Final batch: 5/5, 5/5, 5/5** (96, 55, 69 m; 9–12 cells). The shared
+- boss-check runs, in order: the first fixer's six (cc4b1c9e / c07301b8) passed 4, both misses parked at the steps' foot
+  (28–30 m); roam rule alone 2 of 4 that ran (both misses at the steps again; 3 more aborted on the Chain Bobber crash
+  below); maxRise alone 2 of 4; maxRise + roam 1 of 4 and 1 of 2 (the causeway trap); + the bobber guard 3 of 4 (the
+  causeway trap); + the detour 1 of 2, then the persistent detour 4 in a row of 5 (the fifth walked 35 m: the squad held it
+  in back-to-back slams at the causeway's foot). **Final batch: 5/5, 5/5, 5/5** (96, 55, 69 m; 9–12 cells). The shared
   detour on another stage: boss-check on Calamari 5/5 (100 m, 12 cells, 1,121 m²).
 
 **4. Rule 44 — NOT DONE as decided: the decision cannot pass; measured whole and written into DESIGN §3.5 for the lead.**
