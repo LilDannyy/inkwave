@@ -747,6 +747,7 @@
             mate.bot._bobSnapGate = 0; mate.bot._bobExtT = 9e9; mate.bot._bobPlan = null;
             if (K.bot.fight(mate.bot, 7) && mate.bot._bobSrc === 'snap') snap = true; else { mate.bot._bobberAt = null; mate.bot._bobSnap = false; }
           }
+          mate.bot.target = null;   // (its brain finds the foe itself from here: what it knows of it is in its sight memory)
           if (!snap) return { snap };
           G.subs.use(mate, SUBS.bobber);
           const SN = mate.bot._bobSnapIt;
