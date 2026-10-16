@@ -733,8 +733,9 @@
         R('bots: webHit (the Glide\'s release, the Dash Pellet\'s pop, the Mitts\' leap landing ask it) — a blast at an own idle web is refused, 8 m off it isn\'t, with a foe the team sees in the web it isn\'t',
           onWeb && !offWeb && !withFoe && seesFoe, { onWeb, offWeb, withFoe, seesFoe });
       }
-      // [b5-int3] the snap: a fighting bot throws a lone one onto the feet of a foe facing away from it (busy elsewhere) and
-      // sets it off on that foe as it floats; a foe facing it — a duel — gets none (the duel probe: snaps there lost it)
+      // [b5-int3] the snap: a fighting bot throws a lone one onto a foe's feet and sets it off on that foe as it floats;
+      // it looks away from its fight to aim at it on the way in only when that foe faces away (busy elsewhere) — at a foe
+      // duelling it, it keeps its aim on the foe until the bobber floats (the duel probe: pre-aiming there lost the duel)
       {
         const snapTrial = (facingAway) => {
           reset();
@@ -753,13 +754,14 @@
           // (its brain from here, its legs held — as the trials below; the foe stands where it was, facing the same way)
           { const up = brain0.get(mate); mate.bot.update = function (dt) { const r = up.call(this, dt); mate.intent.move.set(0, 0, 0); mate.intent.jump = false; return r; }; }
           const hit0 = ev('hit').filter((x) => x.e.victim === foe).length;
-          step(2.5, () => { put(foe, V(0, 0, 7), facingAway ? 0 : Math.PI); if (!SN || !['fly', 'open', 'live'].includes(SN.state)) return false; });
+          let preAimed = false;
+          step(2.5, () => { put(foe, V(0, 0, 7), facingAway ? 0 : Math.PI); if (SN && SN.state !== 'live' && mate.bot._bobSnapQ?.it === SN && mate.bot._bobSnapQ.pre) preAimed = true; if (!SN || !['fly', 'open', 'live'].includes(SN.state)) return false; });
           stub(mate);
-          return { snap, thrown: !!SN, state: SN?.state, spot: SN ? v3(SN.spot) : null, blewBy: SN?.blast?.by === mate, foeHit: ev('hit').filter((x) => x.e.victim === foe).length > hit0 };
+          return { snap, thrown: !!SN, preAimed, state: SN?.state, spot: SN ? v3(SN.spot) : null, blewBy: SN?.blast?.by === mate, foeHit: ev('hit').filter((x) => x.e.victim === foe).length > hit0 };
         };
         const away = snapTrial(true), face = snapTrial(false);
-        R('bots: a snap — a fighting bot throws a lone bobber onto the feet of a foe facing away from it and sets it off on that foe as it floats; a foe facing it (a duel) gets none',
-          away.snap && away.thrown && away.blewBy && away.foeHit && !face.snap, { away, face });
+        R('bots: a snap — a fighting bot throws a lone bobber onto a foe\'s feet and sets it off on that foe as it floats (facing away, and duelling it); aimed at on its way in only for the foe facing away',
+          away.snap && away.thrown && away.blewBy && away.foeHit && away.preAimed && face.snap && face.thrown && face.blewBy && face.foeHit && !face.preAimed, { away, face });
       }
       // a teammate bot with sight of a chain shoots it when a foe enters R(N) − 0.3 — several trials (PAGE_ARGS reps=N,
       // default 5), every one within the time: one lucky run proves nothing about a 0.2 m target
