@@ -465,6 +465,29 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
 
   if (part === 'racekid') { await zeroB(); await grabShare(16, true); await toPond(); }   // ([karp-face] the host's own player vs the guest)
 
+  // ---- [karp-face] review round 3, NET_ARGS='part=ottag': the results screen's OVERTIME +m:ss on both screens. A Bravo
+  // host bot holds it while Alpha leads at time-up (S38 'held': overtime), and the host splats it just past a whole second
+  // of its own overtime clock ('stopped'). A follower's own clock trails the host's by its playback delay; the results
+  // round it UP to whole seconds — the reviewer's 3.04 / 2.92 read +0:04 / +0:03. Both screens: the same overtimeT and the
+  // same tag
+  if (part === 'ottag') {
+    const tb = await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
+    await A.js(`(() => { const K = __G.match.karp, b = __G.match.actors.find((o) => o.nid === ${tb}); b.pos.set(0, 0, 1.0); b.vel.set(0, 0, 0); K.shell.add(1, 3000, b); return 1; })()`);
+    for (const c of [A, B]) await c.until(`__G.match.karp.holder && __G.match.karp.holder.nid === ${tb}`, 5000, 30).catch(() => {});
+    await A.js(`(() => { const K = __G.match.karp; K.count[0] = 50; K.reachT[0] = 1; K.fuse = 60; __G.match.time = 0.3; return 1; })()`);
+    for (const c of [A, B]) await c.until(`__G.match.karp.overtime`, 5000, 20).catch(() => {});
+    const frac = 0.03 + Math.random() * 0.07;
+    await A.js(`(() => { const K = __G.match.karp; window.__otEnd = null; const id = setInterval(() => { const t = K.overtimeT; if (K.winner != null) { clearInterval(id); return; } if (t > 3 && t % 1 > ${frac.toFixed(3)} && t % 1 < 0.12) { window.__otEnd = +t.toFixed(3); const h = K.holder; if (h) { h.invuln = 0; h.splat(null, 'weapon'); } clearInterval(id); } }, 3); return 1; })()`);
+    for (const c of [A, B]) await c.until(`!!__G.match.result`, 30000, 100).catch(() => {});
+    const res = async (c) => J(c, `(() => { const r = __G.match.result, K = __G.match.karp; return r ? { winner: r.winner, reason: r.reason, counts: r.counts, otT: +K.overtimeT.toFixed(3) } : null; })()`);
+    const rA = await res(A), rB = await res(B), at = await J(A, `window.__otEnd`);
+    for (const c of [A, B]) await c.until(`__inkwave.menus.current === 'results'`, 40000, 300).catch(() => {});
+    await wait(6000);
+    const tag = async (c) => J(c, `(() => { const t = [...document.querySelectorAll('.iw-res__tag--zot')].map((e) => e.textContent.replace(/\\s+/g, ' ').trim()); return t.length ? t : null; })()`);
+    const tA = await tag(A), tB = await tag(B);
+    R('ottag. an overtime that ends just past a whole second on the host: the same overtime played on both screens, and the same OVERTIME +m:ss tag on both results screens',
+      !!rA && !!rB && rA.reason === 'stopped' && rB.reason === rA.reason && rA.otT === rB.otT && !!tA && JSON.stringify(tA) === JSON.stringify(tB), { splatAt: at, host: rA, guest: rB, tags: { host: tA, guest: tB } });
+  }
   if (part === 'snap') {
     // [karp-face] review round 1 (the blocker and its twin): a snapshot the host took BEFORE a discrete record plays on a
     // guest AFTER it (records go at once, snapshots ride the timeline). It must change nothing there: not a new carrier's
@@ -551,9 +574,10 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
   await A.js(`(() => { const K = __G.match.karp; if (K.overtime) K._end(K.losing(), 'comeback'); else __G.match.time = 0.2; return 1; })()`);
   for (const c of [A, B]) await c.until(`!!__G.match.result`, 25000, 250).catch(() => {});
   await wait(800);
-  const end = async (c) => J(c, `(() => { const r = __G.match.result; return r ? { mode: r.mode, winner: r.winner, reason: r.reason, counts: r.counts, st: __G.match.actors.map((a) => [a.nid, Math.round(a.stats.karpM || 0), a.stats.karpPops || 0]).sort((x, y) => x[0] - y[0]) } : null; })()`);
+  // ([karp-face] review round 3: and the overtime played — the results screen's OVERTIME +m:ss — from the end record)
+  const end = async (c) => J(c, `(() => { const r = __G.match.result; return r ? { mode: r.mode, winner: r.winner, reason: r.reason, counts: r.counts, ot: r.overtime ? +__G.match.karp.overtimeT.toFixed(2) : null, st: __G.match.actors.map((a) => [a.nid, Math.round(a.stats.karpM || 0), a.stats.karpPops || 0]).sort((x, y) => x[0] - y[0]) } : null; })()`);
   const ea = await end(A), eb = await end(B);
-  R(`${part === 'lag' ? 'lag ' : ''}16. both screens show the same result: mode, winner, reason, counts and every player's karpM / karpPops`, !!ea && !!eb && ea.mode === 'bazookarp' && JSON.stringify(ea) === JSON.stringify(eb) && (part === 'racekid' || part === 'racefair' || part === 'racerun' || part === 'raceswap' || part === 'raceside' || ea.st.some((q) => q[1] > 0 || q[2] > 0)), { host: ea, guest: eb });   // (racekid: no burst, no carry made progress)
+  R(`${part === 'lag' ? 'lag ' : ''}16. both screens show the same result: mode, winner, reason, counts, the overtime played and every player's karpM / karpPops`, !!ea && !!eb && ea.mode === 'bazookarp' && JSON.stringify(ea) === JSON.stringify(eb) && (part === 'racekid' || part === 'racefair' || part === 'racerun' || part === 'raceswap' || part === 'raceside' || part === 'ottag' || ea.st.some((q) => q[1] > 0 || q[2] > 0)), { host: ea, guest: eb });   // (racekid: no burst, no carry made progress)
   const errs = [];
   for (const c of [A, B]) errs.push(...(c.log || []).filter((l) => /TypeError|ReferenceError|Uncaught/.test(l)));
   R('no page errors on either screen', errs.length === 0, errs.slice(0, 4));

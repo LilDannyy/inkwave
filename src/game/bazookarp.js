@@ -23,7 +23,7 @@
 // Records (host → all, SPEC §7.2): ['s' | 'S', q, t, …] snapshots on the timeline; at once ['p', q, nid] grant ·
 // ['u', q, nid, x, y, z] undone · ['b', q, team, x, y, z, byNid] burst · ['d', q, how, x, y, z] dropped / moved ·
 // ['r', q, x, y, z, why] reset flight · ['w', q, team, index] plant · ['x', q, nid, x, y, z, own] Carp Blast ·
-// ['t', q, losing, why] overtime · ['e', q, winner, reason, c0, c1, b0, b1] end.
+// ['t', q, losing, why] overtime · ['e', q, winner, reason, c0, c1, b0, b1, otT] end ([karp-face] otT: the overtime played).
 //
 // Events: karp:phase { phase, prev } · karp:hit { team, meter } · karp:burst { team, pos, by } · karp:pickup { actor,
 // team } · karp:undo { actor } · karp:drop { actor, team, pos, how } · karp:reset { from, why } · karp:plant { team,
@@ -760,7 +760,11 @@ export class Bazookarp {
   }
   _end(winner, reason) {
     if (this.winner != null) return;
-    this._rec(['e', winner, REASONS.indexOf(reason), this.count[0], this.count[1], r2(this.bestM[0]), r2(this.bestM[1])]);
+    // ([karp-face] review round 3: the overtime played rides the end record — a follower's own clock trails the host's
+    // by its playback delay, and the results screen rounds it up to whole seconds: 3.04 here, 2.92 there read
+    // OVERTIME +0:04 / +0:03. This screen keeps the same rounded number it sends)
+    this.overtimeT = r2(this.overtimeT);
+    this._rec(['e', winner, REASONS.indexOf(reason), this.count[0], this.count[1], r2(this.bestM[0]), r2(this.bestM[1]), this.overtimeT]);
     this.winner = winner; this.reason = reason;
     this.stats.otEnd = this.overtime ? reason : null;
     this.log.push({ t: +this.clock.toFixed(2), winner, reason, counts: [...this.count] });
@@ -821,7 +825,7 @@ export class Bazookarp {
       case 'w': { const H = this.holder; this.lastPlant = { team: e[2], left: this.match.time, win: K.otPick, ot: this.overtime }; this.count[e[2]] = Math.min(this.count[e[2]], this.weirs[e[2]][e[3]]?.count ?? this.count[e[2]]); this._applyPlant(H && H.team === e[2] ? H : null, e[2], e[3]); if (H && H.carry) this._release(H); break; }
       case 'x': { const a = byNid(e[2]); const c = new V3(e[3], e[4], e[5]); if (a) { this.lastCarrier = { team: a.team, how: 'fuse', left: this.match.time }; this._release(a); this._explode(a, c, !!e[6]); } break; }
       case 't': this.overtime = true; this.otLosing = e[2]; this.overtimeT = 0; emit('karp:overtime', { losing: e[2], why: OT_WHYS[e[3]] }); break;
-      case 'e': { this.count = [e[4], e[5]]; this.bestM = [e[6], e[7]]; this.winner = e[2]; this.reason = REASONS[e[3]]; emit('karp:end', { winner: e[2], reason: this.reason, counts: [...this.count] }); this.match.endKarp?.(e[2], this.reason); break; }
+      case 'e': { this.count = [e[4], e[5]]; this.bestM = [e[6], e[7]]; if (Number.isFinite(e[8])) this.overtimeT = e[8]; this.winner = e[2]; this.reason = REASONS[e[3]]; emit('karp:end', { winner: e[2], reason: this.reason, counts: [...this.count] }); this.match.endKarp?.(e[2], this.reason); break; }
     }
     void snap;
   }
