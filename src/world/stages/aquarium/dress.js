@@ -81,18 +81,23 @@ export function registerDress(D, H, KIT) {
   // diagonal than across) centred inside the block, so it stands at most `out` proud of either face yet wraps the corner;
   // a crevice part-way up splits it into two stones, the upper one domed `rise` over the block's top `top`
   const cornerRockG = (rho, top, rise, out, seed) => tpl(`crock|${rho}|${top}|${rise}|${out}|${seed}`, () => {
-    // (c: its reach out of a face is rho × 1.035 (the profile's swell) × 1.045 (the lumps) − c = out)
-    const NS = 14, ys = [], c = 1.085 * rho - out, s0 = seed * 2.17, split = 0.42 + 0.12 * Math.sin(s0);
+    // (c: its reach out of a face is rho × 1.035 (the profile's swell) × 1.045 (the lumps) − c = out; NS a multiple of 8, so
+    // a column of vertices runs down the diagonal itself — between two, the chord cut the squircle's corner and the block's
+    // corner showed through as a thin line)
+    const NS = 16, ys = [], c = 1.082 * rho - out, s0 = seed * 2.17, split = 0.42 + 0.12 * Math.sin(s0);
     for (let j = 0; j <= 12; j++) ys.push((top * j) / 12);
     for (let j = 1; j <= 5; j++) ys.push(top + rise * Math.sin((j / 6) * HP));
     const sq = (f) => Math.pow(Math.pow(Math.abs(Math.cos(f)), 5) + Math.pow(Math.abs(Math.sin(f)), 5), -0.2);
     const pos = [], col = [], idx = [];
     ys.forEach((y, j) => {
       const over = y > top ? (y - top) / rise : 0;
-      const groove = 1 - 0.13 * Math.exp(-Math.pow((y - split) / 0.045, 2));
-      const rho_y = rho * groove * (over > 0 ? Math.cos(over * HP * 0.92) : 1 - 0.035 * Math.sin(y * 6.1 + s0)) * (y < 0.06 ? 0.96 + 0.66 * y : 1);
+      const gy = Math.exp(-Math.pow((y - split) / 0.045, 2)), groove = 1 - 0.13 * gy;
+      const rho_y = rho * (over > 0 ? Math.cos(over * HP * 0.92) : 1 - 0.035 * Math.sin(y * 6.1 + s0)) * (y < 0.06 ? 0.96 + 0.66 * y : 1);
       for (let i = 0; i < NS; i++) {
-        const f = (i / NS) * TAU, n = Math.sin(f * 3 + s0 + y * 4.3) * Math.sin(y * 7.7 - s0 + f * 2), R = rho_y * sq(f) * (1 + 0.045 * n);
+        // (the crevice is cut everywhere but over the block's corner itself, where it let the corner show through: there it
+        // is only shaded)
+        const f = (i / NS) * TAU, n = Math.sin(f * 3 + s0 + y * 4.3) * Math.sin(y * 7.7 - s0 + f * 2), dg = (f - Math.PI / 4) / 0.36;
+        const R = rho_y * (1 - 0.13 * gy * (1 - Math.exp(-dg * dg))) * sq(f) * (1 + 0.045 * n);
         pos.push(-c + R * Math.cos(f), y, -c + R * Math.sin(f));
         const m2 = Math.sin(f * 7 + y * 13 + s0) * Math.sin(y * 17 - f * 5 + s0 * 0.5), m3 = Math.sin(f * 13 - y * 23 + s0 * 3);
         const k = (0.86 + 0.12 * n) * (0.9 + 0.1 * m2 + 0.05 * m3) * (groove < 0.95 ? 0.62 : 1) * (1 + 0.18 * over);
