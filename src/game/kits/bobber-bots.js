@@ -123,7 +123,7 @@ function buildChain(a, A, tp, from = a.pos) {
   C.sort((p, q) => p.sc - q.sc);
   const L = [];
   let checks = 0;
-  const fits = (c) => L.every((q) => Math.hypot(q.x - c.at.x, q.z - c.at.z) >= 2.4) && L.some((q) => Math.hypot(q.x - c.at.x, q.z - c.at.z) <= 4.6 && Math.abs(q.y - c.at.y) < 2.2 && G.physics.los(_v.set(q.x, q.y + 1.0, q.z), _v2.set(c.at.x, c.at.y + 1.0, c.at.z)));
+  const fits = (c) => L.every((q) => Math.hypot(q.x - c.at.x, q.z - c.at.z) >= 2.4) && L.some((q) => Math.hypot(q.x - c.at.x, q.y - c.at.y, q.z - c.at.z) <= LINK3 && Math.abs(q.y - c.at.y) < 2.2 && G.physics.los(_v.set(q.x, q.y + 1.0, q.z), _v2.set(c.at.x, c.at.y + 1.0, c.at.z)));
   while (L.length < 4 && checks < 10) {
     const c = C.find((q) => !q.bad && !L.includes(q.at) && (!L.length || fits(q)));
     if (!c) break;
@@ -133,6 +133,10 @@ function buildChain(a, A, tp, from = a.pos) {
   return L.length >= 3 ? L : null;
 }
 const _la = { yaw: 0, pitch: 0, miss: Infinity };
+// [b5-int3] two links' float spots tether within linkRange 5.0 m — in 3-D: within 4.6 m across and 2.2 m apart in height
+// they can be 5.1 m apart (a guard's links on a ledgy raised zone landed on two levels and never tethered: a 2-chain, the
+// only=zone miss); 4.7 leaves a lob's landing error room
+const LINK3 = 4.7;
 // how far (x, z) is from the tower track's centre line (its metre points)
 function trackDist(P, x, z) {
   let best = Infinity;
@@ -205,7 +209,7 @@ function layout(a, A, tower, from = a.pos) {
     const at = okSpot(a, x, z, tower, from);
     // (links within 2.2 m of the first one's height — a zone's edge often drops a step or two — and with a clear line from
     // its float spot to one already picked within linking reach: the relink's own test, so they tether)
-    if (at && (!L.length || (Math.abs(at.y - L[0].y) < 2.2 && L.some((q) => Math.hypot(q.x - at.x, q.z - at.z) <= 4.6 && G.physics.los(_v.set(q.x, q.y + 1.0, q.z), _v2.set(at.x, at.y + 1.0, at.z)))))) L.push(at);
+    if (at && (!L.length || (Math.abs(at.y - L[0].y) < 2.2 && L.some((q) => Math.hypot(q.x - at.x, q.y - at.y, q.z - at.z) <= LINK3 && G.physics.los(_v.set(q.x, q.y + 1.0, q.z), _v2.set(at.x, at.y + 1.0, at.z)))))) L.push(at);
   }
   return L.length >= 3 ? L : null;
 }
@@ -396,7 +400,7 @@ function linkNear0(b, P, q, tp) {
     if (T.some((t) => Math.hypot(t.x - x, t.z - z) < 2.4) || !T.some((t) => Math.hypot(t.x - x, t.z - z) <= 4.6)) return null;
     if (items.some((o) => o.team === a.team && (o.state === 'live' || o.state === 'open') && Math.hypot(o.spot.x - x, o.spot.z - z) < 3.4 && !T.some((t) => Math.hypot(t.x - o.spot.x, t.z - o.spot.z) < 1.5))) return null;
     const at = okSpot(a, x, z, tp);
-    if (!at || !T.some((t) => Math.hypot(t.x - at.x, t.z - at.z) <= 4.6 && Math.abs(t.y - at.y) < 2.2 && G.physics.los(_v.set(t.x, t.y + 1.0, t.z), _v2.set(at.x, at.y + 1.0, at.z)))) return null;
+    if (!at || !T.some((t) => Math.hypot(t.x - at.x, t.y - at.y, t.z - at.z) <= LINK3 && Math.abs(t.y - at.y) < 2.2 && G.physics.los(_v.set(t.x, t.y + 1.0, t.z), _v2.set(at.x, at.y + 1.0, at.z)))) return null;
     return at;
   };
   for (const rr of [1.0, 1.8, 2.6]) for (let k = 0; k < 8; k++) { const th = (k * Math.PI) / 4 + rr; const at = ok(q.x + Math.cos(th) * rr, q.z + Math.sin(th) * rr); if (at) return at; }
@@ -578,7 +582,7 @@ export const botKit = {
         let at = okSpot(a, q.x, q.z, tp);
         // (and it still tethers to a link that was thrown: one it was picked beside may have been skipped)
         const T0 = P.thrown || [P.pts[0]];
-        if (at && !T0.some((t) => Math.hypot(t.x - at.x, t.z - at.z) <= 4.6 && Math.abs(t.y - at.y) < 2.2 && G.physics.los(_v.set(t.x, t.y + 1.0, t.z), _v2.set(at.x, at.y + 1.0, at.z)))) { at = null; _noWhy = 'untethered'; }
+        if (at && !T0.some((t) => Math.hypot(t.x - at.x, t.y - at.y, t.z - at.z) <= LINK3 && Math.abs(t.y - at.y) < 2.2 && G.physics.los(_v.set(t.x, t.y + 1.0, t.z), _v2.set(at.x, at.y + 1.0, at.z)))) { at = null; _noWhy = 'untethered'; }
         if (!at) { const why = _noWhy; at = linkNear(b, P, q, tp); blog(b, at ? 'moved' : 'skip', { i: P.i - 1, d: Math.round(Math.hypot(q.x - a.pos.x, q.z - a.pos.z) * 10) / 10, why, moved: P.from ? Math.round(P.from.distanceTo(a.pos) * 10) / 10 : -1 }); }
         if (at) {
           b._bobberAt = at; b._bobSnap = false; BOBBER_BOT.grows++; (P.thrown || (P.thrown = [P.pts[0]])).push(at);
