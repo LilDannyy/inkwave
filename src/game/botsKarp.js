@@ -786,8 +786,10 @@ export function karpAim(b, P, dt, it) {
   if (d > (melee ? 4.5 : Math.min(b._range() * 1.05, 18))) return null;
   // (a melee swing, roll or lunge carries the body on: none from closer than 0.6 m outside touch range — step back first)
   if (melee && d - (Kp.shell.radius() + PLAYER.radius) < 0.6) return null;
-  // (the grabber closing to its 3.0–3.2 m at ≥ 85 % of ours: in position first — a charge weapon walks slowly while it charges)
-  if (b.kRole === 'grab' && P.side(a.team) >= KARP_AI.grabAt && d > KARP_AI.grabR + 0.35) return null;
+  // (the grabber closing to its 3.0–3.2 m at ≥ 85 % of ours: in position first — a charge weapon walks slowly while it
+  // charges; and on the ring a charger, a bow or a splatling holds its fire: a stream or a draw still running at the burst
+  // keeps it a kid, and it swims in late)
+  if (b.kRole === 'grab' && P.side(a.team) >= KARP_AI.grabAt && (d > KARP_AI.grabR + 0.35 || ['charger', 'bow', 'spinner', 'splatling'].includes(w.kind))) return null;
   _v.set(a.pos.x, a.pos.y + 1.1, a.pos.z);
   if (!G.physics.los(_v, c)) return null;
   const yaw = Math.atan2(c.x - a.pos.x, c.z - a.pos.z), pitch = clamp(Math.atan2(c.y - (a.pos.y + 1.1), Math.max(0.5, d)), -0.9, 0.9);

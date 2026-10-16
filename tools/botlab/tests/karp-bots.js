@@ -165,14 +165,14 @@
       restAt(Kp.R.pond.clone(), 500);
       // our side at 90 %: the grabber closes to 3.0–3.2 m and holds there
       const add0 = Kp.shell.add; Kp.shell.add = () => {};   // (its own shots never burst it during the wait)
-      let rr = []; step(3.5, (i) => { pinMeter(0.9); gA.hp = PLAYER.hp; if (i > 150) rr.push(hd(gA.pos, Kp.shell.center())); });
+      let rr = [], out = null; step(3.5, (i) => { pinMeter(0.9); gA.hp = PLAYER.hp; if (i > 150) { const r = hd(gA.pos, Kp.shell.center()); rr.push(r); if (r > 3.3 && !out) out = { i, r: +r.toFixed(2), mode: gA.bot.mode, tgt: gA.bot.target?.name, mv: [+gA.intent.move.x.toFixed(2), +gA.intent.move.z.toFixed(2)], vel: [+gA.vel.x.toFixed(1), +gA.vel.z.toFixed(1)], esc: !!gA.bot.sp.esc, wig: gA.bot.wiggleT > 0, fire: gA.intent.fire, sq: gA.intent.squid, path: gA.bot.path ? gA.bot.path.length : 0 }; } });
       Kp.shell.add = add0;
       const rMin = Math.min(...rr), rMax = Math.max(...rr), role = gA.bot.kRole, spot = gA.bot.kSpot ? +hd(gA.bot.kSpot, Kp.shell.center()).toFixed(2) : null, mode = gA.bot.mode;
       // the burst (Alpha's): the time to its pick-up
       const t0 = G.time; let tp = null;
       Kp.shell.add(0, Kp.shell.hp * 2, gA);
       step(2, () => { if (Kp.holder === gA && tp === null) tp = G.time - t0; if (tp !== null) return false; });
-      res.push({ w: gA.weaponId, role, rMin, rMax, spot, mode, grabAfterHold: tp === null ? null : +(tp - K.pickHold).toFixed(3) });
+      res.push({ w: gA.weaponId, role, rMin, rMax, spot, mode, grabAfterHold: tp === null ? null : +(tp - K.pickHold).toFixed(3), out: out || undefined });
     }
     const ok = res.every((r) => r.role === 'grab' && r.rMin >= 2.95 && r.rMax <= 3.3 && r.grabAfterHold !== null && r.grabAfterHold <= 0.2 + 1 / 60 && r.grabAfterHold >= -1e-6);   // (3.3: the ring 3.0–3.2 + one stride of drift)
     R('D the grabber waits 3.0–3.2 m out at ≥ 85 % of ours and grabs within 0.2 s after the 0.25 s hold (normal; 5 bursts)', ok, res);
