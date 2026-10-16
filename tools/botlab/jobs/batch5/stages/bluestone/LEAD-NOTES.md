@@ -72,3 +72,8 @@ minors go to these owners:
    b5-stage-bluestone merges with the Bazookarp packages, then `eras-karp.js` part B and `bazookarp-check.cjs
    ERA=1/2/3` on the merged head.
 The art phase waits for the weekly usage reset (Friday 2026-10-23 06:00).
+- **The frame budget: CLOSED (2026-10-17, the Mac mini's JOB-6 at 986f1af9, idle machine, ×3).** Worst frame from
+  J − 0.5 to done + 1.5: 35.4 / 32.0 / 32.1 ms (the jump frame at about J + 1.5 s), p95 4.6–5.0 ms, era update
+  ≤ 2.5 ms; the Bravo viewer's 2→3 and the sunset 3→1 jumps peak at 10–16 ms; 'first' 3/3 with no shader compiled
+  during a jump. net-eras and the lagged run passed there too. One aside for the engine in general, not this stage:
+  the first inking frame of any match is 160–260 ms (a paint-atlas first-use cost).
