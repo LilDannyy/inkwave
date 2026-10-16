@@ -1,148 +1,239 @@
-# Bazookarp WP3 (karp-bots) — lead report
+# Bazookarp WP3 (karp-bots) — lead report, fix round 1
 
-Worktree `/Users/danielosling/Desktop/1/st-b5-karp-bots`, branch `b5-karp-bots` (from b5-int3 b55f7472). Nothing pushed.
-Everything ran on this Mac, one Electron instance at a time under the shared `SLOTS=3` lock (load average 400+ for most of
-the afternoon, so a single page test often queued 10 minutes for a slot).
+Worktree `/Users/danielosling/Desktop/1/st-b5-karp-bots`, branch `b5-karp-bots`. Nothing pushed. Everything ran on this Mac,
+one Electron instance at a time under the shared `SLOTS=3` lock (`BOTLAB_OUT=…/inkwave-upstream/.botlab`), load average
+20–70 all evening; nothing on the Mac mini (this round's instructions: unavailable, push nothing — the uncommitted
+"Mac mini is back" edit to `COMMON.md` in the worktree is not mine and is left as found). `JOB-1.sh` is ready for it.
 
-**Takeover.** The package was started on 2026-10-10 and cut off after about two hours. Its 5 commits (39ce5114 … f877849d)
-and its uncommitted edits (the grabber's 3.12 m ring, melee stand spots ahead of the swell, a melee breaker never swinging
-within 0.6 m of touch range, the shell guard judged 0.3 s ahead, karp-bots test fixes) were read and kept: they were sound.
-Its karp-bots run stood at 16/20 (A hard, C, J(b) and M failing); its report had no tests, matches, pictures or commits
-sections and `out/` was empty. This round found the causes of the four failures (two were test bugs, two were real bot
-faults), fixed them and the seven more the new scenario G(b), the reworked H and the matches turned up (§1, §5.1), retuned the
-opening shell, ran the regressions and 70 bot matches (16-match sets on three heads, and 1–6-match checks), made the
-pictures and wrote this report.
+This round answers review 1 (verdict REDO, `LEAD-REVIEW.json`, at dd4be8cc / code 3620384a). §0 takes the issues one by
+one with their proof; §1–§7 are the full report, the previous round's corrected where the review showed it wrong.
 
-**`COMMON.md` changed under the worktree while this ran** (an uncommitted edit dated 2026-10-16 12:04: "THE MAC MINI IS
-BACK"). This package's own instructions say the Mac mini is unavailable and to push nothing, so nothing was pushed and
-everything ran here; `JOB-1.sh` is committed and ready for the lead's consolidated pass. The edit is left as it was found
-(not committed by this package).
+## 0. The review's issues, one by one
 
-## 1. What was built, rule by rule (SPEC §8, §11 WP3, the WP1 report's "Left for WP3")
+### 0.1 MAJOR — defenders read a hidden carrier's live position. Fixed (017beb3d). The reviewer was right.
+`defendObj` (`at = k ? k.pos : this.restPos()`), `perchSpot` (`P.ahead(H.team, 10)`: the enemy's own route at its live
+index), `_deal`'s interceptor choice (`cp = … this.restPos()`) and `karpEngage`'s default (`hd(t.pos, P.restPos()) < 12`) all
+read `Kp.pos`, which bazookarp.js copies from the holder every frame. The previous report's "every karp decision reads
+`k.guess` only" was false for the plan (it held for the interceptor goal alone).
+- **`carSeen[t]`**: per team, what it knows of the enemy carrier — seeded at the pick-up with the spot the Bazookarp lay on
+  (public: it lay there marked, in plain view), moved only by a look one of its bots had (`teamKnown`'s `k.guess`).
+  **`karpAt(t)`**: the resting / free spot, or with the other team carrying, `carSeen[t]` — never `Kp.pos`.
+- **`expRoute(t)` / `expAhead(t, m)`**: "the route the plan expects it to take" (SPEC §8.5), from the last known spot to the
+  nearest enemy target on the enemy's static masks, cached per sighting; never `route[enemy]`.
+- `defendObj`: the known spot, else the last known, else the weir it held. `_deal`: interceptors by the known / last known
+  spot. **`karpPerchLook`** (exported): the shell; the known carrier; else 10 m along the expected route. `karpEngage`: by
+  `karpAt`. Interceptors start from the team's last known spot, not only their own. (`tick()` still routes a *human*
+  carrier: read by its own team's escorts only.)
 
-Everything is in `src/game/botsKarp.js` (WP1's 238 lines → ~1 280), wired in by short tagged hooks (`[b5-karp-bots]`) in
-`bots.js`, `botSpecials.js`, `botSight.js`, `subs.js`, `kits/waddle.js`, `kits/blade.js`, `kits/mitts.js`.
-`KARP_AI.enabled = false` (karp-match `KARP_AI=0`) plays WP1's minimal set unchanged, for an A/B.
+| karp-bots W (new) | old code (3620384a, a scratch copy) | fixed |
+|---|---|---|
+| W(a) the plan, Alpha asleep: a carrier picked up in the alley (−10, −12), then hidden in the lane (17, −10), never seen — the defended weir, the perch's look, the interceptor (easy: one), a perch's fight 8 m from it | **FAIL**: w11 → w10, interceptor P1 → Fizz, fight false → true | PASS: w11, (−5.5, −3.5), P1, false at both spots |
+| W(b) Alpha awake: picked up in the alley (b1) / seen there in kid form (b2), then hidden in the lane 8 s, unseen (480 unknown frames each) | **FAIL**: the weir flips mid-way (w11 218 frames, w10 262), the keeper ends on w10's spot | PASS: w11 all 480 frames, the keeper on w11's spot |
+
+W(b2) is the review's "I(b) with a hidden carrier": seen at one weir, hidden by the other, the keeper stays where it was seen.
+
+### 0.2 MAJOR — B failed most runs; melee bots died to bursts. Fixed (02616427, c1a4def2). The reviewer was right.
+A probe that logs each bot outside its band (the test's own B, 6 runs on 3620384a: **1 of 6 passed**) put every failure in
+**refill mode** at 75 % of ours: a brush or Mitts breaker low on ink went to the stock refill search's nearest own ink
+(4.5–6.5 m out) or, finding none, to its spawn pad (one was 13 m out when sampled). `karpGoal` isn't consulted in refill mode.
+The review's other cases — a melee bot fighting a foe that stands by the shell, burst victims fighting / refilling 3.2–3.7 m
+out — are the same gap in other modes, and the matches showed a third: the meter jumps (one charger shot is 160 of a
+500 hp shell), so the 70 % danger had stood for 0–0.45 s when the burst came.
+- **The refill band** (`karpRefillSpot`, hooked first in `_pickRefill`): a breaker by the shell refills inside its band —
+  closing in, its close spot … 4.5 m; on the ring, 5.8–9 m; the grabber at ≥ 85 % of ours, 2.95–3.4 m — on our ink there, else
+  on its own stand spot (the stock refill paints a puddle there and swims in it). `karpMove` holds a refilling breaker inside
+  that band (a squid slides on its puddle; the step onto own ink can be a step inward).
+- **The keep-out**: once the other side is ≥ 50 %, no bot of ours steps in past 5.1 m (the burst's 4.5 + 0.6), judged 0.25 s
+  ahead at its speed — fighting a foe by the shell (theirs is safe from its own burst), refilling, walking past; a Cutlass lunge
+  or a Mitts landing that would end inside 4.9 m is refused (`karpShellIn`). Melee-only first; matches then showed ranged
+  fighters dying the same way (twins, bow, bucket, a charger perch), so it covers every bot.
+- **The swell seen coming** (`KARP_AI.swellAhead` = 1 s): the shell swells with the meter for all to see. The shell danger
+  also stands once the other side's rate over the last half second would burst it within 1 s, and a melee breaker closing in
+  moves out to the ring once that rate would carry the other side past 50 % within the second.
+- Re-forming / resetting: everyone to the ring — SPEC §8.1's last row was missing (melee breakers stood 2.6–2.9 m from the
+  Pond while it flew back and re-formed).
+
+Proof:
+- **B ×10 on c1a4def2's breaker code (nothing since touches B): 10 / 10** (minOut 6.33–6.53, maxOut ≤ 7.05; minIn 3.31–4.01, maxIn 4.12–4.24). On 3620384a:
+  the reviewer's 2 / 5, my probe's 1 / 6. The B check's bounds are unchanged.
+- New checks, each with a teeth run (the feature off; the check must then fail): **B(b2)** refills stay in the band, drained
+  every second at 75 % of ours — maxR 3.8, minR 3.05 m (teeth: 17.6–20.3 m out); **B(d)** at 60 % of theirs a melee breaker
+  fights a foe standing 3.4 m from the centre from ≥ 4.6 m — 4.74–4.86 m (teeth: 2.76–2.97 m); **A(c)** with Bravo at 72 % ranged
+  bots on the far side walk round to their own ring outside 5.3 m — 5.51–5.55 (teeth, the danger and the keep-out off: 3.1 m);
+  **A(d)** the swell-rate danger stands at 50 % while the meter climbs 60 %/s, not when it is still (teeth: none); **R(d)**
+  re-forming: spots 6.5–7.1 m, nobody inside 6.3 m (teeth: spots 2.55 m, a bot 1.76 m from the centre).
+- Matches (karp-match now logs every burst victim: weapon, role, mode, distance, whether it had noticed the danger, how long the
+  danger had stood). **Burst splats per 100 pops: 3.8–9.1 on 3620384a's sets** (the reviewer's 9.0); this round 9.1 with the
+  melee-only keep-out (mX: 12 victims, 7 ranged fighters), 5.1 with the keep-out for every bot and the swell danger (mX2: 5,
+  all melee grabbers closing in), **0.8 and 1.8 with the melee swell rule (mX3: 1 victim in 129 pops; mX4: 2 in 110)**.
+
+B(d)'s bound is 4.6 m, not my first 4.8: the burst splats a player whose chest (1.0 m up) is within 4.5 m of the shell's centre
+(1.3 m up), i.e. 4.49 m out on the same floor (bazookarp.js `_burst`); one run read 4.74 m. That is my own new check's margin,
+not a bound the review set.
+
+### 0.3 minor — the match numbers. Agreed: reported with the spread; two of the three levers tried.
+The previous report presented one 16-match set's knockout rate as a PASS. Every set I have (all-bot, `karp-agg.py`; the builder's two 16-match sets
+mix normal and hard 10 / 6, the reviewer's has one hard, mine are all normal):
+
+| set | code | n | KOs (early < 1:15) | first pop median | carries: splat ≤ 2.5 s / no new ground | halyard: fallback / ×3 retreat s a match | burst splats / 100 pops |
+|---|---|---|---|---|---|---|---|
+| builder "final" | 3168aebf+ | 16 | 7 (3) | 11.4 s | 47 % / 66 % | 3.2 / 9.0 (n 5) | 7.1 |
+| builder "final2" (the old report's) | 3620384a | 16 | 8 (0) | 12.5 s | 49 % / 56 % | 3.6 / 8.5 (n 5) | 3.8 |
+| builder "head check" | 3620384a | 4 | 2 (2) | 9.9 s | 49 % / 55 % | 3.0 / 6.7 (n 2) | 3.2 |
+| reviewer | 3620384a | 6 | 0 (0) | 12.1 s | 44 % / 71 % | 6.0 / 12.7 (n 3) | 9.0 |
+| mX | 02616427 + fallback steps | 6 | 3 (0) | 10.6 s | 46 % / 58 % | 3.0 / 6.5 | 9.1 |
+| mZ — `clearAt` 0.85 | same | 6 | 3 (1) | 13.6 s | 55 % / 62 % | 3.0 / 10.1 | 6.5 |
+| mY — fallback steps off | same | 3 (halyard) | 2 (1) | 10.3 s | 51 % / 57 % | 4.0 / 5.4 | 2.0 |
+| mX2 | + keep-out for all, swell danger | 6 | 4 (1) | 10.9 s | 52 % / 58 % | 3.3 / 7.7 | 5.1 |
+| mX3 | + melee swell rule (c1a4def2 less the keeper fix) | 6 | 3 (1) | 10.1 s | 51 % / 66 % | 5.0 / 11.8 | 0.8 |
+| mX4 | c1a4def2 (the final code less the Bubble Guard run and the hard grab's 0.1 s) | 6 | 3 (1) | 12.7 s | 45 % / 60 % | 3.3 / 6.8 | 1.8 |
+
+Each set is 2–3 matches a stage; none is a balance answer (§9.1's targets are for ≥ 16 a stage). Pooled: on 3620384a 10
+knockouts in 26 matches (38 %), 5 of them before 1:15; on this round's last two sets 6 in 12 (50 %), 2 before 1:15 (38 s on
+karpbox, 60 s); first pop medians 9.9–13.6 s; half the carries die within 2.5 s of the pick-up and 55–71 % make no new ground
+in every set; no carrier stuck > 3 s, no clamp rejection, no own-zone second, 0 console lines in any.
+
+The levers the old report named:
+- **"Clear the ring before our burst"** (`KARP_AI.clearAt`: from 85 % of ours the breakers fight every foe in range): worse —
+  carries splatted within 2.5 s 55 % vs 46 %, first pop 13.6 vs 10.6 s, a knockout at 30.6 s (mZ vs mX, same code). Left in,
+  **off**, for the balance pass.
+- **The fallback "the shortest way back to forward ground"**: a carrier with no forward path now loosens its route rules least
+  first — the retreat mark's slack 6 → 7.5 m (a dip the engine forgives: its ×3 starts at 8 m), then 11 m, then none, then
+  through its own zone — instead of dropping the retreat mask at once. A 7.5 m pass is no ×3 and is counted apart (`fbSoft`,
+  1–9 a halyard match). Fallbacks a halyard match: 3.0–5.0 with it (5 sets, 15 matches), 4.0 without (3); the ×3 retreat seconds did
+  **not** drop (5.4 without, 6.5–11.8 with: noise at n 3). Kept (it can never add a ×3); **not a fix**. Every halyard fallback is
+  on the ferry's side corridors behind the cabin — `fbAt` (x, y, z) in every set: (−5…3.9, 1.3, ±3.1…5.1), plus (7.8, 1.3,
+  3.1), (8.1, 1.3, −3.8), (11.4, 2.5, 1.9), (−6.6, 1.3, −3.5), (−7, 1.3, 3.7) once each: **WP4b's** (§9.1 #11: a `noRetreat`
+  there, or a forward way off the corridor). karpbox and lockgate: 0 in every set.
+- **A pre-keeper**: not tried. Early knockouts are 0–2 in 6 a set; judging them needs ≥ 16-match sets. It is the next lever.
+
+### 0.4 minor — roles and difficulty rows without checks; A passed without the danger. Fixed (02616427, c1a4def2).
+Every new check has a **teeth** run: `PAGE_ARGS='teeth=1'` runs it again with its feature off (through `KARP_AI` or the
+difficulty rows) and requires the failure. Results from the full runs (§5.1):
+
+| check | what | result | teeth (feature off) |
+|---|---|---|---|
+| R(a) escorts | lead 8–14 m ahead on the route inking it; flank 3–8 m beside it on the known threat's side; anchor ≤ 15 m | lead 11.2 m ahead, route ink 0.78–0.92; flank 4.4 m on the threat's side; anchor 8.3 m | lead 0.1 m, flank 0.4 m, anchor 19.3 m |
+| R(b) the perch | a charger 10–22 m from the shell with a line (shell phase); 10–22 m from the known enemy carrier with a line | 11.6–15.6 m / 12.8–17.7 m | it grabs / intercepts |
+| R(c) the free phase | the grabber makes for it; the rest fight 3–8 m out on their side | grabber 0.05–0.2 m; fighters 4.7–5.3 m | fighters 9–11 m |
+| R(d) re-forming | §0.2 | | |
+| S(a) breakers' bombs | a barrage held at 30 % of ours, thrown at 45 % | held / thrown | not thrown |
+| S(b) escorts' specials | held while nobody threatens the carrier; free once a known foe is within 15 m of it | false / null (the usual rules) | false under threat |
+| S(c) interceptors' | a Vortex Strike held while the carrier is unknown, fired once it is known | held / fired | (two-sided) |
+| S(d) the Bubble Guard's share | an escort's bubble held while calm; under threat it runs to the carrier and pops it, the carrier inside | 65–122 frames inside | not popped, 0 |
+| Y(a) interceptors | easy 1 (the rest keep), normal ≥ 2, hard ≥ 2 from both sides | 1 / 3 / 3 at ±1 | easy 2 |
+| Y(b) grab delay | easy 0.3–0.6 s after the hold, hard ≤ 0.1 s (normal: D) | easy 0.37 s, hard 0.03 s (§7: two late reads before the aims moved) | easy 0.03 s |
+| Y(c) easy's no-lob | easy never charges at a located foe it can't see; normal lobs | 0 / 132–141 frames | easy 123–128 |
+| Y(d) hard's lead | hard leads a foe crossing at 4 m/s; normal aims at it (hard > 0.15 rad, normal < 0.1, apart > 0.15) | 0.25–0.34 rad / 0.00–0.06 | 0.03 |
+| Y(e) re-pick | easy 3 s, normal 1.5 s, hard 1 s | 3.02 / 1.52 / 1.02 s | normal 3.02 |
+| A(c), A(d), B(b2), B(d) | §0.2 | | |
+
+Bugs these checks found, fixed: in the free phase **every fighter became a grabber** (walking round to its spot it passed
+within 6 m of the Bazookarp and was re-dealt "grab"); a perch kept its shell-phase spot for 6 s after the other team picked
+up (it re-picks now when the situation changes or what it watches moves > 6 m); a lead escort with a Bubble Guard was often too
+far ahead for the 5 m the share needs (S(d) failed once) (it now runs to a threatened carrier first); a keeper fighting a foe near its spot held
+wherever it stood, 14 m off its weir (I(b) failed once: never more than 6 m off its spot now); a test-isolation leak (S's
+charged barrage fired during Y(b)'s wait). The review's "A passes even without the danger area" was right: A(c) walks bots
+round the shell and fails without the ring rules.
+
+### 0.5 minor — Big Bursts from the carrier's usual range. Left as numbers: the lead's balance decision, with data.
+The Carp Shot is the mode's offence and carries already die young (§0.3), so I changed nothing. H is now named for what it
+is: it passes **from 18 m** (17–18 / 20 in the four full runs), the range it happens to pass at — §11's "≥ 16 of 20" is **not met at
+the carrier's usual 12–15 m**. Its report rows over four full runs: **12 m: 1–3 of 10; 15 m: 3–7 of 10.** What it would
+take at 15 m (`hwhat=1`, 10 trials each, four runs): **swell 0.45 → 0.6 s: 5–6 of 10; → 0.75 s: 7–9 of 10; the Big Burst's
+radius 4.0 → 3.5 m: 4, 6, 10, 10 of 10** (10 trials are noisy). TELL THE USER: a Big Burst from under ~15 m is close to unavoidable for a kid on dry
+ground; a ~0.3 s longer swell or a 0.5 m smaller blast would change that.
+
+### 0.6 minor — JOB-1.sh. Fixed (a9d9fd5b).
+The default fits COMMON's cap: `TOTAL=8` matches a difficulty **summed over its stages** (karpbox 2, halyard 3, lockgate 3 at
+normal; halyard 4, lockgate 4 at hard). `N` (a stage) is marked LEAD ONLY, for the consolidated pass. `SUBS` is passed to each
+karp-match explicitly. A stage builder copies it into **its own key's folder**. A dry run with stub tools: 2 / 3 / 3 and 4 / 4
+matches, `SUBS=all=dash` reaching each, `N=2` overriding.
+
+### 0.7 minor — two sight / danger gaps. Fixed (017beb3d).
+- The wake reaches `min(20 m, the bot's awareness)`: J(a)'s new 18 m case — normal notices, **easy (16 m) does not**; on
+  3620384a easy did (FAIL there).
+- A remote (guest) carrier's last 3 s of fuse are a danger to the host's bots on its team, from the host's own fuse and the
+  rate the guest's `kr` sent. L(b): FAIL on 3620384a, PASS now. NET.md says so.
+
+## 1. What was built, rule by rule (SPEC §8, §11 WP3)
+
+Everything is in `src/game/botsKarp.js` (~1 400 lines), wired by short tagged hooks (`[b5-karp-bots]`) in `bots.js`,
+`botSpecials.js`, `botSight.js`, `subs.js`, `kits/waddle.js`, `kits/blade.js`, `kits/mitts.js`. `KARP_AI.enabled = false`
+(karp-match `KARP_AI=0`) plays WP1's minimal set, for an A/B. Its numbers and switches are in `KARP_AI`.
 
 ### 1.1 The team plan (`karpPlan()`, §8.1)
-One plan per match engine (a WeakMap on `match.karp`), re-dealt twice a second **and at once on every karp event**
-(`karp:burst / pickup / drop / reset / plant / phase / field`; the listeners go into the engine's own `unsubs`). Per team,
-by situation:
+One plan per match engine, re-dealt twice a second and at once on every karp event (`burst / pickup / drop / reset / plant /
+phase / field`). Per team, by situation:
 
 | situation | roles |
 |---|---|
-| `shell` (shielded / re-forming / resetting) | the **perch** (a charger, while there's another bot to grab) first; the **grabber** (the bot nearest the shell, no special running — its own Bubble Guard is fine — hp ≥ 60); the rest **break** (each a slot, spread on our side). Re-forming / resetting: the same spots round the resting point / the Pond, 6–8 m out |
-| `free` | the grabber (nearest, not mid-special; none if a human teammate is within 3 m and closer, §8.3) and anyone within 6 m **grab**; the rest **fight** 4–7 m out toward their side |
-| `ours` | **carry**, **lead** (11 m ahead on the carrier's route, inking it), **flank** (5 m beside it, on the side the known threat is), **anchor** (9 m behind it on its route); a 5th+ bot flanks |
-| `theirs` | **keeper** ×1 (×2 when the carrier is known within 25 m by the field of our open Gate, or its count within 10 of its weir's), **perch** (a charger, unless 2 keepers are needed), **intercept** ×2 (×1 easy; hard: from two sides, ±0.9 rad); leftovers intercept (easy: keep) |
+| `shell` (shielded / re-forming / resetting) | the **perch** (a charger, while there's another bot to grab); the **grabber** (nearest the shell, no special running — its own Bubble Guard is fine — hp ≥ 60); the rest **break**. Re-forming / resetting: everyone on the ring round the resting point / the Pond |
+| `free` | the grabber (nearest, not mid-special; none if a human teammate is within 3 m and closer, §8.3) and anyone within 6 m as it comes free **grab**; the rest **fight** 5.5 m out toward their side, and stay fighters |
+| `ours` | **carry**, **lead** (11 m ahead on the carrier's route, inking it), **flank** (5 m beside it, on the known threat's side), **anchor** (9 m behind); a 5th+ bot flanks |
+| `theirs` | **keeper** ×1 (×2 when the carrier is known within 25 m by the field of our open Gate, or its count within 10 of its weir's), **perch** (a charger, unless 2 keepers), **intercept** ×2 (×1 easy; hard from two sides, ±0.9 rad); leftovers intercept (easy: keep) |
 
-Humans fill the role whose spot is nearest them (bots take the rest). Hysteresis: a bot keeps its role unless another is
-clearly nearer (3 m; 6 m for escorts and defenders). The dead get a role for their respawn. Team knowledge is
-`teamKnown()` (≤ 4 s) read at the last look's spot (`k.guess`) — never the live position.
+Humans fill the role whose spot is nearest them. Hysteresis: a bot keeps its role unless another is clearly nearer (3 m; 6 m
+for escorts and defenders). **What a team knows** (§3): foes through `teamKnown` at the last look's spot; the enemy carrier
+through `carSeen` (its pick-up, then the team's looks); its route through `expRoute`.
 
 ### 1.2 Breakers and the burst (§8.2)
-- **Ranged breakers** stand on the 5.5–9 m ring (a 7 m spot, spread by slot on our side, with a kid's-eye line to the
-  shell's centre) and strafe there while they shoot. `karpAim` shoots the shell when nothing better is in sight.
-- **Melee breakers** (roller, brush, blade, mitts) close in to `max(2.5, r' + 0.38 + 0.5) + 0.3` m (r' the radius a little
-  ahead of the meter: it swells) while the other team's side is under 50 %, and stand on the ring above it. They never swing
-  from closer than 0.6 m outside touch range (a swing, roll or lunge carries the body on).
-- **The danger** (≥ 70 % of theirs normal, ≥ 60 % hard, none easy): a botSpecials area (§1.5); the team behind steps out
-  to ≥ 5.5 m and routes round it; the ranged ones keep shooting from the ring.
-- **The grabber**: at ≥ 85 % of ours it closes to 3.12 m (touch reach at full swell 2.68 m) with a gentle radial spring; a
-  charger, bow or splatling there **holds its fire** (a stream still running at the burst kept it a kid and it arrived
-  late); after the burst it times its run so it arrives inside its difficulty's window (normal 0.1 s after the 0.25 s hold,
-  easy 0.5 s, hard at once), swimming in through its own team's burst ink (all of it is theirs the moment it bursts).
-- **Touch, never** (karp-bots C, 0 in 20 bursts):
-  - a bot with no business close to the shell (not a melee breaker, not already within 3.2 m) routes clear of its **full
-    swell** (nodes within rMax + 0.6 = 2.9 m: `shellWide`), and its footwork guard keeps clear of rMax + 0.38 m — a big
-    hit swells the shell 0.5 m in one frame onto a bot walking past just outside its reach (that was C's one touch);
-    melee breakers and bots already close use the shell's radius now + 0.6 m; where the full swell leaves no way round (a
-    narrow bridge) `_pathTo` retries round the shell itself;
-  - the guard is judged where the bot will be in 0.3 s at its speed toward the centre, takes the inward part off a move,
-    pushes out (a kid, no charge) inside reach + 0.15 m;
-  - **bots never lunge (Cutlass heavy cut) or land a Mitts leap into the sting** (`karpShellIn`, asked by the kits'
-    `lungeSafe` / `landingOk`, bot-only, Bazookarp-only): the lunge sets the velocity itself, so no footwork guard can stop
-    it (that was the other touch C found).
-- **The shell first**: in the shell phase a breaker takes a fight only with a foe within min(0.75 × range, 10 m) or inside
-  the ring; the grabber only one within 6 m. More than 18 m out they don't paint on the way in and swim our ink.
-- **Specials**: breakers keep a bomb-type special (barrages, Cheer Orb, Vortex Strike) for the shell, fired at ≥ 40 % of
-  ours (Vortex Strike: 2.5 m beside the shell on their side).
+- **Ranged breakers** stand on the 5.5–9 m ring (a 7 m spot, spread by slot on our side, with a kid's-eye line to the shell's
+  centre) and strafe there while they shoot (`karpAim`).
+- **Melee breakers** (roller, brush, blade, mitts) close in to `max(2.5, r' + 0.88) + 0.3` m (r' the radius a little ahead of
+  the meter) while the other side is under 50 % — and its rate wouldn't carry it past 50 % within a second — and stand on the
+  ring otherwise. They never swing from closer than 0.6 m outside touch range.
+- **The danger** (≥ 70 % of theirs normal, ≥ 60 % hard, none easy; also once the rate would burst it within 1 s): a botSpecials
+  area of 5.5 m. **The keep-out** (≥ 50 % of theirs): nobody of ours in past 5.1 m. **Refills** inside the breaker's band.
+- **The grabber**: at ≥ 85 % of ours it closes to 3.12 m (a charger, bow or splatling holds its fire there); after the burst it
+  times its run to arrive early inside its difficulty's window (easy 0.43 s after the 0.25 s hold, normal 0.1 s, hard 0.1 s
+  early),
+  swimming in through its team's burst ink.
+- **Never a touch**: routes clear of the full swell (rMax + 0.6 = 2.9 m) unless a melee breaker or already close; a footwork
+  guard judged 0.3 s ahead; no Cutlass lunge or Mitts landing into the sting (`karpShellIn`, bot-only, Bazookarp-only).
+- **The shell first**: in the shell phase a breaker fights only a foe within min(0.75 × range, 10 m) or inside the ring; the
+  grabber only one within 6 m. More than 18 m out they don't paint on the way in and swim our ink.
+- **Specials**: a bomb-type special (barrages, Cheer Orb, Vortex Strike) kept for the shell, thrown at ≥ 40 % of ours.
 
 ### 1.3 The carrier (§8.4)
-- **Routes**: when its target changes (its standing weirs — each its own target — then its Gate), up to 3 candidates on
-  `G.nav` with no climbs and its avoid mask: the layout's `routes` hints (mirrored for Bravo; only their waypoints still
-  ahead by the field; when a stage has hints they are the only candidates), else the shortest path and k-disjoint
-  alternatives (2.5 m clear of route 1 except within 6 m of the ends, ≤ 1.7× long). Re-picked every 3 / 1.5 / 1 s by
-  difficulty (hard also when the number of known foes changes) by cost: what's left + 6 m per known foe within 10 m of its
-  next 25 m + 0.3 × the metres of enemy ink on its next 20 m + 0.15 × the danger cost on its next 25 m; 8 m of hysteresis.
-- **Walking the pick** (new this round): its goal is the picked route's node 12 m on (the target in the last 12 m), so it
-  really walks the route it chose — going straight at the target it cut the corner of a longer route picked round known
-  foes (karp-bots M: maxX 3.5 → 7.3). If that node lies behind its retreat mark (a route that winds back first) the goal is
-  the target and the route rules find the forward way.
-- **`_pathTo`** is carrier-aware at every call site: the avoid mask (both spawn zones, its own free zones, carrierBlock, the
-  shell, nodes the field's current state takes away, and on its own half nodes 6 m behind its retreat mark), and a Float32
-  cost refilled at most twice a second (dangers + 1.2 a node off the pick's 2 m corridor + 2 a node within 4 m of a known
-  foe + **1.5 a node within 0.7 m of its own free zone**, so corners are rounded a node out). The masks are now built **per
-  field state** (a zone may stand in some eras only). No path → plan again without the retreat part
-  (**carrierRetreatFallback**, one count per 3 s episode, logged with the team, P and the mark); still none → level 2,
-  through its own zone at a cost (a short zone ×3). A carrier standing inside its own zone leaves it the shortest way.
-- **Steering** (new): `_steer`'s look-ahead never cuts a straight line across its own free zone or a carrierBlock (they
-  are no walls, so the line probes didn't see them; karp-bots G(b) found a carrier cutting through a zone arm).
-- **Never retreat**, never `refill` / `retreat` mode (WP1's gate).
-- **Form**: kid to charge; a squid through our ink when no foe is known within 12 m (the marker hides) and never in theirs;
-  just after a pick-up (1.8 s, standing in our ink) it dives and swims on along its route.
-- **Shots** (`karpCarrierAct`, the only writer of `it.fire` while carrying), §8.4's order: a weir / the Gate within 4 m:
-  no shots · the knockback push (normal / hard: Splashes backwards in enemy ink with a known foe within 10 m, or the fuse
-  under 6 s and the target ≤ 12 m) · hard: a Splash out of a focus · a known foe within 6 m: a Splash at its feet, then a
-  0.6 s step back · a known foe 6–22 m: a charged shot by the arc solver (normal / hard lob at a remembered spot; easy only
-  with a line, always full; hard leads) · an enemy Waddle / Torpedo within 8 m: a Splash at it · enemy ink on the next
-  10 m and nobody within 15 m: a full charge onto the route 15 m ahead.
-  - **The low arc** (new): the solver returned whichever pitch fit best, now and then a 2 s high lob anyone walks out of;
-    it takes the low arc, the high one only at a foe out of sight (over cover).
-  - **Kick-safe** (new): never a shot whose kick (backwards along the aim, 0.75–1.8 m) would carry it off a > 0.9 m drop or
-    into the water behind it — halyard's sun deck put carriers down on their own side's corridor, behind their retreat
-    mark.
-- **Fuse**: on its own half, when the fuse can't reach the target at 85 % of its walking pace, it heads for the first route
-  node 2 m past the halfway line, so a blast drops the Bazookarp forward (O).
+- **Routes**: up to 3 candidates per target (its standing weirs, each its own target, then its Gate) on `G.nav`, no climbs,
+  its avoid mask: the layout's `routes` hints (the only candidates when the stage has any), else the shortest path and
+  k-disjoint alternatives. Re-picked every 3 / 1.5 / 1 s by difficulty (hard also when the known threat changes) by cost
+  (what's left + 6 m per known foe within 10 m of the next 25 m + 0.3 × enemy-ink metres on the next 20 m + the dangers), with
+  8 m of hysteresis. It walks the pick (a node 12 m on).
+- **`_pathTo`** is carrier-aware at every call site (both spawns, its own free zones, carrierBlock, the shell, nodes the field
+  state removes, its retreat mark − 6 m on its own half; a Float32 cost: dangers, off-corridor, near known foes, its zone's
+  edge), built per field state. **No path**: the rules loosened least first (§0.3), each step counted.
+- Never `refill` / `retreat` mode; kid to charge; a squid through our ink when no foe is known within 12 m; dives first after
+  a pick-up; never steers across its own zone.
+- **Shots** (`karpCarrierAct`, the only writer of `it.fire` while carrying): no shots by its target · the knockback push
+  (normal / hard) · hard: a Splash out of a focus · a foe within 6 m: a Splash at its feet, then a step back · a known foe
+  6–22 m: a charged shot by the arc solver (the low arc; easy only with a line, always full; hard leads) · an enemy Waddle /
+  Torpedo within 8 m: a Splash · enemy ink ahead and nobody within 15 m: a full charge 15 m ahead. Never a shot whose kick
+  would carry it off a ledge or into water.
+- **Fuse**: on its own half, short of time at 85 % of its pace, it heads 2 m past the halfway line first.
 
 ### 1.4 Escorts, defenders, interceptors (§8.1, §8.5)
-- **Lead** 11 m ahead inking the route (the emptiest of 5 route points 4–16 m ahead in reach); **flank** 5 m to the
-  threat's side; **anchor** 9 m behind. Escorts fight within 20 m of the carrier and never chase past it; they fire
-  specials only while the carrier is threatened; a Bubble Guard holder within 5 m pops it then (sprules' pass-on).
-- **Keeper**: a hold spot 4–9 m in front of the defended weir (two weirs: the one nearer where the carrier is known) or our
-  risen Gate, on the attackers' side by the field, with a line to the objective and the approach, in cover (precomputed per
-  objective and field state, ≤ 420 rays once). It fights from the spot, never chases more than 6 m off it, and inks the
-  approach.
-- **Interceptors** go for the carrier while the team knows where it is (seen, or located: the kid-form marker is a
-  reveal), from 7.5 m (outside its Splash; melee straight in; hard from two sides); hidden, to its last known spot and then
-  along the route the plan expects it to take, 8 m at a time. Never its live position (J).
-- **Perch**: a charger on high ground 10–22 m from the shell or the enemy carrier / its route, re-picked every 6 s.
-- **Super jumps** (`karpJump`): a respawned bot jumps to our carrier when it's alive and ≥ 35 m away (else to the anchor);
-  a defender respawning while they carry stays home (N).
-- Target bias +40 on the enemy carrier (WP1); the Roe Shell is a shield in the line of fire for every bot (`karpShields`).
+- **Lead** 11 m ahead inking the route; **flank** 5 m to the known threat's side; **anchor** 9 m behind. Escorts fight within
+  20 m of the carrier and never chase past it; specials only while the carrier is threatened (a known foe within 15 m); a
+  Bubble Guard holder runs to the threatened carrier and pops it within 5 m (sprules' pass-on).
+- **Keeper**: a hold spot 4–9 m in front of the defended weir (two weirs: the one nearer where the carrier is known, else last
+  known) or our risen Gate, on the attackers' side, with a line to the objective and the approach, in cover; it fights from
+  there and is never more than 6 m off it; it inks the approach.
+- **Interceptors**: at the carrier while the team knows where it is (from 7.5 m; melee straight in; hard from two sides);
+  hidden, to the team's last known spot, then along the expected route 8 m at a time.
+- **Perch**: a charger on high ground 10–22 m from what it watches (§0.1), re-picked every 6 s or when that moves.
+- **Super jumps**: a respawned bot jumps to our carrier ≥ 35 m away (else the anchor); defenders stay home while they carry.
 
-### 1.5 Dangers and sight (§8.6) — no wall-hacks
-`botSpecials.specialDangers()` calls `karpDangers()`:
-- **An enemy Carp Shot in flight** (real or ghost): a disc at its predicted landing (a 0.05 s ballistic sweep, cached
-  0.1 s), radius blast + 0.6 m, `tIn` = flight left + the 0.45 s swell, `vis 'near'`. New this round:
-  - the disc is drawn **0.8 m back toward the shooter** and 0.8 m bigger, so the way out from under a lob is sideways or on
-    beyond — back toward the shooter runs under the ball, and **a Carp Shot lands on a body in its way** (karpGun's capsule
-    test): that was most of the misses in H;
-  - **its way in** — the last metres of its fall below head height, short of the last one — is a projectile line
-    (`DANGER_API.line`, new), an obstacle for the way out only (`dodge` 0.05 s: never a reason to run by itself), noticed
-    together with the disc (`d.with`, new in botSpecials: one thing seen, two areas).
-- **Landed**: the disc at the landing, `tIn` = the swell left, lethal 2 for a Big Burst, a wall is cover, `vis 'big'`.
-- **Our carrier's last 3 s of fuse**: 4.5 + 1 m round it, for its teammates only (`d.not` = the carrier), `vis 'big'`, heard
-  10 m (L).
-- **The shell about to burst**: 5.5 m for the team behind once the other side is ≥ 70 % (normal) / 60 % (hard), none easy.
+### 1.5 Dangers and sight (§8.6)
+`botSpecials.specialDangers()` calls `karpDangers()`: an enemy Carp Shot in flight (a disc at its predicted landing, drawn
+0.8 m back toward the shooter, plus its way in below head height as an obstacle line) and landed; our carrier's last 3 s of
+fuse (teammates only; a guest carrier's too); the shell about to burst (§1.2). `botSight`: a submerged enemy carrier's wake,
+noticed with a clear line out to min(20 m, the bot's awareness), never through a wall.
 
-`botSight`: a submerged enemy carrier is noticed by its wake out to `SIGHT.karpWakeR` = 20 m with a clear line and the usual
-0.45 s of looking — never through a wall, and only the carrier has it (J(a)).
-
-### 1.6 Walkers round the shell (the WP1 report's open point)
-Waddle Bombs route round the shell's nodes (`karpShellAvoid()`, the full swell); Skitter Bombs steer for the nearer tangent
-when the straight line to their foe runs through the shell (`subs.js shellRound`). WP1's glance / wall behaviour stays
-underneath, so nothing ends inside the shell (P; bazookarp-rules M5).
+### 1.6 Walkers round the shell
+Waddle Bombs route round the shell's nodes (`karpShellAvoid()`); Skitter Bombs steer for the nearer tangent (`subs.js
+shellRound`). This affects humans' thrown subs too, in Bazookarp only (WP1's hand-over).
 
 ### 1.7 Difficulty (§8.8, `KARP_AI.diff`)
 
@@ -150,237 +241,149 @@ underneath, so nothing ends inside the shell (P; bazookarp-rules M5).
 |---|---|---|---|
 | carrier shots | always full, only with a line, no lead | full / by range, lobs at a remembered spot | + leads a moving target |
 | knockback push | never | enemy ink with a foe ≤ 10 m; fuse < 6 s and target ≤ 12 m | + a Splash out of a focus |
-| route re-pick | 3 s | 1.5 s | 1 s + when the known threat changes |
-| breakers' danger | none | ≥ 70 % | ≥ 60 % |
+| route re-pick | 3 s | 1.5 s | 1 s + on a new threat |
+| breakers' danger | none | ≥ 70 % (or about to burst within 1 s) | ≥ 60 % (or within 1 s) |
 | interceptors | 1 | 2 | 2, from two sides |
-| grab after the hold | 0.6 s (aimed at 0.5) | 0.2 s (aimed at 0.1) | 0 s |
+| grab after the hold | aimed 0.43 s (window 0.6) | aimed 0.1 s (window 0.2) | 0.1 s early (0 s) |
 
-## 2. Decisions where the request / SPEC left a gap (for the lead)
-1. **A Carp Shot is not a "fast" projectile** for botSpecials' miss chance: a lobbed ball, read like a thrown Splat Bomb.
-2. **Our carrier's fuse danger is `vis 'big'`, heard within 10 m**, not `'actor'` (bots only keep sight memory of foes, so
-   its teammates could never have noticed an `'actor'` area); `d.not` keeps the carrier itself out of it.
-3. **The shell danger's threshold is the threatened team's difficulty.**
-4. **Normal bots also push when the fuse is short** (§8.4's table names it for normal and hard).
-5. **A layout's `routes` hints are the only candidates** when the stage has any (no current stage has hints: karpbox
-   proves them, M).
-6. **The retreat mask's "own half" comes from the field**, and nodes the current state removes are avoided; a **level-2
-   fallback** goes through the carrier's own free zone when that is the only way on (the SPEC's fallback drops only the
-   retreat part, which can leave no path at all).
-7. **Team knowledge from the last look** (`k.guess`), never `e.pos`.
-8. **The shell first** in the shell phase (fights only close in or inside the ring).
-9. **The grabber swims in** through its own burst's ink, and aims inside its difficulty's window (not at its end).
-10. **A fresh carrier dives first** (1.8 s under our ink, along its route).
-11. **Keepers**: 2 when the carrier is close (§8.5); an easy team's leftovers keep.
-12. **karp-match's stuck metric leaves out bots holding a spot on purpose** (keepers, ring breakers, the grabber's wait,
-    perches: `kHoldUntil`), as match.cjs does a zone guard; the hold time is reported.
-13. **(new) Bots with no business near the shell keep clear of its full swell (2.9 m), not of its radius now**: a melee
-    breaker's close spot is the SPEC's rule; everyone else would only be walking past, and the swell can jump 0.5 m in a frame.
-14. **(new) The kits' lunge / leap guard lives in the kits** (`kits/blade.js lungeSafe`, `kits/mitts.js landingOk`: one
-    tagged line each, bots only, a no-op outside Bazookarp) — the same place their existing "bots don't lunge off ledges"
-    rule is.
-15. **(new) karp-bots H fires from 18 m, with 12 and 15 m reported.** The SPEC's "≥ 16 of 20" names no range. A Big Burst
-    from 12–15 m lands in 0.5–0.7 s and blows 0.45 s later; a normal bot notices it after 0.25–0.45 s and has 4 m to cover at
-    5.3 m/s on dry ground: a coin flip by the numbers (12 m: 1–6 of 10, 15 m: 1–8 of 10 across 7 runs), not by the bots. From
-    18 m it is 16–20 of 20. The victim now stands on its breaker spot as the SPEC says (the old test's victim was still
-    walking in from its deck, under the arc). **TELL THE USER**: a Big Burst from under ~15 m is close to unavoidable for a
-    standing kid on dry ground; that is the Carp Shot's numbers (flight + 0.45 s swell, 4.0 m blast), which this package
-    didn't change.
-16. **(new) karp-bots J(b) looks once after its teleport.** The test jumps the carrier 12 m behind a wall in one frame;
-    until the interceptor's next look (≤ 0.25 s) its fight memory still says "seen", and bots.js's view of a seen foe is the
-    foe itself. A real carrier moves ≤ 1 m between two looks, so the test now makes that look at once; the plan, the
-    interceptor goal and every karp decision read `k.guess` only.
-17. **(new) The opening Roe Shell is 600 hp** (§4).
+## 2. Decisions where the SPEC left a gap (for the lead)
+1. A Carp Shot is not a "fast" projectile for botSpecials' miss chance (a lob, read like a thrown bomb).
+2. Our carrier's fuse danger is `vis 'big'`, heard within 10 m (bots keep sight memory of foes only), `d.not` the carrier.
+3. The shell danger's threshold is the threatened team's difficulty.
+4. Normal bots also push when the fuse is short.
+5. A layout's `routes` hints are the only candidates when the stage has any.
+6. The retreat mask's "own half" comes from the field; a level-2 fallback goes through the carrier's own zone when that is the
+   only way on. **(new)** The fallback loosens the retreat slack in steps (7.5 m, 11 m, none) before that.
+7. **(corrected)** What a team knows of the enemy carrier: its pick-up spot (public), then its own bots' looks — never its live
+   position, never its own route. The expected route is the team's guess from the last known spot.
+8. The shell first in the shell phase.
+9. The grabber swims in, aiming inside its difficulty's window; **(new)** early in it (easy 0.43 s, hard 0.1 s early): a run
+   now and then lands ~0.15 s after its estimate.
+10. A fresh carrier dives first.
+11. Keepers: 2 when the carrier is close; an easy team's leftovers keep. **(new)** A keeper is never more than 6 m off its spot.
+12. karp-match's stuck metric leaves out bots holding a spot on purpose.
+13. Bots with no business near the shell keep clear of its full swell.
+14. The kits' lunge / leap guard lives in the kits (one tagged line each, bots only).
+15. **(revised)** H passes from 18 m only; 12–15 m is a balance decision for the lead (§0.5).
+16. **(corrected)** J(b) looks once after its teleport (a real carrier moves ≤ 1 m between looks). It covers the interceptor
+    goal only; the plan's knowledge is W's.
+17. The opening Roe Shell is 600 hp (§4).
+18. **(new)** The 50 % keep-out for every bot of ours, the refill band, the swell seen coming (`swellAhead` 1 s) — not SPEC text;
+    the SPEC's 70 % danger alone left 2 burst splats a match.
+19. **(new)** A free-phase fighter stays a fighter; a Bubble Guard escort runs to a threatened carrier to share it.
+20. **(new)** `clearAt` (clear the ring before our burst) is in the code, off: worse in 6 matches.
 
 ## 3. Online, and what the bots read
-- **No new records, nothing new on the wire.** Bots run on the host (and offline) only, as every INKWAVE bot does; the plan
-  reads the host's engine and `G.karpGun.shots` (ghosts included), so a guest's Carp Shot is a danger to the host's bots
-  like any other. The wake rule reads the replicated `anim.form` / `submerged`.
-- **No wall-hacks**: foes through `botSight` (seen, located — the kid-form marker is a reveal — or remembered, shared as
-  `teamKnown`, always at the last look's spot); dangers through botSpecials' noticing rules; interceptors never read the
-  carrier's live position (J).
-- A bot adopting a disconnected carrier keeps carrying with these hooks.
-- The kits' bot-only lunge / leap guard (`karpShellIn`) is false for any human, any remote actor and outside Bazookarp.
+- **No new records.** Bots run on the host (and offline) only; the plan reads the host's engine and `G.karpGun.shots`
+  (ghosts included), so a guest's Carp Shot is a danger to the host's bots like any other. A guest carrier's fuse danger comes
+  from the host's own fuse and the guest's `kr` rate (NET.md).
+- **No wall-hacks.** Foes through `botSight` (seen, located — the kid-form marker is a reveal — or remembered; `teamKnown` at
+  the last look's spot). The enemy carrier: its public pick-up spot, then looks; the expected route from there (W, J(b)). The
+  previous report's claim was wrong for the plan until this round (§0.1).
+- The kits' bot-only lunge / leap guard is false for any human, remote actor, or outside Bazookarp.
+- Known gap, not Bazookarp's: `bots.js`'s view of a foe (`tv`) gives its live position while its memory still says "seen",
+  until the next look (≤ 0.25 s).
 
 ## 4. Numbers tuned, and why
-Only `BAZOOKARP` numbers on the allowed list, and the bots; no rule changed.
+Only `BAZOOKARP.shell.hp` (the opening Roe Shell 1000 → 600, the previous round: the first bots reach the Pond 8–11.5 s in;
+first-pop medians 9.9–13.6 s in this round's sets, 10.1 and 12.7 on the last two) and the bots. `reformHp`, regrowth, the burst
+radius, the Carp Shot's sizes and kick unchanged (§0.5 has what a swell / radius change would buy). `KARP_AI`: the ring
+5.5–9 m, the grab at ≥ 85 % from 3.12 m, the danger 5.5 m at 70 / 60 %, the keep-out 5.1 m from 50 %, `swellAhead` 1 s,
+escorts 11 / 5 / 9 m within 20 m, fighters 5.5 m, specials at 40 % / 15 m, jumps from 35 m, the wake 20 m.
 
-| number | was | now | why |
-|---|---|---|---|
-| `shell.hp` (the opening Roe Shell) | 1000 | **600** | The first bots reach the Pond 8.3–11.3 s in (karp-match now logs it): the walk is the floor under the first pop. At 1000 the median first pop was 13–18 s (the previous round), at 800 11.6 s on karpbox (n 6), 14.5 lockgate, 13.1 halyard; at 600 on the head 9.7 s on karpbox, 12.6 halyard, 12.4 lockgate (normal). §9.1 wants 6–12. Below ~600 the first team there would burst it alone. |
-| `shell.reformHp`, `regen`, `regenDelay`, `burstR`, the Carp Shot's sizes and `kick` | — | unchanged | Re-formed shells pop every 4–15 s; the knockout rate is already inside 20–60 % (§5.3; a `reformHp` 700 what-if didn't help the early knockouts); overtimes too few to judge the 15 % row; normal and hard cross K's 7.5 m of enemy ink in 2.2–3.2 s with the push (easy, which never pushes, 2.9–4.2 s). The shared balance pass judges these. |
-| bots: `KARP_AI` | — | ring 5.5–9 m, grab at ≥ 85 % from 3.12 m, danger 5.5 m at 70 / 60 %, escorts 20 m, jumps from 35 m, wake 20 m | the SPEC's numbers |
-
-## 5. Tests and their results (all local; nothing on the Mac mini)
+## 5. Tests and their results (all local)
 
 ### 5.1 `karp-bots.js` (`MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/karp-bots.js … page.cjs`)
-**22/22 on the head (3620384a).** About 40 runs of single groups and 5 full runs this round (16/20 → 20/21 → 21/22 →
-21/22 → 22/22); the history of each check is in the right-hand column.
+43 checks and 16 teeth runs (`teeth=1`), 59 in all, plus H's what-ifs (`hwhat=1`). Full runs this round: **58 / 59**
+(c1a4def2 less the keeper fix: I(b) — the keeper bug, fixed; then I + W 4 / 4 and I 2 / 2), **57 / 59** (the final code less
+the Bubble Guard run and the hard grab's start: S(d) — the bug, fixed; Y(b) hard 0.17 s — §7). Then D, S and Y three times on the
+final code (8350f1f6): **10 / 10 each**; the last full run on it: **59 / 59**. Earlier group runs and their fixes are in §0.
 
-| check (SPEC §11 WP3) | final run | notes |
-|---|---|---|
-| A breakers out of the burst at ≥ 70 % (normal) / 60 % (hard), keeping the 5.5 m ring; easy has no danger | min 5.59 / 5.91 m | the previous round had loosened it to 4.6 m after a 3.78 m run; now 5.46–6.39 m in 9 runs, so it is back at 5.3 m (the ring with 0.2 m of slack) |
-| B melee breakers: the ring at 55 % of theirs, ≥ 2.9 m and in reach at 75 % of ours | out 6.4–6.9 m, in 4.1 m | |
-| C no touch damage in 20 bursts, all eight bots | 0 | it failed twice this round (a passing bucket caught by a 0.5 m swell in one frame; a Cutlass lunge): both fixed (§1.2) |
-| D the grabber at 3.0–3.2 m, grabbing within 0.2 s after the hold (5 weapons) | 3.17–3.19 m, 0.05–0.17 s | failed twice (a spinner's stream at 0.25 s; a shooter at 0.23 s): fixed (it holds stream / charge weapons on the ring; aims inside the window) |
-| E an autopilot carrier, 3 scripted carries: no ×3, no own zone, no stuck > 3 s | 3/3, 0 / 0 / 0 | |
-| F carriers with the mitts, blade, brolly, bow, roller, charger, twins, 3 carries each: zero own shots, subs, `sub:cantuse`, specials, climbs, leaps, rolls | 21/21 carries, all 0 | |
-| G every forward route closed (a sea-to-sea own zone): a short ×3 instead of standing still | fallback 1, zone ×3 0.63 s, moved 28.6 m | |
-| G(b) **new**: a pocket of its own zone open behind it — the retreat mask's own case: level-1 fallback, a short retreat ×3, round the arm, on | ×3 1.6 s, zone 0 s | found the carrier cutting across a zone arm (the steering fix, §1.3) |
-| H a breaker standing where a Big Burst lands leaves the disc (normal, ≥ 16 of 20) | 20/20 (18 m) | 16–20 of 20 in 7 runs; 12 m 1–6 of 10, 15 m 1–8 of 10, reported (§2 #15) |
-| I(a) the keeper holds the open Gate | 8.5 m from it | |
-| I(b) two weirs: the keeper on the weir on the carrier's route, switching with it | ok both | once 9.56 m against the 9.5 m bound (then 4 passes): flaky at the edge |
-| J(a) the wake: seen at 15 m in the open, not at 23 m, not behind a wall; a non-carrier at 15 m not | ok | |
-| J(b) an interceptor doesn't track a hidden carrier through a wall | its goals ≥ 12.3 m off the real spot | was failing on the test's own teleport (§2 #16) |
-| K the knockback push in enemy ink (normal and hard; never easy) | normal 4–5 pushes, crossing in 2.8–3.1 s; easy 0 | |
-| L our carrier's last 3 s of fuse: a danger to its teammates, never to itself | a mate 2.7 m off gets out to 5.9–7.4 m | |
-| M the layout's route hints are the only candidates; two known foes on one move the pick, and the carrier walks it | picks east, walks to x 7.3 | was failing: a test bug (re-granting a held Bazookarp) and a real one (it walked straight at the target, §1.3) |
-| N super jumps to the carrier ≥ 35 m off; a defender stays home | ok | |
-| O a fuse that can't make it: over the halfway line first | ok | |
-| P walkers (Skitter, Waddle) round the shell to a foe behind it | Skitter 21 of 110 frames pressed against it, 0 inside; Waddle 0 | the bound "under a quarter of the walk" is the previous round's (it was < 12 frames) |
-
-### 5.2 Regressions (on this round's code)
-| test | result |
+| check | final runs |
 |---|---|
-| `bot-sight.js` (testbox, turf) | 13/13 |
-| `bot-specials.js` (testbox, turf) / (tower) | 19/19 / 1/1 |
-| `bazookarp-rules.js` (karpbox) | 117/117 (twice; A4 reads `BAZOOKARP.shell.hp`) |
-| `karp-loop.js` | 6/6 (twice) |
-| `karp-two.js` karpbox / halyard | 6/6 (twice) / 6/6 |
-| `int3.js` karpbox / testbox turf | 10/10 (twice; once on the head 3620384a) / 4/4 |
+| A breakers out of the burst at ≥ 70 % (normal) / 60 % (hard), easy none; A(c) walk round; A(d) the swell seen coming | min 5.59–6.32 / 5.63–5.82 m; 5.51–5.55 m; stands rising, not still |
+| B melee breakers (the ring at 55 % of theirs; ≥ 2.9 m and ≤ 5 m at 75 % of ours); B(b2) refills; B(d) the keep-out | out 6.26–6.53, in 3.31–4.24 m (and ×10: 10 / 10); 3.05–3.8 m; 4.74–4.86 m |
+| C no touch damage in 20 bursts, all eight bots | 0 |
+| D the grabber at 3.0–3.2 m, grabbing within 0.2 s after the hold (5 weapons, normal) | 3.17–3.19 m, 0.03–0.05 s |
+| E an autopilot carrier, 3 carries: no ×3, no own zone, no stuck > 3 s | 3 / 3, all 0 |
+| F carriers with the mitts, blade, brolly, bow, roller, charger, twins: zero own shots, subs, `sub:cantuse`, specials, climbs, leaps, rolls | 21 / 21, all 0 |
+| G every forward route closed: a short ×3; G(b) a pocket of its own zone | fallback 1, zone ×3 0.63 s, moved 28.6 m; level 1 at slack 11 m, ×3 1.6 s |
+| H out of a Big Burst's disc (normal, from 18 m) | 17–18 / 20; 12 m 1–3 / 10, 15 m 3–7 / 10 reported |
+| I(a) the keeper at the open Gate; I(b) two weirs | 7.8–8.4 m; ok (mean 4.2–7.9 / 6.5–8.7 m) |
+| J(a) the wake (15 m yes, 23 m no, a wall no, a non-carrier no, 18 m normal yes / easy no); J(b) no tracking through a wall | ok; goals ≥ 7 m off the real spot |
+| K the knockback push (normal, hard; never easy) | normal 5 pushes, across in 2.67 s; hard 2.15 s; easy 0 |
+| L the fuse danger for teammates; L(b) a guest carrier's | a mate 2.7 m off out to 5.9 m; ok |
+| M the route hints; N super jumps; O the fuse → over the halfway line; P walkers round the shell | ok |
+| R(a–d), S(a–d), Y(a–e), W(a–b) | §0.1, §0.4 |
 
-Not run (untouched by this package's changes, or hooks that are no-ops outside Bazookarp): net tests (nothing new on the
-wire), the Mitts / twins / Cutlass suites (the two kit lines are bot-only and Bazookarp-only), hud, sfx, menus.
+### 5.2 Regressions (on c1a4def2 with the keeper fix; 8350f1f6 since changes Bazookarp bots only)
+`bot-sight.js` (testbox, turf) **13 / 13** · `bot-specials.js` (testbox, turf) **19 / 19** · `bazookarp-rules.js` (karpbox)
+**117 / 117** · `karp-loop.js` **6 / 6** · `int3.js` (karpbox) **10 / 10**. 0 console errors in all. Not run: net tests (nothing
+new on the wire), the Mitts / twins / Cutlass suites (the two kit lines are bot-only and Bazookarp-only), hud, sfx, menus.
 
-### 5.3 Bot matches (`karp-match.cjs`, all-bot, 300 s + overtime at 60 Hz; `karp-agg.py`)
-**The head (3620384a), 16 matches** — karpbox, halyard, lockgate at normal ×4 / ×3 / ×3, and ×2 each at hard, one
-Electron instance (`PLAN=…`), 16:12–16:28:
+### 5.3 Bot matches
+§0.3's table: 27 matches this round (karpbox, halyard, lockgate at normal, 2–3 a stage a set, one Electron instance each set,
+`PLAN=`), JSONs in the session's scratchpad (not committed). karp-match now also prints the burst victims and the carries that
+ended in a splat within 2.5 s / made no new ground; karp-agg prints them as a "bots:" line.
 
-| stage | diff | result | KO at | first pop (bots by the Pond) | pops A/B | carries (made new ground) | plants | fallback | ×3 retreat / zone s | carrier stuck > 3 s | clamp | stuck % |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| halyard | hard | B knockout | 102.7 | 12.92 (9/9) | 3/6 | 9 (8) | 1 | 2 | 5.4 / 0 | 0 | 0 | 0.1 |
-| halyard | hard | A stopped | – | 16.42 (9.8/9.8) | 7/12 | 19 (7) | 1 | 7 | 19.1 / 0 | 0 | 0 | 0.5 |
-| halyard | normal | B knockout | 272.5 | 12.63 (9/9.5) | 6/16 | 22 (8) | 1 | 2 | 3.6 / 0 | 0 | 0 | 0.5 |
-| halyard | normal | A time | – | 13.78 (9/8.8) | 20/10 | 30 (5) | 2 | 5 | 11.8 / 0 | 0 | 0 | 0.4 |
-| halyard | normal | B knockout | 258.6 | 10.25 (10/9.5) | 14/14 | 28 (12) | 2 | 2 | 2.8 / 0 | 0 | 0 | 0.2 |
-| karpbox | hard | B stopped | – | 11.06 (8.3/8.3) | 13/17 | 30 (8) | 2 | 0 | 0 / 0 | 0 | 0 | 0.6 |
-| karpbox | hard | A knockout | 84.9 | 20.27 (9.3/8.5) | 4/1 | 5 (3) | 2 | 1 | 0 / 0 | 0 | 0 | 2 |
-| karpbox | normal | A knockout | 180.4 | 9.3 (9/8.8) | 11/7 | 18 (9) | 1 | 0 | 0 / 0 | 0 | 0 | 0 |
-| karpbox | normal | A knockout | 116.1 | 10.07 (8.3/8) | 3/6 | 9 (8) | 1 | 0 | 0 / 0 | 0 | 0 | 0 |
-| karpbox | normal | A knockout | 178 | 13.99 (8.3/8) | 11/5 | 16 (7) | 1 | 0 | 0 / 0 | 0 | 0 | 1.8 |
-| karpbox | normal | B knockout | 198.1 | 9.15 (9/8.8) | 5/17 | 22 (7) | 1 | 0 | 0 / 0 | 0 | 0 | 0.2 |
-| lockgate | hard | A stopped | – | 12.08 (10.8/11) | 12/3 | 15 (8) | 2 | 1 | 2.8 / 0 | 0 | 0 | 0.3 |
-| lockgate | hard | A time | – | 13.45 (11.3/11) | 11/15 | 25 (12) | 1 | 0 | 0 / 0 | 0 | 0 | 0.4 |
-| lockgate | normal | B time | – | 12.38 (10.8/11.3) | 10/12 | 22 (9) | 2 | 0 | 0 / 0 | 0 | 0 | 0.2 |
-| lockgate | normal | B time | – | 11.98 (10.8/11.8) | 14/9 | 22 (9) | 1 | 0 | 0 / 0 | 0 | 0 | 0.1 |
-| lockgate | normal | A time | – | 12.9 (11/10.8) | 5/16 | 21 (9) | 1 | 0 | 0 / 0 | 0 | 0 | 0.2 |
-
-"carries (made new ground)": carries, and in brackets those that pushed their team's best further (the rest died before
-passing the spot where the last one fell). 0 console lines, 0 frame errors in all 16.
-
-| §9.1 row (all 16) | result |
-|---|---|
-| knockout rate 20–60 % | **PASS** 8/16 (50 %): karpbox normal 4/4, hard 1/2; halyard 2/3, 1/2; lockgate 0/3, 0/2 |
-| early knockouts ≤ 1 of 16, median ≥ 2:30 | **PASS** 0 early, median 179 s (but **3 of 16** in the previous set below: §7) |
-| weir planted ≥ 75 % | **PASS** 16/16 |
-| side balance | **PASS** A 9, B 7 |
-| first pop median 6–12 s | **FAIL** 12.5 s: karpbox 9.7 s (normal) / 15.7 (hard), halyard 12.6 / 14.7, lockgate 12.4 / 12.8 — the first bots reach the Pond at 8–11.8 s |
-| Carp Blasts ≤ 1.5, resets ≤ 2 a match | **PASS** 0, 0 |
-| own-free-zone time ≤ 3 s | **PASS** 0.0 s |
-| stuck ≤ 1 %, carrier > 5 s: 0 | **PASS** 0.5 %, **0 carrier episodes > 3 s in all 16** (the done criterion: karpbox's 6 too) |
-| losing team wins ≥ 15 % of S38a / S38c overtimes | report only: 0/1 |
-| shared-bubble knockouts ≤ 25 % | **PASS** 0/8 |
-| clamp rejections 0 | **PASS** 0 |
-| carrierRetreatFallback ≤ 1 a match (a stage builder's flag) | **FLAG** 1.25: halyard 3.0 (normal) / 4.5 (hard), karpbox 0 / 0.5, lockgate 0 / 0.5 |
-
-The other sets this round (all through `karp-agg.py`; the JSONs are in the session's scratchpad, not committed):
-
-| set | code | n | knockouts | early (< 1:15) | first pop median | stuck | carrier > 3 s | clamp | fallback / match |
-|---|---|---|---|---|---|---|---|---|---|
-| baseline | 63133505, 800 hp | 16 | 6 (38 %) | 2 (47, 60 s) | 13–15 s (cells) | 0.2–0.4 % | 0 | 0 | halyard 3.7 / 4.0, others ≤ 0.5 |
-| opening shell 600 hp (`KARP_CFG`) | 63133505 | 5 | 2 | 0 | karpbox 10.5, lockgate 15.1 | ≤ 0.9 % | 0 | 0 | ≤ 1 |
-| pre-head check | 3168aebf + D fix | 16 | 7 (44 %) | **3** (43, 44, 55 s) | 11.4 s | 1.0 % | 0 | 0 | 1.0 (halyard 2.3 / 4.5) |
-| head check | 3620384a | 4 | 2 | **2** (35, 43 s) | ~10 s | 0–0.3 % | 0 | 0 | halyard 6 / 0, karpbox 0 / 0 |
-| what-if `reformHp` 700 | 3620384a | 6 | 2 (33 %) | **2** (42, 49 s) | 12.7 s | 0.2 % | 0 | 0 | halyard 3.5, others 0 |
-
-
-### 5.4 Pictures (`tools/botlab/jobs/batch5/karp-bots/out/`, karpbox, made by `shots.sh` + `shots-pre.js`)
-- `karp-bots-burst.jpg` (241 KB) — Bravo bursts the opening shell at 8.2 s: Alpha's breakers stand 6.2–12.5 m out on
-  the ring (outside the 4.5 m burst), Bravo's grabber 2.8 m from the Bazookarp running in.
-- `karp-bots-weir.jpg` (216 KB) — an Alpha carrier swimming up its weir's ramp in its lead's ink (only its marker pillar
-  shows), the lead already on the weir, the flank behind.
-- `karp-bots-keeper.jpg` (244 KB) — Alpha's keeper 6 m in front of its risen Gate, the approach inked.
-- `karp-bots-wake.jpg` (116 KB) — an Alpha interceptor's eyes, Bravo's carrier swimming hidden in its ink 15 m off: no
-  marker, a faint ripple; the bot notices it by the wake rule (`seen: true`).
+### 5.4 Pictures (`tools/botlab/jobs/batch5/karp-bots/out/`)
+- **new** `karp-bots-halyard-burst.jpg` (239 KB) — a real all-bot halyard match 0.2 s after its first burst (17.7 s, Bravo's):
+  Bravo's burst ink on the cabin roof, its three grabbers under it as squids 2.5–3.4 m from the Bazookarp (not visible: hidden in
+  their ink), Alpha's spinner on the deck below in its own ink, 4.7 m off; Alpha's others were 25–57 m away. The first real-stage
+  picture (the review: all four earlier ones were staged karpbox scenes). I looked at it: it shows the burst's ink and the one
+  Alpha kid, not a ring of breakers — on halyard Bravo got there first.
+- `karp-bots-burst.jpg`, `karp-bots-weir.jpg`, `karp-bots-keeper.jpg`, `karp-bots-wake.jpg` — the previous round's staged
+  karpbox scenes (unchanged).
 
 ## 6. Commits and the shared files touched
 
-The previous round (2026-10-10, kept):
-- `39ce5114` the team plan, the carrier's routes and shot table, the danger areas, the wake, walkers round the shell.
-- `293507bf` karp-bots.js A–M; the grabber's timed run, the ring hold, the shell guard, team knowledge from the last look.
-- `d2b37568` a fresh carrier dives first; karp-bots N, O, P; `JOB-1.sh`; README.
-- `0485f186` tuning: the opening shell 1000 → 800 hp; breakers hurry in.
-- `f877849d` karp-match `PLAN` / `REPEAT`; roles as bot-seconds.
+This round (2026-10-16, evening):
+- `a9d9fd5b` JOB-1.sh: the cap, SUBS, the folder.
+- `017beb3d` no wall-hack in the defending plan; the wake within awareness; a guest carrier's fuse danger; W, J(a) 18 m, L(b).
+- `02616427` the refill band, the melee keep-out, re-forming to the ring, free-phase fighters, the perch re-pick, `KARP_AI`
+  numbers; checks A(c), B(b2), B(d), R, S, Y with teeth; H's name.
+- `b48e307a` karp-match burst victims and short carries; karp-agg's bots line; NET.md.
+- `9b9d0cc0` (scratch) the halyard picture.
+- `c1a4def2` the keep-out for every bot, the band hold, the swell seen coming, the fallback steps, `clearAt` (off), the keeper's
+  6 m; A(d); test isolation.
+- `14b9ee07` botlab README; shots.sh.
+- `8350f1f6` a Bubble Guard escort runs to the threatened carrier; the grab aims; S(c), Y(d).
+- this report: a `(scratch)` commit.
 
-This round (2026-10-16):
-- `03353da5` the shell's full swell (guard, routes), no lunge / leap into the sting, the carrier walks its picked route and
-  never steers across its own zone; its uncommitted edits; karp-bots C, G(b), J(b), M.
-- `11cfc5f5` Carp Shot dodging (the way-in line, `d.with`, the disc drawn back), the low arc; karp-bots H reworked.
-- `71aff892` the grabber holds stream / charge weapons on its ring.
-- `63133505` the carrier's masks per field state; the narrow-shell retry.
-- `bb21cde9` kick-safe carrier shots; the look-ahead falls back to the target behind the mark; karp-match what-ifs,
-  arrival, the fallback log.
-- `3168aebf` tuning: the opening shell 800 → 600 hp; karp-bots A back to the ring.
-- `c70bfacb` (scratch) the pictures.
-- `b025d202` botlab README.
-- `3620384a` unreachable spots (nearest point on the way, else a pause), the perch's fallbacks, the grabber's window.
-- this report: a `(scratch)` commit after it.
+The previous round: 39ce5114, 293507bf, d2b37568, 0485f186, f877849d, 03353da5, 11cfc5f5, 71aff892, 63133505, bb21cde9, 3168aebf,
+c70bfacb, b025d202, 3620384a, dd4be8cc.
 
 Shared files (all hook lines tagged `[b5-karp-bots]`):
-- `src/game/bots.js`: the import (22); respawn → `karpJump` (684); `karpSpecial` in the fight and paint special
-  decisions (949, 1043); `karpPaintAim` (989); `karpMove` before the carrier's last guard (1091); Vortex Strike aim →
-  `karpStrikeAt` (1510); `karpShields` in the shields list (2518); `_pathTo`: `KA.cost`, the narrow-shell retry and the
-  level-2 fallback (2986–2988); `_steer`'s look-ahead → `karpSteerOk` (3206).
-- `src/game/botSpecials.js`: the import (67); `D()` gains `not` and `with` (109); `DANGER_API` gains `line` (144);
-  `karpDangers` (346); `_scan` skips `d.not` (640) and notices `d.with` with its partner (663); `_gone` counts per source
-  (700).
-- `src/game/botSight.js`: `SIGHT.karpWakeR` (39) and the wake in `_look` (227).
-- `src/game/subs.js`: the Skitter's heading through `shellRound` (508) and the function (1094).
-- `src/game/kits/waddle.js` (30, 420), `kits/blade.js` (18, 106), `kits/mitts.js` (28, 695): one import and one line each.
-- `src/config.js`: `BAZOOKARP.shell.hp` (723).
-- `tools/botlab/karp-match.cjs` (PLAN, KARP_AI, KARP_TUNE / KARP_CFG, arrival, the bots' report),
-  `tools/botlab/tests/bazookarp-rules.js` (A4), `tools/botlab/README.md`.
-- New: `tools/botlab/tests/karp-bots.js`; `tools/botlab/jobs/batch5/karp-bots/` (`JOB-1.sh`, `shots.sh`, `shots-pre.js`,
-  `out/*.jpg`, this report).
+- `src/game/bots.js`: the import (22); respawn → `karpJump` (684); `karpSpecial` (949, 1043); `karpPaintAim` (989); `karpMove`
+  (1091); Vortex Strike aim (1510); `karpShields` (2518); `_pathTo`: `KA.cost`, the narrow-shell retry and the stepped fallback
+  (2986–2988); **`_pickRefill` → `karpRefillSpot` (3045, new)**; `_steer` → `karpSteerOk` (3208).
+- `src/game/botSpecials.js`: the import (67); `D()`'s `not` / `with` (109); `DANGER_API.line` (144); `karpDangers` (346);
+  `_scan` (640, 663); `_gone` (700). (Unchanged this round.)
+- `src/game/botSight.js`: `SIGHT.karpWakeR` (39); the wake in `_look` (227, **changed**: min with awareness).
+- `src/game/subs.js` (508, 1094), `kits/waddle.js` (30, 420), `kits/blade.js` (18, 106), `kits/mitts.js` (28, 695): unchanged.
+- `src/config.js`: `BAZOOKARP.shell.hp` (723), unchanged this round.
+- `docs/NET.md`: a "bots" bullet in the Bazookarp section.
+- Tools: `tools/botlab/karp-match.cjs`, `tools/botlab/karp-agg.py`, `tools/botlab/README.md`, `tools/botlab/tests/karp-bots.js`;
+  scratch: `tools/botlab/jobs/batch5/karp-bots/` (`JOB-1.sh`, `shots.sh`, `shots-pre.js`, `out/`, this report).
 
 ## 7. Unfinished, flaky, uncertain
-- **Early knockouts (§9.1's row: no knockout before 1:15 in more than 1 of 16; median ≥ 2:30) fail** — 0 of 16 on the head, but 3 of 16 in the set before it (43, 44, 55 s) and 2 of 4 in the head's own check (35, 43 s); 2 of 16 at 800 hp. They
-  come from runaway sequences on the first-cut layouts: one team bursts, carries 18–28 m to its weir in 4–6 s (a carrier
-  swims its team's ink at 9.4 m/s), re-pops the 500 hp shell where it dropped on the other half before the other team is
-  back from its spawn, and walks the last 20 m. Halyard (L 54.8 m) and lockgate (57.2 m) sit at the bottom of §9.1's
-  55–85 m band, karpbox (47 m) below it. Levers for the shared balance pass, none applied: `shell.reformHp` up (a 6-match what-if at 700 still had 2 runaways at 42 and 49 s: it is not the lever),
-  a "pre-keeper" (when the other side leads the meter, one of ours falls back to our weir), longer stages (WP4b).
-- **Most carries make no new ground**: 60–80 % of carries end in a splat within ~2 s of the pick-up. At the burst the
-  other team waits on its ring 5.5–9 m out (the danger keeps it out of the 4.5 m burst, so `burst splats` is 0–2 a match)
-  and focuses the carrier (+40). Progress still accumulates (the shell re-forms where its carrier fell, and the knockout rate
-  is inside the band), but a "clear the ring before the burst" / "regroup behind the team" behaviour is the next bot lever.
-- **Halyard's carrierRetreatFallback is over the flag** (3.0 at normal, 4.5 at hard on the head; 2.3–4.5 in every set a match; karpbox and lockgate 0). The log
-  (`[x, y, z, level, team, P, mark]`) puts them all on the ferry's side corridors (y 1.3, |z| 3.5–5): a Bazookarp that
-  re-forms on a team's own corridor, behind the cabin, has no forward way that doesn't first go 6+ m back. The kick-safe
-  shots stopped carriers knocking themselves down there; the rest is the first-cut layout (WP4b), as §9.1 says.
-- **The first pop on lockgate stays over 12 s** (median 12.4 s at normal, 12.8 at hard on the head; 12.4–19.8 across the sets): its bots reach the bridge Pond at 10.3–11.5 s; the
-  shell's hp can't fix the walk. Karpbox and halyard are inside 6–12 s at 600 hp.
-- **Big Bursts from under ~15 m are near-unavoidable** for a standing kid on dry ground (§2 #15, H's report row).
-- **Overtime's "losing team wins ≥ 15 %"**: too few S38a / S38c overtimes to judge (report only).
-- **Flaky at the edges**: I(b) once 9.56 m against its 9.5 m bound (4 passes since); H 16–20 of 20 at 18 m; D's window
-  (fixed twice this round, 7 passes since); A 5.46 m at its lowest against 5.3.
-- **P's bound** (a Skitter pressed against the shell for under a quarter of its walk; 21 of 110 frames) is the previous
-  round's loosening of "< 12 frames"; the Skitter does round the shell and never ends inside it.
-- **Nothing ran on the Mac mini**: the shared balance pass (`JOB-1.sh`: 16 matches per stage at normal on karpbox,
-  halyard, lockgate and 16 at hard on halyard, lockgate) is committed and not run; this report's sets are 2–4 per cell.
-  (`COMMON.md` in this worktree now says the Mac mini is back; this package's instructions said to push nothing.)
-- **Not tested with real clients**: a guest's Carp Shot as a danger to the host's bots (it reads the ghost the host already
-  flies; nothing new on the wire).
-- **bots.js's view of a foe** (`tv`) gives the live position while its memory still says "seen" — until the next look,
-  ≤ 0.25 s. Not Bazookarp's; left alone (J(b)'s teleport showed it).
-- **The wake has no look of its own** on this base (WP2's `bazookarpFx` owns it): the wake picture shows a ripple only.
-
+- **Carries still die young**: in every set ~half the carries end in a splat within 2.5 s of the pick-up and 55–71 % make no
+  new ground. "Clear the ring" made it worse; a pre-keeper is untried. The next bot lever, for the shared balance pass.
+- **Early knockouts**: 2 of the last 12 matches before 1:15 (38 s karpbox, 60 s); 5 of 26 on 3620384a. §9.1 allows 1 in 16.
+  Needs ≥ 16-match sets on the Mac mini to judge; halyard (54.8 m) and lockgate (57.2 m) sit at the bottom of the 55–85 m band,
+  karpbox (47 m) below it.
+- **Halyard's carrierRetreatFallback is over the flag** (3.0–5.0 a match, ×3 retreat 5–12 s a match), all on the ferry's side
+  corridors at the `fbAt` coordinates in §0.3: WP4b's layout. The stepped fallback did not reduce the ×3 seconds.
+- **Big Bursts from 12–15 m** are near-unavoidable (§0.5): the lead's balance decision.
+- **First pop**: medians 9.9–13.6 s across sets (12.7 s on the last); lockgate's walk in (11–11.5 s) is the floor there.
+- **Burst splats remain**: 0.8–1.8 per 100 pops on the last two sets, melee grabbers caught 4.4–4.5 m out (at the burst's edge)
+  or by a meter jump with the danger standing 0.3 s.
+- **Flaky at the edges**: Y(b) hard read 0.17 s (window ≤ 0.1) in 2 of 12 trials; the grabber now aims early in each window
+  (easy 0.43 s, normal 0.1 s, hard 0.1 s early), and three runs since read easy 0.37 s and hard 0.03 s in all 12 trials; the cause
+  of the occasional ~0.15 s late arrival is not found. I(b) failed once on the keeper bug (fixed; 3 passes since). J(b) failed once in a full run (all 240 frames
+  "seen legitimately" — its team saw the carrier at P1 from the start) and passed in 4 runs since, with `firstLegit` now
+  reported should it recur; I could not reproduce it. B(d) read 4.74 m once against my first 4.8 m bound (now 4.6, §0.2).
+- **The matches are small**: 2–3 a stage a set, one Electron instance each; nothing ran on the Mac mini. `JOB-1.sh` is ready.
+- **Not tested with real clients**: a guest's Carp Shot as a danger to the host's bots, a guest carrier's fuse danger (L(b)
+  flags the actor remote on one screen).
+- **The wake has no look of its own** on this base (WP2's `bazookarpFx`).
