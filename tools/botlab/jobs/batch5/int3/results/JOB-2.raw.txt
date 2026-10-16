@@ -1,0 +1,166 @@
+JOB-2 raw results — automatic, by the Mac mini's b5-runner, 2026-10-16 13:26:11
+branch botlab-b5-int3, ran at 30e94bc, exit code 0, wall time 13min
+(a written-up JOB-2.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### pinned: head b97b3eb, base 7759085 (harness from b97b3eb)
+### C-base-halyard-1: == halyard [turf 180s]: turf 42.9% vs 42.1% | CONSOLE 0 unique warning/error line(s) 
+### A-base-halyard-1: == halyard [zones]: winner Bravo (time) | final 100 vs 51 (penalty +0/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A-head-halyard-1: == halyard [zones]: winner Bravo (time) | final 66 vs 27 (penalty +0/+48.8) | OT no | CONSOLE 0 unique warning/error line(s) 
+### C-head-halyard-1: == halyard [turf 180s]: turf 39.6% vs 42.2% | CONSOLE 0 unique warning/error line(s) 
+### A-base-halyard-2: == halyard [zones]: winner Bravo (time) | final 67 vs 43 (penalty +12/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### C-base-halyard-2: == halyard [turf 180s]: turf 31.7% vs 51.5% | CONSOLE 0 unique warning/error line(s) 
+### A-head-halyard-2: == halyard [zones]: winner Bravo (neutralised) | final 68 vs 66 (penalty +0/+14) | OT 28.5s | CONSOLE 0 unique warning/error line(s) 
+### C-head-halyard-2: == halyard [turf 180s]: turf 47.3% vs 35.3% | CONSOLE 0 unique warning/error line(s) 
+### A-base-saltpan-1: == saltpan [zones]: winner Alpha (time) | final 81 vs 82 (penalty +0/+5) | OT no | CONSOLE 0 unique warning/error line(s) 
+### C-base-saltpan-1: == saltpan [turf 180s]: turf 35.8% vs 35.5% | CONSOLE 0 unique warning/error line(s) 
+### A-head-saltpan-1: == saltpan [zones]: winner Alpha (time) | final 7 vs 80 (penalty +62.2/+17) | OT no | CONSOLE 0 unique warning/error line(s) 
+### C-head-saltpan-1: == saltpan [turf 180s]: turf 35% vs 37.2% | CONSOLE 0 unique warning/error line(s) 
+### A-base-saltpan-2: == saltpan [zones]: winner Alpha (time) | final 80 vs 100 (penalty +0/+2) | OT no | CONSOLE 0 unique warning/error line(s) 
+### C-base-saltpan-2: == saltpan [turf 180s]: turf 40.1% vs 34.7% | CONSOLE 0 unique warning/error line(s) 
+### A-head-saltpan-2: == saltpan [zones]: winner Bravo (time) | final 93 vs 65 (penalty +7/+24.9) | OT no | CONSOLE 0 unique warning/error line(s) 
+### C-head-saltpan-2: == saltpan [turf 180s]: turf 34% vs 36.6% | CONSOLE 0 unique warning/error line(s) 
+### A-base-crossmarket-1: == crossmarket [zones]: winner Alpha (time) | final 53 vs 55 (penalty +0/+30) | OT no | CONSOLE 0 unique warning/error line(s) 
+### C-base-crossmarket-1: == crossmarket [turf 180s]: turf 49.4% vs 27.1% | CONSOLE 0 unique warning/error line(s) 
+### A-head-crossmarket-1: == crossmarket [zones]: winner Alpha (time) | final 72 vs 77 (penalty +5.2/+10.8) | OT no | CONSOLE 0 unique warning/error line(s) 
+### C-head-crossmarket-1: == crossmarket [turf 180s]: turf 32.4% vs 45.4% | CONSOLE 0 unique warning/error line(s) 
+### A-base-crossmarket-2: == crossmarket [zones]: winner Alpha (time) | final 58 vs 92 (penalty +0/+7) | OT no | CONSOLE 0 unique warning/error line(s) 
+### C-base-crossmarket-2: == crossmarket [turf 180s]: turf 31.1% vs 42.7% | CONSOLE 0 unique warning/error line(s) 
+### A-head-crossmarket-2: == crossmarket [zones]: winner Bravo (knockout) | final 77 vs 0 (penalty +18/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### C-head-crossmarket-2: == crossmarket [turf 180s]: turf 44.2% vs 33.1% | CONSOLE 0 unique warning/error line(s) 
+### A-base-lockgate-1: == lockgate [zones]: winner Bravo (time) | final 95 vs 39 (penalty +3.8/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### C-base-lockgate-1: == lockgate [turf 180s]: turf 35.1% vs 48.2% | CONSOLE 0 unique warning/error line(s) 
+### A-head-lockgate-1: == lockgate [zones]: winner Alpha (knockout) | final 0 vs 100 (penalty +0/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### C-head-lockgate-1: == lockgate [turf 180s]: turf 37.6% vs 40.5% | CONSOLE 0 unique warning/error line(s) 
+### A-base-lockgate-2: == lockgate [zones]: winner Bravo (knockout) | final 100 vs 0 (penalty +0/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### A-head-lockgate-2: == lockgate [zones]: winner Bravo (knockout) | final 100 vs 0 (penalty +0/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### C-base-lockgate-2: == lockgate [turf 180s]: turf 47.7% vs 37.9% | CONSOLE 0 unique warning/error line(s) 
+### C-head-lockgate-2: == lockgate [turf 180s]: turf 39.7% vs 38.9% | CONSOLE 0 unique warning/error line(s) 
+### B-halyard-t0: == halyard [zones]: winner Bravo (time) | final 93 vs 55 (penalty +5.3/+22.7) | OT no | CONSOLE 0 unique warning/error line(s) 
+### B-halyard-t1: == halyard [zones]: winner Bravo (time) | final 92 vs 59 (penalty +7/+2.5) | OT no | CONSOLE 0 unique warning/error line(s) 
+### B-saltpan-t0: == saltpan [zones]: winner Bravo (time) | final 100 vs 71 (penalty +0/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### B-saltpan-t1: == saltpan [zones]: winner Alpha (time) | final 61 vs 75 (penalty +0/+20) | OT no | CONSOLE 0 unique warning/error line(s) 
+### B-calamari-t0: == calamari [zones]: winner Alpha (time) | final 47 vs 74 (penalty +1.5/+15.8) | OT no | CONSOLE 0 unique warning/error line(s) 
+### B-calamari-t1: == calamari [zones]: winner Bravo (time) | final 76 vs 28 (penalty +15.7/+0) | OT no | CONSOLE 0 unique warning/error line(s) 
+### B-treehills-t1: == treehills [zones]: winner Alpha (time) | final 38 vs 72 (penalty +9.4/+16) | OT no | CONSOLE 0 unique warning/error line(s) 
+### B-treehills-t0: == treehills [zones]: winner Bravo (retake) | final 42 vs 31 (penalty +35/+24) | OT 33.7s | CONSOLE 0 unique warning/error line(s) 
+## set A
+## set B
+## set C
+SUMMARY 40 of 40 matches wrote a result
+
+## last 15 lines of job.log
+  saltpan-1     35.8 / 35.5  1249  6.4   51   1249  0/0
+  saltpan-2     40.1 / 34.7  1181  8     64   1181  0/0
+  MEAN (n 8): turf per bot 1241.6 p | splats per bot 6.89 | inked total 79.2 % | splats 55.4/match
+C head: map | turf % A / B | per bot: turf p, splats | all splats | roller (×8) turf p | err
+  crossmarket-1 32.4 / 45.4  1445  7.4   59   1445  0/0
+  crossmarket-2 44.2 / 33.1  1328  7.3   58   1328  0/0
+  halyard-1     39.6 / 42.2  1145  6.1   50   1145  0/0
+  halyard-2     47.3 / 35.3  1206  4.5   36   1206  0/0
+  lockgate-1    37.6 / 40.5  1191  6.1   50   1191  0/0
+  lockgate-2    39.7 / 38.9  1195  6.1   49   1195  0/0
+  saltpan-1     35 / 37.2    1411  5     40   1411  0/0
+  saltpan-2     34 / 36.6    1152  6.9   55   1152  0/0
+  MEAN (n 8): turf per bot 1259.1 p | splats per bot 6.17 | inked total 77.4 % | splats 49.6/match
+  head / base: turf per bot ×1.01, splats per bot ×0.90, inked total ×0.98
+SUMMARY 40 of 40 matches wrote a result
+
+## A.txt
+A base: map | winner (reason) | final counts | margin | lead changes | first take s | contested % | OT | err
+  crossmarket-1 A (time       ) 53 vs 55  2    1   21.4   3.1   no     0/0
+  crossmarket-2 A (time       ) 58 vs 92  34   1   39     1.8   no     0/0
+  halyard-1     B (time       ) 100 vs 51 49   0   53.6   1.8   no     0/0
+  halyard-2     B (time       ) 67 vs 43  24   2   47.4   2.7   no     0/0
+  lockgate-1    B (time       ) 95 vs 39  56   1   17.8   3.0   no     0/0
+  lockgate-2    B (knockout   ) 100 vs 0  100  0   12.1   1.5   no     0/0
+  saltpan-1     A (time       ) 81 vs 82  1    2   72.2   9.2   no     0/0
+  saltpan-2     A (time       ) 80 vs 100 20   0   80.8   1.4   no     0/0
+  MEAN (n 8): margin 35.8 | lead changes 0.88 | first take 43.0 s | contested 3.1 % | knockouts 1/8 | overtime 0/8
+A head: map | winner (reason) | final counts | margin | lead changes | first take s | contested % | OT | err
+  crossmarket-1 A (time       ) 72 vs 77  5    1   23.4   2.2   no     0/0
+  crossmarket-2 B (knockout   ) 77 vs 0   77   1   22.1   5.3   no     0/0
+  halyard-1     B (time       ) 66 vs 27  39   0   31.8   12.4  no     0/0
+  halyard-2     B (neutralised) 68 vs 66  2    2   26.9   8.1   28.5s  0/0
+  lockgate-1    A (knockout   ) 0 vs 100  100  0   29.7   2.9   no     0/0
+  lockgate-2    B (knockout   ) 100 vs 0  100  0   17.5   0.0   no     0/0
+  saltpan-1     A (time       ) 7 vs 80   73   0   55.2   4.4   no     0/0
+  saltpan-2     B (time       ) 93 vs 65  28   0   55.3   5.8   no     0/0
+  MEAN (n 8): margin 53.0 | lead changes 0.50 | first take 32.7 s | contested 5.1 % | knockouts 3/8 | overtime 1/8
+
+## B.txt
+B: map / forced side | winner (reason) | counts forced vs other | forced won | K/D forced vs other | orbs used | splats by the orb (forced) | Cheer Orb stats | err
+  calamari t0   A (time       ) 47 vs 74  yes  42/30 vs 30/42  12  0   orbs 12 lifted 11 cheers 59 gains 55 (396.0 pts) held 1 | 0/0
+  calamari t1   B (time       ) 28 vs 76  yes  47/19 vs 19/47  12  1   orbs 12 lifted 12 cheers 54 gains 52 (378.1 pts) held 1 | 0/0
+  halyard t0    B (time       ) 93 vs 55  no   39/49 vs 48/39  6   1   orbs 6 lifted 6 cheers 17 gains 12 (86.4 pts) held 2 | 0/0
+  halyard t1    B (time       ) 59 vs 92  yes  44/31 vs 29/46  3   1   orbs 3 lifted 3 cheers 14 gains 14 (106.0 pts) held 0 | 0/0
+  saltpan t0    B (time       ) 100 vs 71 no   34/46 vs 46/34  11  2   orbs 11 lifted 11 cheers 50 gains 47 (332.6 pts) held 5 | 0/0
+  saltpan t1    A (time       ) 75 vs 61  no   25/49 vs 49/25  2   2   orbs 2 lifted 2 cheers 11 gains 11 (77.6 pts) held 0 | 0/0
+  treehills t0  B (retake     ) 42 vs 31  no   25/41 vs 41/25  8   1   orbs 8 lifted 8 cheers 43 gains 36 (250.7 pts) held 0 | 0/0
+  treehills t1  A (time       ) 72 vs 38  no   42/40 vs 40/42  6   0   orbs 6 lifted 5 cheers 23 gains 18 (128.7 pts) held 0 | 0/0
+  MEAN (n 8): the Cheer Orb team won 3/8 | count lead (other − forced; + = forced ahead) -2.2 | K/D forced 1.12 vs other 1.11 | orbs used 7.5/match, splats by them 1.00/match
+
+## C.txt
+C base: map | turf % A / B | per bot: turf p, splats | all splats | roller (×8) turf p | err
+  crossmarket-1 49.4 / 27.1  1457  9.1   73   1457  0/0
+  crossmarket-2 31.1 / 42.7  1312  9.3   74   1312  0/0
+  halyard-1     42.9 / 42.1  1118  5.6   47   1118  0/0
+  halyard-2     31.7 / 51.5  1063  5.6   45   1063  0/0
+  lockgate-1    35.1 / 48.2  1257  7     56   1257  0/0
+  lockgate-2    47.7 / 37.9  1296  4.1   33   1296  0/0
+  saltpan-1     35.8 / 35.5  1249  6.4   51   1249  0/0
+  saltpan-2     40.1 / 34.7  1181  8     64   1181  0/0
+  MEAN (n 8): turf per bot 1241.6 p | splats per bot 6.89 | inked total 79.2 % | splats 55.4/match
+C head: map | turf % A / B | per bot: turf p, splats | all splats | roller (×8) turf p | err
+  crossmarket-1 32.4 / 45.4  1445  7.4   59   1445  0/0
+  crossmarket-2 44.2 / 33.1  1328  7.3   58   1328  0/0
+  halyard-1     39.6 / 42.2  1145  6.1   50   1145  0/0
+  halyard-2     47.3 / 35.3  1206  4.5   36   1206  0/0
+  lockgate-1    37.6 / 40.5  1191  6.1   50   1191  0/0
+  lockgate-2    39.7 / 38.9  1195  6.1   49   1195  0/0
+  saltpan-1     35 / 37.2    1411  5     40   1411  0/0
+  saltpan-2     34 / 36.6    1152  6.9   55   1152  0/0
+  MEAN (n 8): turf per bot 1259.1 p | splats per bot 6.17 | inked total 77.4 % | splats 49.6/match
+  head / base: turf per bot ×1.01, splats per bot ×0.90, inked total ×0.98
+
+## lines.txt
+A-base-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=halyard MODE=zones
+A-head-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=halyard MODE=zones
+C-base-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=halyard MODE=turf SECS=180 WEAPONS=all=roller
+C-head-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=halyard MODE=turf SECS=180 WEAPONS=all=roller
+A-base-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=halyard MODE=zones
+A-head-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=halyard MODE=zones
+C-base-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=halyard MODE=turf SECS=180 WEAPONS=all=roller
+C-head-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=halyard MODE=turf SECS=180 WEAPONS=all=roller
+A-base-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=saltpan MODE=zones
+A-head-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=saltpan MODE=zones
+C-base-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=saltpan MODE=turf SECS=180 WEAPONS=all=roller
+C-head-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=saltpan MODE=turf SECS=180 WEAPONS=all=roller
+A-base-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=saltpan MODE=zones
+A-head-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=saltpan MODE=zones
+C-base-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=saltpan MODE=turf SECS=180 WEAPONS=all=roller
+C-head-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=saltpan MODE=turf SECS=180 WEAPONS=all=roller
+A-base-crossmarket-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=crossmarket MODE=zones
+A-head-crossmarket-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=crossmarket MODE=zones
+C-base-crossmarket-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=crossmarket MODE=turf SECS=180 WEAPONS=all=roller
+C-head-crossmarket-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=crossmarket MODE=turf SECS=180 WEAPONS=all=roller
+A-base-crossmarket-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=crossmarket MODE=zones
+A-head-crossmarket-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=crossmarket MODE=zones
+C-base-crossmarket-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=crossmarket MODE=turf SECS=180 WEAPONS=all=roller
+C-head-crossmarket-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=crossmarket MODE=turf SECS=180 WEAPONS=all=roller
+A-base-lockgate-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=lockgate MODE=zones
+A-head-lockgate-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=lockgate MODE=zones
+C-base-lockgate-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=lockgate MODE=turf SECS=180 WEAPONS=all=roller
+C-head-lockgate-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=lockgate MODE=turf SECS=180 WEAPONS=all=roller
+A-base-lockgate-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=lockgate MODE=zones
+A-head-lockgate-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=lockgate MODE=zones
+C-base-lockgate-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/base MAP=lockgate MODE=turf SECS=180 WEAPONS=all=roller
+C-head-lockgate-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=lockgate MODE=turf SECS=180 WEAPONS=all=roller
+B-halyard-t0 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=halyard MODE=zones SPECIALS=team0=booyah
+B-halyard-t1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=halyard MODE=zones SPECIALS=team1=booyah
+B-saltpan-t0 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=saltpan MODE=zones SPECIALS=team0=booyah
+B-saltpan-t1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=saltpan MODE=zones SPECIALS=team1=booyah
+B-calamari-t0 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=calamari MODE=zones SPECIALS=team0=booyah
+B-calamari-t1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=calamari MODE=zones SPECIALS=team1=booyah
+B-treehills-t0 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=treehills MODE=zones SPECIALS=team0=booyah
+B-treehills-t1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-2-1016-1312/head MAP=treehills MODE=zones SPECIALS=team1=booyah
