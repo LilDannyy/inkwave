@@ -163,7 +163,7 @@ Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/j
   just beyond the rules, vaults over a low wall or a railing): a find when worth > 10 m, an entrance (with its own line
   of sight) when it lands inside a Gate's ring from outside it; an inkable step of ≤ 1.8 m the kid hops counts as a hop,
   not a climb, in every no-climb search. #16 moves the carrier both ways SPEC §2.4 allows: running as a kid, and swimming
-  in its own ink (9.44 m/s, the swim-jump: about twice the kid's reach, onto 2.0 m ledges) from any takeoff whose floor
+  in its own ink (9.44 m/s, the swim-jump: about twice the kid's reach, onto ledges up to 2.2 m when it lets go of squid form at the top; 2.25 m never) from any takeoff whose floor
   takes ink — the probes' windows are the measured reach of each (`REACH`, the self-test's `reach` / `reachs` rows). A
   squid gap (lowGap) passes grates and rails, as a squid does.
   The flagged places are numbered once — the top-down's discs and its key, the `-flag-<n>` pictures, the console and the
