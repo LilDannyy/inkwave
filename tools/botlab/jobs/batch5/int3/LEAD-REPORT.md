@@ -14,8 +14,10 @@ committed for the record and runs when the lead pushes the branch.
 ## 1. Chain Bobber bots
 
 **Outcome: real work done, numbers better, but for bots the Chain Bobber is still mostly area denial — TELL THE USER.**
-At the shipped code: PENDING-FINLINE. The lead's bar was "wasted well under 88 %, at least one bobber splat a match":
-the waste bar is met PENDING-WASTEMET; the splat bar is not PENDING-SPLATMET.
+At the shipped code (8 matches: 4 Turf, 4 Zone Control): 29 chains set off, 5 caught a foe, **83 % wasted, 0.25 bobber
+splats a match** — against 84 % and 0.5 at HEAD (4 matches) and 76 % / 0.5 for my predecessor's 12. The lead's bar was
+"wasted well under 88 %, at least one bobber splat a match": **neither is met.** What I changed fixes real faults (below)
+and shows in the controlled checks, but not in the match totals. Only one variant moved them, and it costs duels.
 
 What I found first (instrumented, `match.cjs` BOBBER-WASTE / BOBBER-AIMED / SNAPLOG): at HEAD the waste was mostly
 *collateral* — teammates' unaimed shots and blasts through webs, chain reactions — and the aimed chain shots almost never
@@ -24,13 +26,20 @@ before the bot's aim settled on a 0.2 m bobber — the foes' bots notice an arme
 out of it, and their guard never lets them walk into one they have noticed).
 
 What I changed (all kit-local: `kits/bobber-bots.js`, two lines in `bobber.js`):
-- **Snaps** (`SNAP`): a lone bobber thrown to float on the feet of a foe that is *not duelling us* (facing more than 60°
-  away: busy with a teammate, painting, charging elsewhere), only by a weapon whose shot gets there within 0.3 s, never
-  where its blast would reach a teammate's idle web; aimed at for its last 0.3 s of flight while nothing hits the bot,
-  and shot the moment it floats with that foe where the shot will find it (`arrivalT`: the weapon's own flight time).
+- **Snaps** (`SNAP`): a lone bobber thrown to float on the feet of a foe that is *not duelling the bot* (facing more than
+  60° away: busy with a teammate, painting, charging elsewhere), 4–9.5 m off, only by a weapon whose shot gets there
+  within 0.3 s (not the melee kits or the bucket), never where its blast would reach a teammate's idle web; aimed at for
+  its last 0.3 s of flight while nothing has hit the bot for 0.6 s, and shot the moment it floats with that foe where the
+  shot will find it (`arrivalT`: the weapon's own flight time).
 - **Aimed chain shots**: the bot keeps going while its foe is where the shot will find it *or walking in* (the old
   re-check used a stricter rule than the scan that engaged, and stopped at once); an automatic gun fires once its aim is
   within the bobber's own size (one shot a press, and chargers, within half of it), else stops and drops a charge.
+- **A round now hits the bobber in front of the foe** (`weapons.js`, 518d72fa — the one shared-file change of mine here):
+  a round's run in a frame was tested against the players before `blockShot`, so a bobber with a foe up to ~1 m behind it
+  never took the round — the foe did. That is exactly when a web would catch someone. Found by the new snap check: 14
+  rounds at a bobber 6.4 m off, the aim on it, 0 hits; the run is now cut at the first device or shot-catcher, as the
+  Roe Shell's already was. (It also makes a Drip Curtain or a Brolly canopy in front of a player take a round the player
+  used to take through it in the same frame.)
 - **Idle means idle**: a chain counts as having a foe in it only when the foe is well inside (R(N) − 0.35): a shot
   through a chain whose foe stood at its rim set it off for a glancing 25–35 or nothing, and the bobber ate the shot.
 - Kept from my predecessor: team knowledge for the trigger (a foe a teammate saw ≤ 0.35 s ago; the bot still needs its own
@@ -38,13 +47,15 @@ What I changed (all kit-local: `kits/bobber-bots.js`, two lines in `bobber.js`):
   the Turf ambush (a hidden squid by its own web), the third-guard fallback.
 - Tried and **dropped**: rarer Turf webs (0.8 % and 1.2 % a frame, 80–85 ink: Turf then set off no chain at all in 6
   matches — the webs were most of Turf's few catches; `TURF_WEB` is a knob, back at the built 2 %/72); snaps at *any*
-  foe — see the duel probe.
+  foe, with or without the pre-aim (7a9935e7, reverted in 70594ef5) — see the duel probe.
 
 **The duel probe** (new, `jobs/batch5/int3/probes/duel-bobber.js`: one bot with the sub against one without on testbox,
 real brains at normal, a Splattershot each, 60 rounds): no sub 22–21 (A's splats – B's); snaps at any foe, pre-aimed: 10–23
-(40 rounds); snaps at a slow foe: 17–29; snaps at any foe without the pre-aim: 24–23 but they caught nothing; **the
-shipped gate (a foe facing away): 21–24, no cost.** The pre-aim is what makes a snap catch, and in a duel it is also what
-loses the duel: the bot looks away from the foe that is shooting it.
+(40 rounds); pre-aimed only when nothing had hit the bot for 0.6 s, at a slow foe too: 17–29; at a slow foe, no pre-aim:
+24–23, 7 thrown, none caught; at any foe, no pre-aim: 20–29, 25 thrown, none caught; **the shipped gate (a foe facing
+away): 21–24 — no snaps in a 1-v-1, no cost.** In a duel the foe strafes off any spot in the second a bobber takes to
+float, so a snap only catches when the bot aims at it on the way in — which is the bot looking away from the foe that is
+shooting it.
 
 Numbers (all `SUBS=all=bobber`, `match.cjs` with DIAG; Turf 180 s, Zone Control its full 300 s; halyard + saltpan; random
 weapons, which swing a 2-match set a lot: melee kits and the bucket can't snap or shoot a bobber from range):
@@ -55,19 +66,24 @@ weapons, which swing a 2-match set a lot: melee kits and the bucket can't snap o
 | sub-bobber builder's | 6 | 33 | 4 | 88 % | 2 | 0.33 |
 | my predecessor's v4–v6 (Turf + Zone) | 12 | 63 | 15 | 76 % | 6 | 0.50 |
 | HEAD ed69203b (my baseline) | 4 | 19 | 3 | 84 % | 2 | 0.50 |
-| snaps at any foe, pre-aimed (my v2–v4; they cost duels) | 12 | 76 | 25 | 67 % | 10 | 0.83 |
-| gated snaps, no pre-aim, rarer Turf webs (v5, 2 scan sets) | 8 | 34 | 12 | 65 % | 5 | 0.62 |
+| snaps at any foe, pre-aimed (my v1–v4; they cost duels) | 13 | 79 | 28 | 65 % | 12 | 0.92 |
+| snaps at a slow or turned-away foe, rarer Turf webs (v5; scan, scan2: Zone only) | 8 | 34 | 12 | 65 % | 5 | 0.62 |
 | gated + pre-aimed snaps, rarer Turf webs (fin) | 4 | 13 | 5 | 62 % | 2 | 0.50 |
-| **shipped** (fin2) | 4 | PENDING | | | | |
-| shipped + `dangerHear=2.5` (hear3, the A/B below) | 4 | PENDING | | | | |
+| gated snaps, Turf webs as built (fin2) | 4 | 13 | 1 | 92 % | 1 | 0.25 |
+| the same + `dangerHear=2.5` (hear3, the A/B below) | 4 | 16 | 3 | 81 % | 2 | 0.50 |
+| **shipped** (fin4: + the guards' fixes, the crab hold, the round-ordering fix) | 4 | 16 | 4 | 75 % | 1 | 0.25 |
+| **fin2 + fin4** | 8 | 29 | 5 | 83 % | 2 | 0.25 |
 
 **Decision for the lead (TELL THE USER):** with bots that never walk into a web they have noticed and a 0.2 m target the
 blast needs a shot on, bots get an occasional catch from the Chain Bobber — mostly in Zone Control, where foes must come
 to the zone — and area denial everywhere. Two levers that are not "kit-local tuning" are measured for you:
-1. Snaps at any foe (pre-aimed): ~0.8 bobber splats a match and 67 % waste, but bots lose their 1-v-1s (the probe).
+1. Snaps at any foe, pre-aimed (my v1–v4, 13 matches): 79 set off, 28 caught, 65 % wasted, **12 splats — 0.92 a
+   match** — but a bot with it loses its 1-v-1s (the probe: 10–23). The only variant that moved the numbers.
 2. `SUBS.bobber.dangerHear` (a knob, off): foes' bots notice an armed web only within that many metres, or in front of
    them with a line (now: within 5 m whatever way they face, like a beeping bomb — a floating bobber is silent once it has
-   inflated). At 2.5: PENDING-HEAR. It also makes a *human's* webs catch bots more often.
+   inflated). At 2.5 (hear3 against fin2, the same code otherwise, 4 matches each): 16 chains set off against 13, 3 caught against 1,
+   2 splats against 1, foes in a chain's reach 44.6 s against 49.3 — **no measurable effect**: the foes' guard still keeps
+   them out of a web they notice that close. Left off.
 
 ## 2. Bot teammates and a human's webs
 
@@ -90,7 +106,15 @@ checked and extended:
   take that web with it), and a chain counts as idle unless a foe is well inside it (R(N) − 0.35, ±1.6 m): a shot through
   a chain whose foe stood at its rim set it off for a glancing 25–35 or nothing, and the bobber ate the shot.
 
-(pending)
+**Proof.**
+- `sub-bobber.js` 'bots' holds the checks: the real brain with its aim pinned at a web holds a Splat Bomb / Waddle / Skitter
+  / Shaker / Tracer / Boomerang throw and presses it turned away; a Cutlass's full charge at a web is dropped (the web
+  stands); `webHit` refuses a blast at an idle web, not one 8 m off, not one with a foe the team sees in it. **Run on the
+  0a973384 tree with today's test file** (`p2/old0a97`): the throw check FAILS (the Waddle, Skitter, Shaker, Tracer and
+  Boomerang were all pressed at the web; only the Splat Bomb was held, by the integrator's 6afe6c06), the Cutlass check
+  FAILS (the cut was loosed and the web blown: 0 left of 1), and webHit doesn't exist (a harness error) — 1 of 4.
+- `bobber-web.js` clear variant (the scripted player never sets its web off; its bot teammates' aimed trigger is off,
+  everything else of theirs on), halyard Zone Control, n = 6 and 12, zone and lane layouts: PENDING-WEB.
 
 ## 3. Zone Control guards' chains
 
@@ -104,7 +128,18 @@ checked and extended:
   ledgy raised zone, a 2.6 m drift and a fall into the water. The burst's later links re-pick their spots from wherever the
   bot is (`linkNear`), with up to two growth plans after, so a drift costs a link, not the chain. In only=zone the guards
   face nobody, so a drift there can only come from a respawn; none happened in my runs.
-- `sub-bobber.js only=zone` on halyard, 10 runs at the final code: PENDING-ZONE10. (My predecessor's 10 — 5 before the
+- **The misses I found, and four fixes (mine).** My first runs at the takeover code failed 2 of 5 (my predecessor's 10/10
+  did not hold), and the next sets 1 in 10 each — every miss a guard on halyard's ledgy raised zone left with a 2-chain:
+  1. links were kept within 4.6 m across and 2.2 m in height of each other — up to 5.1 m in 3-D, past the 5.0 m tether
+     (`LINK3` = 4.7 m in 3-D, ca83cb8c);
+  2. a planned lob counted as on target when it struck a wall's face at the right spot, but a bobber that strikes a wall
+     floats at the hit height, up to 2.2 m over the floor (`lobAim`'s miss counts a float more than 0.5 m off its
+     planned height, 113fd96f);
+  3. a guard started a chain on 76 ink (the start gate 72, its own refill gate 82): two links, then 6 s standing to fill
+     for the third, by which time the plan no longer tethered (a guard starts at 82 now, a1d4810c);
+  4. a burst landing as two 2-chains a step apart grew only its newest, which had nowhere to grow (any own short chain,
+     the biggest first, and a growth link may sit by the bot's own bobbers, 636d7032).
+- `sub-bobber.js only=zone` on halyard, 10 runs at the final code: PENDING-ZONE10. (Along the way: 8/10 while fixes 1–2 went in, 1 of 2 right after, 9/10 with fixes 1–3.) (My predecessor's 10 — 5 before the
   fallback, 5 after — were 10/10.)
 
 ## 4. Glide Bomb
@@ -115,8 +150,12 @@ intent, so the scripted kid's press never reached its runner — always late in 
 which throw failed depended only on how long the earlier parts took. The test now keeps the clock from running out (as
 sub-bobber.js does); it also pins the local kid's, the foe's and the mate's loadouts at the start (restored at the end),
 puts the Barrage's special back after 'lock', and a throw that makes no stone is a FAIL with its state and trace instead
-of a TypeError. Three full runs at the final code: PENDING-GLIDE3 (the predecessor's three before my changes: 61/61, 61/61,
-61/61; before the clock fix it had 58/60, 58/59, 59/59, 57/60, 58/61, 58/61).
+of a TypeError. Three full runs at the final code (mine): **60/61, 61/61, 61/61** — no missing stone in any (my predecessor's three after
+the clock fix: 61/61 ×3; before it: 58/60, 58/59, 59/59, 57/60, 58/61, 58/61). The one failure is another row, not the
+stone: in run 1 one of the two Cutlass rounds made no fight throw at all inside its 8 s (the round requires a throw;
+the other round let go 8.3 m out with a 1.48 s cook, inside the rule). A bot's choice, flaky by construction; not
+loosened. net-sub-glide 11/11 (the stone's look out of the hand is drawn by every screen for its own copy; no record
+changed).
 
 (b) **The roll, made to read as a roll (mine).** The pictures my predecessor left showed what the reviewer saw: the stone is
 set down 0.5 m ahead on the release frame, and the roll pose then swung the free arm *back* and through — after the stone
@@ -209,7 +248,27 @@ lines, the kick, the pop), `out/dash-pov-fwd-late.jpg` (~0.17 s), `out/dash-pov-
 
 ## 7. Regressions after the later fixes
 
-(pending)
+Re-run at the final code, one at a time (logs `p2/t3/`, `p2/t4/`): **deployables 34/34, bot-specials 19/19, tuning
+12/12, sub-tweaks2 bow 3/3, sub-dash 43/43, int3 karpbox 10/10**; int3 turf PENDING-INT3; tower-rules and hud-lead
+were re-run by my predecessor after the integrator's later fixes (26/26; 22/22 · 14/14 · 12/12) and nothing since touches
+the tower or the HUD's lead banners, so I didn't spend the shared machine on them again.
+- **int3.js's throwhold check was broken by my predecessor's own move** (7882d3ee moved the throw hold out of the bobber's
+  botAct into a bots.js hook; the check still called botAct and failed 3/4 — it had last been run before the move). It
+  now asks the hook (4030cf65): PENDING-INT3.
+
+- **perf-bobbers phase 4**: **not run here** — the machine sat at load 14–20 all day and at 400+ in the afternoon (other
+  builders), so a with/without frame-time comparison means nothing; it is in JOB-2.sh for the Mac mini, three times. The kit's own tick in the matches above: 0.06–0.18 ms a frame (its budget 0.5).
+  The phase's "with" and "without" halves are two 30 s windows run one after the other, so a load change between them
+  swings it (the reviewer's two runs: +7.0 and +0.8 ms); this machine was at load 14–20 the whole day — never quiet. The
+  quiet measurement is JOB-1's.
+- **sub-tweaks2's Tideline Bow trail row** ("the centre arrow's trail ≥ 95 % inked, every volley"): 3/3 here (1.00, 0.99,
+  0.98). Nothing
+  in this wave touches the bow, its trail or the paint grid; the row sits on its threshold — my predecessor's 24 volleys
+  measured 0.95–1.00, the integrator's failures 0.90–0.94 — and moves with the arrows' random spread. "Worse on b5-int3"
+  doesn't hold up: the untouched base failed 2 runs in 6, b5-int3 now 5 in 10 (the integrator's 5 of 6 plus my
+  predecessor's 0 of 4) — not a difference 6 and 10 runs can show (Fisher's exact test p ≈ 0.6). Not loosened.
+- **tuning's roller row** (39 % vs > 40 %): 77 % here (the bot rolled 77 % of 10 s, 77 % of that faster than walking); it
+  passed twice for my predecessor too. A random-walk row near its bar once; not reproduced.
 
 ## 8. The Carp Field's 60 ms load budget
 
@@ -242,6 +301,23 @@ re-run at the final code: PENDING-NET.
 
 ## Commits (b55f7472..HEAD; mine from 1e8ac7d2 up, my predecessor's ed69203b and below)
 
+- `518d72fa` weapons.js: a round's run this frame is tested against blockShot up to the player it would hit first — a device or a kit's shot-catcher nearer alon…
+- `4030cf65` int3.js throwhold: asks the press's check where it now lives (SUB_KITS.bobber.holdThrow, run by bots.js after every kit's botAct since 7882d3ee) —…
+- `3ca12320` Chain Bobber bots: a Crab Rig's cannon (its sub press) is held while its shell would land with its 3 m blast by an own idle web — bobber-web clear…
+- `636d7032` Chain Bobber bots: a burst left short of three grows any of the bot's own short chains, the biggest first, and a growth link may sit by its own oth…
+- `8d3a87c3` sub-bobber.js: the snap check takes three trials at the foe facing away — each must throw onto its feet, one of the three set off on the foe (the s…
+- `206cbead` Chain Bobber bots: a snap's shots stream (no tap): the foe steps out of a floated web within ~0.5 s of noticing it, every shot counts; sub-bobber.j…
+- `a1d4810c` Chain Bobber bots: a Zone Control guard starts a chain only on the tank its own refill gate waits for (inkCost + 42 = 82; was 72) — one that starte…
+- `36a34713` (scratch) int3 polish: JOB-2.sh for the Mac mini — the measurements that need a quiet machine (the Carp Field's build at match start on every stage…
+- `113fd96f` Chain Bobber bots: a planned lob counts as a miss when the bobber would float more than 0.5 m off its planned height — one striking a wall's face f…
+- `ca83cb8c` Chain Bobber bots: a chain's links are picked within 4.7 m of each other in 3-D (LINK3) — within 4.6 m across and 2.2 m in height two float spots c…
+- `8fcd4dcd` sub-bobber.js: the snap check hands the foe back to the bot's own brain after the decision (a target set by hand, without the brain's view of it, t…
+- `70594ef5` Revert "Chain Bobber bots: snaps at any foe again …" — the duel probe: thrown at a foe duelling the bot (no pre-aim) 25 snaps caught nothing and th…
+- `7a9935e7` Chain Bobber bots: snaps at any foe again, but aimed at on the way in only while that foe faces away (busy elsewhere) and nothing hits the bot — at…
+- `decfa6ce` sub-bobber.js: the snap — a fighting bot throws a lone bobber onto the feet of a foe facing away from it and sets it off on that foe as it floats;…
+- `f16ce22d` sub-sentry.js: a fighting bot sets one down mid-duel (just hit, 80 hp), never on its last legs (30 hp) — fails on the old 'not hit for 1 s' rule
+- `6f81b53b` Glide Bomb: the underhand roll reads as one — the stone's look starts at the fist that held it (the held prop's foot and size) and eases onto its t…
+- `dd4e7bd5` (scratch) int3 polish: the lead's report, interim (the final verification and the dash-reach audit still running; PENDING marks what they fill in)
 - `d485e090` botlab README: the new Chain Bobber counters on match.cjs (BOBBER-WASTE, BOBBER-AIMED, the snaps; SNAPLOG=1) and the dangerHear A/B knob
 - `8ad535c0` (scratch) int3 polish: the duel probes (a bot with the Chain Bobber or the Scrap Sentry against one without, testbox, real brains: who wins the due…
 - `3b182596` Scrap Sentry bots: set down mid-duel too (it was only when not hit for 1 s, which a duel never is), not below 40 hp (it folds when its owner goes)…
