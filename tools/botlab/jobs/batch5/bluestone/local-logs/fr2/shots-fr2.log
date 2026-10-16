@@ -1,0 +1,3 @@
+shot fr2-jump1-knee-J+1.5 108574 {"era":1,"phase":"jump","from":1,"to":2,"t":61.517,"next":{"from":1,"to":2,"at":60,"inS":0},"front":37.92,"flips":8,"navEra":1,"turfTotal":90362,"eraShoves":0,"rescues":0,"devices":0,"mc":61.52}
+shot fr2-chip-J+1.5 {"x":458.9609375,"y":88.3125,"w":362.078125,"h":28.125,"text":"1880s·TODAY·3000sTIME JUMP!","cls":"er-chip is-jump"}
+CONSOLE 0 error line(s)

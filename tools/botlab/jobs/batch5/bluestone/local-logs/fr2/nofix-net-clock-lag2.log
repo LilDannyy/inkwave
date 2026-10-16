@@ -1,0 +1,12 @@
+[net] relay ws://127.0.0.1:55084
+[net] 2 clients up in 16.1 s
+[net] playing a 1:30 Turf War on halyard to the whistle…
+FAIL guest: the match clock never goes up from one frame to the next (it gives time back by running slow)  {"frames":5424,"ups":15,"upMax":0.1054,"upSteps":[[80.4889,0.0508,1792164772682],[77.2398,0.0275,1792164775982],[76.5339,0.1054,1792164776715],[52.4843,0.0329,1792164801048],[46.9173,0.0614,1792164806646],[45.8787,0.0307,1792164807747],[44.7595,0.0416,1792164809079],[43.1345,0.0299,1792164810746],[36.4978,0.0448,1792164817411],[35.976,0.0307,1792164817978],[24.8734,0.0823,1792164829378],[10.6594,0.0372,1792164843877],[7.8299,0.0839,1792164846743],[7.3471,0.0508,1792164847310],[6.298,0.0253,1792164848411]]}
+PASS guest: the HUD timer never shows a second again (each next second is lower)  {"shown":91,"back":[],"first":[["1:30",1792164763184],["1:29",1792164764051],["1:28",1792164764984]],"lastShown":["0:11","0:10","0:09","0:08","0:07","0:06","0:05","0:04","0:03","0:02","0:01","0:00"]}
+FAIL both: the final countdown fires 10 … 1, each second once and in order — on the guest even after a host tick right after its 6 says it is 0.3 s ahead (its clock not stepped up)  {"guest":[10,9,8,7,6,7,6,5,4,3,2,1],"host":[10,9,8,7,6,5,4,3,2,1],"inject":{"before":5.99,"after":6.1398,"slew":0},"skew":[-0.035,-0.031,-0.182,-0.049,-0.015,-0.983,-1.849,-1.949,-1.948,-1.947,null,null]}
+PASS guest: its clock is the host's at the same wall time (median < 0.15 s, p90 < 0.25 s)  {"samples":5112,"median":0.021,"p90":0.047,"max":0.221,"meanSigned":0.003,"ticks":166,"stepsForward":11,"fwdMax":-0.0812,"slewTicks":0,"slewMax":0,"resyncs":16,"lostToStalls":{"host":1.86,"guest":1.43}}
+RESULT 2/4
+c0 console: none
+c1 console: none
+relay stats {"dropped":0,"rateKicks":0,"peakRate":25,"maxMsg":508}
+outside requests refused: none

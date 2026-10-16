@@ -1,0 +1,12 @@
+[net] relay ws://127.0.0.1:54934
+[net] 2 clients up in 19.4 s
+[net] playing a 1:30 Turf War on halyard to the whistle…
+FAIL guest: the match clock never goes up from one frame to the next (it gives time back by running slow)  {"frames":5360,"ups":24,"upMax":0.2525,"upSteps":[[84.8522,0.0392,1792163782550],[82.1581,0.0262,1792163785284],[80.5176,0.0312,1792163786949],[77.7405,0.0447,1792163790050],[77.2185,0.0357,1792163790616],[68.4544,0.0274,1792163799416],[64.5817,0.0408,1792163803315],[60.1512,0.061,1792163807749],[51.4095,0.0328,1792163816948],[49.2089,0.0331,1792163819182],[44.1421,0.0909,1792163824281],[32.6554,0.0528,1792163835780],[32.1249,0.0531,1792163836448],[26.602,0.0695,1792163844314],[23.8382,0.0664,1792163847713],[19.9671,0.0574,1792163851481],[18.9913,0.2525,1792163852514],[18.6439,0.1463,1792163853113],[18.265,0.0657,1792163853713],[17.7308,0.0528,1792163854314]]}
+FAIL guest: the HUD timer never shows a second again (each next second is lower)  {"shown":93,"back":[["0:19","0:20"]],"first":[["1:30",1792163777753],["1:29",1792163778487],["1:28",1792163779420]],"lastShown":["0:11","0:10","0:09","0:08","0:07","0:06","0:05","0:04","0:03","0:02","0:01","0:00"]}
+PASS both: the final countdown fires 10 … 1, each second once and in order  {"guest":[10,9,8,7,6,5,4,3,2,1],"host":[10,9,8,7,6,5,4,3,2,1],"skew":[-0.021,0.013,0.015,0.046,0.046,0.046,0.011,0.013,0.018,0.014]}
+PASS guest: its clock is the host's at the same wall time (median < 0.15 s, p90 < 0.25 s)  {"samples":5042,"median":0.025,"p90":0.114,"max":1.325,"meanSigned":0.006,"ticks":165,"stepsForward":23,"fwdMax":-0.3834,"slewTicks":0,"slewMax":0,"resyncs":25,"lostToStalls":{"host":4.82,"guest":5.22}}
+RESULT 2/4
+c0 console: none
+c1 console: none
+relay stats {"dropped":0,"rateKicks":0,"peakRate":30,"maxMsg":508}
+outside requests refused: none

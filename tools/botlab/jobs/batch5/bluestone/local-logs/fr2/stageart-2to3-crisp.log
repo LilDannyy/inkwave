@@ -1,0 +1,3 @@
+HARNESS ERA_FROM=2 ERA_TO=3 FRONT=30: every game page loads with ?erafrom=2&erato=3&front=30
+shot bluestone day { width: 3840, height: 2160 }
+shot bluestone dusk { width: 3840, height: 2160 }
