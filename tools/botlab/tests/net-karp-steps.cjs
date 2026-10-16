@@ -75,8 +75,9 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
   await wait(1500);
 
   // ---- 5. grab share: N bursts, a Bravo host bot and B each 3 m from it, both running in on hearing the burst
-  const grabShare = async (N = 10) => {
-    const bot = await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
+  // (kid = true: the host's OWN player races B instead of a host bot)
+  const grabShare = async (N = 10, kid = false) => {
+    const bot = kid ? aNid : await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
     const wins = { bot: 0, guest: 0, none: 0 }, dec = [];
     for (let k = 0; k < N; k++) {
       await toPond();
@@ -85,19 +86,24 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
       const kp5 = (await info(A)).pos;
       await A.js(`(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); b.pos.set(${kp5[0]} + 3, 0, ${kp5[2]}); b.vel.set(0, 0, 0); b.yaw = b.aimYaw = -Math.PI / 2; b.intent.move.set(0, 0, 0); return 1; })()`);
       await put(B, kp5[0] - 3, 0, kp5[2], Math.PI / 2);
-      await A.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const b = __G.match.actors.find((o) => o.nid === ${bot}); b.intent.move.set(-1, 0, 0); __simAfter(0.9, () => b.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
-      await B.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const a = __G.match.local; a.intent.move.set(1, 0, 0); __simAfter(0.9, () => a.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
+      // (a burst splats the other team's players close by, so the host's own player — an Alpha kid — races B for a
+      // Bazookarp set free without one: the host's 'u' frees it on every screen; each side starts on hearing it)
+      const ev = kid ? `'karp:phase', (e) => { if (e.phase !== 'free') return;` : `'karp:burst', () => {`;
+      await A.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on(${ev} off(); const b = __G.match.actors.find((o) => o.nid === ${bot}); b.intent.move.set(-1, 0, 0); __simAfter(0.9, () => b.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
+      await B.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on(${ev} off(); const a = __G.match.local; a.intent.move.set(1, 0, 0); __simAfter(0.9, () => a.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
       await wait(250);
-      await burst(1);
+      if (kid) await A.js(`(() => { const K = __G.match.karp; K.shell.clear(); K._rec(['u', -1, +K.pos.x.toFixed(2), +K.pos.y.toFixed(2), +K.pos.z.toFixed(2)]); K._setPhase('free', 0); return 1; })()`);
+      else await burst(1);
       await A.until(`!!__G.match.karp.holder`, 6000, 30).catch(() => {});
       const h = (await info(A)).holder;
       if (h === bot) wins.bot++; else if (h === bNid) wins.guest++; else wins.none++;
+      if (kid) await alive(A);
       // ([karp-face] the host's decision: each claim's since — after it went free on its own screen — and when it was in)
       dec.push(await J(A, `(() => { const g = (__G.match.karp.stats.grantLog || []).slice(-1)[0]; return g ? { wait: g.wait, won: g.won, c: g.claims.map((c) => [c.remote ? 'B' : 'bot', c.since, c.at, c.ok ? 1 : 0]), late: (g.late || []).map((l) => [l.since, l.after]) } : null; })()`));
       await wait(300);
     }
     const wpn = await J(A, `(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}), g = __G.match.actors.find((o) => o.nid === ${bNid}); return { bot: b.weaponId, guest: g.weaponId }; })()`);
-    R(`5. grab share over ${N} bursts, a host bot vs guest B at equal distance (reported; no threshold)`, wins.bot + wins.guest >= N - 2, { wins, wpn, at: (await info(A)).pos, dec });
+    R(`5${kid ? 'k' : ''}. grab share over ${N} bursts, ${kid ? 'the host\'s own player' : 'a host bot'} vs guest B at equal distance (reported; no threshold)`, wins.bot + wins.guest >= N - 2, { wins, wpn, at: (await info(A)).pos, dec });
 
   };
 
@@ -372,7 +378,8 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
       !!cl && cl.at != null && cl.at - cl.closeT >= 0.25 && c15a.holder === bNid && c15b.holder === bNid && c15a.winner == null && c15a.overtime, { host: { holder: c15a.holder, winner: c15a.winner, reason: c15a.reason, ot: c15a.overtime }, guest: c15b.holder, closed: cl });
   }
 
-  if (part === 'race') { await zeroB(); await put(A, 0, 0, -14); await grabShare(16); await toPond(); }   // ([karp-face] the grab share alone)
+  if (part === 'race') { await zeroB(); await put(A, 0, 0, -14); await grabShare(16); await toPond(); }
+  if (part === 'racekid') { await zeroB(); await grabShare(16, true); await toPond(); }   // ([karp-face] the host's own player vs the guest)   // ([karp-face] the grab share alone)
 
   if (part === 'snap') {
     // [karp-face] review round 1 (the blocker and its twin): a snapshot the host took BEFORE a discrete record plays on a

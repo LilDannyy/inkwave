@@ -802,7 +802,7 @@ export class Bazookarp {
         if (a) this._applyGrant(a);
         break;
       }
-      case 'u': { const a = byNid(e[2]); if (a) { if (this.holder === a || a.carry) this._release(a); if (!a.remote) this.lockT = 0; } this.pos.set(e[3], e[4], e[5]); this._setPhase('free', 0); emit('karp:undo', { actor: a }); break; }
+      case 'u': { const a = byNid(e[2]); if (a) { if (this.holder === a || a.carry) this._release(a); if (!a.remote) this.lockT = 0; } this.pos.set(e[3], e[4], e[5]); this.shell.clear(); this._setPhase('free', 0); emit('karp:undo', { actor: a }); break; }   // ([karp-face] free: no shell)
       case 'b': { this.pos.set(e[3], e[4], e[5]); this.stats.pops[e[2]]++; const c = _v.copy(this.pos).setY(this.pos.y + K.shell.lift); this._burst(e[2], c, byNid(e[6])); this._setPhase('free', K.pickHold); break; }
       case 'd': { const H = this.holder; if (H) { this.lastCarrier = { team: H.team, how: HOWS[e[2]], left: this.match.time }; this._release(H); } this._reform(_v.set(e[3], e[4], e[5]), -1); emit('karp:drop', { actor: H, team: H ? H.team : -1, pos: _v.clone(), how: HOWS[e[2]] }); break; }
       case 'r': { const H = this.holder; if (H) { const w = WHYS[e[5]]; this.lastCarrier = { team: H.team, how: w === 'zone' || w === 'none' ? 'splat' : w, left: this.match.time }; this._release(H); } this._reset(_v.set(e[2], e[3], e[4]), WHYS[e[5]] || 'none'); break; }
