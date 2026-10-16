@@ -385,6 +385,32 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
   }
 
   if (part === 'race') { await zeroB(); await put(A, 0, 0, -14); await grabShare(16); await toPond(); }
+  // ([karp-face] the race's rule itself, free of the run's physics: a host bot and B each step onto the Bazookarp a set
+  // time after it went free on their own screens — 0.30 s and 0.36 s, the host's first in even rounds, B's in odd: the
+  // earlier one must win, whichever side it is on)
+  if (part === 'racefair') {
+    await zeroB(); await put(A, 0, 0, -14);
+    const bot = await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
+    const N = 12, rows = []; let right = 0;
+    for (let k = 0; k < N; k++) {
+      await toPond();
+      const kp = (await info(A)).pos, hostFirst = k % 2 === 0, tH = hostFirst ? 0.3 : 0.36, tB = hostFirst ? 0.36 : 0.3;
+      await A.js(`(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); b.pos.set(${kp[0]} + 4, 0, ${kp[2]}); b.vel.set(0, 0, 0); b.intent.move.set(0, 0, 0); import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); __simAfter(${tH}, () => { b.pos.set(${kp[0]} + 0.5, ${kp[1]}, ${kp[2]}); b.vel.set(0, 0, 0); }); }); }); return 1; })()`);
+      await put(B, kp[0] - 4, 0, kp[2]);
+      await B.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); __simAfter(${tB}, () => { const a = __G.match.local; a.pos.set(${kp[0]} - 0.5, ${kp[1]}, ${kp[2]}); a.vel.set(0, 0, 0); }); }); }); return 1; })()`);
+      await wait(250);
+      await burst(1);
+      await A.until(`!!__G.match.karp.holder`, 6000, 30).catch(() => {});
+      const h = (await info(A)).holder, want = hostFirst ? bot : bNid;
+      if (h === want) right++;
+      const g = await J(A, `(() => { const g = (__G.match.karp.stats.grantLog || []).slice(-1)[0]; return g ? { w: g.wait, c: g.claims.map((c) => [c.remote ? 'B' : 'bot', c.since]) } : null; })()`);
+      rows.push([hostFirst ? 'bot first' : 'B first', h === bot ? 'bot' : h === bNid ? 'B' : String(h), g]);
+      await wait(300);
+    }
+    await toPond();
+    R(`5f. the race's rule: the claimant that touched it first on its own screen wins, host bot or guest alike (each steps on 0.30 s / 0.36 s after it went free on its own screen; ${N} rounds, alternating)`, right >= N - 1, { right, N, rows });
+  }
+
   if (part === 'racekid') { await zeroB(); await grabShare(16, true); await toPond(); }   // ([karp-face] the host's own player vs the guest)   // ([karp-face] the grab share alone)
 
   if (part === 'snap') {
@@ -475,7 +501,7 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
   await wait(800);
   const end = async (c) => J(c, `(() => { const r = __G.match.result; return r ? { mode: r.mode, winner: r.winner, reason: r.reason, counts: r.counts, st: __G.match.actors.map((a) => [a.nid, Math.round(a.stats.karpM || 0), a.stats.karpPops || 0]).sort((x, y) => x[0] - y[0]) } : null; })()`);
   const ea = await end(A), eb = await end(B);
-  R(`${part === 'lag' ? 'lag ' : ''}16. both screens show the same result: mode, winner, reason, counts and every player's karpM / karpPops`, !!ea && !!eb && ea.mode === 'bazookarp' && JSON.stringify(ea) === JSON.stringify(eb) && (part === 'racekid' || ea.st.some((q) => q[1] > 0 || q[2] > 0)), { host: ea, guest: eb });   // (racekid: no burst, no carry made progress)
+  R(`${part === 'lag' ? 'lag ' : ''}16. both screens show the same result: mode, winner, reason, counts and every player's karpM / karpPops`, !!ea && !!eb && ea.mode === 'bazookarp' && JSON.stringify(ea) === JSON.stringify(eb) && (part === 'racekid' || part === 'racefair' || ea.st.some((q) => q[1] > 0 || q[2] > 0)), { host: ea, guest: eb });   // (racekid: no burst, no carry made progress)
   const errs = [];
   for (const c of [A, B]) errs.push(...(c.log || []).filter((l) => /TypeError|ReferenceError|Uncaught/.test(l)));
   R('no page errors on either screen', errs.length === 0, errs.slice(0, 4));
