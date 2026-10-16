@@ -332,7 +332,9 @@ export class EraFx {
     // the shared materials, made now (their programs compile at load: EraWorld._precompile), never mid-jump
     const hm = () => new THREE.ShaderMaterial({ uniforms: { uCol: { value: this.colA }, uA: { value: 0 }, uT: { value: 0 }, uFront: { value: -1 }, uD: { value: W.dissolve } }, vertexShader: HOLO_VS, fragmentShader: HOLO_FS,
       transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor });
-    this.holoMat = [hm(), hm()];
+    // ([2], [3]: the opened footprints at done — the same shaders and settings, so the same two programs)
+    this.holoMat = [hm(), hm(), hm(), hm()];
+    this.opened = null;
     // (review 2, issue 1: the holograms' programs — a LineSegments and a Mesh draw — are compiled at load with the rest:
     //  EraWorld._precompile shows these two one-box stand-ins for its pass; setJump builds the real ones at the warning)
     const wb = new THREE.BufferGeometry(), wp = [], wl = [];
@@ -464,6 +466,37 @@ export class EraFx {
     this.holo = [mk(pl, rl, true), mk(pf, rf, false)];
   }
   _disposeHolo() { for (const m of this.holo || []) { this.group.remove(m); m.geometry.dispose(); } this.holo = null; }
+  // ---- done (DESIGN §3.4: "every new opening and piece pulses white-gold for 4 s"; the final review, issue 7): the new
+  // pieces pulse in the level shader; what went leaves its footprint outlined in white-gold on the floor beneath it, with
+  // a faint fill, pulsing with them and fading over the 4 s (the hologram programs: nothing compiles at done)
+  setOpened(J) {
+    this._disposeOpened();
+    if (!J || !J.vanish || !J.vanish.length) return;
+    const L = this.W.level, pl = [], pf = [], y0 = -1.0;
+    for (const id of J.vanish) {
+      const b = L.blocks[id];
+      if (!b || b.hidden || b.rail || 4 * b.half.x * b.half.z < 1) continue;   // (gates and pieces: not a prop's collider, a rail)
+      const fy = L.groundHeight(b.center.x, b.center.z, b.aabbMin.y + 0.5);
+      if (!(fy > y0)) continue;
+      const c = [];
+      for (const [i, k] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) c.push(_v.copy(b.center).addScaledVector(b.axes[0], i * b.half.x).addScaledVector(b.axes[2], k * b.half.z).setY(fy + 0.05).toArray());
+      for (let i = 0; i < 4; i++) pl.push(...c[i], ...c[(i + 1) % 4]);
+      for (const k of [0, 1, 2, 0, 2, 3]) pf.push(...c[k]);
+    }
+    if (!pl.length) return;
+    const mk = (pos, lines) => {
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('aR', new THREE.Float32BufferAttribute(new Array(pos.length / 3).fill(0), 1));
+      const m = lines ? new THREE.LineSegments(geo, this.holoMat[2]) : new THREE.Mesh(geo, this.holoMat[3]);
+      m.frustumCulled = false; m.renderOrder = 13; m.visible = false; m.name = lines ? 'EraOpenedLines' : 'EraOpenedFill';
+      m.onBeforeRender = (r, sc, ca, g) => { g.drawRange.count = sc.overrideMaterial ? 0 : Infinity; };   // (out of the GTAO pass)
+      this.group.add(m);
+      return m;
+    };
+    this.opened = [mk(pl, true), mk(pf, false)];
+    this.stats.opened = pl.length / 24;
+  }
+  _disposeOpened() { for (const m of this.opened || []) { this.group.remove(m); m.geometry.dispose(); } this.opened = null; }
 
   _curtainOn(jump) {
     if (!this.curtain) {
@@ -537,6 +570,17 @@ export class EraFx {
         Uh.uA.value = (m.isLineSegments ? 0.35 + 0.1 * Math.sin(U.uEraT.value * Math.PI * 4) : 0.1 + 0.04 * Math.sin(U.uEraT.value * Math.PI * 4)) * (st.phase === 'jump' ? 1 : (st.warnIn ?? Math.min(1, st.warnK * 3)));
       }
     }
+    // the opened footprints: with the done pulse (4 s), then gone
+    if (this.opened) {
+      const k = st.pulse || 0;
+      if (k <= 0) this._disposeOpened();
+      else for (const m of this.opened) {
+        m.visible = true;
+        const Uo = m.material.uniforms;
+        Uo.uT.value = U.uEraT.value; Uo.uFront.value = -1;
+        Uo.uA.value = (m.isLineSegments ? 0.6 + 0.25 * Math.sin(U.uEraT.value * 7) : 0.14 + 0.06 * Math.sin(U.uEraT.value * 7)) * k;
+      }
+    }
     // the curtain riding the front (10 m tall)
     if (st.phase === 'jump' && J) {
       if (!this.curtain || !this.curtain.visible) this._curtainOn(J);
@@ -554,6 +598,7 @@ export class EraFx {
   }
   dispose() {
     this._disposeHolo();
+    this._disposeOpened();
     for (const m of this.holoMat || []) m.dispose();
     this.scene.remove(this.group);
     this.group.traverse((o) => { if (o.isMesh || o.isLineSegments || o.isSprite) { o.geometry?.dispose?.(); if (o.material && !o.material._shared) o.material.dispose?.(); } });
@@ -711,12 +756,34 @@ export class EraHud {
 }
 
 // --------------------------------------------------------------------------------------------- the minimap (H14)
-// From the warning to done: appearing pieces as white-gold dashes, vanishing ones as warm-grey hatching
+// From the warning to done: appearing pieces as white-gold dashes, vanishing ones as warm-grey hatching. For 3 s after done
+// (DESIGN §3.4: "… and pings on the minimap"; the final review, issue 7): what changed pings — every piece that came and
+// every footprint that opened filled white-gold, fading, and two rings running out of each changed group's centre
 export function drawEraMap(R, c, mm, t) {
-  const L = R.outlines();
-  if (!L.length) return;
+  const L = R.outlines(), P = R.pings ? R.pings() : null;
+  if (!L.length && !P) return;
   const C = R.W.E.colors || {}, tc = { x: 0, y: 0 }, pulse = 0.65 + 0.35 * Math.sin(t * Math.PI * 4);
   c.save();
+  if (P) {
+    const k = Math.max(0, 1 - P.age / P.dur), col = C.appear || '#f4e9c8', s = mm.s || 7;
+    c.fillStyle = col; c.strokeStyle = col; c.setLineDash([]);
+    for (const o of P.outlines) {
+      const ca = Math.cos(o.yaw), sa = Math.sin(o.yaw);
+      c.beginPath();
+      [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([i, j], n) => { mm.toCanvas(o.x + ca * o.hx * i + sa * o.hz * j, o.z - sa * o.hx * i + ca * o.hz * j, tc); if (n) c.lineTo(tc.x, tc.y); else c.moveTo(tc.x, tc.y); });
+      c.closePath();
+      c.globalAlpha = 0.5 * k; c.fill();
+      c.globalAlpha = 0.95 * k; c.lineWidth = 1.6; c.stroke();
+    }
+    c.lineWidth = 2;
+    for (const gi of P.groups) {
+      const g = R.W.groups[gi];
+      if (!g) continue;
+      mm.toCanvas(g.cx, g.cz, tc);
+      for (const ph of [0, 0.45]) { const q = ((P.age + ph) % 0.9) / 0.9; c.globalAlpha = (1 - q) * k * 0.9; c.beginPath(); c.arc(tc.x, tc.y, (1.2 + q * 6) * s, 0, Math.PI * 2); c.stroke(); }
+    }
+    c.globalAlpha = 1;
+  }
   for (const o of L) {
     const ca = Math.cos(o.yaw), sa = Math.sin(o.yaw), pts = [];
     for (const [i, k] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { mm.toCanvas(o.x + ca * o.hx * i + sa * o.hz * k, o.z - sa * o.hx * i + ca * o.hz * k, tc); pts.push([tc.x, tc.y]); }

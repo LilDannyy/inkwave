@@ -5,7 +5,9 @@
 // from the pre-bell; the big countdown J − 10 … J − 1 with Tartar's phone); the callouts (the warning, the era's name
 // at the jump, "NEW ROUTES OPEN" / "NEW AREAS!" at done); the minimap's base per era (a pixel hash of each), the
 // outlines of what changes from the warning to done in the layout's neutral colours (white-gold dashes, warm-grey
-// hatching: never a team ink's cyan or amber); the stage-select thumbnail (era 1 solid, later eras dashed).
+// hatching: never a team ink's cyan or amber), the done ping (the final review, issue 7: white-gold over what changed for
+// 3 s, the opened floor outlined in the world through the 4 s pulse); the stage-select thumbnail (era 1 solid, later eras
+// dashed).
 (async () => {
   const g = window.__inkwave, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
@@ -155,6 +157,25 @@
   const olAfter = E.outlines().length;
   R('step 9: from the warning to done the minimap outlines what changes — appearing pieces in white-gold dashes, vanishing ones in warm-grey hatching (never cyan or amber); none after done',
     appearN > 50 && vanishN > 5 && nA > 300 && nV > 50 && nCyan === 0 && nAmber === 0 && olAfter === 0, { appearN, vanishN, painted: n, whiteGold: nA, warmGrey: nV, cyan: nCyan, amber: nAmber, olAfter, colors: L.layout.eras.colors });
+  // the done ping (DESIGN §3.4: "every new opening and piece pulses white-gold for 4 s and pings on the minimap"; the final
+  // review, issue 7): for 3 s after done the live layer fills what changed in white-gold (the pieces that came, the
+  // footprints that opened) and two rings run out of each changed group; nothing by done + 3. In the world, the floor
+  // under each piece that went is outlined in white-gold for the 4 s pulse, then gone
+  const drawCount = () => {
+    const c2 = document.createElement('canvas'); c2.width = mm.w; c2.height = mm.h;
+    const x2 = c2.getContext('2d'); E.drawMap(x2, mm, null, mm.s, null, E.tNow);
+    const d2 = x2.getImageData(0, 0, c2.width, c2.height).data; let wg = 0, any = 0;
+    for (let i = 0; i < d2.length; i += 4) { if (d2[i + 3] < 30) continue; any++; if (Math.abs(d2[i] - 0xf4) + Math.abs(d2[i + 1] - 0xe9) + Math.abs(d2[i + 2] - 0xc8) < 46) wg++; }
+    return { any, whiteGold: wg };
+  };
+  const P0 = E.pings(), ping0 = drawCount(), FX = W.fx, fx0 = { lines: !!FX.opened?.[0]?.visible, fill: !!FX.opened?.[1]?.visible, rects: FX.stats.opened || 0, a: +(FX.opened?.[0]?.material.uniforms.uA.value || 0).toFixed(2) };
+  tAt(J3.doneAt + 3.2);
+  const P1 = E.pings(), ping1 = drawCount();
+  tAt(J3.doneAt + 4.2);
+  const fx1 = { opened: !!FX.opened };
+  R('step 9 (final review, issue 7): at done the minimap pings what changed — every piece that came and every footprint that opened in white-gold, rings out of each changed group — for 3 s, then nothing; in the world the floor under each piece that went is outlined in white-gold through the 4 s pulse, then gone',
+    !!P0 && P0.outlines.length === ol.length && P0.groups.length > 20 && ping0.whiteGold > 600 && !P1 && ping1.any === 0 && fx0.lines && fx0.fill && fx0.rects >= 4 && fx0.a > 0.3 && !fx1.opened,
+    { at05: { pings: P0 && { outlines: P0.outlines.length, groups: P0.groups.length }, pixels: ping0, fx: fx0 }, at32: { pings: !!P1, pixels: ping1 }, at42: fx1 });
   // the thumbnail
   const svg = layoutThumbSVG(L.layout, 'day');
   const later = D.eraPieces(L.layout).filter((p) => !D.hasEra(p.mask, 1) && !p.hidden).length;

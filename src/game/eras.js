@@ -645,6 +645,7 @@ export class StageEras {
         if (!this._fired.has(key)) {
           this._fired.set(key, J.at + W.doneOff);
           this.fresh = J.fresh; this._freshUntil = J.at + W.doneOff + 30; this._pulseAt = J.at + W.doneOff;
+          if (t - this._pulseAt < 4) W.fx?.setOpened?.(J);
           if (t - (J.at + W.doneOff) <= 2) { const N = W.names; this._say(J.to < J.from ? `BACK TO THE ${N[J.to - 1]}` : J.to === 2 ? 'NEW ROUTES OPEN' : 'NEW AREAS!', N[J.to - 1], false); }
           this.stats.snapDones = (this.stats.snapDones || 0) + 1;
           emit('era:done', { era: J.to, snapped: true });
@@ -716,6 +717,7 @@ export class StageEras {
         this.stats.bots.replans += this._replan(J.to);
         W._mapEra(J.to);
         this.fresh = J.fresh; this._freshUntil = t + 30; this._pulseAt = t;
+        W.fx?.setOpened?.(J);
         this._visitStart(J, t);
         const rewind = J.to < J.from;
         this._say(rewind ? `BACK TO THE ${N[J.to - 1]}` : J.to === 2 ? 'NEW ROUTES OPEN' : 'NEW AREAS!', N[J.to - 1], false);
@@ -1104,7 +1106,7 @@ export class StageEras {
     }
     this.phase = phase; this.cur = J;
     W.jumping = phase === 'jump';
-    const pulse = t - this._pulseAt < 4 ? 1 - (t - this._pulseAt) / 4 : 0;
+    const pa = t - this._pulseAt, pulse = pa >= 0 && pa < 4 ? 1 - pa / 4 : 0;   // (a clock moved back before a done: none)
     if (phase === 'jump') W.looks(J.from, J.to, front, 0, 0, J.from, J.to);
     else if (phase === 'warn' || phase === 'prebell') W.looks(e, e, -1, phase === 'warn' ? warnK : 0, 0, J.from, J.to);
     else { const lj = this._lastDone(t, list); W.looks(e, e, -1, 0, pulse, lj ? lj.from : e, lj ? lj.to : e); }
@@ -1117,7 +1119,7 @@ export class StageEras {
     const pick = J && t >= J.at - 1 && t < J.at + 1.2 ? 1 : 0;
     const beam = J && t >= J.at - 1 && t < J.at + 0.6 ? Math.min(1, (t - (J.at - 1)) / 0.3) * (t > J.at + 0.3 ? 1 - (t - J.at - 0.3) / 0.3 : 1) : 0;
     const warnIn = J && phase === 'warn' ? Math.min(1, (t - J.warnAt) / 0.6) : 0;   // (the holograms and wires: up within 0.6 s of the warning)
-    W.fx?.update(1 / 60, { t, jump: J, phase, front, warnK, warnIn, ring: ringK, pickup: pick, beam });
+    W.fx?.update(1 / 60, { t, jump: J, phase, front, warnK, warnIn, ring: ringK, pickup: pick, beam, pulse: phase === 'idle' || phase === 'prebell' ? pulse : 0 });
     // the front's ticking whoosh rides the front where it passes you
     if (this._fz && phase === 'jump' && G.camera) {
       const cam = G.camera.position, d = Math.hypot(cam.x, cam.z) || 1, near = Math.abs(d - front);
@@ -1208,6 +1210,16 @@ export class StageEras {
     return false;
   }
   danger(pos, pad) { return this.dangerAt(pos, pad); }
+  // done (DESIGN §3.4: "… and pings on the minimap"): for 3 s after a done, what changed in that jump — the pieces that came
+  // and the footprints that opened, and the groups they belong to — for drawEraMap's white-gold ping
+  pings() {
+    const t = this.tNow, a = t - this._pulseAt;
+    if (!(a >= 0 && a < 3)) return null;
+    const lj = this._lastDone(t, this.jumps(t));
+    if (!lj) return null;
+    const J = this._info(lj);
+    return { age: a, dur: 3, outlines: J.outlines, groups: J.groups };
+  }
   // the changing pieces' outlines (the minimap), from the warning to done
   outlines() { const t = this.tNow, J = this.cur; return J && t >= J.warnAt && t < J.at + this.W.doneOff ? J.outlines : []; }
   // per-era rest flags for Bazookarp (a node valid in the era in force and every later era of the match)
