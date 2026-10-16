@@ -12,7 +12,7 @@ setTimeout(() => { console.log('WATCHDOG'); app.exit(1); }, 900000);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // cameras
-const SWIM = { from: [-20.5, 2.0, -49], look: [-15.5, 4.0, -10], fov: 72 };           // a kid on Swimston looking up the leg toward the knee and the dome
+const SWIM = { from: [-20.5, 3.2, -51.5], look: [-15.5, 4.0, -10], fov: 72 };         // a kid on Swimston looking up the leg toward the knee and the dome (over the news kiosk)
 const SPAWN = { from: [-18, 5.0, -64.5], look: [-5.4, 1.8, 0], fov: 82 };              // the spawn camera (spawnA)
 const CIRCUS = { from: [-19, 2.0, 2], look: [0, 5.0, 0], fov: 74 };                   // the circus ring's west side, toward the dome (the Halo over it in era 3)
 const HALO = { from: [-21, 6.5, -21], look: [-6, 4.6, -7], fov: 58 };                 // the Halo's south-west side from the knee
@@ -97,12 +97,34 @@ app.on('browser-window-created', (_, win) => {
     // the minimap in each era and during the warning: base + ink + the module's live layer, drawn on a canvas
     const mms = await js(`(async () => { const g = window.__inkwave, E = g.match.eras, mm = g.minimap, out = {};
       const step = (s) => { const n = Math.max(1, Math.round(s * 60)); for (let i = 0; i < n; i++) g.debug.step(1000 / 60); };
-      const draw = () => { const c = document.createElement('canvas'); c.width = mm.w; c.height = mm.h; const x = c.getContext('2d'); x.fillStyle = '#20242c'; x.fillRect(0, 0, c.width, c.height); x.drawImage(mm.base, 0, 0); if (mm.inkC) x.drawImage(mm.inkC, 0, 0); E.drawMap(x, mm, null, mm.s, null, 0.12); return c.toDataURL('image/jpeg', 0.86); };
+      // (the ink layer redrawn first, in full: with the HUD hidden the minimap is not updated, and its ink canvas would be
+      //  stale — another palette's ink from an earlier match)
+      const draw = () => { mm._band = 0; mm.update(0.2, true); const c = document.createElement('canvas'); c.width = mm.w; c.height = mm.h; const x = c.getContext('2d'); x.fillStyle = '#20242c'; x.fillRect(0, 0, c.width, c.height); x.drawImage(mm.base, 0, 0); if (mm.inkC) x.drawImage(mm.inkC, 0, 0); E.drawMap(x, mm, null, mm.s, null, 0.12); return c.toDataURL('image/jpeg', 0.86); };
       for (const e of [1, 2, 3]) { E.debugJump(e, { instant: true }); step(0.2); out['minimap-era' + e] = draw(); }
       E.debugJump(1, { instant: true }); step(0.2); E.debugJump(2, { inS: 9.4 }); step(0.4); out['minimap-warn-jump1'] = draw();
       step(13); E.debugJump(3, { inS: 9.4 }); step(0.4); out['minimap-warn-jump2'] = draw();
       return out; })()`);
     for (const [k, v] of Object.entries(mms || {})) { const f = `${OUT}/${k}.jpg`; fs.writeFileSync(f, Buffer.from(v.split(',')[1], 'base64')); console.log('shot', k, fs.statSync(f).size); }
+    // Zone Control (the chip docked under the zones HUD): the warning's era callout and a gameplay callout on screen together
+    if (!ONLY.length || ONLY.includes('zones-warn')) {
+      await js(`window.__inkwave.debug.unfreeze?.(); window.__inkwave.api.startMatch({ mapId: 'bluestone', duration: 300, time: 'day', mode: 'zones' })`);
+      for (let i = 0; i < 240; i++) { if (await js(`window.__inkwave.match?.state === 'playing' && !!window.__inkwave.match.eras`)) break; await wait(250); }
+      await wait(2000);
+      const r = await js(`(() => { try { ${pre.replace('E = g.match.eras', 'E = window.__inkwave.match.eras')}
+        g.debug.freeze(); for (const a of g.match.actors) { if (a.bot) a.bot.update = () => {}; if (a.intent) { a.intent.move?.set(0, 0, 0); a.intent.fire = false; } }
+        E.debugJump(1, { instant: true }); step(0.2); E.debugJump(2, { inS: 10.3 }); step(0.4);
+        g.hud._callout('SPLATTED BY', 'a gameplay callout', false);
+        const C = ${JSON.stringify(SWIM)}; g.settings.fov = C.fov;
+        g.rig.cinematic(new THREE.Vector3(...C.from), new THREE.Vector3(...C.from), new THREE.Vector3(...C.look), new THREE.Vector3(...C.look), 99, () => {});
+        g.hud?.setVisible?.(true); g.menus?.show?.(null);
+        document.querySelectorAll('.iw-ui, #fade').forEach((e) => { e.style.visibility = 'hidden'; });
+        document.querySelectorAll('.iw-hud').forEach((e) => { e.style.visibility = 'visible'; });
+        g.debug.step(1000 / 60); return E.state(); } catch (e) { return 'ERR ' + e.stack; } })()`);
+      await wait(700); await js(`window.__inkwave.debug.step(1000 / 60); 0`); await wait(450);
+      const f = `${OUT}/zones-warn-callouts.jpg`;
+      if (frame) fs.writeFileSync(f, frame.toJPEG(82));
+      console.log('shot zones-warn-callouts', fs.existsSync(f) ? fs.statSync(f).size : 0, JSON.stringify(r).slice(0, 220));
+    }
     const uniq = [...new Set(logs)];
     console.log(`CONSOLE ${uniq.length} error line(s)`); for (const l of uniq.slice(0, 20)) console.log('  ' + l);
     app.quit();
