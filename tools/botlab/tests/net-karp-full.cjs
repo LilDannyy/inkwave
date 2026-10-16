@@ -100,9 +100,10 @@ module.exports = async ({ clients, R, wait, say, args, open, close, relay }) => 
   }
   for (const c of [N, O]) await c.until(`!!(__G.match && __G.match.result)`, 60000, 500).catch(() => {});
   await wait(1500);
-  const end = async (c) => J(c, `(() => { const r = __G.match && __G.match.result; return r ? { mode: r.mode, winner: r.winner, reason: r.reason, counts: r.counts, st: __G.match.actors.map((a) => [a.nid, Math.round(a.stats.karpM || 0), a.stats.karpPops || 0]).sort((x, y) => x[0] - y[0]) } : null; })()`);
+  // ([karp-face] review round 3: and the overtime played — the results screen's OVERTIME +m:ss — from the end record)
+  const end = async (c) => J(c, `(() => { const r = __G.match && __G.match.result; return r ? { mode: r.mode, winner: r.winner, reason: r.reason, counts: r.counts, ot: r.overtime ? +__G.match.karp.overtimeT.toFixed(2) : null, st: __G.match.actors.map((a) => [a.nid, Math.round(a.stats.karpM || 0), a.stats.karpPops || 0]).sort((x, y) => x[0] - y[0]) } : null; })()`);
   const en = await end(N), eo = await end(O);
-  R('5. the match plays to its end under the new host: the same result on both screens (mode, winner, reason, counts, every player\'s karpM / karpPops)',
+  R('5. the match plays to its end under the new host: the same result on both screens (mode, winner, reason, counts, the overtime played, every player\'s karpM / karpPops)',
     !!en && !!eo && en.mode === 'bazookarp' && (en.winner === 0 || en.winner === 1) && JSON.stringify(en) === JSON.stringify(eo), { newHost: en, other: eo });
   R('5b. … its rules records kept flowing to the other guest after the leave', !!qMid && qMid.o >= preQ && (last ? true : true) && (await st(O))?.lastQ > preQ, { preQ, mid: qMid, end: await st(O) });
   // the results table both players see (names, CARRIED, POPS, splats, deaths)
@@ -111,7 +112,9 @@ module.exports = async ({ clients, R, wait, say, args, open, close, relay }) => 
   const table = (c) => J(c, `[...document.querySelectorAll('.iw-ttable')].map((t) => [...t.querySelectorAll('.iw-prow')].map((r) => [r.querySelector('.iw-prow__nm')?.textContent, ...[...r.querySelectorAll('.iw-prow__n')].map((n) => n.textContent)].join('|')).sort())`);
   const tn = await table(N), to = await table(O);
   const cols = await J(N, `[...document.querySelectorAll('.iw-ttable__head')].map((h) => h.textContent)`);
-  R('5c. … and the same results table on both screens, with the CARRIED and POPS columns', tn.length === 2 && JSON.stringify(tn) === JSON.stringify(to) && cols.every((x) => /CARRIED/.test(x) && /POPS/.test(x)), { newHost: tn, other: to, cols });
+  const tags = (c) => J(c, `[...document.querySelectorAll('.iw-res__tag--zot')].map((t) => t.textContent.replace(/\\s+/g, ' ').trim())`);   // (the OVERTIME tag: the reason's words are each viewer's)
+  const gn = await tags(N), go = await tags(O);
+  R('5c. … and the same results table and OVERTIME +m:ss tag on both screens, with the CARRIED and POPS columns', tn.length === 2 && JSON.stringify(tn) === JSON.stringify(to) && cols.every((x) => /CARRIED/.test(x) && /POPS/.test(x)) && JSON.stringify(gn) === JSON.stringify(go) && gn.length === (en && en.ot != null ? 1 : 0), { newHost: tn, other: to, cols, otTags: { newHost: gn, other: go } });
   // ---- 6. back to the lobby; A can join again
   for (const c of [N, O]) await c.until(`__G.net.state === 'lobby' && __G.mode === 'menu'`, 60000, 500).catch(() => {});
   const back = await Promise.all([N, O].map((c) => J(c, `({ cur: __inkwave.menus.current, state: __G.net.state, n: __G.net.lobby.players.length, host: __G.net.isHost, mode: __G.net.lobby.mode })`)));

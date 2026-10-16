@@ -383,14 +383,14 @@
     const u = Math.min(H.el.clientWidth / 100, (H.el.clientHeight * 1.7778) / 100);
     // K1. tilt the camera down until the marker's own point projects up in the top bar (above the status pill's bottom)
     let raw1 = null, mk1 = null; const tr1 = [];
-    for (let k = 0; k < 60 && !raw1; k++) {
-      g.rig.pitch = -0.2 + k * 0.025; step(2 / 60); H.karp._topT = 0; step(1 / 60);
+    for (let k = 0; k < 70 && !raw1; k++) {
+      g.rig.pitch = -0.2 - k * 0.02;   // (a lower pitch: the camera looks down, the point rises on the screen) step(2 / 60); H.karp._topT = 0; step(1 / 60);
       const p = H.karp._proj(foe.pos.x, foe.pos.y + 2.4, foe.pos.z), ty = topY();
       tr1.push(p ? +p.y.toFixed(0) : null);
       if (p && !p.behind && p.y > 6 && p.y < ty - 6 && p.x > 60 && p.x < p.W - 60) { raw1 = { y: +p.y.toFixed(1), top: +ty.toFixed(1), pitch: +g.rig.pitch.toFixed(3) }; mk1 = S().marker; }
     }
     R('K1. a carrier whose marker would sit up in the top bar (a raised Pond seen from below): pinned under the status pill — its pill and its arrow below the bar, the distance shown — never over the Carp Line',
-      !!raw1 && !!mk1 && !mk1.onScreen && mk1.box.t >= raw1.top - 0.5 && mk1.y - 3 * u >= raw1.top - 1 && mk1.dist > 0, { raw: raw1, marker: mk1, u: +u.toFixed(2), tried: raw1 ? undefined : tr1 });
+      !!raw1 && !!mk1 && !!mk1.box && !mk1.onScreen && mk1.box.t >= raw1.top - 0.5 && mk1.y - 3 * u >= raw1.top - 1 && mk1.dist > 0, { raw: raw1, marker: mk1, u: +u.toFixed(2), tried: raw1 ? undefined : tr1 });
     // K2. a live OVERTIME! call-out with its instruction; tilt until the marker sits on the sub line: it fades out (and is
     // back once the call-out is gone)
     g.rig.pitch = -0.15; step(2 / 60); H.karp._topT = 0; step(1 / 60);
@@ -403,7 +403,8 @@
       if (!z || !sub || !mk) { tr2.push(null); continue; }
       const sb = rel(sub.getBoundingClientRect());
       tr2.push(mk.y);
-      if (mk.onScreen && ov(mk.box, sb) > 0) hit2 = { mk, sub: sb, cls: H.karp.mk.classList.contains('is-under') };
+      const mb2 = mk.box || { l: mk.x - 25, r: mk.x + 25, t: mk.y - 25, b: mk.y };   // (the old marker reported no box: its pill, roughly)
+      if (mk.onScreen && ov(mb2, sb) > 0) hit2 = { mk, sub: sb, cls: H.karp.mk.classList.contains('is-under') };
     }
     await wait(260);
     const op2 = opMk();
@@ -422,7 +423,8 @@
       if (!bt || !mk) { tr3.push(null); continue; }
       const bb = rel(bt.getBoundingClientRect());
       tr3.push(mk.y);
-      if (mk.onScreen && ov(mk.box, bb) > 0) hit3 = { mk, word: bb, cls: H.karp.mk.classList.contains('is-under') };
+      const mb3 = mk.box || { l: mk.x - 25, r: mk.x + 25, t: mk.y - 25, b: mk.y };
+      if (mk.onScreen && ov(mb3, bb) > 0) hit3 = { mk, word: bb, cls: H.karp.mk.classList.contains('is-under') };
     }
     await wait(260);
     const op3 = opMk();

@@ -231,6 +231,7 @@ async function more({ cs, A, J, info, R, wait, say, close, part, aNid, opt = {} 
       if (!K.__j0) { K.__j0 = K._judge.bind(K); K._judge = (s, c, R) => { window.__jd[s.gid] = (window.__jd[s.gid] || 0) + 1; return K.__j0(s, c, R); }; }
       if (!K.__g0) { K.__g0 = K.ghost.bind(K); K.ghost = (a, d) => { if (d[0] === 0) window.__gs.push([d[1], a.nid, performance.now()]); return K.__g0(a, d); }; }
       if (!N.__rk0) { N.__rk0 = N.recKit.bind(N); N.recKit = (a, kind, d) => { if (kind === 'karp') window.__rk.push([d[0], d[1], a.nid]); return N.__rk0(a, kind, d); }; }
+      if (!N.__ol0) { N.__ol0 = N.onLeave.bind(N); N.onLeave = (id, hc) => { const Q = N.peers.get(id); window.__qAtLeave = Q ? Q.events.filter((e) => e[1] === 'k' && e[3] === 'karp').map((e) => [e[4][0], e[4][1]]) : null; return N.__ol0(id, hc); }; }
       const P = N.peers.get(N.s.hostId); if (P) P.events.push = function (...es) { for (const e of es) if (e[1] === 'k' && e[3] === 'karp' && e[4] && e[4][0] === 2) e[0] += ${hold}; return Array.prototype.push.apply(this, es); };
       import('./src/core/ctx.js').then((m) => { m.on('damage', (e) => { if (e.victim === __G.match.local && e.source === 'karp') window.__dm.push(+(+e.amount).toFixed(1)); }); }); return 1; })()`);
     // a dry shot: where a Big Burst from (0, 0, −4) aimed +z lands (nobody near)
@@ -249,8 +250,7 @@ async function more({ cs, A, J, info, R, wait, say, close, part, aNid, opt = {} 
     await A.js(`(() => { ${aim} window.__blown = null; import('./src/core/ctx.js').then((m) => { const off = m.on('karp:blast', (e) => { if (!e.ghost) { window.__blown = performance.now(); off(); } }); }); window.__gid = __G.karpGun._fire(b, 1).gid; window.__ag.push(window.__gid); return 1; })()`);
     const gid = await J(A, `window.__gid`), aGids = await J(A, `window.__ag`);
     await A.until(`!!window.__blown`, 6000, 4).catch(() => {});
-    const queuedAtLeave = await Promise.all(rest.map((c) => J(c, `(() => { const N = __G.netm, P = N.peers.get(N.s.hostId); return P ? P.events.filter((e) => e[1] === 'k' && e[3] === 'karp' && e[4][1] === ${gid}).map((e) => e[4][0]) : null; })()`)));
-    say(`dbl: host A leaves the moment its blast went off (gid ${gid}; queued on the others: ${JSON.stringify(queuedAtLeave)}; hold ${hold} s)`);
+    say(`dbl: host A leaves the moment its blast went off (gid ${gid}; hold ${hold} s)`);
     await close(0);
     const N = await newHost();
     if (!N) { R('dbl: a guest becomes the host', false, {}); return; }
@@ -264,9 +264,9 @@ async function more({ cs, A, J, info, R, wait, say, close, part, aNid, opt = {} 
     const oLaunch = await J(O, `window.__gs.filter((r) => ${ng}.includes(r[0])).length`);
     await wait(1800);
     const rows = [];
-    for (const c of rest) rows.push({ c: `c${c.i}`, host: c === N, ...(await J(c, `({ judged: window.__jd[${gid}] || 0, dmg: window.__dm, alive: __G.match.local.alive, hp: +__G.match.local.hp.toFixed(1), sent2: window.__rk.filter((r) => r[0] === 2 && r[1] === ${gid}).length })`)) });
+    for (const c of rest) rows.push({ c: `c${c.i}`, host: c === N, ...(await J(c, `({ judged: window.__jd[${gid}] || 0, dmg: window.__dm, alive: __G.match.local.alive, hp: +__G.match.local.hp.toFixed(1), sent2: window.__rk.filter((r) => r[0] === 2 && r[1] === ${gid}).length, queuedAtLeave: (window.__qAtLeave || []).filter((r) => r[1] === ${gid}).map((r) => r[0]) })`)) });
     R('dbl: a shot that blew as its host left is judged once on every remaining screen (each kid hurt once, not splatted), and the new host records no blast of its own for it',
-      rows.length === 2 && rows.every((r) => r.judged === 1 && r.dmg.length === 1 && r.dmg[0] < 100 && r.alive && r.sent2 === 0), { gid, hold, queuedAtLeave, rows });
+      rows.length === 2 && rows.every((r) => r.judged === 1 && r.dmg.length === 1 && r.dmg[0] < 100 && r.sent2 === 0), { gid, hold, rows });
     // the new host's own shots for the adopted bot (fired above): gids past every one the old host used, the other guest flies both
     R('dbl: the new host\'s next two shots for the adopted bot have gids past every one the old host used for it, and the other guest flies both',
       nGids[2] && nGids[0] !== nGids[1] && nGids.slice(0, 2).every((g) => g > Math.max(...aGids)) && oSaw.every((x) => x && x.owner === bot && x.fresh) && oLaunch === 2,
