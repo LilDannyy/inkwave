@@ -1486,7 +1486,7 @@ export function register(D, H) {
       // chain + CREW ONLY plate across the foot (closed to players), rail colliders along both rope rails
       B.tube(NS('paint'), K.hazY, [P3(0.05, 1.0, -W / 2), P3(0.05, 0.78, 0), P3(0.05, 1.0, W / 2)], 0.02, { radial: 4 });
       B.push(0.07, 0.72, 0, HP); pbox(B, NS('paint'), K.white, 0.36, 0.2, 0.01, 0, 0, 0); letters(B, 'CREW ONLY', { h: 0.05, x: 0, y: -0.025, z: 0.006, c: K.red, flat: true, wt: 0.24 }); B.pop();
-      B.col(-0.02, 0, -W / 2 - 0.05, 0.12, 1.2, W / 2 + 0.05, { rail: true });
+      B.col(-0.02, 0, -W / 2 - 0.05, 0.12, 1.2, W / 2 + 0.05, { rail: true, roof: true });   // [b5-int3] (off-limits on top: an air dash off the quay stood a kid on it — dash-reach.js)
       for (let k = 0; k < 3; k++) { const t0 = k / 3, t1 = (k + 1) / 3; for (const sz of [-1, 1]) B.col(t0 * run, 0, sz * W / 2 - 0.06, t1 * run, 0.2 + t1 * rise + 1.05, sz * W / 2 + 0.06, { rail: true }); }
     },
   };
