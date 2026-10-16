@@ -3,7 +3,8 @@
 // the port, the lighthouse, the bridge, the ferris wheel, the sailboats: this IS an islet in the bay); round it:
 //   seawall   the islet's granite sea wall: a dark plinth along every edge of the drum and both blades, at the waterline
 //   dome      the Deep Dome, a glass observatory dome on stilts 240 m out east, joined to the islet by a Tubeway tube on
-//             pylons; a glowing streak runs along the tube every few seconds (animate)
+//             pylons (unlit glass; a small lamp on each brass collar at dusk); a glowing streak runs along it every few
+//             seconds (animate)
 //   light     a red-and-white breakwater light on its rubble mole north-east, its lamp lit at dusk
 export function buildFar(kit, P) {
   const { box, cyl, sph, xf, beam, prep } = kit;
@@ -48,11 +49,15 @@ export function buildFar(kit, P) {
   const A = [33.5, 4.2, 2.0], Bq = [dx - 19.5, dy + 3.0, dz];
   const tubeG = new T.CylinderGeometry(0.9, 0.9, 1, 14, 1, true);
   const L = Math.hypot(Bq[0] - A[0], Bq[1] - A[1], Bq[2] - A[2]);
-  { const g = prep(tubeG, '#cfe3e6', 0.15); g.scale(1, L, 1); g.rotateZ(-Math.PI / 2); g.rotateZ(Math.atan2(Bq[1] - A[1], Math.hypot(Bq[0] - A[0], Bq[2] - A[2]))); g.rotateY(-Math.atan2(Bq[2] - A[2], Bq[0] - A[0])); g.translate((A[0] + Bq[0]) / 2, (A[1] + Bq[1]) / 2, (A[2] + Bq[2]) / 2); st.push(g); }
+  // (fix round 3: the tube's glass glowed (0.15) and read at dusk as one white bar across the sea, the brightest thing on the
+  // stage side of the spawn's view — now it stays unlit and a little greyer; only the travelling streak and the collars'
+  // small lamps light it at dusk, DESIGN.md §5.6)
+  { const g = prep(tubeG, '#b9ccd0', 0); g.scale(1, L, 1); g.rotateZ(-Math.PI / 2); g.rotateZ(Math.atan2(Bq[1] - A[1], Math.hypot(Bq[0] - A[0], Bq[2] - A[2]))); g.rotateY(-Math.atan2(Bq[2] - A[2], Bq[0] - A[0])); g.translate((A[0] + Bq[0]) / 2, (A[1] + Bq[1]) / 2, (A[2] + Bq[2]) / 2); st.push(g); }
   for (let i = 1; i < 10; i++) {
     const t = i / 10, x = A[0] + (Bq[0] - A[0]) * t, y = A[1] + (Bq[1] - A[1]) * t, z = A[2] + (Bq[2] - A[2]) * t;
     st.push(xf(box(0.7, y + 1.6 - 0.9, 0.7, GL), x, (y - 0.9 - 1.6) / 2, z));
     st.push(xf(cyl(1.05, 1.05, 0.35, 14, '#a8895a'), x, y, z, 0, 0, Math.PI / 2));
+    st.push(xf(sph(0.13, 8, 6, '#ffe2b0', 0.55), x, y + 1.12, z));   // (the collar's lamp: lit at dusk)
   }
   // the streak: a warm capsule running out along the tube every 7 s
   const streakMat = new T.MeshBasicMaterial({ color: '#fff0d0', transparent: true, opacity: 0.0, depthWrite: false });
