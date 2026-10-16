@@ -578,7 +578,7 @@ export class EraFx {
         m.visible = true;
         const Uo = m.material.uniforms;
         Uo.uT.value = U.uEraT.value; Uo.uFront.value = -1;
-        Uo.uA.value = (m.isLineSegments ? 0.6 + 0.25 * Math.sin(U.uEraT.value * 7) : 0.14 + 0.06 * Math.sin(U.uEraT.value * 7)) * k;
+        Uo.uA.value = (m.isLineSegments ? 0.85 + 0.15 * Math.sin(U.uEraT.value * 7) : 0.2 + 0.07 * Math.sin(U.uEraT.value * 7)) * k;
       }
     }
     // the curtain riding the front (10 m tall)

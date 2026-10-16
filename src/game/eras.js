@@ -859,7 +859,15 @@ export class StageEras {
         const b = B[id], top = this._topOf(b, a.pos.x, a.pos.z);
         if (top !== null && Math.abs(a.pos.y - top) < 0.35) { S.onVanish++; S.onVanishWho.push({ who: a.name, bot: !!a.bot, tag: b.tag, t: +this.tNow.toFixed(2) }); break; }
       }
-      for (const id of on) if (this._bodyIn(a, B[id])) { S.inAppear++; break; }
+      for (const id of on) if (this._bodyIn(a, B[id])) {
+        S.inAppear++;
+        // (who and how: a super jump's arc, a special's flight, a jump off a ledge — the shove's own case, for the audit)
+        const sp = a.specialActive;
+        (S.inAppearWho || (S.inAppearWho = [])).push({ who: a.name, bot: !!a.bot, tag: B[id].tag, t: +this.tNow.toFixed(2), pos: [a.pos.x, a.pos.y, a.pos.z].map((v) => +v.toFixed(2)),
+          vy: a.vel ? +a.vel.y.toFixed(2) : null, grounded: !!a.grounded, form: a.form, sj: !!a.superJumpState, special: sp ? sp.kind || sp.id || '?' : null, goal: a.bot ? a.bot.mode || null : null });
+        if (S.inAppearWho.length > 20) S.inAppearWho.shift();
+        break;
+      }
     }
     if (S.onVanishWho.length > 40) S.onVanishWho.shift();
   }
@@ -922,7 +930,7 @@ export class StageEras {
       const med = V.bots.length ? (() => { const all = V.bots.map((n) => V.t[n] ?? Infinity).sort((a, b) => a - b); return all[Math.floor((all.length - 1) / 2)]; })() : null;
       return { jump: V.jump, doneAt: V.doneAt, bots: V.bots.length, visited: ts.length, within20: ts.filter((x) => x <= 20).length, median: med === Infinity ? null : med, times: ts };
     });
-    return { eraShoves: this.stats.eraShoves, rescues: this.stats.rescues, flips: this.stats.flips, onVanish: S.onVanish, onVanishWho: S.onVanishWho.slice(-6), inAppear: S.inAppear, loiterS: +S.loiterS.toFixed(2), loiterWho: S.loiterWho,
+    return { eraShoves: this.stats.eraShoves, rescues: this.stats.rescues, flips: this.stats.flips, onVanish: S.onVanish, onVanishWho: S.onVanishWho.slice(-6), inAppear: S.inAppear, inAppearWho: (S.inAppearWho || []).slice(-6), loiterS: +S.loiterS.toFixed(2), loiterWho: S.loiterWho,
       envSplats: S.envSplats, envOther: S.envOther || 0, envSplatWho: S.envSplatWho.slice(-6), replans: S.replans, prepos: S.prepos, preposHeld: S.preposHeld, visits, era: this.era,
       // (the era the match started in and whether the audit held it there, ?era=n: a mislabelled per-era run shows in its log)
       start: this.sched.start, held: this.W.audit || 0, fixed: this.sched.fixed || 0, jumpsPlanned: this.sched.jumps.length, cycle: this.sched.cycle || 0, devices: this.stats.devices, zipEnds: (this.stats.zipEnds || []).length };
