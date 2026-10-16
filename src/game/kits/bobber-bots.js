@@ -1327,7 +1327,17 @@ export function botAct(b, dt, it, move, busy) {
       if (wr0?.kit && wr0.kit.queued > 0) wr0.kit.queued = 0;   // ([b5-int3] a Cutlass's buffered tap swings on its own a moment later)
       BOBBER_BOT.holds++;
       b._bobHoldT = (b._bobHoldT || 0) + dt;
-      if (b.mode === 'fight' && b._bobHoldT > 0.35) { const sd = (b._bobHoldSd ||= Math.random() < 0.5 ? -1 : 1); move.set(Math.cos(b.aimYaw) * sd, 0, -Math.sin(b.aimYaw) * sd); }
+      if (b._bobHoldT > 1.5) {
+        // A paint bot can hold fire on an own idle web while its objective
+        // planner keeps it in place. After a short hold, leave the web's line
+        // and clear intentional stand holds so the next frame can re-plan.
+        const sd = (b._bobHoldSd ||= Math.random() < 0.5 ? -1 : 1);
+        move.set(Math.cos(b.aimYaw) * sd, 0, -Math.sin(b.aimYaw) * sd);
+        b._bobHold = null; b.zHoldUntil = 0; b.path = null; b.pi = 0; b.repath = 0; b.goalTimer = 0;
+        b._bobHoldT = 0; BOBBER_BOT.holdTimeouts = (BOBBER_BOT.holdTimeouts || 0) + 1;
+      } else if (b.mode === 'fight' && b._bobHoldT > 0.35) {
+        const sd = (b._bobHoldSd ||= Math.random() < 0.5 ? -1 : 1); move.set(Math.cos(b.aimYaw) * sd, 0, -Math.sin(b.aimYaw) * sd);
+      }
     } else { b._bobHoldT = 0; b._bobHoldSd = 0; }
   }
   b._bobFire0 = !!it.fire;   // ([b5-int3] a press next frame: asked fresh)
