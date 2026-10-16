@@ -45,11 +45,11 @@ registerCause('lava', { name: 'Burned in the lava', knocked: 'Knocked into the l
 - `G.stageWorld`: the `StageWorld` (all modules' W for the current world), or `null`.
 - `G.match.stage`: the `StageRun` (all modules' R for the current match, plus `S.clock`), or `null`.
 - `G.<worldAs>` / `G.match.<matchAs>`: your own W / R. **Keep the contracts' names on them**: other packages call them
-  directly — the subs read `G.match.lava.surfaceAt / under / covers`, Bazookarp reads `G.match.eras.dangerAt` and
-  `G.match.lava.restMask`, both read the actor field `a.pipe` (the [subs / Bazookarp table](#the-subs-spec-and-bazookarp-interfaces-one-home-each)).
+  directly — the subs read `G.match.lava.surfaceAt / under / covers`, Bazookarp reads `G.match.eras.dangerAt`,
+  `G.match.lava.restMask` and (b5-int3's field) `G.match.stage.karpStates()`, both read the actor field `a.pipe` (the [subs / Bazookarp table](#the-subs-spec-and-bazookarp-interfaces-one-home-each)).
 - Every hook below is **optional**: implement a method of that name on W or R and the registry calls it.
 - Code that must not know any stage asks the registry's queries (`G.level.liquidY`, `G.level.noPlace`,
-  `G.match.stage.restMask(...)`, `.danger(...)`, `.under(...)`, `.sink(...)`).
+  `G.match.stage.restMask(...)`, `.karpStates()`, `.danger(...)`, `.under(...)`, `.sink(...)`).
 
 ## Lifecycle
 
@@ -342,6 +342,7 @@ clamp: shorten `rig.curDist` / `rig.boom.x`). The lens never dips under a module
 | `G.match.stage?.sink(p, what)` | R `under`, then R `fizzle(p, what)` | false (shots, bombs, thrown subs, the buoy, the Shaker / Torpedo / Tracer / Waddle sink there: no splat, no blast) |
 | `G.match.stage?.sweeps(out)` | R `sweeps(out)` | [] (Bazookarp rest flags: the boxes a module's moving pieces cover over their whole travel) |
 | `G.match.stage?.restMask(state)` | R `restMask` | null (Bazookarp: `Uint8Array` over nav nodes, 1 = standable in that state) |
+| `G.match.stage?.karpStates()` | R `karpStates` (every module's, in order) | [] (Bazookarp's Carp Field states, karpField.js: `[{ key, nodeOk(id) }]`; the field is built with them at load — state 0 is always the stage as built — and bazookarp.js switches to `field.stateOf(key)` at `era:done { era }` / `lava:warn { to }`. Caldera: `[{ key: 'low' }, { key: 'high' }]` from `restMask`) |
 | `G.match.stage?.danger(pos, pad)` | R `danger` | false (Bazookarp drop spot, bots) |
 | `G.match.stage?.crushIn(shape, how)` | `G.deploy.crushIn` (subs SPEC §0.3), looked up at each call | [b5-subs] the real one (deployables.js): `{ blocks, rider }` (the user's list — a Lurk Mine is pushed aside, not crushed: the lead's rule), `{ sphere }`, `{ where }`, `{ standingOn }`, `{ liquid }` → the count destroyed, each with one `'device:down'` { how }; the tower's `crush(T)` is now a call of it. The page test proves the forwarding with a stand-in; `tests/sub-sentry.js` 'crush' runs the real one |
 | `G.match.stage?.state()` | R `state` | `{ t, keys }` (tests) |
@@ -522,7 +523,7 @@ Nothing by hand.
 | subs §0.5 / DECISIONS #24: `G.level.noPlace` (aquarium device aprons) | `G.level.noPlace(p, r)`, answered by `W.noPlace` / `R.noPlace` (false on every other stage). Whether the aquarium uses it and the subs call it: the lead's (see the pipes table) |
 | subs §0.2 / §0.4 (deployables, `F.dash` bit 23) | not stage-side; `F.stage` keeps bit 22 |
 | Bazookarp §5.5 bluestone: one union nav with `e.em`, per-era `valid`, `era:warn` / `era:done { era }`, `G.match.eras.dangerAt(pos)` | the eras module: `nav.edgeMask`; per-era `valid` on its W; the events; `dangerAt` on R (`G.match.eras`); generic `G.match.stage.danger(pos, pad)` / `restMask(era)` for stage-agnostic code |
-| Bazookarp §5.5 caldera: merged LOW + HIGH nav, `reach`, `G.match.lava.restMask(level)` (pure, callable at match start), `lava:warn { to }` | `restMask(level)` on R (`G.match.lava`; `G.match.stage.restMask(state)` asks the same); `reach` on R; the event |
+| Bazookarp §5.5 caldera: merged LOW + HIGH nav, `reach`, `G.match.lava.restMask(level)` (pure, callable at match start), `lava:warn { to }` | `restMask(level)` on R (`G.match.lava`; `G.match.stage.restMask(state)` asks the same); **`karpStates()`** on R (fix round 3: what b5-int3's Bazookarp reads — `G.match.stage.karpStates()` → `[{ key: 'low', nodeOk }, { key: 'high', nodeOk }]` from `restMask`; `field.stateOf(to)` at `lava:warn`); `reach` on R; the event; `sweeps(out)` (the riders' whole travel, `{ x, z, hx, hz, yaw, y0, y1 }` boxes — karpField reads both that and its old `[x0, z0, x1, z1]`) |
 | Bazookarp §5.5 aquarium: `modes.bazookarp.carp`, `'pipe'` edges with `len`, riders `a.pipe` | edges keep every extra field of `W.navEdges` specs (`len`, `key`, `leg`); `a.pipe` on the actor; carp refusal in the module's `canEnter` |
 | Bazookarp: movers' whole paths | the railcars: `movers.js sweepRect(car)` (Bazookarp's own hook); stage modules' moving pieces: `G.match.stage.sweeps(out)` |
 | Bazookarp: the mode's own setup | build it in `match.js` **after** `this.stage = StageRun.create(this)` (as Zone Control / Tower Command are), so `restMask` / `dangerAt` exist at its load |
