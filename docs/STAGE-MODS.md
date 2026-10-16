@@ -304,7 +304,7 @@ clone with the era vertex collapse). Untagged placements are merged exactly as t
 | `botHold(b)` | `BotBrain.update`'s super-jump early return | true = the bot does nothing this frame (riding) |
 | `edgeTypes: ['pipe']` + `botSteer(b, edge, out)` | `_steer`, after the waypoint advance, when the next edge's type is yours (and the ledge-replan exception) | return `out` (the move) or null |
 | `beforePath(b)` | `_pathTo`, before `nav.path` | set your per-bot nav rule state (`this.botX = …`) |
-| `botAct(b, dt, it, move, vis)` | after the pods' bot hook | an aim (Vector3) to take over, or null |
+| `botAct(b, dt, it, move, vis)` | after the pods' bot hook | an aim (Vector3) to take over, or null. Bot fields it may set for this frame ([b5-caldera]): `b.stageUrgent` (run it ahead of a threat's footwork), `b.guardOff` (a straight run at a step: no edge / water guard), `b._needJump = true` (ask for a hop) with `b.hopAt` (fix round 4: the `{ x, y, z }` the hop is for — `_tail` judges it by the flight steered at that spot, `_hopLands`, and flies it there; a refused ask's press costs no cool-down) |
 | `wet(x, z, gy, ahead)` | `_wet`, `_avoidWater`, `_squidWouldDrop` (ahead 0.5), `stageKit.floorFor` (ahead 1) | true = feet on that floor would be in your hazard (now or within `ahead` s) |
 | `goalWeight(id)` | `_pickPaintGoal` | × on a paint goal's score (eras' fresh nodes ×2) |
 | `sightLanding(e)` | `botSight` `check` / `recheck` | a Vector3: remember this enemy there (`src: 'jump'`), never target it |
@@ -343,7 +343,7 @@ clamp: shorten `rig.curDist` / `rig.boom.x`). The lens never dips under a module
 | `G.match.stage?.sweeps(out)` | R `sweeps(out)` | [] (Bazookarp rest flags: the boxes a module's moving pieces cover over their whole travel) |
 | `G.match.stage?.restMask(state)` | R `restMask` | null (Bazookarp: `Uint8Array` over nav nodes, 1 = standable in that state) |
 | `G.match.stage?.karpStates()` | R `karpStates` (every module's, in order) | [] (Bazookarp's Carp Field states, karpField.js: `[{ key, nodeOk(id) }]`; the field is built with them at load — state 0 is always the stage as built — and bazookarp.js switches to `field.stateOf(key)` at `era:done { era }` / `lava:warn { to }`. Caldera: `[{ key: 'low' }, { key: 'high' }]` from `restMask`) |
-| `G.match.stage?.danger(pos, pad)` | R `danger` | false (Bazookarp drop spot, bots) |
+| `G.match.stage?.danger(pos, pad)` | R `danger` | false (Bazookarp drop spot, bots; bazookarp.js `_dynOk` asks it from an `era:warn` to its `era:done`, and on a liquid stage at all times from its first `lava:warn` — the lava's `danger` = a floor it covers within 10 s: fix round 4) |
 | `G.match.stage?.crushIn(shape, how)` | `G.deploy.crushIn` (subs SPEC §0.3), looked up at each call | [b5-subs] the real one (deployables.js): `{ blocks, rider }` (the user's list — a Lurk Mine is pushed aside, not crushed: the lead's rule), `{ sphere }`, `{ where }`, `{ standingOn }`, `{ liquid }` → the count destroyed, each with one `'device:down'` { how }; the tower's `crush(T)` is now a call of it. The page test proves the forwarding with a stand-in; `tests/sub-sentry.js` 'crush' runs the real one |
 | `G.match.stage?.state()` | R `state` | `{ t, keys }` (tests) |
 

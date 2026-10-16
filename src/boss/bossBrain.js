@@ -162,6 +162,18 @@ export class BossBrain {
         if (this.stuckT > 0.8) { this.stuckT = 0; this.goalT = 0; this.path = null; }
       }
     }
+    // [b5-caldera] fix round 4 (roamAfter stages): wedged — no 1 m made in 6 s of trying to walk (a tip it can neither turn
+    // in nor step out of) — it backs out along its body, 1.5 s, where its pose fits
+    if (b.nav.level?.layout?.boss?.roamAfter > 0) {
+      const W = this._wedge || (this._wedge = { x: b.pos.x, z: b.pos.z, tryT: 0, back: 0 });
+      if (W.back > 0) {
+        W.back -= dt;
+        const bx = b.pos.x - Math.sin(b.yaw) * SPEED[ph] * 0.5 * dt, bz = b.pos.z - Math.cos(b.yaw) * SPEED[ph] * 0.5 * dt;
+        if (nav.poseOk(bx, bz, b.yaw)) { b.pos.x = bx; b.pos.z = bz; } else W.back = 0;
+        if (W.back <= 0) { W.x = b.pos.x; W.z = b.pos.z; W.tryT = 0; this.goalT = 0; this.path = null; }
+      } else if (Math.hypot(b.pos.x - W.x, b.pos.z - W.z) > 1) { W.x = b.pos.x; W.z = b.pos.z; W.tryT = 0; }
+      else if (go && (W.tryT += dt) > 6) { W.back = 1.5; W.tryT = 0; this._backs = (this._backs || 0) + 1; }
+    }
   }
   // turn toward yaw at the phase's rate, only through headings its body fits. Hemmed in (a claw would meet a wall), it
   // sidles toward open floor while it turns — up the clearance field, never off it → false when it can't do either
@@ -210,7 +222,7 @@ export class BossBrain {
   }
 
   _pickGoal(t) {
-    const b = this.b, nav = b.nav, pad = nav.pads[0];
+    const b = this.b, nav = b.nav, pad = nav.pads[0], RA = nav.level?.layout?.boss?.roamAfter;
     this.goalT = 3 + this.rnd() * 2.5;
     let best = null, bs = -Infinity;
     for (let i = 0; i < 16; i++) {
@@ -222,6 +234,9 @@ export class BossBrain {
       if (Math.hypot(x - pad.x, z - pad.z) < 18) s -= 12;   // never camps the squad's spawn
       if (this._anchor?.camped && Math.hypot(x - this._anchor.x, z - this._anchor.z) < 9) s -= 8;   // [b5-caldera] (_roam)
       if (this._camps >= 2 && this._campAt) s += Math.min(Math.hypot(x - this._campAt.x, z - this._campAt.z), 30) * 0.5 + (Math.sign(z) !== Math.sign(this._campAt.z) ? 8 : 0);   // [b5-caldera] fix round 4 (_roam: camped twice — far, and the other half: the stages are 180° turns)
+      // [b5-caldera] fix round 4 (roamAfter stages): never a goal where it can't turn round — it walked into the tip of the
+      // west Lakefront wedge, could neither turn nor step, and stood there 70 s (boss-check)
+      if (RA > 0) { let ok = 0; for (let k = 0; k < 8; k++) if (nav.turnOk(x, z, (k * Math.PI) / 4)) ok++; if (ok < 6) s -= 20; }
       if (s > bs) { bs = s; best = [x, z]; }
     }
     if (!best) return;

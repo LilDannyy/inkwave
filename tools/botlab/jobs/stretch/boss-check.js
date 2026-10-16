@@ -32,7 +32,7 @@
   const played = boss.log.moves.reduce((o, mv) => { o[mv[1]] = (o[mv[1]] || 0) + 1; return o; }, {});
   R('it roams (distance walked, 4 m cells visited)', dist > 50 && seen.size > 8, { dist_m: Math.round(dist), cells4m: seen.size, trail });
   R('it never stands idle for long (outside a move)', maxStill < 12, { maxIdle_s: maxStill });
-  R('(information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot', true, { halves_s: half, longestSpell_s: campMax, at: campAt, camps: boss.brain?._camps ?? null });
+  R('(information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot', true, { halves_s: half, longestSpell_s: campMax, at: campAt, camps: boss.brain?._camps ?? null, backOuts: boss.brain?._backs ?? 0 });
   R('it plays its moves (charges included)', Object.keys(played).length >= 3, { played, stuns, hp: +(boss.hp / boss.maxHp).toFixed(2), dead: boss.dead });
   return out;
 })();
