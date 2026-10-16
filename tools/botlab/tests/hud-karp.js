@@ -224,10 +224,15 @@
     const kr = kcEl && kcEl.getBoundingClientRect(), zr4 = zcEl && zcEl.getBoundingClientRect();
     const subR = kcEl && kcEl.querySelector('.iw-call__sub')?.getBoundingClientRect();
     R('I4. a kill call-out (WIPEOUT!) and our SHELL BURST! at once: ours waits out its pop-in (≥ 0.3 s), then sits wholly below it (its sub line too)', tz != null && tz >= 300 && !!kr && !!zr4 && zr4.top >= Math.max(kr.bottom, subR ? subR.bottom : 0) - 1, { after: tz, kill: kr && { t: Math.round(kr.top), b: Math.round(kr.bottom) }, sub: subR && Math.round(subR.bottom), ours: zr4 && { t: Math.round(zr4.top), b: Math.round(zr4.bottom) }, size: [innerWidth, innerHeight] });
-    // I6. the kill call-out drifts up as it fades (to −110 % of its height; still opaque at −98 %): anchored low enough
-    // that it never reaches the Carp Line's status pill (WIPEOUT!'s ribbon covered FREE — GRAB IT! at 1920×1080)
-    const anc = H.callouts.getBoundingClientRect().top - er().top, kh = kcEl ? kcEl.offsetHeight : 0, drift = anc - 0.98 * kh;
-    R('I6. a big kill call-out\'s fade-out drift stays below the status pill', !!kcEl && drift >= topY() - 1, { anchor: Math.round(anc), h: kh, driftTop: Math.round(drift), pill: Math.round(topY()), size: [innerWidth, innerHeight] });
+    // I6. the kill call-out, through its whole life until it has faded: never up on the Carp Line's status pill (its
+    // stock exit drifts up 60 % of its height: WIPEOUT!'s ribbon covered FREE — GRAB IT! at 1920×1080)
+    let minTop = 1e9, seen6 = 0;
+    for (let k = 0; k < 70 && kcEl && kcEl.isConnected; k++) {
+      const r6 = kcEl.getBoundingClientRect(), op = +getComputedStyle(kcEl).opacity;
+      if (op >= 0.3) { minTop = Math.min(minTop, r6.top - er().top); seen6++; }
+      await wait(40);
+    }
+    R('I6. a big kill call-out never rises onto the status pill while it is visible (opacity ≥ 0.3)', seen6 > 10 && minTop >= topY() - 1, { minTop: Math.round(minTop), pill: Math.round(topY()), samples: seen6, size: [innerWidth, innerHeight] });
     clearCalls(); step(1 / 60);
     // I5. the carrier's own fuse: 30 s small; 8.5 s big, beating
     put(me, spot(P.x, P.z + dz * 2, P.y)); grab(me); follow();

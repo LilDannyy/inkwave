@@ -188,10 +188,13 @@ const CSS = `
 .iw-kshell.is-under, .iw-ktag.is-under { opacity: 0; }
 /* [karp-face] while a kill call-out (WIPEOUT! …) is live, ours sit under it (at 960×600 the two layers overlapped) */
 .iw-hud.is-karp.has-kcall .iw-zcalls { top: max(33%, calc(var(--jal-b, 0px) + var(--u) * .9), var(--kcb, 0px)); }
-/* [karp-face] the kill call-outs anchor low enough that their upward drift (to −110 % of their height as they fade) stays
-   below the Carp Line's status pill (--kst-b: its bottom) — WIPEOUT!'s ribbon covered FREE — GRAB IT! */
-.iw-hud.is-karp .iw-callouts { top: max(27%, calc(var(--kst-b, 0px) + var(--u) * 6.5 + 4px)); }
-.iw-hud.is-karp.has-jal .iw-callouts { top: max(27%, calc(var(--jal-b, 0px) + var(--u) * 3.7 + 4px), calc(var(--kst-b, 0px) + var(--u) * 6.5 + 4px)); }
+/* [karp-face] under the Carp Line the kill call-outs leave with a short lift (the stock one drifts up to −110 % of their
+   height as they fade: WIPEOUT!'s ribbon covered FREE — GRAB IT!), and anchor no higher than the status pill's bottom
+   (--kst-b) plus that */
+.iw-hud.is-karp .iw-call { animation-name: iw-call-karp; }
+@keyframes iw-call-karp { 0% { opacity: 0; scale: 2.2; } 10% { opacity: 1; scale: .9; } 16% { scale: 1.05; } 22% { scale: 1; } 80% { opacity: 1; scale: 1; translate: -50% -50%; } 100% { opacity: 0; scale: 1; translate: -50% -64%; } }
+.iw-hud.is-karp .iw-callouts { top: max(27%, calc(var(--kst-b, 0px) + var(--u) * 5 + 4px)); }
+.iw-hud.is-karp.has-jal .iw-callouts { top: max(27%, calc(var(--jal-b, 0px) + var(--u) * 3.7 + 4px), calc(var(--kst-b, 0px) + var(--u) * 5 + 4px)); }
 /* the carrier's squad badge */
 .iw-sq.is-karp::after { content: ''; position: absolute; right: -16%; bottom: -10%; width: 52%; height: 52%; border-radius: 50%; pointer-events: none; z-index: 2;
   background: #ffd27a url("data:image/svg+xml;utf8,${encodeURIComponent(KARP_GLYPH.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ').replace(/currentColor/g, '#ffffff'))}") center / 86% no-repeat;
