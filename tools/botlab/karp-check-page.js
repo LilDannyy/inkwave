@@ -907,7 +907,7 @@ export async function runChecks(o = {}) {
     chk(16, 'The hop and gap edges, proved physically', !ran ? 'SKIP' : fails.length || walkBad.length ? 'FAIL' : 'OK',
       !ran ? 'PHYS=0: not run (a RESULT ok needs it)' : `${tests.length} added edges tried (${F.stats.hops} hops, ${F.stats.gaps} gaps): ${tests.length - fails.length} made, ${fails.length} not${fails.length ? ` (${byKind.hop} hops, ${byKind.gapLevel} gaps up / level, ${byKind.gapDown} gaps down)` : ''}${fails.length ? ' → hopVeto ' + JSON.stringify(veto.slice(0, 6)) + (veto.length > 6 ? ` … ${veto.length}` : '') : ''}; ${beyond.length} candidates beyond the rules (${cand.high.length} high hops, ${cand.long.length} long gaps): ${made.length} made (to #7d); ${cand.off.length} hops onto off-field ground: ${offMade.length} made (to #7d / #7a)` + walkTxt + (res ? ` · ${res.trials} trials, ${Math.round(res.ms / 1000)} s; walks ${Math.round((walkRes?.ms || 0) / 1000)} s` : ''),
       { tried: tests.length, failed: fails.length, failedBy: byKind, hopVeto: veto, beyond: beyond.length, beyondMade: made.length, offHops: cand.off.length, offMade: out._offMade, trials: res?.trials, ms: res?.ms,
-        walks: wl.map((w) => ({ ...w, path: undefined })), walkRoutes: [wOk(wR), wR.length], walkEntrances: [wOk(wE), wE.length], walkFailed: walkBad.length, made: made.map((r) => ({ kind: r.kind, a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(gainOf(C, r.from, r.to)) })) }, fl);
+        walks: wl.map((w) => ({ ...w, path: undefined })), walkRoutes: walkRes ? [wOk(wR), wR.length] : null, walkEntrances: walkRes ? [wOk(wE), wE.length] : null, walkFailed: walkBad.length, made: made.map((r) => ({ kind: r.kind, a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(gainOf(C, r.from, r.to)) })) }, fl);
   }
   tm('16');
   // ----------------------------------------------------------------------------------------------- #7 finished (with #16's made candidates)
@@ -1440,16 +1440,28 @@ export async function kitPictures() {
     let u = null; for (const q of [0.86, 0.76, 0.66, 0.56]) { u = c.toDataURL('image/jpeg', q); if (u.length * 0.75 < 290000) break; }
     shots.push({ name: `${C.id}-kit-${name}.jpg`, url: u });
   };
+  // an eye `back` m behind `p` along -f (then nearer, farther and to either side) that is out of every block and sees
+  // `look`: a pier's kiosk or a wall right behind the spot doesn't fill the picture
+  const eye = (p, f, back, up, look) => {
+    const sx = f.z, sz = -f.x;
+    for (const [b, side] of [[back, 0], [back - 1.5, 0], [back + 2, 0], [back, 2], [back, -2], [back - 2.5, 2.5], [back - 2.5, -2.5], [back + 2, 3], [back + 2, -3]]) {
+      const e = new V3(p.x - f.x * b + sx * side, p.y + up, p.z - f.z * b + sz * side);
+      if (!L.pointInside(e, 0.15) && G.physics.los(e, look)) return e;
+    }
+    return new V3(p.x - f.x * back, p.y + up + 2.5, p.z - f.z * back);
+  };
   try {
     const w = R.weirs[0][0];
     if (w) {
       const f = new V3(Math.sin(w.yaw), 0, Math.cos(w.yaw));   // the walking direction
-      await shot('weir', new V3(w.pos.x - f.x * 7, w.pos.y + 1.7, w.pos.z - f.z * 7), new V3(w.pos.x, w.pos.y + 1.1, w.pos.z), 'a weir from the attackers\' side (posts 5.4 m apart, the sill, the curtain)');
+      const lw = new V3(w.pos.x, w.pos.y + 1.1, w.pos.z);
+      await shot('weir', eye(w.pos, f, 7, 1.7, lw), lw, 'a weir from the attackers\' side (posts 5.4 m apart, the sill, the curtain)');
       const s = new V3(Math.cos(w.yaw), 0, -Math.sin(w.yaw));
       await shot('weir-post', new V3(w.pos.x + s.x * 2.7 - f.x * 2.2 + s.x * 1.4, w.pos.y + 1.5, w.pos.z + s.z * 2.7 - f.z * 2.2 + s.z * 1.4), new V3(w.pos.x + s.x * 2.7, w.pos.y + 1.2, w.pos.z + s.z * 2.7), 'a weir post: footing, shaft, band, capital (roof, no ink)');
     }
     const g = R.gates[0].pos, fg = new V3(Math.sin(R.gates[0].yaw), 0, Math.cos(R.gates[0].yaw));
-    await shot('gate', new V3(g.x - fg.x * 7 + 2, g.y + 2.2, g.z - fg.z * 7), new V3(g.x, g.y + 0.9, g.z), 'the Dragon Gate: the octagonal plinth, the gold-banded posts');
+    const lg = new V3(g.x, g.y + 0.9, g.z);
+    await shot('gate', eye(g, fg, 7, 2.2, lg), lg, 'the Dragon Gate: the octagonal plinth, the gold-banded posts');
     const sb = L.blocks.find((b) => b.tag === 'karp-sign-board' && b.center.z > 0);
     if (sb) { const n = sb.axes[2]; await shot('sign', new V3(sb.center.x + n.x * 2.6 + n.z * 0.6, sb.center.y - 0.1, sb.center.z + n.z * 2.6 - n.x * 0.6), sb.center.clone(), 'a NO CARP sign'); }
     const cb = (R.carrierBlock || []).find((v) => v.poly.every((p) => p[1] > 0)) || (R.carrierBlock || [])[0];
