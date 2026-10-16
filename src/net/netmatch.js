@@ -239,10 +239,14 @@ export class NetMatch {
     if (this.isHost && this.match) {
       this.clockT -= TICK;
       if (this.clockT <= 0) {
-        this.clockT = 0.5; msg.c = [this.match.state, r2(this.match.time)];
+        // [b5-eras] the clock as it will be when the tick reaches the relay (half this screen's round trip to it): each
+        // follower adds its own half on arrival, so every screen's match / stage clock is the host's to within the jitter
+        // (Bluestone's era flips: ENGINE.md §4.7, < 0.4 s at netlag 150 / jitter 50; the final review's issue 4)
+        const lead = this._lead();
+        this.clockT = 0.5; msg.c = [this.match.state, r2(this.match.time - lead)];
         // (Practice: no match clock — the stage clock instead: movers' timetables, pods' growth)
         const st = this.practice ? (this.match.movers?.clock?.t ?? this.match.pods?.clock?.t ?? this.match.stage?.clockT()) : undefined;   // [b5-stagehooks] stage modules' clock
-        if (st !== undefined) msg.c.push(r3(st));
+        if (st !== undefined) msg.c.push(r3(st + lead));
       }
     }
     this.stats.out++;
@@ -722,10 +726,23 @@ export class NetMatch {
   }
 
   // ---- host clock / state / result --------------------------------------------------------------------------------------
+  // [b5-eras] half this screen's round trip to the relay, s (0 until the first pong; capped at 0.25): the lowest of the
+  // smoothed round trip's last 20 readings (one per clock tick: 10 s), so a stalled frame that held a pong back (a jump's
+  // done on a loaded machine) does not push the clock ahead — the network's floor, as the playback clock's offset is
+  _lead() {
+    const r = this.s.tr?.rtt || 0;
+    if (!(r > 0)) return 0;
+    const w = this._rttWin || (this._rttWin = []);
+    w.push(r); if (w.length > 20) w.shift();
+    let m = r; for (const x of w) if (x < m) m = x;
+    return Math.min(m, 500) / 2000;
+  }
   _hostClock([state, time, st]) {
     const m = this.match;
     if (!m || this.isHost) return;
+    const lead = this._lead();   // [b5-eras] (the relay → here half of the trip: the host sent its half on)
     if (this.practice && st !== undefined) {
+      st += lead;
       this.stageSync = { t: st, at: now() };
       // a late joiner: the pods the session has grown so far, replayed once our stage clock is the host's
       if (this.podsPending && m.pods) {
@@ -735,7 +752,10 @@ export class NetMatch {
       }
       if (this.stagePending && m.stage) { m.stage.netRestore(this.stagePending, st); this.stagePending = null; }   // [b5-stagehooks]
     }
-    if (state === 'playing' && m.state === 'playing' && Math.abs(m.time - time) > 0.2) m.time += (time - m.time) * 0.5;
+    // [b5-eras] halfway to the host's clock as it is now (its tick's age added back), past a 0.05 s dead band (0.2 before:
+    // a follower sat up to 0.2 s plus the trip behind — 0.37 s at netlag 150; the stage clock eases the steps out)
+    const want = time - lead;
+    if (state === 'playing' && m.state === 'playing' && Math.abs(m.time - want) > 0.05) m.time += (want - m.time) * 0.5;
   }
   _hostState(d) {
     const m = this.match;

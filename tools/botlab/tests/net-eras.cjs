@@ -3,11 +3,16 @@
 //   CLIENTS=2 URLQ=wipstages NET=tools/botlab/tests/net-eras.cjs tools/botlab/run.sh tools/botlab/netpage.cjs   (a third client is opened
 //   for the late join; NET_ARGS='only=turf,host,practice')
 // turf      a 1:30 Turf War with bots on bluestone (jumps at 30 and 60 s): every group flips on both screens within 0.4 s of
-//           each other (wall clock: both clients run in this one process); after each done both screens agree on `solid`
-//           for every era block and on the nav's era (edgeMask); a sprinkler the guest stuck on the Degrayling crates is
-//           gone on both screens after their flip; the guest's splats on the Iron Bridge from 0.4 s before its flip to 0.6 s
-//           after (the guard window: field 15 carries the painter's stage time) leave the bridge's cells equal on both
-//           screens; both results screens show the host's counts
+//           each other (wall clock: both clients run in this one process), and the two stage clocks agree (each screen's
+//           era update logged with the wall time: the follower's clock is the host's to within 0.15 s, median, and 0.25 s,
+//           90th percentile — the trip to the relay added back, final review issue 4); after each done both screens agree
+//           on `solid` for every era block and on the nav's era (edgeMask); a sprinkler the guest stuck on the Degrayling
+//           crates' wall and a Drip Curtain it threw onto their roof (final review, issue 1) are gone on both screens after
+//           their flip (the guest kept alive through it: a precondition that both ghosts stood on the host's screen);
+//           the guest's splats on the Iron Bridge from 0.4 s before its flip to 0.6 s after (the guard window: field 15
+//           carries the painter's stage time) leave the bridge's cells equal on both screens; both results screens show
+//           the host's counts. The contract's lagged run (ENGINE §4.7, §6 step 11): URLQ='wipstages&netlag=150&netjitter=50'
+//           NET_ARGS='only=turf' — the same checks and thresholds
 // host      a second match: the host leaves after jump 1; the guest, now the host, runs jump 2 on time (its match clock at
 //           60 ± 0.4 s when its era:jump fires) and the match finishes on its screen
 // practice  online Practice: the host's stage clock rides its ticks (no movers or pods here: the registry's clock); the host
@@ -27,6 +32,9 @@ module.exports = async ({ clients, R, wait, say, open, close, args }) => {
       if (n === 'era:done' && W) { let h = 2166136261; for (const id of W.eraIds) { h ^= __G.level.blocks[id].solid ? 1 : 2; h = Math.imul(h, 16777619) >>> 0; } row.solid = (h >>> 0).toString(16); row.edgeMask = __G.nav.edgeMask; row.navEra = W.navEra; }
       L.push(row);
     });
+    // each era update with the wall clock and the runtime's time after it (the two screens' clocks compared offline)
+    const E = __G.match.eras, C = (window.__eraClk = []), u = E.update.bind(E);
+    E.update = (dt, t) => { u(dt, t); C.push([Date.now(), +E._tHigh.toFixed(4)]); if (C.length > 40000) C.splice(0, 10000); };
     return 1; })()`;
   const arm = async (c) => { await c.js(`import('./src/core/ctx.js').then((m) => { window.__eraCtx = m; return 1; })`); await c.js(RECORD); };
   const log = (c) => J(c, `window.__eraLog || []`);
@@ -57,13 +65,29 @@ module.exports = async ({ clients, R, wait, say, open, close, args }) => {
     // the guest sticks a sprinkler on Alpha's Degrayling crates (they vanish at jump 1's flip, r 28.7: J + 1.15): its own
     // player, put on Swimston 3 m west of them, throws it flat at their west face (the game's own sub use: it records it)
     await B.until(`__G.match.eras.S.clock.t > 18`, 60000, 250);
+    // (the guest is kept alive through the crates' flip at J + 1.15: invulnerable from here to 34 s — teleported among
+    //  the bots on Swimston it was splatted once, and a splat takes its sprinkler with it: final review, issue 4)
     const thrown = await B.js(`import('./src/config.js').then(({ SUBS }) => { const L = __G.level, cr = L.blocks.find((b) => b.tag === 'crates-stack' && b.center.z < 0), me = __G.local;
+      me.invuln = 16;
       me.pos.set(cr.aabbMin.x - 2.9, 0.02, cr.aabbMax.z - 0.7); me.vel.set(0, 0, 0); me.aimYaw = Math.PI / 2; me.aimPitch = -0.28;
       const n0 = __G.subs.items.length; __G.subs.use(me, SUBS.sprinkler); window.__eraDev = __G.subs.items[__G.subs.items.length - 1]; return __G.subs.items.length > n0; })`);
     await wait(1800);
     const devB = await J(B, `(() => { const it = window.__eraDev, L = __G.level; return it ? { state: it.state, onCrates: it.face >= 0 && !!L.faces[it.face] && L.blocks[L.faces[it.face].block].tag === 'crates-stack', gid: it.gid ?? null, pos: [it.pos.x, it.pos.y, it.pos.z].map((v) => +v.toFixed(2)) } : null; })()`);
-    const ghostA = async () => J(A, `(() => { const p = ${JSON.stringify(devB && devB.pos)}; if (!p) return null; const g = __G.subs.items.filter((it) => it.ghost && it.state !== 'dead' && Math.hypot(it.pos.x - p[0], it.pos.z - p[2]) < 1.2); return g.length; })()`);
+    const ghostNear = async (p, kind) => J(A, `(() => { const p = ${JSON.stringify(p)}; if (!p) return null; return __G.subs.items.filter((it) => it.ghost && it.state !== 'dead' && it.kind === ${JSON.stringify(kind)} && Math.hypot(it.pos.x - p[0], it.pos.z - p[2]) < 1.2).length; })()`);
+    const ghostA = async () => ghostNear(devB && devB.pos, 'sprinkler');
     const ghostBefore = await ghostA();
+    // a Drip Curtain onto the crates' roof (2.8 m; a curtain has no face and lives ~9 s: thrown at 28.6 s, 2.5 s before
+    // the flip): the game's own sub use (its record), from a throw point over the roof, straight down
+    await B.until(`__G.match.eras.S.clock.t > 28.6`, 60000, 100);
+    const curThrown = await B.js(`import('./src/config.js').then(({ SUBS }) => { const L = __G.level, cr = L.blocks.find((b) => b.tag === 'crates-stack' && b.center.z < 0), me = __G.local, P = __G.projectiles, tv = P.throwVelocity;
+      const back = me.pos.clone(); me.pos.set(cr.center.x, cr.aabbMax.y + 0.2, cr.center.z - 1.0);
+      P.throwVelocity = (a, sp, out) => out.set(0.3, -3, 0);
+      try { __G.subs.use(me, SUBS.curtain); } finally { P.throwVelocity = tv; }
+      me.pos.copy(back); me.vel.set(0, 0, 0);
+      window.__eraCur = __G.subs.items[__G.subs.items.length - 1]; return window.__eraCur && window.__eraCur.kind === 'curtain'; })`);
+    await wait(900);
+    const curB = await J(B, `(() => { const it = window.__eraCur; return it ? { state: it.state, pos: [it.pos.x, it.pos.y, it.pos.z].map((v) => +v.toFixed(2)), hp: +(it.hp || 0).toFixed(1), t: +__G.match.eras.S.clock.t.toFixed(2) } : null; })()`);
+    const curGhostBefore = await ghostNear(curB && curB.pos, 'curtain');
     // the guest's splats on the Iron Bridge's middle span through its flip's guard window (it appears at jump 1)
     const br = await J(B, `(() => { const L = __G.level, W = __G.eraWorld, b = L.blocks.find((x) => x.tag === 'iron-bridge' && x.eraGroup === 'bridge-2' && x.center.z < 0); const g = W.groups[b.eraG]; return { id: b.id, x: b.center.x, y: b.aabbMax.y, z: b.center.z, F: 30 + g.rg / W.speed, faces: b.faces.filter((f) => f >= 0) }; })()`);
     await B.until(`__G.match.eras.S.clock.t > ${br.F - 3}`, 60000, 250);
@@ -74,7 +98,15 @@ module.exports = async ({ clients, R, wait, say, open, close, args }) => {
     // (the bridge's cells compared once the replays have landed, before done: the bots' nav still has no bridge then)
     await B.until(`__G.match.eras.S.clock.t > ${br.F + 1.7}`, 30000, 50);
     const cells = async (c) => J(c, `(() => { const L = __G.level, P = __G.paint, out = []; for (const fid of ${JSON.stringify(br.faces)}) { const f = L.faces[fid]; if (!f || !f.atlas) continue; for (let k = f.grid; k < f.grid + f.nu * f.nv; k++) out.push(P.grid[k]); } return out; })()`);
-    const [cA, cB] = await Promise.all([cells(A), cells(B)]), diffN = cA.reduce((s, v, i) => s + (v !== cB[i] ? 1 : 0), 0), inkedN = cB.filter((v) => v).length;
+    // (the host's bots paint too, and with netlag a splat is in flight for ~0.2 s: the cells are compared up to six times,
+    //  0.4 s apart — paint in flight differs once and then agrees, a guard verdict that differs would differ every time)
+    let cA = [], cB = [], diffN = -1; const tries = [];
+    for (let k = 0; k < 6 && diffN !== 0; k++) {
+      if (k) await wait(400);
+      [cA, cB] = await Promise.all([cells(A), cells(B)]);
+      diffN = cA.reduce((s, v, i) => s + (v !== cB[i] ? 1 : 0), 0); tries.push(diffN);
+    }
+    const inkedN = cB.filter((v) => v).length;
     // after each done (+ 1.5 s on each screen's own clock): the era blocks' solid flags and the nav's era on both screens
     const snap = async (c) => J(c, `(() => { const W = __G.eraWorld; let h = 2166136261; for (const id of W.eraIds) { h ^= __G.level.blocks[id].solid ? 1 : 2; h = Math.imul(h, 16777619) >>> 0; } return { t: +__G.match.eras.S.clock.t.toFixed(2), era: __G.match.eras.era, solid: (h >>> 0).toString(16), edgeMask: __G.nav.edgeMask, navEra: W.navEra }; })()`);
     const after = [];
@@ -90,21 +122,54 @@ module.exports = async ({ clients, R, wait, say, open, close, args }) => {
     await A.until(`__G.match && (__G.match.eras && __G.match.eras.S.clock.t > 66 || __G.match.state !== 'playing')`, 120000, 300);
     await wait(1200);
     const devAfter = [await J(B, `(() => { const it = window.__eraDev; return it ? it.state : null; })()`), await ghostA()];
+    const curAfter = [await J(B, `(() => { const it = window.__eraCur; return it ? it.state : null; })()`), await ghostNear(curB && curB.pos, 'curtain')];
     const la = await log(A), lb = await log(B);
+    // the two stage clocks compared at the same wall time: for each of the follower's era updates from done 1 + 2 s to
+    // 28 s later, the host's clock interpolated at that wall time, minus the follower's
+    const [ka, kb] = [await J(A, `window.__eraClk || []`), await J(B, `window.__eraClk || []`)];
+    const clockSkew = (() => {
+      const out = [], per = new Map();
+      let i = 1;
+      for (const [w, tb] of kb) {
+        if (tb < done1 + 2 || tb > done1 + 28) continue;
+        while (i < ka.length && ka[i][0] < w) i++;
+        if (i >= ka.length || ka[i - 1][0] > w) continue;
+        const [w0, t0] = ka[i - 1], [w1, t1] = ka[i], ta = w1 > w0 ? t0 + ((t1 - t0) * (w - w0)) / (w1 - w0) : t0;
+        out.push(ta - tb);
+        const k = Math.floor(tb); (per.get(k) || per.set(k, []).get(k)).push(ta - tb);
+      }
+      const ab = out.map(Math.abs).sort((x, y) => x - y), q = (k) => (ab.length ? +ab[Math.min(ab.length - 1, Math.floor(ab.length * k))].toFixed(3) : null);
+      const signed = [...out].sort((x, y) => x - y);
+      // (per second of the follower's clock: the signed median, host − follower; and each screen's frames over 1/24 s, whose
+      //  lost time the clock tick takes back: the game clock advances by at most 1/24 s a frame)
+      const series = [...per].map(([k, v]) => { v.sort((x, y) => x - y); return [k, +v[v.length >> 1].toFixed(2)]; });
+      const longFrames = (L0) => { let n = 0, lost = 0; for (let j = 1; j < L0.length; j++) { const d = (L0[j][0] - L0[j - 1][0]) / 1000; if (d > 1 / 24 + 0.005) { n++; lost += d - 1 / 24; } } return { n, lostS: +lost.toFixed(2) }; };
+      return { n: out.length, median: q(0.5), p90: q(0.9), max: q(1), signedMedian: signed.length ? +signed[signed.length >> 1].toFixed(3) : null, series, longFrames: [longFrames(ka), longFrames(kb)] };
+    })();
+    const lagQ = await A.js(`location.search`);
     const flips = (L0) => { const m = new Map(); for (const r of L0) if (r.n === 'era:flip' && !m.has(r.group + '@' + Math.round(r.t / 30))) m.set(r.group + '@' + Math.round(r.t / 30), r); return m; };
     const fa = flips(la), fb = flips(lb), skew = [];
     for (const [k, r] of fa) { const q = fb.get(k); if (q) skew.push([k, q.wall - r.wall]); }
     const maxSkew = skew.length ? Math.max(...skew.map((x) => Math.abs(x[1]))) / 1000 : null;
     const perJump = [1, 2].map((j) => { const v = skew.filter((x) => x[0].endsWith('@' + j)).map((x) => Math.abs(x[1]) / 1000); return v.length ? { groups: v.length, max_s: +Math.max(...v).toFixed(3), median_s: +v.sort((a, b) => a - b)[v.length >> 1].toFixed(3) } : null; });
-    R('turf: every group flips on both screens within 0.4 s (wall clock) of each other, through both jumps',
-      skew.length >= 50 && maxSkew < 0.4, { groups: skew.length, maxSkew_s: maxSkew, perJump, clockSkew_s: skewS, worst: skew.sort((x, y) => Math.abs(y[1]) - Math.abs(x[1])).slice(0, 4), flipsA: fa.size, flipsB: fb.size });
+    const lag = (/netlag=(\d+)/.exec(lagQ) || [])[1] || 0, jit = (/netjitter=(\d+)/.exec(lagQ) || [])[1] || 0;
+    // (each screen's clock at the wall time of the worst flips, from the era-update logs: a flip lands on the frame that
+    //  crosses its time, so on a loaded machine a slow frame adds up to its length to the skew)
+    const clkAt = (K, w) => { for (let j = 1; j < K.length; j++) if (K[j][0] >= w) { const [w0, t0] = K[j - 1], [w1, t1] = K[j]; return +(w1 > w0 ? t0 + ((t1 - t0) * (w - w0)) / (w1 - w0) : t0).toFixed(3); } return null; };
+    const atFlips = skew.slice().sort((x, y) => Math.abs(y[1]) - Math.abs(x[1])).slice(0, 3).map(([k]) => { const r = fa.get(k), q = fb.get(k); return { k, hostFlip: [r.wall, clkAt(ka, r.wall), clkAt(kb, r.wall)], guestFlip: [q.wall, clkAt(ka, q.wall), clkAt(kb, q.wall)] }; });
+    R(`turf${lag ? ` (netlag ${lag} / jitter ${jit})` : ''}: every group flips on both screens within 0.4 s (wall clock) of each other, through both jumps`,
+      skew.length >= 50 && maxSkew < 0.4, { groups: skew.length, maxSkew_s: maxSkew, perJump, clockSkew_s: skewS, worst: skew.sort((x, y) => Math.abs(y[1]) - Math.abs(x[1])).slice(0, 4), atFlips, flipsA: fa.size, flipsB: fb.size });
+    R(`turf${lag ? ` (netlag ${lag} / jitter ${jit})` : ''}: the follower's stage clock is the host's at the same wall time — within 0.15 s (median) and 0.25 s (90th percentile) over 26 s after jump 1 (the trip to the relay added back, final review issue 4)`,
+      clockSkew.n >= 200 && clockSkew.median < 0.15 && clockSkew.p90 < 0.25, { clockSkew, sampled: skewS, rtt: [await A.js(`Math.round(__G.net?.tr?.rtt || __G.netm?.s?.tr?.rtt || 0)`).catch(() => null), await B.js(`Math.round(__G.netm?.s?.tr?.rtt || 0)`).catch(() => null)] });
     R('turf: after each done both screens agree on solid for every era block and on the nav\'s era (edgeMask)',
       after.length === 2 && after.every(([a, b]) => a.solid === b.solid && a.edgeMask === b.edgeMask && a.navEra === b.navEra && a.era === b.era) && after[0][0].navEra === 2 && after[1][0].navEra === 3,
       { after, donesB: lb.filter((r) => r.n === 'era:done').map((r) => [r.era, r.t]) });
-    R('turf: a sprinkler the guest stuck on the Degrayling crates is gone on both screens after their flip (the owner pops it, its end record ends the ghost)',
-      thrown && devB && devB.onCrates && ghostBefore >= 1 && devAfter[0] === 'dead' && devAfter[1] === 0, { devB, ghostBefore, after: devAfter });
+    R('turf (precondition): the guest\'s sprinkler stuck on the Degrayling crates\' wall and its Drip Curtain on their roof both stand on both screens before the flip (the host has their ghosts)',
+      thrown && devB && devB.onCrates && devB.state === 'spray' && ghostBefore >= 1 && curThrown && curB && curB.state === 'curtain' && Math.abs(curB.pos[1] - 2.8) < 0.1 && curGhostBefore >= 1, { devB, ghostBefore, curB, curGhostBefore });
+    R('turf: that sprinkler and that curtain are gone on both screens after the crates\' flip (the owner pops them, the end record [2, gid, 2] ends the ghosts)',
+      devAfter[0] === 'dead' && devAfter[1] === 0 && curAfter[0] === 'dead' && curAfter[1] === 0, { sprinkler: devAfter, curtain: curAfter });
     R('turf: the guest\'s splats on the Iron Bridge from 0.4 s before its flip to 0.6 s after (the guard window; field 15 carries the painter\'s stage time) leave its cells equal on both screens',
-      shots.length >= 8 && Math.min(...shots) <= -0.3 && Math.max(...shots) >= 0.5 && cA.length > 20 && diffN === 0 && inkedN > 0, { shots: shots.length, span: [Math.min(...shots), Math.max(...shots)], cells: cA.length, inked: inkedN, differ: diffN });
+      shots.length >= 8 && Math.min(...shots) <= -0.3 && Math.max(...shots) >= 0.5 && cA.length > 20 && diffN === 0 && inkedN > 0, { shots: shots.length, span: [Math.min(...shots), Math.max(...shots)], cells: cA.length, inked: inkedN, differ: diffN, differPerTry: tries });
     for (const c of [A, B]) await c.until(`__G.match && __G.match.state === 'results' && !!__G.match.result`, 150000, 500);
     const res = [await J(A, `{ cov: __G.match.result.coverage.map((x) => +x.toFixed(4)), w: __G.match.result.winner }`), await J(B, `{ cov: __G.match.result.coverage.map((x) => +x.toFixed(4)), w: __G.match.result.winner }`)];
     R('turf: both results screens show the host\'s counts (the 3000s\' turf, the same winner)', JSON.stringify(res[0]) === JSON.stringify(res[1]), { res });
