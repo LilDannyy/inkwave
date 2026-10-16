@@ -80,12 +80,15 @@
     paintAround(0, side(P, 4), 3); paintAround(1, side(P, -4), 3);
     Kp.clock = 19; Kp.shell.m = 0.66 * Kp.shell.hp; Kp.shell.quiet = 0; Kp.shell.flashK = 0.6; step(0.1); follow(); g.rig.pitch = 0.05; step(1 / 60); calm();
   });
+  // ([karp-face] review round 1: the burst happens in set() and the frame is taken 0.15 s of sim later — as a moment()
+  // the 1080 picture caught the frame before it; the WIPEOUT! of the four splatted and our SHELL BURST! both live)
   add('hud-burst', () => {
     reset(); m.time = 274;
     put(me, spot(P.x - 0.6, P.z - dz * 6, P.y), 0); me.yaw = me.aimYaw = yawTo(me, P);
     B.forEach((b, i) => put(b, spot(P.x + (i - 1.5) * 2.2, P.z + dz * 3, P.y)));
     Kp.clock = 25; step(0.05); follow(); calm();
-  }, () => { Kp.shell.add(0, 5000, me); for (let i = 0; i < 9; i++) dbg.step(1000 / 60); }, 60);
+    Kp.shell.add(0, 5000, me); for (let i = 0; i < 9; i++) dbg.step(1000 / 60);
+  }, null, 350);
   add('hud-free', () => {
     reset(); m.time = 270;
     Kp.shell.clear(); Kp._setPhase('free', 0);

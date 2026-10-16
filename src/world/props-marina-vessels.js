@@ -2763,7 +2763,7 @@ export const HALYARD_VESSELS = [
   { type: 'ferry_hull', pos: [0, 0, 0], notIn: 'tower' },
   { type: 'ferry_hull', pos: [0, 0, 0], linkspan: true, onlyIn: 'tower' },   // Tower Command: floats against both ends
   { type: 'ferry_cabin', pos: [0, 0, 0] },
-  { type: 'ferry_bridge', pos: [0, 3.8, 0], mirror: false, notIn: 'tower' },
+  { type: 'ferry_bridge', pos: [0, 3.8, 0], mirror: false, notIn: ['tower', 'bazookarp'] },   // [karp-face] (its wheelhouse block isn't built there: the Pond is on the cabin roof — the dressing and funnel stood inside the Roe Shell)
   // cover pieces from docs/HALYARD.md (Alpha half; mirrored)
   { type: 'ferry_locker', pos: [11.75, 1.3, 2.15], notIn: 'tower' },
   { type: 'ferry_cargo', pos: [14.2, 1.3, 0.4], notIn: 'tower' },
