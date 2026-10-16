@@ -756,7 +756,8 @@
           const hit0 = ev('hit').filter((x) => x.e.victim === foe).length;
           step(2.5, () => { put(foe, V(0, 0, 7), facingAway ? 0 : Math.PI); if (!SN || !['fly', 'open', 'live'].includes(SN.state)) return false; });
           stub(mate);
-          return { snap, thrown: !!SN, state: SN?.state, spot: SN ? v3(SN.spot) : null, blewBy: SN?.blast?.by === mate, foeHit: ev('hit').filter((x) => x.e.victim === foe).length > hit0 };
+          return { snap, thrown: !!SN, state: SN?.state, spot: SN ? v3(SN.spot) : null, blewBy: SN?.blast?.by === mate, foeHit: ev('hit').filter((x) => x.e.victim === foe).length > hit0,
+            dbg: { mode: mate.bot.mode, sees: !!mate.bot.sight?.sees(foe), hp: mate.hp, ld: r2(mate.lastDamage), ink: r2(mate.ink), snapLog: (BOBBER_BOT.snapLog || []).slice(-6), scanWhy: BOBBER_BOT.scanWhy, holds: BOBBER_BOT.holds, fired: BOBBER_BOT.fired, snapShots: BOBBER_BOT.snapShots, aimYaw: r2(mate.bot.aimYaw), wep: mate.weapon.kind } };
         };
         const away = snapTrial(true), face = snapTrial(false);
         R('bots: a snap — a fighting bot throws a lone bobber onto the feet of a foe facing away from it and sets it off on that foe as it floats; a foe facing it (a duel) gets none',

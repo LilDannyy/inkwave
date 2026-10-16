@@ -610,7 +610,7 @@ export const botKit = {
     const T = tripOf(b);
     if (T) {
       if (Math.hypot(a.pos.x - T.S.x, a.pos.z - T.S.z) > 1.6 && G.time - T.t0 < 8) return false;
-      if (a.ink < 72) { W.ink++; return false; }
+      if (a.ink < (guard ? a.sub.inkCost + 42 : 72)) { W.ink++; return false; }
       b._bobTrip = null;
       const L = tp ? layout(a, T.A, tp) : buildChain(a, T.A, tp);
       if (!L) { W.spot++; BOBBER_BOT.tripsNo = (BOBBER_BOT.tripsNo || 0) + 1; b._bobNoSpotT = G.time + 0.5; blog(b, 'tripNo', { d: Math.round(Math.hypot(a.pos.x - T.S.x, a.pos.z - T.S.z) * 10) / 10, no: JSON.stringify(NO) }); return false; }
@@ -619,7 +619,9 @@ export const botKit = {
     }
     // [b5-int3] Turf: TURF_WEB (the knob)
     const turf = !zonePlan() && !tp;
-    if (a.ink < (turf ? TURF_WEB.ink : 72)) { W.ink++; return false; }
+    // ([b5-int3] a Zone Control guard waits for the tank its own refill gate waits for — inkCost + 42 — before it starts: a
+    // guard that started on 76 ink threw two links, stood 6 s filling for the third, and the plan no longer tethered)
+    if (a.ink < (turf ? TURF_WEB.ink : guard ? a.sub.inkCost + 42 : 72)) { W.ink++; return false; }
     if (turf && Math.random() > TURF_WEB.p / 0.02) return false;
     // (a bot with a dozen of its own out already doesn't start another chain: past the hidden guard each throw would only
     // retire its oldest — its web is big enough, and every throw, relink and fizzle costs the frame)
