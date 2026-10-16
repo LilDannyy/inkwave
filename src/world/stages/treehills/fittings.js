@@ -118,7 +118,7 @@ export function registerFittings(D, H, T) {
         railing(B, a, b, { h, gap: o.gap ?? 1.5, kick: o.kick });
         const L = Math.hypot(b[0] - a[0], b[2] - a[2]), n = Math.max(1, Math.ceil(L / 1.2));
         const yl = Math.min(a[1], b[1]);
-        colSeg(B, [a[0], a[2]], [b[0], b[2]], 0.07, yl, Math.max(a[1], b[1]) + h, n, RAIL);
+        colSeg(B, [a[0], a[2]], [b[0], b[2]], 0.07, yl, Math.max(a[1], b[1]) + h, n, o.offTop ? { rail: true, roof: true } : RAIL);   // [b5-int3] o.offTop: its top off-limits (dash-reach.js)
       }
     },
   };
