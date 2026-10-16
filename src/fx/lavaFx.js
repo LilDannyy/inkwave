@@ -774,7 +774,7 @@ export function drawLavaMap(R, c, mm, tc, s, t) {
     else for (let k = n; k < C.n; k++) D[P[k] * 4 + 3] = 0;
     C.n = n;
     C.fill.getContext('2d').putImageData(C.img, 0, 0);
-    if (R.stats) { R.stats.mapMs = Math.max(R.stats.mapMs || 0, +(performance.now() - t1).toFixed(2)); R.stats.mapN = (R.stats.mapN || 0) + 1; }
+    if (R.stats) { const ms = +(performance.now() - t1).toFixed(2); R.stats.mapMs = Math.max(R.stats.mapMs || 0, ms); R.stats.mapN = (R.stats.mapN || 0) + 1; const A = (R.stats.mapSteps ||= []); if (A.length < 200) A.push(ms); }
   }
   c.drawImage(C.fill, 0, 0);
   const hatchOn = (st.warn && st.next.to === 'high') || st.phase === 'rise';
