@@ -117,7 +117,7 @@ app.on('browser-window-created', (_, win) => {
       const w = rep.checks[3]?.nums?.teams?.[0], hops = rep.checks[2]?.nums;
       const zoneN = rep.checks[9]?.nums?.zones?.filter((z) => z.team === 1).length ?? 0;
       const rt = rep.checks[5]?.nums?.rows?.filter((r) => r.team === 0).map((r) => (r.r2 ? 2 : 1));
-      console.log(`RESULT ${id}${rep.states.length > 1 ? '@' + rep.key : ''} ${ok ? 'ok' : 'fail'} L=${rep.L.join('/')} weir=${w?.weirs?.map((q) => q.count).join(',')} gate=${rep.checks[8]?.nums?.rows?.[0]?.dist} routes=${rt && rt.length ? Math.min(...rt) : 0}/2 zones=${zoneN} hops=${hops?.hops}+${hops?.gaps}${fails.length ? ' FAIL=' + fails.join(',') : ''}${skips.length ? ' SKIP=' + skips.join(',') : ''}`);
+      console.log(`RESULT ${id}${rep.states.length > 1 ? '@' + rep.key : ''} ${ok ? 'ok' : 'fail'} L=${rep.L.join('/')} weir=${w?.weirs?.map((q) => q.count).join(',')} gate=${rep.checks[8]?.nums?.rows?.[0]?.dist} routes=${rt && rt.length ? Math.min(...rt) : 0}/2 zones=${zoneN} hops=${hops?.hops}+${hops?.gaps}${rep.checks[16]?.nums?.walkRoutes ? ` walks=${rep.checks[16].nums.walkRoutes.join('/')}+${rep.checks[16].nums.walkEntrances.join('/')}` : ''}${fails.length ? ' FAIL=' + fails.join(',') : ''}${skips.length ? ' SKIP=' + skips.join(',') : ''}`);
       if (shots.length) console.log(`  pictures (${OUT}): ${shots.join(', ')}`);
       const json = { ...rep, carry, drop, shots, result: ok ? 'ok' : 'fail', fails, skips };
       fs.writeFileSync(path.join(OUT, `${tag ? tag + '-' : ''}${id}${rep.states.length > 1 ? '-s' + rep.key : ''}-karp.json`), JSON.stringify(json, null, 1));
@@ -194,13 +194,13 @@ app.on('browser-window-created', (_, win) => {
         }
         if (table.length > 1) {
           console.log('\n== all stages');
-          console.log('| stage | L (m) | weir counts | result | failing checks | hop + gap edges | #16 made / not made (hopVeto) | beyond the rules made | #7d finds (gain > 10 m) | entrances A/B | s |');
-          console.log('|---|---|---|---|---|---|---|---|---|---|---|');
+          console.log('| stage | L (m) | weir counts | result | failing checks | hop + gap edges | #16 made / not made (hopVeto) | #16 walks: routes, entrances | beyond the rules made | #7d finds (gain > 10 m) | entrances A/B | s |');
+          console.log('|---|---|---|---|---|---|---|---|---|---|---|---|');
           for (const r of table) {
             if (r.err) { console.log(`| ${r.id} | error: ${r.err} |`); continue; }
             const c = r.j.checks, n16 = c[16]?.nums || {}, n7 = c[7]?.nums || {};
             const finds = (n7.d || []).length, ents = (n7.teams || []).map((t) => t.entrances.length).join('/');
-            console.log(`| ${r.id}${r.j.placeholder ? ' (placeholder)' : ''} | ${r.j.L.join(' / ')} | ${(c[3]?.nums?.teams?.[0]?.weirs || []).map((w) => w.count).join(', ')} | ${r.j.result} | ${r.j.fails.map((n) => '#' + n).join(' ')} | ${c[2]?.nums?.hops} + ${c[2]?.nums?.gaps} | ${n16.tried != null ? `${n16.tried - n16.failed} / ${n16.failed}${n16.failed ? ` (h ${n16.failedBy.hop}, g ${n16.failedBy.gapLevel}, g↓ ${n16.failedBy.gapDown})` : ''}` : '–'} | ${n16.beyondMade ?? '–'} of ${n16.beyond ?? '–'} | ${finds}${finds ? ': ' + (n7.d || []).slice(0, 3).map((f) => `${f.probe} ${f.gain}`).join(', ') : ''} | ${ents} | ${r.s} |`);
+            console.log(`| ${r.id}${r.j.placeholder ? ' (placeholder)' : ''} | ${r.j.L.join(' / ')} | ${(c[3]?.nums?.teams?.[0]?.weirs || []).map((w) => w.count).join(', ')} | ${r.j.result} | ${r.j.fails.map((n) => '#' + n).join(' ')} | ${c[2]?.nums?.hops} + ${c[2]?.nums?.gaps} | ${n16.tried != null ? `${n16.tried - n16.failed} / ${n16.failed}${n16.failed ? ` (h ${n16.failedBy.hop}, g ${n16.failedBy.gapLevel}, g↓ ${n16.failedBy.gapDown})` : ''}` : '–'} | ${n16.walkRoutes ? `${n16.walkRoutes[0]}/${n16.walkRoutes[1]}, ${n16.walkEntrances[0]}/${n16.walkEntrances[1]}` : '–'} | ${n16.beyondMade ?? '–'} of ${n16.beyond ?? '–'} | ${finds}${finds ? ': ' + (n7.d || []).slice(0, 3).map((f) => `${f.probe} ${f.gain}`).join(', ') : ''} | ${ents} | ${r.s} |`);
           }
           fs.writeFileSync(path.join(OUT, 'all-stages.json'), JSON.stringify(table.map((r) => ({ id: r.id, err: r.err, result: r.j?.result, fails: r.j?.fails, L: r.j?.L, s: r.s, c2: r.j?.checks?.[2]?.nums, c16: r.j?.checks?.[16]?.nums, c7: r.j?.checks?.[7]?.nums })), null, 1));
         }

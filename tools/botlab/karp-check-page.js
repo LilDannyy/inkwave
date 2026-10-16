@@ -858,6 +858,29 @@ export async function runChecks(o = {}) {
     const byKind = { hop: 0, gapLevel: 0, gapDown: 0 }; for (const r of fails) { if (r.kind === 'hop') byKind.hop++; else if (nodes[r.to].y < nodes[r.from].y - K.gap.upMax) byKind.gapDown++; else byKind.gapLevel++; }
     // the made candidates beyond the rules go to #7d with their gain
     for (const r of made) { const g2 = gainOf(C, r.from, r.to); if (g2 > CK.gain && !waived(C, '7d', nodes[r.from])) out._7d.push({ probe: r.kind === 'high hop' ? 'highHop' : 'longGap', a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: fin(g2) ? r1(g2) : 'off-field', warnOnly: !fin(g2) }); }
+    // the walks: a kid with the carrier's rules on every route 1 and route 2 of every leg and through every entrance into
+    // each Gate's ring (one crossing per entrance: not a climb, a ride or a hop over off-field ground — those are proved
+    // apart), a hop or gap edge on the way taken by its own trials above when the walk itself doesn't make it
+    let walkRes = null;
+    if (res) {
+      const madeSet = new Set(res.list.filter((r) => r.ok && !r.beyond).map((r) => r.from + ':' + r.to));
+      const walks = [];
+      for (const lg of legs) if (lg.kind !== 'pg') for (const [nm, p] of [['route 1', lg.rt.r1], ['route 2', lg.rt.r2]]) if (p && p.length > 1) walks.push({ team: lg.team, what: `team ${lg.team} ${lg.name}, ${nm}`, path: p });
+      for (const t of [0, 1]) {
+        for (const e of groups(out._aCross[t].filter((c) => c.type !== ET.climb && c.type !== 8 && c.type !== 9), CK.entGroup)) {
+          const c = e.pts.find((q) => q.type === ET.walk) || e.pts[0], what = `team ${t} through the entrance at (${r1(e.c.x)}, ${r1(e.c.z)}) into its Gate's ring`;
+          // a run-up: the last 8 m of the shortest climb-free route from the Pond to the crossing; then on to the Gate
+          const s0 = search(C, pondNodes, { noClimb: true, avoid: zm[t], target: mask(N, [c.from]) });
+          let run = s0.hit >= 0 ? pathOf(s0.prev, s0.hit) : [c.from], acc = 0, k = run.length - 1;
+          while (k > 0 && acc < 8) { acc += d3(nodes[run[k - 1]], nodes[run[k]]); k--; }
+          run = run.slice(k);
+          const s1 = search(C, [c.to], { noClimb: true, target: mask(N, gateNodes[t]) });
+          walks.push({ team: t, what, entrance: true, path: s1.hit >= 0 ? [...run, ...pathOf(s1.prev, s1.hit)] : null, why: 'no climb-free route on from it to the Gate' });
+        }
+      }
+      walkRes = walkProof(C, walks, madeSet);
+    }
+    const walkBad = walkRes ? walkRes.list.filter((w) => !w.ok && !w.mover) : [];
     const offMade = res ? res.list.filter((r) => r.kind === 'off hop' && r.ok) : [];
     out._offMade = [];
     for (const r of offMade) {
@@ -872,13 +895,18 @@ export async function runChecks(o = {}) {
       }
       out._offMade.push({ a: P3(nodes[r.from]), top: P3(nodes[r.to]), exits: off.exits.length });
     }
+    for (const w of walkBad.slice(0, 8)) fl.push({ at: w.fail?.at || w.at, what: `16: not walked: ${w.what}${w.fail ? ` (stuck on a ${w.fail.edge} edge)` : ''}`, look: w.fail?.node ? { x: w.fail.node[0], y: w.fail.node[1], z: w.fail.node[2] } : undefined });
+    draw.walkFails = walkBad.map((w) => ({ at: w.fail?.at || w.at, what: w.what }));
     for (const r of fails.slice(0, 8)) fl.push({ at: P3(nodes[r.from]), what: `16: a ${r.kind} edge no kid makes`, look: nodes[r.to] });
     draw.extra = extra.map((e) => { const r = res?.list.find((x) => x.from === e.from && x.to === e.to && !x.beyond); return { a: [r1(e.a[0]), r1(e.a[2])], b: [r1(e.b[0]), r1(e.b[2])], type: e.type, ok: r ? r.ok : null }; });
     draw.beyond = made.map((r) => { const g2 = gainOf(C, r.from, r.to); return { a: [r1(nodes[r.from].x), r1(nodes[r.from].z)], b: [r1(nodes[r.to].x), r1(nodes[r.to].z)], find: !fin(g2) || g2 > CK.gain }; });
     const ran = !!res;
-    chk(16, 'The hop and gap edges, proved physically', !ran ? 'SKIP' : fails.length ? 'FAIL' : 'OK',
-      !ran ? 'PHYS=0: not run (a RESULT ok needs it)' : `${tests.length} added edges tried (${F.stats.hops} hops, ${F.stats.gaps} gaps): ${tests.length - fails.length} made, ${fails.length} not${fails.length ? ` (${byKind.hop} hops, ${byKind.gapLevel} gaps up / level, ${byKind.gapDown} gaps down)` : ''}${fails.length ? ' → hopVeto ' + JSON.stringify(veto.slice(0, 6)) + (veto.length > 6 ? ` … ${veto.length}` : '') : ''}; ${beyond.length} candidates beyond the rules (${cand.high.length} high hops, ${cand.long.length} long gaps): ${made.length} made (to #7d); ${cand.off.length} hops onto off-field ground: ${offMade.length} made (to #7d / #7a)` + (res ? ` · ${res.trials} trials, ${Math.round(res.ms / 1000)} s` : ''),
-      { tried: tests.length, failed: fails.length, failedBy: byKind, hopVeto: veto, beyond: beyond.length, beyondMade: made.length, offHops: cand.off.length, offMade: out._offMade, trials: res?.trials, ms: res?.ms, made: made.map((r) => ({ kind: r.kind, a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(gainOf(C, r.from, r.to)) })) }, fl);
+    const wl = walkRes?.list || [], wR = wl.filter((w) => !w.entrance), wE = wl.filter((w) => w.entrance), wOk = (l) => l.filter((w) => w.ok).length;
+    const walkTxt = walkRes ? `; walks with the carrier's rules: routes ${wOk(wR)}/${wR.length}, entrances ${wOk(wE)}/${wE.length}${walkRes.proved ? ` (${walkRes.proved} hops / gaps on the way taken by their trials)` : ''}${wl.some((w) => w.mover) ? `, ${wl.filter((w) => w.mover).length} blocked by a parked mover (not judged)` : ''}${walkBad.length ? ` — NOT WALKED: ${walkBad.slice(0, 4).map((w) => `${w.what}${w.fail ? ` (stuck at ${JSON.stringify(w.fail.at)} on a ${w.fail.edge} edge${w.fail.dead ? ', fell' : ''})` : ` (${w.why})`}`).join('; ')}${walkBad.length > 4 ? ` … ${walkBad.length}` : ''}` : ''}` : '';
+    chk(16, 'The hop and gap edges, proved physically', !ran ? 'SKIP' : fails.length || walkBad.length ? 'FAIL' : 'OK',
+      !ran ? 'PHYS=0: not run (a RESULT ok needs it)' : `${tests.length} added edges tried (${F.stats.hops} hops, ${F.stats.gaps} gaps): ${tests.length - fails.length} made, ${fails.length} not${fails.length ? ` (${byKind.hop} hops, ${byKind.gapLevel} gaps up / level, ${byKind.gapDown} gaps down)` : ''}${fails.length ? ' → hopVeto ' + JSON.stringify(veto.slice(0, 6)) + (veto.length > 6 ? ` … ${veto.length}` : '') : ''}; ${beyond.length} candidates beyond the rules (${cand.high.length} high hops, ${cand.long.length} long gaps): ${made.length} made (to #7d); ${cand.off.length} hops onto off-field ground: ${offMade.length} made (to #7d / #7a)` + walkTxt + (res ? ` · ${res.trials} trials, ${Math.round(res.ms / 1000)} s; walks ${Math.round((walkRes?.ms || 0) / 1000)} s` : ''),
+      { tried: tests.length, failed: fails.length, failedBy: byKind, hopVeto: veto, beyond: beyond.length, beyondMade: made.length, offHops: cand.off.length, offMade: out._offMade, trials: res?.trials, ms: res?.ms,
+        walks: wl.map((w) => ({ ...w, path: undefined })), walkRoutes: [wOk(wR), wR.length], walkEntrances: [wOk(wE), wE.length], walkFailed: walkBad.length, made: made.map((r) => ({ kind: r.kind, a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(gainOf(C, r.from, r.to)) })) }, fl);
   }
   tm('16');
   // ----------------------------------------------------------------------------------------------- #7 finished (with #16's made candidates)
@@ -990,6 +1018,57 @@ export function proveEdges(C, list, o = {}) {
   }
   kid.carry = null; kid.invuln = 0;
   return { list: out, trials, ms: Math.round(performance.now() - t0) };
+}
+
+// ================================================================================================= #16's walks
+// A kid with the carrier's rules (`carry` set: PLAYER's speeds × 0.8, both spawn barriers, carrierBlock) stepped through
+// actor.update at 1/60 s alone in the stage, as the hop / gap trials: WASD toward the next node of the path, jump at a
+// riser above the step-up, at a rim before a gap, and once whenever it has made no progress for 0.8 s (a lip, a kerb).
+// A hop or gap edge it doesn't make on the way is decided by that edge's own trials (made: it is set down on the far
+// node and walks on; counted). The walk fails when the kid makes no progress for 2.5 s, falls off or runs out of time
+// (twice the path's length at 4.8 m/s + 8 s); stuck against a dynamic block (a parked mover) it is reported, not judged.
+function walkProof(C, walks, made) {
+  const t0 = performance.now(), { m, nodes, L, G } = C, dt = 1 / 60, V = new V3();
+  const out = []; let proved = 0;
+  const carry = (a) => ({ since: 0, sp: a.special, gun: null, kick: new V3(), j: { mark: NaN, ret: false, half: -1, zone: false, rate: 1, why: null, foot: null, sent: null, sentFoot: null, sentFootT: 0 }, startBest: 0, probe: true });
+  const nearMover = (p) => L.queryBlocks(p.x - 1.4, p.z - 1.4, p.x + 1.4, p.z + 1.4, []).some((id) => L.blocks[id].dynamic && L.blocks[id].solid);
+  for (const w of walks) {
+    if (!w.path) { out.push({ team: w.team, what: w.what, entrance: !!w.entrance, ok: false, why: w.why }); continue; }
+    const kid = m.actors.find((a) => a.bot && a.team === w.team) || m.actors.find((a) => a.team === w.team) || m.actors[0], it = kid.intent;
+    for (const a of m.actors) { if (a.bot) a.bot.update = () => {}; a.intent.move.set(0, 0, 0); a.intent.fire = a.intent.jump = a.intent.squid = a.intent.sub = a.intent.special = false; if (a !== kid) { const pd = L.spawnPads[a.team]; a.pos.set(pd.x, pd.y + 0.05, pd.z); a.vel.set(0, 0, 0); } }
+    const p = w.path, set = (n, toward) => { kid.spawnAt(V.set(n.x, n.y + 0.05, n.z), Math.atan2(toward.x - n.x, toward.z - n.z)); kid.invuln = 99; kid.alive = true; kid.form = 'kid'; kid.carry = carry(kid); it.move.set(0, 0, 0); it.jump = false; for (let f = 0; f < 3; f++) kid.update(dt); };
+    set(nodes[p[0]], nodes[p[1]]);
+    const len = pathLen(C, p), maxS = (len / 4.8) * 2 + 8;
+    let pi = 1, t = 0, best = Infinity, bestT = 0, jumpT = -9, mine = 0, fail = null, mover = false;
+    while (pi < p.length) {
+      if (t > maxS) { fail = { at: P3(kid.pos), node: P3(nodes[p[pi]]), edge: TYPE_NAME[edgeType(C, p[pi - 1], p[pi])] || '?', timeout: true }; break; }
+      // at the next node (or one a few steps on: an overshoot, a run down a stair) → on
+      let adv = -1;
+      if (kid.grounded) for (let k = pi; k < Math.min(p.length, pi + 4); k++) { const r = nodes[p[k]]; if (hd(kid.pos, r) < 0.6 && Math.abs(r.y - kid.pos.y) < 0.8) { adv = k; break; } }
+      if (adv >= 0) { pi = adv + 1; best = Infinity; bestT = t; continue; }
+      const q = nodes[p[pi]], qa = nodes[p[pi - 1]], ty = edgeType(C, p[pi - 1], p[pi]), h = hd(kid.pos, q);
+      if (h < best - 0.25) { best = h; bestT = t; }
+      const fell = !kid.alive || kid.pos.y < Math.min(q.y, qa.y) - 4;
+      if (fell || t - bestT > 2.5) {
+        if ((ty === ET.hop || ty === ET.gap) && made.has(p[pi - 1] + ':' + p[pi])) { set(q, nodes[p[Math.min(pi + 1, p.length - 1)]]); mine++; proved++; pi++; best = Infinity; bestT = t; continue; }
+        if (!fell && nearMover(kid.pos)) mover = true;
+        fail = { at: P3(kid.pos), node: P3(q), edge: TYPE_NAME[ty] || '?', dead: fell };
+        break;
+      }
+      const dx = q.x - kid.pos.x, dz = q.z - kid.pos.z, l = Math.hypot(dx, dz) || 1;
+      if (l > 0.2) it.move.set(dx / l, 0, dz / l); else it.move.set(0, 0, 0);
+      let jump = q.y - kid.pos.y > PLAYER.stepUp - 0.05 && l < 1.6;
+      if (ty === ET.gap && kid.grounded) { const ax = kid.pos.x + (dx / l) * 0.5, az = kid.pos.z + (dz / l) * 0.5; if (!(L.groundHeight(ax, az, kid.pos.y + 0.3) > kid.pos.y - 1.0)) jump = true; }
+      if (t - bestT > 0.8 && t - jumpT > 1.0) jump = true;
+      if (jump && kid.grounded) jumpT = t;
+      it.jump = jump && kid.grounded;
+      kid.update(dt); t += dt;
+    }
+    it.move.set(0, 0, 0); it.jump = false;
+    out.push({ team: w.team, what: w.what, entrance: !!w.entrance, ok: !fail, mover: !!fail && mover, len: r1(len), t: r1(t), proved: mine, fail, nodes: p.length });
+  }
+  for (const a of m.actors) { a.carry = null; a.invuln = 0; a.intent.move.set(0, 0, 0); a.intent.jump = false; }
+  return { list: out, proved, ms: Math.round(performance.now() - t0) };
 }
 
 // ================================================================================================= #11 drop coverage
@@ -1250,6 +1329,7 @@ export async function pictures(o = {}) {
       for (const e of draw.extra || []) if (e.ok !== false) tick(e, e.ok ? 'rgba(60,255,60,0.85)' : '#999', 1.6);
       for (const e of draw.beyond || []) if (e.find) tick(e, '#f0f', 4);
       for (const e of draw.extra || []) if (e.ok === false) tick(e, '#ff2020', 4);
+      for (const w of draw.walkFails || []) { if (!w.at) continue; const [X, Y] = px(w.at[0], w.at[2]); x.strokeStyle = '#ff2020'; x.lineWidth = 4; x.beginPath(); x.arc(X, Y, 12, 0, 7); x.moveTo(X - 8, Y - 8); x.lineTo(X + 8, Y + 8); x.moveTo(X + 8, Y - 8); x.lineTo(X - 8, Y + 8); x.stroke(); }
       // the Gates (trigger, 15 m ring) and their entrances (arrows), the weirs (diamonds), the Pond
       for (const en of draw.entrances || []) {
         const [GX, GY] = px(en.g[0], en.g[2]);
@@ -1271,7 +1351,7 @@ export async function pictures(o = {}) {
       x.font = '15px sans-serif'; x.fillStyle = '#ddd';
       x.fillText('Alpha attacks left → right. Shade: Alpha\'s count (darker = nearer its Gate), dots every 10 counts; white dots: the halfway line. Cyan / yellow: Alpha\'s routes Pond → weir / weir → Gate (dashed: route 2).', 16, H + 56);
       x.fillText('Diamonds: weirs · discs: Dragon Gates (dashed 15 m ring; arrows: entrances, red = unseen from the deck) · hatched: Carp-Free Zones (signs ⊘; green ring = signed entrance, red X = unsigned) · yellow dashed: noRetreat · red: carrierBlock', 16, H + 78);
-      x.fillText(`Ticks: hop / gap edges (green made by a kid, red not: hopVeto) · magenta: made beyond the rules (bold: a #7d find, > 10 m) · purple: plateaus (red: FAIL) · numbered: flags (${flags.length}) — ${flags.slice(0, 6).map((f, i) => `${i + 1}: ${f.what}`).join(' · ').slice(0, 150)}`, 16, H + 100);
+      x.fillText(`Ticks: hop / gap edges (green made by a kid, red not: hopVeto) · magenta: made beyond the rules (bold: a #7d find, > 10 m) · red ⊗: where #16's walking kid got stuck · purple: plateaus (red: FAIL) · numbered: flags (${flags.length}) — ${flags.slice(0, 6).map((f, i) => `${i + 1}: ${f.what}`).join(' · ').slice(0, 150)}`, 16, H + 100);
       shots.push({ name: `${rep.id}${rep.states.length > 1 ? '-s' + rep.key : ''}-karp-top.jpg`, url: jpeg(c) });
       rep._flags = flags;
     }
