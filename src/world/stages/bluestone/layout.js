@@ -505,6 +505,9 @@ const BAZOOKARP = {
   noRetreat: [], carrierBlock: [], noRest: [], hopVeto: [],
   pondPlinth: null,
   shellHp: null,
+  // (the era engine, H21: the carrier field's states are the eras, which only advance in a match, so a drop spot must be
+  //  a rest in the era in force and every later one — karpField's restOk per state ANDed with the states after it)
+  statesAdvance: true,
 };
 
 // ------------------------------------------------------------------------------------------------ the eras (the engine's data)

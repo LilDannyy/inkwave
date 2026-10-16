@@ -812,6 +812,15 @@ export class StageEras {
     }
     return null;
   }
+  // H21 (the Bazookarp engine, wave 2: src/game/karpField.js): the carrier field's states, one per era — a node is a
+  // carrier's in era e when the union graph has it valid in e. The field computes every state at load and switches at
+  // era:done (its own listener: field.setState(field.stateOf(era)), never a rebuild); the registry forwards this as
+  // G.match.stage.karpStates() (stageMods.js [b5-eras]). restMask(state) / dangerAt(pos) answer its drop spot.
+  karpStates() {
+    const nav = this.W.nav;
+    if (!nav?.eraValid) return [];
+    return [1, 2, 3].map((e) => ({ key: e, nodeOk: (id) => nav.eraValid[e - 1][id] === 1 }));
+  }
   // the bot statistics at a flip: own squidkids on a top that just went, or inside a piece that just came
   _flipStats(on, off) {
     const L = this.W.level, B = L.blocks, S = this.stats.bots;
