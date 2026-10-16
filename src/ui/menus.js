@@ -1179,9 +1179,9 @@ export class Menus {
         ? h('span', { class: 'iw-mode__hero is-boss', html: bossSilhouette() })
         : h('span', { class: 'iw-mode__hero is-turf' },
           h('i', { class: 'iw-mode__squid is-a', html: SQUID }),
-          m.id === 'zones' || m.id === 'tower' ? h('i', { class: 'iw-mode__zone', html: m.id === 'tower' ? TOWER_GLYPH : ZONE_GLYPH }) : h('b', { class: 'iw-mode__vs iw-display' }, 'VS'),
+          m.id === 'zones' || m.id === 'tower' || m.id === 'bazookarp' ? h('i', { class: 'iw-mode__zone', html: m.id === 'bazookarp' ? KARP_GLYPH : m.id === 'tower' ? TOWER_GLYPH : ZONE_GLYPH }) : h('b', { class: 'iw-mode__vs iw-display' }, 'VS'),   // [karp-face] (the carp)
           h('i', { class: 'iw-mode__squid is-b', html: SQUID }));
-      const c = h('button', { class: `iw-mode iw-mode--${m.id} iw-in iw-in--pop`, style: { '--tilt': `${(MODES.length > 3 ? [-1.4, 0.8, -0.6, 1.4] : [-1.4, 0.6, 1.4])[i] ?? 0}deg` } },
+      const c = h('button', { class: `iw-mode iw-mode--${m.id} iw-in iw-in--pop`, style: { '--tilt': `${(MODES.length > 3 ? [-1.4, 0.8, -0.6, 1.4, -0.9] : [-1.4, 0.6, 1.4])[i] ?? 0}deg` } },   // [karp-face] (a fifth tilt)
         h('span', { class: 'iw-mode__art' }, img, h('i', { class: 'iw-mode__tint' }),
           h('span', { class: 'iw-mode__splat', html: splatSVG({ seed: 51 + i * 9, fill: 'var(--mc)', r: 58, arms: 9, drops: 5 }) }),
           hero, h('i', { class: 'iw-mode__glare' })),
@@ -1212,7 +1212,7 @@ export class Menus {
     const el = h('div', { class: 'iw-screen iw-modesel' },
       bg, h('div', { class: 'iw-ss__scrim' }),
       this._header('PLAY', { sub: 'Choose a mode · you and the bots' }),
-      h('div', { class: 'iw-modesel__row' + (cards.length > 3 ? ' is-three is-four' : cards.length > 2 ? ' is-three' : '') }, cards),
+      h('div', { class: 'iw-modesel__row' + (cards.length > 4 ? ' is-three is-four is-five' : cards.length > 3 ? ' is-three is-four' : cards.length > 2 ? ' is-three' : '') }, cards),   // [karp-face] (five: Bazookarp listed)
       this._prompts([[['←', '→'], 'DPad', 'Mode'], ['Enter', 'A', 'Select'], ['Esc', 'B', 'Back']]));
     el.dataset.mode = cur;
     setBg(cur);
@@ -3685,7 +3685,8 @@ export class Menus {
     const stNum = h('span', { class: 'iw-lstage__num' });
     const stTime = h('span', { class: 'iw-lstage__time' }, h('i', { class: 'is-sun', html: GLYPHS.sun }), h('i', { class: 'is-golden', html: GLYPHS.golden }), h('i', { class: 'is-moon', html: GLYPHS.sunset }), h('i', { class: 'is-random', html: GLYPHS.dice }));
     const stArrows = h('span', { class: 'iw-lstage__arrows' }, h('i', { class: 'is-l', html: GLYPHS.back }), h('i', { class: 'is-r', html: GLYPHS.next }));
-    const stage = h('div', { class: 'iw-lstage' }, stImgs, h('i', { class: 'iw-lstage__shade' }), stNum, h('span', { class: 'iw-lstage__tape' }, stName), stTime, stArrows);
+    const stPrev = h('span', { class: 'iw-lstage__preview', hidden: true }, 'PREVIEW');   // [karp-face] a stage on placeholder Bazookarp data (?wipstages only, DECISIONS #10)
+    const stage = h('div', { class: 'iw-lstage' }, stImgs, h('i', { class: 'iw-lstage__shade' }), stNum, h('span', { class: 'iw-lstage__tape' }, stName), stTime, stArrows, stPrev);
     stArrows.children[0].addEventListener('click', (e) => { e.stopPropagation(); this._setFocus(stage); setMap(-1); });
     stArrows.children[1].addEventListener('click', (e) => { e.stopPropagation(); this._setFocus(stage); setMap(1); });
     // TIME: day · golden hour · sunset · random (the host rolls one at the start)
@@ -3860,6 +3861,7 @@ export class Menus {
       // (the count follows the mode's stage list, so it refreshes on a mode switch too)
       const list = stageList(), k = list.findIndex((x) => x.id === m.id);
       stNum.innerHTML = rnd ? `STAGE <b>??</b><em>/ ${String(list.length - 1).padStart(2, '0')}</em>` : `STAGE <b>${String(Math.max(1, k)).padStart(2, '0')}</b><em>/ ${String(list.length - 1).padStart(2, '0')}</em>`;
+      stPrev.hidden = !(lobMode() === 'bazookarp' && !rnd && karpPreview(m.id));   // [karp-face]
       if (m.id === shownMap && time === shownTime) return;
       const first = shownMap === null;
       shownMap = m.id; shownTime = time;

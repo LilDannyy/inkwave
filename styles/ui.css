@@ -3229,3 +3229,16 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
   font: 900 var(--fs-xs) / 1 'Rubik', sans-serif; letter-spacing: .12em; box-shadow: 0 0 0 2px #15121c; transform: rotate(4deg); }
 .iw-lstage__preview { position: absolute; left: calc(var(--u) * .7); top: calc(var(--u) * .7); z-index: 3; padding: .25em .55em; border-radius: 99px; background: #ffd54a; color: #15121c;
   font: 900 var(--fs-xs) / 1 'Rubik', sans-serif; letter-spacing: .12em; box-shadow: 0 0 0 2px #15121c; }
+/* [karp-face] the mode screen with Bazookarp listed: five cards in the row (narrower again), and its koi-coral card */
+.iw-modesel__row.is-five { gap: calc(var(--u) * 1.2); }
+.iw-modesel__row.is-five .iw-mode { width: calc(var(--u) * 17.7); height: calc(var(--u) * 36.4); }
+.iw-modesel__row.is-five .iw-mode__hero.is-boss { width: calc(var(--u) * 17.2); }
+.iw-modesel__row.is-five .iw-mode__splat { width: calc(var(--u) * 15); height: calc(var(--u) * 15); }
+.iw-modesel__row.is-five .iw-mode__squid { width: calc(var(--u) * 5.9); height: calc(var(--u) * 5.9); }
+.iw-modesel__row.is-five .iw-mode__zone { width: calc(var(--u) * 5.6); height: calc(var(--u) * 5.6); }
+.iw-modesel__row.is-five .iw-mode__tape .iw-display { font-size: calc(var(--u) * 1.62); }
+.iw-modesel__row.is-five .iw-mode__blurb { font-size: calc(var(--fs-s) * .84); }
+.iw-modesel__row.is-five .iw-mode__chips .iw-chip { font-size: .9em; }
+.iw-mode--bazookarp { --mc: #ff7448; --mc-rgb: 255, 116, 72; --mc-l: #ffc0a6; --mc-d: #b23c16; --mc-ink: #3a0e00; }
+.iw-mode--bazookarp .iw-mode__tape .iw-display { color: #2c0b00; }
+.iw-mode--bazookarp.is-focus .iw-mode__zone { animation: iw-mode-bob 1.2s ease-in-out infinite .25s; }

@@ -18,6 +18,7 @@
 // emote(id, name) · swap(id, { weapon, sub, special, style }) · fill(n) · clear() · host(id) · startMatch() · endMatch() · lose(msg)
 import { G } from '../core/ctx.js';
 import { WEAPON_ORDER, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER, MAPS, TEAM_PALETTES, mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock, ROOM_TIMES, roomTime, roomBotPlan, mapOfflineOk, mapListed, listedMaps, modeListed } from '../config.js';   // [b5-karp] modeListed
+import { karpStageListed } from '../world/karpStages.js';   // [karp-face]
 import * as LOOK from '../game/character-style.js';
 
 const q = new URLSearchParams(typeof location !== 'undefined' ? location.search : '');
@@ -180,6 +181,7 @@ export class MockNet {
     else if (o.bots != null) pref[kind] = o.bots ? -1 : 0;
     // stage rules, exactly as session.js applies them (no Boss Battle on a noBoss stage, no bots on a noBots one)
     if (L.mode === 'boss' && L.map !== 'random' && !mapBossOk(L.map)) L.map = bossFallbackMap(wasMap === 'random' ? MAPS[0].id : wasMap);
+    if (L.mode === 'bazookarp' && L.map !== 'random' && !karpStageListed(L.map)) L.map = (listedMaps().find((m) => karpStageListed(m.id)) || MAPS[0]).id;   // [karp-face] DECISIONS #10, as session.js
     L.botCount = mapNoBots(L.map) ? 0 : pref[kind];
     L.bots = roomBotPlan(L).total > 0 || (L.botCount < 0 && !mapNoBots(L.map));
     this._emit('lobby', { lobby: this.lobby });
