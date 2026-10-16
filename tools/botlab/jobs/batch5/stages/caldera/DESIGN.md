@@ -890,7 +890,7 @@ The layout also carries the Ladle Gantry (`onlyIn: 'bazookarp'`, §2.3), so the 
 ### 4.5 Boss Battle: yes
 
 - Lava **held at LOW** (`schedule.boss: 'low'`): ledges dry, the Race sunk, the Organs at their LOW pose.
-- `boss: { floorY: 1.2, headroom: 4.6 }`. HULLBREAKER's home ground is the 1.2 tier: the island, both causeways, both Lakefronts and
+- `boss: { floorY: 1.2, headroom: 4.6, maxRise: 0.65, roamAfter: 12 }`. HULLBREAKER's home ground is the 1.2 tier: the island, both causeways, both Lakefronts and
   south heads: about 1,300 m² connected (the check needs ≥ 150).
 - **Boss Battle's own variant (the lava engine's fix round 3, the lead's decision: "800 connected beats 1,300 in necks").**
   The boss needs 2.9 m from any wall and 1.8 m from any drop; built as the other modes, the Surge Gauge's four piers and the
@@ -902,6 +902,15 @@ The layout also carries the Ladle Gantry (`onlyIn: 'bazookarp'`, §2.3), so the 
   (`out/fix3/fix3-boss-homeground-before-after.jpg`). Every other mode is built exactly as before. The art phase may give
   Boss Battle a landmark of its own outside the clearance ring (the gauge's place is the boss's floor). The ledges are 1.2 m below it (drops: it never walks
   them); the lake is void (a drop). Its charges stop on the piers, the ladle cars, the drums (stun windows).
+- **The boss's footing (fix round 3, the takeover).** The terraces stand only 1.2 m over its tier, inside BossNav's 1.35 m
+  stride, so its home ground ran up the Lower Surge Steps: it walked up them toward a squad on the terrace and stuck between
+  the parapets (boss-check: 29 m walked in 120 s, two runs in five). `boss.maxRise: 0.65` makes ground more than 0.65 m over
+  its floor no floor to it (the Pour Floor and the Moorings, 0.6 up, stay its ground): **818 m², one piece**
+  (`out/fix3/fix3-boss-homeground-maxrise.jpg`). `boss.roamAfter: 12`: having stood within 5 m of one spot for 12 s it picks
+  its next goal ≥ 9 m away (with the squad on a terrace it settled at its preferred 10 m and played every move from there).
+  And, in the shared brain, a walk blocked straight at its waypoint (a charge left it off-centre on a 10 m causeway, where
+  only a pose along the causeway fits) takes the heading a pose fits that best closes on the waypoint until the straight
+  step fits again (it stood 80 s turning to and fro).
 - The engine adds the rider parts before `BossNav` builds (ENGINE H21), so the Organ columns are walls to it.
 - Verify with a copy of `tools/botlab/jobs/stretch/boss-check.js`: home ground, roams > 50 m, never idle ≥ 12 s, moves
   played.
