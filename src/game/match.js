@@ -37,6 +37,7 @@ export class Match {
     this.paused = false;
     this.lastMinuteFired = false;
     this.lastCount = 99;
+    this.clockSlew = 0;            // [b5-eras] online follower: s of clock to give back by running slow (netmatch _hostClock)
     this.events = [];
   }
 
@@ -244,11 +245,15 @@ export class Match {
           if (this.state !== 'playing') break;
           if (this.tower.overtime) break;
         }
-        this.time -= dt;
+        // [b5-eras] a follower a little ahead of the host gives the time back by running slow (0.5–0.9×), never by stepping
+        // its clock back: the timer's seconds and the final countdown each come once, in order
+        let tdt = dt;
+        if (this.clockSlew > 0) { const g = Math.min(this.clockSlew, dt * Math.min(0.5, 0.1 + this.clockSlew)); this.clockSlew -= g; tdt -= g; }
+        this.time -= tdt;
         if (!this.attract) {
           if (!this.lastMinuteFired && this.time <= 60 && this.duration > 60) { this.lastMinuteFired = true; emit('match:oneminute', {}); }
           const c = Math.ceil(this.time);
-          if (this.time <= MATCH.finalCountdown && c !== this.lastCount && c > 0) { this.lastCount = c; emit('match:count', { n: c }); }
+          if (this.time <= MATCH.finalCountdown && c < this.lastCount && c > 0) { this.lastCount = c; emit('match:count', { n: c }); }   // [b5-eras] (each second once, never again)
         }
         if (this.time <= 0) {
           this.time = 0;

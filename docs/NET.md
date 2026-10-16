@@ -369,9 +369,15 @@ whose existing records carry the result. In detail:
 - **The clock's trip** ([b5-eras], netmatch.js `_lead` / `_hostClock`; the final review's issue 4). The host's clock
   tick (`msg.c`, twice a second) carries its match clock (and Practice's stage clock) as they will be when the tick
   reaches the relay: half the host's smoothed round trip to the relay taken off `time` (added to the stage clock); each
-  follower takes its own half off on arrival, and moves its clock halfway to that past a 0.05 s dead band (0.2 s before,
-  with no trip added back: at 150 ms a follower sat 0.37–0.45 s behind). Every follower's match clock — the HUD's timer,
-  the movers', the pods', the stage modules' — is the host's to within the jitter.
+  follower takes its own half off on arrival and corrects past a 0.05 s dead band (0.2 s before, with no trip added back:
+  at 150 ms a follower sat 0.37–0.45 s behind). **The match clock only ever runs on** (the final review 2's issue 1:
+  stepping it back halfway re-showed a second on the HUD timer and re-fired the final countdown, several times a minute at
+  150 ms with 50 ms of jitter): a follower behind steps halfway forward; one a little ahead (the jitter, its own stall)
+  gives the time back by running slow — `match.clockSlew`, its countdown at 0.5–0.9× until it is given back
+  (`match.js`); only a resync of more than 1.5 s ahead (a stalled host) steps it back. The final countdown fires each
+  second once (`match:count` only for a second below the last). Every follower's match clock — the HUD's timer, the
+  movers', the pods', the stage modules' — is the host's to within the jitter (`tests/net-clock.cjs`, at
+  `netlag=150&netjitter=50`: never up between frames, the timer's seconds and 10 … 1 once each, median 0.02 s off).
 - **The ink guard.** A splat from J − 1 to done + 1 carries its painter's stage time (field 15); the replaying screen
   judges `inkOk(block, et)` at that time, so a splat on a piece around its flip (the guard: ± 0.5 s) inks the same cells
   on every screen. Appearing pieces are cleared at the warning on each screen (before any replay of a splat on them can

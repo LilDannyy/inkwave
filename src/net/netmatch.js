@@ -752,10 +752,17 @@ export class NetMatch {
       }
       if (this.stagePending && m.stage) { m.stage.netRestore(this.stagePending, st); this.stagePending = null; }   // [b5-stagehooks]
     }
-    // [b5-eras] halfway to the host's clock as it is now (its tick's age added back), past a 0.05 s dead band (0.2 before:
-    // a follower sat up to 0.2 s plus the trip behind — 0.37 s at netlag 150; the stage clock eases the steps out)
-    const want = time - lead;
-    if (state === 'playing' && m.state === 'playing' && Math.abs(m.time - want) > 0.05) m.time += (want - m.time) * 0.5;
+    // [b5-eras] toward the host's clock as it is now (its tick's age added back), past a 0.05 s dead band (0.2 before: a
+    // follower sat up to 0.2 s plus the trip behind — 0.37 s at netlag 150). The clock only ever runs on (final review 2,
+    // issue 1: a step back re-showed a second on the timer and re-fired the final countdown): behind, it steps halfway
+    // forward; a little ahead (the trip's jitter, a stall here), it gives the time back by running slow (match.js
+    // clockSlew, 0.5–0.9×); only a resync over 1.5 s ahead (a stalled host) steps it back
+    const want = time - lead, err = want - m.time;   // (> 0: this screen is ahead — less time left here than on the host)
+    if (state === 'playing' && m.state === 'playing') {
+      if (err < -0.05) { m.time += err * 0.5; m.clockSlew = 0; }
+      else if (err > 1.5) { m.time = want; m.clockSlew = 0; }
+      else m.clockSlew = err > 0.05 ? err : 0;
+    }
   }
   _hostState(d) {
     const m = this.match;
