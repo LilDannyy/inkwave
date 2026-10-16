@@ -2,14 +2,26 @@
 
 ## At a glance
 
-- **Review 1's verdict (REDO) is answered: all 8 issues are fixed, each with proof** (§0).
-- **The checker is now harder to fool.** The reviewer's three hidden Gate entrances (H2p, H2bp, H2q) now FAIL #7. On
-  real stages, each of the review's rising-jump shortcuts is now a #7 find.
-- **No more false climb FAILs:** inkable steps of up to 1.8 m that a kid hops count as hops.
-- **Self-test: 48/48** (25 cases before), no console errors.
-- **halyard and lockgate:** their first-cut data still fail, as expected.
-- **For the lead:** two changes to the Carp Field itself (a rising-gap edge, and hop edges where nav has a climb edge)
-  and one reading of the spec (D23). They are marked **TELL THE LEAD**.
+- **Review 3's verdict (REDO) is answered: all 4 issues are fixed, each with proof** (§0). Review 2's six (§0.2) and
+  review 1's eight (§0.3) stay fixed; every one of their cases passes.
+- **The checker now models the carrier both ways SPEC §2.4 allows: running as a kid, and swimming in its own ink.** It
+  also sees vaults over low walls and rails, and squids slipping through rails. The reviewer's five planted faults (V5,
+  V5h, RL, H20, G5) now FAIL #7, and so does a 2.6 m rail only a squid passes. All ten of the review's real-stage
+  crossings are now #7d finds with both ends exact.
+- **Self-test: 72/72 (run twice), no console errors** (review 3's run was 54/58). The clean box passes every check.
+- **Measured: a swim-jump from your own ink, letting go of squid form at the top, lands on a 2.2 m ledge** and clears
+  about 7.4 m of air on the level. Nothing reaches 2.25 m. The kid on dry floor reaches 1.8 m and 4.0 m.
+- **What that does to the stages:** with the swimming carrier modelled, #7d floods on the real stages, from 100 finds
+  (saltpan) to 4 546 (nantai), many of them swim-jumps across water. lockgate's lock canal alone carries about 1 500.
+  These are real moves, but no stage can be built against them as the briefs stand. **The lead has to choose** (§3,
+  D34): build every barrier and moat against the swim-jump (2.3 m, wider than 8 m), shorten the carrier's swim-jump in
+  the engine, or judge #7d on the kid alone and report the swim finds as WARN.
+- **TELL THE LEAD** items are marked in §0 and §3:
+  - the swim-jump reach (game-wide);
+  - the field lacks vault and squid-through-rail edges;
+  - D33's 6.2 m saving;
+  - SPEC #16's "a kid";
+  - review 2's two (on-field hops off the grid, and SPEC's long-gap band).
 - Nothing was pushed and nothing ran on the Mac mini.
 
 **Where and how this ran.**
@@ -17,287 +29,231 @@
 - Worktree `st-b5-karp-checker`, branch `b5-karp-checker` from `b5-int3` b55f7472.
 - Everything ran locally, as my task required: the Mac mini was unavailable. One Electron instance at a time under the
   shared SLOTS=3 lock.
-- The machine's load:
-  - first build and takeover: load average 230–760;
-  - this round: 20–225.
+- Load average: 250–540 this round (230–760 at the first build, 20–225 in fix round 1).
 
 **How the work got here.**
 
 - **The first builder (2026-10-10)** wrote the checker, the self-test box, the kit, the stage-state hook, the README
   section and the builders' brief.
-- **A takeover (2026-10-16 morning)** finished it:
-  - #16's walks;
-  - the kit's tag regression;
-  - four checker defects;
-  - the all-stages table.
-- **Review 1 (on 4387bed6, verdict REDO)** found that small variants of the planted faults passed every check. It also
-  found that #16's own kid made shortcuts no check reported.
-- **This is fix round 1.** §0 answers each issue with what I did and the proof. The rest of the report is the full
-  updated report; **[r1]** marks what this round changed.
+- **A takeover (2026-10-16 morning)** finished it.
+- **Review 1 (REDO) and fix round 1:** rising jumps, hopped climbs, exact weir room, kit footings, numbered flags (§0.3).
+- **Review 2 (REDO) and fix round 2:** off-grid hops, measured windows, squid-climb tops, movers, flag pictures (§0.2).
+  Fix round 2 was interrupted before it committed.
+- **Review 3 (REDO)** read fix round 2's uncommitted tree.
+- **Fix round 3** committed fix round 2 and wrote the vaults and the swimming carrier. A usage limit cut it off while it
+  was calibrating the swimming windows.
+- **I took over fix round 3** from its partial work. I measured the swim-jump to its ceiling and fixed the two #11 cases
+  and one vault gap the real stages showed (§0), then re-ran everything.
 
-## 0. Review 1 (verdict REDO): each issue, what I did, the proof
+**[r1]**, **[r2]** and **[r3]** mark what each fix round changed. **[r3b]** marks this takeover's own changes.
 
-Review 1 ran on 4387bed6. This round (fix round 1) runs from ef762c16 to the last commit listed in §5. Every run below
-is local (my task says the Mac mini is unavailable), one Electron at a time under SLOTS=3, at load average 40–225.
-The review's verdict rested on issue 1: small changes to the planted faults passed every check. Each issue is now
-fixed and proved.
+## 0. Review 3 (verdict REDO): each issue, what was done, the proof
 
-### Issue 1 (blocker): #7 missed rising jumps across open air. FIXED
+Review 3 ran on the working tree over HEAD 0ba0bded, with fix round 2 still uncommitted. Fix round 3 answers it in two
+hands:
 
-**What changed** (karp-check-page.js, #7d / #16 / #7a):
+- **The first fixer** committed fix round 2 (0cd9479b), rebuilt the clean box (92b6a972), wrote the vault probe and
+  the swimming carrier (c0cd3a3b), the review's cases (a536364c) and the docs (90e65be9). A usage limit cut it off
+  while it was calibrating the swimming windows. Its last run (22:19–22:29) was 5/8: `reachs`, `x11f` and `x11z`
+  failed.
+- **I took over from there** (8695f630 on). I read its uncommitted edits (REACH.swim and the swimming rows, half
+  done), kept the method, measured the swim-jump to its ceiling and finished the windows. I fixed the two #11 cases,
+  then re-ran everything.
 
-- **A rising-gap probe.** It takes rim node pairs 1.2–3.0 m apart (flat) where the far one is 0.6–1.8 m higher, with
-  open air between them, a clear waist line, and no 6 m walk joining them. This is the reviewer's own definition.
-  - #16's kid tries each one that matters, with the five-timing trial. One matters when it gains more than 10 m, or
-    when it starts outside a Gate's 15 m ring and lands inside it.
-  - A made one gaining more than 10 m is a #7d FAIL (`riseGap`).
-- **Jumps onto ground the field doesn't hold**, level or rising. D2 used to cover only the hop into a neighbouring
-  cell. Now it also covers a jump from a field rim node to an off-field rim node:
-  - 1.2–3.8 m flat, from 3.4 m down to 1.8 m up, across a real gap (somewhere no floor within 1 m below the lower end:
-    D21) and with a clear waist line;
-  - tried when its best exit is more than 10 m nearer a Gate, or when it has an exit inside a ring it entered from
-    outside.
-- **An off-field top now has more exits.** Besides nav's own edges, stepping or dropping off its edge counts: onto field
-  floor up to 2 cells out and 0.3–3.4 m lower, open above, with a clear waist line.
-  - H2p needed this. Its 1.0 m landing sits in a 1 m strip, where nav has no node beside the ledge because a body
-    doesn't fit against it. So the landing had no nav edge off it at all, yet a kid just walks off.
-- **#7a counts every move #16's kid makes from outside a Gate's 15 m ring to inside it as an entrance:** made high hops,
-  long gaps, rising gaps, and moves onto off-field ground.
-  - Each move has its own line of sight, from the spawn deck's edge (1.5 m up) to 1 m above where it lands, or to any
-    exit it has inside the ring.
-  - A move joins the entrance with a graph crossing nearest it (within 3 m). It never chains two entrances into one,
-    and it is never "seen" through that entrance's walk crossings (D22).
-- **The gain of a one-way move is measured in its own direction:** high hops, long gaps and rising gaps now use
-  D(from) − D(to) for the team it helps.
-  - H2q's "long gap" back out of the ring took the carrier 14.8 m further from the Gate. It was a find only because of
-    |ΔD|. This is the "accident" the reviewer named, and it is gone (x7rq below now lists only its riseGaps).
-  - The static probes keep SPEC's |ΔD|.
+All runs are local: one Electron at a time under SLOTS=3, at load average 22–540.
+
+### Issue 1 (blocker): no probe saw a vault over a low wall or rail, or a squid slipping through a rail. FIXED
+
+**What changed** (c0cd3a3b, karp-check-page.js #7d / #7a / #16):
+
+- **A vault probe in #7d.** It takes field node pairs ≤ 3.5 m apart (flat) where:
+  - the far end is from 3.4 m below to 1.8 m above the near end;
+  - no 6 m of walking joins them;
+  - the waist line is blocked: by nav's own test, or (**[r3b]** e1d4ae4a) by anything a ray meets 0.3 or 0.6 m over the
+    higher end, grates and rails included;
+  - the obstacle's top along the line is at most 2.25 m over the higher end (**[r3b]** was 2.2; see issue 2), with
+    1.5 m of air above it;
+  - there is floor under the whole line (otherwise it is a gap, and the gap probes cover it).
+
+  Rails count at any height up to that top. Candidates are kept only when they can matter (worth > 10 m, or from
+  outside a Gate's ring to inside it), at most two per takeoff and one per 1.5 m of the same place. #16 tries each one,
+  both as the running kid and as the swimming carrier. The run-up is timed off the obstacle's near face. A made vault is
+  a #7d find (`vault`). Into a ring it is a #7a entrance with its own line of sight.
+- **lowGap's squid tube now passes grates and rails**, as `physics.collideBody` lets a squid through them. It no longer
+  stands on a grate, because a squid drops through one. A squid gap into a ring that saves more than 3 m on the field's
+  own way in is a #7a entrance with its own sight line.
+- **A made move that drops more than 2.5 m into a ring is a #7c drop**, like the field's own drop edges.
 
 **Proof:**
 
-- **Self-test.** The reviewer's three faults are now cases that must FAIL #7 for their own reason. All three PASS:
-  in the 48/48 run, again after the direction change, and again on the final code (the 8 entrance cases):
+- **The reviewer's three faults, and a fourth of fix round 3's, are must-FAIL #7 cases. All PASS, each for its planted
+  reason** (§2.1):
+  - **v5**: the ring's NW stretch is a 1.4 m roof wall. #7d finds 4 vaults, each gaining 18.7 m, two a side, e.g.
+    (−15.5, 0, 53.5) → (−12.5, 0, 52.5) beside the reviewer's (−16.5, 0, 54.5) → (−12.5, 0, 52.5).
+  - **v5h**: the same stretch at 1.7 m. #7d finds 2 vaults, 18.7 m.
+  - **rl**: the west opening is closed by a 1.2 m `rail` behind f7's screen. #7a finds two unseen entrances a side, at
+    (−14.5, 46.5) and its mirror: a squid gap and a vault.
+  - **rlh** (fix round 3's): the same opening with a 2.6 m rail. Only the squid gap is an entrance, unseen.
+- **The clean box stays clean.** #16 tries 22 vault candidates (and 32 long gaps) beyond the rules, worth > 10 m or
+  into a ring, and makes none: the ring wall is 3 m.
+- **The reviewer's real-stage crossings:** all ten (the six the review listed, and its scan's top finds on tidewater,
+  halyard, kelpline and crossmarket's mirror) are now #7d finds with both ends exact, each flagged (table in §2.3).
+  - Nine were found as soon as the vault probe existed.
+  - **[r3b]** The tenth, calamari's (15.95, −0.1, −38) → (17.5, −0.1, −36), 10.4 m, was not. A debug run showed its
+    pair failing the candidate's "waist line blocked" test: nav's own test sees nothing at its waist line, while the
+    reviewer's rays 0.3 / 0.6 m up meet something lower that keeps nav's nodes off the line. The test now takes either
+    (e1d4ae4a), and the pair is a kid-made vault find, flag 26.
 
-  | case | the reviewer's fault | before (review 1) | now |
+**TELL THE LEAD (WP0).** The field itself has no vault or squid-through-rail edge, so D is wrong across every low
+barrier on every stage. The checker now finds and FAILs these moves; the engine still doesn't read them.
+
+### Issue 2 (blocker): only a running kid was modelled; a carrier swimming in its own ink jumps much further. FIXED
+
+**What changed** (c0cd3a3b, and **[r3b]** 8695f630):
+
+- **#16 has a second mover: the carrier swimming in its own ink** (SPEC §2.4: "kid or squid freely"). It runs when the
+  kid doesn't make a move and the takeoff's floor takes ink.
+  - The run-up is inked in the kid's team colour straight into the paint grid. The old values are put back at the end;
+    there is no splat, no stage hook and nothing recorded.
+  - The same kid dives, swims at 9.44 m/s from 2 m and 4 m back, and jumps at the kid's distances. On a gap it also
+    jumps at the rim and 0.3 / 0.6 / 0.9 m past it (the coyote jump at its speed).
+  - For a rise of 1.4 m or more it is also tried **letting go of squid form at the top of the jump**. The kid's 0.35 m
+    ledge assist then beats the squid's 0.24 m step-up.
+  - Success is the kid's rule, or standing on the far node's floor within 7 m along unbroken floor (a swim-jump lands
+    well past the node).
+  - A move made either way counts, and the text says which (`(swim-jump)`).
+- **The windows grow to the swimming reach.** Any takeoff whose floor takes ink gets `REACH.swim`, the larger of the two
+  tables. High hops, off-field hops and vaults reach 2.25 m up (was 2.1).
+- **[r3b] The swimming reach measured to its ceiling.** The first fixer's table held 2.2 m up at 0.5 m of air, but its
+  own run made a 2.2 m rise from 3.5 m of air. That landing was outside the window, so `reachs` FAILed. I ran the rows
+  out to the ceiling: 2.2 m up at 3.0 / 4.0 / 4.5 / 5.0 m of air, and 2.25 / 2.3 / 2.4 / 2.5 m up at 3.0–5.0 m of air
+  (one probe run, `kcfix4/p1.log`).
+
+  | rise | made (air, rim to rim) | not made | how |
   |---|---|---|---|
-  | x7r | H2p: a 2.0 m moat in front of a 1.0 m landing just inside the ring, off the field, behind f7's screen | every check OK | FAIL #7: "(a) team 0: an entrance at (-14.5, 47.5) [jump onto off-field ground] not seen from the spawn deck" (and team 1's mirror); (d) 8 offGap finds, 10.1–11.1 m |
-  | x7rb | H2bp: a 1.3 m moat in front of a 1.5 m landing, off the field | every check OK | FAIL #7: the same "(a) … [jump onto off-field ground] not seen"; (d) 8 offGap finds, 10.7 m |
-  | x7rq | H2q: the same moat in front of an on-field landing with a ramp into the ring, screened | #7 failed only through the reverse long gap | FAIL #7: "(a) team 0: an entrance at (-14.5, 47.5) [rising gap] not seen from the spawn deck"; (d) 4 riseGap finds, 10.8–11.8 m, and no longGap |
+  | 2.5 / 2.4 / 2.3 / 2.25 m | none | 3.0–5.0 m | – |
+  | 2.2 m | 3.0, 3.5, 4.0, 4.5 m | 0.3, 1.0, 2.5, 5.0 m | letting go of squid form at the top (0.3–2.5 m: the squid meets the face still rising) |
+  | 2.1 m | 3.5–4.5 m | 0.3, 1.5, 2.5, 5.0, 5.5 m | letting go at the top |
+  | 2.0 m | 0.3–5.0 m | 5.5 m | squid form; 5.0 m letting go |
+  | 1.8 m | 3.0–4.8 m | 5.6 m | squid form |
+  | 1.5 / 1.2 m | to 5.6 / 5.8 m | 6.2 / 6.4 m | squid form |
+  | 0.6 m / level | to 6.8 / 7.4 m | 7.4 / 8.0 m | squid form |
+  | 1.2 m / 3.4 m down | to 8.4 / 9.6 m | 9.0 / 10.4 m | squid form |
 
-- **Real stages:** MAP=all, §2.3, on the final code. Every rising-gap find is a move #16's kid really made, gaining
-  more than 10 m:
+  The kid's own reach is about half: 4.0 m of air level, 2.1 m at 1.8 m up, nothing at 2.0 m.
 
-  | stage | rising-gap finds (made) | example: the review's own where it gave one |
-  |---|---|---|
-  | halyard | 10 | (−5.5, −0.74, −37.5) → (−4.5, 0, −35.5), 19.0 m |
-  | terraces | 27 | (11.5, 1.2, −44.5) → (8.5, 2.4, −44.5), 24.7 m |
-  | craters | 10 | (1.5, 2.12, −56.5) → (3.5, 3, −58.5), 19.8 m |
-  | kelpline (and Cargo) | 5 | (−12.5, 1.04, −39.5) → (−15.5, 2.6, −39.5), 11.3 m |
-  | treehills | 20 | (none from the review) |
-  | calamari | 8 | (none from the review) |
-  | spirhalite | 4 | (none from the review) |
-  | nantai | 2 | (none from the review) |
-  | lockgate | 0 | its 2 worth trying are not made; the review found its top four not made too |
-
-  - Each find is flagged, and on halyard and lockgate pictured.
-  - Jumps onto off-field ground across a real gap add more finds:
-    - halyard 255, almost all across the slips onto the moored boats (`halyard-flag-22.jpg`: a yacht's deck bridges
-      quay and pontoon);
-    - kelpline 20, terraces 14;
-    - craters 4, spirhalite 3;
-    - lockgate 4: the boat frame on blocks by the warehouse wall, `lockgate-flag-6.jpg`.
-  - Kid moves into a ring are now entrances:
-    - halyard has 6 a side: a long gap into the ring at (±4.5, ±41.5) is new, and a rising gap joins the deck entrance;
-    - kelpline's long gap into its ring is unseen from the deck;
-    - calamari goes from 5 to 6 a side. The old grouping had chained two entrances together through the off-hop's exit
-      crossings (D22).
-
-**For the lead (WP0):** the clean fix belongs in the field itself. A rising-gap edge in karpField (rise 0.6–1.8 m over
-1.2–3.0 m, proved by #16 like the hop and gap edges) would let the field *read* these moves too. Until then a carrier who
-makes one reads the far side's D at once, which the continuity clamp may reject. Jumps onto off-field tops (D2) are the
-same gap. **TELL THE LEAD.**
-
-### Issue 2 (major): inkable steps of 1.3–1.8 m counted as climb-only. FIXED
-
-**What changed:**
-
-- `climbHops` now runs before any route is searched. It takes every nav climb edge of at most 1.8 m between field nodes
-  that passes the hop rule's own geometry tests: the waist line over the top, nothing overhead at the foot, and the head
-  across.
-- #16's kid tries each one with the five-timing trial. Its jump is pressed before the wall point nav recorded for that
-  climb.
-- A made one counts as a hop, not a climb, in every no-climb search:
-  - #4 and #5's routes;
-  - #7b, which also no longer lists it as a climb shortcut;
-  - #9's enemy reach;
-  - #13's apron route;
-  - #16's walks, which take its trial when the walking kid misses it;
-  - the #11 carry walk's re-plans.
-- The masks carry over to the carry walk's fresh match.
-- #16's text and JSON report "climbs of ≤ 1.8 m tried as hops: made of tried".
-- The field's D is unchanged: a climb edge and a hop edge have the same length (flat + rise).
-- With PHYS=0 the geometry alone decides, and the text says it is unproven.
+  So `REACH.swim` holds, as `REACH.air` does, the first gap not made beyond the last made one at each rise: 2.2 and
+  2.1 m up 5.0 m, 2.0 m up 5.5. `CK.hopHigh` and the vault's top go to 2.25 m, the first rise never made. The swimming
+  rows now include 2.3 and 2.25 m up (the ceiling, never made) and run 2.2 / 2.1 m up out to 5.0 / 5.5 m of air.
 
 **Proof:**
 
-- **w4, the reviewer's W4.** The weir platform is a 1.5 m inkable box with its ramps gone. It is a `notFail` case: #4
-  and #9 must not fail, and #16 must report the climbs it hopped.
-  - Before: #4 failed "no climb-free carrier route" and #9 failed "a plateau of 28 m² … the enemy only by climbing".
-  - Now: PASS. #4 OK, #9 only WARN, #5 OK at 27.5 / 29.2 m, #15 OK, and "climbs of ≤ 1.8 m tried as hops: 92 of 92
-    made" (144 trials).
-- **Real stages** (MAP=all, climbs of ≤ 1.8 m hopped, made of tried):
+- **The reviewer's two faults are must-FAIL #7 cases. Both PASS** (§2.1):
+  - **h20**: f7's ledge at 2.0 m, no ink, screened. #7a finds unseen entrances by "hop over off-field ground
+    (swim-jump)", and #7d an offHop (swim-jump) worth 13.1 m. The kid alone makes none of it.
+  - **g5**: a 5.0 m moat of open water through the west opening, inkable on both sides. #7d finds 98 long gaps
+    (swim-jump), gaining 12.9–18.7 m.
+- **`reachs` PASSES** (both of this round's full runs, and the focused one): every pair the kid or the swimming
+  carrier makes lies inside both windows at its rise, and each window's edge lies beyond the last made gap at the worst grid alignment. `reach` (the kid alone) still
+  PASSES.
+- **The clean box stays clean**: from its 72 takeoffs whose floor takes ink the swimming carrier makes nothing the kid
+  didn't (796 swim trials), and every one of the 34 added edges is made.
 
-  | stage | climbs hopped (made of tried) |
-  |---|---|
-  | terraces | 408 of 410 |
-  | nantai | 371 of 371 |
-  | spirhalite | 284 of 284 |
-  | craters | 224 of 226 |
-  | calamari | 138 of 138 |
-  | treehills | 91 of 91 |
-  | lockgate | 86 of 94 |
-  | saltpan | 58 of 58 |
-  | kelpline | 52 of 52 |
-  | halyard | 24 of 24 |
-  | tidewater | 11 of 11 |
+**TELL THE LEAD (and the user: this is game-wide).**
 
-  - The review counted how many of these had no hop edge nearby: lockgate 77 of 94, kelpline 26 of 52, craters 149 of
-    228, terraces 226 of 410, halyard 2 of 24. They are now hops wherever the kid makes them.
-  - Visible effect: **spirhalite's #9 no longer FAILs.** The last report's table listed #9 among its FAILs. Now 0 of its
-    47 plateaus is climb-only (a WARN only), which fits its 284 hopped climbs. This is an inference: I didn't re-run the
-    old code.
-  - lockgate's 14 m² plateau at (±12.9, 2.5, ±29.4) stays climb-only: the climbs onto it are not among those a kid
-    hops.
+- SPEC §4.4 #16 says "a kid". The checker reads it as the carrier in either form SPEC §2.4 allows.
+- **The 1.8 m reach rule that stage briefs build barriers and roofs on is 2.2 m for anyone who swim-jumps from their own
+  ink and lets go of squid form at the top**, and a level swim-jump clears about 7.4 m of air. I measured it on the
+  carrier (9.44 m/s). A player without the Bazookarp swims faster (11.8 m/s) with the same jump, so it reaches at least
+  as high and further; that is not measured. The rule the stages were built to ("kids climb ~1.8 m; roofs not
+  jumpable") holds only for a kid on dry floor. A roof edge at 2.0–2.2 m above inkable floor is reachable today in every mode.
+- **On the real stages, most #7d finds are now swim-jumps** (§2.3), and the lead must decide what the carrier may do
+  (D34: keep it and rebuild the barriers, shorten the carrier's swim-jump, or judge #7d on the kid alone).
 
-**For the lead (WP0):** karpField's `_hasNav` skips the hop edge whenever any nav edge joins the pair, climb edges
-included. Adding the hop edge there too (or not counting a climb as "joined") would make the field's own graph say what
-the checker now says. **TELL THE LEAD.**
+### Issue 3 (blocker): fix round 2 was unfinished and uncommitted, the self-test red, the report stale. FIXED
 
-### Issue 3 (major): #15 sampled points and missed thin solids. FIXED
+- **Committed, in small steps.** Fix round 2 is 0cd9479b. The clean box is 92b6a972. Fix round 3 is c0cd3a3b,
+  a536364c, 90e65be9, 8695f630, c62b4153, eb1f357e, 2fdb592d and e1d4ae4a. The pictures and this report are separate `(scratch)`
+  commits. The working tree holds nothing of mine uncommitted. COMMON.md's edit is not mine (§6).
+- **The clean box** (92b6a972). The rail that fix round 2 put at z 38–44 stood in the SE opening's mouth and left it
+  under nav's 0.92 m. Now a 2.6 m rail runs on the channel's west edge from the alley's wall to the pier (z 20.4–36),
+  and the pier is widened into a bridge over the channel's north end (z 36–44). Nothing pinches the SE way in. The
+  rail beats both the kid's 1.8 m and the swim-jump's 2.2 m.
+  - **clean PASSES** every check: L 61.6 / 61.5 m (Δ 0.2 %), weir count 60, 2 routes on every leg, walks 8/8 + 8/8,
+    the carry knocks out both ways.
+  - **x9c and x7h** plant their faults again: x9c FAILs #9 ("not on its owner's half"), x7h FAILs #7d highHop.
+- **x7p4** expects the reason it really fails: #7c's 6 m drop off the tower top into the ring and #7d's tallWall. That
+  is the review's first option. It PASSES.
+- **Self-test: 72/72 with no console errors, run twice** (§2.1). The review's run was 54/58.
+- **The report:** §0.2 answers review 2's six issues with their proof, and D28–D37 are written up (§3). **D33 goes to the
+  lead** (§3): a move the field lacks is a #7d find when it lands more than 10 m nearer a Gate *and* that gain beats the
+  move's own length by more than 6.2 m. It is marked TELL THE LEAD, with what it costs: lockgate's two boat-frame jumps
+  (10.8 / 12.5 m in review 2) are not finds under it.
+- **The all-stages table's rising-gap column** now reads `tried / made` from #16's own counts (`n16.rise`), in 0cd9479b.
+  The review's `undefined` came from the old `rise.cand` field. Every row of §2.3 has numbers.
+- **Re-run after the issue 1 and issue 2 changes** (§2.4): the self-test, `MAP=all` (13 stages), check-maps (every build
+  and every `.bazookarp` build) and karp-layout-diff (96/96 same).
 
-**What changed:** #15 is now exact. Each solid block is clipped to 0.3–3.6 m above the weir's floor and projected down.
-Its corners inside that band, plus its edges' crossings of the band's two planes, form a convex hull, and #15 measures
-the hull's distance from the weir's axis. Under 3.0 m FAILs and names the block with its distance. The weir's own posts
-and sill are still excepted.
+### Issue 4 (minor): the self-test never planted #8's distance, height or sight rules, or #11's falls, narrow walk and zone ×3. FIXED
 
-**Proof:**
+Seven must-FAIL cases (a536364c; **[r3b]** x11f and x11z corrected in c62b4153). All PASS, each for its own reason
+(the texts are this round's final run):
 
-- x15t, the reviewer's T1 (a 0.2 × 0.2 × 3 m lamp post 2.2 m from the weir's centre), was "clear, 6/8" before. It now
-  FAILs with "team 0 weir 1: solid within 3 m: kcheck-lamp (2.1 m)": the post's nearest corner is 2.1 m out.
-- f15 (a pillar 2 m out) still FAILs.
-- The clean box still passes #15 (6/8).
+| case | check | the fault | what it FAILs on |
+|---|---|---|---|
+| x8n | #8 | the Gate 10 m from the pad (z 50) | "the Gate 10 m from the pad (12–20)" |
+| x8f | #8 | the Gate 22 m from the pad (z 38) | "… 22 m from the pad (12–20)" |
+| x8u | #8 | the Gate on a 3.4 m dais up a ramp: 1 m above the pad | "the Gate 1.15 m above the pad (≤ 0.2)" |
+| x8s | #8 | a 4.6 m screen across the apron between the deck and the Gate | "the Gate not seen from the spawn deck" |
+| x11f | #11 | a noRest polygon (x 1…27, z 0…22) round Bravo's water edge nearest the Pond | "team 0: a fall on the enemy half → drop fall rest [0.5, 0, 6.5] (14 m)" (12 m the rule) |
+| x11w | #11 | open water across the main floor at z 6…20, a 1 m causeway on route 1 | "a splat on the narrow walk by weir 1 rested on narrow floor" |
+| x11z | #11 | the spawn-deck zone's eras written as strings (`['0']`): the engine never applies it | "in its own zone the fuse ran ×3 (retreat)": no zone flag |
 
-### Issue 4 (minor): kit posts could float off a ledge. FIXED (as a check)
+**[r3b] The two that failed in the first fixer's last run:**
 
-**What changed:** #1 now checks every kit piece that stands on the floor: each weir and Gate post's footing
-(`-base`), the plinth and its rim, the sill, and each sign's foot.
+- **x11f** planted nothing. Its polygon x 1…20 left the east strip's rim at x 20.5 as a rest 6.7 m from the fall, inside
+  the 12 m rule, so #11 stayed OK. With x 1…27 the nearest rest outside the polygon is ≥ 13.5 m away: Alpha's carrier
+  falling there is dropped 14 m off, at (0.5, 0, 6.5), and #11 FAILs.
+- **x11z** FAILed for a reason its pattern didn't expect. The carrier stood in the zone at ×3, but by the *retreat* rule:
+  the deck lies behind its mark. The engine never set the zone flag, which is the fault. The pattern now matches "ran ×N
+  (not zone)", and the case's text says why.
 
-- It samples 3 × 3 points at ±80 % of the piece's footprint. Each point needs floor (any non-kit solid top) at most
-  0.1 m below the piece's bottom. Buried is fine.
-- A piece that fails is listed and flagged with its place, for both teams.
+## 0.2 Review 2 (verdict REDO, on 68fa97bc): fix round 2
 
-I did not make the kit build each post at its own floor height. A post sunk silently to the floor below a ledge would
-hide a bad weir spot, which the builder must move instead (D25).
+Fix round 2 was interrupted mid-round. Review 3 read its uncommitted working tree, and fix round 3 committed it as
+0cd9479b; its cases are 0ba0bded. Review 3 found issues 1, 2, 4, 5 and 6 fixed and issue 3 caught, but not by the
+pattern its case expected. Every case below PASSES in this round's self-test (§2.1).
 
-**Proof:**
+| # | review 2's issue | what changed (0cd9479b) | proof |
+|---|---|---|---|
+| 1 (blocker) | A hop onto off-field ground into a ring was invisible when the ledge's face missed the 1 m grid | Hops onto off-field ground are taken from up to **two cells** out, diagonals included (0.5–2.25 m up, ≤ 2.3 m flat), with the hop rule's waist and head tests (D28) | **x7m2 / x7m4 / x7m6 / x7m8**: f7's ledge from x −17.2 / −17.4 / −17.6 / −17.8, and **x7m45**, the ledge turned 45°: each FAILs #7a as an unseen "hop over off-field ground" entrance |
+| 2 (blocker) | The windows (riseGap ≤ 3.0 m, longGap / offGap ≤ 3.8 m) stopped short of what #16's kid makes | Every probe of a move the kid makes takes node pairs out to its **measured reach** (`REACH.air`, through `reachWin` / `probeWin`), with the coyote jump tried at and past the rim (D29). Fix round 3 adds the swimming carrier's reach (§0, issue 2) | **x7p2**: P2's 4 m rising gap into the ring FAILs #7a. **reach**: 55 platform pairs over the sea; every jump the kid makes lies inside the windows at the worst grid alignment |
+| 3 (major) | A squid climb over 5.5 m onto off-field ground was only a WARN, its way down never followed | The top's exits are followed, as an off-hop's are. A drop of more than 2.5 m into a ring is #7c; an exit more than 10 m nearer a Gate is #7d. Only a top with no exit is a WARN (D30) | **x7p4**: P4's 6 m inkable tower through the ring wall FAILs #7c (the 6 m drop off its top) and #7d (tallWall) |
+| 4 (minor) | A weir, Gate or Pond on a mover's track was not flagged | #1 FAILs a kit piece in a mover's swept volume, and #15 a weir's 3 m room (D31) | **x15m**: Wc, the weir where the car parks, FAILs #15 ("a mover sweeps within 3 m: kcar") and #1 ("in a mover's path") |
+| 5 (minor) | The noRetreat-to-zone distance read crossing polygons as far apart | `polyPolyDist` is 0 when two edges cross or one polygon holds a vertex of the other | **x9n**: a 0.4 m noRetreat strip across an open-floor zone FAILs #9 ("within 3 m of team N's zone") |
+| 6 (minor) | Flag pictures didn't mark the flagged move; some FAILs carried no flag | Every FAIL with a place carries a flag (#2–#6, #11, #12). `-flag-<n>` draws the move from → to with an arrow and its gain. The pictures come after #11, so its flags are numbered with the rest (D32) | The self-test's driver now FAILs a case whose target FAIL has no flag (that is how `x11f` showed up). Review 3 checked the arrows (e.g. `halyard-flag-23`); this round's are in §2.3 |
 
-- x1, the reviewer's W5 (the weir at [2, 1.2, 28]), had "FAILING none". It now FAILs with "2 kit piece(s) not resting on
-  floor: karp-weir-base at [4.7,1.33,28] (9/9 points 1.15 m above it)" and the mirror.
-- The clean box still passes #1.
-- In the self-test it also caught a real knock-on: f5's corridor weir at x −17.5 now stands a post past the deck's edge.
+**TELL THE LEAD, from review 2:**
 
-### Issue 5 (minor): the carrierBlock glyph drew on an opaque cream square. FIXED
+- **The field's own hop edges** (karpField: orthogonal neighbours only) have the same alignment hole for ledges *on* the
+  field. Today the riseGap probe and the walk crossings catch them; the engine does not (WP0).
+- **SPEC §4.4's long-gap band (3.0–3.8 m) undershoots the kid**, which clears 4.0 m of air level (its rim nodes up to
+  ~6 m apart). The checker uses the measured reach; the band's words are kept only as the field's own gap rule.
 
-**What changed:** `drawNoCarp` reads `'bg' in opts ? opts.bg : '#efe9dc'`. The shimmer's `{ bg: null }` is now
-transparent, and the sign boards keep their cream (ef762c16).
+## 0.3 Review 1 (verdict REDO, on 4387bed6): fix round 1
 
-**Proof:** I re-took `out/kit-carrierblock.jpg` and looked at it next to the old one. The crossed-out carp now floats on
-the shimmer walls with no cream squares, and the shimmer bands still show.
+Fix round 1 answered all eight issues; the full section is in this report at a880d442. In short:
 
-### Issue 6 (minor): the top-down's flags couldn't be decoded. FIXED
-
-**What changed:**
-
-- **One numbering** (`numberFlags`): every FAIL or WARN check's flags with a place, in check order. A check's flags of
-  one kind (the text without its numbers) within 2 m of each other are one flag; its `also` counts the rest.
-- **Where the numbers appear:**
-  - the discs on the top-down;
-  - a key panel under the map (number, check, what, where; three columns; every flag);
-  - the `-flag-<n>.jpg` pictures;
-  - the JSON's `flags`;
-  - the console, which lists every flag after the RESULT line, #11's drop and carry places included.
-- **Discs no longer overlap:** each moves round its place and outward until it is clear.
-- **Every #7d find is flagged now**, the moves #16's kid made included. Finds of one probe within 3 m are one flag
-  ("7d riseGap ×4: gain 10.2–11.3 m").
-- **Flag pictures:** there is now a `-flag-<n>.jpg` for every #7 flag (SPEC §4.4), then the first FLAGSHOTS others, at
-  most 40.
-- **No clipped rings:** the camera bounds are padded to hold both Gates' 15 m rings.
-- **Fainter ticks:** made hop and gap ticks are drawn faint, so FAILs stand out.
-
-**Proof:**
-
-- `out/self-x7h-karp-top.jpg`: 8 flags, each decodable from the key ("#7d highHop ×2: gain 48.3–49.3 m @ (17.5,
-  -48.5)").
-- `out/halyard-karp-top.jpg`: 49 flags with a 3-column key; the riseGap flags (10, 12) are their own entries now
-  (`69abedc0`: only flags of one kind merge).
-- `out/lockgate-karp-top.jpg`: 22 flags.
-- `out/kelpline-karp-top.jpg`: 50 flags.
-- Craters' ring is no longer clipped (`out/craters-karp-top.jpg`).
-- Every picture is under 290 KB (`deef4377`: the size drops when the quality floor isn't enough).
-- The console lists each flag as `  12 #7  (x, y, z): what`.
-
-### Issue 7 (minor): the self-test checked only one sub-rule per check. FIXED
-
-**What changed:** 23 new cases, 48 in all. Each one plants a fault the old set never planted and must FAIL its check
-for its own reason, matched by an `expect` pattern on the check's text. W4 is a `notFail` case.
-
-| sub-rule (the reviewer's list) | case |
-|---|---|
-| #7 (a) an entrance count outside 2–5 | x7a: two more ring openings → "6 entrances … (2–5)" |
-| #7 (c) a drop into the ring | x7c: a 3 m deck outside a west opening → "(c) 12 drop(s) > 2.5 m into a Gate's ring" |
-| #7d tallWall | x7t: a 5.8 m inkable platform up a long ramp → "tallWall … 18.6 m" |
-| #7d longDrop | x7l: a 4 m platform's far edge → "longDrop … 10.6 m" |
-| #7d highHop | x7h: a 1.83 m ledge in a ring opening → "highHop … 49.3 m" |
-| #7d longGap | x7g: the GAP's far platform 3.6 m off → "longGap … 10.2 m" |
-| #7 rising gaps / off-field jumps (H2p, H2bp, H2q) | x7r, x7rb, x7rq (issue 1) |
-| #9 a zone touching a weir / the Gate / a route | x9d / x9g / x9e |
-| #9 a wide entrance with an end unsigned | x9f: "a 10 m entrance … needs a sign within 2 m of each end" |
-| #13 fewer than 3 ways off the deck | x13: "1 way(s) off (≥ 3)" |
-| #14 floor coverage | x14: "ring 4.5–10 m 65.5 % floor (≥ 70)" |
-| #3 weir → Gate under 25 m | x3: "weir 1 → Gate 10.1 m (≥ 25 m and ≥ 45 % of L …)" |
-| #5 route 2 over 1.6 × route 1 | x5b: "route 2 58.4 m = 2.23 × route 1 (≤ 1.6)" |
-| #15 an approach that can't see the weir | x15a: a chicane in the alley → "not seen from the attackers' approach" |
-| #15 thin solids (T1) | x15t (issue 3) |
-| #11 a failing carry walk | x11: f16w's slot on route 1 → "16 stuck episode(s)", no plant; x11r: noRetreat over each whole half → "retreat ×3 on at null m" |
-| W4 (must not fail #4 / #9), W5 | w4, x1 |
-
-**Proof:** `KARP_SELFTEST=1`: **48/48, no console errors**, twice:
-
-- 16.5 min at load 40–100, on 248405e8;
-- 14 min, on 69abedc0, after the direction change (D23), the real-gap rule (D21) and the flag kinds.
-
-The #7a grouping fix (d5795858) re-ran its 8 entrance cases 8/8 (§2.1).
-
-Three cases needed redesigning before they planted cleanly. Each was caught because its pattern didn't match, which is
-what the patterns are for:
-
-- x5b's first 6 m gap let two routes 3 m apart through;
-- x7h's first platform was reached by hops onto its own ramp's side;
-- x11r's first noRetreat missed the stretch near the Gate, so it failed by a 0.02 m tolerance, not by its fault.
-
-### Issue 8 (minor): docs and the job file were stale about the Mac mini. FIXED
-
-**What changed:**
-
-- karp-stages/BUILDER.md (rows 3 and 5) and tools/botlab/README.md (the regression set) now point at COMMON.md's runner
-  protocol instead of "while the Mac mini is away". They also describe the new #1 / #4 / #7 / #15 rules and the
-  numbered flags.
-- JOB-1.sh is split in two:
-  - JOB-1: the field's load budget and the self-test, with a 1.5 h watchdog;
-  - JOB-2 (`# after: JOB-1`): MAP=all on its own, with a 2.5 h watchdog, inside the runner's 3 h cap. It took 20 min
-    here at load 20–35.
-- COMMON.md's uncommitted edit (the Mac mini back as of 10-16) is still not mine. I left it as I found it, because my
-  task says the Mac mini is unavailable.
+| # | review 1's issue | fix | proof (cases, all PASS now) |
+|---|---|---|---|
+| 1 (blocker) | #7 missed rising jumps across open air | the riseGap probe; jumps onto off-field ground across a real gap; a kid's move into a ring is a #7a entrance with its own sight line | x7r, x7rb, x7rq (H2p, H2bp, H2q) |
+| 2 (major) | inkable 1.3–1.8 m steps counted as climb-only | climbs of ≤ 1.8 m the kid hops count as hops in every no-climb search | w4 (#4 / #9 must not fail) |
+| 3 (major) | #15 sampled points and missed thin solids | each block measured exactly (its box clipped to the band, projected) | x15t (T1) |
+| 4 (minor) | kit posts could float off a ledge | #1 FAILs a kit footing not resting on floor | x1 (W5) |
+| 5 (minor) | the carrierBlock glyph drew on a cream square | the glyph is drawn on a transparent background again (`drawNoCarp` had turned `bg: null` into cream) | `out/kit-carrierblock.jpg` |
+| 6 (minor) | the top-down's flags couldn't be decoded | numbered discs placed apart, a key panel, `-flag-<n>` | every top-down in `out/` |
+| 7 (minor) | one sub-rule per check | 23 more cases | x3, x5b, x7a, x7c, x7t, x7l, x7h, x7g, x9d–x9g, x13, x14, x15a, x11, x11r |
+| 8 (minor) | docs stale about the Mac mini | README, BUILDER.md, JOB-1 / JOB-2 | – |
 
 ## 1. What was built
 
@@ -327,7 +283,7 @@ Always run it with `BOTLAB_OUT=…/inkwave-upstream/.botlab SLOTS=3 WATCHDOG=…
   RESULT <id> ok|fail L=… weir=… gate=… routes=… zones=… hops=… walks=<routes ok/n>+<entrances ok/n> [FAIL=… SKIP=…]
   ```
 
-- **New this round:** the numbered flags. Every flagged place, in the same numbering as the top-down's discs and key,
+- The numbered flags. Every flagged place, in the same numbering as the top-down's discs and key,
   the `-flag-<n>.jpg` pictures and the JSON's `flags`.
 - `<id>-karp.json`: every check's numbers and flagged places, the flags, the walks, the carry walks and the drop
   coverage.
@@ -348,26 +304,26 @@ Every team-dependent check runs for both teams. The data describes Alpha's attac
 that #16's kid hops counts as a hop (`climbHops`, review 1).
 
 **How each check judges.** The numbers are SPEC §4.4 / §9.1's. A \* marks my reading where the spec left a gap (§3).
-**[r1]** marks what this round changed.
+**[r1]**, **[r2]** and **[r3]** mark what fix rounds 1, 2 and 3 changed.
 
 | # | check | judged |
 |---|---|---|
-| 1 | Data | FAIL any of: the Pond > 0.3 m off (0, 0); the Pond, any weir, either Gate or any sign (both teams) with no floor within 0.3 m under it, on a `roof` block, or inside a spawn zone (barrier + 0.6 m, above the pad − 1 m); no carrier-graph node under the Pond; a kit post / sign block (`karp-weir*`, `karp-gatepost*`, `karp-sign*`) that is not `roof` or takes ink.\* **[r1]** A kit piece that stands on the floor (each post's footing, the Gate's plinth and rim, the sill, each sign's foot) with floor more than 0.1 m below its bottom at any of 3 × 3 points over its footprint, both teams, each flagged.\* (The sill and the plinth are floor and take ink.) |
+| 1 | Data | FAIL any of: the Pond > 0.3 m off (0, 0); the Pond, any weir, either Gate or any sign (both teams) with no floor within 0.3 m under it, on a `roof` block, or inside a spawn zone (barrier + 0.6 m, above the pad − 1 m); no carrier-graph node under the Pond; a kit post / sign block (`karp-weir*`, `karp-gatepost*`, `karp-sign*`) that is not `roof` or takes ink.\* **[r1]** A kit piece that stands on the floor (each post's footing, the Gate's plinth and rim, the sill, each sign's foot) with floor more than 0.1 m below its bottom at any of 3 × 3 points over its footprint, both teams, each flagged.\* (The sill and the plinth are floor and take ink.) **[r2]** A kit piece, the Pond, a weir or a Gate trigger inside a mover's swept volume (D31). |
 | 2 | Field | FAIL any of: \|L_A − L_B\| > 2 %; a hole (a node reached on the carrier graph from the Pond with D = ∞ for a team, unless the data waives it\*); \|fieldAt − D\| > 0.05 m at any node; any sweep point (¼, ½, ¾ of every walk edge, ±0.3 m across where the waist line is clear) more than 2.5 m below its proven lower bound. Reported: the hop / gap edges added, the largest gain across one, the points > 1.5 m low. The halfway line is drawn. |
 | 3 | Distances and counts | FAIL any of: a weir's count outside 45–60 (40–55 % of L); a weir with no field reading at all; weir → Gate < 25 m or < 45 % of L; two weirs > 2 counts apart or < 12 m apart; 0 or > 2 weirs; L outside 55–85 m. Reported: Pond → weir → Gate along the field and on route 1; the Gate's distance from its pad; the lowest count within 3 m of each weir (reported, not judged: D1). |
 | 4 | Reachability | FAIL: no carrier route for Pond → each weir or weir → Gate, either team, without squid climbs, spawn zones, the team's own free zones or carrierBlock. |
 | 5 | Two routes | Route 1 is the shortest no-climb route. Route 2 is the shortest one avoiding every node within 2.5 m (3D\*) of route 1, except within 6 m of either end. Route 3 (squid climbs allowed, off both) is reported. FAIL: a leg with no route at all, no route 2, or route 2 > 1.6 × route 1, for every weir both ways, both teams. With two weirs, also FAIL when: their routes 1 meet (≤ 2.5 m apart outside 6 m of the ends); either route 1 passes within 4 m of the other weir; or the weirs are < 12 m apart. `routes` hints are measured and named. |
 | 6 | Carry times | FAIL: Pond → Gate (L) outside 11.5–18 s at 4.8 m/s. Reported per leg via each weir, walking and swimming (9.44 m/s). |
-| 7 | No shortcut into a base | **(a)** Every carrier-graph edge crossing into the Gate's 15 m ring, grouped single-linkage within 3 m. Also counted: a roof-less car's stop in the ring, and **[r1]** every move #16's kid really makes from outside the ring to inside it (a high hop, long gap or rising gap beyond the rules; a hop or jump onto off-field ground with an exit in the ring), at its landing. FAIL: outside 2–5 entrances, or an entrance none of whose crossings is seen from 1.5 m above any edge node of the defenders' spawn deck (to 1 m above the crossing); **[r1]** a kid's move into the ring needs its own line of sight (to its landing or an exit of it in the ring). **(b)** The field without squid climbs vs with, from every halfway-line node. FAIL: a with-climbs path saving > 20 % (its climb edges are listed; a climb the kid hops is not one). **(c)** FAIL: a drop or down-gap edge of > 2.5 m ending inside a ring. **(d)** The probes; each find is flagged (finds of one probe within 3 m are one flag) and pictured. FAIL when the find gains > 10 m; WARN when one end is off the field (a hiding place, D3). The static probes measure \|ΔD\| as SPEC words it: low gaps (a 0.35 m squid tube 0.3 m up, between nodes ≤ 3 m apart not joined by ≤ 6 m of walking); tall walls (nav's climb scan over 5.5 m); long drops (> 3.4 m with open air; signed). The moves #16's kid really makes are measured in their own direction **[r1]**: high hops (1.8–2.1 m) and long gaps (3.0–3.8 m); **[r1] rising gaps** (rim pairs 1.2–3.0 m apart, 0.6–1.8 m up, open air, no 6 m walk; tried when worth > 10 m or into a ring); hops onto off-field ground (D2) and **[r1] jumps onto off-field ground across a real gap** (1.2–3.8 m, 3.4 m down to 1.8 m up; tried when an exit is worth > 10 m or in a ring), whose gain is to their best exit (nav's edges off that ground and **[r1]** stepping off its edge). A find within 2 m of a `waive` entry of that check is waived.\* |
+| 7 | No shortcut into a base | **(a)** Every carrier-graph edge crossing into the Gate's 15 m ring, grouped single-linkage within 3 m. Also counted: a roof-less car's stop in the ring; every move #16 really makes from outside the ring to inside it (a high hop, long gap, rising gap or **[r3]** vault beyond the rules; a hop or jump onto off-field ground with an exit in the ring; **[r3]** a squid gap, through rails and grates too), at its landing, when it saves more than 3 m on the field's own way in (D33). FAIL: outside 2–5 entrances, or an entrance none of whose crossings is seen from 1.5 m above any edge node of the defenders' spawn deck (to 1 m above the crossing); a move into the ring needs its own line of sight (to its landing or an exit of it in the ring). **(b)** The field without squid climbs vs with, from every halfway-line node. FAIL: a with-climbs path saving > 20 % (its climb edges are listed; a climb the kid hops is not one). **(c)** FAIL: a drop or down-gap edge of > 2.5 m ending inside a ring; **[r2]** a squid-climb top's drop into the ring; **[r3]** a made move that ends in the ring more than 2.5 m below where it left. **(d)** The probes; each find is flagged (finds of one probe within 3 m are one flag) and pictured. FAIL when the find gains > 10 m and **[r2]** beats its own length by > 6.2 m (D33); WARN when one end is off the field with no exit (a hiding place, D3 / D30). The static probes measure \|ΔD\| as SPEC words it: low gaps (a 0.35 m squid tube 0.3 m up, between nodes ≤ 3 m apart not joined by ≤ 6 m of walking; **[r3]** through grates and rails, never standing on a grate); tall walls (nav's climb scan over 5.5 m; **[r2]** the top's exits followed); long drops (> 3.4 m with open air; signed). The moves #16 really makes are measured in their own direction: high hops (1.8–2.25 m up), long gaps, rising gaps (0.6–1.8 m up across open air, no 6 m walk), **[r3]** vaults (D35), hops onto off-field ground (**[r2]** up to two cells out, diagonals included: D28) and jumps onto off-field ground across a real gap (D21), whose gain is to their best exit. **[r2/r3]** Every one of them takes node pairs out to the mover's measured reach at its rise (D29): the kid's `REACH.air`, and from a takeoff whose floor takes ink the swimming carrier's `REACH.swim`. A move is tried when it can matter (worth > 10 m, or into a ring). A find within 2 m of a `waive` entry of that check is waived.\* |
 | 8 | Gate placement | FAIL any of: not 12–20 m from the defending pad (horizontal); more than 0.2 m above the pad; outside ±40° of the pad → Pond line; not seen from the deck; inside any free zone. |
-| 9 | High ground and free zones | **Plateaus:** connected carrier-graph nodes ≥ 1.4 m above the lowest node within 3 m (≥ 2 nodes\*), on the half most of their nodes are on. FAIL a plateau the owner's carrier reaches (any carrier route from the Pond) and the enemy kid reaches only by a squid climb (no no-climb route from the halfway line, one with), unless every node is inside the owner's zones. **Zone entrances:** every carrier-graph edge (climbs included) into a zone's polygon and band; the crossings (edge midpoints\*) chained within 3 m. FAIL an entrance with no sign (of any of the owner's zones\*) within 2 m of a crossing, or one wider than 8 m without a sign within 2 m of each end (its two farthest crossings). **Also FAIL:** a zone node with D_owner ≤ D_other (both finite\*); a zone touching a weir trigger, a Gate trigger, or a route 1 / route 2 node of any leg; a `noRetreat` polygon within 3 m of a plateau or a zone. **WARN:** enemy arrival (walk 6 m/s, climb 7.5) > 2 × the owner's (from its deck), or a single entrance (plateaus ≥ 4 m²\*). |
+| 9 | High ground and free zones | **Plateaus:** connected carrier-graph nodes ≥ 1.4 m above the lowest node within 3 m (≥ 2 nodes\*), on the half most of their nodes are on. FAIL a plateau the owner's carrier reaches (any carrier route from the Pond) and the enemy kid reaches only by a squid climb (no no-climb route from the halfway line, one with), unless every node is inside the owner's zones. **Zone entrances:** every carrier-graph edge (climbs included) into a zone's polygon and band; the crossings (edge midpoints\*) chained within 3 m. FAIL an entrance with no sign (of any of the owner's zones\*) within 2 m of a crossing, or one wider than 8 m without a sign within 2 m of each end (its two farthest crossings). **Also FAIL:** a zone node with D_owner ≤ D_other (both finite\*); a zone touching a weir trigger, a Gate trigger, or a route 1 / route 2 node of any leg; a `noRetreat` polygon within 3 m of a plateau or a zone (**[r2]** 0 when the polygons cross or one holds a vertex of the other). **WARN:** enemy arrival (walk 6 m/s, climb 7.5) > 2 × the owner's (from its deck), or a single entrance (plateaus ≥ 4 m²\*). |
 | 10 | Retreat sanity | Route 1 and route 2 from each team's own Gate area to the Pond, on its own half. FAIL a dip of P (= L − D) below its running best of > 6 m outside `noRetreat`. Across every state switch the carrier's mark resets (§3.3), so the dip is 0 by rule; the raw change of P a still carrier would see on the routes is reported. |
 | 11 | Carry walk | A fresh match per team, bots out, a scripted carrier (WASD + space): it picks the Bazookarp up at the Pond, walks route 1 to weir 1 (re-planning on the carrier graph after 2.5 s without progress: a stuck episode, logged with its place and edge, **[r1]** and flagged), plants, re-pops and walks to the Gate. Then four more walks: a retreat on its own half (×3 on at 8 m back, off at 3 m, measured from its own `mark`); a visit to its own zone (×3); a fall into the water from the wet node nearest the Pond on each half (own half → the Pond; enemy half → dropped by the last footing on that half, ≤ 12 m; up to 8 edges tried when a railing stops the fall); a splat on the narrowest walk near each weir (must rest on `wide` floor). **Drop coverage:** the field's drop spot at every 4th node of route 1 and route 2 of every leg, and at every node inside each zone (its enemy carrying). Each must land on the carrier's half, ≤ 12 m away except inside an enemy zone, never at the Pond. FAIL any of these. |
 | 12 | Variant | FAIL any of: a piece in the Bazookarp build that Turf War lacks and that is neither the kit nor tagged `onlyIn: 'bazookarp'`; a Turf War piece missing without `notIn: 'bazookarp'`; no `assets/lightmaps/<id>.bazookarp.json`, or a stale one (the level applied none). A test stage (karpbox) is never baked. |
 | 13 | Deep spawns | **Ways off the deck** (a level flood from the pad, ≤ 16 m): nav edges leaving it, chained within 3 m; FAIL < 3. **The apron:** route 1 from the deck's edge to the Gate in front of it; FAIL < 2 solid static blocks (≥ 0.45 m across, prop colliders count, not the kit, not the deck's own blocks) rising ≥ 1.2 m above a route node within 4 m of it. |
 | 14 | The Pond | FAIL: < 70 % of the 4.5–10 m ring is floor (nav cells at any level within ±5 m of the Pond\*), or the shell's centre (1.3 m up) is seen from fewer than 6 of 8 points 7 m out (1.5 m above their floor). |
-| 15 | Weir room | FAIL any of: **[r1]** a solid block nearer than 3.0 m to the weir's axis between 0.3 and 3.6 m above its floor, measured exactly (the block's box clipped to that band, projected down: its hull's distance; any weir's own posts and sill excepted; the block and its distance named); no route to look along; its centre not seen from 1.5 m above route 1's node 8 m before it or 8 m after it; seen from fewer than 3 of 8 points 7 m out. |
-| 16 | Proved physically | **(i) The edges.** Tried: every hop and gap edge the field added; every high-hop and long-gap candidate of #7d; **[r1]** the rising gaps and jumps onto off-field ground that can matter; every hop onto off-field ground; and **[r1]**, before any route is searched, every climb edge of at most 1.8 m that passes the hop rule's tests (`climbHops`: a made one counts as a hop in every no-climb search). A kid with `carry` set (4.8 m/s, the carrier's jump, both spawn barriers, carrierBlock) is stepped through `actor.update` at 1/60 s, alone (everyone else parked). It starts 1.5 m and 3 m before the low end, shortened toward it until it stands on floor (D11). It faces the far end and steers to it; a move down is first tried as a run-off; jump is pressed 0.2 / 0.5 / 0.8 / 1.1 / 1.4 m before the edge (a hop: its riser; a climb hop: the wall nav found; a gap: the rim). Made = grounded on the far node's floor within 0.5 m of it inside 2 s (or on that floor ≤ 3 m away with a clear waist line). **(ii) The walks.** The same kid walks every route 1 and route 2 of every leg, both teams, and goes through every entrance into each Gate's ring: one crossing per entrance with an 8 m run-up from the Pond side, then on to the Gate (squid climbs, rides and the moves proved apart excepted). It steers at the next node. It jumps on a jump, hop or climb-hop edge within 1.6 m of the node; on a walk edge only at a real riser (the floor 0.45 m ahead above the step-up, never a ramp's slope); at a rim; and after 0.8 s without progress. Standing on something right over its node, it heads for the next one. A grounded kid whose own node (the field's reading rule) is one of the next 8 path nodes has reached it. A hop, gap, climb-hop or nav jump edge it doesn't make on the way is decided by that edge's own five-timing trial (made: it is set down on the far node and goes on, counted). **FAIL:** an added edge never made (printed as `hopVeto` entries to paste, broken down by kind); a walk stuck 2.5 s, fallen off or out of time (its place is printed and drawn: ⊗). A walk stuck against a dynamic block (a parked mover) is reported, not judged. Made candidates beyond the rules go to #7d with their gain. |
+| 15 | Weir room | FAIL any of: **[r1]** a solid block nearer than 3.0 m to the weir's axis between 0.3 and 3.6 m above its floor, measured exactly (the block's box clipped to that band, projected down: its hull's distance; any weir's own posts and sill excepted; the block and its distance named); no route to look along; its centre not seen from 1.5 m above route 1's node 8 m before it or 8 m after it; seen from fewer than 3 of 8 points 7 m out.; **[r2]** a mover's swept volume within 3 m (D31). |
+| 16 | Proved physically | **(i) The edges.** Tried: every hop and gap edge the field added; every #7d candidate beyond the rules that can matter (high hops, long gaps, rising gaps, **[r3]** vaults); the hops and jumps onto off-field ground that can matter; and, before any route is searched, every climb edge of at most 1.8 m that passes the hop rule's tests (`climbHops`: a made one counts as a hop in every no-climb search). A kid with `carry` set (4.8 m/s, the carrier's jump, both spawn barriers, carrierBlock) is stepped through `actor.update` at 1/60 s, alone (everyone else parked). It starts 1.5 m and 3 m before the low end, shortened toward it until it stands on floor (D11). It faces the far end and steers to it; a move down is first tried as a run-off; jump is pressed 0.2 / 0.5 / 0.8 / 1.1 / 1.4 m before the edge (a hop: its riser; a climb hop: the wall nav found; a gap: the rim, **[r2]** and the coyote jump at and past it; **[r3]** a vault: the obstacle's near face). Made = grounded on the far node's floor within 0.5 m of it inside 2 s (or on that floor ≤ 3 m away with a clear waist line). **[r3] The second mover:** when the kid fails and the takeoff's floor takes ink, the carrier swims in its own ink (the run-up inked into the paint grid, put back after) at 9.44 m/s from 2 m and 4 m back and swim-jumps at the same distances (a gap also at the rim and 0.3 / 0.6 / 0.9 m past it; a rise of 1.4 m or more also letting go of squid form at the top); made as the kid's, or on the far node's floor within 7 m (D34). A move made either way counts; `(swim-jump)` marks one only the swim made. **(ii) The walks.** The same kid walks every route 1 and route 2 of every leg, both teams, and goes through every entrance into each Gate's ring: one crossing per entrance with an 8 m run-up from the Pond side, then on to the Gate (squid climbs, rides and the moves proved apart excepted). It steers at the next node. It jumps on a jump, hop or climb-hop edge within 1.6 m of the node; on a walk edge only at a real riser; at a rim; and after 0.8 s without progress. A grounded kid whose own node is one of the next 8 path nodes has reached it. A hop, gap, climb-hop or nav jump edge it doesn't make on the way is decided by that edge's own trial. **FAIL:** an added edge never made (printed as `hopVeto` entries to paste, by kind); a walk stuck 2.5 s, fallen off or out of time (its place printed and drawn: ⊗). A walk stuck against a dynamic block is reported, not judged. Made candidates beyond the rules go to #7d / #7a with their gain. |
 
 **Pictures** (JPEG < 290 KB; the page encodes them):
 
@@ -465,23 +421,23 @@ The curtain and the Gate's ring are bazookarpFx's placeholders, WP2's to finish.
 
 ## 2. Tests and results (all local)
 
-### 2.1 The checker's self-test (karpbox): 48/48
+### 2.1 The checker's self-test (karpbox): 72/72
 
 `KARP_SELFTEST=1` runs every case below. Each planted fault must FAIL its own check, and the check's text must match the
-case's `expect` pattern, so the fault is caught for the reason it plants and not by a knock-on. A `notFail` case must
-leave its checks unfailed. The clean karpbox must pass every check, including the carry walk and #16's trials and walks.
+case's `expect` pattern, so the fault is caught for the reason it plants and not by a knock-on. Its target FAIL must
+carry a flag (**[r2]**), and its `also` checks must FAIL too. A `notFail` case must leave its checks unfailed. The REACH
+cases must hold every jump their mover makes inside the windows. The clean karpbox must pass every check, including the
+carry walk and #16's trials and walks.
 
-**Result: 48/48, no console errors.**
+**Result: 72/72, no console errors**, on e1d4ae4a (the final checker; 2fdb592d and later change only comments and
+scratch). It ran in four chunks of 18 cases (`CASES=`), one Electron at a time: 37 min, 01:03–01:41, at load 23–90.
 
-- The full run took 16.5 min at load 40–100 and came before the last three checker changes (D21's real gap, D23's
-  direction, the flag kinds).
-- The cases those changes can touch re-ran afterwards: x7g, x7h, x7rq and f7 (4/4), then x7r, x7rb and f7 (3/3).
-- **The final full run, on 69abedc0, was 48/48 with no console errors** (14 min, 17:33–17:47 at load ~20).
-- Two changes came after it, and each was re-checked:
-  - deef4377, the picture size, touches only the JPEG encoder. It was checked on kelpline and Cargo (MAPS=, no console
-    errors, top-downs 289 / 265 KB).
-  - d5795858, the #7a grouping of kid moves, could touch only cases with a kid's move into a ring. All of those
-    (clean, f7, x7r, x7rb, x7rq, x7h, x7a, x7c) re-ran 8/8 on it, with no console errors.
+- **The run before**, on eb1f357e (before the vault fix), was also 72/72, 61 min at load 250–540.
+  - Its chunk C logged one console error, "The AudioContext encountered an error from the audio device or the WebAudio
+    renderer". The checker plays no sound; the game page opens an AudioContext, and the shared audio device was busy.
+    The same 18 cases re-ran 18/18 with none.
+- **The focused runs** while fixing: `reachs` + x11f + x11z 3/3 on the new windows; the ceiling probe (2.2–2.5 m up);
+  calamari alone for the vault fix (§0).
 
 | case | check | the fault | result | checks failing |
 |---|---|---|---|---|
@@ -490,7 +446,7 @@ leave its checks unfailed. The clean karpbox must pass every check, including th
 | f2 | #2 | a wall on Bravo's half only (a `single`): Alpha's walk 50 % longer | PASS | #2 #15 |
 | f3 | #3 | the weir at 85 % of the way (count ≈ 15) | PASS | #3 #15 |
 | f4 | #4 | the weir on a 3 m box only a climb reaches | PASS | #3 #4 #5 #9 #15 |
-| f5 | #5 | the weir at the end of a 3 m dead-end corridor | PASS | #1 #3 #5 #15 (#1 is new: its west post stands past the deck's edge) |
+| f5 | #5 | the weir at the end of a 3 m dead-end corridor | PASS | #1 #3 #5 #15 |
 | f6 | #6 | a third ring opening, straight in from the south: Pond → Gate ≈ 10 s | PASS | #3 #6 |
 | f7 | #7 | a 1.5 m non-inkable ledge through the ring wall that only a hop climbs, screened from the deck | PASS | #7 |
 | f8 | #8 | the Gate 45° off the pad → Pond line | PASS | #3 #5 #6 #8 |
@@ -510,205 +466,217 @@ leave its checks unfailed. The clean karpbox must pass every check, including th
 | x9b | #9 | a noRetreat polygon over the spawn deck's zone | PASS | #9 |
 | states | #15 | a stage module's state `w` (its world on ?kcstate=w) raises a wall 2.6 m from the weir | PASS | #15 in `w` only |
 | x9c | #9 | a free zone poking 2 m over the halfway line | PASS | #9 |
-| **x7r** | #7 | **H2p** (review 1): a 2.0 m moat, a 1.0 m landing just inside the ring off the field, f7's screen | PASS | #7 |
-| **x7rb** | #7 | **H2bp**: a 1.3 m moat, a 1.5 m landing off the field | PASS | #7 |
-| **x7rq** | #7 | **H2q**: the moat in front of an on-field landing with a ramp into the ring, screened (a rising gap) | PASS | #7 |
-| **x7a** | #7a | two more ring openings on the deck side: 6 entrances | PASS | #7 |
-| **x7c** | #7c | a 3 m deck outside a west opening, up a ramp: 3 m drops into the ring | PASS | #7 |
-| **x7t** | #7d | a 5.8 m inkable platform up a long ramp (tallWall) | PASS | #7 |
-| **x7l** | #7d | a 4 m platform up a long ramp (longDrop) | PASS | #7 |
-| **x7h** | #7d | a 1.83 m ledge in a ring opening, a ramp into the ring, the SW opening closed (highHop) | PASS | #5 #7 |
-| **x7g** | #7d | the GAP's far platform 1 m on and 0.5 m down: 3.6 m of air (longGap) | PASS | #7 |
-| **x3** | #3 | the weir past its platform, 13 m from the ring (weir → Gate 10 m) | PASS | #3 #15 |
-| **x5b** | #5 | a wall across the deck with a 3 m gap on route 1: route 2 round by the flank lane (2.23 ×) | PASS | #5 |
-| **x9d** | #9 | a free zone over the weir's platform | PASS | #9 #15 |
-| **x9e** | #9 | a free zone on the floor across the Pond → weir routes | PASS | #9 |
-| **x9f** | #9 | an open-floor zone signed at one corner only: a 10 m entrance, an end unsigned | PASS | #9 |
-| **x9g** | #9 | a free zone over the Gate | PASS | #8 #9 |
-| **x13** | #13 | two of the parapet's three openings closed: 1 way off | PASS | #13 |
-| **x14** | #14 | open water x 3…14, z 0…10 beside the Pond (mirrored): 65.5 % floor | PASS | #14 |
-| **x15t** | #15 | **T1**: a 0.2 m lamp post 2.2 m from the weir (2.1 m to its corner) | PASS | #15 |
-| **x15a** | #15 | the weir in the alley behind a chicane: its approach can't see it | PASS | #3 #5 #15 |
-| **x1** | #1 | **W5**: the weir at x 2 on its 8 m platform: a post off the edge | PASS | #1 |
-| **x11** | #11 | f16w's slot on route 1: the scripted carrier sticks (16 episodes), no plant | PASS | #11 |
-| **x11r** | #11 | a noRetreat over each whole half: "retreat ×3 on at null m" | PASS | #9 #11 |
-| **w4** | #4 #9 must NOT fail | **W4**: the weir's platform a 1.5 m inkable box, no ramps (92 of 92 climbs hopped) | PASS | (none) |
+| x7r | #7 | **H2p** (review 1): a 2.0 m moat, a 1.0 m landing just inside the ring off the field, f7's screen | PASS | #7 |
+| x7rb | #7 | **H2bp**: a 1.3 m moat, a 1.5 m landing off the field | PASS | #7 |
+| x7rq | #7 | **H2q**: the moat in front of an on-field landing with a ramp into the ring, screened (a rising gap) | PASS | #7 |
+| x7a | #7a | two more ring openings on the deck side: 6 entrances | PASS | #7 |
+| x7c | #7c | a 3 m deck outside a west opening, up a ramp: 3 m drops into the ring | PASS | #7 |
+| x7t | #7d | a 5.8 m inkable platform up a long ramp (tallWall) | PASS | #7 |
+| x7l | #7d | a 4 m platform up a long ramp (longDrop) | PASS | #7 |
+| x7h | #7d | a 1.83 m ledge in a ring opening, a ramp into the ring, the SW opening closed (highHop) | PASS | #5 #7 |
+| x7g | #7d | the GAP's far platform 1 m on and 0.5 m down: 3.6 m of air (longGap) | PASS | #7 |
+| x3 | #3 | the weir past its platform, 13 m from the ring (weir → Gate 10 m) | PASS | #3 #15 |
+| x5b | #5 | a wall across the deck with a 3 m gap on route 1: route 2 round by the flank lane (2.23 ×) | PASS | #5 |
+| x9d | #9 | a free zone over the weir's platform | PASS | #9 #15 |
+| x9e | #9 | a free zone on the floor across the Pond → weir routes | PASS | #9 |
+| x9f | #9 | an open-floor zone signed at one corner only: a 10 m entrance, an end unsigned | PASS | #9 |
+| x9g | #9 | a free zone over the Gate | PASS | #8 #9 |
+| x13 | #13 | two of the parapet's three openings closed: 1 way off | PASS | #13 |
+| x14 | #14 | open water x 3…14, z 0…10 beside the Pond (mirrored): 65.5 % floor | PASS | #14 |
+| x15t | #15 | **T1**: a 0.2 m lamp post 2.2 m from the weir (2.1 m to its corner) | PASS | #15 |
+| x15a | #15 | the weir in the alley behind a chicane: its approach can't see it | PASS | #3 #5 #15 |
+| x1 | #1 | **W5**: the weir at x 2 on its 8 m platform: a post off the edge | PASS | #1 |
+| x11 | #11 | f16w's slot on route 1: the scripted carrier sticks (16 episodes), no plant | PASS | #11 |
+| x11r | #11 | a noRetreat over each whole half: "retreat ×3 on at null m" | PASS | #9 #11 |
+| w4 | #4 #9 must NOT fail | **W4**: the weir's platform a 1.5 m inkable box, no ramps (92 of 92 climbs hopped) | PASS | (none) |
+| x7m2 | #7a | f7's ledge from x −17.2 (its west face off the 1 m grid: floor and top nodes two cells apart) | PASS | #7 |
+| x7m4 | #7a | f7's ledge from x −17.4 (review 2's P1a) | PASS | #7 |
+| x7m6 | #7a | f7's ledge from x −17.6 | PASS | #7 |
+| x7m8 | #7a | f7's ledge from x −17.8 | PASS | #7 |
+| x7m45 | #7a | f7's ledge turned 45°: every floor / top pair diagonal | PASS | #7 |
+| x7p2 | #7a | P2: a 2.6 m moat before a 0.8 m landing in the ring, nodes 4.0 m apart (past the old 3.0 m window) | PASS | #7 |
+| x7p4 | #7c #7d | P4: a 6 m inkable tower through the ring wall: squid up, drop 6 m into the ring | PASS | #7 |
+| x15m | #15 #1 | Wc: the weir where the car parks (a mover's swept volume) | PASS | #1 #5 #15 |
+| x9n | #9 | a 0.4 m noRetreat strip across an open-floor zone (crossing polygons) | PASS | #9 |
+| reach | REACH | the kid: platform pairs over the sea, every made jump inside the windows | PASS | – |
+| v5 | #7d | **V5** (review 3): the ring's NW stretch a 1.4 m roof wall: a kid vaults it | PASS | #7 |
+| v5h | #7d | **V5h**: the same stretch 1.7 m | PASS | #7 |
+| rl | #7a | **RL**: the west opening closed by a 1.2 m rail behind f7's screen: a vault and a squid gap | PASS | #7 |
+| rlh | #7a | the same opening closed by a 2.6 m rail: only a squid slips through | PASS | #7 |
+| h20 | #7a #7d | **H20**: f7's ledge 2.0 m high: only the swim-jump lands on it | PASS | #7 |
+| g5 | #7d | **G5**: a 5.0 m moat through the west opening, inkable both sides: only the swim-jump clears it | PASS | #7 |
+| reachs | REACH | the swimming carrier: inkable near platforms, 2.5 m down to 3.4 m down, every made jump inside the windows | PASS | – |
+| x8n | #8 | the Gate 10 m from the pad | PASS | #8 |
+| x8f | #8 | the Gate 22 m from the pad | PASS | #7 #8 |
+| x8u | #8 | the Gate on a 3.4 m dais: 1 m above the pad | PASS | #1 #3 #7 #8 |
+| x8s | #8 | a 4.6 m screen across the apron: the Gate unseen from the deck | PASS | #8 |
+| x11f | #11 | a noRest polygon round the enemy half's water edge nearest the Pond: the fall dropped ≥ 13.5 m off | PASS | #11 |
+| x11w | #11 | open water across the main floor, a 1 m causeway on route 1: the splat rests on narrow floor | PASS | #5 #11 #14 |
+| x11z | #11 | the spawn-deck zone's eras as strings: the engine never applies it (no zone ×3) | PASS | #11 |
 
-The clean box is unchanged:
+**The clean box** (D37's channel rail and bridge, since 92b6a972):
 
-- L 61.58 / 61.45 m and weir count 60;
-- 18 hop and 24 gap edges, all made;
+- L 61.58 / 61.45 m, weir count 60;
+- 10 hop and 24 gap edges, all made;
 - walks 8/8 routes and 8/8 entrances;
-- 8 rising-gap candidates, none worth trying;
-- the carry knocks out both ways (weir 5.9 + Gate 7.7 s, and 5.7 + 7.5 s), stuck 0;
-- retreat ×3 on at 8.22 m, off at 2.91 m;
-- 250 drop splats fine.
+- 54 moves beyond the rules worth trying (32 long gaps, 22 vaults), none made by the kid;
+- the swimming carrier makes nothing the kid didn't, from 72 inkable takeoffs (796 swim trials);
+- the carry knocks out both ways (weir 5.9 + Gate 7.5 s, and 5.7 + 7.4 s), stuck 0;
+- retreat ×3 on at 8.14 / 8.22 m, off at 2.9 m;
+- 248 drop splats fine.
 
-Pictures (`out/`):
+**Pictures** (`out/`):
 
-- `self-clean-*` (the clean set);
-- the top-downs of the new cases: `self-x7r`, `x7rb`, `x7rq`, `x7h`, `x7a`, `x7c`, `x7t`, `x7l`, `x7g`, `x15t`, `x1`,
-  `w4`, `x9f` and `x11`;
-- `selftest.json`.
+- `self-clean-*`, the clean set;
+- the top-downs of the cases: review 1's (`self-x7r` … `self-x11`), review 2's (`self-x7m2/4/6/8/45`, `x7p2`, `x7p4`,
+  `x15m`, `x9n`) and review 3's (`self-v5`, `v5h`, `rl`, `rlh`, `h20`, `g5`, `x8n/f/u/s`, `x11f/w/z`);
+- `self-reach.json`, `self-reachs.json` (every row with its trial) and `selftest.json`.
 
-### 2.2 The honest report: halyard's and lockgate's first-cut data (this round's code)
+The top-downs read at a glance. For example, `self-rl-karpbox-s0-karp-top.jpg` shows flags 1–4 on the railed west
+opening of each ring, both unseen arrows red, and the key below: "#7a a squid gap into the ring, unseen from the deck"
+and "#7a a vault over a low wall or rail into the ring".
 
-Both still fail, as expected.
+### 2.2 The honest report: halyard's and lockgate's first-cut data (the final checker)
 
-**What changed since the last report:**
+Both still fail, as expected. Since fix round 1, the field-level numbers (L, counts, routes, #9–#15) are unchanged. What
+moved is #7 and #16, under the windows (D29), the swimming carrier (D34) and the vaults (D35). `out/halyard-*` and
+`out/lockgate-*` hold the full sets: a `-flag-<n>` for the #7 flags, up to 40, and the JSON.
 
-- #7 now sees rising gaps and jumps onto off-field ground, measures one-way moves in their own direction, and counts
-  the kid's moves into a ring as entrances;
-- the climbs a kid hops count as hops;
-- the flags are numbered.
+**Halyard** (first cut: weir at (−8, 27.5), Gate at (0, 52.5)). L 54.8 / 54.7 m.
+FAIL #3 #5 #6 #7 #9 #10 #12 #13 #14 #16, the same checks as before.
 
-Everything else is as before. `out/halyard-*`, `out/lockgate-*` hold the full sets (a `-flag-<n>` for every #7 flag)
-and the JSON.
-
-**Halyard** (first cut: weir at (−8, 27.5), Gate at (0, 52.5), a spawn-deck zone with two signs). L 54.8 / 54.7 m.
-FAIL #3 #5 #6 #7 #9 #10 #12 #13 #14 #16.
-
-- **#3 / #6, L and the weir:** L is 54.8 m (< 55) and weir → Gate is 24.4 m (< 25 m, and < 45 % of L). The weir count
-  is 45, the band's edge. Pond → Gate takes 11.4 s walking (< 11.5). Lengthen the Gate's approach (§9.3).
-- **#5:** Pond → weir route 2 is 51.2 m = 1.81 × route 1.
+- **#3 / #5 / #6 / #9 / #10 / #12 / #13 / #14:** as in fix round 1. L is 54.8 m (< 55), weir → Gate is 24.4 m, route 2
+  is 1.81 ×, 11.4 s walking, the deck's wings are only partly zoned, route 1 dips 6.6 m, there is no lightmap, the apron
+  has 1 cover block, and 47.9 % of the Pond's ring is floor.
 - **#7:**
-  - (a) **6 entrances a side (now > 5):**
-    - a **long gap** a kid jumps from outside the ring into it at (±4.5, ±41.5) is a new entrance (seen);
-    - a **rising gap** joins the deck-side entrance at (∓10.5, ±62).
-  - (c) 20 drops of 3.2 m off the spawn deck's edge into the ring (D4).
-  - (d) **284 finds over 10 m:**
-    - **255 jumps onto off-field ground**, almost all of them across the slips onto the **moored boats**. These are
-      flags 21 / 22 at (±19.5, ±34.5), 121 and 134 pairs, gaining 10.1–20 m: a carrier jumps from the quay onto a
-      yacht's deck, walks along it and steps off onto the pontoon. `halyard-flag-22.jpg` shows the yacht. The boats'
-      decks are walkable colliders the field doesn't hold, so they want `roof` tops or a carrierBlock.
-    - 11 hops onto off-field tops at x ±22.5…24, one gaining 41.8 m.
-    - **10 rising gaps** at (±5.5…6.5, −0.74, ±37.5) up onto the slipway's quay (17–19 m; flags 10 / 12). The
-      review's example is among them: (−5.5, −0.74, −37.5) → (−4.5, 0, −35.5), 19 m.
-    - 8 long gaps at the slipway (14.9–16.9 m) and at (−8.5, −15) (12–13 m).
-  - (d) WARN: 16 squid-only gaps behind the spawn deck (hiding places).
-  - **The previous report's "four long gaps from the 2.6 m tops down to the yard" are gone.** In their own direction
-    neither team gains more than 10 m from them; the old 10.3–26.4 m was |ΔD|, a move away from a Gate (D23).
-- **#9:** as before. Climb-only plateaus are not wholly in a zone: the deck's wings at (±7.8, ±65.9) have 9 of 21 nodes
-  in it, two 4 m² tops 3 of 4, and the 15 m² top at (±14.5, ±18.5) none. All four zone entrances a side are unsigned.
-- **#10:** route 1 dips 6.6 m at (∓11.5, 2.4, ∓1.5).
-- **#12:** no lightmap yet.
-- **#13:** one cover block on the apron.
-- **#14:** 47.9 % floor round the Pond.
-- **#16:** 12 of 546 added edges are not made (hopVeto printed). The 24 climbs of ≤ 1.8 m are all hopped. Walks:
-  routes 8/8, entrances 10/10.
-- **Passes:**
-  - #1, #2 (L within 0.2 %, no holes), #4, #8, #15;
-  - **#11:** the carry knocks out both ways, with stuck 0, the flags right, the falls right and 204 drop splats fine.
+  - (a) **10 / 9 entrances** (was 6). Every one is seen. The new ones are long gaps and rising gaps into the ring off the
+    quays, e.g. (±4.5, ±49.5) and (−2.5, 58.5).
+  - (c) 40 drops of 3.2 m off the spawn deck's edge into the ring (D4).
+  - (d) **2 007 finds** (was 300): 1 115 made only by the swimming carrier, 876 by the kid, 16 static.
+    - Long gaps and off-field gaps, mostly swim-jumps: by the slips and the moored boats at x ±19.5…21.5, z ±29.5
+      (flags 23, 25, 39, 41), and across the yard at (±10.5, ±18.5…20.5) (flags 30, 35). Each flag holds 196–325 pairs,
+      gaining up to 24 m.
+    - Vaults: the review's (22.5, 0, −23.5) → (19.5, 0, −24.5), 34.7 m (flag 55).
+    - The off-field tops at x ±23.5…24 (flags 56–58), one gaining 41.8 m, as before.
+- **#16:** 6 of 546 added edges not made (was 12: the swimming carrier makes six the kid didn't). The 24 climbs of
+  ≤ 1.8 m are all hopped. Walks 8/8 routes, 10/10 entrances.
+- **Passes:** #1, #2 (Δ 0.2 %, no holes), #4, #8, #11 (knockout both ways, stuck 0, flags right, 204 drop splats fine),
+  #15.
 
-**Lockgate** (first cut: weir at (0, 24), Gate at (0, 52), a spawn-deck zone with two signs). L 58.0 / 57.9 m.
-FAIL #5 #7 #9 #11 #12 #14 #15 #16.
+**Lockgate** (first cut: weir at (0, 24), Gate at (0, 52)). L 58.0 / 57.9 m. FAIL #5 #7 #9 #11 #12 #14 #15 #16, the
+same checks as before.
 
-- **#5:** route 2 is 2.55 × route 1 to the weir.
+- **#5 / #9 / #11 / #12 / #14 / #15:** as in fix round 1. Route 2 is 2.55 ×, there is a climb-only 14 m² plateau and
+  four unsigned zone entrances a side, the narrow-walk splat rests on narrow floor, there is no lightmap, the Pond's
+  ring is 63.9 % floor and seen from 4 of 8, and the office stands 1.5 m from the weir.
 - **#7:**
-  - (a) 4 entrances a side, all seen.
-  - (c) 10 drops of 3.1–3.3 m into the ring.
-  - (d) **4 finds:** jumps onto off-field ground from (±20.5, 1.08, ±38.5) onto the 1.67 m top of the boat frame on its
-    blocks by the warehouse wall, a prop collider (10.8 / 12.5 m; flags 5 / 6, `lockgate-flag-6.jpg`).
-  - **The previous report's 14 "long gaps from the quay down into the lock chamber" are gone.** Jumping into the chamber
-    takes a carrier more than 10 m *further* from the Gate, so it is no shortcut (D23).
-  - Rising gaps: 143 candidates; only 2 are worth trying, and neither is made. The review found the same: its top four
-    were not made.
-- **#9:**
-  - the climb-only 14 m² plateau at (±12.9, 2.5, ±29.4). It stays climb-only with the hopped climbs counted (86 of
-    lockgate's 94), so the way up onto it is a squid climb;
-  - the zone's four entrances a side are unsigned.
-- **#11:** the narrow-walk splat by the weir rests on narrow floor.
-- **#12:** no lightmap yet.
-- **#14:** 63.9 % floor, and the shell is seen from 4 of 8 directions.
-- **#15:** the weir is 1.5 m from the office (exact now: office, roof and parapet at 1.5 m, a prop collider at 1.72 m),
-  and the defenders' approach can't see it.
-- **#16:** 13 gaps down from the office's edge are not made (hopVeto printed). Walks 8/8, 8/8.
-- **Passes:** #1, #2, #3 (count 50, weir → Gate 29.0 m), #4 (with the hopped climbs), #6 (12.1 s), #8, #10, #13.
+  - (a) **8 / 8 entrances** (was 4), all seen. The new ones are long gaps into the ring, vaults joining two walk entrances, and a
+    jump onto off-field ground at (±3.5, ±42.5).
+  - (c) 22 drops of 3.1–3.3 m into the ring.
+  - (d) **1 650 finds** (was 4): 1 641 by the swimming carrier, 5 by the kid, 4 static. **About 1 500 of them are one
+    move: a swim-jump across the lock canal**, from either quay to the other, gaining 13.6–28.2 m (flags 18, 21, 23, 26).
+    `lockgate-karp-top.jpg` shows it as four magenta fans over the diagonal canal; the field's way round is by the
+    bridges.
+    - The rest are highHop / riseGap / vault swim-jumps at the lock steps (±19.5, −0.6, ±12; flags 10–16), kid vaults at
+      (±9.5, 2.4, ±62.5) (flags 29 / 30), and two low gaps.
+    - Review 2's two boat-frame jumps (10.8 / 12.5 m) are not finds: D33's saving rule (§3).
+- **#16:** 10 of 492 added edges not made (gaps down from the office's edge; was 13). Walks 8/8, 8/8.
+- **Passes:** #1, #2, #3 (count 50, weir → Gate 29.0 m), #4, #6 (12.1 s), #8, #10, #13.
+
+**For WP4b, the canal is the main thing:** its swim-jump is about 1 500 finds on its own. Either the canal's quays get a
+2.3 m barrier or the canal is wider than 8 m, or the lead takes D34's (b) or (c).
 
 ### 2.3 Every shipped stage (`MAP=all`, the final checker)
 
-`MAP=all` ran every shipped stage in one Electron on the final checker (d5795858): 20 min (17:54–18:14) at load
-20–35, no harness errors, no console errors.
+`MAP=all` ran every shipped stage in one Electron on the final checker (e1d4ae4a): 25 min (01:40–02:05) at load 22–75,
+no harness errors, no console errors. The run before, on eb1f357e, matched it row for row except the vault columns of
+terraces (29 → 33 tried), craters (17 → 19) and calamari (9 → 11), which is the widened vault test (§0, issue 1).
 
-- Its first 12 columns are identical to the run before the #7a grouping fix (on 3693a126 / 69abedc0).
-- Only the entrance counts moved: tidewater's Bravo side went back to 7 (the earlier run's 6 was the chaining D22 fixes)
-  and calamari's went to 6 / 6.
-- Only halyard and lockgate have data. The other eleven run on the engine's placeholder data and fail by design
-  (DECISIONS #10). For those, what the stage itself holds (edges, proof, finds, climbs) is real. What depends on the
-  Pond, weir and Gate spots is the placeholder's.
+Only halyard and lockgate have data. The other eleven run on the engine's placeholder data and fail by design
+(DECISIONS #10). For those, what the stage itself holds (edges, proof, finds, climbs) is real, but what depends on the
+Pond, weir and Gate spots is the placeholder's.
 
-| stage | L (m) | weir counts | result | failing checks | hop + gap edges | #16 made / not made (hopVeto) | #16 walks: routes, entrances | beyond the rules made | rising gaps: candidates / tried / made | climbs ≤ 1.8 m hopped | #7d finds (gain > 10 m) | entrances A/B | s |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| tidewater (placeholder) | 57.02 / 55.45 | 100 | fail | #2 #3 #4 #5 #7 #11 #12 #15 #16 | 6 + 108 | 104 / 10 (h 0, g 0, g↓ 10) | 0/0, 12/12 | 41 of 46 | 8 / 0 / 0 | 11 of 11 | 51: lowGap 27, longDrop 13, longGap 6, offHop 5 | 5/7 | 47 |
-| kelpline (placeholder) | 51.96 / 51.95 | 50 | fail | #3 #5 #6 #7 #9 #11 #12 #15 #16 | 40 + 1674 | 1707 / 7 (h 0, g 2, g↓ 5) | 8/8, 6/6 | 330 of 332 | 279 / 7 / 7 | 52 of 52 | 37: lowGap 10, longGap 2, riseGap 5, offGap 20 | 3/3 | 30 |
-| halyard | 54.8 / 54.68 | 45 | fail | #3 #5 #6 #7 #9 #10 #12 #13 #14 #16 | 16 + 530 | 534 / 12 (h 0, g 2, g↓ 10) | 8/8, 10/10 | 160 of 162 | 167 / 12 / 12 | 24 of 24 | 300: lowGap 16, longGap 8, riseGap 10, offHop 11, offGap 255 | 6/6 | 33 |
-| saltpan (placeholder) | 83.48 / 81.06 | 50 | fail | #2 #7 #8 #9 #11 #12 #13 #15 #16 | 91 + 186 | 261 / 16 (h 0, g 6, g↓ 10) | 8/8, 4/4 | 169 of 183 | 110 / 6 / 6 | 58 of 58 | 28: lowGap 28 | 2/2 | 62 |
-| crossmarket (placeholder) | 65.13 / 65.4 | 49 | fail | #5 #7 #8 #9 #11 #12 #13 #14 #15 #16 | 0 + 173 | 167 / 6 (h 0, g 0, g↓ 6) | 6/6, 8/8 | 115 of 123 | 28 / 0 / 0 | 0 of 0 | 6: longGap 6 | 4/4 | 58 |
-| lockgate | 58.03 / 57.9 | 50 | fail | #5 #7 #9 #11 #12 #14 #15 #16 | 66 + 426 | 479 / 13 (h 0, g 0, g↓ 13) | 8/8, 8/8 | 208 of 237 | 143 / 2 / 0 | 86 of 94 | 4: offGap 4 | 4/4 | 59 |
-| terraces (placeholder) | 66.01 / 61.2 | 48 | fail | #2 #7 #8 #9 #11 #12 #13 #15 #16 | 145 + 641 | 780 / 6 (h 2, g 2, g↓ 2) | 8/8, 10/10 | 192 of 196 | 217 / 31 / 31 | 408 of 410 | 52: lowGap 10, longGap 1, riseGap 27, offGap 14 | 5/5 | 67 |
-| nantai (placeholder) | 72.85 / 72.99 | 50 | fail | #7 #8 #9 #12 #13 #15 #16 | 99 + 323 | 420 / 2 (h 0, g 2, g↓ 0) | 8/8, 4/4 | 123 of 137 | 123 / 2 / 2 | 371 of 371 | 20: lowGap 18, riseGap 2 | 2/2 | 27 |
-| craters (placeholder) | 69.39 / 69.26 | 50 | fail | #7 #8 #9 #11 #12 #13 #15 #16 | 317 + 1376 | 1545 / 148 (h 16, g 20, g↓ 112) | 8/8, 2/2 | 412 of 450 | 1155 / 34 / 10 | 224 of 226 | 16: lowGap 1, riseGap 10, offHop 1, offGap 4 | 1/1 | 36 |
-| calamari (placeholder) | 64.82 / 64.82 | 48 | fail | #7 #8 #9 #11 #12 #13 #16 | 74 + 239 | 311 / 2 (h 0, g 0, g↓ 2) | 8/8, 12/12 | 112 of 128 | 118 / 8 / 8 | 138 of 138 | 12: lowGap 4, riseGap 8 | 6/6 | 55 |
-| spirhalite (placeholder) | 80.25 / 79.54 | 50 | fail | #5 #7 #8 #11 #12 #13 #14 #15 | 84 + 622 | 706 / 0 | 8/8, 2/2 | 192 of 208 | 259 / 4 / 4 | 284 of 284 | 25: lowGap 14, highHop 2, riseGap 4, offHop 2, offGap 3 | 1/1 | 52 |
-| treehills (placeholder) | 70.93 / 70.48 | 52 | fail | #7 #8 #9 #11 #12 #13 #15 #16 | 197 + 200 | 393 / 4 (h 0, g 0, g↓ 4) | 8/8, 6/6 | 188 of 210 | 133 / 20 / 20 | 91 of 91 | 42: lowGap 16, longGap 6, riseGap 20 | 3/3 | 63 |
-| cargo (placeholder) | 51.96 / 51.95 | 50 | fail | #3 #5 #6 #7 #9 #11 #12 #15 #16 | 40 + 1674 | 1707 / 7 (h 0, g 2, g↓ 5) | 8/8, 6/6 | 330 of 332 | 279 / 7 / 7 | 52 of 52 | 37: lowGap 10, longGap 2, riseGap 5, offGap 20 | 3/3 | 28 |
+| stage | L (m) | weir counts | result | failing checks | hop + gap edges | #16 made / not made (hopVeto) | #16 walks: routes, entrances | beyond the rules made | rising gaps: tried / made | vaults: tried / made | made only by the swimming carrier | climbs ≤ 1.8 m hopped | #7d finds (gain > 10 m) | entrances A/B | s |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| tidewater (placeholder) | 57.02 / 55.45 | 100 | fail | #2 #3 #4 #5 #7 #11 #12 #15 #16 | 6 + 108 | 106 / 8 (h 0, g 0, g↓ 8) | 0/0, 12/12 | 1689 of 1741 | 3 / 3 | 66 / 66 | 614 (2 edges, 579 beyond, 33 off-field) | 11 of 11 | 1771: lowGap 84, longDrop 13, longGap 1553, riseGap 3, vault 60, offHop 14, offGap 44 | 6/9 | 111 |
+| kelpline (placeholder) | 51.96 / 51.95 | 50 | fail | #3 #5 #6 #7 #9 #11 #12 #15 #16 | 40 + 1674 | 1708 / 6 (h 0, g 2, g↓ 4) | 8/8, 6/6 | 2052 of 2127 | 77 / 77 | 25 / 25 | 1061 (1 edges, 813 beyond, 247 off-field) | 52 of 52 | 1336: lowGap 10, climbOff 2, highHop 5, longGap 747, riseGap 57, vault 21, offHop 23, offGap 471 | 5/5 | 88 |
+| halyard | 54.8 / 54.68 | 45 | fail | #3 #5 #6 #7 #9 #10 #12 #13 #14 #16 | 16 + 530 | 540 / 6 (h 0, g 0, g↓ 6) | 8/8, 10/10 | 1683 of 2135 | 379 / 181 | 3 / 3 | 1394 (6 edges, 1236 beyond, 152 off-field) | 24 of 24 | 2007: lowGap 16, longGap 1166, riseGap 134, vault 3, offHop 34, offGap 654 | 10/9 | 121 |
+| saltpan (placeholder) | 83.48 / 81.06 | 50 | fail | #2 #7 #8 #9 #11 #12 #13 #15 | 91 + 186 | 277 / 0 | 8/8, 4/4 | 65 of 89 | 9 / 8 | 25 / 23 | 70 (16 edges, 54 beyond, 0 off-field) | 58 of 58 | 100: lowGap 47, longGap 24, riseGap 8, vault 21 | 3/3 | 71 |
+| crossmarket (placeholder) | 65.13 / 65.4 | 49 | fail | #5 #7 #8 #9 #11 #12 #13 #14 #15 #16 | 0 + 173 | 167 / 6 (h 0, g 0, g↓ 6) | 6/6, 8/8 | 498 of 511 | 42 / 36 | 38 / 38 | 139 (0 edges, 139 beyond, 0 off-field) | 0 of 0 | 370: highHop 15, longGap 291, riseGap 34, vault 30 | 6/6 | 77 |
+| lockgate | 58.03 / 57.9 | 50 | fail | #5 #7 #9 #11 #12 #14 #15 #16 | 66 + 426 | 482 / 10 (h 0, g 0, g↓ 10) | 8/8, 8/8 | 1666 of 2070 | 174 / 85 | 18 / 12 | 1660 (3 edges, 1653 beyond, 4 off-field) | 90 of 94 | 1650: lowGap 4, highHop 26, longGap 1528, riseGap 84, vault 8 | 8/8 | 131 |
+| terraces (placeholder) | 66.01 / 61.2 | 48 | fail | #2 #7 #8 #9 #11 #12 #13 #15 #16 | 145 + 641 | 780 / 6 (h 2, g 2, g↓ 2) | 8/8, 10/10 | 872 of 1032 | 871 / 742 | 33 / 30 | 91 (0 edges, 89 beyond, 2 off-field) | 408 of 410 | 750: lowGap 11, longGap 60, riseGap 645, vault 24, offHop 4, offGap 6 | 8/10 | 84 |
+| nantai (placeholder) | 72.85 / 72.99 | 50 | fail | #7 #8 #9 #12 #13 #15 | 99 + 323 | 422 / 0 | 8/8, 4/4 | 4524 of 5438 | 206 / 130 | 21 / 21 | 4232 (2 edges, 4228 beyond, 2 off-field) | 371 of 371 | 4546: lowGap 18, longGap 4373, riseGap 130, vault 21, offHop 4 | 2/2 | 215 |
+| craters (placeholder) | 69.39 / 69.26 | 50 | fail | #7 #8 #9 #11 #12 #13 #15 #16 | 317 + 1376 | 1583 / 110 (h 2, g 2, g↓ 106) | 8/8, 2/2 | 513 of 580 | 409 / 392 | 19 / 18 | 239 (38 edges, 200 beyond, 1 off-field) | 226 of 226 | 506: lowGap 40, highHop 4, longGap 53, riseGap 373, vault 18, offHop 11, offGap 7 | 3/3 | 66 |
+| calamari (placeholder) | 64.82 / 64.82 | 48 | fail | #7 #8 #9 #11 #12 #13 #16 | 74 + 239 | 311 / 2 (h 0, g 0, g↓ 2) | 8/8, 12/12 | 479 of 532 | 218 / 165 | 11 / 11 | 265 (0 edges, 265 beyond, 0 off-field) | 138 of 138 | 465: lowGap 4, highHop 2, longGap 271, riseGap 165, vault 9, offHop 14 | 8/7 | 96 |
+| spirhalite (placeholder) | 80.25 / 79.54 | 50 | fail | #5 #7 #8 #11 #12 #13 #14 #15 | 84 + 622 | 706 / 0 | 8/8, 2/2 | 574 of 746 | 198 / 166 | 27 / 24 | 273 (0 edges, 273 beyond, 0 off-field) | 284 of 284 | 562: lowGap 16, highHop 41, longGap 331, riseGap 152, vault 18, offHop 4 | 2/1 | 80 |
+| treehills (placeholder) | 70.93 / 70.48 | 52 | fail | #7 #8 #9 #11 #12 #13 #15 #16 | 197 + 200 | 393 / 4 (h 0, g 0, g↓ 4) | 8/8, 6/6 | 296 of 327 | 206 / 178 | 8 / 6 | 67 (0 edges, 67 beyond, 0 off-field) | 91 of 91 | 312: lowGap 16, longGap 112, riseGap 178, vault 6 | 3/3 | 61 |
+| cargo (placeholder) | 51.96 / 51.95 | 50 | fail | #3 #5 #6 #7 #9 #11 #12 #15 #16 | 40 + 1674 | 1708 / 6 (h 0, g 2, g↓ 4) | 8/8, 6/6 | 2052 of 2127 | 77 / 77 | 25 / 25 | 1061 (1 edges, 813 beyond, 247 off-field) | 52 of 52 | 1336: lowGap 10, climbOff 2, highHop 5, longGap 747, riseGap 57, vault 21, offHop 23, offGap 471 | 5/5 | 95 |
 
-Reading it:
+Reading it (the columns that are new or changed since fix round 1):
 
-- **Hop + gap edges** are what the field added. **#16 made / not made** is the per-edge proof: h = hops, g = gaps up
-  or level, g↓ = gaps down. Every not-made edge is printed in that stage's JSON (`checks.16.nums.hopVeto`), ready to
-  paste.
-  - Craters' 148 are real: thin balustrades and rails that the field's level waist line passes over (D18).
-- **#16 walks:** every route 1 and route 2 of every leg, and every entrance into both Gates' rings, walked by the kid
-  with the carrier's rules, on all 13 stages. Tidewater's placeholder weir has no reading, so it has no routes.
-- **Beyond the rules made:** the 1.8–2.1 m hops, the 3.0–3.8 m gaps and **[r1]** the rising gaps worth trying that the
-  kid really makes.
-- **[r1] Rising gaps:**
-  - the candidates (the reviewer's definition, with a 6 m walk that may now hop a climb);
-  - those worth trying (> 10 m, or into a ring);
-  - those made.
+- **#16 made / not made:** fewer not-made edges than before (halyard 12 → 6, lockgate 13 → 10, craters 148 → 110,
+  saltpan 16 → 0, nantai 2 → 0). The swimming carrier makes some edges the kid can't (D34), and a move made either way
+  counts. So saltpan and nantai no longer FAIL #16.
+- **Beyond the rules made:** the 1.8–2.25 m hops, long gaps, rising gaps and vaults worth trying that either mover
+  makes. The windows now reach the measured reach (D29), so these are hundreds to thousands per stage.
+- **Rising gaps: tried / made.** This is the column the review saw print `undefined`; it now reads #16's own counts.
+- **[r3] Vaults: tried / made.** The kid or the swimming carrier makes nearly every vault worth trying.
+- **[r3] Made only by the swimming carrier:** with the added edges, the beyond-the-rules moves and the off-field moves
+  among them.
+- **#7d finds:** **the swimming carrier dominates.** Its long gaps are most of nantai's 4 546, lockgate's 1 650 and
+  halyard's 2 007. The kid alone still has hundreds on several stages: tidewater 1 120, kelpline 793, terraces 649,
+  halyard 876. Those come from the measured windows (review 2's issue 2). The full list, with both ends and `by`, is in
+  each stage's JSON (`checks.7.nums.d`). `out/all-stages.json` keeps the counts.
+- **Entrances A / B:** a move into the ring that saves more than 3 m is an entrance (D33). Halyard 10 / 9, lockgate
+  8 / 8, tidewater 6 / 9 (3 of Bravo's unseen), kelpline 5 / 5 (1 / 2 unseen); spirhalite's 2 / 1 sits on the
+  placeholder's Gate spot.
 
-  Craters' 1155 candidates compare with the review's 1667, and terraces' 217 with 682. The difference is that a climb
-  the kid hops now joins a pair by a walk. The sets that matter match the review's: halyard 10 over 10 m, kelpline 5,
-  terraces 27, craters 10 made of 34 tried, lockgate 0 made.
-- **[r1] Climbs ≤ 1.8 m hopped:** the climbs of the hop rule's height that pass its tests, made of tried.
-- **#7d finds**, by probe:
-  - The static probes (lowGap, tallWall, longDrop) are as before.
-  - High hops, long gaps and rising gaps count in their own direction (D23). That is why the last table's long-gap
-    finds on halyard's yard tops and lockgate's lock chamber are gone.
-  - The jumps onto off-field ground across a real gap (offGap) are new:
-    - halyard 255, at the moored boats;
-    - kelpline 20, terraces 14, craters 4, lockgate 4, spirhalite 3.
-  - The full list with both ends is in `out/all-stages.json` (`c7.d`) and in each stage's JSON.
-- **Entrances A / B:** #7a's count per Gate, the kid's moves into a ring now included.
-  - halyard went from 5 to 6: the long gap at (±4.5, ±41.5).
-  - calamari went from 5 to 6. Its walk entrances at (∓15, ±45) and (∓2.3, ±45.2) used to be chained into one by the
-    old off-hop's exit crossings; they are two (D22).
-  - Craters' and spirhalite's single entrance comes from the placeholder Gate's spot.
-- **What else changed since the last table:** spirhalite's #9 no longer FAILs (§0, issue 2). Every other stage fails
-  the same checks as before.
+**Review 3's real-stage crossings** (its read-only `vault.js` scan; each one MADE by the checker's own kid). Every one
+is now a #7d find with both ends exact, and flagged within 0.1 m:
 
-Pictures:
+| stage | crossing | gain | the final checker |
+|---|---|---|---|
+| crossmarket | (9.5, 0.72, -55.5) → (6.5, 1.13, -56.5) | 34.4 m | vault (the kid), gain 34.4 m; flag 16 |
+| crossmarket | (-9.5, 0.72, 55.5) → (-7.5, 1.13, 56.5) | 34.4 m | vault (the kid), gain 34.4 m; flag 27 |
+| tidewater | (-11.5, 0, -55.7) → (-11.5, 0, -52.7) | 18.8 m | vault (the kid), gain 18.8 m; flag 26 |
+| tidewater | (5.5, 2.4, -58.7) → (3.5, 2.4, -56.7) | 28.9 m | lowGap (static), gain 28.9 m; flag 32 |
+| terraces | (2.5, 2.4, -35.5) → (3.5, 2.4, -37.5) | 11.9 m | vault (the kid), gain 11.9 m; flag 12 |
+| craters | (-14.5, 0, 30.5) → (-13.5, 0, 33.5) | 11.3 m | vault (the kid), gain 11.3 m; flag 13 |
+| treehills | (-12, 0.3, 22.05) → (-13, 0, 19.5) | 10.9 m | vault (the kid), gain 10.9 m; flag 42 |
+| calamari | (15.95, -0.1, -38) → (17.5, -0.1, -36) | 10.4 m | vault (the kid), gain 10.4 m; flag 26 **[r3b]** e1d4ae4a |
+| halyard | (22.5, 0, -23.5) → (19.5, 0, -24.5) | 34.7 m | vault (the kid), gain 34.7 m; flag 55 |
+| kelpline | (15.5, 0, 62.5) → (15.5, 0, 59.5) | 13.7 m | vault (the kid), gain 13.7 m; flag 73 |
+
+(The tidewater pair at (5.5, 2.4, −58.7) is a squid gap, lowGap, and it is also inside flag 32's group of ten vaults.)
+
+**Pictures:**
 
 - `out/<id>-karp-top.jpg` for all 13 stages, each with its flag key;
-- the full set (pond, weirs, Gate, zone, a `-flag-<n>` for every #7 flag) for halyard and lockgate.
+- the full sets (pond, weirs, Gate, zone, a `-flag-<n>` for the #7 flags) for halyard and lockgate.
+
+Most come from the eb1f357e run. Terraces', craters' and calamari's top-downs, every JSON and `all-stages.json` come
+from the final run.
+
+I looked at `lockgate-karp-top.jpg` (the canal's four fans, 52 flags keyed) and `lockgate-flag-18.jpg`. The flag
+picture's camera stands behind the bridge's arch, so the move's "from" end is drawn over the brickwork. The arrow and
+caption read, but the scene doesn't: a camera that avoids occluders is a polish left open (§6).
 
 ### 2.4 Regressions (what this round could have broken)
 
-- **The checker's self-test:** 48/48 (§2.1).
-- **`MAP=all`:** 13 stages, no harness or console errors (§2.3).
-- **`bazookarp-rules.js` (karpbox): 117/117**, no console errors. I ran it because `karpKitFx` (the glyph's background)
-  is loaded in every Bazookarp match.
-- **Not re-run, because nothing they test changed this round** (`git diff 4387bed6..HEAD -- src` is one line in
-  `src/fx/karpKitFx.js`):
-  - **karp-field.js:** `src/game/karpField.js` is untouched.
-  - **check-maps and karp-layout-diff:** no layout, no data, and no kit geometry (`bazookarp-kit.js` untouched). The
-    glyph is a canvas texture, not a block.
-  - **karp-loop.js and karp-gun.js:** the engine is untouched.
-  - **The sfx and net tests:** nothing crosses the wire or makes a sound.
+This round changed only the checker (`tools/botlab/`), its docs and scratch: `git diff 0ba0bded..HEAD -- src assets docs`
+is empty, as it was for fix round 2.
 
-  The previous round's results stand for these: karp-field 19/21 (its two load-cost rows noise-bound at load 230–290),
-  check-maps byte-identical to b55f7472, karp-layout-diff RESULT same (96/96), karp-loop 6/6.
+- **The checker's self-test:** 72/72, twice (§2.1).
+- **`MAP=all`:** 13 stages, no harness or console errors, twice: on eb1f357e (31 min at load 250–470) and on the final
+  checker e1d4ae4a (§2.3).
+- **check-maps** (`node build/check-maps.mjs`, run on this tree and on b55f7472 unpacked):
+  - every stage's default build: output **identical to base b55f7472**, and to review 3's run;
+  - every `<id>.bazookarp` build: identical to review 3's run. halyard has 155 pieces with its known 25.7° ramp;
+    lockgate has 258 with its known weir-cap z-fight inside the office, which #15 already FAILs.
+- **karp-layout-diff** against b55f7472: **RESULT same (96/96 builds and thumbnails identical)**.
+- **Not re-run, because nothing they test changed:** karp-field.js, bazookarp-rules.js, karp-loop.js, karp-gun.js, the
+  sfx and net tests. `src/` is untouched since fix round 1's one-line `karpKitFx` fix, which bazookarp-rules (117/117)
+  covered then.
 
 ## 3. Decisions where the spec left a gap (for the lead)
 
@@ -757,7 +725,7 @@ Pictures:
   waist line that follows the fall would drop most of them at the source (WP0). **TELL THE LEAD.**
 - **D19. #5 FAILs a leg with no route at all.**
 
-New this round (review 1):
+New in fix round 1 (review 1):
 
 - **D20. Rising gaps** use the reviewer's definition:
   - rim pairs 1.2–3.0 m apart (flat), the far one 0.6–1.8 m up;
@@ -817,6 +785,66 @@ New this round (review 1):
 - **D27. #15 excepts any weir's own posts and sill** (the `karp-weir*` / `karp-sill` tags). Gate posts and NO CARP signs
   count.
 
+New in fix round 2 (review 2):
+
+- **D28. Hops onto off-field ground from up to two cells out.** nav keeps a floor node at least 0.46 m from a face, so
+  where a ledge's face falls just past a cell centre, the floor node and the top node stand two cells apart or on a
+  diagonal. The off-hop takes every off-field top node within 2.3 m (flat) and 0.5–2.25 m up, diagonals included,
+  with the hop rule's waist and head tests (the reviewer's first option; D21's real-gap test stays for the jumps across
+  air).
+- **D29. The windows are the mover's measured reach,** not SPEC's bands. `REACH.air` (the kid) and `REACH.swim` (the
+  swimming carrier) hold, per rise, the first gap of the self-test's REACH rows not made beyond the last made one. A
+  window adds a 0.3 m margin and a cell's worth at each rim (a rim node stands up to 0.95 m back from its edge). The
+  `reach` and `reachs` cases prove every made jump lies inside, at the worst grid alignment. A wider window only costs
+  trials: a candidate becomes a find only when #16 makes it.
+- **D30. A squid climb onto off-field ground** (a tall wall's top) is followed through the top's exits, as the off-hop's
+  tops are: nav's edges off it and stepping or dropping off its edge, down to the 20 m `dropMax`. Only a top with no exit
+  at all is a WARN (a hiding place).
+- **D31. Movers.** #1 FAILs a kit piece standing in a mover's swept volume (`movers.js` `sweepRect`, and
+  `G.match.stage.sweeps()`); #15 FAILs a weir whose 3 m room it crosses. A Gate or Pond trigger in one FAILs #1 too.
+- **D32. Every FAIL with a place carries a flag** (#2–#6, #11, #12 as well as #7). A route-ratio FAIL is flagged at the
+  leg's far end. `-flag-<n>` draws a flagged move from → to with an arrow and its gain in the caption.
+- **D33. When a move the field lacks is a find.** SPEC: "D differs by more than 10 m". The checker: the move lands more
+  than 10 m nearer a Gate, in its own direction (D23), **and** that gain beats the move's own length by more than
+  10 − 3.8 = 6.2 m (`SAVE_FIND`). Into a ring, a move is an entrance when it saves more than 3 m (`CK.entGroup`) on the
+  field's own way in.
+  - **Why:** inside SPEC's windows (≤ 3.8 m flat) the second condition follows from the first, so nothing changes there.
+    The windows now reach 8 m for the kid and 16 m for the swimmer (D29). A long run-and-jump off a deck onto floor 6 m
+    out gains as much D as the drop and walk the field already has, and is no shortcut.
+  - **What it costs:** lockgate's two boat-frame jumps (10.8 / 12.5 m in review 2, at (±20.5, 1.08, ±38.5)) are not
+    finds under it: each saves less than 6.2 m over its own length. Under SPEC's literal words they would be.
+  - **TELL THE LEAD.** Choose between SPEC's literal 10 m and this. The switch is one constant.
+
+New in fix round 3 (review 3):
+
+- **D34. #16's second mover is the carrier swimming in its own ink** (§0, issue 2). It is tried only when the kid fails
+  and the takeoff's floor takes ink (`inkFloor`: a paintable face right under the node). The ink is written into the
+  paint grid only, never splatted, and put back after. Letting go of squid form at the top of the jump is tried for
+  rises of 1.4 m or more. A move made only by the swim is marked `(swim-jump)`.
+  - **What it costs:** on the real stages most #7d finds are now swim-jumps (§2.3): nantai 4 230 of 4 546, lockgate
+    about 1 640 of 1 650 (its lock canal), halyard 1 115 of 2 007. They are real moves for a carrier who inks its
+    run-up, but the stage briefs were built on the kid's 1.8 m / 4 m reach.
+  - **TELL THE LEAD: choose one.**
+    - (a) Keep it. Every barrier and moat beside inkable floor must beat the swim-jump: 2.3 m high, or wider than 8 m
+      of air on the level. That is a rebuild brief for every stage.
+    - (b) Shorten the carrier's swim-jump in the engine (WP0/WP1). For example, a carrier in the air keeps the squid's
+      dry speed rather than its swim speed. The checker's windows follow from the self-test's `reachs` rows: re-run them
+      and paste the new table.
+    - (c) Judge #7d on the kid alone and report the swim finds as a WARN. The trial already has the switch
+      (`o.kidOnly`); one line in the find rule would make it so.
+
+    I have not chosen, because it changes what SPEC §2.4 lets a carrier do. As it stands the checker FAILs on (a).
+- **D35. Vaults** (§0, issue 1): node pairs ≤ 3.5 m apart across a waist-high obstacle whose top is at most 2.25 m over
+  the higher end, with 1.5 m of air above it and floor under the whole line; at most two per takeoff and one per 1.5 m.
+  **The squid tube passes grates and rails**, as `collideBody` lets a squid through them, and never stands on a grate.
+- **D36. The rise ceiling is 2.25 m** (`CK.hopHigh[1]`, the vault's top). The swim-jump letting go at the top lands on
+  2.2 m and never on 2.25, 2.3, 2.4 or 2.5 m (§0, issue 2). 2.25 is the first rise measured as never made, so ledges
+  between 2.2 and 2.25 m are still tried.
+- **D37. The clean box's channel** is closed by a 2.6 m rail on its west edge (z 20.4–36), and its pier is widened into a
+  bridge over the channel's north end (z 36–44). Review 2's #16 kid jumped the 3 m channel, gaining 14 m round by the
+  pier, so the channel had to close; this way it no longer pinches the SE opening (review 3, issue 3). karpbox itself, the
+  rules tests' stage, is unchanged.
+
 ## 4. Online, bots
 
 Nothing crosses the wire:
@@ -829,6 +857,10 @@ Nothing crosses the wire:
 No bot code changed. Bots walk nav, not the carrier graph, so D15 doesn't touch them. The checker's new findings
 (rising gaps, off-field jumps, hopped climbs) are measurements, not engine changes.
 
+**[r3]** The swimming carrier's trials write ink straight into the local paint grid of the offscreen check and put it back;
+nothing is splatted, recorded or sent. Bots are untouched. The swim-jump's reach (2.2 m up, ~7.4 m of air level)
+is something bot carriers could use; that is the bots package's call (karp-bots).
+
 ## 5. Commits and shared files
 
 **By the first builder (2026-10-10):** f9066b54, d076d897, f5d9cfa6, 41b3af85, 67fc76a0, 1fa1d0cf, 8a7bd6ca, da478a62.
@@ -836,7 +868,7 @@ No bot code changed. Bots walk nav, not the carrier graph, so D15 doesn't touch 
 **The takeover (2026-10-16 morning):** 6423a8b7, 8f19bfc0, ec272051, 3ecb30b6, e84f4669, cff56eaf, 49894ea9, d7f07321,
 3f1ec4a7, 8c19a918, a51212ef. Scratch commits: 4d8e193a, 50ad9e2c, 746fe97e, 4387bed6.
 
-**This round (fix round 1, review 1):**
+**Fix round 1 (review 1):**
 
 - ef762c16 karpKitFx: the carrierBlock glyph's background is transparent again (issue 5)
 - 4cabc0db bazookarp-check (review 1):
@@ -864,49 +896,91 @@ No bot code changed. Bots walk nav, not the carrier graph, so D15 doesn't touch 
 - d5795858 bazookarp-check #7a: a kid's move joins the nearest entrance and never chains two (D22)
 - 0398e735 (scratch) out/ on the final checker: MAP=all's top-downs and every stage's JSON, halyard's and lockgate's full
   sets, the self-test's entrance cases re-taken
-- (this report: one `(scratch)` commit after these)
+- a880d442, 68fa97bc (scratch) the report
+
+**Fix round 2 (review 2):**
+
+- 0ba0bded bazookarp-check self-test (review 2): the reviewer's faults as cases before the fixes (x7m*, x7p2, x7p4, x15m,
+  x9n, REACH), and the driver checks a case's `also` checks and that its target FAIL carries a flag
+- 0cd9479b bazookarp-check fix round 2, committed by fix round 3 from the interrupted fixer's working tree: off-field
+  hops from two cells out (D28), the measured windows (D29), squid-climb tops followed (D30), movers (D31),
+  `polyPolyDist`, a flag for every FAIL with a place and the move drawn on `-flag-<n>` (D32), D33, the table's
+  rising-gap column
+
+**Fix round 3 (review 3):**
+
+- 92b6a972 the self-test box: the channel closed by a 2.6 m rail and the pier widened into a bridge (D37); x7p4 expects
+  its real reasons (issue 3)
+- c0cd3a3b bazookarp-check: #16's swimming carrier (D34), the vault probe (D35), the squid tube through rails and grates,
+  made moves dropping > 2.5 m into a ring as #7c; the table's vault and swim columns (issues 1, 2)
+- a536364c the self-test: v5, v5h, rl, rlh, h20, g5, reachs; x8n, x8f, x8u, x8s, x11f, x11w, x11z (issues 1, 2, 4)
+- 90e65be9 README / karp-stages BUILDER.md: the swimming carrier, vaults, squid gaps through rails
+- **(takeover)** 8695f630 the swimming reach measured to its ceiling: REACH.swim, `hopHigh` and the vault's top 2.25 m,
+  the ceiling rows (D36; issue 2)
+- **(takeover)** c62b4153 the self-test: x11f's polygon to x 27, x11z's real reason (issue 4)
+- **(takeover)** eb1f357e README / BUILDER.md: the swim-jump's measured ceiling
+- **(takeover)** 2fdb592d comments on the vault and off-hop probes (no change in behaviour)
+- **(takeover)** cdb87475 (scratch) out/ on eb1f357e: MAP=all's top-downs, every stage's JSON, halyard's and lockgate's
+  full sets; the self-test's clean set and the new cases' top-downs, selftest.json
+- **(takeover)** e1d4ae4a bazookarp-check #7d vaults: the waist line blocked by nav's test or a ray 0.3 / 0.6 m up
+  (review 3's calamari crossing; issue 1)
+- **(takeover)** 8165118f (scratch) out/ on e1d4ae4a: every stage's JSON and all-stages.json, terraces' / craters' /
+  calamari's top-downs, selftest.json (72/72)
+- **(takeover)** this report: one `(scratch)` commit after these
 
 **Shared files touched** (each hook tagged `[b5-karp-checker]`):
 
-- `src/game/karpField.js`: one condition in the gap scan (D15, the first builder's). It is untouched this round.
+- `src/game/karpField.js`: one condition in the gap scan (D15, the first builder's). It is untouched since.
 - `src/game/stageMods.js`: `'karpStates'` in `R_HOOKS`, and `StageRun.karpStates()`.
 - `src/main.js`: the import of `KarpKitFx` and one constructor line.
 - `src/world/bazookarp-kit.js`: the kit, rewritten (WP0's file).
 - `src/world/bazookarp-data.js`: the `waive` field documented in its header.
 - `src/fx/karpKitFx.js` (new; **[r1]** one line in `drawNoCarp`).
 - `docs/STAGE-MODS.md`: the `karpStates` row, and T4 served.
-- `tools/botlab/README.md`: the checker, PROBE and the regression set (**[r1]**).
+- `tools/botlab/README.md`: the checker, PROBE and the regression set (**[r1]**; **[r3]** the swimming carrier, vaults, squid gaps through rails, the measured ceiling).
 - New files:
   - `tools/botlab/bazookarp-check.cjs`, `karp-check-page.js`, `karp-check-box.js` and `karp-check-states.js`;
   - `tools/botlab/jobs/batch5/karp-stages/BUILDER.md`.
 
 ## 6. Unfinished, uncertain
 
-- **The field itself still lacks these moves** (TELL THE LEAD, WP0):
-  - rising gaps;
-  - jumps onto off-field ground;
-  - hop edges where nav already has a climb edge.
+- **The field itself still lacks these moves** (TELL THE LEAD, WP0). The checker finds and FAILs them; the engine does
+  not read them:
+  - rising gaps and jumps onto off-field ground;
+  - hop edges where nav already has a climb edge, and on-field hops whose ledge face misses the grid (review 2);
+  - **[r3] vaults over low walls and rails, and squid gaps through rails and grates**;
+  - **[r3] the swimming carrier's reach** (about twice the kid's, up to 2.2 m).
 
-  The checker finds and reports them, but the engine does not read them. A carrier who makes a rising gap reads the far
-  side at once, which the continuity clamp may reject, and a carrier on an off-field top keeps its last value.
-- **Rising gaps and off-field jumps worth 10 m or less, not into a ring, are not tried.** They could not change a
-  verdict, so the table counts them as candidates only.
+  A carrier who makes one of these reads the far side at once, which the continuity clamp may reject. A carrier on an
+  off-field top keeps its last value.
+- **[r3] The swim-jump's 2.2 m is measured on the carrier only** (9.44 m/s). A player without the Bazookarp swims at
+  11.8 m/s with the same jump velocity. It should reach at least as high and further, but that is not measured. If the
+  lead wants the game-wide number, it is one more REACH run without `carry`.
+- **[r3] The vault probe tries a pruned set:** at most two candidates per takeoff (the best gains) and one per 1.5 m of
+  the same place. A wall is tried where it gains most, not at every node along it. The squid gap counts as an entrance
+  only when it saves more than 3 m on the field's own way in (D33).
+- **[r3] The swimming carrier swims only from floor that takes ink**, inked straight in its own colour. It doesn't model
+  half-inked run-ups or an enemy's ink in the way. It is the best case, which is the right case for a shortcut check.
+- **Moves worth 10 m or less, not into a ring, are not tried.** They could not change a verdict; the table counts them.
 - **An off-field top's exits are not proved physically.** The kid proves the jump onto the top. An exit is a step or
-  drop off its edge with a clear waist line, which nothing but a rail at waist height would stop.
-- **D23 reads SPEC's "differs" as the move's own direction** for the one-way moves #16 proves. That removed real-looking
-  but wrong finds (H2q's, halyard's yard tops, lockgate's lock chamber). The lead may want SPEC's literal \|ΔD\| back.
-- **Halyard's 255 boat finds are real moves**, a yacht's deck bridging a slip (`halyard-flag-22.jpg`), but they are
-  many. They group into 1 flag a side (21 / 22).
-  For WP4b: `roof` boat tops, a carrierBlock, or a waiver.
-- **#16's kid tries a fixed set of moves.** It steers straight at the far node, from 1.5 m and 3 m back, with five jump
-  timings. A move that needs another line could read as not made. A builder should run `PROBE=` on a listed edge
-  before pasting its hopVeto.
-- **COMMON.md was changed in this worktree, not by me** (uncommitted: "THE MAC MINI IS BACK" as of 2026-10-16). My task
-  says the Mac mini is unavailable and to push nothing, so I ran everything locally and left the file as I found it.
-  JOB-1 / JOB-2 (committed, not pushed) are ready for the runner once the lead pushes `botlab-b5-karp-checker`.
-- **The 60 ms field budget is still unmeasured on a quiet machine:** JOB-1, or karp-field.js locally at the low load seen
-  this evening. karpField is untouched this round.
+  drop off its edge with a clear waist line, which only a rail at waist height would stop.
+- **D23 and D33 read SPEC's "differs by more than 10 m"** as the move's own direction, beating its own length by 6.2 m.
+  The lead may want SPEC's literal \|ΔD\| back (§3).
+- **Halyard's boat finds are real moves**, a yacht's deck bridging a slip, but they are many. For WP4b: `roof` boat
+  tops, a carrierBlock, or a waiver.
+- **#16 tries a fixed set of moves.** It steers straight at the far node from fixed run-ups with fixed jump timings. A
+  move that needs another line could read as not made. A builder should run `PROBE=` on a listed edge before pasting its
+  hopVeto.
+- **COMMON.md was changed in this worktree, not by me** (uncommitted: "THE MAC MINI IS BACK", 2026-10-16). My task says
+  the Mac mini is unavailable and to push nothing, so everything ran locally and the file is left as I found it. JOB-1 /
+  JOB-2 (committed, not pushed) are ready for the runner once the lead pushes `botlab-b5-karp-checker`.
+- **The 60 ms field budget is still unmeasured on a quiet machine** (JOB-1). karpField is untouched since the first
+  builder.
 - **The gimmick stages have no states yet on this base.** The generic state path is proved only with the test module
   and karpbox's test state.
-- **The kit's look was judged from pictures only, with no lightmap** (the variants are unbaked). WP2 owns the moving
-  parts.
+- **A `-flag-<n>` camera can stand behind an occluder.** `lockgate-flag-18.jpg` looks through the bridge's arch, so the
+  move's "from" end is drawn over brickwork. The arrow, ends and caption are right; the scene is not readable. The
+  camera does not search for a clear view.
+- **The kit's look was judged from pictures only, with no lightmap.** Review 3 noted that the Gate plinth still reads as
+  a plus of two-tone slabs with a centre seam, and two carrierBlock glyphs overlap at one corner. Neither is changed this
+  round. WP2 owns the moving parts.
