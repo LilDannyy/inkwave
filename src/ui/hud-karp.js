@@ -706,7 +706,7 @@ export function halfwayLines(F, nav) {
   // chain the segments through the edge points they share
   const at = new Map();
   segs.forEach((sg, i) => { for (const p of sg) (at.get(p[0]) || at.set(p[0], []).get(p[0])).push(i); });
-  const used = new Uint8Array(segs.length), out = [];
+  const used = new Uint8Array(segs.length), raw = [], out = [];
   const next = (key, from) => (at.get(key) || []).find((j) => j !== from && !used[j]);
   for (let i = 0; i < segs.length; i++) {
     if (used[i]) continue;
@@ -722,8 +722,21 @@ export function halfwayLines(F, nav) {
         end = o;
       }
     }
-    if (line.length >= 3) out.push(line.flatMap((p) => [p[1], p[2]]));
+    if (line.length >= 2) raw.push(line.map((p) => [p[1], p[2]]));
   }
+  // ([karp-face] review round 3, 2nd fixer: pieces whose ends are within 2.5 grid steps are joined — a line broken at a
+  // skipped square, a step or a missing node, read as a few lone dashes on lockgate's TAB map; then pieces shorter than
+  // 2.5 steps are dropped)
+  const gap2 = (2.5 * nav.step) ** 2, d2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2;
+  for (let joined = true; joined;) {
+    joined = false;
+    scan: for (let i = 0; i < raw.length; i++) for (let j = i + 1; j < raw.length; j++) {
+      const A = raw[i], B = raw[j], a0 = A[0], a1 = A[A.length - 1], b0 = B[0], b1 = B[B.length - 1];
+      const m = d2(a1, b0) <= gap2 ? A.concat(B) : d2(a1, b1) <= gap2 ? A.concat([...B].reverse()) : d2(a0, b1) <= gap2 ? B.concat(A) : d2(a0, b0) <= gap2 ? [...B].reverse().concat(A) : null;
+      if (m) { raw[i] = m; raw.splice(j, 1); joined = true; break scan; }
+    }
+  }
+  for (const L of raw) { let len = 0; for (let k = 1; k < L.length; k++) len += Math.sqrt(d2(L[k], L[k - 1])); if (len >= 2.5 * nav.step) out.push(L.flat()); }
   return out;
 }
 export function drawKarpMap(c, mm, tc, s, hex, t, layer = 'under') {
@@ -752,8 +765,8 @@ export function drawKarpMap(c, mm, tc, s, hex, t, layer = 'under') {
     if (big > 1 && mm._kHalf) {   // (the TAB map only: a dashed white line in a dark casing, readable on a light floor)
       const dash = [Math.max(5, 1.5 * s), Math.max(3.5, 1.0 * s)];
       c.lineCap = 'round'; c.lineJoin = 'round'; c.setLineDash(dash);
-      c.globalAlpha = 0.6; c.strokeStyle = '#15121c'; c.lineWidth = Math.max(3.2, 0.62 * s); c.stroke(mm._kHalf);
-      c.globalAlpha = 0.9; c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(1.6, 0.3 * s); c.stroke(mm._kHalf);
+      c.globalAlpha = 0.8; c.strokeStyle = '#15121c'; c.lineWidth = Math.max(3.6, 0.7 * s); c.stroke(mm._kHalf);
+      c.globalAlpha = 1; c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(1.8, 0.34 * s); c.stroke(mm._kHalf);
       c.setLineDash([]); c.lineCap = 'butt';
     }
     // weirs: diamonds in the attacking team's ink, grey once lowered
