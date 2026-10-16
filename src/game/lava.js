@@ -1080,7 +1080,10 @@ export class StageLava {
       if (!T) continue;
       const cur = T.claim;
       if (!active) { if (cur) this._lookRelease(cur); T.claim = null; continue; }
-      if (cur && cur.a.alive && cur._look === T.L && cur.a.bot === cur) continue;
+      // (fix round 4: a mid-range claimant not yet up hands the claim to a long-range kit of its team that is free again — the
+      // team's only charger / bow claimed first, was splatted on the way, respawned, and the claim had passed to a blaster
+      // for good: lava-match's lookout check failed in 3 of 6 matches with one long-range kit)
+      if (cur && cur.a.alive && cur._look === T.L && cur.a.bot === cur && !(!T.L.on && !LOOKOUT_KINDS.has(cur.a.weapon?.kind) && this.m.actors.some((a) => a.bot && !a.remote && a.alive && a.team === team && a.bot !== cur && LOOKOUT_KINDS.has(a.weapon?.kind) && !a.bot._lavaEsc && !(a.bot._lookBan > t) && a.bot.tRole !== 'ride' && !this._foot(a).kind))) continue;
       if (cur) this._lookRelease(cur);
       T.claim = null;
       if (left < 8) continue;
