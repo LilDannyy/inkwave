@@ -128,6 +128,21 @@
         { clockWentBack: back, warns: n('era:warn'), jumps: n('era:jump'), dones: n('era:done'), flips: flips.map((x) => `${x[2]} @${x[1]}`), crateSolidAfterFlip: solidB, crateBackSolid: reSolid, tB: +tB.toFixed(3), Fc: +Fc.toFixed(3), said });
       E.debugJump(1, { instant: true });
     }
+    // a follower's clock snapping FORWARD across a done (a stalled screen catching up): the done still happens there —
+    // one era:done (snapped: Bazookarp's field switches on it), the nav in the new era, the fresh-ground weight on
+    {
+      E.over = null;
+      const CTX = await import('./src/core/ctx.js'), dn = [];
+      const off = CTX.on('era:done', (d) => dn.push({ ...d, t: +E.S.clock.t.toFixed(2) }));
+      m.time = m.duration - 52; step(0.3);
+      const before = { era: E.era, nav: W.navEra };
+      m.time = m.duration - 66.5; step(0.2);   // (the match clock jumps 14.5 s: the stage clock snaps, seek('clock'))
+      off();
+      R('step 8 (H11): a follower\'s clock snapping forward across a done (a stalled screen catching up) still fires that done once (era:done, snapped) — the nav in the new era, the fresh-ground weight on',
+        before.era === 1 && dn.length === 1 && dn[0].era === 2 && dn[0].snapped === true && W.navEra === 2 && !!E.fresh && E.stats.snapDones >= 1,
+        { before, dones: dn, navEra: W.navEra, fresh: !!E.fresh, snapDones: E.stats.snapDones });
+      E.debugJump(1, { instant: true });
+    }
   }
 
   // ------------------------------------------------------------------------------------------- flip

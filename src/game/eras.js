@@ -615,7 +615,7 @@ export class StageEras {
     if (ms > this.stats.frameMax) this.stats.frameMax = ms;
   }
   seek(t, why = 'clock') {
-    const W = this.W, list = this.jumps(t);
+    const W = this.W, list = this.jumps(t), was = this._tHigh;
     this._tHigh = t;
     for (const [k, at] of this._fired) if (at > t) this._fired.delete(k);   // (what lies ahead again may fire again)
     for (const g of W.groups) { const e = this.eraAt(g.rg, t, list); if (g.era !== e) this._flip(g, e, t); }
@@ -628,6 +628,23 @@ export class StageEras {
     this.lastT = t;
     this._view(t, list);
     emit('era:set', { era: e, instant: true, why });
+    // a follower's clock snapping FORWARD across a done (a stalled screen catching up, within a match): the done still
+    // happens on this screen — era:done (Bazookarp's field switches on it), the fresh-ground weight, the pulse; the
+    // callout only if the done is still fresh (≤ 2 s ago). A late joiner's seek ('late') or a test's jump does not
+    if (why === 'clock' && t > was) {
+      let last = null;
+      for (const j of list) { const d = j.at + W.doneOff; if (d > was && d <= t) last = j; if (j.at > t) break; }
+      if (last) {
+        const J = this._info(last), key = `${J.from}>${J.to}@${J.at}:done:${J.at + W.doneOff}`;
+        if (!this._fired.has(key)) {
+          this._fired.set(key, J.at + W.doneOff);
+          this.fresh = J.fresh; this._freshUntil = J.at + W.doneOff + 30; this._pulseAt = J.at + W.doneOff;
+          if (t - (J.at + W.doneOff) <= 2) { const N = W.names; this._say(J.to < J.from ? `BACK TO THE ${N[J.to - 1]}` : J.to === 2 ? 'NEW ROUTES OPEN' : 'NEW AREAS!', N[J.to - 1], false); }
+          this.stats.snapDones = (this.stats.snapDones || 0) + 1;
+          emit('era:done', { era: J.to, snapped: true });
+        }
+      }
+    }
   }
   _events(t0, t1, list) {
     for (const j of list) {
@@ -881,8 +898,12 @@ export class StageEras {
     const t = this.tNow, A = this.activeAt(t);
     if (!A || t < A.at - this.W.warn || t > A.at + this.W.doneOff + 2) return;
     if (e.attacker || !(e.cause === 'water' || e.cause === 'fall' || e.cause === 'void' || !e.cause)) return;
-    this.stats.bots.envSplats++;
-    this.stats.bots.envSplatWho.push({ who: v.name, bot: !!v.bot, cause: e.cause, t: +t.toFixed(2), at: [+v.pos.x.toFixed(1), +v.pos.y.toFixed(1), +v.pos.z.toFixed(1)] });
+    // (a jump's splat: within 4 m of a block that flipped in the last 2 s; any other such splat in the window is counted
+    //  apart — a bot that walked off the quay as usual)
+    const L = this.W.level, near = (this._recentFlips || []).some((f) => t - f.t <= 2 && f.ids.some((id) => { const b = L.blocks[id]; return Math.hypot(Math.max(b.aabbMin.x - v.pos.x, 0, v.pos.x - b.aabbMax.x), Math.max(b.aabbMin.z - v.pos.z, 0, v.pos.z - b.aabbMax.z)) <= 4; }));
+    const row = { who: v.name, bot: !!v.bot, cause: e.cause, t: +t.toFixed(2), at: [+v.pos.x.toFixed(1), +v.pos.y.toFixed(1), +v.pos.z.toFixed(1)], byJump: near };
+    if (near) this.stats.bots.envSplats++; else this.stats.bots.envOther = (this.stats.bots.envOther || 0) + 1;
+    this.stats.bots.envSplatWho.push(row);
   }
   // the botlab's summary (match.cjs prints it): shoves (expected 0), the flip counts, the loiter time, the splats a jump
   // could have caused, the replans, the pre-positions, and per done the bots' times to new ground (median)
@@ -894,7 +915,7 @@ export class StageEras {
       return { jump: V.jump, doneAt: V.doneAt, bots: V.bots.length, visited: ts.length, within20: ts.filter((x) => x <= 20).length, median: med === Infinity ? null : med, times: ts };
     });
     return { eraShoves: this.stats.eraShoves, rescues: this.stats.rescues, flips: this.stats.flips, onVanish: S.onVanish, onVanishWho: S.onVanishWho.slice(-6), inAppear: S.inAppear, loiterS: +S.loiterS.toFixed(2), loiterWho: S.loiterWho,
-      envSplats: S.envSplats, envSplatWho: S.envSplatWho.slice(-6), replans: S.replans, prepos: S.prepos, preposHeld: S.preposHeld, visits, era: this.era };
+      envSplats: S.envSplats, envOther: S.envOther || 0, envSplatWho: S.envSplatWho.slice(-6), replans: S.replans, prepos: S.prepos, preposHeld: S.preposHeld, visits, era: this.era };
   }
 
   // one group to era e (at its flip): blocks, cells, devices, shoves, rescues, the event
@@ -904,6 +925,8 @@ export class StageEras {
     W._flipCells(g);
     this._devices(off, on);
     this._flipStats(on, off);
+    (this._recentFlips || (this._recentFlips = [])).push({ t, ids: [...on, ...off] });
+    while (this._recentFlips.length && t - this._recentFlips[0].t > 2.5) this._recentFlips.shift();
     if (on.length) this._shove(on);
     if (off.length) this._rescue(off);
     this.stats.flips++;
