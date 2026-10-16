@@ -230,11 +230,14 @@ export const CASES = [
     layout: (L) => { L.half.push(B(-7, 7, 0, 4.6, 50.4, 50.9, { paint: false, roof: true, color: '#a9a090', tag: 'kcheck-gatescreen' })); } },
   // — #11 (issue 4): a fall on the enemy's half that drops the Bazookarp far off, a splat on a narrow walk that rests
   // there, a zone visit the engine doesn't see
-  { id: 'x11f', check: 11, expect: 'a fall on the enemy half → ', carry: true, what: 'a noRest polygon (x 1…20, z 0…22) round the enemy half\'s water edge nearest the Pond (the channel\'s south end): a carrier falling there is dropped 14 m away',
-    def: (d) => { d.noRest = [{ poly: [[1, 0], [20, 0], [20, 22], [1, 22]], y0: -0.5, y1: 1.5 }]; } },
+  // ([fix3b] x 1…27: fix round 3's x 1…20 left the east strip's rim (x 20.5) a rest 6.7 m from the fall, inside dropNear)
+  { id: 'x11f', check: 11, expect: 'a fall on the enemy half → ', carry: true, what: 'a noRest polygon (x 1…27, z 0…22: the main floor\'s east side, the channel\'s south end, the east strip, the GAP) round the enemy half\'s water edge nearest the Pond: a carrier falling there is dropped ≥ 13.5 m away (12 m the rule)',
+    def: (d) => { d.noRest = [{ poly: [[1, 0], [27, 0], [27, 22], [1, 22]], y0: -0.5, y1: 1.5 }]; } },
   { id: 'x11w', check: 11, expect: 'a splat on the narrow walk by weir 1 rested on narrow floor', carry: true, what: 'open water across the main floor at z 6…20 but a 1 m causeway (x −1…0) on route 1: a splat on it rests on the causeway (no wide floor within reach)',
     layout: (L) => { floorWithout(L, [-14, -1, 6, 20], [0, 14, 6, 20]); } },
-  { id: 'x11z', check: 11, expect: 'in its own zone the fuse ran ×1', carry: true, what: 'the spawn-deck zone with its eras written as strings ([\'0\']): the checker\'s static checks read it (they compare as strings), the engine compares numbers and never applies it, so a carrier visiting it runs ×1',
+  // ([fix3b] the reason as it really reads: the deck lies behind the carrier's mark, so it runs ×3 there by the retreat
+  // rule; the walk FAILs because the engine never set the zone flag, whatever the rate)
+  { id: 'x11z', check: 11, expect: 'in its own zone the fuse ran ×\\d \\((?!zone\\))', carry: true, what: 'the spawn-deck zone with its eras written as strings ([\'0\']): the checker\'s static checks read it (they compare as strings), the engine compares numbers and never applies it, so a carrier visiting it gets no zone ×3 (only the retreat rule\'s, the deck lying behind its mark)',
     def: (d) => { d.freeZones[0].eras = ['0']; } },
 ];
 
