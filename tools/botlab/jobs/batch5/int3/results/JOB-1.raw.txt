@@ -1,0 +1,116 @@
+JOB-1 raw results — automatic, by the Mac mini's b5-runner, 2026-10-16 13:11:16
+branch botlab-b5-int3, ran at b97b3eb, exit code 0, wall time 64min
+(a written-up JOB-1.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== reach tidewater 1/24: RESULT 2/3
+FAIL tidewater: dt 1/24, every edge node (4610 of 4610; 4977 nodes); air dash 3.5 m: no dash (ground, off a ledge, a running jump's rise / apex / fall, late in a long fall, a swim jump, off a wall climb; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it ends, first come
+== reach tidewater 1/60 (step=2;off=1): RESULT 2/3
+FAIL tidewater: dt 1/60, every 2th edge node from the 2nd (2305 of 4610; 4977 nodes); air dash 3.5 m: no dash (ground, off a ledge, a running jump's rise / apex / fall, late in a long fall, a swim jump, off a wall climb; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it
+== reach kelpline 1/24: RESULT 3/3
+== reach kelpline 1/60 (step=2;off=1): RESULT 3/3
+== reach halyard 1/24: RESULT 3/3
+== reach halyard 1/60 (step=2;off=1): RESULT 3/3
+== reach saltpan 1/24: RESULT 3/3
+== reach saltpan 1/60 (step=2;off=1): RESULT 3/3
+== reach crossmarket 1/24: RESULT 2/3
+FAIL crossmarket: dt 1/24, every edge node (4490 of 4490; 4730 nodes); air dash 3.5 m: no dash (ground, off a ledge, a running jump's rise / apex / fall, late in a long fall, a swim jump, off a wall climb; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it ends, first co
+== reach crossmarket 1/60 (step=2;off=1): RESULT 2/3
+FAIL crossmarket: dt 1/60, every 2th edge node from the 2nd (2245 of 4490; 4730 nodes); air dash 3.5 m: no dash (ground, off a ledge, a running jump's rise / apex / fall, late in a long fall, a swim jump, off a wall climb; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever 
+== reach lockgate 1/24: RESULT 2/3
+FAIL lockgate: dt 1/24, every edge node (4657 of 4657; 4812 nodes); air dash 3.5 m: no dash (ground, off a ledge, a running jump's rise / apex / fall, late in a long fall, a swim jump, off a wall climb; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it ends, first comes
+== reach lockgate 1/60 (step=2;off=1): RESULT 2/3
+FAIL lockgate: dt 1/60, every 2th edge node from the 2nd (2328 of 4657; 4812 nodes); air dash 3.5 m: no dash (ground, off a ledge, a running jump's rise / apex / fall, late in a long fall, a swim jump, off a wall climb; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it 
+== reach terraces 1/24: RESULT 3/3
+== reach terraces 1/60 (step=2;off=1): RESULT 3/3
+== reach nantai 1/24: RESULT 3/3
+== reach nantai 1/60 (step=2;off=1): RESULT 3/3
+== reach craters 1/24: RESULT 3/3
+== reach craters 1/60 (step=2;off=1): RESULT 3/3
+== reach calamari 1/24: RESULT 3/3
+== reach calamari 1/60 (step=2;off=1): RESULT 2/3
+FAIL calamari: dt 1/60, every 2th edge node from the 2nd (2983 of 5967; 6239 nodes); air dash 3.5 m: no dash (ground, off a ledge, a running jump's rise / apex / fall, late in a long fall, a swim jump, off a wall climb; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it 
+== reach spirhalite 1/24: RESULT 3/3
+== reach spirhalite 1/60 (step=2;off=1): RESULT 3/3
+== reach treehills 1/24: RESULT 3/3
+== reach treehills 1/60 (step=2;off=1): RESULT 3/3
+== reach cargo 1/24: RESULT 3/3
+== reach cargo 1/60 (step=2;off=1): RESULT 3/3
+== sub-glide #1: RESULT 61/61
+== sub-bobber only=zone #1: RESULT 0/1
+FAIL zone: every guard bot with the bobber sets up a 3–4 chain at its zone within 20 s of being a guard (3 guards from 74.85 s, best chains 5, 2, 4)  {"guardsAt":74.85,"best":[5,2,4],"guardS":[20,20,20],"short":[{"who":"Sprinkle","log":[{"t":2.05,"who":"Sprinkle","ev":"noplan","cands":17,"why":"zdoor@3.9:nolay zdoor@3.9:nolayS zdoor@5.2:nolay zdoor@5.2:nolayS zedge@2.2:nolay zedge@2.2:nolayS zed
+== perf-bobbers #1: RESULT 5/5
+== sub-glide #2: RESULT 60/61
+FAIL a Cutlass bot's fight throw plants: let go ≥ 5 m from the foe (or early, short of a full cook), never a fizzle (2 rounds) — released at  / 9.56 m  [{"w":"blade","thrown":false,"relD":null,"off":null,"fizzled":0},{"w":"blade","thrown":true,"cook":1.33,"relD":9.56,"off":0.79,"fizzled":0}]
+== sub-bobber only=zone #2: RESULT 1/1
+== perf-bobbers #2: RESULT 5/5
+== sub-glide #3: RESULT 61/61
+== sub-bobber only=zone #3: RESULT 1/1
+== perf-bobbers #3: RESULT 4/5
+FAIL phase 4: a live 4 v 4 (1800 frames) — with 170 live bobbers on average (topped up to 24 a bot): p95 10.6 ms vs 5.1 without (≤ +3), the bots' think p95 0.4 vs 0.3 ms (≤ +1.0), the bots' own sight deferrals 0 vs 0 a second (≤ 2×, or ≤ 1 a second; the kit's own share ran out 66.23 times a second)  {"without":{"p50":2.6,"p95":5.1,"calls":67,"callsMax":154,"kit95":0.1,"think95":0.3},"wi
+
+## last 15 lines of job.log
+== reach treehills 1/60 (step=2;off=1): RESULT 3/3
+== reach cargo 1/24: RESULT 3/3
+== reach cargo 1/60 (step=2;off=1): RESULT 3/3
+== sub-glide #1: RESULT 61/61
+== sub-bobber only=zone #1: RESULT 0/1
+FAIL zone: every guard bot with the bobber sets up a 3–4 chain at its zone within 20 s of being a guard (3 guards from 74.85 s, best chains 5, 2, 4)  {"guardsAt":74.85,"best":[5,2,4],"guardS":[20,20,20],"short":[{"who":"Sprinkle","log":[{"t":2.05,"who":"Sprinkle","ev":"noplan","cands":17,"why":"zd
+== perf-bobbers #1: RESULT 5/5
+== sub-glide #2: RESULT 60/61
+FAIL a Cutlass bot's fight throw plants: let go ≥ 5 m from the foe (or early, short of a full cook), never a fizzle (2 rounds) — released at  / 9.56 m  [{"w":"blade","thrown":false,"relD":null,"off":null,"fizzled":0},{"w":"blade","thrown":true,"cook":1.33,"relD":9.56,"off":0.79,"fizzled":0}]
+== sub-bobber only=zone #2: RESULT 1/1
+== perf-bobbers #2: RESULT 5/5
+== sub-glide #3: RESULT 61/61
+== sub-bobber only=zone #3: RESULT 1/1
+== perf-bobbers #3: RESULT 4/5
+FAIL phase 4: a live 4 v 4 (1800 frames) — with 170 live bobbers on average (topped up to 24 a bot): p95 10.6 ms vs 5.1 without (≤ +3), the bots' think p95 0.4 vs 0.3 ms (≤ +1.0), the bots' own sight deferrals 0 vs 0 a second (≤ 2×, or ≤ 1 a second; the kit's own share ran out 66.23 times
+
+## reach.txt
+== reach tidewater 1/24: RESULT 2/3
+FAIL tidewater: dt 1/24, every edge node (4610 of 4610; 4977 nodes); air dash 3.5 m: no dash (ground, off a ledge, a running jump's rise / apex / fall, late in a long fall, a swim jump, off a wall climb; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it ends, first come
+== reach tidewater 1/60 (step=2;off=1): RESULT 2/3
+FAIL tidewater: dt 1/60, every 2th edge node from the 2nd (2305 of 4610; 4977 nodes); air dash 3.5 m: no dash (ground, off a ledge, a running jump's rise / apex / fall, late in a long fall, a swim jump, off a wall climb; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it
+== reach kelpline 1/24: RESULT 3/3
+== reach kelpline 1/60 (step=2;off=1): RESULT 3/3
+== reach halyard 1/24: RESULT 3/3
+== reach halyard 1/60 (step=2;off=1): RESULT 3/3
+== reach saltpan 1/24: RESULT 3/3
+== reach saltpan 1/60 (step=2;off=1): RESULT 3/3
+== reach crossmarket 1/24: RESULT 2/3
+FAIL crossmarket: dt 1/24, every edge node (4490 of 4490; 4730 nodes); air dash 3.5 m: no dash (ground, off a ledge, a running jump's rise / apex / fall, late in a long fall, a swim jump, off a wall climb; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it ends, first co
+== reach crossmarket 1/60 (step=2;off=1): RESULT 2/3
+FAIL crossmarket: dt 1/60, every 2th edge node from the 2nd (2245 of 4490; 4730 nodes); air dash 3.5 m: no dash (ground, off a ledge, a running jump's rise / apex / fall, late in a long fall, a swim jump, off a wall climb; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever 
+== reach lockgate 1/24: RESULT 2/3
+FAIL lockgate: dt 1/24, every edge node (4657 of 4657; 4812 nodes); air dash 3.5 m: no dash (ground, off a ledge, a running jump's rise / apex / fall, late in a long fall, a swim jump, off a wall climb; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it ends, first comes
+== reach lockgate 1/60 (step=2;off=1): RESULT 2/3
+FAIL lockgate: dt 1/60, every 2th edge node from the 2nd (2328 of 4657; 4812 nodes); air dash 3.5 m: no dash (ground, off a ledge, a running jump's rise / apex / fall, late in a long fall, a swim jump, off a wall climb; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it 
+== reach terraces 1/24: RESULT 3/3
+== reach terraces 1/60 (step=2;off=1): RESULT 3/3
+== reach nantai 1/24: RESULT 3/3
+== reach nantai 1/60 (step=2;off=1): RESULT 3/3
+== reach craters 1/24: RESULT 3/3
+== reach craters 1/60 (step=2;off=1): RESULT 3/3
+== reach calamari 1/24: RESULT 3/3
+== reach calamari 1/60 (step=2;off=1): RESULT 2/3
+FAIL calamari: dt 1/60, every 2th edge node from the 2nd (2983 of 5967; 6239 nodes); air dash 3.5 m: no dash (ground, off a ledge, a running jump's rise / apex / fall, late in a long fall, a swim jump, off a wall climb; 8 headings) comes to rest on a perch piece, out of bounds or stuck on a roof (still on it after 3 s) where no plain walk / hop gets, and no ground dash or jump + dash, wherever it 
+== reach spirhalite 1/24: RESULT 3/3
+== reach spirhalite 1/60 (step=2;off=1): RESULT 3/3
+== reach treehills 1/24: RESULT 3/3
+== reach treehills 1/60 (step=2;off=1): RESULT 3/3
+== reach cargo 1/24: RESULT 3/3
+== reach cargo 1/60 (step=2;off=1): RESULT 3/3
+
+## tests.txt
+== sub-glide #1: RESULT 61/61
+== sub-bobber only=zone #1: RESULT 0/1
+FAIL zone: every guard bot with the bobber sets up a 3–4 chain at its zone within 20 s of being a guard (3 guards from 74.85 s, best chains 5, 2, 4)  {"guardsAt":74.85,"best":[5,2,4],"guardS":[20,20,20],"short":[{"who":"Sprinkle","log":[{"t":2.05,"who":"Sprinkle","ev":"noplan","cands":17,"why":"zdoor@3.9:nolay zdoor@3.9:nolayS zdoor@5.2:nolay zdoor@5.2:nolayS zedge@2.2:nolay zedge@2.2:nolayS zed
+== perf-bobbers #1: RESULT 5/5
+== sub-glide #2: RESULT 60/61
+FAIL a Cutlass bot's fight throw plants: let go ≥ 5 m from the foe (or early, short of a full cook), never a fizzle (2 rounds) — released at  / 9.56 m  [{"w":"blade","thrown":false,"relD":null,"off":null,"fizzled":0},{"w":"blade","thrown":true,"cook":1.33,"relD":9.56,"off":0.79,"fizzled":0}]
+== sub-bobber only=zone #2: RESULT 1/1
+== perf-bobbers #2: RESULT 5/5
+== sub-glide #3: RESULT 61/61
+== sub-bobber only=zone #3: RESULT 1/1
+== perf-bobbers #3: RESULT 4/5
+FAIL phase 4: a live 4 v 4 (1800 frames) — with 170 live bobbers on average (topped up to 24 a bot): p95 10.6 ms vs 5.1 without (≤ +3), the bots' think p95 0.4 vs 0.3 ms (≤ +1.0), the bots' own sight deferrals 0 vs 0 a second (≤ 2×, or ≤ 1 a second; the kit's own share ran out 66.23 times a second)  {"without":{"p50":2.6,"p95":5.1,"calls":67,"callsMax":154,"kit95":0.1,"think95":0.3},"wi
