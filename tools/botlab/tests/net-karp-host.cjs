@@ -19,12 +19,20 @@
 //   [karp-face] review round 2: 'part=ring;who=1|2' (CLIENTS=3): a guest carries when host A leaves (who=1: B, the new
 //     host; who=2: C, still a guest) — neither the new host's fuse nor the carrier's ring steps up across the takeover;
 //     part=bots checks the new host's fuse for the adopted carrier the same way. Run them under URLQ netlag 100 + jitter 40.
+//   [karp-face] review round 3: 'part=dbl' (CLIENTS=3; 'hold=0.25' by default): an old-host bot carrier's Big Burst blows
+//     3.85 m from B's and C's kids (a non-lethal hit) and host A leaves the moment it blew on A's own screen, its [2] still
+//     queued on the others' timelines. The remaining screens hold A's queued [2] back by 'hold' s (playback jitter: the
+//     race the reviewer saw in 1 of 5 rounds — the new host's adopted copy finishing its swell first and recording a
+//     second [2] — every time). Each remaining screen judges the shot once and each kid is hurt once; the new host records
+//     no [2] of its own for it. Then the new host's own next two shots for the adopted bot: gids past every one the old
+//     host used for it, and the other guest flies both (a reused gid it still held dropped the launch). 'hold=0' runs the
+//     natural race.
 //   CLIENTS=3 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' Q2='autopilot&wipmodes' NET_ARGS='part=bots' NET=tools/botlab/tests/net-karp-host.cjs tools/botlab/run.sh tools/botlab/netpage.cjs
 //   CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' NET_ARGS='part=cargo' NET=tools/botlab/tests/net-karp-host.cjs tools/botlab/run.sh tools/botlab/netpage.cjs
 module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   const opt = Object.fromEntries((args || '').split(/[;&]/).filter(Boolean).map((kv) => kv.split('=')));
   const part = opt.part || (clients.length >= 3 ? 'bots' : 'cargo');
-  const n = part === 'bots' || part === 'plant' || part === 'shot' || part === 'ring' ? 3 : 2;
+  const n = part === 'bots' || part === 'plant' || part === 'shot' || part === 'ring' || part === 'dbl' ? 3 : 2;
   for (const c of clients.slice(0, n)) {
     if (/[?&]wipmodes(&|=|$)/.test(c.url || '') && /[?&]autopilot(&|=|$)/.test(c.url || '')) continue;
     await open(c.i, 'autopilot&wipmodes');
@@ -33,7 +41,7 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   const J = async (c, code) => JSON.parse(await c.js(`JSON.stringify(${code})`));
   for (const c of cs) await c.js(`(async () => { const m = await import('./tools/botlab/karpbox.js'); await m.defineKarpbox(null); const { MAPS } = await import('./src/config.js'); MAPS.find((x) => x.id === 'karpbox').noBots = ${part === 'cargo'}; return 1; })()`);
   const code = await A.js(`__G.net.create('Hosty')`);
-  await A.js(`__G.net.setSettings({ mode: 'bazookarp', map: 'karpbox', time: 'day', botCount: ${part === 'shot' ? 5 : 2}, difficulty: 'easy' }); 1`);   // ([karp-face] shot: bots on both teams)
+  await A.js(`__G.net.setSettings({ mode: 'bazookarp', map: 'karpbox', time: 'day', botCount: ${part === 'shot' || part === 'dbl' ? 5 : 2}, difficulty: 'easy' }); 1`);   // ([karp-face] shot: bots on both teams)
   for (let i = 1; i < n; i++) await cs[i].js(`__G.net.join(${JSON.stringify(code)}, 'Guest${i}').then(() => 1)`);
   await A.until(`__G.net.lobby.players.length === ${n}`, 15000);
   // A on Alpha, the guests on Bravo
@@ -50,7 +58,7 @@ module.exports = async ({ clients, R, wait, say, args, open, close }) => {
   const info = async (c) => J(c, `(() => { const K = __G.match && __G.match.karp; if (!K) return null; const s = K.state(); return { host: __G.net.isHost, follower: K.follower, phase: s.phase, holder: s.holder && s.holder.nid, holderRemote: K.holder ? !!K.holder.remote : null, holderBot: K.holder ? !!K.holder.bot : null, holderIn: K.holder ? __G.match.actors.includes(K.holder) : null, count: s.count, fuse: +s.fuse.toFixed(2), pos: s.pos.map((x) => +x.toFixed(2)), q: K.q, lastQ: K.lastQ, hostChanges: K.stats.hostChanges || 0, winner: s.winner, reason: s.reason, actors: __G.match.actors.length }; })()`);
   const aNid = await J(A, `__G.match.local.nid`);
   await wait(1200);
-  if (part === 'plant' || part === 'shot' || part === 'guestleave' || part === 'ring') return more({ cs, A, J, info, R, wait, say, close, part, aNid, opt });
+  if (part === 'plant' || part === 'shot' || part === 'guestleave' || part === 'ring' || part === 'dbl') return more({ cs, A, J, info, R, wait, say, close, part, aNid, opt });
   // A's kid grabs it at the Pond (the host's own burst) and carries toward Bravo's half for 2 s
   await A.js(`(() => { const K = __G.match.karp, a = __G.match.local; a.pos.set(0, 0, -1.2); a.vel.set(0, 0, 0); K.shell.add(0, 2000, a); return 1; })()`);
   await A.until(`__G.match.karp.holder === __G.match.local`, 4000, 50);
@@ -214,6 +222,55 @@ async function more({ cs, A, J, info, R, wait, say, close, part, aNid, opt = {} 
     const end = async (c) => J(c, `(() => { const r = __G.match.result; return r ? { mode: r.mode, winner: r.winner, reason: r.reason, counts: r.counts } : null; })()`);
     const en = await end(N), eo = await end(O);
     R('13c. the match finishes under the new host, the same result on both screens', !!en && JSON.stringify(en) === JSON.stringify(eo), { en, eo });
+  } else if (part === 'dbl') {
+    const hold = opt.hold != null ? +opt.hold : 0.25;
+    // the bots the new host adopts stand still; every remaining screen counts its judgements per gid (KarpGun._judge), the
+    // karp damage its own kid takes, and the Carp Shot records it sends ([d0, gid]); A's queued blast [2] is held back
+    for (const c of rest) await c.js(`(async () => { const m = await import('./src/game/bots.js'); m.BotBrain.prototype.update = function () {}; return 1; })()`);
+    for (const c of rest) await c.js(`(() => { window.__jd = {}; window.__dm = []; window.__rk = []; window.__gs = []; const K = __G.karpGun, N = __G.netm;
+      if (!K.__j0) { K.__j0 = K._judge.bind(K); K._judge = (s, c, R) => { window.__jd[s.gid] = (window.__jd[s.gid] || 0) + 1; return K.__j0(s, c, R); }; }
+      if (!K.__g0) { K.__g0 = K.ghost.bind(K); K.ghost = (a, d) => { if (d[0] === 0) window.__gs.push([d[1], a.nid, performance.now()]); return K.__g0(a, d); }; }
+      if (!N.__rk0) { N.__rk0 = N.recKit.bind(N); N.recKit = (a, kind, d) => { if (kind === 'karp') window.__rk.push([d[0], d[1], a.nid]); return N.__rk0(a, kind, d); }; }
+      const P = N.peers.get(N.s.hostId); if (P) P.events.push = function (...es) { for (const e of es) if (e[1] === 'k' && e[3] === 'karp' && e[4] && e[4][0] === 2) e[0] += ${hold}; return Array.prototype.push.apply(this, es); };
+      import('./src/core/ctx.js').then((m) => { m.on('damage', (e) => { if (e.victim === __G.match.local && e.source === 'karp') window.__dm.push(+(+e.amount).toFixed(1)); }); }); return 1; })()`);
+    // a dry shot: where a Big Burst from (0, 0, −4) aimed +z lands (nobody near)
+    const aim = `const b = __G.match.actors.find((o) => o.nid === ${bot}); if (!b.alive) b.respawn(); b.pos.set(0, 0, -4); b.vel.set(0, 0, 0); b.yaw = b.aimYaw = 0; b.aimPitch = 0;`;
+    await A.js(`(() => { ${aim} return 1; })()`);
+    await wait(500);
+    await A.js(`(() => { window.__L = null; window.__ag = []; import('./src/core/ctx.js').then((m) => { m.on('karp:land', (e) => { if (!e.ghost && !window.__L) window.__L = e.pos.toArray(); }); }); ${aim} window.__ag.push(__G.karpGun._fire(b, 1).gid); return 1; })()`);
+    await A.until(`!!window.__L`, 5000, 20).catch(() => {});
+    const L = await J(A, `window.__L`);
+    if (!L) { R('dbl: the dry shot landed', false, {}); return; }
+    await wait(2500);
+    // the kids of B and C 3.85 m either side of the landing: a hit that cannot splat (~85)
+    let k = 0;
+    for (const c of rest) { const dx = (k++ % 2 ? 1 : -1) * 3.85; await c.js(`(() => { const a = __G.match.local; if (!a.alive) a.respawn(); a.pos.set(${L[0]} + ${dx}, ${L[1]}, ${L[2]}); a.vel.set(0, 0, 0); a.hp = 100; a.invuln = 0; window.__dm = []; window.__jd = {}; window.__rk = []; return 1; })()`); }
+    await wait(900);
+    await A.js(`(() => { ${aim} window.__blown = null; import('./src/core/ctx.js').then((m) => { const off = m.on('karp:blast', (e) => { if (!e.ghost) { window.__blown = performance.now(); off(); } }); }); window.__gid = __G.karpGun._fire(b, 1).gid; window.__ag.push(window.__gid); return 1; })()`);
+    const gid = await J(A, `window.__gid`), aGids = await J(A, `window.__ag`);
+    await A.until(`!!window.__blown`, 6000, 4).catch(() => {});
+    const queuedAtLeave = await Promise.all(rest.map((c) => J(c, `(() => { const N = __G.netm, P = N.peers.get(N.s.hostId); return P ? P.events.filter((e) => e[1] === 'k' && e[3] === 'karp' && e[4][1] === ${gid}).map((e) => e[4][0]) : null; })()`)));
+    say(`dbl: host A leaves the moment its blast went off (gid ${gid}; queued on the others: ${JSON.stringify(queuedAtLeave)}; hold ${hold} s)`);
+    await close(0);
+    const N = await newHost();
+    if (!N) { R('dbl: a guest becomes the host', false, {}); return; }
+    const O = rest.find((c) => c !== N);
+    // (at once: within the 2 s a screen keeps a blown shot by its gid)
+    const nGids = await J(N, `(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); if (!b.alive) b.respawn(); b.pos.set(0, 0, -4); b.vel.set(0, 0, 0); b.yaw = b.aimYaw = Math.PI; b.aimPitch = 0.3;
+      const g1 = __G.karpGun._fire(b, 0).gid; const g2 = __G.karpGun._fire(b, 0).gid; return [g1, g2, !b.remote]; })()`);
+    await wait(1200);
+    const ng = JSON.stringify(nGids.slice(0, 2));
+    const oSaw = await J(O, `(() => { const K = __G.karpGun; return ${ng}.map((g) => { const s = K.byGid.get(g); return s ? { gid: g, phase: s.phase, ghost: s.ghost, owner: s.owner.nid, fresh: s.t < 2.5 } : null; }); })()`);
+    const oLaunch = await J(O, `window.__gs.filter((r) => ${ng}.includes(r[0])).length`);
+    await wait(1800);
+    const rows = [];
+    for (const c of rest) rows.push({ c: `c${c.i}`, host: c === N, ...(await J(c, `({ judged: window.__jd[${gid}] || 0, dmg: window.__dm, alive: __G.match.local.alive, hp: +__G.match.local.hp.toFixed(1), sent2: window.__rk.filter((r) => r[0] === 2 && r[1] === ${gid}).length })`)) });
+    R('dbl: a shot that blew as its host left is judged once on every remaining screen (each kid hurt once, not splatted), and the new host records no blast of its own for it',
+      rows.length === 2 && rows.every((r) => r.judged === 1 && r.dmg.length === 1 && r.dmg[0] < 100 && r.alive && r.sent2 === 0), { gid, hold, queuedAtLeave, rows });
+    // the new host's own shots for the adopted bot (fired above): gids past every one the old host used, the other guest flies both
+    R('dbl: the new host\'s next two shots for the adopted bot have gids past every one the old host used for it, and the other guest flies both',
+      nGids[2] && nGids[0] !== nGids[1] && nGids.slice(0, 2).every((g) => g > Math.max(...aGids)) && oSaw.every((x) => x && x.owner === bot && x.fresh) && oLaunch === 2,
+      { oldHost: aGids, newHost: nGids.slice(0, 2), other: oSaw, launches: oLaunch });
   } else {
     // a Big Burst from the bot at a spot where the other guest's kid and a Bravo host bot stand; A leaves 0.1 s later
     const bravo = await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);

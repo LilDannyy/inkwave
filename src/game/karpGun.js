@@ -20,7 +20,7 @@ import * as THREE from 'three';
 import { G, emit, clamp, lerp } from '../core/ctx.js';
 import { BAZOOKARP, PLAYER } from '../config.js';
 import { Physics, Hit } from './physics.js';
-import { KIT_GHOSTS, netRec, netId } from './kits/registry.js';
+import { KIT_GHOSTS, netRec } from './kits/registry.js';
 import './karpModel.js';   // [karp-face] the held carp ('sp_karp')
 
 const GN = BAZOOKARP.gun;
@@ -100,7 +100,10 @@ export class KarpGun {
 
   _fire(a, c) {
     const L = launch(a, c, this._L || (this._L = { from: new THREE.Vector3(), vel: new THREE.Vector3() }));
-    const gid = netId(a) || ((this._seq = (this._seq || 0) + 1) % 1e6) + 1;
+    // ([karp-face] review round 3: a gid of the shooter's own count — nid × 1e5 + its shots so far — which every screen
+    // learns from the launches it plays and an adopter carries on past: netId's per-client count restarted on a new host,
+    // whose first shots for an adopted bot reused the old host's gids — a launch whose gid a screen still held was dropped)
+    const gid = a.nid !== undefined ? a.nid * 100000 + (a._kseq = ((a._kseq || 0) % 99999) + 1) : ((this._seq = (this._seq || 0) + 1) % 1e6) + 1;
     const s = this._spawn(a, gid, L.from, L.vel, c, false);
     this.stats.fired[c >= 1 ? 2 : c >= 0.5 ? 1 : 0]++;
     a.lastFire = 0;
@@ -133,7 +136,7 @@ export class KarpGun {
       if (s.phase === 'fly') this._fly(s, dt);
       else if (s.phase === 'swell') {
         s.swell += dt;
-        if (s.swell >= GN.swell && !s.ghost) this._blow(s);
+        if (s.swell >= GN.swell && (!s.ghost || s.adopt)) this._blow(s);   // ([karp-face] adopt: landed by its old owner's queued [1], ours to blow)
         else if (s.ghost && s.swell > GN.swell + 1.5) { s.phase = 'done'; }   // (a ghost whose [2] never came)
       } else if (s.phase === 'done') {
         s.doneT += dt;
@@ -183,7 +186,7 @@ export class KarpGun {
   // the shooter's screen: the blast. Its own players are judged here; the record [2] has every other screen judge theirs
   _blow(s) {
     const c = _v.copy(s.land).setY(s.land.y + 0.35), R = radiusOf(s.c);
-    s.phase = 'done';
+    s.phase = 'done'; s.ghost = false; s.adopt = false; s.blown = true;
     this.stats.blasts++;
     // its ink
     const g = G.physics.raycast(_v2.copy(c).setY(c.y + 0.2), _DOWN, 3, _hit, true);
@@ -219,14 +222,39 @@ export class KarpGun {
   }
 
   // [karp-face] this screen adopts actor a (netmatch _adopt: its player left, or the host did): its shots still in the
-  // air or swelling here become ours — they fly on with collisions, land, swell and blow, and record [1] / [2]
-  adopt(a) { for (const s of this.shots) if (s.owner === a && s.ghost && s.phase !== 'done') { s.ghost = false; if (s.phase === 'swell' && !s.land) s.phase = 'fly'; } }
+  // air or swelling here become ours — they fly on with collisions, land, swell and blow, and record [1] / [2].
+  // (Review round 3: queued, the departed peer's records for a's shots — [t, 'k', nid, kind, data] still waiting on its
+  // playback clock — that every other screen will also play. A shot whose [2] is queued is NOT taken: its queued records
+  // land and blow it here as on every screen — the adopter blowing it too put a second [2] on the wire, and the third
+  // screens judged it twice. One whose [1] is queued but not its [2] waits for that landing, then is ours to blow. The
+  // gid count goes on past every launch it has seen or that is queued, with room to spare.)
+  adopt(a, queued = null) {
+    const rec = new Map();
+    let top = a._kseq || 0;
+    for (const e of queued || []) {
+      if (e[1] !== 'k' || e[2] !== a.nid || e[3] !== 'karp' || !Array.isArray(e[4])) continue;
+      const d = e[4], r = rec.get(d[1]) || rec.set(d[1], new Set()).get(d[1]);
+      r.add(d[0]);
+      if (d[0] === 0) top = Math.max(top, d[1] % 100000);
+    }
+    for (const s of this.shots) {
+      if (s.owner !== a) continue;
+      top = Math.max(top, s.gid % 100000);
+      if (!s.ghost || s.phase === 'done') continue;
+      const r = rec.get(s.gid);
+      if (r && r.has(2)) continue;
+      if (r && r.has(1)) { s.adopt = true; continue; }
+      s.ghost = false; if (s.phase === 'swell' && !s.land) s.phase = 'fly';
+    }
+    a._kseq = Math.min(99990, top + 8);
+  }
   // ---- online: another screen's records (KIT_GHOSTS.karp)
   ghost(a, d) {
     switch (d[0]) {
       // ([karp-face] a departed host's queued launch for a bot this screen has just adopted: the shot is ours to fly, land
       // and blow — its [1] / [2] will never come from its old owner — SPEC §7.6)
-      case 0: { if (this.byGid.has(d[1])) break; const own = !a.remote; const s = this._spawn(a, d[1], _v.set(d[2], d[3], d[4]), _v2.set(d[5], d[6], d[7]), d[8], !own); s.ghost = !own;
+      case 0: { a._kseq = Math.max(a._kseq || 0, d[1] % 100000);   // ([karp-face] the shooter's count, for an adopter to carry on)
+        if (this.byGid.has(d[1])) break; const own = !a.remote; const s = this._spawn(a, d[1], _v.set(d[2], d[3], d[4]), _v2.set(d[5], d[6], d[7]), d[8], !own); s.ghost = !own;
         emit('karp:shot', { actor: a, charge: d[8], from: s.start.clone(), vel: s.vel.clone(), ghost: true }); break; }   // ([karp-face] a remote carrier's shot is heard and seen leaving the mouth here too)
       case 1: {
         const s = this.byGid.get(d[1]);
@@ -237,10 +265,10 @@ export class KarpGun {
       }
       case 2: {
         let s = this.byGid.get(d[1]);
-        if (s && !s.ghost && s.phase === 'done') break;   // ([karp-face] an adopted shot that already blew here)
+        if (s && s.blown) break;   // ([karp-face] a gid is judged once on every screen: an adopted shot that already blew here, a second [2])
         if (!s) s = this._spawn(a, d[1], _v.set(d[2], d[3], d[4]), _v2.set(0, 0, 0), d[5], true);
         if (!s.land) this._land(s, _v.set(d[2], d[3], d[4]), true);
-        s.phase = 'done'; s.c = d[5];
+        s.phase = 'done'; s.c = d[5]; s.blown = true; s.adopt = false;
         const c = _v.set(d[2], d[3] + 0.35, d[4]), R = radiusOf(d[5]);
         this._judge(s, c, R);
         G.fx?.explosion?.(c.clone(), a.color, R);

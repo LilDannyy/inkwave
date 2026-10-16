@@ -813,7 +813,7 @@ export class NetMatch {
       // (Practice: a player who leaves is gone — nobody plays on in their place; the host's bots move to the new host)
       if (drop || (this.practice && !a.isBot)) { this._remove(a); continue; }
       a.owner = this.s.hostId;
-      if (a.owner === this.myId) this._adopt(a);
+      if (a.owner === this.myId) this._adopt(a, this.peers.get(id)?.events);   // [karp-face] (its owner's queued records: KarpGun.adopt)
       else { a.net.buf.length = 0; a.net.handoff = true; }   // same squidkid, new sender: glide onto its new path
     }
     if (hostChanged) this.match.karp?.onHostChange(this.isHost);   // [b5-karp] the new host runs the rules; a carrying guest re-reports
@@ -892,7 +892,7 @@ export class NetMatch {
     this.inkWait = 0;
   }
 
-  _adopt(a) {
+  _adopt(a, queued = null) {
     // continue from exactly where it was drawn — no pop
     a.remote = false;
     this._stopLoops(a);
@@ -908,7 +908,7 @@ export class NetMatch {
     else if (a.alive) { a.character.setVisible(true); a.character.root.visible = true; }
     a.net.err.set(0, 0, 0); a.net.errV?.set(0, 0, 0);   // a.pos is already where it was drawn (path + offset)
     G.deploy?.adopt(a);   // [b5-deploy] its devices (ghosts here till now) are ours: they can still be shot down and crushed
-    G.karpGun?.adopt?.(a);   // [karp-face] its Carp Shots in the air are ours to land and blow
+    G.karpGun?.adopt?.(a, queued);   // [karp-face] its Carp Shots in the air are ours to land and blow (not one whose blast is still queued)
     this.match?.stage?.adopt(a);   // [b5-stagehooks] (a ride in progress becomes ours)
   }
 
