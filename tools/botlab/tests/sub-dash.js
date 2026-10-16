@@ -1,7 +1,8 @@
 // [b5-sub-dash] The Dash Pellet (src/game/kits/dash.js; tools/botlab/jobs/batch5/subs/SPEC.md §D, DECISIONS.md 19), every
 // rule of the spec's D10 but the stage audit (dash-reach.js) and the online one (net-sub-dash.cjs):
 //   MAP=testbox MODE=turf PAGE=tools/botlab/tests/sub-dash.js WATCHDOG=900000 tools/botlab/run.sh tools/botlab/page.cjs
-// PAGE_ARGS: a comma list of sections to run (default all): press, dir, height, limits, blast, walls, edges, hud, brolly, bots
+// PAGE_ARGS: a comma list of sections to run (default all): press, dir, height, limits, blast, walls, edges, hud, brolly, bots,
+// reach ([b5-int3] the stage audit's finds: never out through a slab's top; a roof slide's way off)
 // Movement checks step the dasher alone through actor.update (any dt: 1/60, 1/30, 1/24); the blast's streak, the HUD and
 // the bots run whole frames (the debug stepper). Fails without the kit (the scaffold's stub refuses every press).
 (async () => {
@@ -602,6 +603,57 @@
     }
 
     // ================================================================================== 7. bots
+    // ================================================================================== [b5-int3] reach: what the stage audit found
+    // (dash-reach.js, the lead's rules for its finds) — a kid caught inside a thin slab is never put out through its top;
+    // a kid on a roof slides off by the way that gets it off soonest
+    if (run('reach')) {
+      home();
+      // a swim jump under a 0.45 m slab whose underside a swimming squid's jump just clears (2.25 m), the dash pressed at
+      // frame 18 under it (the squid turns kid: its body is inside the slab) — lockgate's loading-bay canopy, where the kid
+      // went up through the canopy onto its top (2.71 m over its start); and the same with fire pressed instead (no dash)
+      const Z = 30, slab = () => { unbox(); box(4, 2.475, Z, 2.5, 0.225, 3); };
+      const swimUnder = (press) => {
+        slab(); G.paint.clear?.();
+        for (const x of [-2, -0.8, 0.4]) G.paint.splat(V(x, 0.1, Z), 1.0, me.team, { instant: true, seed: 0.5 });
+        put(me, -1.5, 0, Z, Math.PI / 2);
+        sim(me, 2, 1 / 60, { squid: true });
+        me.vel.set(PLAYER.swimSpeed, 0, 0);
+        let top = 0, onSlab = false;
+        sim(me, 120, 1 / 60, (i) => ({ move: [1, 0], jump: i < 2, squid: i < 18, sub: press === 'sub' && i === 18, fire: press === 'fire' && i >= 18 && i < 22 }), () => { top = Math.max(top, me.pos.y); if (me.grounded && blocks.some((b) => b.id === me.ground.block)) onSlab = true; });
+        const r = { press, top: r2(top), onSlab, end: [r2(me.pos.x), r2(me.pos.y), r2(me.pos.z)], grounded: me.grounded };
+        unbox(); G.paint.clear?.();
+        return r;
+      };
+      const under = [swimUnder('sub'), swimUnder('fire')];
+      R('a swim jump under a 0.45 m slab (its underside 2.25 m up, the top 2.7), a kid on the press frame inside it — by the dash (frame 18) or by fire: never put out through its top (never on it, never over its underside)', under.every((r) => !r.onSlab && r.top < 2.25), under);
+      // a kid falling onto a 0.12 m slab 1 m up at 1/24 s a frame, from 3 m over it: it lands on it (the landing still holds)
+      unbox(); box(0, 0.94, Z, 1.5, 0.06, 1.5);
+      put(me, 0, 4, Z, 0);
+      sim(me, 48, 1 / 24, {});
+      const land = { y: r2(me.pos.y), grounded: me.grounded, on: me.grounded && blocks.some((b) => b.id === me.ground.block) };
+      unbox();
+      R('a kid falling 3 m onto a 0.12 m slab at 1/24 s a frame lands on it (the inside rule leaves landings alone)', land.on && Math.abs(land.y - 1.0) < 0.03, land);
+      // a roof slide: a 2 m wide roof strip (top 2.4) in two blocks, a wall along its west side, a wall across its south end,
+      // a tall block along most of its east side but the last 0.4 m of the south block and the north block (the street below,
+      // 2.4 m down). Landed on the north block 0.4 m from its south end — the nearest edge, south, runs on onto the other
+      // roof block to the end wall — it slides off east, within 1 s (calamari's hill-wall, still on it after 3 s)
+      const roofTrial = () => {
+        unbox();
+        box(0, 1.2, Z + 2.35, 1, 1.2, 2.35, 0, { roof: true });          // north roof block, z 30 … 34.7
+        box(0, 1.2, Z - 2.2, 1, 1.2, 2.2, 0, { roof: true });            // south roof block, z 25.6 … 30
+        box(-1.5, 2.5, Z, 0.5, 2.5, 5.2);                                // the west wall (to 5 m)
+        box(0, 2.5, Z - 4.9, 2, 2.5, 0.5);                               // the south end wall
+        box(1.5, 2.5, Z - 2.4, 0.5, 2.5, 2.0);                           // the east block along the south roof, z 25.6 … 29.6
+        put(me, 0.1, 2.42, Z + 0.4, 0);
+        let offT = null, t = 0;
+        sim(me, 300, 1 / 60, {}, () => { t += 1 / 60; const onR = me.grounded && me.ground.block >= 0 && L.blocks[me.ground.block]?.roof; if (offT == null && !onR && t > 0.1) { offT = t; return false; } });
+        const r = { offT: offT == null ? null : r2(offT), at: [r2(me.pos.x), r2(me.pos.y), r2(me.pos.z)] };
+        unbox();
+        return r;
+      };
+      const rs = roofTrial();
+      R('a kid landed on a roof slides off by the way that gets it off soonest: off a 2 m wide roof strip within 1 s, where its nearest edge runs on along the next roof block into a wall', rs.offT != null && rs.offT <= 1.0, rs);
+    }
     if (run('bots')) {
       home();
       const B = foes[0], E = me;   // B dashes; E (us) is its foe, our brain scripted (we never shoot)
