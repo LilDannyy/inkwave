@@ -706,7 +706,7 @@ export class Actor {
     const lift = isSquid ? P.squidBodyLift : P.stepUp;
     const height = isSquid ? P.squidHeight : P.height;
     const y0 = this.pos.y;
-    const c = G.physics.collideBody(this.pos, P.radius, lift, height, this.contacts, stick || this._dashFlat, isSquid);   // [b5-sub-dash] (a dash: walls push it out sideways only, never up over a ledge's corner)
+    const c = G.physics.collideBody(this.pos, P.radius, lift, height, this.contacts, stick || this._dashFlat, isSquid, 3, prevY);   // [b5-sub-dash] (a dash: walls push it out sideways only, never up over a ledge's corner) [b5-int3] (prevY: never up through a block's top more than a step over the feet)
     if (c.ceiling && this.vel.y > 0) this.vel.y = 0;
     if (c.wall) {
       const n = c.wallNormal;
