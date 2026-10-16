@@ -7,7 +7,10 @@
 // is unlit, the Fin Pavilion's fascia is dressed off the deck. Fix round 4 (section 8): the Lookouts and telescope bays are
 // drawn under the ink (render, skirting, speed lines, portholes) and the ink still shows on them, their props and the
 // planters' stand within 8.5 cm of their faces and off their walkable tops, the planters' faces are cream stone, the touch
-// pools' rockery breaks their outline at every corner and along the rim.
+// pools' rockery breaks their outline at every corner and along the rim. Fix round 5 (section 9, the complete eye-level sweep): Penguin Point's
+// rock faces and tops, the ice pile, the pump sets, the dais, the Ticket Hall, the stairs' flanks, the Kelp Balconies, the
+// pavilion's flank walls and the deckchair stacks are dressed under the ink (pixel reads, both halves), this round's props
+// stand within 8.5 cm of what they dress and off its walkable top, the grand stair has its granite nosing.
 //   MAP=aquarium MODE=turf PAGE=tools/botlab/tests/aquarium-art.js tools/botlab/run.sh tools/botlab/page.cjs
 (async () => {
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info });
@@ -278,6 +281,137 @@
     R('the touch pools\' rockery wraps every corner (≥ 4 cm out of both faces, rising ≥ 0.15 m over the rim) and rises ≥ 0.2 m over the rim on every side, both halves',
       cs.length === 8 && cs.every((c) => c.outX >= 0.04 && c.outZ >= 0.04 && c.up >= 0.15) && rs.length === 8 && rs.every((u) => u >= 0.2),
       { corners: Object.fromEntries(Object.entries(corner).map(([k, c]) => [k, [+c.outX.toFixed(3), +c.outZ.toFixed(3), +c.up.toFixed(2)]])), rim: Object.fromEntries(Object.entries(rimUp).map(([k, u]) => [k, +u.toFixed(2)])) });
+  }
+  // 9. fix round 5 (LEAD-NOTES after review 5: the complete eye-level sweep, out/art/r5-sweep-*): every piece it marked bare
+  // is drawn under the ink and reads as what it is, both halves; this round's props stand within 8.5 cm of the blocks they
+  // dress and off their walkable tops; the grand stair's granite nosing covers the promenade's cells at its head
+  {
+    const gl = G.renderer.getContext(), V = (a) => new G.camera.position.constructor(a[0], a[1], a[2]);
+    const { PENGUIN: PG, PUMPS: PU, DAIS: DA, TICKET: TK, W: Wb } = await import('./src/world/stages/aquarium/geo.js');
+    const DEG = Math.PI / 180, dir = (a) => [Math.cos(a * DEG), Math.sin(a * DEG)];
+    const lum = (c) => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
+    const px = (p) => { const v = V(p).project(G.camera), w = gl.drawingBufferWidth, h = gl.drawingBufferHeight, a = new Uint8Array(4 * 9); gl.readPixels(Math.round((v.x + 1) / 2 * w) - 1, Math.round((v.y + 1) / 2 * h) - 1, 3, 3, gl.RGBA, gl.UNSIGNED_BYTE, a); const c = [0, 0, 0]; for (let i = 0; i < 9; i++) for (let k = 0; k < 3; k++) c[k] += a[i * 4 + k] / 9; return c.map(Math.round); };
+    const shot = (from, look, n = 24) => { G.paint.clear?.(); g.rig.cinematic(V(from), V(from), V(look), V(look), 99, () => {}); for (let i = 0; i < n; i++) g.debug.step(1000 / 60); };
+    const tw = (p, s) => [s * p[0], p[1], s * p[2]];
+    const W3 = (s, w, y) => { const [x, z] = Wb(s, w); return [x, y, z]; };
+    const P3 = (a, r, y, c = [0, 0], l = 0) => { const d = dir(a); return [c[0] + d[0] * r - d[1] * l, y, c[1] + d[1] * r + d[0] * l]; };
+    const std = (cs) => { const l = cs.map(lum), m = l.reduce((a, b) => a + b, 0) / l.length; return +Math.sqrt(l.reduce((a, b) => a + (b - m) ** 2, 0) / l.length).toFixed(1); };
+    const cv = (cs) => { const m = cs.map(lum).reduce((a, b) => a + b, 0) / cs.length; return +(std(cs) / Math.max(m, 1)).toFixed(3); };   // (relative: a face in shade has less contrast)
+    const brains = m.actors.map((a) => a.bot); for (const a of m.actors) a.bot = null;   // (the bots stand still: nothing inks the faces read)
+    g.debug.freeze?.();
+    // (a) Penguin Point: the rock terrace's plaza face and the upper rock's plaza face are rockwork — stones and crevices
+    // along the face, a dark granite foot, a white snow lip (they were flat concrete), both halves
+    const rock = [];
+    for (const s of [1, -1]) {
+      shot(tw(W3(6, -6.5, 0.9), s), tw(W3(6, -10, 0.65), s));
+      rock.push({ face: 'terrace', s, cv: cv(Array.from({ length: 15 }, (_, i) => px(tw(W3(5.3 + i * 0.1, -10, 0.62), s)))), foot: px(tw(W3(6, -10, 0.05), s)), lip: px(tw(W3(6, -10, 1.17), s)) });
+      shot(tw(W3(15, -7.0, 1.5), s), tw(W3(15, -12, 1.2), s));
+      rock.push({ face: 'upper', s, cv: cv(Array.from({ length: 15 }, (_, i) => px(tw(W3(14.2 + i * 0.1, -12, 1.0), s)))), foot: px(tw(W3(15, -12, 0.05), s)), lip: px(tw(W3(15, -12, 2.37), s)) });
+    }
+    R('Penguin Point\'s rock faces are rockwork, both halves: stones and crevices along them, a granite foot, a snow lip', rock.every((c) => c.cv > 0.12 && lum(c.lip) > lum(c.foot) + 60), rock);
+    // (b) the rock terrace's top: pale rock slabs with snow lying on them toward the glass (it was one concrete slab)
+    const tops = [];
+    for (const s of [1, -1]) {
+      shot(tw(W3(4, -10.5, 4.6), s), tw(W3(4.5, -14.5, 1.2), s));
+      const g9 = []; for (let i = 0; i < 8; i++) for (let j = 0; j < 6; j++) g9.push(px(tw(W3(3.6 + i * 0.8, -11.6 - j * 1.0, 1.2), s)));
+      tops.push({ s, std: std(g9), max: Math.round(Math.max(...g9.map(lum))) });
+    }
+    R('the rock terrace\'s top is pale rock slabs with snow on them, both halves (not one flat slab)', tops.every((c) => c.std > 10 && c.max > 180), tops);
+    // (c) ink splatted on the terrace's face shows over its rockwork (the art is under the ink)
+    shot(W3(6, -6.5, 0.9), W3(6, -10, 0.65));
+    const bare = px(W3(6, -10, 0.62)); G.paint.splat(V(W3(6, -9.95, 0.62)), 0.45, 0, { instant: true }); for (let i = 0; i < 6; i++) g.debug.step(1000 / 60);
+    const inked = px(W3(6, -10, 0.62)), moved = Math.abs(inked[0] - bare[0]) + Math.abs(inked[1] - bare[1]) + Math.abs(inked[2] - bare[2]);
+    R('ink splatted on Penguin Point\'s rockwork shows over it (the art is under the ink)', moved > 90, { bare, inked, moved });
+    // (d) the ice pile is ice (blue-white blocks) and the pump sets painted machinery (sea-green drum, a hazard band), both halves
+    const ice = [], pump = [];
+    for (const s of [1, -1]) {
+      const ix = PG.ice.b[1], iz = (PG.ice.b[2] + PG.ice.b[3]) / 2;
+      shot(tw([ix + 2.2, 2.2, iz], s), tw([ix, 1.7, iz], s));
+      ice.push({ s, c: px(tw([ix, 1.62, iz + 0.12], s)) });
+      const fx = PU.box[0], fz = (PU.box[2] + PU.box[3]) / 2;
+      shot(tw([fx - 2.6, 0.9, fz], s), tw([fx, 0.6, fz], s));
+      const hz = Array.from({ length: 9 }, (_, i) => px(tw([fx, 0.135, fz - 0.4 + i * 0.1], s)));
+      pump.push({ s, drum: px(tw([fx, 0.63, fz + 0.35], s)), hazardMax: Math.round(Math.max(...hz.map(lum))), hazardMin: Math.round(Math.min(...hz.map(lum))) });
+    }
+    R('the ice pile is stacked ice (blue-white) and the pump sets are painted machinery (a sea-green drum over a hazard band), both halves',
+      ice.every((c) => c.c[2] > c.c[0] + 15) && pump.every((c) => c.drum[1] > c.drum[0] + 3 && c.hazardMax > 3 * c.hazardMin + 20), { ice, pump });
+    // (e) cast stone over a darker granite plinth: the touch pool's dais (east end), the Ticket Hall's plaza face (with a faience
+    // speed line), the grand stair's flank, the Kelp Balcony's face, the Fin Pavilion's flank wall by its stair; both halves
+    const faces = [];
+    const pair = (name, s, from, look, body, foot, extra) => { shot(tw(from, s), tw(look, s)); const r = { name, s, body: px(tw(body, s)), foot: px(tw(foot, s)) }; if (extra) r.line = px(tw(extra, s)); faces.push(r); };
+    const pS = [-Math.sin(-152 * DEG), Math.cos(-152 * DEG)];   // (the grand stair's south side, out of its flank: (0.469, −0.883))
+    const gsF = (y) => { const [x, , z] = P3(-152, 18.5, 0); return [x + pS[0] * 3.0, y, z + pS[1] * 3.0]; };
+    // (the Kelp Balcony's end face toward the promenade: its last segment's side, bearings 240 … 255 round the W drum)
+    const kb = (o, y) => { const a = 247.5 * DEG, dm = [Math.cos(a), Math.sin(a)], pm = [-dm[1], dm[0]]; return [-25 + 6.0 * dm[0] + (0.94 + o) * pm[0], y, 6.0 * dm[1] + (0.94 + o) * pm[1]]; };
+    for (const s of [1, -1]) {
+      pair('dais', s, [-3.5, 0.8, -15.6], [DA.b[1], 0.4, -15.6], [DA.b[1], 0.25, -15.6], [DA.b[1], 0.05, -15.6]);
+      pair('ticket', s, [6.0, 0.9, -49.5], [6.0, 0.5, TK.b[2]], [6.0, 0.45, TK.b[2]], [6.0, 0.07, TK.b[2]], [6.0, 0.8, TK.b[2]]);
+      pair('grandStair', s, gsF(0.8).map((v, i) => (i === 1 ? v : v + (i === 0 ? pS[0] : pS[1]) * 3.0)), gsF(0.5), gsF(0.4), gsF(0.07));
+      pair('kelpBalcony', s, kb(4.5, 3.3), kb(0, 2.9), kb(0, 2.85), kb(0, 2.47));
+      pair('pavilionFlank', s, W3(34, 15.0, 2.9), W3(34, 13.0, 1.7), W3(34, 13.0, 2.0), W3(34, 13.0, 1.25));
+    }
+    R('the dais, the Ticket Hall\'s plaza face, the grand stair\'s flanks, the Kelp Balconies and the pavilion\'s flank walls are dressed, both halves: stone or render over a granite foot (a speed line on the Ticket Hall)',
+      faces.every((c) => lum(c.body) > lum(c.foot) + 30 && (!c.line || c.line[1] > c.line[0])), faces);
+    // (f) the deckchair stack: striped canvas in layers (it was a coral box), both halves
+    const chairs = [];
+    for (const s of [1, -1]) {
+      shot(tw(P3(-158, 26.0, 3.3), s), tw(P3(-158, 28.3, 2.95), s));
+      chairs.push({ s, std: std(Array.from({ length: 11 }, (_, i) => px(tw(P3(-158, 28.3, 2.97, [0, 0], -0.5 + i * 0.1), s)))) });
+    }
+    R('the deckchair stacks are folded striped chairs in layers, both halves (not a plain box)', chairs.every((c) => c.std > 15), chairs);
+    // (g) this round's props: within 8.5 cm (horizontally) of a block they dress and never on its walkable top (a headless
+    // build of their placements alone, both halves)
+    {
+      const { PropKit: PK } = await import('./src/world/props.js'), { dressingFor: DF } = await import('./src/world/dressing.js');
+      const { LAYOUT: LY } = await import('./src/world/stages/aquarium/layout.js');
+      const TYPES = ['aquarium_plate', 'aquarium_penguinplaque', 'aquarium_baskinglumps', 'aquarium_pumpdress', 'aquarium_raketrim'];   // (the hut's windows: on an off-limits block, its round-1 roof overhangs it)
+      const DRESSED = ['penguin-rocks', 'upper-rock', 'basking-rock', 'ice-pile', 'pump-set', 'touch-dais', 'touch-step', 'ticket-hall', 'helmet-bed', 'viewing-step', 'shark-bench', 'grand-stair', 'penguin-steps', 'ticket-stair', 'deck-ramp'];
+      const kit5 = new PK(null, { headless: true });
+      let nIt = 0; for (const it of DF('aquarium')) if (TYPES.includes(it.type)) { kit5.add(it.type, it); nIt++; }
+      const mir = (d) => (d.kind === 'box' ? { ...d, min: [-d.max[0], d.min[1], -d.max[2]], max: [-d.min[0], d.max[1], -d.min[2]] } : d.kind === 'obox' ? { ...d, center: [-d.center[0], d.center[1], -d.center[2]] } : { ...d, low: [-d.low[0], d.low[1], -d.low[2]], high: [-d.high[0], d.high[1], -d.high[2]] });
+      const blocks = LY.half.filter((d) => DRESSED.includes(d.tag) && !(d.notIn === 'tower' && false)).flatMap((d) => [d, mir(d)]);
+      // (footprint distance outside a piece, and its top over (x, z) when inside)
+      const fp = (d, x, z) => {
+        if (d.kind === 'box') { const dx = Math.max(d.min[0] - x, 0, x - d.max[0]), dz = Math.max(d.min[2] - z, 0, z - d.max[2]); return [Math.hypot(dx, dz), d.max[1], Math.min(x - d.min[0], d.max[0] - x, z - d.min[2], d.max[2] - z)]; }
+        if (d.kind === 'obox') { const a = d.rotY * DEG, c = Math.cos(a), s = Math.sin(a), dx = x - d.center[0], dz = z - d.center[2], u = dx * c - dz * s, v = dx * s + dz * c, hu = d.size[0] / 2, hv = d.size[2] / 2; return [Math.hypot(Math.max(Math.abs(u) - hu, 0), Math.max(Math.abs(v) - hv, 0)), d.center[1] + d.size[1] / 2, Math.min(hu - Math.abs(u), hv - Math.abs(v))]; }
+        const [lx, ly, lz] = d.low, [hx, hy, hz] = d.high, run = Math.hypot(hx - lx, hz - lz), ux = (hx - lx) / run, uz = (hz - lz) / run, dx = x - lx, dz = z - lz, al = dx * ux + dz * uz, lat = -dx * uz + dz * ux;
+        return [Math.hypot(Math.max(Math.abs(lat) - d.width / 2, 0), Math.max(-al, 0, al - run)), ly + (Math.max(0, Math.min(run, al)) * (hy - ly)) / run, Math.min(d.width / 2 - Math.abs(lat), al, run - al)];
+      };
+      const st = { n: 0, far: 0, atFar: null, onTop: 0, atTop: null };
+      const v3 = new G.camera.position.constructor();
+      for (const parts of kit5._buckets.values()) for (const p of parts) {
+        const P = p.g.attributes.position;
+        for (let i = 0; i < P.count; i++) {
+          v3.fromBufferAttribute(P, i).applyMatrix4(p.m); st.n++;
+          let best = 9, on = null, hugs = false;
+          for (const d of blocks) {
+            const [out, top, inset] = fp(d, v3.x, v3.z);
+            best = Math.min(best, out);
+            if (out === 0 && inset > 0.02 && v3.y > top + 0.003 && v3.y < top + 1.5) on = d;
+            if (out <= 0.085 && top > v3.y + 0.003) hugs = true;                    // (hugging a face that rises above it, or inside a taller block)
+          }
+          if (on && !hugs) { st.onTop++; st.atTop = [on.tag, +v3.x.toFixed(2), +v3.y.toFixed(2), +v3.z.toFixed(2)]; }
+          if (best > st.far) { st.far = best; st.atFar = [+v3.x.toFixed(2), +v3.y.toFixed(2), +v3.z.toFixed(2)]; }
+        }
+      }
+      R('this round\'s props (plates, the PENGUIN POINT plaque, the basking rock\'s lumps, the pumps\' pipework, the stairs\' string-courses) stand within 8.5 cm of the blocks they dress and none on a walkable top, both halves',
+        nIt >= 17 && st.n > 3000 && st.far <= 0.085 && st.onTop === 0, { placements: nIt, verts: st.n, farthest: +st.far.toFixed(3), at: st.atFar, onTop: st.onTop, atTop: st.atTop });
+      // (h) the grand stair's granite nosing (the lead's call): a stone block across each stair's head, not inked, 8.5 cm
+      // proud; no promenade cell reaches past it onto the stair (they ran out over its top tread in a sawtooth)
+      const nos = L.blocks.filter((b) => b.tag === 'stair-nosing');
+      const ax = dir(-152), pr = [-ax[1], ax[0]];
+      let reach = 99;
+      for (const d of LY.half.filter((q) => q.tag === 'promenade')) for (const [x, z] of [[d.min[0], d.min[2]], [d.max[0], d.min[2]], [d.max[0], d.max[2]], [d.min[0], d.max[2]]]) {
+        const r = x * ax[0] + z * ax[1], l = x * pr[0] + z * pr[1];
+        if (Math.abs(l) < 2.99 && r < 22) reach = Math.min(reach, r);
+      }
+      const ndef = LY.half.find((q) => q.tag === 'stair-nosing');
+      R('the grand stair\'s head has its granite nosing on both halves (not inked, 8.5 cm proud) and no promenade cell reaches past it onto the stair',
+        nos.length === 2 && nos.every((b) => b.faces.every((f) => f < 0 || !L.faces[f].paintable)) && ndef && Math.abs(ndef.center[1] + ndef.size[1] / 2 - 2.485) < 1e-6 && reach >= 20.95 - 0.02,
+        { blocks: nos.length, top: ndef ? +(ndef.center[1] + ndef.size[1] / 2).toFixed(3) : null, cellsFrom: +reach.toFixed(3) });
+    }
+    m.actors.forEach((a, i) => { a.bot = brains[i]; });
+    G.paint.clear?.();
   }
   let bathy = null; G.scene.traverse((o) => { if (o.name === 'aq-bathysphere') bathy = o; });
   // 5. Feeding Time at 1:00 left: looks only
