@@ -82,9 +82,10 @@ app.on('browser-window-created', (_, win) => {
       }
       const rep = await js(`${mod}.then((m) => m.runChecks(${JSON.stringify(o)}))`);
       const drop = await js(`${mod}.then((m) => m.dropCoverage(${JSON.stringify(o)}))`);
+      const dropFlags = drop.bad.slice(0, 4).map((b) => ({ n: 11, at: b.at, what: `11: ${b.what}` }));
       const shots = [];
       if (SHOTS && opts.shots !== false) {
-        const list = await js(`${mod}.then((m) => m.pictures({ state: ${st.i}, flagShots: ${+(process.env.FLAGSHOTS ?? 8)}, topOnly: ${!!opts.topOnly} }))`);
+        const list = await js(`${mod}.then((m) => m.pictures({ state: ${st.i}, flagShots: ${+(process.env.FLAGSHOTS ?? 8)}, topOnly: ${!!opts.topOnly}, extraFlags: ${JSON.stringify(dropFlags)} }))`);
         for (const s of list) { const name = (tag ? tag + '-' : '') + s.name; fs.writeFileSync(path.join(OUT, name), Buffer.from(s.url.split(',')[1], 'base64')); shots.push(name); }
       }
       const carry = [];
@@ -93,7 +94,8 @@ app.on('browser-window-created', (_, win) => {
       const c11 = { n: 11, name: NAMES[11], flags: [] };
       const bad = [];
       if (drop.nBad) bad.push(`drop coverage: ${drop.nBad} of ${drop.samples} splats bad (${drop.pond} back to the Pond): ${drop.bad.slice(0, 3).map((b) => `${b.what} at ${JSON.stringify(b.at)} (${b.why})`).join('; ')}`);
-      for (const b of drop.bad.slice(0, 4)) c11.flags.push({ at: b.at, what: `11: ${b.what}` });
+      c11.flags.push(...dropFlags);
+      for (const c of carry) for (const sa of (c.stuckAt || []).slice(0, 3)) c11.flags.push({ n: 11, at: sa.at, what: `11: team ${c.team}'s carry stuck (a ${sa.edge} edge)` });
       if (carry.length) for (const c of carry) {
         const W = c.walks || {};
         if (c.err) bad.push(`team ${c.team}: the walk threw: ${c.err.slice(0, 160)}`);
@@ -120,7 +122,10 @@ app.on('browser-window-created', (_, win) => {
       const rt = rep.checks[5]?.nums?.rows?.filter((r) => r.team === 0).map((r) => (r.r2 ? 2 : 1));
       console.log(`RESULT ${id}${rep.states.length > 1 ? '@' + rep.key : ''} ${ok ? 'ok' : 'fail'} L=${rep.L.join('/')} weir=${w?.weirs?.map((q) => q.count).join(',')} gate=${rep.checks[8]?.nums?.rows?.[0]?.dist} routes=${rt && rt.length ? Math.min(...rt) : 0}/2 zones=${zoneN} hops=${hops?.hops}+${hops?.gaps}${rep.checks[16]?.nums?.walkRoutes ? ` walks=${rep.checks[16].nums.walkRoutes.join('/')}+${rep.checks[16].nums.walkEntrances.join('/')}` : ''}${fails.length ? ' FAIL=' + fails.join(',') : ''}${skips.length ? ' SKIP=' + skips.join(',') : ''}`);
       if (shots.length) console.log(`  pictures (${OUT}): ${shots.join(', ')}`);
-      const json = { ...rep, carry, drop, shots, result: ok ? 'ok' : 'fail', fails, skips };
+      // the flags, numbered as on the top-down (its discs and key) and in the -flag-<n> pictures; #11's carry places last
+      const flags = await js(`${mod}.then((m) => m.numberFlags(window.__karpCheck.out.checks, ${JSON.stringify(c11.flags)}))`);
+      if (flags.length) { console.log(`  flags (${flags.length}):`); for (const fg of flags) console.log(`    ${String(fg.i).padStart(3)} #${String(fg.check).padEnd(2)} (${fg.at.join(', ')})${fg.also ? ` +${fg.also}` : ''}: ${fg.what}`); }
+      const json = { ...rep, flags, carry, drop, shots, result: ok ? 'ok' : 'fail', fails, skips };
       fs.writeFileSync(path.join(OUT, `${tag ? tag + '-' : ''}${id}${rep.states.length > 1 ? '-s' + rep.key : ''}-karp.json`), JSON.stringify(json, null, 1));
       return json;
     };
@@ -153,7 +158,7 @@ app.on('browser-window-created', (_, win) => {
       } else if (SELF) {
         const box = `import('./tools/botlab/karp-check-box.js')`;
         await boot('');
-        const cases = await js(`${box}.then((m) => m.CASES.map((c) => ({ id: c.id, check: c.check, what: c.what, expect: c.expect || null, phys: !!c.phys, carry: !!c.carry, allStates: !!c.allStates })))`);
+        const cases = await js(`${box}.then((m) => m.CASES.map((c) => ({ id: c.id, check: c.check, what: c.what, expect: c.expect || null, notFail: c.notFail || null, expect16: c.expect16 || null, phys: !!c.phys, carry: !!c.carry, allStates: !!c.allStates })))`);
         const want = process.env.CASES ? process.env.CASES.split(',') : null;
         const res = [];
         for (const c of cases.filter((q) => !want || want.includes(q.id))) {
@@ -176,13 +181,16 @@ app.on('browser-window-created', (_, win) => {
             console.log(`SELFTEST ${c.id.padEnd(10)} the module's states ${JSON.stringify(sts.map((q) => [q.key, q.query]))}: #15 ${runs.map((r) => `${r.key} ${r.c15}`).join(', ')} (state 'w' must FAIL, built from ?${sw?.query}) → ${pass ? 'PASS' : 'FAIL'}`);
             continue;
           }
-          const j = await checkOne('karpbox', sts[0], setup, `self-${c.id}`, { carry: c.id === 'clean' || c.carry, phys: c.id === 'clean' || c.phys, shots: c.id === 'clean' ? true : c.check ? true : false, topOnly: c.id !== 'clean' });
+          const j = await checkOne('karpbox', sts[0], setup, `self-${c.id}`, { carry: c.id === 'clean' || c.carry, phys: c.id === 'clean' || c.phys, shots: c.id === 'clean' || c.check || c.notFail ? true : false, topOnly: c.id !== 'clean' });
           const failing = j.fails;
-          // (the target check must FAIL for the fault planted: its text matches the case's `expect`, not a knock-on)
+          // (the target check must FAIL for the fault planted: its text matches the case's `expect`, not a knock-on;
+          // a notFail case proves a false FAIL gone: none of those checks may fail, and #16's text may be asked to match)
           const why = c.expect ? new RegExp(c.expect).test(j.checks[c.check]?.text || '') : true;
-          const pass = c.id === 'clean' ? j.result === 'ok' : failing.includes(c.check) && why;
-          res.push({ ...c, pass, failing, why });
-          console.log(`SELFTEST ${c.id.padEnd(10)} ${c.id === 'clean' ? 'clean karpbox: every check OK' : `#${c.check} must FAIL (${c.what})${c.expect ? (why ? ', for that reason' : ', NOT for that reason: /' + c.expect + '/') : ''}`} → ${pass ? 'PASS' : 'FAIL'}${failing.length ? ' (failing: ' + failing.map((n) => '#' + n).join(' ') + ')' : ''}`);
+          const why16 = c.expect16 ? new RegExp(c.expect16).test(j.checks[16]?.text || '') : true;
+          const pass = c.id === 'clean' ? j.result === 'ok' : c.check == null ? (c.notFail || []).every((n) => !failing.includes(n)) && why16 : failing.includes(c.check) && why;
+          res.push({ ...c, pass, failing, why, why16 });
+          const what = c.id === 'clean' ? 'clean karpbox: every check OK' : c.check == null ? `${(c.notFail || []).map((n) => '#' + n).join(' ')} must NOT fail (${c.what})${c.expect16 ? (why16 ? ', #16 as expected' : ', #16 NOT as expected: /' + c.expect16 + '/') : ''}` : `#${c.check} must FAIL (${c.what})${c.expect ? (why ? ', for that reason' : ', NOT for that reason: /' + c.expect + '/') : ''}`;
+          console.log(`SELFTEST ${c.id.padEnd(10)} ${what} → ${pass ? 'PASS' : 'FAIL'}${failing.length ? ' (failing: ' + failing.map((n) => '#' + n).join(' ') + ')' : ''}`);
         }
         console.log(`RESULT selftest ${res.filter((r) => r.pass).length}/${res.length}`);
         fs.writeFileSync(path.join(OUT, 'selftest.json'), JSON.stringify(res, null, 1));
