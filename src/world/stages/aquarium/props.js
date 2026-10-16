@@ -9,6 +9,7 @@ import { LAYOUT } from './layout.js';
 import { makeKit } from './kit.js';
 import { registerArch } from './arch.js';
 import { registerDress } from './dress.js';
+import { PLANTERS } from './geo.js';
 
 const DEG = Math.PI / 180, PI = Math.PI;
 const C30 = Math.cos(30 * DEG);
@@ -110,6 +111,15 @@ export const PLACEMENTS = [
   ...[...tagged('trolley'), ...tagged('trolleys')].map((d) => (d.kind === 'box' ? { type: 'aquarium_trolley', ...atBox(d) } : { type: 'aquarium_trolley', ...atObox(d, 0, { h: d.size[1] - 2.0 }) })),
   ...tagged('planter').filter((d, i) => i % 4 === 0).map((d) => ({ type: 'aquarium_planterdress', pos: [boxC(d)[0], 0, boxC(d)[1]], r: 0.9, h: 1.3, plates: [PI * 0.25, PI * 1.25], label: 'SEA HOLLY' })),
   ...tagged('topiary').filter((d, i) => i % 4 === 0).map((d) => ({ type: 'aquarium_planterdress', pos: [boxC(d)[0], 0, boxC(d)[1]], r: 1.0, h: 1.2, plates: [PI * 0.83], label: 'FISH TOPIARY' })),
+  // (fix round 4: the planters' trailing planting and brass plates; floorart.js draws their faces and beds under the ink)
+  ...PLANTERS.oct.map((p, i) => ({ type: 'aquarium_planterdeco', kind: 'oct', pos: [p.c[0], 0, p.c[1]], r: p.r, top: p.top, seed: 3 + i, skip: p.fish ? [] : [1, 5] })),
+  ...PLANTERS.box.map((b, i) => {
+    const [x, z] = W((b.s[0] + b.s[1]) / 2, (b.w[0] + b.w[1]) / 2), deck = b.y0 > 1;
+    // (local x along w, local +z toward the gate: −s; a deck planter's plates face the pad and mid, the queue planter's
+    // both long faces)
+    const plates = deck ? [{ face: [b.w[0] > 0 ? -1 : 1, 0], label: 'SEA HOLLY' }, { face: [0, 1], label: 'SEA HOLLY' }] : [{ face: [0, 1], label: 'SEA HOLLY' }, { face: [0, -1], label: 'FERRY QUEUE' }];
+    return { type: 'aquarium_planterdeco', kind: 'box', pos: [x, b.y0, z], rotY: -30 * DEG, w: b.w[1] - b.w[0], d: b.s[1] - b.s[0], h: b.top - b.y0, seed: 7 + i, plates };
+  }),
   ...tagged('ticket-machines').map((d) => ({ type: 'aquarium_ticketcanopy', ...atBox(d) })),
   ...tagged('icecream-cart').map((d) => ({ type: 'aquarium_cartdress', ...atBox(d) })),
   ...tagged('luggage-scale').map((d) => ({ type: 'aquarium_scale', ...atBox(d) })),
