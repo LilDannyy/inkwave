@@ -811,7 +811,8 @@ New this round (review 1):
     would hide a weir spot the builder must move. It FAILs instead.
 - **D26. The flags.**
   - One numbering for the picture, its key, the `-flag-<n>` pictures, the JSON and the console.
-  - A check's flags within 2 m of each other are one; #7d's finds of one probe within 3 m are one.
+  - A check's flags of one kind (the text without its numbers) within 2 m of each other are one; #7d's finds of one
+    probe within 3 m are one.
   - There are pictures for every #7 flag, then FLAGSHOTS others, at most 40.
 - **D27. #15 excepts any weir's own posts and sill** (the `karp-weir*` / `karp-sill` tags). Gate posts and NO CARP signs
   count.
@@ -895,7 +896,8 @@ No bot code changed. Bots walk nav, not the carrier graph, so D15 doesn't touch 
 - **D23 reads SPEC's "differs" as the move's own direction** for the one-way moves #16 proves. That removed real-looking
   but wrong finds (H2q's, halyard's yard tops, lockgate's lock chamber). The lead may want SPEC's literal \|ΔD\| back.
 - **Halyard's 255 boat finds are real moves**, a yacht's deck bridging a slip (`halyard-flag-22.jpg`), but they are
-  many. They group into 1 flag a side (21 / 22). WP4b will close them with `roof` boat tops or a carrierBlock, or ask for a waiver.
+  many. They group into 1 flag a side (21 / 22).
+  For WP4b: `roof` boat tops, a carrierBlock, or a waiver.
 - **#16's kid tries a fixed set of moves.** It steers straight at the far node, from 1.5 m and 3 m back, with five jump
   timings. A move that needs another line could read as not made. A builder should run `PROBE=` on a listed edge
   before pasting its hopVeto.
