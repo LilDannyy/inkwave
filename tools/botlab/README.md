@@ -154,8 +154,10 @@ Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/j
   where a carrierRetreatFallback happened (with the team, P there and the retreat mark). `PLAN='karpbox:normal:4,
   halyard:hard:2'` plays several matches in one instance (one slot; `OUT=dir/x.json` → `x-<map>-<diff>-<i>.json`);
   what-ifs for the balance pass, never saved: `KARP_TUNE='{"jumpR":30}'` (botsKarp's `KARP_AI`) and
-  `KARP_CFG='{"shell":{"reformHp":600}}'` (`BAZOOKARP`, deep; the opening shell is re-formed with its hp). The shared balance
-  pass: `tools/botlab/jobs/batch5/karp-bots/JOB-1.sh` (the Mac mini template: `STAGES`, `HARD`, `N`).
+  `KARP_CFG='{"shell":{"reformHp":600}}'` (`BAZOOKARP`, deep; the opening shell is re-formed with its hp). The Mac mini JOB
+  template: `tools/botlab/jobs/batch5/karp-bots/JOB-1.sh` (`STAGES`, `HARD`, `TOTAL` — 8 matches a difficulty summed over
+  its stages, COMMON's cap — `SUBS`; `N` a stage is the lead's consolidated pass only). A stage builder copies it into its
+  own key's folder.
 - The bots (SPEC §8, src/game/botsKarp.js): `MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/karp-bots.js
   tools/botlab/run.sh tools/botlab/page.cjs` — WP3's scenarios: breakers out of the burst at ≥ 70 % (60 % hard), melee
   breakers' ring, no touch damage in 20 bursts, the grabber's 3.0–3.2 m wait and grab, an autopilot carrier's 3 carries,
