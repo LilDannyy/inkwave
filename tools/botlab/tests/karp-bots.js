@@ -97,7 +97,7 @@
         if (i > 90) for (const a of A) if (a.alive) { const c = Kp.shell.center(), d = Math.hypot(a.pos.x - c.x, a.pos.z - c.z); if (d < minA && d < 5.3) dbgA.push({ i, n: a.name, w: a.weaponId, d: +d.toFixed(2), role: a.bot.kRole, mode: a.bot.mode, esc: !!a.bot.sp.esc, known: a.bot.sp.known.map((r) => r.d.src), tgt: a.bot.target?.name, see: a.bot.seeTimer > 0, pos: [+a.pos.x.toFixed(1), +a.pos.z.toFixed(1)], v: +Math.hypot(a.vel.x, a.vel.z).toFixed(1), sq: a.form }); minA = Math.min(minA, d); n++; }
       });
       const shoot = KARP_BOT.stats.breakT;
-      R(`A ${diff}: with Bravo's side at ${frac * 100} % the Alpha bots placed 4.2 m out leave the burst (4.5 m) from 1.5 s on — the ring they keep is 5.5 m — still shooting it`, minA >= 4.6 && minA < 12 && n > 0 && shoot > 1, { minA, samples: n, breakT: shoot, dangerKnown: KARP_AI.diff[diff].danger, dbg: dbgA.slice(-6) });
+      R(`A ${diff}: with Bravo's side at ${frac * 100} % the Alpha bots placed 4.2 m out leave the burst (4.5 m) and keep the 5.5 m ring from 1.5 s on (0.2 m of slack), still shooting it`, minA >= 5.3 && minA < 12 && n > 0 && shoot > 1, { minA, samples: n, breakT: shoot, dangerKnown: KARP_AI.diff[diff].danger, dbg: dbgA.slice(-6) });
     }
     // easy ignores the meter (the danger area is off for an easy team)
     fresh();
