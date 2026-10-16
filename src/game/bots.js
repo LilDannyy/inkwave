@@ -1563,10 +1563,11 @@ export class BotBrain {
     // [b5-caldera] momentum first: where the body is carried in the next 0.3 s (+0.3 m) — a slide along a lava lip with
     // speed toward it went over (lava-bots.js trails) — brake against it
     const vx = a.vel.x, vz = a.vel.z, sp = Math.hypot(vx, vz);
-    // (fix round 3: from 0.25 m/s, not 1 — a duel's strafe reversing on a lava lip drifted over it at 0.7–1.0 m/s while
-    // the move pointed back inland; a squid's carry 0.45 s: it brakes softer than a kid)
-    const ct = a.form === 'squid' ? 0.45 : 0.3;
-    if (sp > 0.25 && this._wetHi(px + vx * ct + (vx / sp) * 0.3, pz + vz * ct + (vz / sp) * 0.3, py)) { mv.set(-vx / sp, 0, -vz / sp); return; }
+    // (fix round 3: also from 0.25 m/s when the move points away from the drift — a duel's strafe reversing on a lava lip
+    // drifted over it at 0.7–1.0 m/s while the move pointed back inland; never against a slow walk the move itself asks
+    // for: from stone to stone across a seam the brake held escapers still until the stone sank; a squid's carry 0.45 s)
+    const ct = a.form === 'squid' ? 0.45 : 0.3, away = mv.x * vx + mv.z * vz < 0;
+    if ((sp > 1.0 || (sp > 0.25 && away)) && this._wetHi(px + vx * ct + (vx / sp) * 0.3, pz + vz * ct + (vz / sp) * 0.3, py)) { mv.set(-vx / sp, 0, -vz / sp); return; }
     // [b5-caldera] standing on a lip with the body's middle over the sea or the lava (the foot holds it): back onto the floor
     if (a.grounded && this._wet(px, pz, py)) {
       for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t); if (!this._wet(px + cx * 0.45, pz + cz * 0.45, py)) { mv.set(cx * 0.8, 0, cz * 0.8); return; } }
