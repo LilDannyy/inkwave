@@ -151,12 +151,14 @@ Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/j
 - Pictures: tools/botlab/scenes/karp.js through hud-shots.cjs.
 - **The stage checker** (`[b5-karp-checker]`, SPEC §4.4): `MAP=<id> tools/botlab/run.sh tools/botlab/bazookarp-check.cjs`
   checks a stage's `LAYOUT.bazookarp` against SPEC §9.1 — sixteen checks on the carrier graph (hop and gap edges in),
-  #16 with a kid stepped through `actor.update` with the carrier's jump, #11 with a scripted carrier on both teams — and
+  #16 with a kid stepped through `actor.update` with the carrier's rules (every hop / gap edge tried, every route and
+  every entrance into a Gate's ring walked), #11 with a scripted carrier on both teams — and
   prints a line per check and `RESULT <id> ok|fail …`, writes `<id>-karp.json` and pictures (the top-down with the field,
   routes, entrances, zones and flags; the Pond; each weir and the Gate from both sides; each zone; each flag). `MAP=all`
   runs every shipped stage in one go and prints a table (`WIP=1` adds the stages under construction); env `OUT`,
   `KARP_DEF`, `SHOTS=0`, `CARRY=0`, `PHYS=0`, `DEVSTAGE=1` (Cargo), `ERA=` / `LAVA=` / `KSTATE=` (one stage state; a stage
-  module offers its states through `G.match.stage.karpStates()`, each with the page query of its audit switch). The
+  module offers its states through `G.match.stage.karpStates()`, each with the page query of its audit switch),
+  `PROBE='[x,y,z,x,y,z]'` (one move traced: #16's kid frame by frame, and what it stopped against). The
   checks live in `tools/botlab/karp-check-page.js`. Self-test: `KARP_SELFTEST=1 tools/botlab/run.sh
   tools/botlab/bazookarp-check.cjs` (karpbox's clean case must pass every check, and each planted fault of
   `tools/botlab/karp-check-box.js` must FAIL its own check; `CASES=clean,f7,…`). The per-stage builders' brief:

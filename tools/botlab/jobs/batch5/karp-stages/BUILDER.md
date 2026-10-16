@@ -29,6 +29,9 @@ MAP=<id> tools/botlab/run.sh tools/botlab/bazookarp-check.cjs
        SHOTS=0 CARRY=0 PHYS=0   quick iterations (a RESULT ok needs all three on)
        DEVSTAGE=1         Cargo (noBots: the scripted carrier walks; there are no bot matches on Cargo)
        ERA=1|2|3, LAVA=low|high, KSTATE=<key>   one stage state; without one, every state in turn
+       PROBE='[x, y, z, x, y, z]'   one move traced: #16's kid on the node pair nearest those two points, every frame of
+                          every trial, and the blocks (pieces and prop colliders) where each trial stopped — before
+                          you paste a hopVeto entry or argue with a #7d find, look at why
 MAP=all … (every shipped stage), MAPS=a,b … (some)
 ```
 
@@ -57,7 +60,7 @@ It prints one line per check — `OK`, `WARN`, `FAIL` or `SKIP` with its numbers
 | 13 | ≥ 3 ways off the spawn deck; ≥ 2 cover blocks ≥ 1.2 m within 4 m of route 1 deck → Gate | openings, cover |
 | 14 | ≥ 70 % of the Pond's 4.5–10 m ring is floor; the shell seen from ≥ 6 of 8 | clear the centre (`notIn: 'bazookarp'`) |
 | 15 | nothing solid within 3 m of a weir (0.3–3.6 m up, its posts excepted); seen from both approaches and ≥ 3 of 8 | move it off the wall |
-| 16 | every hop / gap edge the field adds is made by a kid with the carrier's jump | paste the printed `hopVeto` entries into your data (then the field drops them), or open the move up |
+| 16 | every hop / gap edge the field adds is made by a kid with the carrier's jump; the same kid (the carrier's speed, both spawn barriers, carrierBlock) walks every route 1 and route 2 of every leg and through every entrance into each Gate's ring | paste the printed `hopVeto` entries into your data (then the field drops them), or open the move up; a route or entrance it can't walk (the place is printed and drawn: a slot narrower than a body, a lip, a rail the graph's centre ray missed) gets widened, or the piece that fools the graph gets a real wall |
 
 **Waivers.** A #7 or #9 find you can't close goes to the lead with a picture and a reason. Once the lead accepts it, add
 `waive: [{ check: '7d', at: [x, z], why: '…' }]` to your data (Alpha's attack, like everything): a find of that check
