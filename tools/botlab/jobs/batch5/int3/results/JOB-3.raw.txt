@@ -1,0 +1,239 @@
+JOB-3 raw results — automatic, by the Mac mini's b5-runner, 2026-10-16 13:48:03
+branch botlab-b5-int3, ran at a850774, exit code 0, wall time 20min
+(a written-up JOB-3.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### D-barrage_mystery-halyard-1: == halyard [turf 180s]: turf 49.6% vs 23.1% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage-halyard-1: == halyard [turf 180s]: turf 48.6% vs 24.4% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_waddle-halyard-1: == halyard [turf 180s]: turf 34.2% vs 38.7% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bomb-halyard-1: == halyard [turf 180s]: turf 38.1% vs 36.1% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-sentry-halyard-1: == halyard [turf 180s]: turf 47.1% vs 26.4% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-glide-halyard-1: == halyard [turf 180s]: turf 48.3% vs 29.9% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bobber-halyard-1: == halyard [turf 180s]: turf 34% vs 36.2% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-dash-halyard-1: == halyard [turf 180s]: turf 36.8% vs 38.8% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage-halyard-2: == halyard [turf 180s]: turf 37.6% vs 34.4% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_waddle-halyard-2: == halyard [turf 180s]: turf 30.3% vs 45% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bomb-halyard-2: == halyard [turf 180s]: turf 40.4% vs 37.8% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_mystery-halyard-2: == halyard [turf 180s]: turf 33.9% vs 32.9% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-glide-halyard-2: == halyard [turf 180s]: turf 32% vs 38.2% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bobber-halyard-2: == halyard [turf 180s]: turf 36.3% vs 29% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-sentry-halyard-2: == halyard [turf 180s]: turf 36.2% vs 37.5% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-dash-halyard-2: == halyard [turf 180s]: turf 42.2% vs 33.9% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage-saltpan-1: == saltpan [turf 180s]: turf 28.3% vs 40% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_waddle-saltpan-1: == saltpan [turf 180s]: turf 37.1% vs 28% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_mystery-saltpan-1: == saltpan [turf 180s]: turf 32.6% vs 39.1% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bomb-saltpan-1: == saltpan [turf 180s]: turf 28.2% vs 36.5% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-glide-saltpan-1: == saltpan [turf 180s]: turf 40.2% vs 31.5% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-dash-saltpan-1: == saltpan [turf 180s]: turf 42.8% vs 27.8% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bobber-saltpan-1: == saltpan [turf 180s]: turf 33.2% vs 32.8% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-sentry-saltpan-1: == saltpan [turf 180s]: turf 39.1% vs 23.5% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage-saltpan-2: == saltpan [turf 180s]: turf 23% vs 34.8% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_waddle-saltpan-2: == saltpan [turf 180s]: turf 42.9% vs 24.8% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_mystery-saltpan-2: == saltpan [turf 180s]: turf 39.7% vs 24.1% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bomb-saltpan-2: == saltpan [turf 180s]: turf 31.6% vs 35.8% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-glide-saltpan-2: == saltpan [turf 180s]: turf 35.7% vs 33.8% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-sentry-saltpan-2: == saltpan [turf 180s]: turf 21.7% vs 38.8% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bobber-saltpan-2: == saltpan [turf 180s]: turf 28.8% vs 23% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-dash-saltpan-2: == saltpan [turf 180s]: turf 26.2% vs 38.3% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage-calamari-1: == calamari [turf 180s]: turf 40.2% vs 35.8% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_waddle-calamari-1: == calamari [turf 180s]: turf 32.5% vs 25.9% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bomb-calamari-1: == calamari [turf 180s]: turf 22.8% vs 40.3% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_mystery-calamari-1: == calamari [turf 180s]: turf 39.9% vs 30.3% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-sentry-calamari-1: == calamari [turf 180s]: turf 28.5% vs 41.5% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-glide-calamari-1: == calamari [turf 180s]: turf 44% vs 22.7% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bobber-calamari-1: == calamari [turf 180s]: turf 21.9% vs 39.2% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage-calamari-2: == calamari [turf 180s]: turf 27.9% vs 38.5% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_waddle-calamari-2: == calamari [turf 180s]: turf 32.6% vs 39.4% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-dash-calamari-1: == calamari [turf 180s]: turf 25.7% vs 39.4% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_mystery-calamari-2: == calamari [turf 180s]: turf 24.3% vs 40.5% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-glide-calamari-2: == calamari [turf 180s]: turf 28.1% vs 41.4% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bomb-calamari-2: == calamari [turf 180s]: turf 34.3% vs 36.1% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-sentry-calamari-2: == calamari [turf 180s]: turf 34% vs 41.5% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-dash-calamari-2: == calamari [turf 180s]: turf 18.4% vs 41.4% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bobber-calamari-2: == calamari [turf 180s]: turf 32.6% vs 19.5% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage-treehills-1: == treehills [turf 180s]: turf 32.4% vs 30.4% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_waddle-treehills-1: == treehills [turf 180s]: turf 20.8% vs 35.9% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_mystery-treehills-1: == treehills [turf 180s]: turf 24.6% vs 47.9% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bomb-treehills-1: == treehills [turf 180s]: turf 38.6% vs 32.9% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-glide-treehills-1: == treehills [turf 180s]: turf 32.2% vs 33.9% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-sentry-treehills-1: == treehills [turf 180s]: turf 28.7% vs 30.3% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage-treehills-2: == treehills [turf 180s]: turf 39% vs 24.9% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bobber-treehills-1: == treehills [turf 180s]: turf 34.2% vs 29.1% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-dash-treehills-1: == treehills [turf 180s]: turf 36.3% vs 25.5% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_waddle-treehills-2: == treehills [turf 180s]: turf 44% vs 23.1% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bomb-treehills-2: == treehills [turf 180s]: turf 37.8% vs 29.7% | CONSOLE 0 unique warning/error line(s) 
+### D-barrage_mystery-treehills-2: == treehills [turf 180s]: turf 22.6% vs 44.9% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-bobber-treehills-2: == treehills [turf 180s]: turf 24.6% vs 32.1% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-sentry-treehills-2: == treehills [turf 180s]: turf 33.3% vs 33% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-glide-treehills-2: == treehills [turf 180s]: turf 37% vs 31% | CONSOLE 0 unique warning/error line(s) 
+### E-turf-dash-treehills-2: == treehills [turf 180s]: turf 27.9% vs 41.8% | CONSOLE 0 unique warning/error line(s) 
+## set D
+## set E
+SUMMARY 64 of 64 matches wrote a result
+
+## last 15 lines of job.log
+  saltpan-2     35   1    0   0.03  0.00  -      blasts 34 hits 1 | cooked 6 | popped 1 sunk 0 smashed 0 bounces 47 | 0/0
+  treehills-1   31   1    1   0.03  0.03  2015   blasts 31 hits 1 | cooked 3 | popped 0 sunk 0 smashed 0 bounces 48 | 0/0
+  treehills-2   38   0    0   0.00  0.00  -      blasts 38 hits 0 | cooked 4 | popped 0 sunk 0 smashed 0 bounces 70 | 0/0
+  MEAN (n 8): uses 35.4/match | hits per use 0.02 | splats per use 0.02 | ink per splat 3679
+E turf sentry: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    5    12   3   2.40  0.60  108    rounds 29 hits 12 | locked on 14.2 % of its life (6.0 / 42.2 s) | ends {"shot":1,"time":2,"owner":2} | 0/0
+  calamari-2    10   4    2   0.40  0.20  325    rounds 13 hits 4 | locked on 2.8 % of its life (2.7 / 94.9 s) | ends {"owner":6,"time":4} | 0/0
+  halyard-1     5    0    0   0.00  0.00  -      rounds 0 hits 0 | locked on 0.0 % of its life (0.0 / 41.7 s) | ends {"owner":2,"time":1} | 0/0
+  halyard-2     2    0    0   0.00  0.00  -      rounds 4 hits 0 | locked on 37.0 % of its life (0.7 / 2.0 s) | ends {"owner":2} | 0/0
+  saltpan-1     6    7    4   1.17  0.67  98     rounds 15 hits 7 | locked on 3.4 % of its life (2.0 / 57.8 s) | ends {"owner":3,"time":3} | 0/0
+  saltpan-2     8    0    0   0.00  0.00  -      rounds 4 hits 0 | locked on 0.6 % of its life (0.5 / 77.3 s) | ends {"owner":3,"time":4} | 0/0
+  treehills-1   8    9    4   1.13  0.50  130    rounds 11 hits 9 | locked on 3.0 % of its life (2.4 / 80.4 s) | ends {"owner":4,"time":3} | 0/0
+  treehills-2   9    3    0   0.33  0.00  -      rounds 12 hits 3 | locked on 4.3 % of its life (3.8 / 88.1 s) | ends {"owner":5,"time":4} | 0/0
+  MEAN (n 8): uses 6.6/match | hits per use 0.66 | splats per use 0.25 | ink per splat 265 | locked on 8.2 % of its life
+SUMMARY 64 of 64 matches wrote a result
+
+## D.txt
+D barrage: map | uses | splats by barrages | per use | turf % A+B | deaths during it | throws by kind | err
+  calamari-1    9    1    0.11  76.0   3   {"bomb":81} | 0/0
+  calamari-2    5    0    0.00  66.4   0   {"bomb":63} | 0/0
+  halyard-1     4    0    0.00  73.0   1   {"bomb":41} | 0/0
+  halyard-2     3    0    0.00  72.0   0   {"bomb":40} | 0/0
+  saltpan-1     6    0    0.00  68.3   2   {"bomb":62} | 0/0
+  saltpan-2     3    0    0.00  57.8   1   {"bomb":36} | 0/0
+  treehills-1   4    1    0.25  62.8   3   {"bomb":21} | 0/0
+  treehills-2   4    0    0.00  63.9   1   {"bomb":38} | 0/0
+  MEAN (n 8): uses 4.8/match | splats per use 0.05 | inked 67.5 % (A+B; ÷ uses: 14.22 %/use, rough) | deaths during the special 0.29/use
+D barrage_mystery: map | uses | splats by barrages | per use | turf % A+B | deaths during it | throws by kind | err
+  calamari-1    7    1    0.14  70.2   1   {"seeker":12,"mist":11,"burst":13,"waddle":14,"sticky":12,"bomb":10} | 0/0
+  calamari-2    5    0    0.00  64.8   0   {"waddle":8,"sticky":9,"seeker":8,"burst":8,"bomb":10,"mist":8} | 0/0
+  halyard-1     3    0    0.00  72.7   1   {"bomb":4,"waddle":5,"sticky":3,"seeker":4,"mist":5,"burst":3} | 0/0
+  halyard-2     2    0    0.00  66.8   0   {"mist":3,"burst":3,"waddle":3,"sticky":3,"bomb":4,"seeker":3} | 0/0
+  saltpan-1     6    1    0.17  71.7   1   {"waddle":11,"mist":10,"burst":7,"sticky":10,"bomb":8,"seeker":10} | 0/0
+  saltpan-2     8    0    0.00  63.8   3   {"waddle":9,"bomb":8,"sticky":6,"burst":7,"mist":10,"seeker":6} | 0/0
+  treehills-1   8    1    0.13  72.5   2   {"sticky":12,"seeker":12,"bomb":11,"burst":9,"mist":11,"waddle":8} | 0/0
+  treehills-2   5    0    0.00  67.5   0   {"mist":6,"seeker":8,"burst":6,"waddle":6,"sticky":7,"bomb":7} | 0/0
+  MEAN (n 8): uses 5.5/match | splats per use 0.07 | inked 68.8 % (A+B; ÷ uses: 12.50 %/use, rough) | deaths during the special 0.18/use
+D barrage_waddle: map | uses | splats by barrages | per use | turf % A+B | deaths during it | throws by kind | err
+  calamari-1    3    0    0.00  58.4   0   {"waddle":28} | 0/0
+  calamari-2    11   1    0.09  72.0   1   {"waddle":87} | 0/0
+  halyard-1     1    0    0.00  72.9   0   {"waddle":8} | 0/0
+  halyard-2     2    0    0.00  75.3   1   {"waddle":14} | 0/0
+  saltpan-1     7    0    0.00  65.1   0   {"waddle":54} | 0/0
+  saltpan-2     7    0    0.00  67.7   4   {"waddle":41} | 0/0
+  treehills-1   2    0    0.00  56.7   0   {"waddle":17} | 0/0
+  treehills-2   4    0    0.00  67.1   0   {"waddle":35} | 0/0
+  MEAN (n 8): uses 4.6/match | splats per use 0.03 | inked 66.9 % (A+B; ÷ uses: 14.46 %/use, rough) | deaths during the special 0.16/use
+
+## E.txt
+E turf bobber: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    38   0    0   0.00  0.00  -      chains set off 2 / expired 17 / disarmed 7 (caught a foe 0, wasted 2) | splats per chain set off 0.00 | 0/0
+  calamari-2    71   2    1   0.03  0.01  2840   chains set off 5 / expired 24 / disarmed 15 (caught a foe 2, wasted 3) | splats per chain set off 0.20 | 0/0
+  halyard-1     71   0    0   0.00  0.00  -      chains set off 1 / expired 55 / disarmed 4 (caught a foe 0, wasted 1) | splats per chain set off 0.00 | 0/0
+  halyard-2     63   2    1   0.03  0.02  2520   chains set off 3 / expired 44 / disarmed 5 (caught a foe 2, wasted 1) | splats per chain set off 0.33 | 0/0
+  saltpan-1     76   2    1   0.03  0.01  3040   chains set off 5 / expired 31 / disarmed 16 (caught a foe 2, wasted 3) | splats per chain set off 0.20 | 0/0
+  saltpan-2     70   1    1   0.01  0.01  2800   chains set off 3 / expired 47 / disarmed 6 (caught a foe 1, wasted 2) | splats per chain set off 0.33 | 0/0
+  treehills-1   52   0    0   0.00  0.00  -      chains set off 3 / expired 31 / disarmed 6 (caught a foe 0, wasted 3) | splats per chain set off 0.00 | 0/0
+  treehills-2   69   2    0   0.03  0.00  -      chains set off 3 / expired 42 / disarmed 13 (caught a foe 2, wasted 1) | splats per chain set off 0.00 | 0/0
+  MEAN (n 8): uses 63.8/match | hits per use 0.02 | splats per use 0.01 | ink per splat 5100 | chains set off 25 / expired 291 / disarmed 72 (6.4 % set off) | splats per chain set off 0.16
+E turf bomb: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    24   2    1   0.08  0.04  1680    | 0/0
+  calamari-2    25   1    1   0.04  0.04  1750    | 0/0
+  halyard-1     20   2    1   0.10  0.05  1400    | 0/0
+  halyard-2     35   1    1   0.03  0.03  2450    | 0/0
+  saltpan-1     30   1    0   0.03  0.00  -       | 0/0
+  saltpan-2     28   1    0   0.04  0.00  -       | 0/0
+  treehills-1   28   1    0   0.04  0.00  -       | 0/0
+  treehills-2   32   4    3   0.13  0.09  747     | 0/0
+  MEAN (n 8): uses 27.8/match | hits per use 0.06 | splats per use 0.03 | ink per splat 2220
+E turf dash: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    20   2    1   0.10  0.05  1100   dashes 20 (ground 16, air 4) | bots' reasons {"dodge":2,"breakOff":10,"close":7,"rush":1} | sea deaths soon after 0 | streak splats 112 | 0/0
+  calamari-2    14   1    0   0.07  0.00  -      dashes 14 (ground 12, air 2) | bots' reasons {"dodge":0,"breakOff":5,"close":6,"rush":3} | sea deaths soon after 0 | streak splats 85 | 0/0
+  halyard-1     9    0    0   0.00  0.00  -      dashes 9 (ground 8, air 1) | bots' reasons {"dodge":6,"breakOff":0,"close":2,"rush":1} | sea deaths soon after 0 | streak splats 56 | 0/0
+  halyard-2     8    1    0   0.13  0.00  -      dashes 8 (ground 6, air 2) | bots' reasons {"dodge":4,"breakOff":2,"close":2,"rush":0} | sea deaths soon after 0 | streak splats 42 | 0/0
+  saltpan-1     26   4    1   0.15  0.04  1430   dashes 26 (ground 17, air 9) | bots' reasons {"dodge":5,"breakOff":9,"close":12,"rush":0} | sea deaths soon after 0 | streak splats 99 | 0/0
+  saltpan-2     6    0    0   0.00  0.00  -      dashes 6 (ground 6, air 0) | bots' reasons {"dodge":1,"breakOff":0,"close":3,"rush":2} | sea deaths soon after 0 | streak splats 41 | 0/0
+  treehills-1   18   2    1   0.11  0.06  990    dashes 18 (ground 14, air 4) | bots' reasons {"dodge":2,"breakOff":9,"close":7,"rush":0} | sea deaths soon after 0 | streak splats 107 | 0/0
+  treehills-2   10   0    0   0.00  0.00  -      dashes 10 (ground 5, air 5) | bots' reasons {"dodge":3,"breakOff":1,"close":6,"rush":0} | sea deaths soon after 0 | streak splats 45 | 0/0
+  MEAN (n 8): uses 13.9/match | hits per use 0.09 | splats per use 0.03 | ink per splat 2035 | dodges 23 (2.88/match) | sea deaths soon after a dash 0
+E turf glide: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    38   1    1   0.03  0.03  2470   blasts 38 hits 1 | cooked 7 | popped 0 sunk 0 smashed 0 bounces 75 | 0/0
+  calamari-2    44   1    1   0.02  0.02  2860   blasts 43 hits 1 | cooked 8 | popped 1 sunk 0 smashed 0 bounces 58 | 0/0
+  halyard-1     28   0    0   0.00  0.00  -      blasts 28 hits 0 | cooked 2 | popped 0 sunk 0 smashed 0 bounces 31 | 0/0
+  halyard-2     37   1    1   0.03  0.03  2405   blasts 35 hits 1 | cooked 8 | popped 1 sunk 0 smashed 0 bounces 46 | 0/0
+  saltpan-1     32   2    1   0.06  0.03  2080   blasts 32 hits 2 | cooked 6 | popped 0 sunk 0 smashed 0 bounces 50 | 0/0
+  saltpan-2     35   1    0   0.03  0.00  -      blasts 34 hits 1 | cooked 6 | popped 1 sunk 0 smashed 0 bounces 47 | 0/0
+  treehills-1   31   1    1   0.03  0.03  2015   blasts 31 hits 1 | cooked 3 | popped 0 sunk 0 smashed 0 bounces 48 | 0/0
+  treehills-2   38   0    0   0.00  0.00  -      blasts 38 hits 0 | cooked 4 | popped 0 sunk 0 smashed 0 bounces 70 | 0/0
+  MEAN (n 8): uses 35.4/match | hits per use 0.02 | splats per use 0.02 | ink per splat 3679
+E turf sentry: map | uses | enemy hits | splats by it | hits/use | splats/use | ink/splat | its own counters | err
+  calamari-1    5    12   3   2.40  0.60  108    rounds 29 hits 12 | locked on 14.2 % of its life (6.0 / 42.2 s) | ends {"shot":1,"time":2,"owner":2} | 0/0
+  calamari-2    10   4    2   0.40  0.20  325    rounds 13 hits 4 | locked on 2.8 % of its life (2.7 / 94.9 s) | ends {"owner":6,"time":4} | 0/0
+  halyard-1     5    0    0   0.00  0.00  -      rounds 0 hits 0 | locked on 0.0 % of its life (0.0 / 41.7 s) | ends {"owner":2,"time":1} | 0/0
+  halyard-2     2    0    0   0.00  0.00  -      rounds 4 hits 0 | locked on 37.0 % of its life (0.7 / 2.0 s) | ends {"owner":2} | 0/0
+  saltpan-1     6    7    4   1.17  0.67  98     rounds 15 hits 7 | locked on 3.4 % of its life (2.0 / 57.8 s) | ends {"owner":3,"time":3} | 0/0
+  saltpan-2     8    0    0   0.00  0.00  -      rounds 4 hits 0 | locked on 0.6 % of its life (0.5 / 77.3 s) | ends {"owner":3,"time":4} | 0/0
+  treehills-1   8    9    4   1.13  0.50  130    rounds 11 hits 9 | locked on 3.0 % of its life (2.4 / 80.4 s) | ends {"owner":4,"time":3} | 0/0
+  treehills-2   9    3    0   0.33  0.00  -      rounds 12 hits 3 | locked on 4.3 % of its life (3.8 / 88.1 s) | ends {"owner":5,"time":4} | 0/0
+  MEAN (n 8): uses 6.6/match | hits per use 0.66 | splats per use 0.25 | ink per splat 265 | locked on 8.2 % of its life
+
+## lines.txt
+D-barrage-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SPECIALS=all=barrage
+D-barrage_waddle-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SPECIALS=all=barrage_waddle
+D-barrage_mystery-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SPECIALS=all=barrage_mystery
+E-turf-bomb-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SUBS=all=bomb
+E-turf-glide-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SUBS=all=glide
+E-turf-sentry-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SUBS=all=sentry
+E-turf-bobber-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SUBS=all=bobber
+E-turf-dash-halyard-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SUBS=all=dash
+D-barrage-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SPECIALS=all=barrage
+D-barrage_waddle-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SPECIALS=all=barrage_waddle
+D-barrage_mystery-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SPECIALS=all=barrage_mystery
+E-turf-bomb-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SUBS=all=bomb
+E-turf-glide-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SUBS=all=glide
+E-turf-sentry-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SUBS=all=sentry
+E-turf-bobber-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SUBS=all=bobber
+E-turf-dash-halyard-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=halyard MODE=turf SECS=180 SUBS=all=dash
+D-barrage-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SPECIALS=all=barrage
+D-barrage_waddle-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SPECIALS=all=barrage_waddle
+D-barrage_mystery-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SPECIALS=all=barrage_mystery
+E-turf-bomb-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SUBS=all=bomb
+E-turf-glide-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SUBS=all=glide
+E-turf-sentry-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SUBS=all=sentry
+E-turf-bobber-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SUBS=all=bobber
+E-turf-dash-saltpan-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SUBS=all=dash
+D-barrage-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SPECIALS=all=barrage
+D-barrage_waddle-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SPECIALS=all=barrage_waddle
+D-barrage_mystery-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SPECIALS=all=barrage_mystery
+E-turf-bomb-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SUBS=all=bomb
+E-turf-glide-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SUBS=all=glide
+E-turf-sentry-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SUBS=all=sentry
+E-turf-bobber-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SUBS=all=bobber
+E-turf-dash-saltpan-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=saltpan MODE=turf SECS=180 SUBS=all=dash
+D-barrage-calamari-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SPECIALS=all=barrage
+D-barrage_waddle-calamari-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SPECIALS=all=barrage_waddle
+D-barrage_mystery-calamari-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SPECIALS=all=barrage_mystery
+E-turf-bomb-calamari-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SUBS=all=bomb
+E-turf-glide-calamari-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SUBS=all=glide
+E-turf-sentry-calamari-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SUBS=all=sentry
+E-turf-bobber-calamari-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SUBS=all=bobber
+E-turf-dash-calamari-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SUBS=all=dash
+D-barrage-calamari-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SPECIALS=all=barrage
+D-barrage_waddle-calamari-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SPECIALS=all=barrage_waddle
+D-barrage_mystery-calamari-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SPECIALS=all=barrage_mystery
+E-turf-bomb-calamari-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SUBS=all=bomb
+E-turf-glide-calamari-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SUBS=all=glide
+E-turf-sentry-calamari-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SUBS=all=sentry
+E-turf-bobber-calamari-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SUBS=all=bobber
+E-turf-dash-calamari-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=calamari MODE=turf SECS=180 SUBS=all=dash
+D-barrage-treehills-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SPECIALS=all=barrage
+D-barrage_waddle-treehills-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SPECIALS=all=barrage_waddle
+D-barrage_mystery-treehills-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SPECIALS=all=barrage_mystery
+E-turf-bomb-treehills-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SUBS=all=bomb
+E-turf-glide-treehills-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SUBS=all=glide
+E-turf-sentry-treehills-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SUBS=all=sentry
+E-turf-bobber-treehills-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SUBS=all=bobber
+E-turf-dash-treehills-1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SUBS=all=dash
+D-barrage-treehills-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SPECIALS=all=barrage
+D-barrage_waddle-treehills-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SPECIALS=all=barrage_waddle
+D-barrage_mystery-treehills-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SPECIALS=all=barrage_mystery
+E-turf-bomb-treehills-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SUBS=all=bomb
+E-turf-glide-treehills-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SUBS=all=glide
+E-turf-sentry-treehills-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SUBS=all=sentry
+E-turf-bobber-treehills-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SUBS=all=bobber
+E-turf-dash-treehills-2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/int3-JOB-3-1016-1327/head MAP=treehills MODE=turf SECS=180 SUBS=all=dash
