@@ -714,29 +714,37 @@ export class Actor {
 
   // [b5-int3] how far along (dx, dz) a kid sliding from here gets off the roof it's on: the first 0.3 m step where no part
   // of its footprint is over an off-limits top (a drop — over 0.6 m down, or none — or a top that isn't off-limits for it)
-  // — Infinity when a wall (knee or chest high) shuts that way first, or none within 8 m
+  // and stays so for the next 0.6 m (it is still sliding on as it drops) — Infinity when a wall (knee or chest high) shuts
+  // that way first, or none within 8 m
   _roofExitDist(dx, dz, maxD = 8) {
     const FOOT = PLAYER.footRadius;   // [b5-int3]
     const y = this.pos.y, O = _rxO, D = _rxD, H = _rxH, L = G.level;
-    let px = this.pos.x, pz = this.pos.z;
-    D.set(dx, 0, dz);
-    for (let s = 0.3; s <= maxD + 1e-6; s += 0.3) {
-      for (const h of [0.5, 1.1]) if (G.physics.raycast(O.set(px, y + h, pz), D, 0.3 + PLAYER.radius, H).hit && Math.abs(H.normal.y) < 0.5) return Infinity;
-      px += dx * 0.3; pz += dz * 0.3;
-      // (off when no part of the feet is over an off-limits top: the centre and the footprint's four points — a kid's feet
-      // are held by any top the footprint covers, so a gap narrower than it is no way off: crossmarket's row of balconettes
-      // 0.75 m apart sent a kid sliding off one onto the next and back for 3 s)
+    const wall = (px, pz) => { D.set(dx, 0, dz); for (const h of [0.5, 1.1]) if (G.physics.raycast(O.set(px, y + h, pz), D, 0.3 + PLAYER.radius, H).hit && Math.abs(H.normal.y) < 0.5) return true; return false; };
+    // (the feet over an off-limits top here: the centre and the footprint's four points — a kid's feet are held by any top
+    // the footprint covers, so a gap narrower than it is no way off: crossmarket's row of balconettes 0.75 m apart sent a
+    // kid sliding off one onto the next and back for 3 s)
+    const over = (px, pz) => {
       D.set(0, -1, 0);
-      let still = false;
-      for (let k = 0; k < 5 && !still; k++) {
+      for (let k = 0; k < 5; k++) {
         const ox = k === 1 ? FOOT : k === 2 ? -FOOT : 0, oz = k === 3 ? FOOT : k === 4 ? -FOOT : 0;
         const g = G.physics.raycast(O.set(px + ox, y + 0.3, pz + oz), D, 8, H);
         if (!g.hit || H.point.y < y - 0.6) continue;
         const gb = L.blocks[H.block];
-        if (gb && this.isRoofFor(gb)) still = true;
+        if (gb && this.isRoofFor(gb)) return true;
       }
-      D.set(dx, 0, dz);
-      if (!still) return s;
+      return false;
+    };
+    let px = this.pos.x, pz = this.pos.z;
+    for (let s = 0.3; s <= maxD + 1e-6; s += 0.3) {
+      if (wall(px, pz)) return Infinity;
+      px += dx * 0.3; pz += dz * 0.3;
+      if (over(px, pz)) continue;
+      // (and clear for the next 0.6 m — a wall there ends the look: it drops beside it. At 1/24 a kid sliding 3.5 m/s off the
+      // end of one balconette crossed the 0.43 m where neither holds its feet in three frames, dropped 2 cm, and the next one's
+      // end caught it — back and forth for 3 s, dash-reach.js 1/24)
+      let qx = px, qz = pz, clear = true;
+      for (let j = 0; j < 2 && clear; j++) { if (wall(qx, qz)) break; qx += dx * 0.3; qz += dz * 0.3; if (over(qx, qz)) clear = false; }
+      if (clear) return s;
     }
     return Infinity;
   }

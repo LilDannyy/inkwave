@@ -653,6 +653,24 @@
       };
       const rs = roofTrial();
       R('a kid landed on a roof slides off by the way that gets it off soonest: off a 2 m wide roof strip within 1 s, where its nearest edge runs on along the next roof block into a wall', rs.offT != null && rs.offT <= 1.0, rs);
+      // [b5-int3] a row of rail tops that are roofs 0.75 m apart (crossmarket's balconettes: 1.5 × 0.42, top 2.4 here), a wall
+      // behind them, the street 2.4 m below in front: a kid on the end of one, its centre 0.13 m out over the gap (its feet
+      // held by the footprint), slides off their open front to the street — at 1/24 s a frame it went from one end to the
+      // next one's and back for 3 s (dash-reach.js 1/24: the way off along the row looked clear 0.3 m on, over the gap)
+      const balcTrial = (dt) => {
+        unbox(); const hr0 = L.hasRails; L.hasRails = true;
+        box(-1.125, 1.88, Z, 0.75, 0.52, 0.21, 0, { rail: true, roof: true });
+        box(1.125, 1.88, Z, 0.75, 0.52, 0.21, 0, { rail: true, roof: true });
+        box(0, 2.5, Z + 0.71, 3, 2.5, 0.5);                              // the building face behind them
+        put(me, -0.245, 2.42, Z - 0.17, 0);
+        let downT = null, t = 0;
+        sim(me, Math.round(3 / dt), dt, {}, () => { t += dt; if (downT == null && me.pos.y < 1.2) { downT = t; return false; } });
+        const r = { dt: Math.round(1 / dt), downT: downT == null ? null : r2(downT), at: [r2(me.pos.x), r2(me.pos.y), r2(me.pos.z)] };
+        L.hasRails = hr0; unbox();
+        return r;
+      };
+      const bal24 = balcTrial(1 / 24), bal60 = balcTrial(1 / 60);
+      R(`a kid on the end of one of a row of rail-top roofs 0.75 m apart (crossmarket's balconettes) is down in the street within 1 s — at 1/24 s a frame ${bal24.downT} s, at 1/60 ${bal60.downT} s`, bal24.downT != null && bal24.downT <= 1.0 && bal60.downT != null && bal60.downT <= 1.0, { bal24, bal60 });
     }
     if (run('bots')) {
       home();
