@@ -79,6 +79,11 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
   const grabShare = async (N = 10, kid = false) => {
     const bot = kid ? aNid : await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
     const wins = { bot: 0, guest: 0, none: 0 }, dec = [];
+    // (each page's frame rate and sim speed meanwhile: a touch is timed on its own screen's simulation, so a page running
+    // at a lower frame rate covers the 1.7 m in more of its sim time — its actors arrive later)
+    const fps0 = `(() => { window.__fr = 0; window.__frT = performance.now(); window.__frK = __G.match.karp.clock; if (!window.__frOn) { window.__frOn = 1; (function f() { window.__fr++; requestAnimationFrame(f); })(); } return 1; })()`;
+    const fps1 = `(() => { const s = (performance.now() - window.__frT) / 1000; return { fps: +(window.__fr / s).toFixed(1), sim: +((__G.match.karp.clock - window.__frK) / s).toFixed(2) }; })()`;
+    await A.js(fps0); await B.js(fps0);
     for (let k = 0; k < N; k++) {
       await toPond();
       // (3 m either side of where it really rests — the Pond's resting point isn't exactly x 0: at ±3 from x 0, B stood
@@ -103,7 +108,8 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
       await wait(300);
     }
     const wpn = await J(A, `(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}), g = __G.match.actors.find((o) => o.nid === ${bNid}); return { bot: b.weaponId, guest: g.weaponId }; })()`);
-    R(`5${kid ? 'k' : ''}. grab share over ${N} bursts, ${kid ? 'the host\'s own player' : 'a host bot'} vs guest B at equal distance (reported; no threshold)`, wins.bot + wins.guest >= N - 2, { wins, wpn, at: (await info(A)).pos, dec });
+    const frames = { host: await J(A, fps1), guest: await J(B, fps1) };
+    R(`5${kid ? 'k' : ''}. grab share over ${N} bursts, ${kid ? 'the host\'s own player' : 'a host bot'} vs guest B at equal distance (reported; no threshold)`, wins.bot + wins.guest >= N - 2, { wins, wpn, frames, at: (await info(A)).pos, dec });
 
   };
 
