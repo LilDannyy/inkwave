@@ -111,6 +111,16 @@
       said >= 3 && places <= 10 && !gameBefore && !!before && !!after2.era && !!after2.game && apart(after2.era, after2.game) && after2.era[0] >= after2.game[1] - 0.5 && after2.era[0] > before[0] + 2,
       { frames, said, places, gameBefore, before: before && before.map(Math.round), after: { era: after2.era?.map(Math.round), game: after2.game?.map(Math.round) } });
     tAt(E.next ? E.next.at + W.doneOff + 0.5 : E.S.clock.t);
+    // the HUD's banners too: in a 3:00 Turf War "1 minute left!" comes at the very moment jump 2 starts (the "3000s"
+    // banner): the era band moves below it
+    for (let i = 0; i < 40 && document.querySelector('.er-call, .iw-call'); i++) await new Promise((r) => setTimeout(r, 150));
+    __G.hud.banner('one_minute');
+    E._say('3000s', 'TIME JUMP', true);
+    await settle(); step(2 / 60); await settle();
+    const bnEl = document.querySelector('.iw-banners .iw-bn'), bl = bnEl && bnEl.parentElement.getBoundingClientRect();
+    const bn = bnEl ? [bl.top + bnEl.offsetTop - bnEl.offsetHeight / 2, bl.top + bnEl.offsetTop + bnEl.offsetHeight / 2] : null, eb = boxOf('.er-call');
+    R('step 9 (HUD): the HUD\'s banners too — "1 minute left!" and the 3000s banner together (a 3:00 Turf War\'s jump 2): the era band sits below the HUD\'s banner, covering neither it nor the chip',
+      !!bn && !!eb && apart(eb, bn) && eb[0] >= bn[1] - 0.5 && apart(eb, chipBox()), { banner: bn && bn.map(Math.round), era: eb && eb.map(Math.round), chip: chipBox().map(Math.round), text: bnEl?.textContent });
   }
 
   // the minimap: one base per era (pixel hash), outlines during the warning in the layout's colours

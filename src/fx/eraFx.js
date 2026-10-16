@@ -417,9 +417,18 @@ export class EraFx {
       let len = 0; for (let i = 1; i < pts.length; i++) { const d = pts[i].distanceTo(pts[i - 1]); seg.push(d); len += d; }
       this.wires.push({ pts, seg, len });
     }
-    this.beadsPer = 6;
+    // the wires themselves, faint, so the beads read as pulses running out along them from the dome (shown with the beads)
+    const wl = [];
+    for (const w of this.wires) for (let i = 1; i < w.pts.length; i++) wl.push(...w.pts[i - 1].toArray(), ...w.pts[i].toArray());
+    if (wl.length) {
+      const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wl, 3));
+      this.wireLines = new THREE.LineSegments(wg, new THREE.LineBasicMaterial({ color: this.colA, transparent: true, opacity: 0.0, depthWrite: false, toneMapped: false }));
+      this.wireLines.name = 'EraWires'; this.wireLines.frustumCulled = false; this.wireLines.visible = false; this.wireLines.renderOrder = 12;
+      this.group.add(this.wireLines);
+    }
+    this.beadsPer = 8;
     const n = this.wires.length * this.beadsPer;
-    this.beads = n ? new THREE.InstancedMesh(new THREE.SphereGeometry(0.2, 10, 8), new THREE.MeshBasicMaterial({ color: this.colA, toneMapped: false }), n) : null;
+    this.beads = n ? new THREE.InstancedMesh(new THREE.SphereGeometry(0.24, 10, 8), new THREE.MeshBasicMaterial({ color: this.colA, toneMapped: false }), n) : null;
     if (this.beads) { this.beads.name = 'EraWireBeads'; this.beads.frustumCulled = false; this.beads.visible = false; this.group.add(this.beads); }
   }
   _wireAt(w, s, out) {
@@ -503,6 +512,7 @@ export class EraFx {
       p.sp.scale.setScalar(camP ? Math.min(1.1, Math.max(0.12, camP.distanceTo(p.sp.position) * 0.085)) : 1.1);
     }
     // the wire beads (the warning)
+    if (this.wireLines) { const on = st.phase === 'warn'; this.wireLines.visible = on; if (on) this.wireLines.material.opacity = 0.55 * (st.warnIn ?? 1); }
     if (this.beads) {
       const on = st.phase === 'warn';
       this.beads.visible = on;
@@ -511,7 +521,7 @@ export class EraFx {
         for (const w of this.wires) for (let i = 0; i < this.beadsPer; i++) {
           const s = ((t * 0.5 + i / this.beadsPer) % 1);
           this._wireAt(w, s, _v);
-          _m4.compose(_v, _q.identity(), _s.setScalar(0.6 + 0.6 * Math.sin(Math.PI * s)));
+          _m4.compose(_v, _q.identity(), _s.setScalar((0.8 + 0.8 * Math.sin(Math.PI * s)) * (st.warnIn ?? 1)));
           this.beads.setMatrixAt(k++, _m4);
         }
         this.beads.instanceMatrix.needsUpdate = true;
@@ -524,7 +534,7 @@ export class EraFx {
         m.visible = show;
         const Uh = m.material.uniforms;
         Uh.uT.value = U.uEraT.value; Uh.uFront.value = st.phase === 'jump' ? st.front : -1;
-        Uh.uA.value = (m.isLineSegments ? 0.35 + 0.1 * Math.sin(U.uEraT.value * Math.PI * 4) : 0.1 + 0.04 * Math.sin(U.uEraT.value * Math.PI * 4)) * Math.min(1, st.warnK * 3 + (st.phase === 'jump' ? 1 : 0));
+        Uh.uA.value = (m.isLineSegments ? 0.35 + 0.1 * Math.sin(U.uEraT.value * Math.PI * 4) : 0.1 + 0.04 * Math.sin(U.uEraT.value * Math.PI * 4)) * (st.phase === 'jump' ? 1 : (st.warnIn ?? Math.min(1, st.warnK * 3)));
       }
     }
     // the curtain riding the front (10 m tall)
@@ -624,8 +634,9 @@ export class EraHud {
     this._dirty = false;
     if (typeof MutationObserver === 'function') {
       this._mo = new MutationObserver(() => { this._dirty = true; });
-      const HC = G.hud?.callouts;
+      const HC = G.hud?.callouts, BL = G.hud?.bannerLayer;
       if (HC) this._mo.observe(HC, { childList: true });
+      if (BL) this._mo.observe(BL, { childList: true });   // (the HUD's banners: "1 minute left!" comes with jump 2 in a 3:00 Turf War)
       this._mo.observe(host, { childList: true });
       this._zcObserved = null;
     }
@@ -648,8 +659,9 @@ export class EraHud {
     return el;
   }
   // the band's place while an era callout shows: the HUD's callout slot (27 % of the HUD), moved down past what is
-  // there — the chip (docked under Zone Control's / Tower Command's HUD it sits lower), a gameplay callout (it may come
-  // later: checked every frame), Zone Control's callouts. Layout boxes, so the callouts' entry scale does not count.
+  // there — the chip (docked under Zone Control's / Tower Command's HUD it sits lower), a gameplay callout, Zone Control's
+  // callouts, the HUD's banners ("1 minute left!"); placed again whenever one of those comes or goes (the observer).
+  // Layout boxes, so the callouts' entry scale does not count.
   _place() {
     const c = this.calls, call = c?.lastElementChild, host = c?.parentElement;
     if (!call || !host) return;
@@ -663,6 +675,9 @@ export class EraHud {
     if (HC) { const r = HC.getBoundingClientRect(); for (const el of HC.children) clear(r.top - el.offsetHeight / 2, r.top + el.offsetHeight / 2); }
     const ZC = host.querySelector('.iw-zcalls');
     if (ZC) { const r = ZC.getBoundingClientRect(); for (const el of ZC.children) clear(r.top + el.offsetTop, r.top + el.offsetTop + el.offsetHeight); }
+    // the HUD's banners (centred on their top by a translate: layout boxes, the entry animations left out)
+    const BL = G.hud?.bannerLayer;
+    if (BL) { const r = BL.getBoundingClientRect(); for (const el of BL.children) { const hh = el.offsetHeight; if (hh) clear(r.top + el.offsetTop - hh / 2, r.top + el.offsetTop + hh / 2); } }
     if (ZC && this._mo && this._zcObserved !== ZC) { this._zcObserved = ZC; this._mo.observe(ZC, { childList: true }); }   // (Zone Control's callouts: watched from their first sighting)
     const pct = (((top + h / 2 - H.top) / H.height) * 100).toFixed(2) + '%';
     if (c.style.top !== pct) c.style.top = pct;

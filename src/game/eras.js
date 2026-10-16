@@ -1070,7 +1070,8 @@ export class StageEras {
     const ringK = this._ringAt !== undefined && t - this._ringAt < this._ringLen ? 1 - (t - this._ringAt) / this._ringLen : 0;
     const pick = J && t >= J.at - 1 && t < J.at + 1.2 ? 1 : 0;
     const beam = J && t >= J.at - 1 && t < J.at + 0.6 ? Math.min(1, (t - (J.at - 1)) / 0.3) * (t > J.at + 0.3 ? 1 - (t - J.at - 0.3) / 0.3 : 1) : 0;
-    W.fx?.update(1 / 60, { t, jump: J, phase, front, warnK, ring: ringK, pickup: pick, beam });
+    const warnIn = J && phase === 'warn' ? Math.min(1, (t - J.warnAt) / 0.6) : 0;   // (the holograms and wires: up within 0.6 s of the warning)
+    W.fx?.update(1 / 60, { t, jump: J, phase, front, warnK, warnIn, ring: ringK, pickup: pick, beam });
     // the front's ticking whoosh rides the front where it passes you
     if (this._fz && phase === 'jump' && G.camera) {
       const cam = G.camera.position, d = Math.hypot(cam.x, cam.z) || 1, near = Math.abs(d - front);
