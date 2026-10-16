@@ -1883,7 +1883,10 @@ West to east:
   and the strip test's bollards and trough on the east track (not in Tower Command);
 - **the GPO**: its building (6 m) on Customs Lane's corner. **It has no clock tower in the blockout.** In the Z, the
   dome stands 10–22° east of Swimston's axis as seen from the spawn deck, exactly behind the GPO's corner, so any tower
-  there hides the landmark. The art pass puts the GPO's clock on its parapet, under the dome's line. Its **portico terrace** (1.2) runs along x −13 … −9.5, z −42 … −29, with
+  there hides the landmark. The art pass puts the GPO's clock on its parapet, under the dome's line. **The same holds in
+  every era** (engine review, fix round 1): the GPO carries no rooftop superstructure (§5.2's GPO tower and shell stand on
+  the tram shed beside the spawn deck instead), and the hotel's extension and spire rise straight behind its turret, west
+  of the dome's rim; `eras-look` part 3 keeps the dome in sight from both spawns in every era. Its **portico terrace** (1.2) runs along x −13 … −9.5, z −42 … −29, with
   steps down to Swimston (3 m, 21.8°), two piers and a planter;
 - **Degrayling Lane**, Swimston ↔ the quay at z −29 … −22.5: produce stacks shut its west half in the 1880s; from
   today it has café tables in their footprint;

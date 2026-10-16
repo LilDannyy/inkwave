@@ -1,0 +1,23 @@
+PASS  the stage as built: no objective, waterline, reach or river-rail problem in any mode build (turf, tower, bazookarp, boss, zones) or era
+      {"problems":[],"nearest":{"spawn":{"d":15.92,"msg":"goods-wagon","mode":"turf"},"reach":{"d":84.53,"msg":"boiler-house","mode":"turf"},"tower":{"d":1.38,"msg":"halo over the headroom","mode":"tower"},"karp":{"d":4.5,"msg":"cab-shelter / a weir","mode":"bazookarp"},"zone":{"d":3.5,"msg":"cab-shelter","mode":"zones"}}}
+PASS  the nearest era piece to each objective, as the review measured it: a pad 15.9 m (rule ≥ 12), a zone 3.5 m (≥ 2), a weir 4.5 m from its centre (≥ 3), the tower's swept volume ≥ 1 m, the reach ≤ 85 m
+      {"spawn":{"d":15.92,"msg":"goods-wagon","mode":"turf"},"reach":{"d":84.53,"msg":"boiler-house","mode":"turf"},"tower":{"d":1.38,"msg":"halo over the headroom","mode":"tower"},"karp":{"d":4.5,"msg":"cab-shelter / a weir","mode":"bazookarp"},"zone":{"d":3.5,"msg":"cab-shelter","mode":"zones"}}
+PASS  the river rails are found in every era (a rail with open water along one long side)
+      {"rails":[16,28,20]}
+PASS  planted, rule 14 (12 m of a spawn pad): an era-2 crate 10 m in front of Alpha's pad: check-maps fails with that rule
+      {"hits":["[turf] planted [planted:a] changes 10.00 m from the spawn pad at (-18, -64.5) (rule 14: ≥ 12)","[tower] planted [planted:a] changes 10.00 m from the spawn pad at (-18, -64.5) (rule 14: ≥ 12)"],"other":2}
+PASS  planted, rule 15 (2 m of a zone, any height): an era-3 roof box 1.5 m beside the side zone, 4 m up: check-maps fails with that rule
+      {"hits":["[zones] planted [planted:a] changes 1.50 m from a zone outline (rule 15: ≥ 2)"],"other":1}
+PASS  planted, rule 16 (the tower's swept platform + headroom): an era-2 box across the tower track on Swimston's east track: check-maps fails with that rule
+      {"hits":["[tower] planted [planted:b] (y 0.00–1.00) changes 0.00 m from the tower's track at (19.5, 30.0), inside its swept platform + headroom (floor 0.00; rule 16: 1 m clear of ±1.25 m, floor − 1 … floor + 3.72 + 1)"],"other":0}
+PASS  planted, rule 17 (3 m of a weir): an era-2 box 2 m from Bravo's weir: check-maps fails with that rule
+      {"hits":["[bazookarp] planted [planted:b] changes 2.00 m from a weir at (21, 15) (rule 17: ≥ 3)"],"other":1}
+PASS  planted, rule 36 (an era-only waterline deck slab): an era-2 deck in the river, top 0, bottom −1.5: check-maps fails with that rule
+      {"hits":["[turf] planted [planted:a] is an era-only deck slab: top 0, bottom -1.5 (rule 36: bottom ≥ −1.0)","[tower] planted [planted:a] is an era-only deck slab: top 0, bottom -1.5 (rule 36: bottom ≥ −1.0)"],"other":0}
+PASS  planted, rule 37 (the reach ≤ 85 m): an era-2 box 86 m from Tartar: check-maps fails with that rule
+      {"hits":["[turf] planted reaches 86.51 m from (0, 0) (rule 37: ≤ 85)","[tower] planted reaches 86.51 m from (0, 0) (rule 37: ≤ 85)"],"other":0}
+PASS  planted, the river rails (T2: a rail that borders water ends on land or on another rail): one cut 1.5 m short, check-maps fails
+      {"rail":"half[275] punt-rail","cut":"min x 1.5 m","problem":"[turf] #1 the rail punt-rail (half[275]) ends at (-4.50, -45.94) with the water's edge open past it (T2: a river rail ends on land or on another rail)"}
+PASS  the turf rules (11–13): in-range numbers pass; era 2 +12 %, era 3 below era 2, era 3 +26.6 %, 9 % vanishing in one jump each fail with their rule
+      [["rule 11","era 2's turf 11200 m² is 12.0 % off era 1's 10000 (rule 11: within ±10 %)"],["rule 12 (takes away)","era 3's turf 10000 m² is below era 2's 10270 (rule 12: era 3 never takes turf away)"],["rule 12 (over +25 %)","era 3's turf 13000 m² is 26.6 % over era 2's (rule 12: ≤ +25 %)"],["rule 13","jump 1>2: 900 m² of era 1's turf vanishes, 9.0 % (rule 13: ≤ 8 %)"]]
+RESULT eras-static 11/11
