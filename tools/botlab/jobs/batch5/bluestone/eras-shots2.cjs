@@ -7,6 +7,7 @@
 // and the TAB map in each era; a bot standing on the Halo; the rescue over the river in Practice's rewind; the lightmap
 // probe (once bluestone.png is baked: the R and G channels of the street beside the era-1 crates). ONLY=fr1: the final
 // review's done + 0.5 pictures (the opened lane and the wagon's footprint outlined on the floor, the minimap's ping).
+// ONLY=fr2: the final review 2's jump chip at J + 1.5 (the frame and the chip's crop, 2×).
 const { app } = require('electron');
 const fs = require('fs');
 require(process.env.S + '/offscreen-boot.cjs');
@@ -116,6 +117,13 @@ app.on('browser-window-created', (_, win) => {
     await at(61.5);
     await shot('jump1-knee-J+1.5', CAM.knee, { hud: true });
     await shot('jump1-quay-J+1.5', CAM.quay, { hud: true });
+    // (the final review 2, issue 3: the chip through the jump — "TIME JUMP!" dark on the white-gold chip; the frame and the
+    //  chip's crop, 2×)
+    await shot('fr2-jump1-knee-J+1.5', CAM.knee, { hud: true });
+    if (want('fr2-chip') && frame) {
+      const r = await js(`(() => { const c = document.querySelector('.er-chip'); if (!c) return null; const b = c.getBoundingClientRect(), d = window.devicePixelRatio || 1; return { x: b.left * d, y: b.top * d, w: b.width * d, h: b.height * d, text: c.textContent, cls: c.className }; })()`);
+      if (r) { const pad = 24, sz = frame.getSize(), k = sz.width / W, x = Math.max(0, Math.round(r.x / (k || 1) * k - pad)), y = Math.max(0, Math.round(r.y - pad)); const img = frame.crop({ x, y, width: Math.min(sz.width - x, Math.round(r.w + pad * 2)), height: Math.min(sz.height - y, Math.round(r.h + pad * 2)) }); const big = img.resize({ width: img.getSize().width * 2, quality: 'best' }); fs.writeFileSync(`${OUT}/fr2-chip-J+1.5.jpg`, big.toJPEG(90)); console.log('shot fr2-chip-J+1.5', JSON.stringify(r)); }
+    }
     await at(62.0);
     await shot('timelapse-sky-J+2.0', CAM.sky);
     await at(62.05);

@@ -27,4 +27,11 @@ CLIENTS=2 URLQ=wipstages WIPSTAGES=1 NET=tools/botlab/tests/net-eras.cjs WATCHDO
 grep -E '^(PASS|FAIL)|^RESULT|HARNESS' "$J/net-eras.log" | cut -c1-700 > "$J/net-eras.txt"
 CLIENTS=2 URLQ='wipstages&netlag=150&netjitter=50' WIPSTAGES=1 NET=tools/botlab/tests/net-eras.cjs NET_ARGS='only=turf' WATCHDOG=1200000 $R tools/botlab/netpage.cjs > "$J/net-eras-lag.log" 2>&1
 grep -E '^(PASS|FAIL)|^RESULT|HARNESS' "$J/net-eras-lag.log" | cut -c1-900 > "$J/net-eras-lag.txt"
+# (final review 2) the online clock under lag (tests/net-clock.cjs: never up, each second and each count once), and the
+# GPU probe (probe-gpu.js: each frame of jump 1 and of the kept world's 3 → 1 timed with gl.finish, as is and with the
+# curtain / the holograms / the env rebuild off — whose a spike is, on a quiet machine)
+CLIENTS=2 URLQ='netlag=150&netjitter=50' NET=tools/botlab/tests/net-clock.cjs WATCHDOG=900000 $R tools/botlab/netpage.cjs > "$J/net-clock-lag.log" 2>&1
+grep -E '^(PASS|FAIL)|^RESULT' "$J/net-clock-lag.log" | cut -c1-700 > "$J/net-clock-lag.txt"
+MAP=bluestone PAGE=tools/botlab/jobs/batch5/bluestone/probe-gpu.js WATCHDOG=900000 $R tools/botlab/page.cjs > "$J/probe-gpu.log" 2>&1
+grep -E '^(PASS|FAIL)|^RESULT' "$J/probe-gpu.log" | cut -c1-1200 > "$J/probe-gpu.txt"
 echo "RESULT done"
