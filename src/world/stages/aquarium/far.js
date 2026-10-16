@@ -57,7 +57,7 @@ export function buildFar(kit, P) {
     const t = i / 10, x = A[0] + (Bq[0] - A[0]) * t, y = A[1] + (Bq[1] - A[1]) * t, z = A[2] + (Bq[2] - A[2]) * t;
     st.push(xf(box(0.7, y + 1.6 - 0.9, 0.7, GL), x, (y - 0.9 - 1.6) / 2, z));
     st.push(xf(cyl(1.05, 1.05, 0.35, 14, '#a8895a'), x, y, z, 0, 0, Math.PI / 2));
-    st.push(xf(sph(0.13, 8, 6, '#ffe2b0', 0.55), x, y + 1.12, z));   // (the collar's lamp: lit at dusk)
+    st.push(xf(sph(0.17, 8, 6, '#ffe2b0', 0.7), x, y + 1.14, z));   // (the collar's lamp: lit at dusk)
   }
   // the streak: a warm capsule running out along the tube every 7 s
   const streakMat = new T.MeshBasicMaterial({ color: '#fff0d0', transparent: true, opacity: 0.0, depthWrite: false });

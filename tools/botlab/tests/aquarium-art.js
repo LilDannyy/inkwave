@@ -153,7 +153,7 @@
     const { buildFar } = await import('./src/world/stages/aquarium/far.js');
     const C30 = Math.cos(Math.PI / 6), far0 = buildFar({ ...SCENERY_KIT, THREE }, { W: (s, w) => [0.5 * s + C30 * w, -32.5 - C30 * s + 0.5 * w] });
     let tubeGlow = -1, lamps = 0;
-    for (const gg of far0.static) { gg.computeBoundingBox(); const b = gg.boundingBox, gl0 = Math.max(...gg.attributes.glow.array); if (b.max.x - b.min.x > 150 && b.max.y - b.min.y < 12) tubeGlow = Math.max(tubeGlow, gl0); else if (b.max.x - b.min.x < 0.3 && b.min.y > 3 && gl0 > 0.3) lamps++; }
+    for (const gg of far0.static) { gg.computeBoundingBox(); const b = gg.boundingBox, gl0 = Math.max(...gg.attributes.glow.array); if (b.max.x - b.min.x > 150 && b.max.y - b.min.y < 12) tubeGlow = Math.max(tubeGlow, gl0); else if (b.max.x - b.min.x < 0.4 && b.min.y > 3 && gl0 > 0.3) lamps++; }
     R('the Deep Dome\'s tube is unlit glass, with a small lamp on each of its nine collars', tubeGlow === 0 && lamps === 9, { tubeGlow, lamps });
     // (e) the Fin Pavilion's plaza fascia is dressed (pilasters, frieze, skirting, portholes, roundels) from 4–8 cm in front of
     // its face, nothing on the spawn deck's walkable top (3.38)
