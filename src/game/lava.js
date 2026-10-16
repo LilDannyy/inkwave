@@ -1161,6 +1161,15 @@ export class StageLava {
     // (the brain replaced or dropped it — a goal pick, a zone guard holding its ground: put it back; a route the lava
     // shuts is dropped by _replanBots, one the body can't follow by _steer's slip rule below)
     if (L.path && b.path !== L.path) { b.path = L.path; b.pi = L.pi; b.goal = L.goal; }
+    // (fix round 4, review 4 issue 4: a route whose next waypoint stands > 0.9 m over its feet on a walk edge — it slipped
+    // off, or its column hop fell back after the waypoint advance had passed the hop's node — is planned again from where
+    // it stands: a bow stood 6 s at Organ A~'s foot after a failed hop, its route's next edge a walk along A~'s top, and
+    // another under the Horn Step's lip; _steer's own slip rule waits for 1.2 m, and the claim put the route back each frame)
+    const ry = (q) => (q && M.kind[q.id] === 2 && this.riders[M.rider[q.id]] ? this.riders[M.rider[q.id]].top : q ? q.y : 0);
+    if (L.path && b.path === L.path && b.pi > 0 && b.pi < b.path.length && a.grounded) {
+      const n = nav.nodes[b.path[b.pi]], et = nav.edgeType(b.path[b.pi - 1], b.path[b.pi]);
+      if (ry(n) - a.pos.y > 0.9 && et !== 'jump' && et !== 'climb') { L.path = null; L.reT = 0; b.path = null; this.stats.lookReplans = (this.stats.lookReplans || 0) + 1; }
+    }
     const atEnd = !L.path || !b.path || b.pi >= b.path.length;
     if ((atEnd || L.goal === L.foot) && (L.reT -= dt) <= 0) {
       L.reT = 0.8;
@@ -1180,22 +1189,22 @@ export class StageLava {
       L.pi = b.pi;
       // up a column's hop: the trigger off, so the press is a jump (a Twinfire's jump while firing is a dodge roll, and a
       // claimant with them never got up)
-      // (fix round 3: and the hop asked for from there once the walk to the column's edge stalls — the brain's own jump
-      // trigger waits for 1.6 m, and a claimant landing on A's far side stood 2.1 m from B's node, B's face in its way:
-      // lava.js F10, one run in three; the hop's flight is checked as every route hop near the lava, bots.js _hopLands)
-      // (and on enemy ink a jump reaches 0.73 m, short of the next column's 1.15 m: the hop's flight falls back, bots.js
-      // refuses it, and with its trigger off the claimant stood at the face — 20 s on organ B~ in a Zone Control match. It
-      // inks the deck at its feet first, as an escaper does at a step: aimed down behind it, 1.5 s per column at most)
+      // (fix round 3: on enemy ink a jump reaches 0.73 m, short of the next column's 1.15 m: it inks the deck at its feet
+      // first, as an escaper does at a step: aimed down behind it, 1.5 s per column at most)
+      // (fix round 4: within 2.4 m of the column it steps up as an escaper does — straight at the node, the hop asked for at
+      // once and every frame till it is made (bots.js judges each press by the flight steered at the node, hopCheck, and a
+      // refused press costs no cool-down), pressed against the face straight across it; the guards off where its line is
+      // floor. It asked only once its walk had stalled 0.3 s, and a bow drawing in a duel never stalls: 2 s per column)
       if (b.path && b.pi > 0 && b.pi < b.path.length && nav.edgeType(b.path[b.pi - 1], b.path[b.pi]) === 'jump') {
-        const n = nav.nodes[b.path[b.pi]];
-        if (Math.hypot(n.x - a.pos.x, n.z - a.pos.z) < 2.4) {
+        const n = nav.nodes[b.path[b.pi]], ny = ry(n), dh = Math.hypot(n.x - a.pos.x, n.z - a.pos.z);
+        // (from 3.5 m where the column top's floor runs to the seam: the edge guard stopped a bow 3.3 m off Organ B's node, 1 m
+        // short of A's edge — the seam reads as lava — for 2 s)
+        const lineOk = dh < 3.5 && this._lineFloor(a, n.x, n.z, dh, 1.1);
+        if ((dh < 2.4 || lineOk) && ny - a.pos.y > 0.4) {
           it.fire = false;
-          if (b._inkFor !== n) { b._inkFor = n; b._inkT = 0; }
-          if (a.grounded && a.groundTeam === 2 && n.y - a.pos.y > 0.6 && (b._inkT += dt) < 1.5 && (a.ink ?? 100) > 8) {
-            b._needJump = false; it.fire = inkTrigger(a); it.squid = false; move.set(0, 0, 0); b.noProg = 0; b.perchUntil = b.t + 0.3;
-            return { yaw: Math.atan2(a.pos.x - n.x, a.pos.z - n.z), pitch: -1.1, dist: 0.8 };
-          }
-          if (a.grounded && b.noProg > 0.3 && n.y - a.pos.y > 0.4) b._needJump = true;
+          const r = this._stepUp(b, n, ny, dh, lineOk, dt, it, move);
+          b.hopCheck = true;
+          if (r) return r;
         }
       }
     } else if (L.goal === L.foot && L.foot >= 0) {
@@ -1370,38 +1379,11 @@ export class StageLava {
       const dh = nx ? Math.hypot(nx.x - a.pos.x, nx.z - a.pos.z) : Infinity, ny = ry(nx);
       // (the straight run at it from 2–3 m out only where that line is floor all the way: across the lake corner's gap
       // between Race 5 and the north head a bot hopped in place until the stone sank; the route goes round by the link)
-      let lineOk = true;
-      if (nx && ny - a.pos.y > 0.4 && dh < 3.0) for (let d = 0.3; d < dh - 0.8 && lineOk; d += 0.3) { const gx = a.pos.x + ((nx.x - a.pos.x) * d) / dh, gz = a.pos.z + ((nx.z - a.pos.z) * d) / dh; if (!(G.level.groundHeight(gx, gz, a.pos.y + 0.5) > a.pos.y - 0.5)) lineOk = false; }
+      const lineOk = !(nx && ny - a.pos.y > 0.4 && dh < 3.0) || this._lineFloor(a, nx.x, nx.z, dh);
       if (nx && ny - a.pos.y > 0.4 && dh < 3.0 && (dh < 2.0 || lineOk)) {
         b._escNx = nx;
-        if (dh > 0.05) move.set((nx.x - a.pos.x) / dh, 0, (nx.z - a.pos.z) / dh);
-        // (standing in enemy ink a jump reaches 0.73 m, not the step's 1.2: a roller escaping off the Casting Floor hopped
-        // at the causeway's foot until the lava had it — ink the floor at its feet first, then hop)
-        // (aimed back down behind it: facing the step, the shots hit its face)
-        // (for 1.5 s at most, and not with an empty tank: then it hops as it can)
-        // (fix round 3: the 1.5 s counts per step, never reset while the ink under it flickers — a brush's swipes left its feet
-        // in and out of enemy ink every few frames, the count restarted each time, and it stood there inking until the lava
-        // had it: lava-bots ledges)
-        if (b._inkFor !== nx) { b._inkFor = nx; b._inkT = 0; }
-        if (a.groundTeam === 2 && ny - a.pos.y > 0.6 && dh < 1.6 && (b._inkT = (b._inkT || 0) + dt) < 1.5 && (a.ink ?? 100) > 8) { b._needJump = false; it.fire = inkTrigger(a); it.squid = false; move.set(0, 0, 0); b.guardOff = true; return { yaw: Math.atan2(a.pos.x - nx.x, a.pos.z - nx.z), pitch: -1.1, dist: 0.8 }; }
-        // (fix round 4: pressed against the step's face at a slant, actor.js keeps the run speed along the face — a charger
-        // run into the island's face off Race 7 at ~40° slid along it at 5.7 m/s and off the stone's end into the lava,
-        // lava-bots edges — so against that face its hop goes straight across it, to the top 1 m in (a route node can sit
-        // on the face's very edge, where a flight steered at it rose along the face and came down beside it, probe-esc):
-        // pushed straight into the face, it hops, and flies there; the ask names that spot, bots.js judges the hop by the
-        // flight steered at it, and a refused press costs no cool-down)
-        { const c = a.contacts, wb = c.wall && c.wallBlock >= 0 ? G.level.blocks[c.wallBlock] : null, n = c.wallNormal;
-          if (wb && a.grounded && Math.abs(wb.aabbMax.y - ny) < 0.45 && n.x * move.x + n.z * move.z < -0.2) {
-            const px = a.pos.x - n.x * 1.0, pz = a.pos.z - n.z * 1.0, gy = G.level.groundHeight(px, pz, ny + 0.5);
-            if (Math.abs(gy - ny) < 0.4 && !this.wet(px, pz, gy, 2)) b._escHop = { x: px, y: gy, z: pz, t: this.clock.t, nx };
-          } }
-        const H = b._escHop && b._escHop.nx === nx && this.clock.t - b._escHop.t < 1.2 ? b._escHop : null;
-        if (H) { const hx = H.x - a.pos.x, hz = H.z - a.pos.z, hl = Math.hypot(hx, hz); if (hl > 0.05) move.set(hx / hl, 0, hz / hl); }
-        b._needJump = true; b.hopAt = H || (ny === nx.y ? nx : { x: nx.x, y: ny, z: nx.z });
-        // (straight at a step up, nothing to fall off: bots.js's edge and water guards sit this frame out — the floor under
-        // the step's coping reads as lava in the last seconds, a sunk stone's seam as void, and they stopped it at the foot —
-        // when the straight line there is floor under its feet all the way, but for the step's own last 0.8 m)
-        if (lineOk) b.guardOff = true;
+        const r = this._stepUp(b, nx, ny, dh, lineOk, dt, it, move);
+        if (r) return r;
       } else if (b.path) {
         b._escNx = null;
         const mv = b._steer(dt); if (mv !== move) move.copy(mv);
@@ -1412,6 +1394,47 @@ export class StageLava {
       if (SLOW_FIRE.has(a.weapon?.kind) && !(a.groundTeam === 2 && b._escNx)) it.fire = false;
     } else b._escNx = null;
     return null;
+  }
+  // a bot's step up onto node nx (its floor ny, dh away; lineOk: floor under the straight line there): straight at it,
+  // the hop asked for. Used by an escape (the hop out onto the head, the causeway, the island) and a lookout claimant's
+  // column hop (fix round 4: the claimant asked only once its walk had stalled 0.3 s — never while a bow drew — and stood at
+  // the column). → the aim to hold while it inks its feet, else null
+  _stepUp(b, nx, ny, dh, lineOk, dt, it, move) {
+    const a = b.a;
+    if (dh > 0.05) move.set((nx.x - a.pos.x) / dh, 0, (nx.z - a.pos.z) / dh);
+    // (standing in enemy ink a jump reaches 0.73 m, not the step's 1.2: a roller escaping off the Casting Floor hopped
+    // at the causeway's foot until the lava had it — ink the floor at its feet first, then hop)
+    // (aimed back down behind it: facing the step, the shots hit its face)
+    // (for 1.5 s at most, and not with an empty tank: then it hops as it can)
+    // (fix round 3: the 1.5 s counts per step, never reset while the ink under it flickers — a brush's swipes left its feet
+    // in and out of enemy ink every few frames, the count restarted each time, and it stood there inking until the lava
+    // had it: lava-bots ledges)
+    if (b._inkFor !== nx) { b._inkFor = nx; b._inkT = 0; }
+    if (a.grounded && a.groundTeam === 2 && ny - a.pos.y > 0.6 && dh < 1.6 && (b._inkT = (b._inkT || 0) + dt) < 1.5 && (a.ink ?? 100) > 8) { b._needJump = false; it.fire = inkTrigger(a); it.squid = false; move.set(0, 0, 0); b.guardOff = true; b.noProg = 0; b.perchUntil = b.t + 0.3; return { yaw: Math.atan2(a.pos.x - nx.x, a.pos.z - nx.z), pitch: -1.1, dist: 0.8 }; }
+    // (fix round 4: pressed against the step's face at a slant, actor.js keeps the run speed along the face — a charger
+    // run into the island's face off Race 7 at ~40° slid along it at 5.7 m/s and off the stone's end into the lava,
+    // lava-bots edges — so against that face its hop goes straight across it, to the top 1 m in (a route node can sit
+    // on the face's very edge, where a flight steered at it rose along the face and came down beside it, probe-esc):
+    // pushed straight into the face, it hops, and flies there; the ask names that spot, bots.js judges the hop by the
+    // flight steered at it, and a refused press costs no cool-down)
+    { const c = a.contacts, wb = c.wall && c.wallBlock >= 0 ? G.level.blocks[c.wallBlock] : null, n = c.wallNormal;
+      if (wb && a.grounded && Math.abs(wb.aabbMax.y - ny) < 0.45 && n.x * move.x + n.z * move.z < -0.2) {
+        const px = a.pos.x - n.x * 1.0, pz = a.pos.z - n.z * 1.0, gy = G.level.groundHeight(px, pz, ny + 0.5);
+        if (Math.abs(gy - ny) < 0.4 && !this.wet(px, pz, gy, 2)) b._escHop = { x: px, y: gy, z: pz, t: this.clock.t, nx };
+      } }
+    const H = b._escHop && b._escHop.nx === nx && this.clock.t - b._escHop.t < 1.2 ? b._escHop : null;
+    if (H) { const hx = H.x - a.pos.x, hz = H.z - a.pos.z, hl = Math.hypot(hx, hz); if (hl > 0.05) move.set(hx / hl, 0, hz / hl); }
+    b._needJump = true; b.hopAt = H || (ny === nx.y ? nx : { x: nx.x, y: ny, z: nx.z });
+    // (straight at a step up, nothing to fall off: bots.js's edge and water guards sit this frame out — the floor under
+    // the step's coping reads as lava in the last seconds, a sunk stone's seam as void, and they stopped it at the foot —
+    // when the straight line there is floor under its feet all the way, but for the step's own last 0.8 m)
+    if (lineOk) b.guardOff = true;
+    return null;
+  }
+  // floor under the straight line from a toward (x, z), dh away, but for its last `tail` m (samples every 0.3 m)
+  _lineFloor(a, x, z, dh, tail = 0.8) {
+    for (let d = 0.3; d < dh - tail; d += 0.3) { const gx = a.pos.x + ((x - a.pos.x) * d) / dh, gz = a.pos.z + ((z - a.pos.z) * d) / dh; if (!(G.level.groundHeight(gx, gz, a.pos.y + 0.5) > a.pos.y - 0.5)) return false; }
+    return true;
   }
   // the lookouts' HIGH-pose nav nodes (the floats whose look says 'lookout')
   _lookNodes() {

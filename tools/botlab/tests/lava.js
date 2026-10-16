@@ -519,20 +519,24 @@
     // that node) with the climb flag left set — (A) asked now, (B) asked 5 s ago — is never made, and nobody dies
     const fb = bots[0], FB = fb.bot, k8 = [];
     const organTops = nav.nodes.filter((q) => M.kind[q.id] === 2 && M.pose[q.id] === 1 && !W.riders[M.rider[q.id]].sink);
-    for (let kk = 0; kk < 8; kk++) {
+    // (fix round 4: and (C) asked now while the bot is escaping — an escaper's route hop was judged along its velocity, not by
+    // the flight at its node, and flown at the column: two drowned in one run when F8 left its crew's escapes on. A and B
+    // start with no escape on, C with one held on through the 2 s)
+    for (let kk = 0; kk < 12; kk++) {
       setT(58);
       const r = W.riders.filter((x) => x.sink && !x.id.endsWith('~'))[kk % 4], ri = W.riders.indexOf(r), sn = nav.nodes.find((q) => M.rider[q.id] === ri && M.pose[q.id] === 1);
-      put(fb, V(sn.x, rid(r.id).top + 0.02, sn.z)); fb.invuln = 1e6; FB.update = idle.get(fb); step(0.1, 30);
+      put(fb, V(sn.x, rid(r.id).top + 0.02, sn.z)); fb.invuln = 1e6; Object.assign(FB, { _lavaEsc: false, _stoneStep: false, _stoneHold: null, _escNx: null, _escHop: null, _lavaT: 0, _jRef: false, goal: -1 }); FB.update = idle.get(fb); step(0.1, 30);
       let og = null, od = Infinity; for (const q of organTops) { const d = Math.hypot(q.x - sn.x, q.z - sn.z); if (d < od) { od = d; og = q; } }
-      FB.path = [sn.id, og.id]; FB.pi = 1; FB.goal = og.id; FB._needJump = true; FB.jumpCd = 0; FB._clHop = true; FB._njT = kk < 4 ? 0 : __G.time - 5;
+      FB.path = [sn.id, og.id]; FB.pi = 1; FB.goal = og.id; FB._needJump = true; FB.jumpCd = 0; FB._clHop = true; FB._njT = kk < 4 || kk >= 8 ? 0 : __G.time - 5;
+      if (kk >= 8) { FB._lavaEsc = true; FB._lavaT = 9; }
       // (the ask is acted on at the first grounded frame — jumpCd 0 — or never: a hop in the first 0.3 s is that one; a later
       // hop is the bot's own, checked, e.g. its stone step's walk to the head)
       const t0 = Lv.clock.t; let hop = null, died = null; const o8 = on('splatted', (e) => { if (e.victim === fb && !died) died = [e.cause, r3(Lv.clock.t)]; });
-      for (let i = 0; i < 60 && !died; i++) { FB.goalTimer = 9; FB.repath = 9; dbg.step(1000 / 30); if (fb.vel.y > 5 && hop === null) hop = r3(Lv.clock.t - t0); }
-      o8(); freezeBots();
-      k8.push([kk < 4 ? 'A' : 'B', r.id, og.id, +od.toFixed(1), hop, died]);
+      for (let i = 0; i < 60 && !died; i++) { FB.goalTimer = 9; FB.repath = 9; if (kk >= 8) { FB._lavaEsc = true; FB._lavaT = 9; } dbg.step(1000 / 30); if (fb.vel.y > 5 && hop === null) hop = r3(Lv.clock.t - t0); }
+      o8(); freezeBots(); FB._lavaEsc = false; FB._lavaT = 0;
+      k8.push([kk < 4 ? 'A' : kk < 8 ? 'B' : 'C', r.id, og.id, +od.toFixed(1), hop, died]);
     }
-    R('F8b no route hop from a stone at a column across the lava: asked now with the climb\'s hop flag left set (A), or asked 5 s before (B) — 4 stones each: not made (no hop in its first 0.3 s), no death in 2 s', k8.every((x) => !(x[4] !== null && x[4] < 0.3) && !x[5]), { cases: k8 });
+    R('F8b no route hop from a stone at a column across the lava: asked now with the climb\'s hop flag left set (A), asked 5 s before (B), asked now while escaping (C) — 4 stones each: not made (no hop in its first 0.3 s), no death in 2 s', k8.every((x) => !(x[4] !== null && x[4] < 0.3) && !x[5]), { cases: k8 });
     // (fix round 4, review 4 issue 1: in a rise a charger fighting on Race 7 was sent off it — its stone 0.6 m under the
     // island's coping — ran at the coping at a slant, never hopped, slid along the face at 5.7 m/s and off the stone's end;
     // its route's next node was a node of its own stone, at the stone's HIGH height, read as a step up; refused presses had
@@ -656,14 +660,16 @@
     const hash = (t) => { setT(t); const c = cv.getContext('2d'); c.clearRect(0, 0, cv.width, cv.height); Lv.drawMap(c, mm, { x: 0, y: 0 }, mm.s, ['#f00', '#00f'], 1); const d = c.getImageData(0, 0, cv.width, cv.height).data; let h = 0, n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) { n++; h = (h * 31 + d[i - 3] + i) >>> 0; } return { n, h }; };
     const hm = { low: hash(10), mid: hash(39.5), high: hash(50) };
     // (fix round 1) a level step redraws only the pixels it floods or bares: every 0.1 m of a rise and a fall, timed
-    Lv.stats.mapMs = 0; Lv.stats.mapN = 0; Lv.stats.mapSteps = [];
-    for (let t = 35; t <= 45.01; t += 0.25) hash(t);
-    for (let t = 70; t <= 80.01; t += 0.25) hash(t);
-    // (fix round 3: the median step, not the worst — one step of 7.3 ms under a machine load of 400 failed a run whose other
-    // 28 steps were ≤ 0.3 ms; a re-raster makes every step ~9 ms, so the median still catches it)
-    const SS = (Lv.stats.mapSteps || []).slice().sort((a, b) => a - b), med = SS.length ? SS[Math.floor(SS.length / 2)] : Infinity;
-    const mapT = { stepMedMs: med, stepMaxMs: Lv.stats.mapMs, redraws: Lv.stats.mapN, buildMs: Lv.stats.mapBuildMs };
-    R('G5 the minimap: the lava fill spreads over the ledges as it rises (pixel counts LOW < mid-rise < HIGH); a level step redraws in ≤ 1.5 ms (median; it re-rastered the map: 9.4 ms)', hm.low.n > 0 && hm.mid.n > hm.low.n && hm.high.n > hm.mid.n && mapT.redraws >= 20 && med <= 1.5, { ...hm, ...mapT });
+    // (fix round 4, review 4: p90 ≤ 1.5 ms and max ≤ 5 ms of each step's better of two passes — a one-off spike of the
+    // shared machine (7.3 ms under a load of 400, its other 28 steps ≤ 0.3 ms) is in one pass only; a re-raster, ~9 ms a
+    // step, is in both; fix round 3's median let any single slow step through)
+    // (each pass from LOW at t 10, so both time the same steps: a pass begun at HIGH timed a whole HIGH → LOW redraw first)
+    const mapPass = () => { hash(10); Lv.stats.mapMs = 0; Lv.stats.mapN = 0; Lv.stats.mapSteps = []; for (let t = 35; t <= 45.01; t += 0.25) hash(t); for (let t = 70; t <= 80.01; t += 0.25) hash(t); return { steps: (Lv.stats.mapSteps || []).slice(), max: Lv.stats.mapMs, n: Lv.stats.mapN }; };
+    const mp1 = mapPass(), mp2 = mapPass();
+    const SS = (mp1.steps.length === mp2.steps.length ? mp1.steps.map((v, i) => Math.min(v, mp2.steps[i])) : [...mp1.steps, ...mp2.steps]).sort((a, b) => a - b);
+    const qq = (f) => (SS.length ? SS[Math.min(SS.length - 1, Math.floor(SS.length * f))] : Infinity), med = qq(0.5), p90 = qq(0.9), smax = SS.length ? SS[SS.length - 1] : Infinity;
+    const mapT = { stepMedMs: +med.toFixed(3), stepP90Ms: +p90.toFixed(3), stepMaxMs: +smax.toFixed(3), passMaxMs: [mp1.max, mp2.max].map((v) => +(+v).toFixed(3)), redraws: mp1.n, aligned: mp1.steps.length === mp2.steps.length, buildMs: Lv.stats.mapBuildMs };
+    R('G5 the minimap: the lava fill spreads over the ledges as it rises (pixel counts LOW < mid-rise < HIGH); a level step redraws in ≤ 1.5 ms (p90) and ≤ 5 ms (max), each step its better of two passes (a re-raster: 9.4 ms)', hm.low.n > 0 && hm.mid.n > hm.low.n && hm.high.n > hm.mid.n && mapT.redraws >= 20 && p90 <= 1.5 && smax <= 5, { ...hm, ...mapT });
     // (fix round 1) the glow's proximity field: the island's lake faces glow at HIGH (within 0.25 m of open lava), its
     // dry middle (the machine house's foot, 3 m in from the rim) never; the causeway's side over the Casting Floor only
     // once the floor is under (HIGH), not at LOW

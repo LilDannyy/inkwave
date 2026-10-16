@@ -1143,6 +1143,9 @@ export class BotBrain {
     // a step): the hop is judged by the flight steered at it and flown at it (lava-bots edges: an escaper's hop off Race 7
     // was judged by the ballistic arc along its slide beside the island's face, refused, and it slid off the stone)
     const hopAt = this.hopAt || null; this.hopAt = null;
+    // (and hopCheck: that hop is judged even with the guards off — a lookout claimant's column hop; an escape's straight run
+    // at a step keeps its unchecked hop)
+    const hopChk = !!this.hopCheck; this.hopCheck = false;
     if (!this._clMove && !gOff) this._avoidWater(move);   // (a climb's step to its spot in front of the wall: picked clear of the sea)
     if (it.squid && (this._squidWouldDrop(move) || (a.grounded && this._swimDrop(move)))) it.squid = false;
 
@@ -1201,14 +1204,16 @@ export class BotBrain {
     // (lava-bots edges: a twins bot hopped off the Horn Step's 1.2 m edge into the lava); a route's own hop with the sea or
     // the lava within 1.5 m only where its flight, steered at the route's node as the brain steers it, comes down on that
     // node's top (a Cutlass bot's hop up to the Ladle Road slid along the road's face and dropped into the lava beside it)
-    if (it.jump && a.grounded && !a.climbing && !this._clHop && !this._climbAim && !gOff) {
+    if (it.jump && a.grounded && !a.climbing && !this._clHop && !this._climbAim && (!gOff || (hopChk && pathHop && hopAt))) {   // [b5-caldera] fix round 4: hopChk
       let bad;
       if (rolls) bad = !this._rollSafe(a, it.move, w.rollDist) || !this._hopSafe(a, it.move) || this._nearWetHi(a, 3.0);
       // (fix round 3: near the lava a route's hop is judged by the flight it will fly, steered at its node — the ballistic
       // arc along the velocity refused a lookout claimant's hop onto the next column whenever it still drifted the other
       // way, and with the climb's hop flag no longer left set, chargers and bows stopped getting up)
       else if (pathHop && hopAt) bad = !this._hopLands(a, hopAt);   // [b5-caldera] fix round 4 (a module's ask: its node)
-      else if (pathHop && !this._lavaEsc && this.path && this.pi < this.path.length && this._wetWithin(a, 1.5)) bad = !this._hopLands(a, G.nav.nodes[this.path[this.pi]]);
+      // (fix round 4: an escaper's route hop too — judged along its velocity and flown at the route's node, a bot escaping
+      // off a stone hopped at an Organ top across the lava and drowned: lava.js F8b with the escape left on)
+      else if (pathHop && this.path && this.pi < this.path.length && this._wetWithin(a, 1.5)) bad = !this._hopLands(a, G.nav.nodes[this.path[this.pi]]);
       else bad = !this._hopSafe(a, it.move) || (!pathHop && this._nearWetHi(a, 3.0));
       if (bad) { it.jump = false; this._jRef = true; }   // [b5-caldera] fix round 4 (_jRef: refused, no jump made)
     }
