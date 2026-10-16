@@ -71,6 +71,7 @@
     B.forEach((b, i) => put(b, spot(P.x + (i - 1.5) * 3, P.z + dz * 9, P.y), dz > 0 ? Math.PI : 0));
     Kp.clock = 1.5; step(0.2); follow();
     g.hud.karp._say('BURST THE ROE SHELL!', { sub: 'Then carry the Bazookarp to their Dragon Gate', icon: (await import('./src/ui/hud-karp.js')).KARP_GLYPH });
+    step(1 / 60);   // ([karp-face] a HUD frame with the call-out up: the world tags fade out of its way — the frozen clock held them)
   });
   add('hud-shell', () => {
     reset(); m.time = 281;
@@ -156,6 +157,7 @@
     B.forEach((b, i) => put(b, spot(P.x + (i - 1.5) * 3, P.z + dz * 7, P.y)));
     step(0.05); step(3.2); follow(); calm(); g.hud.countLayer?.replaceChildren();   // ([karp-face] the last-ten count's "1": the stepped clock made it fresh; in play it has faded by then)
     g.hud.karp._say('OVERTIME!', { team: 0, sub: 'Stop them — 10 s to hold!', icon: (await import('./src/ui/hud-karp.js')).KARP_GLYPH });
+    step(1 / 60);
   });
   add('hud-fuse-low', () => {
     reset(); m.time = 120;
