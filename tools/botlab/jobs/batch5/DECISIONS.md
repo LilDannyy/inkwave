@@ -90,3 +90,12 @@ marked TELL THE USER goes into the lead's final report as a choice they may want
     at 4.15 m) and calamari. Rule: off-limits tops never hold a kid (fix the stage or the slide); a shortcut onto
     walkable ground is accepted when it saves ≤ 20 m and bypasses no spawn barrier or mode-only wall; otherwise a rail
     lip on the take-off. The same rule as Highmark Foundry's rule 44.
+
+## The user's rule for unfinished content (2026-10-17)
+33. **Playable-but-unfinished content ships tagged BETA, not hidden.** The user: "stuff that is playable but not
+    finished yet can have the 'beta' tag on it like the boss battle mode". So at the next integration (`int4`): the
+    three stages lose `wip` and get `beta: true` (shown in every stage picker, the lobby, the results and the stage
+    select with the same `iw-beta` 'PUBLIC BETA' badge Boss Battle's mode card uses, `src/ui/menus.js` ~1136 / 3678 /
+    4969), and Bazookarp leaves `WIP_MODES` with `beta: true` on its mode card. `wip` stays only for what is not yet
+    playable at all. The art passes, the per-stage Bazookarp layouts and the balance passes then land on a live beta,
+    and the tags come off stage by stage when the lead judges each finished.
