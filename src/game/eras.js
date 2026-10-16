@@ -61,8 +61,8 @@ function auditEra() {
 }
 // the stage-art switch (DESIGN §5.8, ENGINE T3): ?erafrom=a&erato=b&front=r — the world frozen mid-jump, era a outside a
 // front stopped at radius r m and era b inside it (each group's solidity, the shader's front, the props, the curtain and
-// the holograms at r; the sky stays era a's); the clock never moves it. PAGEQ='erafrom=1&erato=2&front=30', or
-// ERA_FROM=1 ERA_TO=2 FRONT=30 on the botlab harnesses (stageart.cjs, shoot.cjs …)
+// the holograms at r; each piece whole on its side, not mid-dissolve; the sky stays era a's); the clock never moves it.
+// PAGEQ='erafrom=1&erato=2&front=30', or ERA_FROM=1 ERA_TO=2 FRONT=30 on the botlab harnesses (stageart.cjs, shoot.cjs …)
 function auditFront() {
   let q = null;
   try { if (typeof location !== 'undefined' && location.search) q = new URLSearchParams(location.search); } catch (e) { /* no page */ }
@@ -1253,6 +1253,7 @@ export class StageEras {
     this.phase = 'jump'; this.cur = J; W.jumping = true;
     if (!this._frzJ) { W.fx?.setJump(J); this._frzJ = J; }
     W.looks(F.from, F.to, F.front, 0, 0, F.from, F.to);
+    W.uniforms.uEra.value.w = 0.01;   // (a still: each piece whole on its side of the front, not caught in its 0.3 s dissolve)
     W.fx?.update(1 / 60, { t, jump: J, phase: 'jump', front: F.front, warnK: 0, warnIn: 1, ring: 0, pickup: 0, beam: 0, pulse: 0 });
     this.chip?.update({ era: F.front > 30 ? F.to : F.from, phase: 'jump', next: null, prog: 1 });
   }
