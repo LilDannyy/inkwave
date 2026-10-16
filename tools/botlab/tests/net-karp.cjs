@@ -133,6 +133,8 @@ async function base({ clients, R, wait, say, args, open }) {
   // (fix round 2) A's own screen logs the kid's hp at each Carp Shot hurt as it happens: read 1.9 s and a few round trips
   // later (seconds on a loaded Mac), the kid had already regenerated (regen starts 1.3 s after a hit, 22 hp/s)
   await A.js(`(() => { window.__aHurt = []; import('./src/core/ctx.js').then((m) => m.on('damage', (e) => { if (e.victim === __G.match.local && e.source === 'karp') window.__aHurt.push({ dmg: +(+e.amount).toFixed(2), hp: +e.victim.hp.toFixed(2), att: e.attacker && e.attacker.nid }); })); return 1; })()`);
+  // ([karp-face] A's screen hears and sees B's launches: a ghost's [0] emits karp:shot there too — the whomp, the mouth)
+  await A.js(`(() => { window.__aShots = []; import('./src/core/ctx.js').then((m) => m.on('karp:shot', (e) => window.__aShots.push({ nid: e.actor && e.actor.nid, ghost: !!e.ghost }))); return 1; })()`);
   const pairs = [];
   const shoot = async (yaw) => {
     await B.js(`(() => { const a = __G.match.local; a.aimYaw = a.yaw = ${yaw}; a.aimPitch = 0; a.intent.fire = true; setTimeout(() => { a.intent.fire = false; }, 60); return 1; })()`);
@@ -152,6 +154,8 @@ async function base({ clients, R, wait, say, args, open }) {
   const hits = await J(B, `window.__hits`);
   R('5b. the Splash hurts A\'s kid on A\'s own screen (the victim judges [2]: B\'s Carp Shot, its hp at that moment)', hpLow < hp0 - 15 && hp1.hurt.some((h) => h.att === bNid && h.dmg > 15), { hp0, hpLow, hp1 });
   R('5c. B gets its hit marker for A (A\'s [3] → a hit event with B as the attacker)', hits.some((h) => h.att === bNid && h.vic === aNid && h.w === 'karp' && h.rv), hits);
+  const aShots = await J(A, `({ ev: window.__aShots, fire: (__inkwave.hud && __inkwave.hud.karp && __inkwave.hud.karp.cues.played || []).filter((n) => n === 'karp_fire').length })`);
+  R('5d. A\'s screen hears B\'s launches: each ghost launch emits karp:shot there and plays the whomp (karp_fire)', aShots.ev.filter((e) => e.nid === bNid && e.ghost).length >= 2 && aShots.fire >= 2, aShots);
 
   // ---- 6. B retreats on its own half: DON'T RETREAT! on B's screen at once, the host's rate ×3 (B's kr)
   await put(B, 0.3, 0, 6);

@@ -306,7 +306,7 @@ export class Bazookarp {
     a.character?.setWeapon?.('sp_karp');   // [karp-face] the carp launcher (karpModel.js)
     this.holder = a; this.holderTeam = a.team; this.grantT = this.clock;
     this._hr = a.remote; this._sampQ = null; this.blastHold = null;   // [karp-face]
-    this.fuse = K.fuse; this.rate = 1; this.rateWhy = null;
+    this.fuse = K.fuse; this.rate = 1; this.rateWhy = null; this._fz = null;   // ([karp-face] a fresh fuse: no old snapshot to read on from)
     this.remote = { half: -1, zone: false, rate: 1, why: null, foot: null, sampleT: -1 };
     this.base = null;
     this.touched = true;
@@ -685,9 +685,16 @@ export class Bazookarp {
   }
 
   // ================================================================== online: snapshots, records
+  // [karp-face] the time base snapshots are stamped with: the MATCH clock (time played, plus overtime), which netmatch
+  // keeps in step on every screen (within 0.2 s) — the engine's own clock starts when each screen built its match, which
+  // can be seconds apart, so a guest's "how old is this snapshot" read off it was off by that much (SPEC §7.2's rule)
+  _tb() {
+    const m = this.match;
+    return Number.isFinite(m.duration) && Number.isFinite(m.time) ? Math.max(0, m.duration - m.time) + (this.overtime ? this.overtimeT : 0) : this.clock;
+  }
   _snap() {
     const H = this.holder;
-    return ['s', this.q, r2(this.clock), PHASES.indexOf(this.phase), r2(this.pos.x), r2(this.pos.y), r2(this.pos.z), H ? H.nid ?? -1 : -1,
+    return ['s', this.q, r2(this._tb()), PHASES.indexOf(this.phase), r2(this.pos.x), r2(this.pos.y), r2(this.pos.z), H ? H.nid ?? -1 : -1,
       Math.round(this.shell.meter), r2(this.fuse), this.holder?.remote ? this.remote.rate : this.rate, this.rateWhy === 'retreat' ? 1 : this.rateWhy === 'zone' ? 2 : 0,
       this.count[0], this.count[1], r2(this.overtimeT), this.overtime && this.otWin.open ? r2(this.otWin.left) : -1];
   }
@@ -745,6 +752,7 @@ export class Bazookarp {
     this.otWin.open = !!this.overtime && win >= 0;   // (a new host's window carries on from here: onHostChange)
     if (win >= 0) this.otWin.left = win;
     this.hostT = t;
+    this._fz = { fuse, rate, t };   // ([karp-face] a remote carrier's fuse is read forward from here: _followerTick)
     this._fuseSync(fuse, rate, t);
     if (q < this.lastQ) return;   // (older than the last discrete record: its phase / holder / position are stale)
     let phase = PHASES[ph];
@@ -795,6 +803,9 @@ export class Bazookarp {
       if (this.phaseT <= 0) this._reform(P, -1);
     } else if (this.phase === 'reforming' && this.shell.state === 'intact') this._setPhase('shielded');
     if (this.holder && this.holder === G.local) this.fuse -= dt * (this.holder.carry?.j?.rate || 1);
+    // [karp-face] someone else's carrier: the host's fuse now, read forward from the newest snapshot by the match clock
+    // (at most 0.6 s on: a stalled stream doesn't run it away) — the marker, the Carp Line and the pause strip show it
+    else if (this.holder && this._fz) this.fuse = Math.max(0, this._fz.fuse - this._fz.rate * Math.min(0.6, Math.max(0, this._tb() - this._fz.t)));
   }
   // the carrier's own HUD fuse (§7.2): run locally at the local rate; a host snapshot may move it forward at once, back
   // by at most 0.2 s a second
@@ -810,7 +821,7 @@ export class Bazookarp {
   }
   _fuseSync(fuse, rate, t) {
     if (!this.holder || this.holder.remote) return;
-    const hostNow = fuse - rate * Math.max(0, this.clock - t);
+    const hostNow = fuse - rate * Math.max(0, this._tb() - t);
     const S = this.hud;
     if (S.fuseShown > hostNow + K.fuseSync.fwd) S.fuseShown = hostNow;
     else if (S.fuseShown < hostNow - K.fuseSync.fwd) S.fuseShown = Math.min(hostNow, S.fuseShown + K.fuseSync.back / K.snapHz);

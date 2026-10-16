@@ -226,7 +226,8 @@ export class KarpGun {
     switch (d[0]) {
       // ([karp-face] a departed host's queued launch for a bot this screen has just adopted: the shot is ours to fly, land
       // and blow — its [1] / [2] will never come from its old owner — SPEC §7.6)
-      case 0: { if (this.byGid.has(d[1])) break; const own = !a.remote; const s = this._spawn(a, d[1], _v.set(d[2], d[3], d[4]), _v2.set(d[5], d[6], d[7]), d[8], !own); s.ghost = !own; break; }
+      case 0: { if (this.byGid.has(d[1])) break; const own = !a.remote; const s = this._spawn(a, d[1], _v.set(d[2], d[3], d[4]), _v2.set(d[5], d[6], d[7]), d[8], !own); s.ghost = !own;
+        emit('karp:shot', { actor: a, charge: d[8], from: s.start.clone(), vel: s.vel.clone(), ghost: true }); break; }   // ([karp-face] a remote carrier's shot is heard and seen leaving the mouth here too)
       case 1: {
         const s = this.byGid.get(d[1]);
         if (!s) break;

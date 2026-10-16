@@ -102,11 +102,13 @@
   // ---- D. the fuse display rule (a follower's screen, stub snapshots)
   put(me, spot(P.x, P.z + dz * 1, P.y)); grab(me); step(0.05);
   m.follower = true;
-  Kp.hud.fuseShown = 40; Kp.clock = 100;
-  Kp._fuseSync(38, 1, 100);   // the host is 2 s ahead: jump now
+  // (snapshots are stamped with the match clock — time played — which netmatch keeps in step on every screen)
+  const tb = () => Kp._tb();
+  Kp.hud.fuseShown = 40; m.time = m.duration - 100;
+  Kp._fuseSync(38, 1, tb());   // the host is 2 s ahead: jump now
   const jump = Kp.hud.fuseShown;
   let maxRise = 0, prev = Kp.hud.fuseShown;
-  for (let i = 0; i < 20; i++) { Kp.clock += 0.1; Kp._hudFuse(0.1); Kp._fuseSync(45, 1, Kp.clock); maxRise = Math.max(maxRise, Kp.hud.fuseShown - prev); }
+  for (let i = 0; i < 20; i++) { m.time -= 0.1; Kp._hudFuse(0.1); Kp._fuseSync(45, 1, tb()); maxRise = Math.max(maxRise, Kp.hud.fuseShown - prev); }
   const give = Kp.hud.fuseShown - (38 - 2.0);
   m.follower = false;
   R('D1. the shown fuse jumps forward at once to the host\'s', Math.abs(jump - 38) < 1e-6, { jump });
@@ -150,6 +152,14 @@
   let mapErr = null;
   try { const { drawKarpMap } = await import('./src/ui/hud-karp.js'); const mm = g.minimap; const c = mm.ctx; drawKarpMap(c, mm, { x: 0, y: 0 }, mm.s, G.teamHex, 1, 'under'); drawKarpMap(c, mm, { x: 0, y: 0 }, mm.s, G.teamHex, 1, 'over'); } catch (e) { mapErr = String(e); }
   R('G2. the map layer draws both layers without error', !mapErr, { mapErr });
+  // [karp-face] the hiss: a carrier's last 3 s, on the carrier (a teammate's screen hears it where the carrier is)
+  { const A0 = G.audio, lp0 = A0.loop.bind(A0), loops = []; A0.loop = (n, o) => { const hnd = lp0(n, o); if (n === 'karp_hiss') loops.push({ pos: !!(o && o.pos) }); return hnd; };
+    put(ally, spot(P.x + 2, P.z + dz * 4, P.y)); grab(ally); step(0.1);
+    Kp.fuse = 12; step(0.2); const before = !!H.karp.cues.loops.hiss;
+    Kp.fuse = 2.6; step(0.1); const during = !!H.karp.cues.loops.hiss;
+    Kp.fuse = 40; step(0.1); const after = !!H.karp.cues.loops.hiss;
+    A0.loop = lp0; release(); step(0.1);
+    R('G3. the hiss: a teammate carrier\'s last 3 s starts a positional karp_hiss on it, and it stops when the fuse is no longer in its last 3 s', !before && during && !after && loops.length === 1 && loops[0].pos, { before, during, after, loops }); }
 
   // ---- H. the results screen
   const reasons = ['knockout', 'time', 'untouched', 'comeback', 'retake', 'no-pickup', 'stopped', 'overtime-cap'];

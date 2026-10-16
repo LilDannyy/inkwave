@@ -13,6 +13,8 @@
 //   karp_blast       the shot's blast, sized by its charge (pitch / volume)
 //   karp_fuse_tick   the carrier's last 10 s, every second (2D for the carrier; faster and higher under ×3)
 //   karp_fuse_fast   a rattle loop while the fuse burns ×3 (the carrier only, 2D)
+//   karp_hiss        the last 3 s of a carrier's fuse: a steaming hiss and sizzle on the carrier, rising (positional for
+//                    everyone near — the teammates' warning to step away, SPEC §6.7; 2D for the carrier)
 //   karp_explode     the Carp Blast: a huge boom with a sub drop and a long wash
 //   karp_reset       a whoosh up as it leaves for the Pond, a splash where it lands (karp_splash)
 //   karp_weir        a fanfare, then water draining (a weir lowered)
@@ -138,6 +140,19 @@ def('karp_fuse_fast', {
     return { pitch() {}, params() {} };
   },
 });
+def('karp_hiss', {
+  gain: 0.3, max: 1, jitter: 0, reverb: 0.06, oneShot: 2,
+  loop(v, p, o) {
+    const T = v.t, st = { k: (o && o.params && o.params.k) || 0 };
+    const g = v.gain(0, v.out), bp = v.filter('bandpass', 5200 * p, 1.6, g);
+    v.noise('white', T, null, bp);                                                                            // the steam
+    const sz = v.gain(0, v.filter('highpass', 2400, 0.8, v.out));
+    v.noise('white', T, null, sz); v.lfo(31, 0.5, sz.gain, T, null);                                          // the sizzle
+    const apply = (now) => { g.gain.setTargetAtTime(0.32 + 0.5 * st.k, now, 0.08); sz.gain.setTargetAtTime(0.1 + 0.25 * st.k, now, 0.08); bp.frequency.setTargetAtTime((4200 + 2600 * st.k) * p, now, 0.1); };
+    apply(T);
+    return { pitch() {}, params(o2, now) { Object.assign(st, o2); apply(now); } };
+  },
+});
 def('karp_explode', {
   gain: 0.75, max: 1, jitter: 0, reverb: 0.4,
   build(v, p) {
@@ -203,14 +218,14 @@ def('karp_alarm', {
   },
 });
 export const KARP_SOUNDS = ['karp_shell_hit', 'karp_shell_warn', 'karp_burst', 'karp_pickup', 'karp_drop', 'karp_charge', 'karp_full', 'karp_fire', 'karp_land', 'karp_blast',
-  'karp_fuse_tick', 'karp_fuse_fast', 'karp_explode', 'karp_reset', 'karp_splash', 'karp_weir', 'karp_gate', 'karp_alarm'];
+  'karp_fuse_tick', 'karp_fuse_fast', 'karp_hiss', 'karp_explode', 'karp_reset', 'karp_splash', 'karp_weir', 'karp_gate', 'karp_alarm'];
 
 // ---- the director: the events → the cues; the carrier's loops (charge hum, ×3 rattle) and its fuse ticks
 export class KarpCues {
   constructor() {
     const A = () => G.audio, me = () => G.match?.local;
     const mine = (a) => !!a && a === me();
-    this.loops = { charge: null, fast: null };
+    this.loops = { charge: null, fast: null, hiss: null };
     this.played = [];   // (tests: the last cues, newest last)
     const play = (name, o = {}) => { this.played.push(name); if (this.played.length > 40) this.played.shift(); return A()?.play?.(name, o); };
     this.play = play;
@@ -235,7 +250,7 @@ export class KarpCues {
   update(dt, f) {
     const Kp = G.match?.karp, me = G.match?.local, A = G.audio;
     const stop = (k) => { const h = this.loops[k]; if (h) { h.stop?.(0.08); this.loops[k] = null; } };
-    if (!Kp || !f || !me) { stop('charge'); stop('fast'); return; }
+    if (!Kp || !f || !me) { stop('charge'); stop('fast'); stop('hiss'); return; }
     // the charge hum (the local carrier)
     const g = me.carry?.gun, charging = !!(f.carrying && g && g.charging && me.form !== 'squid');
     if (charging && !this.loops.charge) this.loops.charge = A?.loop?.('karp_charge', { volume: 0.9, params: { k: 0 } }) || null;
@@ -247,6 +262,13 @@ export class KarpCues {
     if (!fast) stop('fast');
     const n = f.carrying ? Math.ceil(f.fuseShown) : null;
     if (n !== this._fuseN) { if (n != null && n <= 10 && n >= 1 && this._fuseN != null) this.play('karp_fuse_tick', { pitch: n <= 3 ? 1.25 : fast ? 1.12 : 1 }); this._fuseN = n; }
+    // the hiss: any carrier's last 3 s, on the carrier (its teammates' warning to step away; the carrier hears it 2D)
+    const H = Kp.holder, left = H ? (f.carrying ? f.fuseShown : f.fuse) : 99;
+    if (H && H.alive && left <= 3 && left > 0) {
+      const k = Math.min(1, Math.max(0, 1 - left / 3));
+      if (!this.loops.hiss) this.loops.hiss = A?.loop?.('karp_hiss', f.carrying ? { volume: 0.8, params: { k } } : { pos: H.pos, volume: 1, params: { k } }) || null;
+      this.loops.hiss?.set?.(f.carrying ? { params: { k } } : { pos: H.pos, params: { k } });
+    } else stop('hiss');
     // the shell's warning at 75 % (once each time the meter climbs past it, either way)
     const k = f.shell === 'intact' && f.hp > 0 ? f.meter / f.hp : 0, side = k >= 0.75 ? 1 : k <= -0.75 ? -1 : 0;
     if (side && side !== this._warnSide) this.play('karp_shell_warn', { pos: Kp.shell.center() });
