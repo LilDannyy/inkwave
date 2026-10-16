@@ -3228,9 +3228,9 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 .iw-kpip { display: inline-block; width: .62em; height: .62em; margin: 0 .16em; rotate: 45deg; border-radius: 2px; background: currentColor; box-shadow: 0 0 0 1.5px #15121c; }
 .iw-pzone__team--a .iw-kpip { color: var(--ta); } .iw-pzone__team--b .iw-kpip { color: var(--tb); }
 .iw-kpip.is-low { color: #6b6f7a !important; }
-.iw-ticket__preview { position: absolute; right: calc(var(--u) * .5); top: calc(var(--u) * .5); z-index: 3; padding: .25em .55em; border-radius: 99px; background: #ffd54a; color: #15121c;
+.iw-ticket__preview { position: absolute; right: calc(var(--u) * 3); top: calc(var(--u) * .4); z-index: 3; padding: .25em .55em; border-radius: 99px; background: #ffd54a; color: #15121c;
   font: 900 var(--fs-xs) / 1 'Rubik', sans-serif; letter-spacing: .12em; box-shadow: 0 0 0 2px #15121c; transform: rotate(4deg); }
-.iw-lstage__preview { position: absolute; left: calc(var(--u) * .7); top: calc(var(--u) * .7); z-index: 3; padding: .25em .55em; border-radius: 99px; background: #ffd54a; color: #15121c;
+.iw-lstage__preview { position: absolute; right: calc(var(--u) * .7); top: calc(var(--u) * .7); z-index: 3; padding: .25em .55em; border-radius: 99px; background: #ffd54a; color: #15121c;
   font: 900 var(--fs-xs) / 1 'Rubik', sans-serif; letter-spacing: .12em; box-shadow: 0 0 0 2px #15121c; }
 /* [karp-face] the mode screen with Bazookarp listed: five cards in the row (narrower again), and its koi-coral card */
 .iw-modesel__row.is-five { gap: calc(var(--u) * 1.1); }
