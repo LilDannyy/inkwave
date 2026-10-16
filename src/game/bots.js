@@ -1052,6 +1052,11 @@ export class BotBrain {
         } else if (inkFrac > 0.03) {
           it.squid = false; it.fire = !CHARGES[w.kind] || a.weaponRunner.charging || this.aimPitch < -0.7;
           wantPitch = -1.0;
+        } else if (!this._refillBad || this.t - this._refillBad.t > 6) {
+          // [b5-caldera] fix round 4: too dry to paint and no own ink to step onto here (the patch it was sent to is a level
+          // off, behind a wall or across a gap): it looks elsewhere for 6 s instead of standing ~10 s for the kid's slow
+          // refill (lava-match: refilling bots stood 11–13.5 s on the Lakefront corner and on a lookout's top)
+          this._refillBad = { x: a.pos.x, z: a.pos.z, t: this.t }; this.repath = 0; this.path = null;
         }
       }
     }
@@ -3318,9 +3323,11 @@ export class BotBrain {
     }
     // search nearby for own ink
     let bestP = null, bd = Infinity;
+    const RB = this._refillBad && this.t - this._refillBad.t < 6 ? this._refillBad : null;   // [b5-caldera] fix round 4 (not the patch it couldn't use)
     for (let i = 0; i < 14; i++) {
       const ang = Math.random() * Math.PI * 2, r = 1 + Math.random() * 7;
       _v.set(a.pos.x + Math.cos(ang) * r, a.pos.y, a.pos.z + Math.sin(ang) * r);
+      if (RB && Math.hypot(_v.x - RB.x, _v.z - RB.z) < 3) continue;
       const st = G.paint.regionStats(_v.x, _v.y, _v.z, 1.2, this.inkTeam, _stats);
       if (st.n && st.own > 0.6 && r < bd) { bd = r; bestP = _v.clone(); }
     }
@@ -3328,6 +3335,7 @@ export class BotBrain {
     for (let i = 0; i < 16 && !bestP; i++) {
       const ang = Math.random() * Math.PI * 2, r = 8 + Math.random() * 14;
       _v.set(a.pos.x + Math.cos(ang) * r, a.pos.y, a.pos.z + Math.sin(ang) * r);
+      if (RB && Math.hypot(_v.x - RB.x, _v.z - RB.z) < 3) continue;
       const st = G.paint.regionStats(_v.x, _v.y, _v.z, 1.5, this.inkTeam, _stats);
       if (st.n && st.own > 0.6) bestP = _v.clone();
     }

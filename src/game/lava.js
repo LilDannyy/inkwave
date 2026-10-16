@@ -1141,7 +1141,9 @@ export class StageLava {
     if (b.mode === 'retreat' || (b.mode === 'refill' && !up)) { L.path = null; L.on = false; return; }   // (its life, its tank first)
     b.goalTimer = Math.max(b.goalTimer || 0, 0.6); b.repath = Math.max(b.repath || 0, 0.6);
     // dry on the top: it stays — the brain's refill paints a puddle where it stands and swims in it (the deck takes ink)
-    if (up && b.mode === 'refill') { const here = nav.nearest(a.pos, 1.2, true); if (here >= 0) { b.path = [here]; b.pi = 0; b.goal = here; } L.on = true; L.held += dt; this.stats.lookHold = (this.stats.lookHold || 0) + dt; return; }
+    // (fix round 4: and held on purpose — perchUntil — while it waits for its tank there: a shooter that ran dry up top
+    // stood 13.5 s for the kid's slow refill and read as stuck, lava-match)
+    if (up && b.mode === 'refill') { const here = nav.nearest(a.pos, 1.2, true); if (here >= 0) { b.path = [here]; b.pi = 0; b.goal = here; } L.on = true; L.held += dt; this.stats.lookHold = (this.stats.lookHold || 0) + dt; b.perchUntil = b.t + 0.3; return; }
     if (up) {
       L.on = true; L.held += dt; this.stats.lookHold = (this.stats.lookHold || 0) + dt;
       if (L.log && L.log.up === null) L.log.up = +t.toFixed(1);
