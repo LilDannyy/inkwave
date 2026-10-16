@@ -702,6 +702,33 @@ Colour is never the only signal: the arrows, the words, the pitch direction and 
   open lava. No leap gaps.
 - **No unplanned jumps:** the narrowest level gap between two floors across lava is 4.5 m (the south head's tip to the
   island's SW corner); everything narrower is a seam. The dash-reach audit (§6.2) checks hop + air dash at both levels.
+- **Rule 44 as measured (the lava engine's fix round 3; `lava-audit.js`, a kid stepped by the real physics from 2.6 m
+  behind each edge in 16 headings off every edge node, LOW and HIGH; the Dash Pellet's air dash pressed on the rise, at the
+  apex and on the fall; "saves" = the nav route's length the other way minus the jump's). Per half (Bravo's are the turn):**
+
+  | place | level | crossing | lava gap | saves | status |
+  |---|---|---|---|---|---|
+  | the south bay's corners (Lakefront / Moorings ↔ the south head's copings) | LOW, HIGH | plain running jump | 4.5–5.5 m | 0.8–7.9 m | crosses |
+  | the north head's lake corner by the Slump bay's coping | LOW | plain running jump | 4.5 m | 4.5 m | crosses |
+  | the island ↔ the causeway across the notch at its root | LOW, HIGH | plain running jump | 4.5 m | 5.7 m | crosses |
+  | the lookout column (its LOW top, 2.3) down onto the causeway | LOW | plain running jump | 4.9 m | 9.1–12.5 m | crosses |
+  | the East Pool's corners (the Horn Step / ford ↔ the island's east copings) | LOW | plain running jump | 4.8–5.0 m | 2.4–3.2 m | crosses |
+  | across the Spillway arm from the bridge / horn (2.3) to its copings and the Horn Step | HIGH | plain running jump | 4.5–5.4 m | 6.3–9.3 m | crosses |
+  | **Race 2's corridor with its stones sunk: the north head / Slump ↔ the island's west face** | LOW | swim jump; run or swim + air dash | 4.4–5.9 m | **20–34 m** (4 starts: no way round on foot found) | **a shortcut** |
+  | **the south head ↔ the lookout column** | LOW | swim jump; run + air dash | 5.2–6.0 m | **40–47 m** | **a shortcut** |
+  | **Race 1's first stones → the island's SW shore by the Organ sockets** | HIGH | run + air dash | 5.0–5.4 m | **24–34 m** | **a shortcut** |
+  | every other swim / dash crossing (101 + 56 swim, 167 + 203 dash rows at LOW + HIGH, both halves) | both | swim / dash | 4.4–6.0 m | ≤ 20 m | accepted skill routes |
+
+  The lead's decision (fix round 3) was to widen "the three running-jump corners" to ≥ 5.5 m and to widen to ≥ 6.5 m (or
+  lip) "the 45 m" swim route. The complete audit has more than that, and none of it is a three-corner fix: a plain running
+  jump crosses at 11 places per half, gaps up to 5.5 m (a 2.3 m start carries further), and every one of them crosses a
+  corner between two floors joined by land — the most any saves is 12.5 m, below the skill-route bar. A widening that
+  stops them all moves most of the lake's shore. A 1 m railing is no lip: the audit's kid lands on it (railings are
+  walkable) and a swim jump's 1.77 m arc clears it (tried this round, taken out). **Not changed this round; the three
+  shortcuts in bold are the real ones**, and each needs the stage, not the engine: Race 2's corridor ≥ 6.5 m at LOW (the
+  island's west face pulled in or the north head's shore pushed back, Race 2 a third stone longer), the south bay's west
+  shore pushed back ≥ 1 m from the lookout, and Race 1's first stones ≥ 6.5 m from the island's SW shore (or a taller lip
+  there). The lead decides; `lava-audit.js` rule 44's two checks are the gate and fail until then.
 - **Symmetric:** one lake, a 180° layout, both sides change at the same instant.
 - **Objectives never drown:** the Pour Floor (1.8), both Moorings (1.8), the whole tower track (≥ 1.2), the Pond, weir
   and Gates (≥ 1.2), the Ladle Gantry (1.2), every spawn (≥ 30 m from the region).
