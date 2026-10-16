@@ -20,6 +20,15 @@
   const only = String(window.__preArgs || '');
   // (fix round 1) Zone Control and Tower Command: the lava chip under each mode's own HUD (the top crop), in the warning,
   // the rise, at HIGH and in overtime — MODE=zones / MODE=tower
+  // (fix round 3) Bazookarp: the chip beside Bazookarp's own status line under the clock (.iw-kst) — MODE=bazookarp
+  if (m.mode === 'bazookarp' && m.karp) {
+    const pt = [-6, 1.82, -12], at = [0, 10];
+    add('karp-warn-rise', () => { L.debugT(26); stand(...pt, ...at, -0.1); step(0.5); }, 150);
+    add('karp-high', () => { L.debugT(55); stand(...pt, ...at, -0.1); step(0.3); }, 100);
+    add('karp-carry-warn', () => { L.debugT(26); stand(...pt, ...at, -0.1); m.karp.phase = 'free'; m.karp._applyGrant(me); step(0.5); }, 150);
+    window.__hudScenes = S;
+    return S.map((s) => ({ name: s.name }));
+  }
   if (m.mode === 'zones' || m.mode === 'tower') {
     const pt = [-6, 1.82, -12], at = [0, 10];
     add(m.mode + '-warn-rise', () => { L.debugT(26); stand(...pt, ...at, -0.1); step(0.5); }, 150);

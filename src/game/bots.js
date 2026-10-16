@@ -1500,7 +1500,9 @@ export class BotBrain {
     const vy0 = (a.submerged ? PLAYER.swimJumpVel : PLAYER.jumpVel) * (a.groundTeam === 2 ? 0.72 : 1);
     const st = (x, y, z) => { const dx = n.x - x, dz = n.z - z, d = Math.hypot(dx, dz); return d > 0.3 ? [dx / d, dz / d] : null; };
     const f = this._flight(a, a.vel.x, vy0, a.vel.z, st, 1.4);
-    if (!(f.gy > -Infinity) || Math.abs(f.gy - n.y) > 0.35 || Math.hypot(f.x - n.x, f.z - n.z) > 1.2) return false;
+    // (on n's top: n's height, and a route's node there — an Organ column's top is a 2–5 m hexagon on a 1 m lattice, the
+    // landing rarely within a metre of the one node the route names)
+    if (!(f.gy > -Infinity) || Math.abs(f.gy - n.y) > 0.35 || Math.hypot(f.x - n.x, f.z - n.z) > 2.6 || !this._standable(f.x, f.gy, f.z)) return false;
     const SM = G.match?.stage;
     return !(SM && SM.wet(f.x, f.z, f.gy, 0.5));
   }
