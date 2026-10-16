@@ -237,12 +237,16 @@ placements.push({ type: 'bluestone_cabletram', ...TRAM, eras: '1' }, { type: 'bl
 for (const [x, y, z, ry] of [[-25.3, 1.5, -44, 0], [-25.3, 1.5, -23, 0], [-15.3, 1.5, -26.5, Math.PI], [-13.7, 1.5, -14.4, Math.PI], [-8, 1.5, -16.1, Math.PI / 2]]) {
   for (const [type, eras] of [['bluestone_gaslamp', '1'], ['bluestone_streetlight', '2'], ['bluestone_lightmast', '3']]) placements.push({ type, pos: [x, y, z], rotY: ry, eras });
 }
+// (the spawn → dome line, DESIGN §8.3: from the spawn deck the dome stands exactly behind the GPO, so nothing stands on
+//  the GPO's roof in any era — its tower and spire are on the tram shed beside the spawn deck — and the hotel's
+//  extension and spire rise straight behind its turret, west of the dome's rim; eras-look part 3 checks that the dome
+//  stays in sight from both spawns in every era)
 placements.push({ type: 'bluestone_glasstower', pos: [-29.5, 0, -7], size: [4.4, 6], y0: 9, top: 34, eras: '2' });
-placements.push({ type: 'bluestone_glasstower', pos: [-12.5, 0, -44], size: [3.2, 2.6], y0: 6, top: 27, eras: '2' });
-placements.push({ type: 'bluestone_glasstower', pos: [-10.6, 0, -21.3], size: [1.8, 1.6], y0: 9, top: 21, eras: '2' });
+placements.push({ type: 'bluestone_glasstower', pos: [-9, 0, -68], size: [3.2, 2.6], y0: 6, top: 27, eras: '2' });
+placements.push({ type: 'bluestone_glasstower', pos: [-13.3, 0, -21.7], size: [1.4, 1.2], y0: 9, top: 21, eras: '2' });
 placements.push({ type: 'bluestone_spire', pos: [-29.5, 0, -7], y0: 9, top: 26, r: 3, eras: '3' });
-placements.push({ type: 'bluestone_spire', pos: [-12.5, 0, -44], y0: 6, top: 18, r: 2.2, eras: '3' });
-placements.push({ type: 'bluestone_spire', pos: [-10.6, 0, -21.3], y0: 9, top: 29, r: 1.3, eras: '3' });
+placements.push({ type: 'bluestone_spire', pos: [-9, 0, -68], y0: 6, top: 18, r: 2.2, eras: '3' });
+placements.push({ type: 'bluestone_spire', pos: [-13.3, 0, -21.8], y0: 9, top: 29, r: 1.05, eras: '3' });
 placements.push({ type: 'bluestone_lightlattice', pos: [0, 0, 0], mirror: false, eras: '3' });
 export const BERM_MISS = [];
 export const PLACEMENTS = eraFilter(placements);

@@ -9,12 +9,14 @@
 // Part 2: props and backdrop per era: the tagged prop buckets shown only in their eras (exactly one tram type outside a
 //   jump), their era material and depth material; the backdrop's era sets (one shown per era; both during the horizon
 //   run, clipped by its radius; the new one alone after it).
+// Part 3: the landmark from the base: the dome and its lantern stay in sight from both spawn decks in every era (no era
+//   superstructure on the spawn → dome line, DESIGN §8.3).
 (async () => {
   const g = window.__inkwave, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
   const THREE = await import('three');
   const D = await import('./src/world/eras-data.js');
-  const only = (/only=([\d,]+)/.exec(String(window.__pageArgs || ''))?.[1] || '1,2').split(',').map(Number);
+  const only = (/only=([\d,]+)/.exec(String(window.__pageArgs || ''))?.[1] || '1,2,3').split(',').map(Number);
   const dbg = g.debug;
   dbg.freeze();
   for (const a of g.match.actors) { if (a.bot) a.bot.update = () => {}; if (a.intent) { a.intent.move?.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.jump = false; } a.character.root.visible = false; a.character.setVisible?.(false); }
@@ -141,6 +143,52 @@
       { v1, vRun, far, vAfter, sets: Object.keys(S), clipKey });
     step(W.doneOff);
     E.debugJump(1, { instant: true });
+  }
+
+  // ================================================================================================ part 3
+  // The landmark from the base (DESIGN.md §8.3; review fix 4): the copper dome and its lantern, seen from each spawn deck
+  // (the pad + 1.7 m, the spawn camera's eye), are never hidden by an era's rooftop superstructures. Rays from the eye to
+  // points on the dome's near side (the copper: an ellipsoid r 7.05 from the drum at 9.98 to the crown at 15.12; the
+  // lantern: r 1.75, 15.0–17.4); those the shared city leaves open (the GPO hides the drum in every era) are tested per
+  // era against the era meshes up then (era level meshes and era prop buckets); at least 90 % stay open in every era.
+  if (only.includes(3)) {
+    E.debugJump(1, { instant: true }); step(0.05);
+    const rc = new THREE.Raycaster(), fxg = W.fx?.group, eraSet = new Set([...W.meshes, ...W.propMeshes]);
+    const under = (o, g0) => { for (let q = o; q; q = q.parent) if (q === g0) return true; return false; };
+    const shown = (o) => { for (let q = o; q; q = q.parent) if (!q.visible) return false; return true; };
+    const shared = [];
+    // (opaque meshes only: the spawn barrier's shimmer, water and FX are see-through)
+    const opaque = (o) => [].concat(o.material || []).some((m) => m && !m.transparent && m.depthWrite !== false && m.visible !== false);
+    scene.traverse((o) => { if (o.isMesh && !o.isSkinnedMesh && o.geometry && !eraSet.has(o) && !(fxg && under(o, fxg)) && shown(o) && opaque(o)) shared.push(o); });
+    const C = 9.98, RX = 7.05, RY = 15.12 - 9.98, pts = [];
+    for (let i = 0; i < 32; i++) for (let j = 0; j < 7; j++) { const th = (i / 32) * Math.PI * 2, ph = ((j + 0.5) / 7) * (Math.PI / 2); pts.push({ p: new THREE.Vector3(Math.cos(th) * RX * Math.cos(ph), C + RY * Math.sin(ph), Math.sin(th) * RX * Math.cos(ph)), n: new THREE.Vector3(Math.cos(th) * Math.cos(ph) / RX, Math.sin(ph) / RY, Math.sin(th) * Math.cos(ph) / RX) }); }
+    for (let i = 0; i < 16; i++) for (const y of [15.4, 16.2, 17.0]) { const th = (i / 16) * Math.PI * 2; pts.push({ p: new THREE.Vector3(Math.cos(th) * 1.76, y, Math.sin(th) * 1.76), n: new THREE.Vector3(Math.cos(th), 0, Math.sin(th)) }); }
+    const eyes = L.spawnPads.map((q) => new THREE.Vector3(q.x, q.y + 1.7, q.z)), tmp = new THREE.Vector3();
+    const rays = eyes.map((eye) => pts.filter((s) => s.n.dot(tmp.copy(eye).sub(s.p)) > 0).map((s) => ({ o: eye, dir: s.p.clone().sub(eye).normalize(), d: s.p.distanceTo(eye) })));
+    // (a hit on the landmark itself — inside the dome's own cylinder over the drum, r ≤ 9.5 m, y ≥ 9.9: its era-3 light
+    //  lattice and collar — is the landmark seen, not hidden)
+    const own = (q) => Math.hypot(q.x, q.z) <= 9.5 && q.y >= 9.9;
+    const hit = (r, list) => { rc.set(r.o, r.dir); rc.near = 0.05; rc.far = r.d - 0.3; return rc.intersectObjects(list, false).find((h) => !own(h.point)) || null; };
+    const t0 = performance.now();
+    const sharedBy = new Map();
+    const base = rays.map((rs) => rs.filter((r) => { const h = hit(r, shared); if (h) { const k = `${h.object.name || h.object.type} (${Math.round(h.point.x)}, ${Math.round(h.point.y)}, ${Math.round(h.point.z)})`; sharedBy.set(k, (sharedBy.get(k) || 0) + 1); } return !h; }));
+    const per = [];
+    for (const e of [1, 2, 3]) {
+      E.debugJump(e, { instant: true }); step(0.05);
+      const up = [...W.meshes, ...W.propMeshes].filter((m) => shown(m));
+      const row = { e, open: [], frac: [], blockers: [] };
+      base.forEach((rs, i) => {
+        let open = 0; const at = new Map();
+        for (const r of rs) { const h = hit(r, up); if (!h) { open++; continue; } const k = `${h.object.name} (${Math.round(h.point.x)}, ${Math.round(h.point.y)}, ${Math.round(h.point.z)})`; at.set(k, (at.get(k) || 0) + 1); }
+        row.open.push(`${open}/${rs.length}`); row.frac.push(+(open / Math.max(1, rs.length)).toFixed(3));
+        row.blockers.push([...at.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, n]) => `${k} ×${n}`));
+      });
+      per.push(row);
+    }
+    E.debugJump(1, { instant: true });
+    R('look (review fix 4): the dome and its lantern stay in sight from both spawn decks in every era — of the rays the shared city leaves open, ≥ 90 % are open past each era\'s superstructures (DESIGN §8.3: no tower on the spawn → dome line)',
+      base.every((b) => b.length >= 40) && per.every((x) => x.frac.every((f) => f >= 0.9)),
+      { eyes: eyes.map((v) => v.toArray().map((x) => +x.toFixed(1))), samples: rays.map((r) => r.length), openPastShared: base.map((b) => b.length), shared: shared.length, sharedBlockers: [...sharedBy.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6), per, ms: Math.round(performance.now() - t0) });
   }
   return out;
 })()
