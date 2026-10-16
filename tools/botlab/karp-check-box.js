@@ -275,9 +275,9 @@ function reachPieces() {
 // [fix3] review 3: the swimming REACH rows: (dy, air) pairs as REACH_ROWS, for the carrier swimming in its own ink — a near
 // platform 6 m long that takes ink (the run-up), its rim 0.05 m short of the cell centre at x ±27.5 (its rim node a cell
 // back), a far platform 2.4 m long `air` m on; the same slots, past the kid's rows' x (the case builds only these, on a
-// stage widened to x ±44)
+// stage widened to x ±44); [fix3b] the ceiling: 2.25 / 2.3 m up never made, 2.2 m up made from 3.0–4.5 m of air
 export const SWIM_ROWS = [
-  [2.2, [0.3, 1.0]], [2.1, [0.3, 1.5, 2.5, 3.5]], [2.0, [0.3, 1.5, 2.5, 3.5, 4.5]], [1.8, [3.0, 4.0, 4.8, 5.6]], [1.5, [4.0, 5.0, 5.6, 6.2]],
+  [2.3, [3.5, 4.0]], [2.25, [3.0, 3.5, 4.0, 4.5]], [2.2, [0.3, 3.0, 4.0, 4.5, 5.0]], [2.1, [0.3, 2.5, 3.5, 4.5, 5.0, 5.5]], [2.0, [0.3, 1.5, 2.5, 3.5, 4.5, 5.0, 5.5]], [1.8, [3.0, 4.0, 4.8, 5.6]], [1.5, [4.0, 5.0, 5.6, 6.2]],
   [1.2, [5.0, 5.8, 6.4, 7.0]], [0.6, [6.0, 6.8, 7.4, 8.0]], [0, [6.6, 7.4, 8.0, 8.6]], [-1.2, [7.6, 8.4, 9.0, 9.6]], [-3.4, [8.8, 9.6, 10.4, 11.0]],
 ].flatMap(([dy, airs]) => airs.map((air) => ({ dy, air })));
 export function swimRows() {

@@ -27,14 +27,15 @@ export const CK = {
   ring: 15, entGroup: 3, ents: [2, 5], climbSave: 0.2, ringDrop: 2.5, gain: 10,
   padGate: [12, 20], padUp: 0.2, cone: 40, plateauUp: 1.4, plateauR: 3, kidV: 6, kidClimb: 7.5, signR: 2, wideEnt: 8, nrGap: 3,
   dip: 6, deckWays: 3, apron: 2, apronH: 1.2, apronR: 4, pondRing: [4.5, 10], pondCover: 0.7, pondSeen: 6, weirRoom: 3.0, weirSeen: 3,
-  dropNear: 12, hopHigh: [1.8, 2.2], gapLong: [3.0, 3.8],
+  dropNear: 12, hopHigh: [1.8, 2.25], gapLong: [3.0, 3.8],
   // [fix2] review 2: a hop onto ground off the field from up to two cells out (0.5–2.2 m up, ≤ 2.3 m flat), and the
   // deepest drop any probe follows (as longDrop)
   offRise: 0.5, offFlat: 2.3, dropMax: 20,
-  // [fix3] review 3: (hopHigh[1] 2.1 → 2.2: a carrier's swim-jump from its own ink lands on 2.0–2.1 m, see REACH.swim)
-  // vaults over a low wall or a railing: node pairs ≤ 3.5 m apart, the obstacle's top ≤ 2.2 m over the higher end with
+  // [fix3] review 3: (hopHigh[1] 2.1 → 2.25: a carrier's swim-jump from its own ink, letting go of squid form at the top,
+  // lands on a 2.2 m ledge from 3.0–4.5 m of air and on 2.25 m from none: see REACH.swim)
+  // vaults over a low wall or a railing: node pairs ≤ 3.5 m apart, the obstacle's top ≤ 2.25 m over the higher end with
   // 1.5 m of air above it
-  vault: { flat: 3.5, top: 2.2, air: 1.5 },
+  vault: { flat: 3.5, top: 2.25, air: 1.5 },
 };
 // [fix2] review 2: the kid's reach. REACH.air: the widest open gap (rim to rim, along the line) #16's kid jumps at a rise
 // dy (m, + up) — measured on the self-test's REACH rows (karp-check-box.js 'reach', the coyote jump included), rounded up;
@@ -48,12 +49,16 @@ export const CK = {
 // 0.9 m up's first)
 // [fix3] review 3: REACH.swim, the same for a carrier swimming in its own ink (SPEC §2.4: "kid or squid freely"): it moves
 // at swimSpeed × 0.8 = 9.44 m/s, jumps at swimJumpVel 9.4 (apex 1.77 m) and keeps its speed in the air (actor.js: a
-// squid's air target is max(squidDrySpeed, its speed)), so it flies about twice as far and lands on 2.0–2.1 m (the
+// squid's air target is max(squidDrySpeed, its speed)), so it flies about twice as far and lands as high as 2.2 m (the
 // squid's 0.24 m step-up, or the kid's 0.35 m ledge assist when it lets go of squid form at the top). Measured on the
-// self-test's swimming REACH rows (karp-check-box.js 'reachs': inkable near platforms) and rounded up as REACH.air is; a
-// takeoff whose floor takes ink (inkFloor) gets the larger of the two
+// self-test's swimming REACH rows (karp-check-box.js 'reachs': inkable near platforms) and set, as REACH.air is, to the
+// first gap not made beyond the last made one: 2.25 m up nothing from 3.0–4.5 m of air (nor 2.3 / 2.4 / 2.5 m up, a
+// probe run); 2.2 m up 4.5 made / 5.0 not (letting go at the top; 0.3 m not: the squid meets the face rising); 2.1 4.5 /
+// 5.0; 2.0 5.0 / 5.5; 1.8 4.8 / 5.6; 1.5 5.6 / 6.2; 1.2 5.8 / 6.4; 0.6 6.8 / 7.4; level 7.4 / 8.0; 1.2 down 8.4 / 9.0;
+// 3.4 down 9.6 / 10.4; below, the fall's extra time at 9.44 m/s. A takeoff whose floor takes ink (inkFloor) gets the
+// larger of the two
 export const REACH = { air: [[-20, 8.4], [-10, 6.9], [-6, 6.1], [-3.4, 5.4], [-2.2, 5.0], [-1.2, 4.6], [-0.6, 4.4], [0, 4.4], [0.6, 4.0], [0.9, 4.0], [1.2, 3.4], [1.5, 3.4], [1.8, 2.7], [1.9, 2.0], [2.0, 0.2], [2.2, 0.2]],
-  swim: [[-20, 16.8], [-10, 13.4], [-6, 11.7], [-3.4, 10.4], [-2.2, 9.7], [-1.2, 9.0], [-0.6, 8.5], [0, 7.9], [0.6, 7.3], [0.9, 7.0], [1.2, 6.5], [1.5, 6.0], [1.8, 5.3], [2.0, 4.8], [2.1, 4.2], [2.2, 0.5]],
+  swim: [[-20, 16.8], [-10, 13.4], [-6, 11.7], [-3.4, 10.4], [-2.2, 9.7], [-1.2, 9.0], [-0.6, 8.5], [0, 8.0], [0.6, 7.4], [0.9, 6.9], [1.2, 6.4], [1.5, 6.2], [1.8, 5.6], [2.0, 5.5], [2.1, 5.0], [2.2, 5.0], [2.25, 5.0]],
   margin: 0.3, rimBack: 0.95 };
 const lerpTab = (A, dy) => { if (dy <= A[0][0]) return A[0][1]; for (let k = 1; k < A.length; k++) if (dy <= A[k][0]) { const [x0, y0] = A[k - 1], [x1, y1] = A[k]; return y0 + ((y1 - y0) * (dy - x0)) / (x1 - x0); } return A[A.length - 1][1]; };
 const reachAir = (dy, swim = false) => (swim ? Math.max(lerpTab(REACH.air, dy), lerpTab(REACH.swim, dy)) : lerpTab(REACH.air, dy));
