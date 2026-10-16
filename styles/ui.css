@@ -3240,7 +3240,8 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 .iw-modesel__row.is-five .iw-mode__squid { width: calc(var(--u) * 5.9); height: calc(var(--u) * 5.9); }
 .iw-modesel__row.is-five .iw-mode__zone { width: calc(var(--u) * 5.6); height: calc(var(--u) * 5.6); }
 .iw-modesel__row.is-five .iw-mode__tape .iw-display { font-size: calc(var(--u) * 1.42); }
-.iw-modesel__row.is-five .iw-mode__new { scale: .86; }
+.iw-modesel__row.is-five .iw-mode__new { scale: .86; right: calc(var(--u) * -.35); top: calc(var(--u) * -1.5); }   /* ([karp-face] inside the 1.1 u gap: the next card covered it) */
+.iw-modesel__row.is-five .iw-mode__beta { left: calc(var(--u) * 1.5); top: calc(var(--u) * 4.1); rotate: -2deg; font-size: max(8px, calc(var(--u) * .66)); letter-spacing: .1em; }   /* (under the kicker: beside it, it ran into the next card) */
 .iw-modesel__row.is-five .iw-mode__blurb { margin: calc(var(--u) * 2.3) calc(var(--u) * 1.3) 0; font-size: max(10px, calc(var(--u) * .84)); }
 .iw-modesel__row.is-five .iw-mode__chips { gap: calc(var(--u) * .35); margin: auto calc(var(--u) * 1.1) calc(var(--u) * 1.2); }
 .iw-modesel__row.is-five .iw-mode__chips .iw-chip { font-size: max(9px, calc(var(--u) * .72)); padding: .3em .55em .3em .3em; }
@@ -3255,6 +3256,17 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 .iw-howto__rules.is-karp .iw-rule__art { height: calc(var(--u) * 7.4); margin-bottom: calc(var(--u) * .6); }
 .iw-howto__rules.is-karp .iw-rule__title { font-size: calc(var(--u) * 1.45); }
 .iw-howto__rules.is-karp .iw-rule__text { font-size: max(11px, calc(var(--u) * .88)); line-height: 1.3; }
+/* [karp-face] review round 1: on a short window (960×600) the Overtime note ran under the key bar — smaller art, tighter
+   cards and the note's short wording there */
+.iw-hnote__short { display: none; }
+@media (max-height: 720px) {
+  .iw-howto__rules.is-karp { gap: calc(var(--u) * .8); }
+  .iw-howto__rules.is-karp .iw-rule { padding: calc(var(--u) * .7) calc(var(--u) * .8) calc(var(--u) * .9); }
+  .iw-howto__rules.is-karp .iw-rule__art { height: calc(var(--u) * 4.6); margin-bottom: calc(var(--u) * .45); }
+  .iw-howto__rules.is-karp .iw-rule__text { line-height: 1.24; }
+  .iw-howto__rules.is-karp + .iw-howto__noteslot .iw-hnote__long { display: none; }
+  .iw-howto__rules.is-karp + .iw-howto__noteslot .iw-hnote__short { display: inline; }
+}
 @media (max-width: 1100px) {
   .iw-howto__modes.is-four .iw-segico i { display: none; }
   .iw-howto__modes.is-four .iw-seg__opt { font-size: .76em; letter-spacing: .01em; }

@@ -2904,7 +2904,8 @@ export class Menus {
     ];
     const karpNotes = () => h('div', { class: 'iw-howto__notes iw-in iw-in--up' },
       h('div', { class: 'iw-hnote' }, h('i', { html: GLYPHS.bolt }), h('span', null, h('b', null, 'Specials charge'), ' while the other team holds it, and for the team behind while nobody does.')),
-      h('div', { class: 'iw-hnote' }, h('i', { html: GLYPHS.clock }), h('span', null, h('b', null, 'Overtime:'), ' if the team behind holds it at time-up, or the team ahead just lost it in the last 15 s, or the team behind just landed a weir in the last 5 s, play goes on. Grab it within 10 s and carry it past their count.')));
+      h('div', { class: 'iw-hnote' }, h('i', { html: GLYPHS.clock }), h('span', null, h('b', null, 'Overtime:'), h('span', { class: 'iw-hnote__long' }, ' if the team behind holds it at time-up, or the team ahead just lost it in the last 15 s, or the team behind just landed a weir in the last 5 s, play goes on. Grab it within 10 s and carry it past their count.'),
+        h('span', { class: 'iw-hnote__short' }, ' if the team behind holds it at time-up (or just lost it, or just took a weir), play goes on: grab it within 10 s, carry it past their count.'))));   // ([karp-face] the short one on a short window: 960×600)
     const card = ([art, title, text], i, mode) => h('div', { class: 'iw-rule iw-in iw-in--pop', style: { '--tilt': `${[-1.2, 1, 0.8, -1][i]}deg` } },
       h('div', { class: 'iw-rule__art' + (mode !== 'turf' ? ' is-zone' : ''), html: (mode === 'bazookarp' ? KARP_RULE_ART : mode === 'tower' ? TOWER_RULE_ART : mode === 'zones' ? ZONE_RULE_ART : RULE_ART)[art] }),
       h('div', { class: 'iw-rule__num' }, String(i + 1)),

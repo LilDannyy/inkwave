@@ -11,6 +11,8 @@
 //       stage, the ones still on placeholder data tagged PREVIEW (and only those); the length locked at 5:00
 //     L the online lobby (the offline stand-in as the host's session): the mode with the carp icon and the locked 5:00;
 //       ▶ through its stage list: the same stages as the stage select, PREVIEW on the placeholder ones (?wipstages)
+//   [karp-face] review round 1 (run it at W=960 H=600 too): H2 the four cards and both notes are wholly on screen, clear of
+//     the key bar; M3 the Boss card's NEW! badge and PUBLIC BETA tag aren't covered by the next card
 //   without ?wipmodes: no BAZOOKARP card, rules tab or lobby mode (a room refuses the mode)
 //   WIPMODES=1 MAP=halyard MODE=bazookarp PAGE=tools/botlab/tests/karp-menus.js tools/botlab/run.sh tools/botlab/page.cjs
 //   (and the same with WIPSTAGES=1 too, and with neither)
@@ -72,6 +74,14 @@
       R(`${tag}H1. How to Play: a BAZOOKARP tab; four cards with art (Burst the shell · Carry it · Take the weir · Mind the fuse) and the two notes`,
         hasTab && cards.length === 4 && cards.every((c) => c.art) && JSON.stringify(cards.map((c) => c.title)) === JSON.stringify(['Burst the shell', 'Carry it', 'Take the weir', 'Mind the fuse'])
         && /20% slower/.test(cards[1].text || '') && /3× as fast/.test(cards[3].text || '') && notes.length === 2 && /Specials charge/.test(notes[0]) && /Overtime/.test(notes[1]), { tabs, cards: cards.map((c) => c.title), notes });
+      // H2 [karp-face]: every card and note wholly on screen, and none under the key bar (at 960×600 the Overtime note ran
+      // off the bottom, under it)
+      await wait(700);
+      const rr = (e) => { const r = e.getBoundingClientRect(); return { l: Math.round(r.left), t: Math.round(r.top), r: Math.round(r.right), b: Math.round(r.bottom) }; };
+      const bar = q('.iw-howto .iw-prompts') || qa('.iw-prompts').pop(), barR = bar ? rr(bar) : null;
+      const boxes = [...qa('.iw-rule'), ...qa('.iw-hnote')].map(rr);
+      const clash = boxes.filter((b) => b.b > innerHeight + 1 || (barR && b.r > barR.l && b.l < barR.r && b.b > barR.t + 1));
+      R(`${tag}H2. How to Play at ${innerWidth}×${innerHeight}: the four cards and both notes wholly on screen, clear of the key bar`, boxes.length === 6 && clash.length === 0, { bar: barR, notes: qa('.iw-hnote').map(rr), clash });
     } else R(`${tag}H1. How to Play has no Bazookarp tab while the mode is hidden`, !hasTab && tabs.length >= 3, { tabs });
 
     // ---- M. the mode screen
@@ -85,6 +95,18 @@
       R(`${tag}M1. the mode screen's fifth card: BAZOOKARP · RANKED RULES · NEW! · Lockgate's art · the carp · 4 V 4 / 5:00 + OT / CARRY IT HOME`,
         cards.length === 5 && !!info && info.name === 'BAZOOKARP' && info.kicker === 'RANKED RULES' && info.badge === 'NEW!' && /lockgate/.test(info.img) && info.carp && JSON.stringify(info.chips) === JSON.stringify(['4 V 4', '5:00 + OT', 'CARRY IT HOME']), info);
       R(`${tag}M2. all five cards fit the screen (${innerWidth}×${innerHeight})`, fit, cards.map((c) => { const r = c.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right), Math.round(r.bottom)]; }));
+      // M3 [karp-face]: the Boss card's badge and beta tag are on top where they are drawn (the Bazookarp card next to it
+      // covered both at 960×600) — the topmost element at points along their middle is inside the Boss card
+      const boss = q('.iw-mode--boss'), cover = [];
+      for (const sel of ['.iw-mode__new', '.iw-mode__beta']) {
+        const e = boss && boss.querySelector(sel); if (!e) { cover.push({ sel, missing: true }); continue; }
+        const r = e.getBoundingClientRect();
+        for (const [fx, fy] of [[0.5, 0.5], [0.22, 0.5], [0.78, 0.5]]) {   // (along its middle: it's rotated, its box corners aren't it)
+          const x = r.left + r.width * fx, y = r.top + r.height * fy, top = document.elementFromPoint(x, y);
+          if (!top || !boss.contains(top)) cover.push({ sel, at: [Math.round(x), Math.round(y)], top: top ? (top.className?.baseVal ?? top.className) : null });
+        }
+      }
+      R(`${tag}M3. the Boss card's NEW! badge and PUBLIC BETA tag aren't covered by the card beside them (${innerWidth}×${innerHeight})`, !!boss && cover.length === 0, { cover: cover.slice(0, 6) });
     } else R(`${tag}M1. no BAZOOKARP card while the mode is hidden (four cards)`, !kc && cards.length === 4, { cards: cards.length });
 
     // ---- S. the stage select in Bazookarp
