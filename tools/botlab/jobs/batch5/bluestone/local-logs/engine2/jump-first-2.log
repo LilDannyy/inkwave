@@ -1,0 +1,3 @@
+PASS step 8 (review 2, issue 1): the page's first jump on the real schedule compiles no shader program from J − 20 to done + 1.5 (every era program was compiled at load: the bells' sprites and the holograms too) and the warning frame's era update is under 10 ms  {"precompiled":1,"compiledAtLoad":7,"compileMs":578,"programs":[149,149],"grew":[],"newPrograms":[],"warnFrame":{"t":-10,"updateMs":6.9,"parts":{"view":21.7,"audio":6.4,"say":2.7,"ring":2.2,"clearFaces":0.3,"setJump":0.6,"warnState":1.8}}}
+RESULT 1/1
+console errors: none

@@ -1,0 +1,18 @@
+[net] relay ws://127.0.0.1:55423
+[net] 2 clients up in 14.1 s
+PASS bot plan: 3 bots, split to even the teams  {"total":3,"team":[2,1],"free":6}
+PASS a match still waits for everyone to ready up
+PASS the match has the 2 players + the bots asked for, teams even  {"byTeam":[3,2],"bots":3}
+PASS a timed match (not practice) on the same stage and look for both  {"actors":[[0,false],[0,true],[0,true],[1,false],[1,true]],"practice":false,"time":59.78340000000001,"theme":"sunset","map":"kelpline"}
+PASS the relay room is locked during a match
+PASS …a late joiner is turned away: Match in progress  {"err":"Match in progress"}
+[net] playing the minute out…
+PASS results on both screens, the same winner  {"res":[0,0]}
+PASS …then both back in the lobby, the settings kept  [{"cur":"lobby","n":2,"bc":3},{"cur":"lobby","n":2}]
+PASS the relay room is open again
+RESULT 9/9
+c0 console: none
+c1 console: none
+c2 console: none
+relay stats {"dropped":0,"rateKicks":0,"peakRate":24,"maxMsg":3104}
+outside requests refused: none

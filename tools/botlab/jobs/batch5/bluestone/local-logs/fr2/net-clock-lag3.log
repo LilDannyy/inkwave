@@ -1,0 +1,12 @@
+[net] relay ws://127.0.0.1:55240
+[net] 2 clients up in 15.8 s
+[net] playing a 1:30 Turf War on halyard to the whistle…
+PASS guest: the match clock never goes up from one frame to the next (it gives time back by running slow)  {"frames":5384,"ups":0,"upMax":0,"upSteps":[]}
+PASS guest: the HUD timer never shows a second again (each next second is lower)  {"shown":91,"back":[],"first":[["1:30",1792166373568],["1:29",1792166374333],["1:28",1792166375267]],"lastShown":["0:11","0:10","0:09","0:08","0:07","0:06","0:05","0:04","0:03","0:02","0:01","0:00"]}
+PASS both: the final countdown fires 10 … 1, each second once and in order — on the guest even after a host tick right after its 6 says it is 0.3 s ahead (its clock not stepped up)  {"guest":[10,9,8,7,6,5,4,3,2,1],"host":[10,9,8,7,6,5,4,3,2,1],"inject":{"before":5.9897,"after":5.9897,"slew":0.3},"skew":[0.01,-0.022,-0.023,-0.023,-0.039,-0.006,-0.301,-0.141,-0.007,-0.007]}
+PASS guest: its clock is the host's at the same wall time (median < 0.15 s, p90 < 0.25 s)  {"samples":5084,"median":0.021,"p90":0.073,"max":0.476,"meanSigned":0.014,"ticks":165,"stepsForward":23,"fwdMax":-0.1475,"slewTicks":15,"slewMax":0.2998,"resyncs":0,"lostToStalls":{"host":1.84,"guest":1.99}}
+RESULT 4/4
+c0 console: none
+c1 console: none
+relay stats {"dropped":0,"rateKicks":0,"peakRate":29,"maxMsg":508}
+outside requests refused: none

@@ -1,0 +1,3 @@
+PASS paint density and lightmap rows on high (the union world vs Halyard)  [{"id":"bluestone","quality":"high","atlas":4096,"ppm":27.6,"paintArea_m2":12312,"lightUsed":1142,"lightSize":2048,"buildMs":1007},{"id":"halyard","quality":"high","atlas":4096,"ppm":27.6,"paintArea_m2":10170,"lightUsed":740,"lightSize":2048,"buildMs":1073}]
+RESULT 1/1
+console errors: none

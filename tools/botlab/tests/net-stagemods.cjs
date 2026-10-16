@@ -10,7 +10,10 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
   const [A, B] = clients;
   const J = async (c, code) => JSON.parse(await c.js(`JSON.stringify(${code})`));
   const install = (c) => c.js(`(async () => { const D = await import('./tools/botlab/tests/stage-mods-dummy.js'); const { MAP_LAYOUTS } = await import('./src/world/maps.js'); D.installDummy(MAP_LAYOUTS.halyard); __inkwave.worldKey = null; return 1; })()`);
-  const st = (c) => J(c, `(() => { const m = __G.match, S = m && m.stage; return S && m.dummymod ? { ...m.dummymod.state(), host: __G.net.isHost, nids: m.actors.map((a) => [a.nid, a.isLocal]) } : null; })()`);
+  const st = (c) => J(c, `(() => { const m = __G.match, S = m && m.stage; return S && m.dummymod ? { ...m.dummymod.state(), host: __G.net.isHost, nids: m.actors.map((a) => [a.nid, a.isLocal]), wall: Date.now() } : null; })()`);
+  // [b5-eras] two screens' clocks compared at the same wall time (both clients run in this one process: one Date.now()):
+  // the second screen is read a round trip after the first, which on a loaded machine is ~0.5 s of its clock
+  const skewOf = (a, b) => +((b.t - (b.wall - a.wall) / 1000) - a.t).toFixed(3);
   await install(A); await install(B);
   const code = await A.js(`__G.net.create('Hosty')`);
   await A.js(`__G.net.setSettings({ mode: 'practice', map: 'halyard', time: 'day', botCount: 0 }); 1`);
@@ -23,7 +26,7 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
   let a = await st(A), b = await st(B);
   R('both screens run the module (G.stageWorld, match.stage, the dummy)', !!a && !!b && a.host && !b.host && b.follower, { a: !!a, b: !!b });
   if (!a || !b) return;
-  R('the stage clock agrees on both screens (Practice: the host\'s stage clock rides its ticks), ± 0.4 s', Math.abs(a.t - b.t) < 0.4, { a: a.t, b: b.t });
+  R('the stage clock agrees on both screens (Practice: the host\'s stage clock rides its ticks), ± 0.4 s', Math.abs(skewOf(a, b)) < 0.4, { a: a.t, b: b.t, readApart_s: (b.wall - a.wall) / 1000, skew: skewOf(a, b) });
   R('a pure function of the clock agrees: the moving collider\'s top (± 0.15 m) and the edge window', Math.abs(a.top - b.top) < 0.15 && (a.open === b.open || Math.abs((a.t % 10) - 10) < 0.5 || (a.t % 10) < 0.5), { a: [a.top, a.open], b: [b.top, b.open] });
   // 2) the host's records reach the guest
   await A.js(`(__G.match.dummymod.bump(), __G.match.dummymod.bump(), __G.match.dummymod.bump(), 1)`);
@@ -55,10 +58,10 @@ module.exports = async ({ clients, R, wait, open, close, say }) => {
   for (let i = 0; i < 10; i++) {
     await wait(1000);
     a = await st(A); c = await st(C);
-    skew.push(c ? +(c.t - a.t).toFixed(2) : null);
-    if (c && Math.abs(c.t - a.t) < 0.6) break;
+    skew.push(c ? skewOf(a, c) : null);
+    if (c && Math.abs(skewOf(a, c)) < 0.6) break;
   }
-  R('a late joiner restores the module\'s state from the snapshot (n) and its clock (± 0.6 s once settled), with seek(\'late\')', c && c.n === a.n && Math.abs(c.t - a.t) < 0.6 && c.seeks.includes('late'), { host: [a.n, a.t], joiner: c && [c.n, c.t, c.seeks], skew });
+  R('a late joiner restores the module\'s state from the snapshot (n) and its clock (± 0.6 s once settled), with seek(\'late\')', c && c.n === a.n && Math.abs(skewOf(a, c)) < 0.6 && c.seeks.includes('late'), { host: [a.n, a.t], joiner: c && [c.n, c.t, c.seeks], skew });
   await A.js(`(__G.match.dummymod.bump(), 1)`);
   await C.until(`__G.match.dummymod.n === ${a.n + 1}`, 8000).catch(() => {});
   const c2 = await st(C);

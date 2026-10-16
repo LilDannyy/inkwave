@@ -1,0 +1,33 @@
+shot prebell-phone 89676 {"era":1,"phase":"prebell","from":1,"to":2,"t":40.367,"next":{"from":1,"to":2,"at":60,"inS":19.633333333332928},"front":-1,"flips":0,"navEra":1,"turfTotal":87974,"eraShoves":0,"rescues":0,"devices":0,"mc":40.37}
+shot jump1-knee-J-10 128183 {"era":1,"phase":"warn","from":1,"to":2,"t":50.467,"next":{"from":1,"to":2,"at":60,"inS":9.53333333332489},"front":-1,"flips":0,"navEra":1,"turfTotal":87974,"eraShoves":0,"rescues":0,"devices":0,"mc":50.47}
+shot jump1-quay-J-10 144585 {"era":1,"phase":"warn","from":1,"to":2,"t":50.483,"next":{"from":1,"to":2,"at":60,"inS":9.51666666665821},"front":-1,"flips":0,"navEra":1,"turfTotal":87974,"eraShoves":0,"rescues":0,"devices":0,"mc":50.48}
+shot mural-hoki-era1 54825 {"era":1,"phase":"warn","from":1,"to":2,"t":50.5,"next":{"from":1,"to":2,"at":60,"inS":9.49999999999153},"front":-1,"flips":0,"navEra":1,"turfTotal":87974,"eraShoves":0,"rescues":0,"devices":0,"mc":50.5}
+shot minimap-era1-warn 101237
+shot pulses-warn 154251 {"era":1,"phase":"warn","from":1,"to":2,"t":54.217,"next":{"from":1,"to":2,"at":60,"inS":5.783333333323682},"front":-1,"flips":0,"navEra":1,"turfTotal":87974,"eraShoves":0,"rescues":0,"devices":0,"mc":54.22}
+shot timelapse-sky-J+0.1 67065 {"era":1,"phase":"jump","from":1,"to":2,"t":60.117,"next":{"from":1,"to":2,"at":60,"inS":0},"front":2.92,"flips":0,"navEra":1,"turfTotal":87974,"eraShoves":0,"rescues":0,"devices":0,"mc":60.12}
+shot timelapse-sky-J+1.0 62073 {"era":1,"phase":"jump","from":1,"to":2,"t":61.017,"next":{"from":1,"to":2,"at":60,"inS":0},"front":25.42,"flips":0,"navEra":1,"turfTotal":87974,"eraShoves":0,"rescues":0,"devices":0,"mc":61.02}
+shot jump1-knee-J+1.5 103870 {"era":1,"phase":"jump","from":1,"to":2,"t":61.517,"next":{"from":1,"to":2,"at":60,"inS":0},"front":37.92,"flips":8,"navEra":1,"turfTotal":90362,"eraShoves":0,"rescues":0,"devices":0,"mc":61.52}
+shot jump1-quay-J+1.5 137186 {"era":1,"phase":"jump","from":1,"to":2,"t":61.533,"next":{"from":1,"to":2,"at":60,"inS":0},"front":38.33,"flips":8,"navEra":1,"turfTotal":90362,"eraShoves":0,"rescues":0,"devices":0,"mc":61.53}
+shot timelapse-sky-J+2.0 60259 {"era":1,"phase":"jump","from":1,"to":2,"t":62.017,"next":{"from":1,"to":2,"at":60,"inS":0},"front":50.42,"flips":8,"navEra":1,"turfTotal":90362,"eraShoves":0,"rescues":0,"devices":0,"mc":62.02}
+shot mural-hoki-J+2.05 76002 {"era":1,"phase":"jump","from":1,"to":2,"t":62.067,"next":{"from":1,"to":2,"at":60,"inS":0},"front":51.67,"flips":8,"navEra":1,"turfTotal":90362,"eraShoves":0,"rescues":0,"devices":0,"mc":62.07}
+shot timelapse-sky-J+3.0 58555 {"era":1,"phase":"jump","from":1,"to":2,"t":63.017,"next":{"from":1,"to":2,"at":60,"inS":0},"front":75.42,"flips":8,"navEra":1,"turfTotal":90362,"eraShoves":0,"rescues":0,"devices":0,"mc":63.02}
+shot jump1-knee-done+1 123983 {"era":2,"phase":"idle","from":null,"to":null,"t":64.983,"next":{"from":2,"to":3,"at":120,"inS":55.01666666665763},"front":-1,"flips":8,"navEra":2,"turfTotal":90362,"eraShoves":0,"rescues":0,"devices":0,"mc":64.98}
+shot jump1-quay-done+1 137062 {"era":2,"phase":"idle","from":null,"to":null,"t":65,"next":{"from":2,"to":3,"at":120,"inS":54.99999999999096},"front":-1,"flips":8,"navEra":2,"turfTotal":90362,"eraShoves":0,"rescues":0,"devices":0,"mc":65}
+shot mural-hoki-era2 73416 {"era":2,"phase":"idle","from":null,"to":null,"t":65.017,"next":{"from":2,"to":3,"at":120,"inS":54.983333333324296},"front":-1,"flips":8,"navEra":2,"turfTotal":90362,"eraShoves":0,"rescues":0,"devices":0,"mc":65.02}
+shot minimap-era2 99530
+shot tabmap-era2 83024
+shot jump2-quay-J-10 146521 {"era":2,"phase":"warn","from":2,"to":3,"t":110.417,"next":{"from":2,"to":3,"at":120,"inS":9.583333333326877},"front":-1,"flips":8,"navEra":2,"turfTotal":90362,"eraShoves":0,"rescues":0,"devices":0,"mc":110.42}
+shot jump2-quay-J+2 136085 {"era":2,"phase":"jump","from":2,"to":3,"t":122.017,"next":{"from":2,"to":3,"at":120,"inS":0},"front":50.42,"flips":52,"navEra":2,"turfTotal":106486,"eraShoves":0,"rescues":0,"devices":0,"mc":122.02}
+shot jump2-quay-done+1 127015 {"era":3,"phase":"idle","from":null,"to":null,"t":124.983,"next":null,"front":-1,"flips":52,"navEra":3,"turfTotal":106486,"eraShoves":0,"rescues":0,"devices":0,"mc":124.98}
+shot mural-seams-era3 65243 {"era":3,"phase":"idle","from":null,"to":null,"t":125,"next":null,"front":-1,"flips":52,"navEra":3,"turfTotal":106486,"eraShoves":0,"rescues":0,"devices":0,"mc":125}
+shot minimap-era3 104311
+shot tabmap-era3 89814
+shot bot-on-halo 107996 {"era":3,"phase":"idle","from":null,"to":null,"t":127.333,"next":null,"front":-1,"flips":52,"navEra":3,"turfTotal":106486,"eraShoves":0,"rescues":0,"devices":0,"mc":127.33}
+shot minimap-era1 91360
+shot tabmap-era1 79673
+rescue setup {"F":181.48337453126308,"at":[2.5,-0.20000000000000007,-37]}
+shot rescue-garden-before 95547 {"era":3,"phase":"jump","from":3,"to":1,"t":181.3,"next":{"from":3,"to":1,"at":180,"inS":0},"front":32.5,"flips":94,"navEra":3,"turfTotal":92986,"eraShoves":0,"rescues":0,"devices":0,"mc":0}
+shot rescue-garden-after 104534 {"era":3,"phase":"jump","from":3,"to":1,"t":181.617,"next":{"from":3,"to":1,"at":180,"inS":0},"front":40.42,"flips":102,"navEra":3,"turfTotal":88328,"eraShoves":0,"rescues":2,"devices":0,"mc":0}
+rescue {"rescues":2,"at":[5.5,-0.34,-41.5],"alive":true}
+shot lightmap-probe 24782
+CONSOLE 0 error line(s)

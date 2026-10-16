@@ -1,0 +1,29 @@
+tidewater    411 pieces  ok
+kelpline     283 pieces  ok
+halyard      96 pieces  1 issue(s)
+   - half[41] ramp is 25.7° (max 24)
+halyard.zones 102 pieces  ok
+saltpan      148 pieces  ok
+saltpan.zones 154 pieces  ok
+crossmarket  184 pieces  ok
+crossmarket.zones 190 pieces  ok
+lockgate     198 pieces  ok
+terraces     588 pieces  ok
+terraces.zones 587 pieces  ok
+nantai       599 pieces  ok
+craters      1271 pieces  ok
+calamari     166 pieces  ok
+spirhalite   749 pieces  ok
+treehills    669 pieces  ok
+   eras objectives (nearest era piece): spawn 15.92 m (goods-wagon, turf); reach 84.53 m (boiler-house); tower 1.38 m (halo over the headroom, tower); karp 4.5 m (cab-shelter / a weir, bazookarp); zone 3.5 m (cab-shelter, zones); 28 river rails checked per era
+   eras static rules: Tartar's tower clear (18); 32 overhead pieces, the lowest 3.75 m over a route (halo [halo-6:a] #3; 22: ≥ 4.0); 20 overhead decks, 12 drop gaps ≤ 2.05 m (23); era-3 tops ≤ 5.4 m (26: ≤ 9); 12 swap groups (29–30); slots 64/65/66 and 2 remaps (39: ≤ 6, ≤ 4)
+   ACCEPTED (layout eras.accept.rule22): halo-6:a 3.75 m (the Halo 225° side over the balcony stair's top corner, 3.66 m: accepted blockout geometry, DESIGN §3.6 #3)
+   ACCEPTED (layout eras.accept.rule22): halo-6:b 3.75 m (the Halo 225° side over the balcony stair's top corner, 3.66 m: accepted blockout geometry, DESIGN §3.6 #3)
+bluestone#1  568 pieces  (strips over 25 m: 0)
+bluestone#2  590 pieces  (strips over 25 m: 0)
+bluestone#3  700 pieces  (strips over 25 m: 0)
+   eras: 52 groups; jump 1→2 4 / 4 groups per half, 26 blocks; jump 2→3 22 / 22, 130; era-only 21.9 %
+bluestone    712 pieces  ok
+aquarium     5 pieces  ok
+caldera      5 pieces  ok
+cargo        283 pieces  ok

@@ -486,6 +486,46 @@ guard and the lava's clip judge it at the painter's moment on every screen); the
 ride) and draw a proxy itself (`carryRemote`, after the sample's flags and yaw). A late joiner of a Practice session
 gets the modules' snapshot in its start config (`stage`) and restores it when its first host clock arrives (then
 `seek(t, 'late')`); a host change tells the modules (`hostChanged`). Tested by `tools/botlab/tests/net-stagemods.cjs`.
+Bluestone Junction's eras ([b5-eras], src/game/eras.js) send nothing of their own: every jump (the pre-bell, the warning,
+each group's flip at J + r_g / 25, done) is a pure function of that clock on each screen, and a clock snap re-derives
+it at once (`seek`, `era:set`); `R.splatTime` stamps field 15 only from J − 1 to done + 1; each screen shoves, rescues
+and pops (S.crushIn, or the walk of `G.subs.items` until the subs package adds it) its own squidkids and devices only,
+whose existing records carry the result. In detail:
+- **The jump on every screen.** A follower's stage clock follows the host's match clock (`duration − time`, eased within
+  1.5 s, snapped beyond: `seek('clock')`); the runtime holds the world at its clock's high-water mark between seeks, so a
+  clock easing back a little never re-fires an event or flips a group back. Groups flip on the two screens within the
+  clock skew of each other (measured < 0.4 s of wall time on two clients of one machine, and with `netlag=150&netjitter=50`).
+- **The clock's trip** ([b5-eras], netmatch.js `_lead` / `_hostClock`; the final review's issue 4). The host's clock
+  tick (`msg.c`, twice a second) carries its match clock (and Practice's stage clock) as they will be when the tick
+  reaches the relay: half the host's smoothed round trip to the relay taken off `time` (added to the stage clock); each
+  follower takes its own half off on arrival and corrects past a 0.05 s dead band (0.2 s before, with no trip added back:
+  at 150 ms a follower sat 0.37–0.45 s behind). **The match clock only ever runs on** (the final review 2's issue 1:
+  stepping it back halfway re-showed a second on the HUD timer and re-fired the final countdown, several times a minute at
+  150 ms with 50 ms of jitter): a follower behind steps halfway forward; one a little ahead (the jitter, its own stall)
+  gives the time back by running slow — `match.clockSlew`, its countdown at 0.5–0.9× until it is given back
+  (`match.js`); only a resync of more than 1.5 s ahead (a stalled host) steps it back. The final countdown fires each
+  second once (`match:count` only for a second below the last). Every follower's match clock — the HUD's timer, the
+  movers', the pods', the stage modules' — is the host's to within the jitter (`tests/net-clock.cjs`, at
+  `netlag=150&netjitter=50`: never up between frames, the timer's seconds and 10 … 1 once each, median 0.02 s off).
+- **The ink guard.** A splat from J − 1 to done + 1 carries its painter's stage time (field 15); the replaying screen
+  judges `inkOk(block, et)` at that time, so a splat on a piece around its flip (the guard: ± 0.5 s) inks the same cells
+  on every screen. Appearing pieces are cleared at the warning on each screen (before any replay of a splat on them can
+  land); vanished pieces at done + 1.
+- **Devices.** The owner's screen pops its own device stuck to a piece that vanishes, resting on one with no face to say so
+  (a Drip Curtain on a roof), or caught in one that appears; its end record `[2, gid, 2]` (the subs SPEC's crushed: the
+  crunch, never a ghost mine's blast) ends the ghosts elsewhere. A Zipline anchored on a piece that vanishes ends at each
+  screen's own flip: the owner drops its rider, every other screen takes the tether down (nothing on the wire).
+- **Practice.** The host's ticks carry the stage clock (no movers or pods on Bluestone: the registry's clock); followers
+  snap to it (`seek('clock')`), so a host who moves the clock (or a late tick) moves every screen. The rewind 3 → 1 runs
+  like any jump; each screen rescues its own squidkids over the river.
+- **A late joiner** (Practice) applies the era of the host's clock on its first tick (`seek('late')`, the start config's
+  stage snapshot); its `importGrid` copy has the union world's length in every era, and the era apply recounts the turf.
+- **A host change** needs no hand-over: the new host's match clock runs on, and the next jump comes on its clock.
+- **The results** are the host's counts, taken in the era in force at the whistle (the 3000s in a timed match).
+Tested by `tools/botlab/tests/net-eras.cjs` (CLIENTS=2 and a third client for the late join: flip skew and the two stage
+clocks at the same wall time, solid and the nav era after each done, a sprinkler and a Drip Curtain on the Degrayling
+crates, the Iron Bridge's cells around its flip, the results; the host leaving between the jumps; Practice's clock, a late
+joiner in the 3000s and the rewind; and the contract's lagged run, `URLQ='wipstages&netlag=150&netjitter=50'`).
 
 **Pipes** (Gulper Aquarium's Tubeway: src/game/pipes.js, a stage module; aquarium ENGINE.md §3.9 / §4.7). A ride is the
 rider's own: its owner decides the capture, refusal, ride, pop and touchdown, and records two kit records through

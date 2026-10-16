@@ -1,0 +1,2 @@
+HARNESS ERA=2 disagrees with PAGEQ's era=3: use ERA=1|2|3 or PAGEQ='era=n' (Bluestone's audit switch), not both
+rc 0

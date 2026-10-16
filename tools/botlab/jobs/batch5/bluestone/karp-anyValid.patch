@@ -1,0 +1,11 @@
+--- a/src/game/karpField.js
++++ b/src/game/karpField.js
+@@ -168,7 +168,7 @@
+     const ok = (this.ok = new Uint8Array(N));
+     for (let i = 0; i < N; i++) {
+       const n = nav.nodes[i];
+-      if (!nav.valid[i] || n.zone >= 0) continue;
++      if (!(nav.anyValid || nav.valid)[i] || n.zone >= 0) continue;   // [b5-eras] every era's nodes on a stage with eras (Bluestone: the union graph's anyValid), the states mask them
+       if (R.carrierBlock.some((v) => volNode(v, n.x, n.y, n.z))) continue;
+       ok[i] = 1;
+     }

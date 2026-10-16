@@ -1,0 +1,192 @@
+# head 7de724a2 13:10:39
+# head 7de724a2
+--- 13:10:39 regions 1 1
+### ink-regions era 1 run 1
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5496,"inked":0.705,"regions":{"circus":{"m2":1487,"share":0.271,"inked":0.76},"base":{"m2":978,"share":0.178,"inked":0.75},"knee":{"m2":835,"share":0.152,"inked":0.68},"swimston":{"m2":541,"share":0.099,"inked":0.83},"river":{"m2":493,"share":0.09,"inked":0.45},"knee-far":{"m2":416,"share":0.076,"inked":0.66},"hoki":{"m2":267,"share":0.049,"inked":0.72},"gpo-quay":{"m2":265,"share":0.048,"inked":0.62},"arcade":{"m2":210,"share":0.038,"inked":0.69},"halo":{"m2":3,"share":0.001,"inked":0.43}}}
+--- 13:11:23 regions 1 2
+### ink-regions era 1 run 2
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5496,"inked":0.671,"regions":{"circus":{"m2":1487,"share":0.271,"inked":0.8},"base":{"m2":978,"share":0.178,"inked":0.72},"knee":{"m2":835,"share":0.152,"inked":0.61},"swimston":{"m2":541,"share":0.099,"inked":0.78},"river":{"m2":493,"share":0.09,"inked":0.51},"knee-far":{"m2":416,"share":0.076,"inked":0.23},"hoki":{"m2":267,"share":0.049,"inked":0.73},"gpo-quay":{"m2":265,"share":0.048,"inked":0.62},"arcade":{"m2":210,"share":0.038,"inked":0.73},"halo":{"m2":3,"share":0.001,"inked":0.36}}}
+--- 13:12:12 regions 1 3
+### ink-regions era 1 run 3
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5496,"inked":0.668,"regions":{"circus":{"m2":1487,"share":0.271,"inked":0.77},"base":{"m2":978,"share":0.178,"inked":0.7},"knee":{"m2":835,"share":0.152,"inked":0.52},"swimston":{"m2":541,"share":0.099,"inked":0.86},"river":{"m2":493,"share":0.09,"inked":0.62},"knee-far":{"m2":416,"share":0.076,"inked":0.48},"hoki":{"m2":267,"share":0.049,"inked":0.53},"gpo-quay":{"m2":265,"share":0.048,"inked":0.5},"arcade":{"m2":210,"share":0.038,"inked":0.72},"halo":{"m2":3,"share":0.001,"inked":0.2}}}
+--- 13:12:56 regions 1 4
+### ink-regions era 1 run 4
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5496,"inked":0.72,"regions":{"circus":{"m2":1487,"share":0.271,"inked":0.79},"base":{"m2":978,"share":0.178,"inked":0.79},"knee":{"m2":835,"share":0.152,"inked":0.66},"swimston":{"m2":541,"share":0.099,"inked":0.84},"river":{"m2":493,"share":0.09,"inked":0.51},"knee-far":{"m2":416,"share":0.076,"inked":0.59},"hoki":{"m2":267,"share":0.049,"inked":0.6},"gpo-quay":{"m2":265,"share":0.048,"inked":0.73},"arcade":{"m2":210,"share":0.038,"inked":0.75},"halo":{"m2":3,"share":0.001,"inked":0.25}}}
+--- 13:13:43 done
+# head 7de724a2
+--- 13:13:43 regions 3 1
+### ink-regions era 3 run 1
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6645,"inked":0.692,"regions":{"circus":{"m2":1624,"share":0.244,"inked":0.86},"base":{"m2":978,"share":0.147,"inked":0.74},"knee":{"m2":859,"share":0.129,"inked":0.55},"river":{"m2":594,"share":0.089,"inked":0.59},"swimston":{"m2":549,"share":0.083,"inked":0.84},"halo":{"m2":468,"share":0.07,"inked":0.42},"knee-far":{"m2":416,"share":0.063,"inked":0.44},"garden":{"m2":379,"share":0.057,"inked":0.7},"gpo-quay":{"m2":302,"share":0.045,"inked":0.78},"hoki":{"m2":267,"share":0.04,"inked":0.68},"arcade":{"m2":210,"share":0.032,"inked":0.65}}}
+--- 13:14:31 regions 3 2
+### ink-regions era 3 run 2
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6645,"inked":0.581,"regions":{"circus":{"m2":1624,"share":0.244,"inked":0.67},"base":{"m2":978,"share":0.147,"inked":0.6},"knee":{"m2":859,"share":0.129,"inked":0.5},"river":{"m2":594,"share":0.089,"inked":0.47},"swimston":{"m2":549,"share":0.083,"inked":0.72},"halo":{"m2":468,"share":0.07,"inked":0.57},"knee-far":{"m2":416,"share":0.063,"inked":0.39},"garden":{"m2":379,"share":0.057,"inked":0.53},"gpo-quay":{"m2":302,"share":0.045,"inked":0.61},"hoki":{"m2":267,"share":0.04,"inked":0.52},"arcade":{"m2":210,"share":0.032,"inked":0.66}}}
+--- 13:15:46 regions 3 3
+### ink-regions era 3 run 3
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6645,"inked":0.702,"regions":{"circus":{"m2":1624,"share":0.244,"inked":0.8},"base":{"m2":978,"share":0.147,"inked":0.64},"knee":{"m2":859,"share":0.129,"inked":0.65},"river":{"m2":594,"share":0.089,"inked":0.52},"swimston":{"m2":549,"share":0.083,"inked":0.85},"halo":{"m2":468,"share":0.07,"inked":0.71},"knee-far":{"m2":416,"share":0.063,"inked":0.56},"garden":{"m2":379,"share":0.057,"inked":0.65},"gpo-quay":{"m2":302,"share":0.045,"inked":0.8},"hoki":{"m2":267,"share":0.04,"inked":0.73},"arcade":{"m2":210,"share":0.032,"inked":0.77}}}
+--- 13:16:34 regions 3 4
+### ink-regions era 3 run 4
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6645,"inked":0.678,"regions":{"circus":{"m2":1624,"share":0.244,"inked":0.7},"base":{"m2":978,"share":0.147,"inked":0.75},"knee":{"m2":859,"share":0.129,"inked":0.65},"river":{"m2":594,"share":0.089,"inked":0.74},"swimston":{"m2":549,"share":0.083,"inked":0.78},"halo":{"m2":468,"share":0.07,"inked":0.43},"knee-far":{"m2":416,"share":0.063,"inked":0.41},"garden":{"m2":379,"share":0.057,"inked":0.77},"gpo-quay":{"m2":302,"share":0.045,"inked":0.72},"hoki":{"m2":267,"share":0.04,"inked":0.63},"arcade":{"m2":210,"share":0.032,"inked":0.72}}}
+--- 13:17:17 done
+# head 7de724a2 13:17:17 pictures
+### r4-era1
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6484,"blocks":568,"solidBlocks":568,"propMeshes":3,"navNodes":4845,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":80,"tris":174031,"cpuRenderMs":2.17,"cpuSimMs":2.02},"coverage":[3.6,1.2]}
+### r4-era2
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6107,"blocks":590,"solidBlocks":590,"propMeshes":3,"navNodes":4995,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":125,"tris":278150,"cpuRenderMs":1.98,"cpuSimMs":1.86},"coverage":[2.4,3]}
+### r4-era3
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6261,"blocks":700,"solidBlocks":700,"propMeshes":3,"navNodes":5886,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":107,"tris":222995,"cpuRenderMs":1.9,"cpuSimMs":1.73},"coverage":[1.6,3.3]}
+### r4-era1-zones
+REPORT {"map":"bluestone","mode":"zones","time":"day","loadMs":6936,"blocks":568,"solidBlocks":568,"propMeshes":3,"navNodes":4845,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":139,"tris":304654,"cpuRenderMs":2.44,"cpuSimMs":2.35},"coverage":[1.9,2.8]}
+### r4-era3-zones
+REPORT {"map":"bluestone","mode":"zones","time":"day","loadMs":6542,"blocks":700,"solidBlocks":700,"propMeshes":3,"navNodes":5886,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":86,"tris":176740,"cpuRenderMs":1.99,"cpuSimMs":1.92},"coverage":[0.9,2.2]}
+### done
+### r4-era1
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6895,"blocks":568,"solidBlocks":568,"propMeshes":3,"navNodes":4845,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":102,"tris":188998,"cpuRenderMs":2.74,"cpuSimMs":3.09},"coverage":[3.3,4.9]}
+### r4-era2
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6161,"blocks":590,"solidBlocks":590,"propMeshes":3,"navNodes":4995,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":137,"tris":295573,"cpuRenderMs":1.99,"cpuSimMs":2.02},"coverage":[2.9,1.7]}
+### r4-era3
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6100,"blocks":700,"solidBlocks":700,"propMeshes":3,"navNodes":5886,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":76,"tris":166193,"cpuRenderMs":2,"cpuSimMs":1.76},"coverage":[1.5,2.4]}
+### tower top 1
+REPORT {"map":"bluestone","mode":"tower","time":"day","loadMs":6955,"blocks":564,"solidBlocks":564,"propMeshes":3,"navNodes":4883,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":1
+### ink 1
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6347,"blocks":568,"solidBlocks":568,"propMeshes":3,"navNodes":4845,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":89
+### ink 3
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6918,"blocks":700,"solidBlocks":700,"propMeshes":3,"navNodes":5886,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":76
+### done
+# head 5aa4b5f7 13:24:32 tests
+# head 5aa4b5f7
+--- 13:24:32 spawn-mid 1
+### spawn-mid era 1
+PASS spawn to mid  {"t0":{"m":72.4,"s":6.13,"straight":67},"t1":{"m":76.2,"s":6.46,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+--- 13:24:51 size-budget 1
+### size-budget era 1
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1038}
+PASS paint atlas density  {"ppm":12.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4845,"cap":14535,"capNeeded":[6000,6000]}
+RESULT 3/3
+--- 13:25:09 climb-audit 1
+### climb-audit era 1
+PASS climb edges barred by a railing  {"climbs":130,"bad":[],"n":0}
+RESULT 1/1
+--- 13:25:26 cover-map 1
+### cover-map era 1
+PASS cover map  {"map":"bluestone","floorCells":5006,"within5m_pct":99.6,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+--- 13:25:43 stage-audit turf 1
+### stage-audit turf era 1
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+RESULT 2/3
+--- 13:26:01 stage-audit tower 1
+### stage-audit tower era 1
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+RESULT 3/4
+--- 13:26:20 spawn-mid 2
+### spawn-mid era 2
+PASS spawn to mid  {"t0":{"m":72.4,"s":6.13,"straight":67},"t1":{"m":76.2,"s":6.46,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+--- 13:26:57 size-budget 2
+### size-budget era 2
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1041}
+PASS paint atlas density  {"ppm":12.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4995,"cap":14985,"capNeeded":[6000,6000]}
+RESULT 3/3
+--- 13:27:14 climb-audit 2
+### climb-audit era 2
+PASS climb edges barred by a railing  {"climbs":130,"bad":[],"n":0}
+RESULT 1/1
+--- 13:27:32 cover-map 2
+### cover-map era 2
+PASS cover map  {"map":"bluestone","floorCells":5166,"within5m_pct":99.6,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+--- 13:27:49 stage-audit turf 2
+### stage-audit turf era 2
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+RESULT 2/3
+--- 13:28:05 stage-audit tower 2
+### stage-audit tower era 2
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+RESULT 3/4
+--- 13:28:22 spawn-mid 3
+### spawn-mid era 3
+PASS spawn to mid  {"t0":{"m":72.4,"s":6.13,"straight":67},"t1":{"m":76.2,"s":6.46,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+--- 13:28:38 size-budget 3
+### size-budget era 3
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1115}
+PASS paint atlas density  {"ppm":11.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":5886,"cap":17658,"capNeeded":[6000,6000]}
+RESULT 3/3
+--- 13:28:55 climb-audit 3
+### climb-audit era 3
+PASS climb edges barred by a railing  {"climbs":144,"bad":[],"n":0}
+RESULT 1/1
+--- 13:29:12 cover-map 3
+### cover-map era 3
+PASS cover map  {"map":"bluestone","floorCells":5688,"within5m_pct":99.5,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+--- 13:29:50 stage-audit turf 3
+### stage-audit turf era 3
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+RESULT 2/3
+--- 13:30:07 stage-audit tower 3
+### stage-audit tower era 3
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+RESULT 3/4
+--- 13:30:23 done
+# head 5aa4b5f7
+--- 13:30:23 tower-check 1
+### tower-check era 1
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+--- 13:31:50 tower-check 2
+### tower-check era 2
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+--- 13:33:16 tower-check 3
+### tower-check era 3
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+--- 13:34:30 done
+# head 5aa4b5f7
+--- 13:34:30 zones 1
+### zones era 1
+== bluestone [zones]: winner Alpha (knockout) | final 0 vs 90 (penalty +0/+9) | OT no
+   held A 116.8s B 21.3s neutral 117.5s | captures 8 (takeovers 2), control events 15, first capture @35.3s | rotations 4
+   stuck 0.4% | splats 60 (water 0) | specials 13 | super jumps 26 | turf 35.8/21.4 | sim 255.8s in 33s (wall 33s) | {"cpuSimMs":0.71}
+   splats by cause {"brolly":6,"mitts":8,"blast":10,"bow":8,"shot":16,"blaster":2,"jetpack":2,"seeker":1,"charger":2,"crab":2,"tracer":1,"blower":1,"drop":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+--- 13:35:19 zones 3
+### zones era 3
+== bluestone [zones]: winner Bravo (neutralised) | final 79 vs 57 (penalty +6.6/+10.3) | OT 1.2s
+   held A 47.3s B 74s neutral 179.8s | captures 10 (takeovers 7), control events 20, first capture @22.7s | rotations 6
+   stuck 0.3% | splats 90 (water 1) | specials 15 | super jumps 50 | turf 26.6/33.9 | sim 301.3s in 36s (wall 36s) | {"cpuSimMs":0.69}
+   splats by cause {"blade":25,"drop":6,"mitts":10,"shot":18,"charger":10,"bow":8,"roller":5,"zipcaster":3,"crab":1,"boomerang":1,"water":1,"kraken":1,"bomb":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+--- 13:36:11 done
+# head 5aa4b5f7
+--- 13:36:11 boss
+### boss
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":555,"floorY":0,"box":[-34.8,34.8,-14.8,14.8],"cells":{"floor":4744.5,"wall":733,"drop":7709,"pad":253.5}}
+PASS overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.04,"pen":{"balconyN:a":{"pen_m":-0.46,"at":[-4.25,-11.75]},"balconyN:b":{"pen_m":-0.46,"at":[3.75,11.75]},"landing:a":{"pen_m":0.04,"at":[-9.75,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":null,"gallery:b":null,"verandaE1:a":{"pen_m":-1.96,"at":[3.25,-13.75]},"verandaE1:b":{"pen_m":-1.96,"at":[-8.25,13.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":352}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":39,"cells4m":6,"trail":[[-14.6,-2.9],[-12.9,-5.9],[-15.5,-3.1],[-15.3,-3.2],[-13.1,-4.2],[-9.9,12.2],[-8.9,12.2],[0.6,12.8],[0.6,12.7],[0.6,11.7],[0.5,11.6],[0.5,11.6]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":4}
+PASS it plays its moves (charges included)  {"played":{"barrage":9,"slam":3,"charge":2,"crablets":3,"sweep":2,"frenzy":1},"stuns":2,"hp":0.3,"dead":false}
+RESULT 6/7
+--- 13:36:58 done
+# end 5aa4b5f7 13:36:58

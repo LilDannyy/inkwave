@@ -1,0 +1,26 @@
+== bluestone [zones]: winner Bravo (time) | final 67 vs 17 (penalty +16/+0) | OT no
+   held A 65.8s B 139.8s neutral 94.3s | captures 8 (takeovers 4), control events 15, first capture @21.7s | rotations 6
+   lead changes 2 | contested 8.5s (other team ≥ warn on a held zone; ≥ 25 %: 8.5s) | a flip pending 7.3s | rules {"control":0.7,"contest":0.35,"warn":0.25,"flipHold":0.6} | match 300s
+   teams: A [blade/zipcaster bucket/crab mitts/barrage_sticky charger/drainbow] far 54%, near 24%, dead 19%, jump 3% | B [bow/blower blade/booyah shooter/zooka mitts/barrage_mist] far 47%, near 40%, dead 12%, jump 2%
+   bot-time: {"far":50,"near":32,"dead":15,"jump":2} (far by mode {"paint":2531,"refill":222,"fight":1598,"retreat":470}) | specials ready 23
+   bots in the active zone 54.8% of the time | avg inside A 0.36 B 0.48 | within 12 m A 0.85 B 1.36
+   roles (% of bot-time) {"paint":35,"watch":17,"stage":11,"push":13,"guard":7} | holding on purpose 9.3%
+   per bot: turf 1534p, on-zone ink 384p, splats 8.5 → XP beyond the win/lose base ≈ 1644
+   stuck 0.4% | splats 68 (water 0) | specials 16 | super jumps 24 | turf 22.3/32.3 | sim 300s in 79s (wall 80s) | {"cpuSimMs":2.89}
+   penalties [{"team":1,"p":10,"start":100,"end":88.5},{"team":0,"p":10,"start":100,"end":88.5},{"team":1,"p":16,"start":98.5,"end":77.6},{"team":0,"p":16,"start":87.6,"end":66.4}]
+   control log 21.7:B@center 33.1:N@center 50:A@sideA 94.7:N@center 103.8:B@center 135.1:N@sideB 145.6:B@sideB 172.4:N@center 184.3:A@center 205.5:N@center 211.8:B@center 222:N@sideB 234.8:B@sideB 270:N@center 274.6:B@center
+   best shares per activation center@0-35s A67/B100 | sideA@35-95s A100/B28 | center@95-135s A23/B100 | sideB@135-172s A13/B100 | center@173-222s A100/B100 | sideB@222-270s A8/B100 | center@270-300s A29/B100
+   reachable cells center0:1812/1812 R6.5 nodes108 side1:1584/1584 R7.6 nodes96 side2:1584/1584 R7.6 nodes96 | retake pushes A 6 B 2
+   loadouts A:blade+shaker A:bucket+sprinkler A:mitts+boomerang A:charger+mine B:bow+waddle B:blade+shaker B:shooter+bomb B:mitts+boomerang
+   by weapon (players, splats dealt, deaths, avg turf) blade×2 18/22 1989p · bucket×1 5/12 1219p · mitts×2 18/24 1174p · charger×1 6/3 1229p · bow×1 5/1 1275p · shooter×1 16/6 2219p
+   splats by cause {"blade":16,"charger":4,"bow":5,"mitts":17,"slosh":3,"shot":12,"mine":2,"zooka":3,"boomerang":1,"crab":2,"shaker":1,"booyah":1,"bomb":1}
+   special uses A {"zipcaster":2,"drainbow":3,"barrage":2,"crab":1} B {"zooka":3,"blower":3,"booyah":2} | drainbow {"placed":3,"passes":71,"cuts":5,"crossings":7,"fizzles":71,"pops":3,"extended":2.05,"holds":818}
+   special ends A {"zipcaster":{"time":1,"splat":1},"drainbow":{"time":2,"splat":1},"barrage_sticky":{"splat":2},"crab":{"time":1}} B {"zooka":{"time":2,"splat":1},"blower":{"time":3},"booyah":{"throw":2}} | zipcheer {"zipUses":2,"zips":1,"zipHits":0,"zipSaved":0,"orbs":2,"lifted":2,"liftM":4.4,"cheers":9,"helped":9,"orbCharge":0.6251851851851886,"gains":9,"gainPts":67.2,"splatHeld":0,"dmgHeld":0,"thrown":2}
+   SURF uses 0 thrown 0 anchored 0 lost 0 popped 0 | rings 0 hits 0 (marks 0, ring splats 0) dodged 0 | ink 0 m² in 0 splats | turf from it A 0 of 5646 · B 0 of 6623 | assists A 5 B 11 {"jumps":0,"byDamage":16,"byJump":0,"credited":16} | bots {"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0}
+   enemy specials AI on | splatted by specials: A 4 {"zooka":3,"booyah":1} · B 2 {"crab":2} | K/D A 26/42 B 42/26 | {"noticed":90,"missed":4,"escapes":37,"evaded":15,"caught":7,"avoidedPath":14,"goalMoved":48,"guard":0,"backedOff":3,"retargeted":2,"heldFire":3.9999999999999907,"knockShots":0,"reengaged":1,"bubbleHold":0.2833333333333333,"popShots":0,"hops":0,"hunted":2,"splattedBy":{"zooka":3,"crab":2,"booyah":1}}
+   sight: fighting 679 bot-s, trigger held 269 s | foe out of sight 44% of fight time, aim still on it 85.8% of that | shooting at nothing 35% of trigger time (30.9% straight at the hidden foe; 2% while it still thinks it sees it, 29.6% a charge held, 3.5% shots) | bots 24.14 ms per sim s (looking 1.16) | {"checks":9449,"rays":15827,"deferred":0,"seen":942,"lost":497,"cleared":24,"expired":70,"located":1164,"jumps":78,"hits":9,"sprays":4,"memBombs":11,"hunts":143}
+   wall climbs (at the wall): {"tries":14,"done":10,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+   DEPLOY hits 2 (25 dmg) | shot down {} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI on): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON

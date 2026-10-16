@@ -1,0 +1,27 @@
+[net] relay ws://127.0.0.1:65474
+[net] 2 clients up in 14.4 s
+[net] turf: playing to jump 1…
+PASS turf: a 1:30 Turf War on bluestone runs the eras on both screens (jumps at 30 and 60 s)  {"sched":[{"from":1,"to":2,"at":30},{"from":2,"to":3,"at":60}]}
+[net] turf: playing to the end…
+PASS turf: every group flips on both screens within 0.4 s (wall clock) of each other, through both jumps  {"groups":52,"maxSkew_s":0.045,"perJump":[{"groups":8,"max_s":0.045,"median_s":0.044},{"groups":44,"max_s":0.024,"median_s":0.011}],"clockSkew_s":[0.025,0.025,0.025,0.025,0.108,0.08,0.057,0.058],"worst":[["bridge-1:a@1",45],["bridge-1:b@1",45],["bridge-3:a@1",44],["bridge-3:b@1",44]],"flipsA":52,"flipsB":52}
+PASS turf: the follower's stage clock is the host's at the same wall time — within 0.15 s (median) and 0.25 s (90th percentile) over 26 s after jump 1 (the trip to the relay added back, final review issue 4)  {"clockSkew":{"n":1553,"median":0.033,"p90":0.075,"max":0.168,"signedMedian":0.033},"sampled":[0.025,0.025,0.025,0.025,0.108,0.08,0.057,0.058],"rtt":[3,2]}
+PASS turf: after each done both screens agree on solid for every era block and on the nav's era (edgeMask)  {"after":[[{"t":35.59,"era":2,"solid":"90072ca1","edgeMask":2,"navEra":2},{"t":35.57,"era":2,"solid":"90072ca1","edgeMask":2,"navEra":2}],[{"t":65.81,"era":3,"solid":"81d84ad","edgeMask":4,"navEra":3},{"t":65.84,"era":3,"solid":"81d84ad","edgeMask":4,"navEra":3}]],"donesB":[[2,33.966],[3,63.97]]}
+PASS turf (precondition): the guest's sprinkler stuck on the Degrayling crates' wall and its Drip Curtain on their roof both stand on both screens before the flip (the host has their ghosts)  {"devB":{"state":"spray","onCrates":true,"gid":300001,"pos":[-14.51,1.16,-24.2]},"ghostBefore":1,"curB":{"state":"curtain","pos":[-12.18,2.8,-27],"hp":157.8,"t":29.53},"curGhostBefore":1}
+PASS turf: that sprinkler and that curtain are gone on both screens after the crates' flip (the owner pops them, the end record [2, gid, 2] ends the ghosts)  {"sprinkler":["dead",0],"curtain":["dead",0]}
+PASS turf: the guest's splats on the Iron Bridge from 0.4 s before its flip to 0.6 s after (the guard window; field 15 carries the painter's stage time) leave its cells equal on both screens  {"shots":16,"span":[-0.4,0.57],"cells":368,"inked":94,"differ":0}
+PASS turf: both results screens show the host's counts (the 3000s' turf, the same winner)  {"res":[{"cov":[0.0605,0.1166],"w":1},{"cov":[0.0605,0.1166],"w":1}]}
+[net] host: playing to jump 1's done…
+[net] host: the host left
+PASS host: after the host leaves (after jump 1), the new host runs jump 2 on time — its match clock at 60 ± 0.4 s when its era:jump fires — and the 3000s arrive  {"jump2":{"n":"era:jump","wall":1792147684604,"t":60.016,"mc":60.016},"after":{"host":true,"follower":false,"era":3,"state":"playing"}}
+PASS host: … and the match finishes on the new host's screen
+PASS practice: online Practice runs the eras from the host's stage clock (its ticks carry it: no movers or pods here) — the clocks agree within 0.4 s, both in the 1880s  {"s0":[{"t":3.23,"era":1,"navEra":1,"turf":87974,"phase":"idle"},{"t":3.22,"era":1,"navEra":1,"turf":87974,"phase":"idle"}]}
+PASS practice: the host moved to the 3000s; the guest follows within 2 s (its clock snaps to the host's: seek('clock')), turf totals equal  {"follow_s":0.11,"s1":[{"t":125.13,"era":3,"navEra":3,"turf":106486,"phase":"idle"},{"t":125.13,"era":3,"navEra":3,"turf":106486,"phase":"idle"}]}
+PASS practice: a late joiner in the 3000s — its era is 3 within 2 s of its first host tick, its importGrid takes the host's turf (the same inked live cells), its turfTotal equals the host's  {"era3After_s":0,"joinToTick_s":4.4,"joiner":{"t":143.76,"era":3,"navEra":3,"turf":106486,"phase":"idle"},"host":{"t":143.52,"era":3,"navEra":3,"turf":106486,"phase":"idle"},"inked":[{"inked":1078,"counts":[662,416]},{"inked":1078,"counts":[662,416]}]}
+PASS practice: the rewind at 180 s takes all three screens back to the 1880s (nav era 1, the same turf total)  {"s3":[{"t":186.08,"era":1,"navEra":1,"turf":87974,"phase":"idle"},{"t":187.26,"era":1,"navEra":1,"turf":87974,"phase":"idle"},{"t":187.34,"era":1,"navEra":1,"turf":87974,"phase":"idle"}]}
+[net] done
+RESULT 14/14
+c0 console: none
+c1 console: none
+c2 console: none
+relay stats {"dropped":0,"rateKicks":0,"peakRate":31,"maxMsg":3518}
+outside requests refused: none

@@ -1,0 +1,3 @@
+PASS render time per moment (median of 40 renders, ms) with each piece off in turn  [{"label":"era 2 at rest","calls":519,"tris":1693911,"all":3.6,"noHolo":3.1,"noCurtain":5,"noEraShadows":9.1,"noEraMeshes":8.7,"noSets":7.4,"noFxGroup":7.3},{"label":"jump 1 → 2, J + 1.3","calls":533,"tris":1602687,"all":6.9,"noHolo":7.8,"noCurtain":7.1,"noEraShadows":6.9,"noEraMeshes":9,"noSets":3.9,"noFxGroup":3.8},{"label":"jump 2 → 3, J + 1.3","calls":531,"tris":1609545,"all":6.3,"noHolo":11.3,"noCurtain":7.9,"noEraShadows":3.5,"noEraMeshes":11.4,"noSets":9.4,"noFxGroup":7.4}]
+RESULT 1/1
+console errors: none

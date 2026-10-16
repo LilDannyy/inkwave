@@ -1,0 +1,84 @@
+### boss  (2026-10-10 10:16)
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":650,"floorY":0,"box":[-35.3,35.3,-14.8,14.8],"cells":{"floor":4581,"wall":676.5,"drop":7929,"pad":253.5}}
+PASS overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.04,"pen":{"balconyN:a":{"pen_m":-0.46,"at":[-4.25,-11.75]},"balconyN:b":{"pen_m":-0.46,"at":[3.75,11.75]},"landing:a":{"pen_m":0.04,"at":[-9.75,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":null,"gallery:b":null,"verandaE1:a":{"pen_m":-1.96,"at":[3.25,-13.75]},"verandaE1:b":{"pen_m":-1.96,"at":[-8.25,13.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":352}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":8,"cells4m":2,"trail":[[-14.3,-2.8],[-19.4,-9],[-19.4,-9],[-19.4,-9],[-19.4,-9],[-19.4,-9],[-19.4,-9],[-19.4,-9],[-19.4,-9],[-19.4,-9],[-19.4,-9],[-19.4,-9]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":5}
+PASS it plays its moves (charges included)  {"played":{"charge":1,"barrage":17,"crablets":2},"stuns":1,"hp":0.4,"dead":false}
+RESULT 6/7
+### climb-audit1  (2026-10-10 10:17)
+PASS climb edges barred by a railing  {"climbs":168,"bad":[],"n":0}
+RESULT 1/1
+### climb-audit2  (2026-10-10 10:19)
+PASS climb edges barred by a railing  {"climbs":168,"bad":[],"n":0}
+RESULT 1/1
+### climb-audit3  (2026-10-10 10:22)
+PASS climb edges barred by a railing  {"climbs":182,"bad":[],"n":0}
+RESULT 1/1
+### cover-map1  (2026-10-10 10:18)
+PASS cover map  {"map":"bluestone","floorCells":4826,"within5m_pct":99.4,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+### cover-map2  (2026-10-10 10:20)
+PASS cover map  {"map":"bluestone","floorCells":4986,"within5m_pct":99.4,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+### cover-map3  (2026-10-10 10:23)
+PASS cover map  {"map":"bluestone","floorCells":5508,"within5m_pct":99.4,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+### size-budget1  (2026-10-10 10:17)
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1006}
+PASS paint atlas density  {"ppm":12.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4715,"cap":14145,"capNeeded":[6000,6000]}
+RESULT 3/3
+### size-budget2  (2026-10-10 10:19)
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1014}
+PASS paint atlas density  {"ppm":12.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4865,"cap":14595,"capNeeded":[6000,6000]}
+RESULT 3/3
+### size-budget3  (2026-10-10 10:22)
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1081}
+PASS paint atlas density  {"ppm":11.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":5756,"cap":17268,"capNeeded":[6000,6000]}
+RESULT 3/3
+### spawn-mid1  (2026-10-10 10:16)
+PASS spawn to mid  {"t0":{"m":72.4,"s":6.13,"straight":67},"t1":{"m":76.2,"s":6.46,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+### spawn-mid2  (2026-10-10 10:19)
+PASS spawn to mid  {"t0":{"m":72.4,"s":6.13,"straight":67},"t1":{"m":76.2,"s":6.46,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+### spawn-mid3  (2026-10-10 10:22)
+PASS spawn to mid  {"t0":{"m":72.4,"s":6.13,"straight":67},"t1":{"m":76.2,"s":6.46,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+### stage-audit-tower1  (2026-10-10 10:18)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.13,6.46],"avg":6.29,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":74,"cps":["39%","69%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+### stage-audit-tower2  (2026-10-10 10:22)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.13,6.46],"avg":6.29,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":74,"cps":["39%","69%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+### stage-audit-tower3  (2026-10-10 10:23)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.13,6.46],"avg":6.29,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":74,"cps":["39%","69%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+### stage-audit-turf1  (2026-10-10 10:18)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.13,6.46],"avg":6.29,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+### stage-audit-turf2  (2026-10-10 10:20)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.13,6.46],"avg":6.29,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+### stage-audit-turf3  (2026-10-10 10:23)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.13,6.46],"avg":6.29,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3

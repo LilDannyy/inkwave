@@ -1,0 +1,8 @@
+15:30  up 14 days, 20:58, 2 users, load averages: 26.08 49.80 183.57
+15:35  up 14 days, 21:03, 2 users, load averages: 128.00 96.90 165.79
+15:36  up 14 days, 21:04, 2 users, load averages: 70.98 86.34 158.36
+15:39  up 14 days, 21:07, 2 users, load averages: 38.40 65.57 137.80
+15:39  up 14 days, 21:07, 2 users, load averages: 57.54 66.93 134.20
+15:40  up 14 days, 21:08, 2 users, load averages: 48.64 61.93 127.70
+15:41  up 14 days, 21:09, 2 users, load averages: 49.48 59.73 123.10
+CHAIN2 DONE

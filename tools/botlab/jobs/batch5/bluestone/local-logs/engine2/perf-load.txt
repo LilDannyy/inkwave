@@ -1,0 +1,4 @@
+15:48  up 14 days, 21:16, 2 users, load averages: 43.18 46.35 93.96
+15:58  up 14 days, 21:26, 2 users, load averages: 178.57 224.60 185.31
+16:01  up 14 days, 21:29, 2 users, load averages: 116.48 176.28 171.94
+PERF DONE

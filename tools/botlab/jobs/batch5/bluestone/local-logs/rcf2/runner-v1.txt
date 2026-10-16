@@ -1,0 +1,4 @@
+# head b9fef3ce 13:09:00
+### r4-era1
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":5853,"blocks":568,"solidBlocks":568,"propMeshes":3,"navNodes":4845,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":144,"tris":326998,"cpuRenderMs":1.68,"cpuSimMs":1.48},"coverage":[2.2,4]}
+### done

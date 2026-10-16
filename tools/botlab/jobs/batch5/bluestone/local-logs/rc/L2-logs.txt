@@ -1,0 +1,174 @@
+### boss  (2026-10-10 10:07)
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":657,"floorY":0,"box":[-35.3,35.3,-14.8,14.8],"cells":{"floor":4583.5,"wall":674,"drop":7929,"pad":253.5}}
+FAIL overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.27,"pen":{"balconyN:a":{"pen_m":0.27,"at":[-2.25,-12.75]},"balconyN:b":{"pen_m":0.27,"at":[2.25,12.75]},"landing:a":{"pen_m":0.04,"at":[-9.75,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":{"pen_m":-2.21,"at":[-3.75,-12.75]},"gallery:b":{"pen_m":-2.21,"at":[3.75,12.75]},"verandaE1:a":{"pen_m":-1.96,"at":[3.25,-13.75]},"verandaE1:b":{"pen_m":-1.96,"at":[-8.25,13.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":359}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":24,"cells4m":5,"trail":[[-13.5,-4.2],[-14.5,-5.6],[-17.5,-3.2],[-8.2,-7.5],[-5.7,-9.6],[-5.7,-9.6],[-3.7,-10.3],[-2.7,-10.3],[-2.7,-10.3],[-2.7,-10.3],[-2.7,-10.3],[-2.7,-10.3]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3}
+PASS it plays its moves (charges included)  {"played":{"barrage":13,"sweep":1,"charge":1,"slam":2,"crablets":4,"frenzy":1},"stuns":2,"hp":0.28,"dead":false}
+RESULT 5/7
+### climb-audit1  (2026-10-10 01:27)
+PASS climb edges barred by a railing  {"climbs":168,"bad":[],"n":0}
+RESULT 1/1
+### climb-audit2  (2026-10-10 01:29)
+PASS climb edges barred by a railing  {"climbs":168,"bad":[],"n":0}
+RESULT 1/1
+### climb-audit3  (2026-10-10 01:31)
+PASS climb edges barred by a railing  {"climbs":182,"bad":[],"n":0}
+RESULT 1/1
+### cover-map-crossmarket  (2026-10-10 01:39)
+PASS cover map  {"map":"crossmarket","floorCells":4690,"within5m_pct":95.4,"largestOpenRadius_m":12.7,"at":[-0.5,-0.5],"skip":[],"grid":{"x0":-31,"z0":-68,"nx":62,"nz":136,"b64":…}}
+RESULT 1/1
+### cover-map-halyard  (2026-10-10 01:39)
+PASS cover map  {"map":"halyard","floorCells":4252,"within5m_pct":96.4,"largestOpenRadius_m":17,"at":[-15.5,-19.5],"skip":[],"grid":{"x0":-24,"z0":-70,"nx":48,"nz":140,"b64":…}}
+RESULT 1/1
+### cover-map1  (2026-10-10 01:27)
+PASS cover map  {"map":"bluestone","floorCells":4828,"within5m_pct":99.4,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+### cover-map2  (2026-10-10 01:29)
+PASS cover map  {"map":"bluestone","floorCells":4988,"within5m_pct":99.4,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+### cover-map3  (2026-10-10 01:32)
+PASS cover map  {"map":"bluestone","floorCells":5508,"within5m_pct":99.2,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+### perfH  (2026-10-10 02:14)
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":8044,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":156,"tris":1447016,"cpuRenderMs":2.42,"cpuSimMs":2.12},"coverage":[3.3,4.4]}
+### regions3-1  (2026-10-10 02:22)
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6458,"inked":0.629,"regions":{"circus":{"m2":1635,"share":0.253,"inked":0.75},"base":{"m2":978,"share":0.151,"inked":0.72},"knee":{"m2":858,"share":0.133,"inked":0.47},"swimston":{"m2":549,"share":0.085,"inked":0.87},"halo":{"m2":468,"share":0.072,"inked":0.5},"knee-far":{"m2":427,"share":0.066,"inked":0.3},"river":{"m2":385,"share":0.06,"inked":0.56},"garden":{"m2":379,"share":0.059,"inked":0.6},"gpo-quay":{"m2":302,"share":0.047,"inked":0.66},"hoki":{"m2":267,"share":0.041,"inked":0.53},"arcade":{"m2":210,"share":0.032,"inked":0.57}}}
+PASS map (x −40 … 40 left to right, z 0 … −80 top to bottom; 0–9 inked tenths)  ["   0 ....................","  -4 33022645366456754242","  -8 02.73566787755653310"," -12 11.5768779876851220."," -16 211396469998973011.."," -20 00279657778566300..."," -24 342557679...4632...."," -28 43377858663769......"," -32 13447997667559......"," -36 56157985678668......"," -40 55178973652534......"," -44 45879933777400......"," -48 447898888..........."," -52 786899886..........."," -56 189889996..........."," -60 016787742..........."," -64 ..89778............."," -68 ..57423............."," -72 ..58642............."," -76 ...................."," -80 ...................."]
+### regions3-2  (2026-10-10 02:26)
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6458,"inked":0.672,"regions":{"circus":{"m2":1635,"share":0.253,"inked":0.83},"base":{"m2":978,"share":0.151,"inked":0.76},"knee":{"m2":858,"share":0.133,"inked":0.63},"swimston":{"m2":549,"share":0.085,"inked":0.88},"halo":{"m2":468,"share":0.072,"inked":0.22},"knee-far":{"m2":427,"share":0.066,"inked":0.39},"river":{"m2":385,"share":0.06,"inked":0.52},"garden":{"m2":379,"share":0.059,"inked":0.61},"gpo-quay":{"m2":302,"share":0.047,"inked":0.76},"hoki":{"m2":267,"share":0.041,"inked":0.52},"arcade":{"m2":210,"share":0.032,"inked":0.72}}}
+PASS map (x −40 … 40 left to right, z 0 … −80 top to bottom; 0–9 inked tenths)  ["   0 ....................","  -4 74068968999976875546","  -8 05.46836779866874323"," -12 05.5975666765762112."," -16 014897357566963320.."," -20 21388865677787211..."," -24 445788889...9600...."," -28 15476858742679......"," -32 03579976734469......"," -36 04679996757476......"," -40 12288897658843......"," -44 37889976885314......"," -48 788789887..........."," -52 277999797..........."," -56 267899987..........."," -60 067789866..........."," -64 ..69887............."," -68 ..87736............."," -72 ..24534............."," -76 ...................."," -80 ...................."]
+### size-budget1  (2026-10-10 01:26)
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1007}
+PASS paint atlas density  {"ppm":12.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4727,"cap":14181,"capNeeded":[6000,6000]}
+RESULT 3/3
+### size-budget2  (2026-10-10 01:28)
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1015}
+PASS paint atlas density  {"ppm":12.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4877,"cap":14631,"capNeeded":[6000,6000]}
+RESULT 3/3
+### size-budget3  (2026-10-10 01:31)
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1086}
+PASS paint atlas density  {"ppm":11.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":5768,"cap":17304,"capNeeded":[6000,6000]}
+RESULT 3/3
+### spawn-mid1  (2026-10-10 01:26)
+PASS spawn to mid  {"t0":{"m":71.8,"s":6.09,"straight":67},"t1":{"m":75.6,"s":6.41,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+### spawn-mid2  (2026-10-10 01:28)
+PASS spawn to mid  {"t0":{"m":71.8,"s":6.09,"straight":67},"t1":{"m":75.6,"s":6.41,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+### spawn-mid3  (2026-10-10 01:30)
+PASS spawn to mid  {"t0":{"m":71.8,"s":6.09,"straight":67},"t1":{"m":75.6,"s":6.41,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+### stage-audit-tower1  (2026-10-10 01:28)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.09,6.41],"avg":6.25,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":74,"cps":["39%","69%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+### stage-audit-tower2  (2026-10-10 01:30)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.09,6.41],"avg":6.25,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":74,"cps":["39%","69%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+### stage-audit-tower3  (2026-10-10 01:39)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.09,6.41],"avg":6.25,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":74,"cps":["39%","69%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+### stage-audit-turf1  (2026-10-10 01:28)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.09,6.41],"avg":6.25,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+### stage-audit-turf2  (2026-10-10 01:29)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.09,6.41],"avg":6.25,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+### stage-audit-turf3  (2026-10-10 01:37)
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[6.09,6.41],"avg":6.25,"straight":67}
+PASS no climb barred by a railing  {"bad":0}
+RESULT 2/3
+### towercheck1  (2026-10-10 02:17)
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### towercheck2  (2026-10-10 10:05)
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### towercheck3  (2026-10-10 02:15)
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### towermatch3  (2026-10-10 10:02)
+== bluestone [tower len 74/74]: winner Bravo (retake) | counts 74 vs 31 (score 74/31) | best push A 24.3m B 50.8m | OT 20.3s | sim 320.3s
+   held A 150s B 158.5s | contested 7s (4×) | neutral 11.5s | control changes 10 (takes 11) | idle→neutral 0
+   checkpoints cleared A 0 B 1 (reached 0/2, refills 0/1) | riders avg while held A 1.3 B 1.15 | mounts 23/31
+   stuck 0.1% | by the tower's side 3.3% of bot-time, stuck there 0.3s (1 episodes) | splats 112 (water 0) | specials 17 (ready 20) | super jumps 50 | turf 22.1/24 | sim 320.3s in 84s (wall 84s) | {"cpuSimMs":0.83}
+   control log 11.8:B@0 13.1:A@-0.3 17.2:B@0 63.3:A@-30.1 119.9:B@24.3 150.6:A@0 159.9:B@8.5 226.7:A@-50.8 245:B@-33.9 258.9:A@-43.7 320.3:B@17.9
+   stuck {"t":82,"name":"P1","w":"charger","mode":"refill","role":"perch","pos":[-17,0,4.7],"tower":7.9,"path":true,"dur":1}
+   stuck {"t":38.5,"name":"P1","w":"charger","mode":"fight","role":"perch","pos":[-18,0,-24.2],"tower":23.8,"path":false,"dur":0.5}
+   stuck {"t":50.8,"name":"P1","w":"charger","mode":"refill","role":"perch","pos":[-16.4,0,-27.1],"tower":19.4,"path":true,"dur":0.5}
+   stuck {"t":252,"name":"P1","w":"charger","mode":"retreat","role":"perch","pos":[-18.8,0,-38.1],"tower":20.1,"path":true,"dur":0.5}
+   stuck {"t":37.5,"name":"P1","w":"charger","mode":"fight","role":"perch","pos":[-18.2,0,-24.2],"tower":24.2,"path":false,"dur":0.25}
+   stuck {"t":138.8,"name":"P1","w":"charger","mode":"paint","role":"perch","pos":[-4.6,0,-17.7],"tower":22.3,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"map":"bluestone","winner":1,"reason":"retake","counts":[74,31],"best":[24.3,50.8],"held":[150,158.5],"controlChanges":10,"cpClear":[0,1],"stuckPct":0.1,"console":1,"frameErrors":0,"mounts":[23,31],"ridersAvg":[1.3,1.15],"x":{"climbs":[20,23],"sjRider":15,"kills":112,"killsNear":[50,57],"attempts":143,"boarded":42,"aborted":98,"climbMounts":34,"sjMounts":2,"toBoard":{"med":2.25,"p80":7.25},"nearBoard":{"med":1.5,"p80":2.75,"under6":36,"n":37},"stanceT":[[299.5,20.5],[300.75,19.25]],"stanceSw":[8,8],"ridersThreat":[1.2,1.07],"ridersSafe":[2.49,2.23],"heldThreatS":[138.75,147.75],"heldSafeS":[11.25,10.75],"escortDist":14.2,"escortWithin12":67,"water":[],"offWhy":{"approach":4,"near:climb":3,"climbing":5,"sj":10},"abortWhy":{"role":35,"death":63},"steamEps":[4,4],"steamEpMed":[6.5,4.25],"ridersSafe3s":[3.22,3.11],"aliveSafe3s":[4,4],"safe3sS":[4.5,2.25],"escortMed":7.172986586396348,"escortP80":22.197949436937673,"backupMed":6.398865286100987},"sideStuckS":0.3,"splats":112}
+### turf3r1  (2026-10-10 02:18)
+== bluestone [turf 180s]: turf 40.3% vs 20.6%
+   stuck 0% | splats 36 (water 0) | specials 3 | super jumps 14 | turf 40.3/20.6 | sim 180s in 37s (wall 37s) | {"cpuSimMs":1.28}
+   splats by cause {"brolly":4,"blast":3,"mitts":5,"slosh":1,"blade":5,"bow":9,"charger":2,"tracer":2,"jetpack":2,"mine":1,"waddle":1,"burst":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"simT":180,"simMs":36655,"state":"finish","stuckPct":0,"splats":36,"water":0,"specials":3,"jumps":14,"cov":[40.3,20.6],"teamKD":[{"k":22,"d":14,"sp":0,"by":{}},{"k":14,"d":22,"sp":2,"by":{"jetpack":2}}],"spUses":[{"storm":1,"blower":1,"jetpack":1},{}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":56,"missed":0,"escapes":14,"evaded":7,"caught":5,"avoidedPath":3,"goalMoved":4,"guard":0,"backedOff":0,"retargeted":0,"heldFire":0,"knockShots":0,"reengaged":0,"bubbleHold":0,"popShots":0,"hops":0,"hunted":1,"splattedBy":{"jetpack":2}},"surf":{"stats":{"uses":0,"throws":0,"lands":0,"rings":0,"hits":0,"dodges":0,"marks":0,"kills":0,"splats":0,"turf":0,"popped":0,"lost":0,"rides":0,"lifts":0,"shoves":0,"crushed":0,"falls":0,"reanchors":0},"bots":{"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0},"assists":{"jumps":0,"byDamage":5,"byJump":0,"credited":5},"teams":[{"assists":2,"surfTurf":0,"turf":4654},{"assists":3,"surfTurf":0,"turf":2746}]},"byCause":{"brolly":4,"blast":3,"mitts":5,"slosh":1,"blade":5,"bow":9,"charger":2,"tracer":2,"jetpack":2,"mine":1,"waddle":1,"burst":1},"byWeapon":{"blade":{"n":1,"splats":5,"deaths":6,"turf":1761},"mitts":{"n":1,"splats":6,"deaths":3,"turf":885},"blaster":{"n":1,"splats":5,"deaths":2,"turf":1156},"bow":{"n":2,"splats":10,"deaths":9,"turf":901},"brolly":{"n":1,"splats":6,"deaths":7,"turf":526},"charger":{"n":1,"splats":3,"deaths":4,"turf":556},"bucket":{"n":1,"splats":1,"deaths":5,"turf":713}},"per":{"turf":925,"zoneTurf":
+### turf3r2  (2026-10-10 02:19)
+== bluestone [turf 180s]: turf 36.6% vs 36.2%
+   stuck 0.1% | splats 42 (water 0) | specials 7 | super jumps 13 | turf 36.6/36.2 | sim 180s in 37s (wall 37s) | {"cpuSimMs":1.01}
+   splats by cause {"mitts":15,"shot":7,"blast":10,"boomerang":2,"blaster":4,"blade":3,"tracer":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"simT":180,"simMs":37306,"state":"finish","stuckPct":0.1,"splats":42,"water":0,"specials":7,"jumps":13,"cov":[36.6,36.2],"teamKD":[{"k":23,"d":19,"sp":0,"by":{}},{"k":19,"d":23,"sp":0,"by":{}}],"spUses":[{"blower":2,"zooka":1,"strike":2},{"strike":1,"drainbow":1}],"drainbow":{"placed":1,"passes":7,"cuts":1,"crossings":2,"fizzles":7,"pops":1,"extended":0,"holds":305},"spStats":{"noticed":45,"missed":0,"escapes":11,"evaded":2,"caught":0,"avoidedPath":4,"goalMoved":14,"guard":0,"backedOff":0,"retargeted":0,"heldFire":0,"knockShots":0,"reengaged":0,"bubbleHold":1.483333333333333,"popShots":0,"hops":0,"hunted":3,"splattedBy":{}},"surf":{"stats":{"uses":0,"throws":0,"lands":0,"rings":0,"hits":0,"dodges":0,"marks":0,"kills":0,"splats":0,"turf":0,"popped":0,"lost":0,"rides":0,"lifts":0,"shoves":0,"crushed":0,"falls":0,"reanchors":0},"bots":{"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0},"assists":{"jumps":0,"byDamage":10,"byJump":0,"credited":10},"teams":[{"assists":6,"surfTurf":0,"turf":4867},{"assists":4,"surfTurf":0,"turf":4809}]},"byCause":{"mitts":15,"shot":7,"blast":10,"boomerang":2,"blaster":4,"blade":3,"tracer":1},"byWeapon":{"shooter":{"n":1,"splats":5,"deaths":6,"turf":1244},"twins":{"n":2,"splats":3,"deaths":11,"turf":1549},"mitts":{"n":2,"splats":15,"deaths":10,"turf":816},"blaster":{"n":2,"splats":16,"deaths":8,"turf":1037},"blade":{"n":1,"splats":3,"deaths":7,"turf":1628}},"per":{"turf":1209,"zoneTurf":0,"splats":5.3,"xpVar":1419},"sight":{"fightS":301,"fireS":58,"hidPct":45.6,"blindPct":8.2,"trackPct":80.8,"blindTr
+### turf3r3  (2026-10-10 02:20)
+== bluestone [turf 180s]: turf 25.8% vs 39.4%
+   stuck 0.3% | splats 36 (water 0) | specials 7 | super jumps 21 | turf 25.8/39.4 | sim 180s in 41s (wall 42s) | {"cpuSimMs":1.38}
+   splats by cause {"blade":6,"roller":2,"bow":1,"drop":3,"blast":4,"shot":10,"charger":5,"crab":1,"mitts":4}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"simT":180,"simMs":41484,"state":"finish","stuckPct":0.3,"splats":36,"water":0,"specials":7,"jumps":21,"cov":[25.8,39.4],"teamKD":[{"k":16,"d":20,"sp":1,"by":{"crab":1}},{"k":20,"d":16,"sp":0,"by":{}}],"spUses":[{"jetpack":1,"barrage":1},{"zipcaster":2,"drainbow":2,"crab":1}],"drainbow":{"placed":2,"passes":8,"cuts":5,"crossings":3,"fizzles":8,"pops":2,"extended":0.34,"holds":155},"spStats":{"noticed":35,"missed":0,"escapes":14,"evaded":7,"caught":2,"avoidedPath":9,"goalMoved":9,"guard":1,"backedOff":2,"retargeted":1,"heldFire":2.9999999999999942,"knockShots":0,"reengaged":2,"bubbleHold":0,"popShots":0,"hops":0,"hunted":1,"splattedBy":{"crab":1}},"surf":{"stats":{"uses":0,"throws":0,"lands":0,"rings":0,"hits":0,"dodges":0,"marks":0,"kills":0,"splats":0,"turf":0,"popped":0,"lost":0,"rides":0,"lifts":0,"shoves":0,"crushed":0,"falls":0,"reanchors":0},"bots":{"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0},"assists":{"jumps":0,"byDamage":6,"byJump":0,"credited":6},"teams":[{"assists":1,"surfTurf":0,"turf":3417},{"assists":5,"surfTurf":0,"turf":4780}]},"byCause":{"blade":6,"roller":2,"bow":1,"drop":3,"blast":4,"shot":10,"charger":5,"crab":1,"mitts":4},"byWeapon":{"blaster":{"n":1,"splats":4,"deaths":3,"turf":981},"charger":{"n":1,"splats":5,"deaths":4,"turf":554},"roller":{"n":2,"splats":5,"deaths":10,"turf":1155},"mitts":{"n":1,"splats":4,"deaths":7,"turf":662},"bow":{"n":1,"splats":1,"deaths":5,"turf":977},"blade":{"n":1,"splats":6,"deaths":6,"turf":1722},"spinner":{"n":1,"splats":11,"deaths":1,"turf":993}},"per":{"turf":1025
+### zones1  (2026-10-10 10:00)
+== bluestone [zones]: winner Alpha (time) | final 5 vs 84 (penalty +0/+11.2) | OT no
+   held A 150.3s B 49.8s neutral 99.8s | captures 8 (takeovers 4), control events 15, first capture @23.2s | rotations 7
+   stuck 0.1% | splats 77 (water 0) | specials 13 | super jumps 23 | turf 33.9/19.9 | sim 300s in 92s (wall 93s) | {"cpuSimMs":2.1}
+   control log 23.2:A@center 54:N@sideB 70.7:B@sideB 102.9:N@center 113.6:A@center 134.1:N@sideB 142.2:B@sideB 147.2:N@sideB 152.6:B@sideB 165.1:N@center 175.3:A@center 210.5:N@sideA 220.9:A@sideA 252.9:N@center 268.5:A@center
+   best shares per activation center@0-54s A100/B37 | sideB@54-103s A36/B100 | center@103-134s A100/B5 | sideB@134-165s A58/B100 | center@165-210s A100/B36 | sideA@211-253s A100/B4 | center@253-300s A100/B57
+   splats by cause {"shot":32,"slosh":3,"mitts":23,"boomerang":1,"brush":2,"jetpack":2,"crab":1,"blast":8,"drop":3,"blaster":2}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"simT":300,"simMs":92046,"state":"finish","stuckPct":0.1,"splats":77,"water":0,"specials":13,"jumps":23,"cov":[33.9,19.9],"teamKD":[{"k":47,"d":30,"sp":3,"by":{"jetpack":2,"crab":1}},{"k":30,"d":47,"sp":0,"by":{}}],"spUses":[{"barrage":2,"blower":1,"slam":1},{"jetpack":3,"zipcaster":2,"crab":3,"stamp":1}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":83,"missed":3,"escapes":42,"evaded":13,"caught":3,"avoidedPath":12,"goalMoved":17,"guard":2,"backedOff":4,"retargeted":1,"heldFire":0.55,"knockShots":0,"reengaged":1,"bubbleHold":0.26666666666666666,"popShots":0,"hops":0,"hunted":11,"splattedBy":{"jetpack":2,"crab":1}},"surf":{"stats":{"uses":0,"throws":0,"lands":0,"rings":0,"hits":0,"dodges":0,"marks":0,"kills":0,"splats":0,"turf":0,"popped":0,"lost":0,"rides":0,"lifts":0,"shoves":0,"crushed":0,"falls":0,"reanchors":0},"bots":{"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0},"assists":{"jumps":0,"byDamage":17,"byJump":0,"credited":17},"teams":[{"assists":7,"surfTurf":0,"turf":5564},{"assists":10,"surfTurf":0,"turf":4470}]},"byCause":{"shot":32,"slosh":3,"mitts":23,"boomerang":1,"brush":2,"jetpack":2,"crab":1,"blast":8,"drop":3,"blaster":2},"byWeapon":{"shooter":{"n":1,"splats":19,"deaths":7,"turf":2509},"bucket":{"n":2,"splats":3,"deaths":22,"turf":1089},"brush":{"n":2,"splats":5,"deaths":24,"turf":748},"mitts":{"n":1,"splats":24,"deaths":8,"turf":1442},"blaster":{"n":1,"splats":12,"deaths":9,"turf":1330},"spinner":{"n":1,"splats":14,"deaths":7,"turf"
+### zones3  (2026-10-10 09:58)
+== bluestone [zones]: winner Bravo (time) | final 76 vs 47 (penalty +17/+0.1) | OT no
+   held A 35.3s B 157.5s neutral 107s | captures 10 (takeovers 4), control events 20, first capture @17.8s | rotations 5
+   stuck 0.2% | splats 65 (water 0) | specials 15 | super jumps 21 | turf 22.3/31.3 | sim 300s in 76s (wall 77s) | {"cpuSimMs":2.12}
+   control log 17.8:B@center 44.8:N@center 63.1:B@sideB 88.5:N@sideB 94.8:B@sideB 101.3:N@center 110.9:A@center 123.7:N@center 125.8:B@center 147.2:N@sideB 158.7:B@sideB 188:N@sideB 189.9:B@sideB 205:N@center 224.7:A@center 247:N@center 249.6:B@center 262.4:N@center 277.8:B@center 298:N@center
+   best shares per activation center@0-49s A65/B99 | sideB@49-101s A58/B100 | center@102-147s A100/B100 | sideB@147-205s A49/B100 | center@205-300s A100/B100
+   splats by cause {"brush":2,"shot":23,"zooka":1,"mitts":9,"blast":12,"jetpack":2,"slam":1,"stamp":2,"drop":6,"crab":2,"brolly":2,"bow":3}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"simT":300,"simMs":76414,"state":"finish","stuckPct":0.2,"splats":65,"water":0,"specials":15,"jumps":21,"cov":[22.3,31.3],"teamKD":[{"k":31,"d":34,"sp":3,"by":{"zooka":1,"crab":2}},{"k":34,"d":31,"sp":5,"by":{"jetpack":2,"slam":1,"stamp":2}}],"spUses":[{"jetpack":4,"slam":1,"stamp":3,"barrage":1},{"zooka":3,"crab":2,"bubbler":1}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":120,"missed":6,"escapes":62,"evaded":17,"caught":3,"avoidedPath":27,"goalMoved":70,"guard":3,"backedOff":7,"retargeted":7,"heldFire":1.9166666666666647,"knockShots":0,"reengaged":6,"bubbleHold":0,"popShots":0,"hops":0,"hunted":8,"splattedBy":{"zooka":1,"jetpack":2,"slam":1,"stamp":2,"crab":2}},"surf":{"stats":{"uses":0,"throws":0,"lands":0,"rings":0,"hits":0,"dodges":0,"marks":0,"kills":0,"splats":0,"turf":0,"popped":0,"lost":0,"rides":0,"lifts":0,"shoves":0,"crushed":0,"falls":0,"reanchors":0},"bots":{"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0},"assists":{"jumps":0,"byDamage":13,"byJump":0,"credited":13},"teams":[{"assists":3,"surfTurf":0,"turf":5155},{"assists":10,"surfTurf":0,"turf":6304}]},"byCause":{"brush":2,"shot":23,"zooka":1,"mitts":9,"blast":12,"jetpack":2,"slam":1,"stamp":2,"drop":6,"crab":2,"brolly":2,"bow":3},"byWeapon":{"blaster":{"n":1,"splats":14,"deaths":8,"turf":1640},"mitts":{"n":1,"splats":10,"deaths":12,"turf":1249},"brolly":{"n":1,"splats":2,"deaths":11,"turf":1083},"bow":{"n":1,"splats":5,"deaths":3,"turf":1183},"roller":{"n":1,"splats":5,"deaths":12

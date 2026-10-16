@@ -187,8 +187,7 @@ const R_HOOKS = ['update', 'lateUpdate', 'seek', 'dispose',
   // nav + bots
   'navEdge', 'navNode', 'beforePath', 'botHold', 'botSteer', 'botAct', 'wet', 'goalWeight', 'sightLanding',
   // queries
-  'under', 'fizzle', 'liquidY', 'noPlace', 'restMask', 'danger', 'sweeps', 'state',
-  'karpStates',   // [b5-karp-checker]
+  'under', 'fizzle', 'liquidY', 'noPlace', 'restMask', 'danger', 'sweeps', 'state', 'karpStates',   // [b5-eras] karpStates
   // looks / HUD / camera
   'drawMap', 'diorama', 'prompt', 'hud', 'cam', 'camAfter'];
 
@@ -332,6 +331,9 @@ export class StageRun {
   // tools/botlab/bazookarp-check.cjs can build each state's world); none: [] (one state)
   karpStates() { for (const R of this.h.karpStates) { const s = R.karpStates(); if (s && s.length) return s; } return []; }
   danger(pos, pad = 0.5) { for (const R of this.h.danger) if (R.danger(pos, pad)) return true; return false; }
+  // [b5-eras] Bazookarp's carrier field: the stage's route states, [{ key, nodeOk(id) }] (bluestone: one per era, keys
+  // 1–3; the field switches at era:done) — the first module that answers; [] for a stage whose routes never change
+  karpStates() { for (const R of this.h.karpStates) { const s = R.karpStates(); if (s && s.length) return s; } return []; }
   // the volumes a module's moving pieces cover over their whole travel ({ x, z, hx, hz, yaw, y0, y1 } boxes pushed into
   // out): Bazookarp's rest flags, like movers.js sweepRect(car) for the railcars
   sweeps(out = []) { for (const R of this.h.sweeps) R.sweeps(out); return out; }

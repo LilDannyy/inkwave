@@ -1,0 +1,18 @@
+# at 40b4a62 (the final stage head 81e1655): climb-audit per era, cover-map eras 1 and 3
+### climb-audit era 1
+PASS climb edges barred by a railing  {"climbs":156,"bad":[],"n":0}
+RESULT 1/1
+### climb-audit era 2
+PASS climb edges barred by a railing  {"climbs":223,"bad":[],"n":0}
+RESULT 1/1
+### climb-audit era 3
+PASS climb edges barred by a railing  {"climbs":236,"bad":[],"n":0}
+RESULT 1/1
+### cover-map era 1
+era 1: 98.7% of 7068 floor cells within 5 m of cover; largest open circle r 10.5 m at [-3.5, -54.5]
+  open stretches over 10 m across (cells > 5 m from cover): 44
+   r 10.5 m    1 m²  centre [-3.5, -54.5]  farthest [-3.5, -54.5]
+### cover-map era 3
+era 3: 98.5% of 8130 floor cells within 5 m of cover; largest open circle r 10.5 m at [-3.5, -54.5]
+  open stretches over 10 m across (cells > 5 m from cover): 60
+   r 10.5 m    1 m²  centre [-3.5, -54.5]  farthest [-3.5, -54.5]

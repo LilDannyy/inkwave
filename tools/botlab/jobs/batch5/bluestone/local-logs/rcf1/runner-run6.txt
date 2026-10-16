@@ -1,0 +1,27 @@
+# head a0533a54
+--- 12:25:23 zones 1
+### zones era 1
+== bluestone [zones]: winner Bravo (time) | final 74 vs 24 (penalty +15.1/+3.3) | OT no
+   held A 73.5s B 86s neutral 140.3s | captures 8 (takeovers 5), control events 15, first capture @23s | rotations 6
+   stuck 0.4% | splats 70 (water 2) | specials 14 | super jumps 23 | turf 24.4/26.9 | sim 300s in 44s (wall 44s) | {"cpuSimMs":0.98}
+   splats by cause {"shot":31,"water":2,"stamp":1,"charger":7,"brolly":10,"bow":4,"drop":3,"brush":2,"slosh":7,"mine":3}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+--- 12:26:33 zones 2
+### zones era 2
+== bluestone [zones]: winner Bravo (knockout) | final 100 vs 0 (penalty +0/+0) | OT no
+   held A 0s B 130.5s neutral 101.5s | captures 5 (takeovers 0), control events 9, first capture @19.5s | rotations 4
+   stuck 0.2% | splats 74 (water 1) | specials 9 | super jumps 32 | turf 16.9/29.4 | sim 232.3s in 38s (wall 38s) | {"cpuSimMs":0.81}
+   splats by cause {"drop":9,"shot":26,"blade":16,"water":1,"mitts":12,"brush":2,"roller":2,"slosh":4,"seeker":1,"crab":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+--- 12:27:28 zones 3
+### zones era 3
+== bluestone [zones]: winner Bravo (time) | final 83 vs 21 (penalty +14/+57.8) | OT no
+   held A 17.5s B 116.5s neutral 165.5s | captures 8 (takeovers 2), control events 16, first capture @33.4s | rotations 7
+   stuck 0.3% | splats 71 (water 0) | specials 12 | super jumps 38 | turf 19.7/23.5 | sim 299.8s in 53s (wall 53s) | {"cpuSimMs":1.51}
+   splats by cause {"brolly":14,"mitts":13,"shot":17,"drop":3,"charger":6,"bow":9,"slosh":4,"seeker":1,"sticky":1,"tracer":2,"brush":1}
+   DIAG: 1 stuck episode(s) of 2 s or more
+   stuck {"t":276.5,"name":"Pip","w":"brush","mode":"fight","role":"stage","pos":[6.6,0,15.9],"path":false,"hold":false,"pod":"-","dur":2.25}
+CONSOLE 1 unique warning/error line(s)
+--- 12:28:39 done

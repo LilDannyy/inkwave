@@ -1,0 +1,1 @@
+HARNESS ERA_FROM=1 ERA_TO=2 FRONT=30: give all three (ERA_FROM ≠ ERA_TO, each 1, 2 or 3; FRONT in m, ≥ 0) and no ERA or PAGEQ era

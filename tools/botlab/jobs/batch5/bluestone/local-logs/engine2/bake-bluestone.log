@@ -1,0 +1,66 @@
+[bake] bluestone: building world…
+  [bake] state 1 of 3
+  [bake] 0%
+  [bake] 3%
+  [bake] 6%
+  [bake] 11%
+  [bake] 17%
+  [bake] 23%
+  [bake] 29%
+  [bake] 35%
+  [bake] 36%
+  [bake] 44%
+  [bake] 47%
+  [bake] 52%
+  [bake] 56%
+  [bake] 62%
+  [bake] 68%
+  [bake] 74%
+  [bake] 79%
+  [bake] 84%
+  [bake] 90%
+  [bake] 95%
+  [bake] state 2 of 3
+  [bake] 0%
+  [bake] 3%
+  [bake] 7%
+  [bake] 13%
+  [bake] 19%
+  [bake] 25%
+  [bake] 31%
+  [bake] 36%
+  [bake] 41%
+  [bake] 46%
+  [bake] 52%
+  [bake] 55%
+  [bake] 60%
+  [bake] 66%
+  [bake] 72%
+  [bake] 77%
+  [bake] 84%
+  [bake] 88%
+  [bake] 95%
+  [bake] 96%
+  [bake] state 3 of 3
+  [bake] 0%
+  [bake] 3%
+  [bake] 5%
+  [bake] 9%
+  [bake] 16%
+  [bake] 22%
+  [bake] 27%
+  [bake] 33%
+  [bake] 37%
+  [bake] 45%
+  [bake] 47%
+  [bake] 52%
+  [bake] 56%
+  [bake] 62%
+  [bake] 67%
+  [bake] 74%
+  [bake] 79%
+  [bake] 84%
+  [bake] 89%
+  [bake] 95%
+  [bake] 99%
+[bake] bluestone: done in 193.9 s (hash 22885, 1142/2048 rows used)

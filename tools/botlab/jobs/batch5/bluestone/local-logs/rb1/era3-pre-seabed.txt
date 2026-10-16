@@ -1,0 +1,90 @@
+# era 3: tower-check, page tests, Turf War ink x8 and ink-regions x4 at 86abfbc / a8bc8a8 (r1-r3), r4 with a transient signal post, r5-r8 at 9b0aae8: all BEFORE the sea bed (7d101e6); the final-head runs are in final-head.txt
+--- 21:51:14 tower-check 3
+### tower-check era 3
+== bluestone tower track · heading 0° · length 146.5 / 146.5 m (Alpha's / Bravo's side) · speed 1.83 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[146.5,146.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+--- 21:52:48 spawn-mid 3
+### spawn-mid era 3
+PASS spawn to mid  {"t0":{"m":72.1,"s":6.11,"straight":70},"t1":{"m":76.1,"s":6.45,"straight":70},"spawns":[[0,-70],[0,70]],"mid":[0,0]}
+RESULT 1/1
+--- 21:53:06 size-budget 3
+### size-budget era 3
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1527}
+PASS paint atlas density  {"ppm":8.5,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":7000,"cap":21000,"capNeeded":[1500,1500]}
+RESULT 3/3
+--- 21:53:24 climb-audit 3
+### climb-audit era 3
+PASS climb edges barred by a railing  {"climbs":147,"bad":[],"n":0}
+RESULT 1/1
+--- 21:53:41 cover-map 3
+### cover-map era 3
+PASS cover map  {"map":"bluestone","floorCells":6862,"within5m_pct":97.3,"largestOpenRadius_m":9.7,"at":[19.5,-15.5],"skip":[],"grid":{"x0":-63,"z0":-85,"nx":126,"nz":170,"b64":…}}
+RESULT 1/1
+--- 21:53:59 stage-audit turf 3
+### stage-audit turf era 3
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+RESULT 2/3
+--- 21:54:16 stage-audit tower 3
+### stage-audit tower era 3
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+RESULT 3/4
+--- 21:54:34 turf3 1
+### turf3 r1
+== bluestone [turf 180s]: turf 28% vs 25.7%
+   stuck 0% | splats 36 (water 0) | specials 6 | super jumps 19 | turf 28/25.7 | sim 180s in 27s (wall 27s) | {"cpuSimMs":1.4}
+   splats by cause {"brolly":5,"drop":8,"charger":3,"blaster":1,"shot":3,"boomerang":2,"brush":4,"blast":4,"mitts":4,"roller":2}
+--- 21:55:19 turf3 2
+### turf3 r2
+== bluestone [turf 180s]: turf 27.9% vs 36%
+   stuck 0% | splats 42 (water 0) | specials 6 | super jumps 26 | turf 27.9/36 | sim 180s in 49s (wall 49s) | {"cpuSimMs":1.14}
+   splats by cause {"blade":15,"shot":7,"blast":5,"drop":3,"blaster":1,"roller":4,"brush":1,"charger":4,"jetpack":2}
+--- 21:56:28 turf3 3
+### turf3 r3
+== bluestone [turf 180s]: turf 26.7% vs 26.3%
+   stuck 0.1% | splats 36 (water 0) | specials 3 | super jumps 17 | turf 26.7/26.3 | sim 180s in 30s (wall 30s) | {"cpuSimMs":0.63}
+   splats by cause {"brolly":8,"mitts":7,"bow":7,"drop":1,"shot":5,"surf":1,"seeker":2,"blade":3,"brush":2}
+--- 21:57:16 turf3 4
+### turf3 r4
+== bluestone [turf 180s]: turf 35.9% vs 32.4%
+   stuck 0% | splats 41 (water 0) | specials 7 | super jumps 18 | turf 35.9/32.4 | sim 180s in 36s (wall 36s) | {"cpuSimMs":1.41}
+   splats by cause {"blade":11,"drop":6,"blast":8,"shot":9,"mitts":6,"waddle":1}
+--- 21:58:09 turf3 5
+### turf3 r5
+== bluestone [turf 180s]: turf 30.9% vs 26.7%
+   stuck 0.1% | splats 38 (water 0) | specials 4 | super jumps 18 | turf 30.9/26.7 | sim 180s in 28s (wall 28s) | {"cpuSimMs":1}
+   splats by cause {"mitts":9,"shot":15,"drop":2,"brolly":3,"bow":3,"slosh":2,"zooka":1,"sticky":1,"burst":1,"roller":1}
+--- 21:58:56 turf3 6
+### turf3 r6
+== bluestone [turf 180s]: turf 37.7% vs 24.1%
+   stuck 0% | splats 46 (water 0) | specials 6 | super jumps 19 | turf 37.7/24.1 | sim 180s in 32s (wall 33s) | {"cpuSimMs":0.8}
+   splats by cause {"blade":8,"charger":7,"blaster":2,"brush":6,"drop":6,"blast":5,"zipcaster":2,"shot":6,"torpedo":2,"slosh":1,"kraken":1}
+--- 21:59:49 turf3 7
+### turf3 r7
+== bluestone [turf 180s]: turf 31.8% vs 24.1%
+   stuck 0% | splats 42 (water 0) | specials 5 | super jumps 22 | turf 31.8/24.1 | sim 180s in 33s (wall 33s) | {"cpuSimMs":1.48}
+   splats by cause {"shot":14,"blast":7,"charger":8,"mitts":9,"bow":2,"zooka":1,"blaster":1}
+--- 22:00:41 turf3 8
+### turf3 r8
+== bluestone [turf 180s]: turf 27.8% vs 36.1%
+   stuck 0% | splats 32 (water 0) | specials 10 | super jumps 17 | turf 27.8/36.1 | sim 180s in 44s (wall 44s) | {"cpuSimMs":1.46}
+   splats by cause {"blade":7,"shot":7,"kraken":2,"burst":1,"mitts":6,"bow":3,"roller":2,"drop":4}
+tools/botlab/jobs/batch5/bluestone/rb1-local.sh: line 29: syntax error near unexpected token `;'
+tools/botlab/jobs/batch5/bluestone/rb1-local.sh: line 29: `; done; fi'
+--- 22:01:43 regions 3 1
+### ink-regions era 3 run 1
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":7840,"inked":0.545,"regions":{"base":{"m2":1599,"share":0.204,"inked":0.73},"circus":{"m2":1260,"share":0.161,"inked":0.58},"east":{"m2":941,"share":0.12,"inked":0.54},"swimston":{"m2":830,"share":0.106,"inked":0.81},"west":{"m2":786,"share":0.1,"inked":0.51},"arm":{"m2":531,"share":0.068,"inked":0.42},"arm-tip":{"m2":456,"share":0.058,"inked":0.3},"halo":{"m2":366,"share":0.047,"inked":0.54},"garden":{"m2":317,"share":0.04,"inked":0.43},"river-works":{"m2":312,"share":0.04,"inked":0.03},"arm-walks":{"m2":229,"share":0.029,"inked":0.3},"alley":{"m2":212,"share":0.027,"inked":0.16}}}
+--- 22:02:37 regions 3 2
+### ink-regions era 3 run 2
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":7840,"inked":0.573,"regions":{"base":{"m2":1599,"share":0.204,"inked":0.77},"circus":{"m2":1260,"share":0.161,"inked":0.82},"east":{"m2":941,"share":0.12,"inked":0.59},"swimston":{"m2":830,"share":0.106,"inked":0.79},"west":{"m2":786,"share":0.1,"inked":0.63},"arm":{"m2":531,"share":0.068,"inked":0.41},"arm-tip":{"m2":456,"share":0.058,"inked":0.03},"halo":{"m2":366,"share":0.047,"inked":0.17},"garden":{"m2":317,"share":0.04,"inked":0.26},"river-works":{"m2":312,"share":0.04,"inked":0.13},"arm-walks":{"m2":229,"share":0.029,"inked":0.34},"alley":{"m2":212,"share":0.027,"inked":0.15}}}
+--- 22:03:23 regions 3 3
+### ink-regions era 3 run 3
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":7840,"inked":0.627,"regions":{"base":{"m2":1599,"share":0.204,"inked":0.73},"circus":{"m2":1260,"share":0.161,"inked":0.84},"east":{"m2":941,"share":0.12,"inked":0.62},"swimston":{"m2":830,"share":0.106,"inked":0.84},"west":{"m2":786,"share":0.1,"inked":0.69},"arm":{"m2":531,"share":0.068,"inked":0.49},"arm-tip":{"m2":456,"share":0.058,"inked":0.36},"halo":{"m2":366,"share":0.047,"inked":0.29},"garden":{"m2":317,"share":0.04,"inked":0.32},"river-works":{"m2":312,"share":0.04,"inked":0.19},"arm-walks":{"m2":229,"share":0.029,"inked":0.42},"alley":{"m2":212,"share":0.027,"inked":0.4}}}
+--- 22:04:19 regions 3 4
+### ink-regions era 3 run 4
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":7840,"inked":0.573,"regions":{"base":{"m2":1599,"share":0.204,"inked":0.66},"circus":{"m2":1260,"share":0.161,"inked":0.86},"east":{"m2":941,"share":0.12,"inked":0.59},"swimston":{"m2":830,"share":0.106,"inked":0.74},"west":{"m2":786,"share":0.1,"inked":0.55},"arm":{"m2":531,"share":0.068,"inked":0.49},"arm-tip":{"m2":456,"share":0.058,"inked":0.24},"halo":{"m2":366,"share":0.047,"inked":0.16},"garden":{"m2":317,"share":0.04,"inked":0.44},"river-works":{"m2":312,"share":0.04,"inked":0.08},"arm-walks":{"m2":229,"share":0.029,"inked":0.43},"alley":{"m2":212,"share":0.027,"inked":0.26}}}
+--- 22:05:16 done

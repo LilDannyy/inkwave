@@ -27,8 +27,25 @@ const DEVSTAGE = process.env.DEVSTAGE === '1', WIPSTAGES = process.env.WIPSTAGES
 const addFlag = (u, on, flag) => (on && typeof u === 'string' && u.startsWith('app://inkwave/index.html') && !new RegExp(`[?&]${flag}\\b`).test(u)
   ? u.replace(/^([^#]*?)(\?[^#]*)?(#.*)?$/, (_, p, q, h) => `${p}${q ? q + '&' : '?'}${flag}${h || ''}`) : u);
 // PAGEQ='era=2' / 'lava=high' …: every game page loads with that query too (a stage module's audit switch) [b5-stagehooks]
-const PAGEQ = process.env.PAGEQ || '';
-const devURL = (u) => addFlag(addFlag(addFlag(addFlag(u, DEVSTAGE, 'devstage'), WIPSTAGES, 'wipstages'), WIPMODES, 'wipmodes'), !!PAGEQ, PAGEQ);
+// [b5-eras] ERA=1|2|3 is the same as PAGEQ='era=n' (Bluestone's era audit: start in era n, never jump), so the older job
+// scripts and tools that still say ERA= measure what they say; anything else in ERA (all, 0, a typo) or an ERA that
+// disagrees with PAGEQ's era stops the harness at boot with a HARNESS line, instead of silently running era 1
+const ERA = process.env.ERA || '', PQE = /(?:^|&)era=([^&]*)/.exec(process.env.PAGEQ || '');
+if (ERA && (!/^[123]$/.test(ERA) || (PQE && PQE[1] !== ERA))) {
+  console.log(`HARNESS ERA=${ERA} ${/^[123]$/.test(ERA) ? `disagrees with PAGEQ's era=${PQE[1]}` : 'is not 1, 2 or 3'}: use ERA=1|2|3 or PAGEQ='era=n' (Bluestone's audit switch), not both`);
+  process.exit(2);
+}
+// [b5-eras] ERA_FROM=a ERA_TO=b FRONT=r (ENGINE.md T3, the split-time stage art): PAGEQ='erafrom=a&erato=b&front=r' — the
+// world frozen mid-jump, era a outside a front stopped at r m, era b inside it. All three or none (a ≠ b, each 1–3; r ≥ 0),
+// and never with ERA or a PAGEQ era: anything else stops the harness at boot
+const EF = process.env.ERA_FROM || '', ET = process.env.ERA_TO || '', FR = process.env.FRONT || '';
+if ((EF || ET || FR) && (!/^[123]$/.test(EF) || !/^[123]$/.test(ET) || EF === ET || !/^\d+(\.\d+)?$/.test(FR) || ERA || /(?:^|&)era(from|to)?=/.test(process.env.PAGEQ || ''))) {
+  console.log(`HARNESS ERA_FROM=${EF} ERA_TO=${ET} FRONT=${FR}: give all three (ERA_FROM ≠ ERA_TO, each 1, 2 or 3; FRONT in m, ≥ 0) and no ERA or PAGEQ era`);
+  process.exit(2);
+}
+const PAGEQ = [process.env.PAGEQ || '', ERA && !PQE ? `era=${ERA}` : '', EF ? `erafrom=${EF}&erato=${ET}&front=${FR}` : ''].filter(Boolean).join('&');
+if (ERA || EF) console.log(`HARNESS ${ERA ? `ERA=${ERA}` : `ERA_FROM=${EF} ERA_TO=${ET} FRONT=${FR}`}: every game page loads with ?${PAGEQ}`);
+const devURL = (u) => addFlag(addFlag(addFlag(u, DEVSTAGE, 'devstage'), WIPSTAGES, 'wipstages'), !!PAGEQ, PAGEQ);
 class OffscreenBW extends electron.BrowserWindow {
   constructor(opts = {}) {
     super({ ...opts, show: false, fullscreen: false, width: 1512, height: 945, webPreferences: { ...(opts.webPreferences || {}), offscreen: true } });
