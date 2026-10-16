@@ -83,6 +83,19 @@ for (const [name, d, re] of cases) {
   R('the turf rules (11–13): in-range numbers pass; era 2 +12 %, era 3 below era 2, era 3 +26.6 %, 9 % vanishing in one jump each fail with their rule',
     ok.length === 0 && bad.every(([, ps, re]) => ps.length === 1 && re.test(ps[0])), bad.map(([k, ps]) => [k, ps[0]]));
 }
+// the capacity rules (8, 9; review 2, issue 4): the review's measure of the union (12,312 m², 11.3 % era-only, 1,142 rows)
+// passes; a union over 20,000 m², era-only over 25 %, 1,900 rows, and an atlas that does not fit each fail with their rule
+{
+  const ok = D.capacityRules({ area: 12312, eraOnly: 1391, rows: 1142, fits: true });
+  const bad = [
+    ['rule 8 (area)', D.capacityRules({ area: 20500, eraOnly: 1391, rows: 1142, fits: true }), /rule 8: ≤ 20,000/],
+    ['rule 8 (era-only)', D.capacityRules({ area: 12312, eraOnly: 3200, rows: 1142, fits: true }), /rule 8: ≤ 25 %/],
+    ['rule 9 (rows)', D.capacityRules({ area: 12312, eraOnly: 1391, rows: 1900, fits: true }), /rule 9/],
+    ['rule 9 (no fit)', D.capacityRules({ area: 12312, eraOnly: 1391, rows: 2100, fits: false }), /does not fit/],
+  ];
+  R('the capacity rules (8, 9): the union as the review measured it passes; 20,500 m², 26 % era-only, 1,900 rows and an atlas that does not fit each fail with their rule',
+    ok.length === 0 && bad.every(([, ps, re]) => ps.length === 1 && re.test(ps[0])), bad.map(([k, ps]) => [k, ps[0]]));
+}
 const fails = out.filter((x) => !x.ok).length;
 console.log(`RESULT eras-static ${out.length - fails}/${out.length}`);
 process.exit(fails ? 1 : 0);

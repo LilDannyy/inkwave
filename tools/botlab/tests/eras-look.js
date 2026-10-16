@@ -24,6 +24,7 @@
   g.hud?.setVisible?.(false);
   const step = (s) => { const n = Math.max(1, Math.round(s * 60)); for (let i = 0; i < n; i++) dbg.step(1000 / 60); };
   const W = __G.eraWorld, E = g.match.eras, L = __G.level, Rn = __G.renderer, scene = __G.scene;
+  const tAt0 = (t) => step(Math.max(0, t - E.S.clock.t));
   if (!W || !E) { R('the era engine runs on bluestone', false); return out; }
   const has = (m, e) => (m >> (e - 1)) & 1;
   const cam = (from, look, fov = 60) => { g.settings.fov = fov; g.rig.cinematic(new THREE.Vector3(...from), new THREE.Vector3(...from), new THREE.Vector3(...look), new THREE.Vector3(...look), 99, () => {}); };
@@ -68,9 +69,15 @@
     W.jumping = true; m0.onBeforeRender(Rn, { overrideMaterial: {} }, null, geo); const gated = geo.drawRange.count;
     m0.onBeforeRender(Rn, { overrideMaterial: null }, null, geo); const normal = geo.drawRange.count;
     W.jumping = false; m0.onBeforeRender(Rn, { overrideMaterial: {} }, null, geo); const rest = geo.drawRange.count;
-    R('step 5: era meshes cast shadows through a depth material that collapses absent pieces, and sit out the GTAO pass only during a jump',
-      W.meshes.every((m) => m.customDepthMaterial && m.customDepthMaterial.customProgramCacheKey() === 'era-depth-aEra') && gated === 0 && normal === Infinity && rest === Infinity,
-      { gated, normal, rest });
+    // (review 2, issue 2) in the warning only the coming era's meshes (drawn collapsed) sit out GTAO; the pieces in play keep it
+    const mPresent = W.meshes.find((m) => m.userData.eraMask & 1), mComing = W.meshes.find((m) => !(m.userData.eraMask & 1) && (m.userData.eraMask & 2));
+    W.warming = true; W._restEra = 1;
+    mPresent.onBeforeRender(Rn, { overrideMaterial: {} }, null, mPresent.geometry); const warnPresent = mPresent.geometry.drawRange.count;
+    mComing.onBeforeRender(Rn, { overrideMaterial: {} }, null, mComing.geometry); const warnComing = mComing.geometry.drawRange.count;
+    W.warming = false; mPresent.onBeforeRender(Rn, { overrideMaterial: null }, null, mPresent.geometry); mComing.onBeforeRender(Rn, { overrideMaterial: null }, null, mComing.geometry);
+    R('step 5: era meshes cast shadows through a depth material that collapses absent pieces, and sit out the GTAO pass during a jump; in the warning only the coming era\'s (review 2: the pieces still in play keep their contact shading)',
+      W.meshes.every((m) => m.customDepthMaterial && m.customDepthMaterial.customProgramCacheKey() === 'era-depth-aEra') && gated === 0 && normal === Infinity && rest === Infinity && warnPresent === Infinity && warnComing === 0,
+      { gated, normal, rest, warning: { present: [mPresent.userData.eraMask, warnPresent], coming: [mComing.userData.eraMask, warnComing] } });
     // NO GHOSTS: the crates (era 1 only) in era 2, against the frame with the era-1 meshes out of the scene altogether
     // (on 'high', where GTAO runs: the harness profile may run lower)
     const q0 = g.settings.quality;
@@ -97,6 +104,22 @@
     R('step 5: no ghosts — where an absent piece stands the frame is the frame without its mesh (GTAO on): the era-1 crates in era 2, and the eras-1–2 booking office mid-jump after its flip',
       gtaoOn && dRest.max <= 2 && dJump.max <= 2 && front > 55, { rest: dRest, midJump: dJump, sameFrame: dSame, front: +front.toFixed(1), gtao: gtaoOn, quality: q0 });
     step(W.doneOff);
+    // (review 2, issue 2) a piece still in play during the warning — the goods wagon (eras 1–2) in jump 1's warning — renders
+    // exactly as with no GTAO gate at all: it keeps its contact shading (GTAO on)
+    E.debugJump(1, { instant: true }); step(0.1);
+    const wagon = L.blocks.find((b) => b.tag === 'goods-wagon' && b.center.z < 0);
+    cam([wagon.center.x - 7, 4.5, wagon.center.z + 6], [wagon.center.x, 1.2, wagon.center.z], 52);
+    const Jw = E.debugJump(2, { inS: 6 }); step(0.4);
+    const warnPhase = E.phase;
+    const eraMs = [...W.meshes, ...W.propMeshes], gates = eraMs.map((m) => m.onBeforeRender);
+    const Aw = grab();
+    for (const m of eraMs) if (m.userData.eraMask & 1) m.onBeforeRender = () => {};   // (the pieces in play: never gated; the coming ones keep theirs)
+    const Bw = grab();
+    eraMs.forEach((m, i) => { m.onBeforeRender = gates[i]; });
+    const dWarn = diff(Aw, Bw, [0.25, 0.25, 0.75, 0.75]);
+    R('step 5 (review 2, issue 2): in the warning a piece still in play (the goods wagon in jump 1\'s warning) renders as with no GTAO gate — its contact shading kept (GTAO on)',
+      warnPhase === 'warn' && !!g.R.gtao && dWarn.max <= 2, { phase: warnPhase, diff: dWarn, gtao: !!g.R.gtao });
+    tAt0(Jw.doneAt + 0.5);
     // draw calls per era (the spawn camera) and mid-jump
     const sp = L.spawnPads[0];
     cam([sp.x, sp.y + 1.7, sp.z], [sp.x * 0.3, sp.y - 1.5, 0], 82);

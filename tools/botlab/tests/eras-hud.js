@@ -93,6 +93,23 @@
       okLook && kept && aloneOk && bigOk && bothOk && hudCalls.filter((t) => t !== 'SPLATTED!').length === 0,
       { look, team, kept, hudCalls, hostH: Math.round(Hh), big: { pct: pct(bigBox.era), era: bigBox.era?.map(Math.round), chip: bigBox.chip.map(Math.round), text: bigBox.text, top: bigBox.top }, alone: { pct: pct(alone), box: alone && alone.map(Math.round), chip: chipBox().map(Math.round) }, both: { eraPct: pct(both.era), gamePct: pct(both.game), era: both.era?.map(Math.round), game: both.game?.map(Math.round), chip: both.chip.map(Math.round) } });
     tAt(E.next ? E.next.at + W.doneOff + 0.5 : E.S.clock.t);
+    // (review 2, issue 3) the band is laid out when a callout is said and when something it clears changes — a gameplay
+    // callout coming or going (the HUD's callouts are watched), the chip changing state — never every frame: a whole
+    // jump with its four era callouts lays it out a handful of times, and a gameplay callout arriving after an era
+    // callout still pushes the band below it
+    const C = E.chip, p0 = C.stats.places, s0 = calls.length;
+    const Jp = E.debugJump(E.era === 3 ? 1 : E.era + 1, { inS: 10.05 });
+    tAt(Jp.doneAt + 2.6);
+    const places = C.stats.places - p0, said = calls.length - s0, frames = Math.round((Jp.doneAt + 2.6 - (Jp.at - 10.05)) * 60);
+    E.debugJump(E.era === 3 ? 1 : E.era + 1, { inS: 10.05 }); step(0.2); await settle();
+    const before = boxOf('.er-call');
+    co('SPLATTED AGAIN!', 'a gameplay callout after the era\'s', false);
+    await new Promise((r) => setTimeout(r, 0)); step(2 / 60); await settle();
+    const after2 = { era: boxOf('.er-call'), game: boxOf('.iw-call') };
+    R('step 9 (review 2, issue 3): the era band is laid out only when a callout is said or what it must clear changes (not every frame): a whole jump with its callouts lays it out a handful of times; a gameplay callout arriving after an era callout still pushes the band below it',
+      said >= 3 && places <= 10 && !!after2.era && !!after2.game && apart(after2.era, after2.game) && after2.era[0] >= after2.game[1] - 0.5,
+      { frames, said, places, before: before && before.map(Math.round), after: { era: after2.era?.map(Math.round), game: after2.game?.map(Math.round) } });
+    tAt(E.next ? E.next.at + W.doneOff + 0.5 : E.S.clock.t);
   }
 
   // the minimap: one base per era (pixel hash), outlines during the warning in the layout's colours

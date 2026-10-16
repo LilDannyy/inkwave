@@ -82,9 +82,11 @@ export class EraWorld {
     // baseMs: every minimap base switch (a cached swap is ~0 ms); baseBuilds: the switches that had to BUILD a raster
     // ({ e, ms, why, t }: t = the stage time, null outside a match) — a build between J and done + 1 is the hitch
     this.stats = { navMs: 0, mergeMs: 0, navBuilds: [], paintMs: 0, meshMs: 0, levelMs: 0, baseMs: [], baseBuilds: [] };
-    // era meshes sit out the GTAO override pass (it draws them without the collapse) while both eras' meshes are up
-    this._aoGate = (r, s, c, g) => { g.drawRange.count = s.overrideMaterial && (this.jumping || this.warming) ? 0 : Infinity; };
-    this.warming = false;
+    // era meshes sit out the GTAO override pass (it draws them without the collapse) while both eras' meshes are up: during
+    // a jump every era mesh; during the warning only the coming era's, drawn collapsed (review 2, issue 2: the pieces still
+    // in play keep their contact shading for the 10 s warning)
+    this._aoGateFor = (mask) => (r, s, c, g) => { g.drawRange.count = s.overrideMaterial && (this.jumping || (this.warming && !hasEra(mask, this._restEra))) ? 0 : Infinity; };
+    this.warming = false; this._restEra = 1;
   }
 
   // ---------------------------------------------------------------- build chain
@@ -236,7 +238,7 @@ export class EraWorld {
       mesh.name = `level:era${m}${grate ? ':grate' : ''}`; mesh.userData.eraMask = m;
       mesh.castShadow = !grate; mesh.receiveShadow = true;
       mesh.customDepthMaterial = eraDepthMaterial(this.uniforms, 'aEra');
-      mesh.onBeforeRender = this._aoGate;
+      mesh.onBeforeRender = this._aoGateFor(m);
       scene.add(mesh); this.meshes.push(mesh);
     }
     for (const m of props?._meshes || []) {
@@ -244,7 +246,7 @@ export class EraWorld {
       if (!tag || tag[0] !== 'e') continue;
       m.userData.eraMask = +tag.slice(1);
       m.customDepthMaterial = eraDepthMaterial(this.uniforms, 'aTag');
-      m.onBeforeRender = this._aoGate;
+      m.onBeforeRender = this._aoGateFor(m.userData.eraMask);
       this.propMeshes.push(m);
     }
     this.fx = new EraFx(this, { scene, props });
@@ -417,16 +419,24 @@ export class EraWorld {
   _precompile() {
     const r = G.renderer, sc = G.scene, cam = G.camera;
     if (!r || !sc || !cam || !r.compile) return;
+    // (review 2, issue 1: the kiosks' bell sprites and the holograms' stand-ins too — their programs were first used on the
+    //  warning's frame — and the backdrop's era sets, which first show in the horizon run; every one drawn empty or off
+    //  screen: the sprites at opacity 0, the stand-ins 40 m under the stage, the sets as they are)
     const fx = [];
-    this.fx?.group.traverse((o) => { if (o !== this.fx.group && !o.isSprite) fx.push(o); });
+    this.fx?.group.traverse((o) => { if (o !== this.fx.group) fx.push(o); });
     if (this.fx?.curtain) { this.fx.curtain.material.uniforms.uA.value = 0; this.fx.curtain.scale.set(0.01, 0.01, 0.01); }
-    const t = now(), ms = [...this.meshes, ...this.propMeshes, ...fx], was = ms.map((m) => m.visible);
+    const sprites = fx.filter((o) => o.isSprite), op = sprites.map((o) => o.material.opacity);
+    for (const o of sprites) o.material.opacity = 0;
+    const sets = Object.values(this.env?.stageSets || {}).filter(Boolean);
+    const t = now(), ms = [...this.meshes, ...this.propMeshes, ...fx, ...sets], was = ms.map((m) => m.visible);
     for (const m of ms) m.visible = true;
+    const p0 = r.info?.programs?.length || 0;
     // a real frame (the game's own post stack: the exact program variants, the shadow depth and the GTAO passes), every
     // era mesh up but collapsed by the shader (uEra holds the world's era: a piece of another era draws nothing)
     try { if (G.game?.R?.render) G.game.R.render(); else r.compile(sc, cam); } catch (e) { /* (a headless page) */ }
     ms.forEach((m, i) => { m.visible = was[i]; });
-    this.stats.compileMs = Math.round(now() - t);
+    sprites.forEach((o, i) => { o.material.opacity = op[i]; });
+    this.stats.compileMs = Math.round(now() - t); this.stats.compiled = (r.info?.programs?.length || 0) - p0; this.stats.precompiled = (this.stats.precompiled || 0) + 1;
   }
   // ---------------------------------------------------------------- switches
   // one group to era e now: its blocks solid or not (returns the block ids that came / went)
@@ -454,7 +464,7 @@ export class EraWorld {
     U.uEra.value.set(eraBit(from), eraBit(to), front, this.dissolve);
     U.uEraW.value.set(eraBit(nextFrom), eraBit(nextTo), warnK, pulseK);
     // (in the warning the coming era's meshes are already up, collapsed by the shader: no program is first used mid-jump)
-    this.warming = warnK > 0 && front < 0;
+    this.warming = warnK > 0 && front < 0; this._restEra = from;
     const vis = (m) => hasEra(m, from) || (front >= 0 && hasEra(m, to)) || (this.warming && hasEra(m, nextTo));
     for (const m of this.meshes) m.visible = vis(m.userData.eraMask);
     for (const m of this.propMeshes) m.visible = vis(m.userData.eraMask);
@@ -634,6 +644,11 @@ export class StageEras {
       case 'prebell':
         emit('era:prebell', { ...base, inS: W.prebell });
         this._snd('era_bell', { pos: T, volume: 0.8 });
+        // (one distant ring that also shows: Tartar's phone gives a single shake and the kiosks' bells flash once — the
+        //  clock rows start counting down from here, EraFx, and the chip shows "TODAY in 20")
+        this._ringAt = this.tNow; this._ringLen = 0.9;
+        emit('era:ring', { n: 'prebell', pos: [0, 6.6, 0] });
+        if (W.fx) W.fx.stats.rings++;
         break;
       case 'warn':
         emit('era:warn', { ...base, inS: W.warn, names: N });

@@ -236,6 +236,19 @@
     await time();
     R('step 4: load measured on the stage: the world build with the era engine and without it (the union, everything solid); nav ×3 under 700 ms (no dirty-region rebuild needed)',
       navSum < 700, { withEras: withE, without, navRuns, navSum, mergeMs: navE.mergeMs, paintMs: navE.paintMs, meshMs: navE.meshMs, levelMs: navE.levelMs });
+    // (review 2, issue 4) the capacity rules on the union as built: the paintable area of every paint face and its era-only
+    // share (rule 8), the union lightmap's rows at layoutLightmap(8, 2048) (rule 9: the three-pass bake depends on it)
+    {
+      const L2 = __G.level, P2 = __G.paint;
+      let area = 0, eraOnly = 0;
+      for (const f of P2.paintFaces) { const a = f.su * f.sv; area += a; if (L2.blocks[f.block].presence) eraOnly += a; }
+      const had = L2.faces.map((f) => f.light), hs = L2.lightSize, hu = L2.lightUsed, hh = L2.layoutHash;
+      const fits = L2.layoutLightmap(8, 2048), rows = L2.lightUsed;
+      L2.faces.forEach((f, i) => { f.light = had[i]; }); L2.lightSize = hs; L2.lightUsed = hu; L2.layoutHash = hh;
+      const ps = D.capacityRules({ area, eraOnly, rows, fits });
+      R('step 4 (review 2, issue 4): the capacity rules hold on the union as built — paintable area ≤ 20,000 m² with era-only ≤ 25 % (rule 8), the union lightmap ≤ 1,800 rows at layoutLightmap(8, 2048) (rule 9)',
+        ps.length === 0, { area_m2: Math.round(area), eraOnly_m2: Math.round(eraOnly), eraOnlyPct: +((100 * eraOnly) / area).toFixed(1), rows, fits, ppm: P2.ppm, problems: ps });
+    }
   }
   // ================================================================================================ part 5 (the other stages)
   if (only.includes(5)) {

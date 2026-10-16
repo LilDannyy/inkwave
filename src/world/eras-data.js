@@ -428,6 +428,18 @@ export function turfRules(area, gone) {
   return out;
 }
 
+// The capacity rules (ENGINE §5 rules 8 and 9; review 2, issue 4) on the union world as built (eras-world part 4 measures
+// them on the live Level and paint system): the union's paintable area ≤ 20,000 m², of which era-only ≤ 25 %; the union
+// lightmap fits layoutLightmap(8, 2048) with ≤ 1,800 rows used. `c` = { area, eraOnly (m²), rows, fits }. Problems as
+// strings.
+export function capacityRules(c) {
+  const out = [];
+  if (!(c.area <= 20000)) out.push(`the union's paintable area is ${Math.round(c.area)} m² (rule 8: ≤ 20,000)`);
+  if (!(c.eraOnly <= 0.25 * c.area)) out.push(`era-only paintable area is ${Math.round(c.eraOnly)} m², ${((100 * c.eraOnly) / Math.max(1, c.area)).toFixed(1)} % of the union's (rule 8: ≤ 25 %)`);
+  if (!c.fits || !(c.rows <= 1800)) out.push(`the union lightmap uses ${c.rows} rows of layoutLightmap(8, 2048)${c.fits ? '' : ' and does not fit'} (rule 9: ≤ 1,800)`);
+  return out;
+}
+
 // ------------------------------------------------------------------------------------------------ the registry hooks
 const filterMode = (src, mode) => ({ single: src.single.filter((d) => inMode(d, mode)), half: src.half.filter((d) => inMode(d, mode)) });
 // every mode build of a stage with eras that the static rules look at: [[mode, pieces]] (the turf build as given, then

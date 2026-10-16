@@ -329,6 +329,14 @@ export class EraFx {
     const hm = () => new THREE.ShaderMaterial({ uniforms: { uCol: { value: this.colA }, uA: { value: 0 }, uT: { value: 0 }, uFront: { value: -1 }, uD: { value: W.dissolve } }, vertexShader: HOLO_VS, fragmentShader: HOLO_FS,
       transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor });
     this.holoMat = [hm(), hm()];
+    // (review 2, issue 1: the holograms' programs — a LineSegments and a Mesh draw — are compiled at load with the rest:
+    //  EraWorld._precompile shows these two one-box stand-ins for its pass; setJump builds the real ones at the warning)
+    const wb = new THREE.BufferGeometry(), wp = [], wl = [];
+    for (let i = 0; i < 8; i++) wp.push(i & 1 ? 0.5 : -0.5, i & 2 ? 0.5 : -0.5, i & 4 ? 0.5 : -0.5);
+    for (const [a, d] of BOX_EDGES) wl.push(...wp.slice(a * 3, a * 3 + 3), ...wp.slice(d * 3, d * 3 + 3));
+    wb.setAttribute('position', new THREE.Float32BufferAttribute(wl, 3)); wb.setAttribute('aR', new THREE.Float32BufferAttribute(new Array(wl.length / 3).fill(0), 1));
+    this.holoWarm = [new THREE.LineSegments(wb, this.holoMat[0]), new THREE.Mesh(wb, this.holoMat[1])];
+    for (const m of this.holoWarm) { m.visible = false; m.frustumCulled = false; m.position.set(0, -40, 0); m.name = 'EraHoloWarm'; this.group.add(m); }
     this._curtainOn({ from: 1, to: 2 }); this.curtain.visible = false;
   }
 
@@ -481,7 +489,15 @@ export class EraFx {
     } else if (this._handsIdle !== true) { this._setHands(10 / 60 / 12, 2 / 12, 0); this._handsIdle = true; }
     if (J && st.phase !== 'idle') this._handsIdle = false;
     // the kiosks' bell glyphs
-    for (const p of this.phones) { p.sp.visible = ring > 0.05; if (p.sp.visible) { p.sp.position.y = p.pos.y + 1.4 + 0.12 * Math.sin(t * 30); p.sp.material.opacity = Math.min(1, ring * 1.6); } }
+    // (their size on screen is capped: a world size of 1.1 m, but never more than ~6 % of the view's height up close —
+    //  review 2: a kiosk next to the camera filled a corner of the screen)
+    const camP = G.camera?.position;
+    for (const p of this.phones) {
+      p.sp.visible = ring > 0.05;
+      if (!p.sp.visible) continue;
+      p.sp.position.y = p.pos.y + 1.4 + 0.12 * Math.sin(t * 30); p.sp.material.opacity = Math.min(1, ring * 1.6);
+      p.sp.scale.setScalar(camP ? Math.min(1.1, Math.max(0.12, camP.distanceTo(p.sp.position) * 0.085)) : 1.1);
+    }
     // the wire beads (the warning)
     if (this.beads) {
       const on = st.phase === 'warn';
@@ -573,6 +589,7 @@ const DOCKS = { zones: 'zo', tower: 'tw' };
 export class EraHud {
   constructor(R) {
     this.R = R;
+    this.stats = { places: 0 };
     const host = G.hud?.el;
     if (!host || typeof document === 'undefined') { this.el = null; return; }
     if (!cssOn) { const st = document.createElement('style'); st.id = 'era-hud-css'; st.textContent = CSS; document.head.appendChild(st); cssOn = true; }
@@ -585,6 +602,23 @@ export class EraHud {
     this.calls = document.createElement('div'); this.calls.className = 'er-calls';
     host.appendChild(this.calls);
     this.last = '';
+    // (review 2, issue 1: the first callout's layout — its display font's first shaping, the band's first box — cost
+    //  ~80 ms on the warning's frame: both kinds are laid out once now, hidden, while the match is set up)
+    for (const big of [false, true]) {
+      const w = document.createElement('div'); w.className = 'er-call' + (big ? ' is-big' : ''); w.style.visibility = 'hidden'; w.style.animation = 'none';
+      w.innerHTML = `<span class="er-call__ribbon"></span><span class="er-call__txt iw-display">TIME JUMP ${N.join(' ')}</span><small class="er-call__sub">1880s → TODAY in 10</small>`;
+      this.calls.appendChild(w); void w.offsetHeight; void w.getBoundingClientRect(); w.remove();
+    }
+    // (review 2, issue 3: the band is placed when a callout is said, and again only when something it must clear changes —
+    //  a gameplay callout or a Zone Control callout comes or goes, the chip changes state — never every frame)
+    this._dirty = false;
+    if (typeof MutationObserver === 'function') {
+      this._mo = new MutationObserver(() => { this._dirty = true; });
+      const HC = G.hud?.callouts;
+      if (HC) this._mo.observe(HC, { childList: true });
+      this._mo.observe(host, { childList: true });
+      this._zcObserved = null;
+    }
   }
   // an era callout: replaces the era's previous one only (the HUD's own callouts are left alone), the HUD's sounds
   say(text, sub, big = false) {
@@ -599,6 +633,7 @@ export class EraHud {
     setTimeout(() => el.remove(), 3200);
     this.calls.appendChild(el);
     this._place();
+    this._dirty = false;
     G.hud?._snd?.(big ? 'special_ready' : 'ui_confirm', { volume: big ? 0.7 : 0.55 });
     return el;
   }
@@ -618,6 +653,7 @@ export class EraHud {
     if (HC) { const r = HC.getBoundingClientRect(); for (const el of HC.children) clear(r.top - el.offsetHeight / 2, r.top + el.offsetHeight / 2); }
     const ZC = host.querySelector('.iw-zcalls');
     if (ZC) { const r = ZC.getBoundingClientRect(); for (const el of ZC.children) clear(r.top + el.offsetTop, r.top + el.offsetTop + el.offsetHeight); }
+    if (ZC && this._mo && this._zcObserved !== ZC) { this._zcObserved = ZC; this._mo.observe(ZC, { childList: true }); }   // (Zone Control's callouts: watched from their first sighting)
     const pct = (((top + h / 2 - H.top) / H.height) * 100).toFixed(2) + '%';
     if (c.style.top !== pct) c.style.top = pct;
   }
@@ -630,18 +666,23 @@ export class EraHud {
     else if (nx && o.phase === 'warn') { next = `→ ${N[nx.to - 1]}`; count = String(Math.max(1, Math.ceil(nx.inS))); }
     else if (o.phase === 'jump') next = 'TIME JUMP!';
     const key = `${o.era}|${o.phase}|${next}|${count}|${nx ? 1 : 0}`;
+    // (layout reads first — the band's place, only when something it clears changed — then the frame's style writes)
+    if (this._dirty && this.calls?.firstElementChild) { this._place(); this.stats.places++; }
+    this._dirty = false;
     if (key !== this.last) {
+      const st = `${o.phase}|${nx ? 1 : 0}`;
+      if (this._st !== st) { this._st = st; this._dirty = true; }   // (the chip's state changes its box: re-place next frame)
       this.last = key;
       this.names.forEach((b, i) => b.classList.toggle('is-on', i + 1 === o.era));
       this.next.textContent = next; this.count.textContent = count;
       this.el.classList.toggle('is-warn', o.phase === 'warn'); this.el.classList.toggle('is-jump', o.phase === 'jump');
       this.el.classList.toggle('is-final', !nx && o.phase !== 'jump');
     }
-    this.bar.style.width = ((o.prog || 0) * 100).toFixed(1) + '%';
-    if (this.calls?.firstElementChild) this._place();
+    const w = ((o.prog || 0) * 100).toFixed(1) + '%';
+    if (w !== this._w) { this._w = w; this.bar.style.width = w; }
   }
   get text() { return this.el ? this.el.textContent : ''; }
-  dispose() { this.el?.remove(); this.el = null; this.calls?.remove(); this.calls = null; }
+  dispose() { this._mo?.disconnect(); this._mo = null; this.el?.remove(); this.el = null; this.calls?.remove(); this.calls = null; }
 }
 
 // --------------------------------------------------------------------------------------------- the minimap (H14)

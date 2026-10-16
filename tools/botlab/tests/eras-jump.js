@@ -17,6 +17,10 @@
 //         sounds (era_bell, era_ring, era_kiosk, era_pickup, era_swell, era_front, era_pop)
 // frames  no frame over 50 ms during a jump (performance.now() round each simulated, rendered frame)
 // modes   a Boss Battle starts in era 2 and never jumps; Practice starts in era 1 and cycles 1 → 2 → 3 → 1
+// first   (review 2, issue 1; first on a fresh page: PAGE_ARGS='only=first' or the default order) the page's first jump on
+//         the real schedule compiles no shader program from J − 20 to done + 1.5 (renderer.info.programs never grows:
+//         every era program — the kiosks' bell sprites and the holograms included — was compiled at load) and the warning
+//         frame's era update stays under 10 ms (the first callout's layout warmed at set-up)
 (async () => {
   const g = window.__inkwave, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
@@ -25,7 +29,7 @@
   const { SUBS, PLAYER } = await import('./src/config.js');
   const { SFX } = await import('./src/audio/audio.js');
   const { Hit } = await import('./src/game/physics.js');
-  const parts = (/only=([\w,]+)/.exec(String(window.__pageArgs || ''))?.[1] || 'sched,flip,fall,shove,rescue,device,guard,fx,frames,modes').split(',');
+  const parts = (/only=([\w,]+)/.exec(String(window.__pageArgs || ''))?.[1] || 'first,sched,flip,fall,shove,rescue,device,guard,fx,frames,modes').split(',');
   const dbg = g.debug;
   dbg.freeze();
   const calm = () => { for (const a of g.match.actors) { if (a.bot) a.bot.update = () => {}; if (a.intent) { a.intent.move?.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.jump = a.intent.sub = a.intent.special = false; } } };
@@ -39,6 +43,30 @@
   const flipAt = (b, J) => J.at + W.groups[b.eraG].rg / W.speed;
   const kid = () => g.match.actors.find((a) => a.isLocal) || g.match.actors[0];
   const put = (a, x, y, z) => { a.pos.set(x, y, z); a.vel?.set(0, 0, 0); a.grounded = false; };
+
+  // ------------------------------------------------------------------------------------------- first (a fresh page)
+  if (parts.includes('first')) {
+    // the load-time compile pass (EraWorld.ready → the idle callback → _precompile) has run
+    for (let i = 0; i < 80 && !(W.stats.precompiled >= 1); i++) await new Promise((r) => setTimeout(r, 100));
+    const m = g.match, Rn = __G.renderer, prog = () => Rn.info.programs?.length || 0;
+    m.time = m.duration - 39; step(0.1);   // (the host clock to 39 s played: J − 21 of jump 1)
+    const upd = E.update.bind(E); let um = 0;
+    E.update = (dt, t) => { const a0 = performance.now(); upd(dt, t); um = performance.now() - a0; };
+    const p0 = prog(), rows = [];
+    let warnFrame = null, maxProg = p0, prevPhase = E.phase;
+    while (E.S.clock.t < 60 + W.doneOff + 1.5) {
+      dbg.step(1000 / 60);
+      const p = prog(), ph = E.phase;
+      if (p > maxProg) { maxProg = p; rows.push([+(E.S.clock.t - 60).toFixed(2), ph, p - p0]); }
+      if (ph === 'warn' && prevPhase !== 'warn' && !warnFrame) warnFrame = { t: +(E.S.clock.t - 60).toFixed(2), updateMs: +um.toFixed(2) };
+      prevPhase = ph;
+    }
+    E.update = upd;
+    R('step 8 (review 2, issue 1): the page\'s first jump on the real schedule compiles no shader program from J − 20 to done + 1.5 (every era program was compiled at load: the bells\' sprites and the holograms too) and the warning frame\'s era update is under 10 ms',
+      W.stats.precompiled >= 1 && maxProg === p0 && !!warnFrame && warnFrame.updateMs < 10 && E.era === 2,
+      { precompiled: W.stats.precompiled, compiledAtLoad: W.stats.compiled, compileMs: W.stats.compileMs, programs: [p0, maxProg], grew: rows.slice(0, 8), warnFrame });
+    E.debugJump(1, { instant: true }); E.over = null;   // (back on the real schedule: 'sched' moves the clock back to 49 s)
+  }
 
   // ------------------------------------------------------------------------------------------- sched
   if (parts.includes('sched')) {
