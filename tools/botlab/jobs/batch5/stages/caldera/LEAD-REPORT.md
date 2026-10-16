@@ -122,7 +122,7 @@ What held bots, found with trails (`probe-look`: all bots bows or chargers, the 
 The sets before it, for the record: 28f957b1 3 of 4 all-pass (Zone Control: the claimant 10.75 s on enemy ink, iii);
 958d24a3 3 of 4 (Zone Control: 13.5 s refilling on the lookout, and no long-range kit at all); 14cb2709 1 of 4 (two Turf
 Wars whose only long-range kit died, iv; **a lava death in Zone Control at the north head's lake-corner notch** — below);
-Bazookarp 5:00 at 14cb2709 7/7. 0 sea falls in all 18.
+Bazookarp 5:00 at 14cb2709 7/7. 0 sea falls in all 19.
 
 ### 5 (minor). The tests — FIXED
 
@@ -256,7 +256,7 @@ New: bazookarp.js's `_liq` (two tagged lines); bots.js's `hopAt` / `hopCheck` ar
 ## 6. Unfinished, flaky or uncertain
 
 - **Rule 44**: not built — the lead decides between DESIGN §3.5's options (option 1 passes every running crossing at 19.3 m).
-- **Rule 21 (new audit, fails)**: three pinches per half beside race5, race1 and race6; one bot death in 18 matches and one
+- **Rule 21 (new audit, fails)**: three pinches per half beside race5, race1 and race6; one bot death in 19 matches and one
   fight death in 8 gate runs came from race5's. Stage geometry, for the lead.
 - **The boss** can still spend most of a round on Alpha's west Lakefront (84 s in one run, passing at 64 m).
 - **Fight deaths in lava-bots** remain possible (1 in 360 in two of eight runs): a squid off a just-dried ledge's lip, the
