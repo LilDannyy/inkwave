@@ -64,3 +64,27 @@ marked TELL THE USER goes into the lead's final report as a choice they may want
 3. Then, on the merged base: the four subs (parallel), and the Bazookarp packages in the spec's order (`karp-engine`,
    `karp-checker`, then `karp-face` and `karp-bots` in parallel, then `karp-ref`).
 4. Then a Bazookarp layout for every stage, the consolidated balance run, the full verification sweep.
+
+## Balance decisions from the Mac mini's first measurement pass (2026-10-16, b5-int3 @ b97b3ebf, n = 8–24 per cell)
+25. **Carp Field load budget (SPEC ≤ 60 ms per state at match start): met.** On a quiet machine every stage builds under
+    60 ms (worst Cargo 43.4 ms, Treehills 34.7). The 75–190 ms readings came from the loaded local Mac. No per-stage cache.
+26. **Cheer Orb after the rework: no change.** The A/B in Zone Control is about even (3/8 wins, count lead −2.2, K/D 1.12
+    vs 1.11, 34 cheers a match).
+27. **The barrages: no change now.** Splat Barrage, Waddle Bomb Barrage and Mystery Bomb Barrage all splat 0.03–0.07
+    per use in bot Turf War; the new two match the old one. Bots aim barrages badly in general: a bot item for later.
+28. **Roller: kept.** `rollSpeed` 6.5 against `runSpeed` 6.0 (was 4.4) is the user's "slightly faster than walking". In
+    a mixed lobby the roller's turf rises from ×1.04 to ×1.17 of the lobby mean while it rolls less of its time (34.6 →
+    27.5 %). TELL THE USER: a real turf gain for rollers follows from their words.
+29. **Zone Control forgiveness: kept, with a late-game question open.** Against the pre-batch base (n = 24 per code):
+    contested time 2.3 → 4.5 %, lead changes 0.42 → 0.71, first takes unchanged (the early game is what the user asked
+    for); but the final margin 29 → 45.5 and knockouts 1/24 → 5/24, opening after 180 s. A 30 s timeline + per-flip log
+    is being measured; then one small step on the penalty or the flip hold if the leader's late retakes drive it, else
+    nothing.
+30. **Scrap Sentry: no buff.** 0.25 (Turf) / 0.12 (Zones) splats per use, 8× any other sub, while locked on only
+    3.7 / 7.2 % of its life; bot placement is being improved in the polish, its numbers are not.
+31. **Glide Bomb bots: a fight bias is required** (1 enemy hit in 545 glides in Zone Control; three paint throws per
+    fight throw). Part of the wave 2 polish.
+32. **Dash Pellet reach:** a swim jump + air dash lands 2.3–2.7 m up on tidewater, crossmarket, lockgate (a thin prop
+    at 4.15 m) and calamari. Rule: off-limits tops never hold a kid (fix the stage or the slide); a shortcut onto
+    walkable ground is accepted when it saves ≤ 20 m and bypasses no spawn barrier or mode-only wall; otherwise a rail
+    lip on the take-off. The same rule as Highmark Foundry's rule 44.
