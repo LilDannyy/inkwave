@@ -512,6 +512,25 @@
     const deadK = deaths.length ? deaths[0][6] : -1;
     R('F8 bots on the stones at the fall warning step off before they sink (4 of 4: no lava death at all, the three parked ones included)', !deaths.some(drowned), { deaths, alive: crew.slice(0, 4).map((b) => b.alive), trail: deadK >= 0 ? trail[deadK]?.slice(-14) : undefined });
     freezeBots();
+    // (fix round 3: F8 failed once in three runs — a bow claimant, its last climb ended in a hop onto a column's top, hopped
+    // off race 2 into the lava 1.3 s after it was put there, steered at Organ A: the climb's hop flag had stayed set, so the
+    // hop skipped the lava check, and the hop it made had been asked for 13 s before at Organ A's foot)
+    // F8b: on each of Alpha's stones at HIGH, a route hop asked for at the nearest Organ top across the lava (its route cut to
+    // that node) with the climb flag left set — (A) asked now, (B) asked 5 s ago — is never made, and nobody dies
+    const fb = bots[0], FB = fb.bot, k8 = [];
+    const organTops = nav.nodes.filter((q) => M.kind[q.id] === 2 && M.pose[q.id] === 1 && !W.riders[M.rider[q.id]].sink);
+    for (let kk = 0; kk < 8; kk++) {
+      setT(58);
+      const r = W.riders.filter((x) => x.sink && !x.id.endsWith('~'))[kk % 4], ri = W.riders.indexOf(r), sn = nav.nodes.find((q) => M.rider[q.id] === ri && M.pose[q.id] === 1);
+      put(fb, V(sn.x, rid(r.id).top + 0.02, sn.z)); fb.invuln = 1e6; FB.update = idle.get(fb); step(0.1, 30);
+      let og = null, od = Infinity; for (const q of organTops) { const d = Math.hypot(q.x - sn.x, q.z - sn.z); if (d < od) { od = d; og = q; } }
+      FB.path = [sn.id, og.id]; FB.pi = 1; FB.goal = og.id; FB._needJump = true; FB.jumpCd = 0; FB._clHop = true; FB._njT = kk < 4 ? 0 : __G.time - 5;
+      let hop = false, died = null; const o8 = on('splatted', (e) => { if (e.victim === fb && !died) died = [e.cause, r3(Lv.clock.t)]; });
+      for (let i = 0; i < 60 && !died; i++) { FB.goalTimer = 9; FB.repath = 9; dbg.step(1000 / 30); if (fb.vel.y > 5) hop = true; }
+      o8(); freezeBots();
+      k8.push([kk < 4 ? 'A' : 'B', r.id, og.id, +od.toFixed(1), hop, died]);
+    }
+    R('F8b no route hop from a stone at a column across the lava: asked now with the climb\'s hop flag left set (A), or asked 5 s before (B) — 4 stones each, no hop, no death', k8.every((x) => !x[4] && !x[5]), { cases: k8 });
   }
   // (fix round 1) the lookout claim: from the rise each team's best long-range bot goes up its own side's lookout and
   // holds it until the fall warning; every bot from its pad, brains on, a normal fight

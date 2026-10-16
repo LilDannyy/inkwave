@@ -1173,6 +1173,12 @@ export class BotBrain {
     if (this.noProg === 0) this._skipped = false;
     this.stuck = this.noProg;
     let pathHop = false;   // [b5-caldera] (a route's own hop up a step: only the arc check below)
+    // [b5-caldera] fix round 3 (lava.js F8: a bow claimant hopped off a Pumice stone into the lava): a hop asked for and not
+    // made within 0.5 s is dropped (one asked for at a column's foot was made 13 s later from a stone, steered at that
+    // column across the lake), and a climb's top-strip hop is one only while the climb drives it (after a hop onto the top
+    // the flag stayed set, and every later hop — a duel's, a stuck one, a route's — skipped the lava check below)
+    if (this._needJump) { if (!this._njT) this._njT = G.time; else if (G.time - this._njT > 0.5) { this._needJump = false; this._njT = 0; } } else this._njT = 0;
+    if (a.grounded && !this._climbAim) this._clHop = false;
     if (this._needJump && this.jumpCd <= 0 && a.grounded) { it.jump = true; this.jumpCd = 0.6; pathHop = this._needJump === true; this._needJump = false; }   // [b5-caldera] ('wiggle': a stuck hop)
     // [b5-caldera] no hop that comes down in the sea or the lava: at run speed a hop (a duel's dodge, a stuck hop, a kit's
     // own) flies 4–6 m, far past what the edge guard looks ahead (lava-bots.js: blaster / twins / brolly bots hopped off
