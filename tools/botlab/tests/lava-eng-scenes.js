@@ -19,14 +19,15 @@
   const info = () => ({ t: +L.clock.t.toFixed(2), y: +L.y.toFixed(3), phase: L.st.phase, chip: document.querySelector('.lv-chip')?.textContent || null });
   const S = [];
   // a world view: the lava at stage time t (stepped w s on to it for the particles), the camera from → look, no HUD
-  const cam = (name, t, from, look, fov = 70, w = 0.4) => S.push({ name, wait: 120, set: async () => {
+  // (w: s stepped to t; at least 6 — the particles live on the look's own clock and a scene's steam or embers would show
+  // in the next one: they last ≤ 4.8 s)
+  const cam = (name, t, from, look, fov = 70, w = 6) => S.push({ name, wait: 120, set: async () => {
     hud(false); me.pos.copy(__G.level.spawnPads[me.team]); me.vel.set(0, 0, 0);
     L.debugT(t - w); step(w);
     g.settings.fov = fov; g.rig.cinematic(V(from), V(from), V(look), V(look), 99, () => {}); step(4 / 60);
     return info();
   } });
-  const isl = [-2.0, 2.9, -2.0], org = [-10, 2.6, -9.5];
-  cam('eng-top-low', 15, [-0.02, 140, 0], [0, 0, 0], 35);
+    cam('eng-top-low', 15, [-0.02, 140, 0], [0, 0, 0], 35);
   cam('eng-top-high', 52, [-0.02, 140, 0], [0, 0, 0], 35);
   cam('eng-mid-low', 15, [6, 4, -14], [0, 5, 0], 72);
   cam('eng-mid-high', 52, [6, 4, -14], [0, 5, 0], 72);
@@ -36,28 +37,30 @@
   cam('eng-gauge-warning-fall', 62, [0, 3.2, -10], [0, 11, -2.5], 60);
   cam('eng-shelf-low', 15, [-19.6, 3.0, -15.1], [-25, 0, -5], 70);
   cam('eng-shelf-warning', 30, [-19.6, 3.0, -15.1], [-25, 0, -5], 70);
-  cam('eng-shelf-rising', 39, [-19.6, 3.0, -15.1], [-25, 0, -5], 70, 2.5);
+  cam('eng-shelf-rising', 39, [-19.6, 3.0, -15.1], [-25, 0, -5], 70, 6);
   cam('eng-shelf-high', 52, [-19.6, 3.0, -15.1], [-25, 0, -5], 70);
-  cam('eng-shelf-falling-steam', 74, [-19.6, 3.0, -15.1], [-25, 0, -5], 70, 4);
-  for (const [k, t] of [[1, 37.6], [2, 38.0], [3, 38.6]]) cam('eng-stones-surfacing-' + k, t, [-17.0, 3.2, -16.0], [-22, 0.4, -3], 65, 0.6);
+  cam('eng-shelf-falling-steam', 74, [-19.6, 3.0, -15.1], [-25, 0, -5], 70, 6);
+  for (const [k, t] of [[1, 37.6], [2, 38.0], [3, 38.6]]) cam('eng-stones-surfacing-' + k, t, [-17.0, 3.2, -16.0], [-22, 0.4, -3], 65);
   cam('eng-race-high', 52, [-17.0, 3.2, -16.0], [-22, 0.4, -3], 65);
-  for (const [k, t, nm] of [[1, 15, 'low'], [2, 38, 'rising'], [3, 42, 'rising'], [4, 52, 'high'], [5, 75, 'falling']]) cam(`eng-organs-${k}-${nm}`, t, [-3, 3.5, -15], [-10, 2.6, -9], 65);
-  cam('eng-organs-island-low', 15, isl, org, 62);
-  cam('eng-organs-island-high', 52, isl, org, 62);
+  for (const [k, t, nm] of [[1, 15, 'low'], [2, 38, 'rising'], [3, 42, 'rising'], [4, 52, 'high'], [5, 75, 'falling']]) cam(`eng-organs-${k}-${nm}`, t, [-1, 4.5, -20], [-10, 3, -9], 60);
+  cam('eng-organs-island-low', 15, [0.5, 5.5, 2.0], [-10, 2.5, -9.5], 55);
+  cam('eng-organs-island-high', 52, [0.5, 5.5, 2.0], [-10, 2.5, -9.5], 55);
   cam('eng-stain-line-causeway-low', 15, [-9, 1.6, -19.5], [-5.2, 0.5, -16.5], 60);
   cam('eng-stain-line-cliff-low', 15, [-21.5, 2.5, -12], [-28, 1.0, -6], 60);
   cam('eng-stain-line-pulse-warning', 27, [-21.5, 2.5, -12], [-28, 1.0, -6], 60);
   cam('eng-under-spillway-bridge-low', 15, [10.0, 3.6, -22.0], [15.0, 0, -28.0], 65);
   cam('eng-under-spillway-bridge-high', 52, [10.0, 3.6, -22.0], [15.0, 0, -28.0], 65);
-  cam('eng-lavafall-low', 15, [8, 4.5, -30], [14, -2, -37.5], 70);
-  cam('eng-lavafall-high', 52, [8, 4.5, -30], [14, -2, -37.5], 70);
+  // (the falls from the front: out past the lip in the void, looking back up at the curtain pouring off it)
+  cam('eng-lavafall-low', 15, [9, -5, -49], [10, -3, -37.5], 72);
+  cam('eng-lavafall-high', 52, [9, -5, -49], [10, -3, -37.5], 72);
   // (new, fix round 3) the lavafall from its side: west of the lip's line, low, looking east along the face it pours down
   cam('eng-lavafall-side-low', 15, [-3.5, -2.0, -42.0], [14, -7, -37.0], 72);
   cam('eng-lavafall-side-high', 52, [-3.5, -2.0, -42.0], [14, -7, -37.0], 72);
   // the HUD views (lava-hud-scenes.js's default list), the follow camera on the player
   const look = (x, z, pitch = -0.12) => { const yw = Math.atan2(x - me.pos.x, z - me.pos.z); me.yaw = yw; if (g.rig) { g.rig.yaw = yw; g.rig.pitch = pitch; } };
   const stand = (x, y, z, lx, lz, pitch) => { if (!me.alive) me.respawn(); me.pos.set(x, y, z); me.vel.set(0, 0, 0); me.invuln = 0; look(lx, lz, pitch); g.rig?.follow?.(me, true); };
-  const H = (name, set, wait = 120) => S.push({ name, wait, set: async () => { hud(true); g.settings.fov = fov0; await set(); return info(); } });
+  // (5 s at LOW rest first: the last scene's steam and embers die out — they live on the look's own clock)
+  const H = (name, set, wait = 120) => S.push({ name, wait, set: async () => { hud(true); g.settings.fov = fov0; L.debugT(15); step(5); await set(); return info(); } });
   const shelf = [-25.6, 0.02, -9.0], to = [-12, -4];
   H('eng-rise-1-warning', () => { L.debugT(24.6); stand(...shelf, ...to); step(0.7); }, 200);
   H('eng-rise-2-countdown', () => { L.debugT(31.4); stand(...shelf, ...to); step(0.4); });
