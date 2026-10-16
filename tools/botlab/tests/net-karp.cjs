@@ -75,8 +75,11 @@ async function base({ clients, R, wait, say, args, open }) {
   const sent = await J(B, `(() => { clearInterval(window.__karpAim); __G.match.local.intent.fire = false; const s = window.__sent; window.__sent = null; return { t: s.map((q) => Math.round(q[0])), k: s.map((q) => q[1]), weapon: __G.match.local.weaponId }; })()`);
   await A.js(`(() => { const S = __G.match.karp.shell; S.hpMax = 1000; S.m = Math.max(-600, Math.min(600, S.m)); return 1; })()`);
   await wait(400);
-  let ha = await info(A), hb = await info(B);
-  R('1. B\'s shots on the shell move the HOST\'s meter (summed on B\'s tick: kh); B\'s meter follows the host\'s', ha.meter < -40 && Math.abs(hb.meter - ha.meter) < 120, { host: ha.meter, guest: hb.meter });
+  // ([karp-face] review round 3: B's copy follows within a few snapshots — read until it has, at most 3 s: on a Mac at
+  // load 150 a fixed 400 ms read B's copy from before the host's clamp, −1728 against −636)
+  let ha = await info(A), hb = await info(B), t1 = Date.now();
+  while (Math.abs(hb.meter - ha.meter) >= 120 && Date.now() - t1 < 3000) { await wait(100); ha = await info(A); hb = await info(B); }
+  R('1. B\'s shots on the shell move the HOST\'s meter (summed on B\'s tick: kh); B\'s meter follows the host\'s', ha.meter < -40 && Math.abs(hb.meter - ha.meter) < 120, { host: ha.meter, guest: hb.meter, extraMs: Date.now() - t1 });
   let peak1 = 0;
   for (let i = 0; i < sent.t.length; i++) { let n = 0; for (let j = i; j < sent.t.length && sent.t[j] - sent.t[i] < 1000; j++) n++; peak1 = Math.max(peak1, n); }
   const span1 = sent.t.length > 1 ? (sent.t[sent.t.length - 1] - sent.t[0]) / 1000 : 0;
