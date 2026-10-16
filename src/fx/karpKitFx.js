@@ -103,7 +103,10 @@ export class KarpKitFx {
         root.add(wall);
         if (len >= 1.6) {
           const gm = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), new THREE.MeshBasicMaterial({ map: glyph, transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
-          gm.position.set(wall.position.x, fy + 1.3, wall.position.z); gm.rotation.y = wall.rotation.y; gm.renderOrder = 4;
+          // ([b5-karp-checker fix4] review 4: off the edge's middle, the same way round the polygon on every edge — at the
+          // middle, opposite edges' glyphs lined up and stacked at one corner of the view)
+          const u = len >= 3 ? 0.72 : 0.5;
+          gm.position.set(a[0] + (b[0] - a[0]) * u, fy + 1.3, a[1] + (b[1] - a[1]) * u); gm.rotation.y = wall.rotation.y; gm.renderOrder = 4;
           root.add(gm);
         }
       }

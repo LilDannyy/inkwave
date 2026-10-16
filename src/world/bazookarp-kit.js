@@ -8,9 +8,11 @@
 //          bazookarpFx's), a dark band where the curtain's frame meets the shaft; between them a 0.12 m stone sill the
 //          curtain falls onto (walk-over, it takes ink: it is floor). The shafts' inner faces (2.45 m out) and the
 //          footings / capitals stay outside the shell's full 2.3 m swell at their heights (its `clear` rule holds).
-//   Gate   an octagonal plinth 3.4 m across the flats and 0.15 m high (a step-up; floor, takes ink) with a 0.06 m rim
-//          step round it, between two posts 4.4 m apart (0.6 m shafts on 0.8 m footings, a gold band and a capital:
-//          3.2 m in all). The arch, the lid and the light column are bazookarpFx's.
+//   Gate   a square plinth 3.4 m across and 0.15 m high (one paving slab: a step-up; floor, it takes ink) on a 0.06 m
+//          base course 0.09 m wider all round, square to the Gate, between two posts 4.4 m apart (0.6 m shafts on 0.8 m
+//          footings, a gold band and a capital: 3.2 m in all). The arch, the lid (a 1.6 m disc on the slab) and the light
+//          column are bazookarpFx's. ([b5-karp-checker fix4] review 4: the octagon, a plus of three slabs and four corner
+//          pieces a step lower, read as a cross of two-tone slabs in three reviews; one slab reads as one plinth)
 //   sign   a NO CARP post: a 0.3 m foot, a 0.15 m post, a 0.75 × 0.5 m board facing the sign's yaw (1.9 m to its top);
 //          the board's NO CARP glyph and the carrierBlock shimmer are drawn by src/fx/karpKitFx.js.
 // Heights: a spot's y when the data gives [x, y, z]; else the highest box / obox / ramp top of the layout under it.
@@ -68,15 +70,11 @@ export function karpKitPieces(def, layout) {
   }
   if (def.gate) {
     const [x, z] = xz(def.gate.at), y = fl(def.gate.at), yawD = def.gate.yaw ?? 0, yaw = (yawD * Math.PI) / 180;
-    // the octagonal plinth, 3.4 m across the flats, built as mapkit's OCT in the Gate's own frame (a plus of three slabs
-    // 0.15 m high, its four 45° corners a 0.05 m step: no two pieces share a top)
-    const c = Math.cos(yaw), sn = Math.sin(yaw), at = (lx, lz) => [x + lx * c + lz * sn, z - lx * sn + lz * c];
-    const A = 1.7, hs = A * Math.tan(Math.PI / 8), Rc = A / Math.cos(Math.PI / 8);
-    const P = { color: PLINTH, pattern: P_PAVE, tag: 'karp-gate' };
-    out.push(ob(x, z, 2 * A, 2 * hs, y, y + 0.15, yawD, P));
-    for (const s of [-1, 1]) { const [qx, qz] = at(0, s * (hs + A) / 2); out.push(ob(qx, qz, 2 * hs, A - hs, y, y + 0.15, yawD, P)); }
-    const depth = A - hs * Math.SQRT2 + Math.min(0.3, 0.12 * Rc), k = (A - depth / 2) / Math.SQRT2;
-    for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) { const [qx, qz] = at(sx * k, sz * k); out.push(ob(qx, qz, 2 * hs, depth, y, y + 0.05, yawD + (sx * sz > 0 ? 45 : -45), { color: RIM, pattern: P_STONE, tag: 'karp-gate-rim' })); }
+    // the plinth: a darker 0.06 m base course 3.58 m square (clear of the posts' footings, whose inner faces stand 1.8 m
+    // out) on the floor, and on it one paving slab 3.4 m square up to 0.15 m: stacked, not overlapping (check-maps calls
+    // overlapping pieces whose tops are < 0.08 m apart z-fighting, the floor included)
+    out.push(ob(x, z, 3.58, 3.58, y, y + 0.06, yawD, { color: RIM, pattern: P_STONE, tag: 'karp-gate-rim' }));
+    out.push(ob(x, z, 3.4, 3.4, y + 0.06, y + 0.15, yawD, { color: PLINTH, pattern: P_PAVE, tag: 'karp-gate' }));
     const px = Math.cos(yaw), pz = -Math.sin(yaw);
     for (const s of [-1, 1]) post(out, x + px * 2.2 * s, z + pz * 2.2 * s, y, yawD, 'karp-gatepost', GATE_POST);
   }
