@@ -541,6 +541,12 @@ const ERAS = {
     3: { theme: { all: { horizon: '#e6eef6', zenith: '#4a86d0' } }, lamps: '#eef4ff' },
   },
   timelapse: { sunSwing: 60, cloudRate: 20 },
+  // check-maps' accepted exceptions, printed on every run (eras-data.js): rule 22 wants an overhead piece's underside
+  // ≥ 4.0 m over a route; the Halo's 225° diagonal side (0.4 m thick, underside 4.9) passes 3.66 m over the balcony stair's
+  // top corner, where the flight runs out under its outer edge (the blockout as accepted: DESIGN §3.6 #3 gives the Halo's
+  // smallest clearance as 3.8 m; the final review's issue 6 check measured this). Lever if the camera minds it: the
+  // diagonal sides 0.2 m thick (underside 5.1), a collider change and a re-bake.
+  accept: { rule22: [{ group: 'halo-6', min: 3.65, why: 'the Halo 225° side over the balcony stair\'s top corner, 3.66 m: accepted blockout geometry, DESIGN §3.6 #3' }] },
 };
 
 // ------------------------------------------------------------------------------------------------ the whole union, then this build's era

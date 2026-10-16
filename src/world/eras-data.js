@@ -440,6 +440,186 @@ export function capacityRules(c) {
   return out;
 }
 
+// ------------------------------------------------------------------------------------------------ the tower, overheads, swaps, looks
+// The ENGINE §5 rules the final review found unchecked (issue 6): 18 (Tartar's tower never changes), 21–22 (overhead
+// pieces: the underside ≥ 4.0 m over a route, the deck ≤ 6 m wide), 23 (an open era-deck edge railed ≥ 0.9 m), 26 (era-3
+// walkable tops ≤ 9 m), 29–30 (a swap's new footprint inside the old, swapped walkable tops within ±0.02 m) and 39 (≤ 6
+// stage texlib slots, ≤ 4 remaps), on one mode build's pieces. Each returns problem strings.
+const walkable = (q) => q.solid && !q.roof && !q.rail && !q.hidden;
+// Tartar's tower (rule 18): its pieces (by tag; a layout may name them in eras.tartar.tags) carry no era, and no era piece
+// meets one (overlaps or touches it in xz with their heights meeting: nothing is added into, onto or against it)
+export const TARTAR_TAGS = ['concourse', 'concourse-ramp', 'column', 'clock-beam', 'clock-steps', 'drum', 'dome', 'lantern'];
+export function tartarCheck(pieces, tags = TARTAR_TAGS) {
+  const out = [], T = pieces.filter((p) => tags.includes(p.tag));
+  if (!T.length) return [`rule 18: no piece of Tartar's tower found (tags ${tags.join(', ')})`];
+  for (const p of T) if (p.mask !== 7) out.push(`${p.tag} (${p.name}) of Tartar's tower carries eras (rule 18: the tower never changes)`);
+  for (const p of pieces) p.bb = p.bb || bbox(p.poly);
+  for (const q of pieces) {
+    if (q.mask === 7) continue;
+    for (const p of T) {
+      if (p.mask !== 7 || q.y0 > p.y1 + 0.02 || q.y1 < p.y0 - 0.02 || !(q.bb[0] <= p.bb[1] + 0.05 && q.bb[1] >= p.bb[0] - 0.05 && q.bb[2] <= p.bb[3] + 0.05 && q.bb[3] >= p.bb[2] - 0.05)) continue;
+      if (polyPolyDist(q.poly, p.poly) <= 0.02) { out.push(`${q.tag} [${q.key}] meets Tartar's tower (${p.tag}, ${p.name}) (rule 18: nothing changes at the tower)`); break; }
+    }
+  }
+  return out;
+}
+// Overhead pieces (ENGINE §5 rules 21–23, "Overhead pieces"; the camera, §4.4). An era piece whose underside is ≥ 3.4 m
+// over everything walkable beneath it in an era it exists in (the street, 0, where nothing is) is an overhead piece
+// there (rule 21). Over a route — a walkable top a kid walks along, ≥ 2 m across both ways (not a cart's, a bollard's or a
+// planter's top) — its underside is ≥ 4.0 m and the deck ≤ 6 m wide, its footprint's shorter side (rule 22). Under 3.4 m
+// it is an appearing piece (rules 19–20) or ordinary cover, not these rules'. `accept`: the layout's own accepted
+// exceptions to rule 22, [{ group, min, why }] (eras.accept.rule22) — reported on every run, never silent
+const routeTop = (q) => { if (!walkable(q)) return false; const [x0, x1, z0, z1] = q.bb; return x1 - x0 >= 2.0 && z1 - z0 >= 2.0; };
+export function overheadPieces(pieces) {
+  const res = [];
+  for (const p of pieces) p.bb = p.bb || bbox(p.poly);
+  for (const p of pieces) {
+    if (p.mask === 7 || !p.solid || p.rail || p.y0 < 3.4) continue;
+    for (const e of [1, 2, 3]) {
+      if (!hasEra(p.mask, e)) continue;
+      const cand = pieces.filter((q) => q !== p && hasEra(q.mask, e) && walkable(q) && near(p, q) && q.y1 <= p.y0 - 0.05);
+      const C = cellsOf(p.poly, 0.25);
+      let all = Infinity, route = Infinity, at = null;
+      for (let i = 0; i < C.length; i += 2) {
+        const x = C[i], z = C[i + 1], [, pb] = topAt(p, x, z);
+        let best = 0, bestR = -Infinity;
+        for (const q of cand) { if (!inPoly(q.poly, x, z)) continue; const [qt] = topAt(q, x, z); if (qt >= pb - 0.05) continue; if (qt > best) best = qt; if (routeTop(q) && qt > bestR) bestR = qt; }
+        all = Math.min(all, pb - best);
+        if (bestR > -Infinity && pb - bestR < route) { route = pb - bestR; at = [x, z]; }
+      }
+      if (all >= 3.4) res.push({ p, e, route, at });
+    }
+  }
+  return res;
+}
+export function overheadCheck(pieces, accept = []) {
+  const out = [], info = { overheads: 0, minRoute: Infinity, minAt: null, accepted: [] };
+  for (const { p, e, route, at } of overheadPieces(pieces)) {
+    info.overheads++;
+    if (route < info.minRoute) { info.minRoute = +route.toFixed(2); info.minAt = `${p.tag} [${p.key}] #${e}`; }
+    if (route < 4.0 - 1e-6) {
+      const ok = accept.find((a) => p.key && p.key.slice(0, -2) === a.group && route >= (a.min ?? 4.0) - 0.005);
+      if (ok) { info.accepted.push(`${p.key} ${route.toFixed(2)} m (${ok.why})`); continue; }
+      out.push(`#${e} ${p.tag} [${p.key}] is ${route.toFixed(2)} m over a route at (${at[0].toFixed(1)}, ${at[1].toFixed(1)}) (rule 22: an overhead piece's underside ≥ 4.0 m)`);
+    }
+    if (route === Infinity) continue;   // (over no route: rule 22's width does not bind)
+    const P = p.poly, sides = P.map((a, i) => Math.hypot(P[(i + 1) % P.length][0] - a[0], P[(i + 1) % P.length][1] - a[1]));
+    const w = P.length === 4 ? Math.min(Math.max(sides[0], sides[2]), Math.max(sides[1], sides[3])) : Math.min(p.bb[1] - p.bb[0], p.bb[3] - p.bb[2]);
+    if (w > 6.0 + 1e-6) out.push(`#${e} ${p.tag} [${p.key}] is an overhead deck ${w.toFixed(2)} m wide over a route (rule 22: ≤ 6 m)`);
+  }
+  if (info.minRoute === Infinity) info.minRoute = null;
+  return { problems: out, info };
+}
+// Open deck edges (rule 23, "Overhead pieces"): every edge of an overhead walkable deck (a box: the Halo's sides and
+// corners, the stairs' top landings; a flight's sides are the stairs' own — the as-built lower superstop flight has none,
+// DESIGN §2.6a) is either continued — a floor of the same era within 1.0 m below the deck's top or 0.3 m above it (a step,
+// a stair, a landing, the next side, a roof it would land on) just beyond it — or guarded by a piece of that era standing
+// ≥ 0.9 m over the deck's top within 0.2 m of it (a rail, a planter, glass, a wall). Sampled every 0.25 m, 0.12 m beyond
+// the edge. An open run up to 2.05 m is a drop gap (DESIGN §2.6: the Halo's two 2 m inner gaps are ways down); a longer
+// one is a problem
+export const DROP_GAP = 2.05;
+export function deckEdgeCheck(pieces) {
+  const out = [], info = { decks: 0, edgeM: 0, gaps: 0 };
+  for (const { p, e } of overheadPieces(pieces)) {
+    if (!walkable(p) || p.k !== 'b') continue;
+    info.decks++;
+    {
+      const pcs = pieces.filter((q) => q !== p && hasEra(q.mask, e) && q.solid && near({ bb: [p.bb[0] - 0.5, p.bb[1] + 0.5, p.bb[2] - 0.5, p.bb[3] + 0.5] }, q));
+      const P = p.poly, [cx, cz] = centre(P);
+      for (let i = 0; i < P.length; i++) {
+        const a = P[i], b = P[(i + 1) % P.length], L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        if (L < 0.3) continue;
+        const ux = (b[0] - a[0]) / L, uz = (b[1] - a[1]) / L;
+        // (the edge's outward normal: away from the convex footprint's centre)
+        let nx = uz, nz = -ux;
+        if ((((a[0] + b[0]) / 2 - cx) * nx + ((a[1] + b[1]) / 2 - cz) * nz) < 0) { nx = -nx; nz = -nz; }
+        let run = 0, worst = 0, wAt = null;
+        for (let s = 0.125; s < L; s += 0.25) {
+          const ex = a[0] + ux * s, ez = a[1] + uz * s, ox = ex + nx * 0.12, oz = ez + nz * 0.12, ix = ex - nx * 0.05, iz = ez - nz * 0.05;
+          const [top] = topAt(p, ix, iz);
+          // (what lies beyond: a floor within a step, else the drop)
+          let fl = -Infinity;
+          for (const q of pcs) { if (q.rail || !inPoly(q.poly, ox, oz)) continue; const [qt] = topAt(q, ox, oz); if (qt <= top + 0.3 && qt > fl) fl = qt; }
+          if (fl >= top - 1.0) { run = 0; continue; }
+          info.edgeM += 0.25;
+          const guard = pcs.some((q) => q.y1 >= top + 0.9 - 1e-6 && q.y0 <= top + 0.3 && pointPolyDist(q.poly, ex, ez) <= 0.2);
+          if (guard) { run = 0; continue; }
+          run += 0.25;
+          if (run > worst) { worst = run; wAt = [ex, ez, top - fl]; }
+        }
+        if (worst > 0.5 && worst <= DROP_GAP) info.gaps++;
+        if (worst > DROP_GAP) out.push(`#${e} ${p.tag} [${p.key}] has an open edge ${worst.toFixed(2)} m long at (${wAt[0].toFixed(1)}, ${wAt[1].toFixed(1)}), ${wAt[2] === Infinity ? 'over nothing' : wAt[2].toFixed(2) + ' m'} above what lies beyond (rule 23: a rail ≥ 0.9 m; a drop gap ≤ ${DROP_GAP} m)`);
+      }
+    }
+  }
+  info.edgeM = +info.edgeM.toFixed(1);
+  return { problems: out, info };
+}
+// Era-3 walkable tops (rule 26): every walkable top that exists in the 3000s and not in the 1880s is ≤ 9 m over the street
+export function heightCheck(pieces, street = 0) {
+  const out = [];
+  let max = -Infinity, mt = '';
+  for (const p of pieces) {
+    if (!hasEra(p.mask, 3) || hasEra(p.mask, 1) || !walkable(p)) continue;
+    if (p.y1 > max) { max = p.y1; mt = p.tag; }
+    if (p.y1 > street + 9 + 1e-6) out.push(`${p.tag} [${p.key}] is a walkable era-3 top at ${p.y1.toFixed(2)} m (rule 26: ≤ 9 m over the street)`);
+  }
+  return { problems: out, info: { maxTop: +max.toFixed(2), tag: mt } };
+}
+// Swaps (rules 29–30), per match jump: in a group where pieces vanish and appear at once, every appearing piece's
+// footprint lies inside the vanishing ones' (29) where it could come down on someone — its underside < 3.4 m over the
+// walkable top beneath in the era before (rules 19–21: a part 3.4 m or more overhead needs no old solid round it, the hotel
+// stair's top flight beyond its cab shelter) — and a walkable top that appears over a walkable top that vanishes (their
+// footprints overlapping, their tops within 0.5 m) is within ±0.02 m of it (30)
+export function swapCheck(pieces) {
+  const out = [], info = { swaps: 0 };
+  for (const p of pieces) p.bb = p.bb || bbox(p.poly);
+  for (const [ea, eb] of [[1, 2], [2, 3]]) {
+    const G = new Map();
+    for (const p of pieces) {
+      if (!p.key || !p.solid) continue;
+      const a = hasEra(p.mask, ea), b = hasEra(p.mask, eb);
+      if (a === b) continue;
+      let g = G.get(p.key); if (!g) G.set(p.key, (g = { on: [], off: [] }));
+      (b ? g.on : g.off).push(p);
+    }
+    for (const [key, g] of G) {
+      if (!g.on.length || !g.off.length) continue;
+      info.swaps++;
+      const before = pieces.filter((q) => hasEra(q.mask, ea) && walkable(q));
+      for (const p of g.on) {
+        const C = cellsOf(p.poly, 0.25), cand = before.filter((q) => near(p, q));
+        let outside = 0, at = null;
+        for (let i = 0; i < C.length; i += 2) {
+          const x = C[i], z = C[i + 1];
+          if (g.off.some((q) => inPoly(q.poly, x, z))) continue;
+          const [, pb] = topAt(p, x, z);
+          let qt = 0; for (const q of cand) { if (!inPoly(q.poly, x, z)) continue; const [t] = topAt(q, x, z); if (t < pb - 0.05 && t > qt) qt = t; }
+          if (pb - qt >= 3.4) continue;   // (overhead there: rules 19–21)
+          outside++; at = at || [x, z];
+        }
+        if (outside * 0.0625 > 0.05) out.push(`jump ${ea}→${eb}: ${p.tag} [${key}] appears ${(outside * 0.0625).toFixed(2)} m² outside what its group gives up, e.g. at (${at[0].toFixed(1)}, ${at[1].toFixed(1)}) (rule 29: a swap's new footprint lies inside the old)`);
+        if (!walkable(p)) continue;
+        for (const q of g.off) {
+          if (!walkable(q) || polyPolyDist(p.poly, q.poly) > 0 || Math.abs(p.y1 - q.y1) > 0.5) continue;
+          if (Math.abs(p.y1 - q.y1) > 0.02 + 1e-6) out.push(`jump ${ea}→${eb}: ${p.tag}'s walkable top ${p.y1.toFixed(2)} swaps with ${q.tag}'s ${q.y1.toFixed(2)} [${key}] (rule 30: ±0.02 m)`);
+        }
+      }
+    }
+  }
+  return { problems: out, info };
+}
+// Looks (rule 39): the stage's own texlib slots (PATTERN slots from 28 up: 0–27 are the shared kit) on its pieces and in
+// its remaps ≤ 6, and ≤ 4 remap entries
+export function lookCheck(layout, builds) {
+  const out = [], E = layout.eras || {}, slots = new Set();
+  for (const [, v] of builds) for (const p of v) if (typeof p.d.pattern === 'number' && p.d.pattern >= 28) slots.add(p.d.pattern);
+  for (const r of E.remap || []) for (const x of [r.base, ...(r.eras || [])]) if (typeof x === 'number' && x >= 28) slots.add(x);
+  if (slots.size > 6) out.push(`the stage uses ${slots.size} texlib slots of its own (${[...slots].sort((a, b) => a - b).join(', ')}) (rule 39: ≤ 6)`);
+  if ((E.remap || []).length > 4) out.push(`${E.remap.length} remap entries (rule 39: ≤ 4)`);
+  return { problems: out, info: { slots: [...slots].sort((a, b) => a - b), remaps: (E.remap || []).length } };
+}
+
 // ------------------------------------------------------------------------------------------------ the registry hooks
 const filterMode = (src, mode) => ({ single: src.single.filter((d) => inMode(d, mode)), half: src.half.filter((d) => inMode(d, mode)) });
 // every mode build of a stage with eras that the static rules look at: [[mode, pieces]] (the turf build as given, then
@@ -483,6 +663,22 @@ registerStageData('eras', {
       for (const e of [1, 2, 3]) { const rc = railCheck(v, e, m); out.push(...rc.problems); railsSeen = Math.max(railsSeen, rc.rails); }
     }
     console.log(`   eras objectives (nearest era piece): ${Object.entries(nearest).map(([k, x]) => `${k} ${x.d} m (${x.msg}${k === 'reach' ? '' : ', ' + x.mode})`).join('; ')}; ${railsSeen} river rails checked per era`);
+    // Tartar's tower (18), overhead pieces and their deck edges (21–23), era-3 heights (26), swaps (29–30), in each mode's
+    // build; the looks (39) once (the final review, issue 6)
+    const acc = E?.accept?.rule22 || [], seen = { accepted: new Set() };
+    let oh = null, dk = null, ht = null, sw = null;
+    for (const [m, v] of builds) {
+      const tag = (x) => (m === (api.mode || 'turf') ? x : `[${m}] ${x}`);
+      out.push(...tartarCheck(v, E?.tartar?.tags || TARTAR_TAGS).map(tag));
+      const o = overheadCheck(v, acc), d = deckEdgeCheck(v), h = heightCheck(v), w = swapCheck(v);
+      out.push(...[...o.problems, ...d.problems, ...h.problems, ...w.problems].map(tag));
+      for (const a of o.info.accepted) seen.accepted.add(a);
+      if (!oh) { oh = o.info; dk = d.info; ht = h.info; sw = w.info; }
+    }
+    const lk = lookCheck(layout, builds);
+    out.push(...lk.problems);
+    console.log(`   eras static rules: Tartar's tower clear (18); ${oh.overheads} overhead pieces, the lowest ${oh.minRoute} m over a route (${oh.minAt}; 22: ≥ 4.0); ${dk.decks} overhead decks, ${dk.gaps} drop gaps ≤ ${DROP_GAP} m (23); era-3 tops ≤ ${ht.maxTop} m (26: ≤ 9); ${sw.swaps} swap groups (29–30); slots ${lk.info.slots.join('/')} and ${lk.info.remaps} remaps (39: ≤ 6, ≤ 4)`);
+    for (const a of seen.accepted) console.log(`   ACCEPTED (layout eras.accept.rule22): ${a}`);
     const strips = [];
     for (const e of [1, 2, 3]) {
       const S = stripCheck(pieces, e, layout.bounds);

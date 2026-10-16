@@ -3,7 +3,9 @@
 // The objective rules (14 spawn pads, 15 zones, 16 the tower's swept volume, 17 the Bazookarp Pond / weirs / Gate), the
 // waterline slab (36), the reach (37), the river rails' ends, and the turf rules (11–13) hold on the stage as built, in
 // every mode build; and each check FAILS on one planted violation (a piece put where its rule forbids it, a river rail
-// cut short, turf numbers out of range), so a later edit that breaks a rule cannot pass check-maps.
+// cut short, turf numbers out of range), so a later edit that breaks a rule cannot pass check-maps. The final review's
+// issue 6 adds Tartar's tower (18), overhead pieces (21–22), their deck edges (23), era-3 heights (26), swaps (29–30) and
+// the looks (39), each with its own planted violation.
 const { MAP_LAYOUTS } = await import(new URL('../../../src/world/maps.js', import.meta.url));
 const { layoutFor } = await import(new URL('../../../src/world/variants.js', import.meta.url));
 const D = await import(new URL('../../../src/world/eras-data.js', import.meta.url));
@@ -96,6 +98,45 @@ for (const [name, d, re] of cases) {
   R('the capacity rules (8, 9): the union as the review measured it passes; 20,500 m², 26 % era-only, 1,900 rows and an atlas that does not fit each fail with their rule',
     ok.length === 0 && bad.every(([, ps, re]) => ps.length === 1 && re.test(ps[0])), bad.map(([k, ps]) => [k, ps[0]]));
 }
+// ---------------------------------------------------------------------------------------------- 18, 21–23, 26, 29–30, 39
+{
+  const builds = (lay) => D.eraBuilds(lay, 'turf');
+  const st = (lay) => {
+    const ps = [], acc = [];
+    for (const [m, v] of builds(lay)) {
+      const o = D.overheadCheck(v, lay.eras.accept?.rule22 || []);
+      ps.push(...[...D.tartarCheck(v), ...o.problems, ...D.deckEdgeCheck(v).problems, ...D.heightCheck(v).problems, ...D.swapCheck(v).problems].map((x) => `[${m}] ${x}`));
+      acc.push(...o.info.accepted);
+    }
+    ps.push(...D.lookCheck(lay, builds(lay)).problems);
+    return { ps, acc };
+  };
+  const real2 = st(L), tv = D.eraPieces(L);
+  const oi = D.overheadCheck(tv, L.eras.accept?.rule22 || []).info, di = D.deckEdgeCheck(tv).info;
+  R('the stage as built: Tartar\'s tower (18), the overhead pieces (21–22: the one accepted exception, printed), their deck edges (23), era-3 tops (26), swaps (29–30), the looks (39) — no problem in any mode build',
+    real2.ps.length === 0 && oi.overheads >= 30 && di.decks >= 16 && real2.acc.length > 0 && real2.acc.every((a) => /halo-6/.test(a)),
+    { problems: real2.ps.slice(0, 6), accepted: [...new Set(real2.acc)], overheads: oi, decks: di, height: D.heightCheck(tv).info, swaps: D.swapCheck(tv).info, looks: D.lookCheck(L, builds(L)).info });
+  const plantN = (...ds) => ({ ...L, single: [...L.single, ...ds], eras: { ...L.eras, source: { single: [...L.eras.source.single, ...ds], half: L.eras.source.half } } });
+  // (planted over Swimston's carriageway, x −24.5 … −16, a route; Tartar's concourse at (0, 0))
+  const swapDome = (() => { const d0 = [...L.single, ...L.half].find((d) => d.tag === 'dome'); const sw = (list) => list.map((x) => (x === d0 ? { ...d0, eras: '12' } : x)); return { ...L, single: sw(L.single), half: sw(L.half), eras: { ...L.eras, source: { single: sw(L.eras.source.single), half: sw(L.eras.source.half) } } }; })();
+  const cases2 = [
+    ['rule 18 (Tartar\'s tower never changes): an era-2 box set on the concourse', plantN(box(-1, 1, 1.3, 2.3, -1, 1)), /rule 18/],
+    ['rule 18: the dome given eras \'12\'', swapDome, /rule 18/],
+    ['rule 22 (an overhead underside ≥ 4.0 m over a route): an era-3 deck 3.6 m over Swimston', plantN(box(-19, -17, 3.6, 3.8, -31, -29, { eras: '3' })), /rule 22: an overhead piece's underside/],
+    ['rule 22 (an overhead deck ≤ 6 m wide): an era-3 deck 7 × 7 m, 4.4 m over Swimston', plantN(box(-24, -17, 4.4, 4.7, -36, -29, { eras: '3' })), /rule 22: ≤ 6 m/],
+    ['rule 23 (an open overhead deck edge railed): an era-3 deck 3 × 5 m, 4.5 m over Swimston, no rails', plantN(box(-19.5, -16.5, 4.5, 4.8, -33, -28, { eras: '3' })), /rule 23/],
+    ['rule 26 (era-3 walkable tops ≤ 9 m): an era-3 deck at 9.5 m', plantN(box(-19, -17, 9.2, 9.5, -31, -29, { eras: '3' })), /rule 26/],
+    ['rule 29 (a swap\'s new footprint inside the old): an era-1 roofed crate 2 × 2 m and, in its group, an era-2–3 box 3 × 3 m', plantN(box(-19, -17, 0, 2.0, -31, -29, { eras: '1', roof: true, paint: false, eraGroup: 'planted-sw' }), box(-19.5, -16.5, 0, 1.0, -31.5, -28.5, { eras: '23', eraGroup: 'planted-sw' })), /rule 29/],
+    ['rule 30 (swapped walkable tops ±0.02 m): an era-1 1.0 m top swapping with an era-2–3 1.1 m one', plantN(box(-19, -17, 0, 1.0, -31, -29, { eras: '1', eraGroup: 'planted-sw2' }), box(-19, -17, 0, 1.1, -31, -29, { eras: '23', eraGroup: 'planted-sw2' })), /rule 30/],
+    ['rule 39 (≤ 4 remaps): five remap entries', { ...L, eras: { ...L.eras, remap: [...L.eras.remap, ...L.eras.remap, L.eras.remap[0]] } }, /remap entries \(rule 39/],
+    ['rule 39 (≤ 6 stage texlib slots): four more stage slots on era-2 boxes', plantN(...[70, 71, 72, 73].map((k, i) => box(-19, -18.5, 0, 0.5, -31 + i, -30.5 + i, { pattern: k, eraGroup: 'planted-tex' }))), /texlib slots of its own/],
+  ];
+  for (const [name, lay, re] of cases2) {
+    const p2 = st(lay).ps;
+    R(`planted, ${name}: check-maps fails with that rule`, p2.some((x) => re.test(x)), { hits: p2.filter((x) => re.test(x)).slice(0, 2), other: p2.filter((x) => !re.test(x)).length });
+  }
+}
+
 const fails = out.filter((x) => !x.ok).length;
 console.log(`RESULT eras-static ${out.length - fails}/${out.length}`);
 process.exit(fails ? 1 : 0);
