@@ -104,12 +104,13 @@ export class Bazookarp {
       on('era:warn', () => { this._danger = true; this._recheck(true); }),
       on('lava:warn', ({ to }) => { this.fieldSwitch(this.field.stateOf(to)); }),
     ];
-    this.wire.on('claim', ({ actor, ts }) => this._claim(actor, ts));
+    this.wire.on('claim', ({ actor, ts, since }) => this._claim(actor, ts, since));
     this.wire.on('decline', ({ actor, q }) => this._decline(actor, q));
     this.wire.on('rate', (d) => { if (d.actor === this.holder) { this.remote.rate = d.rate; this.remote.why = d.why; this.remote.half = d.half; this.remote.zone = d.zone; } });
     this.wire.on('foot', (d) => { if (d.actor === this.holder) this.remote.foot = { pos: new V3(d.x, d.y, d.z), half: d.half, zone: d.zone }; });
     this.wire.on('refused', ({ actor }) => { if (actor && !actor.remote) { this.lockT = 0; this.wire.log.refused = (this.wire.log.refused || 0) + 1; } });   // (kd: our claim was refused)
     this.lockT = 0; this.claimT = 0;          // a guest's kit lock while its claim is out, its re-send clock
+    this.freeT0 = 0; this.grantAt = null;     // [karp-face] when it went free on this screen; the host's grant decision time
     this.carriedOnce = new Set();             // players whose first carry has ended (the prompt's charge line)
     this.hud = { fuseShown: K.fuse, fast: false, why: null };
   }
@@ -139,6 +140,7 @@ export class Bazookarp {
     const prev = this.phase;
     this.phase = p; this.phaseT = t;
     if (p !== prev) emit('karp:phase', { phase: p, prev });
+    if (p === 'free' && prev !== 'free') { this.freeT0 = this.clock; this.grantAt = null; }   // [karp-face] each screen's own "free since" (claims, §7.3)
   }
   // (q carries on above the last one this screen applied as a follower: a new host's first record — even one made while
   // its leave handling still runs, before onHostChange — is never at or below what the other guests already applied)
@@ -251,36 +253,60 @@ export class Bazookarp {
       const s = a.specialActive;
       if (s && !s.free && !(s.kind === 'bubbler' || s.id === 'bubbler')) { if (a.isLocal) this._noteRefuse(a, 'special'); continue; }
       if (!this.canPick(a)) continue;
-      if (this.host) { if (!this.claims.some((c) => c.a === a)) this.claims.push({ a, ts: this.wire.now() }); }
-      else if (a === G.local && (this.claimT -= 1 / 60) <= 0) { this.claimT = K.claimRetry; this.lockT = K.claimLockMax; this.wire.claim(a.nid, this.wire.now()); }
+      // [karp-face] each claim carries how long after it went free ON THE CLAIMANT'S OWN SCREEN it was touched (since):
+      // the host orders claims by it, so a guest who heard of the burst one trip late, and whose claim arrives a trip
+      // later still, races the host's own actors fairly (§7.3; the review measured a host bot winning 10 / 10)
+      const since = Math.max(0, this.clock - this.freeT0);
+      if (this.host) { if (!this.claims.some((c) => c.a === a)) this.claims.push({ a, ts: this.wire.now(), since, at: this.clock, p: a.pos.clone() }); }
+      else if (a === G.local && (this.claimT -= 1 / 60) <= 0) { this.claimT = K.claimRetry; this.lockT = K.claimLockMax; this.wire.claim(a.nid, this.wire.now(), since); }
     }
   }
   _noteRefuse(a, why) { if (!this._refT || this.clock - this._refT > 2) { this._refT = this.clock; emit('karp:refuse', { actor: a, why }); } }
   // a guest's claim (the wire): ts is its send time on our clock
-  _claim(a, ts) {
+  _claim(a, ts, since) {
     if (this.follower || !a) return;
     if (this.phase !== 'free') { if (this.phase !== 'carried' || this.holder !== a) this.wire.toGuest(a.nid, { why: this.phase }); return; }
+    // ([karp-face] a claim without its own "since" — an older client — counts from its arrival on our clock)
+    const sn = Number.isFinite(since) && since >= 0 ? since : Math.max(0, this.clock - this.freeT0);
     const c = this.claims.find((q) => q.a === a);
-    if (c) c.ts = Math.min(c.ts, ts); else this.claims.push({ a, ts, remote: true });
+    if (c) { c.ts = Math.min(c.ts, ts); c.since = Math.min(c.since, sn); } else this.claims.push({ a, ts, since: sn, at: this.clock, remote: true });
   }
-  // host: grant the nearest valid claim once the hold is over
-  _grant() {
+  // host: grant a claim once the hold is over (§7.3). [karp-face] Not the first claim that exists on this screen: the
+  // host's own actors claim on the frame they touch it, a guest's claim lands a round trip after the guest heard of
+  // the burst, so first-come gave the host's bots 10 grabs in 10 at equal distance (net-karp face 5). Instead:
+  //   - once a claim is in, wait `wait` s for claims still in flight (a round trip plus a tick to the guests close
+  //     enough to have touched it as early; 0 with nobody remote near: offline and lone grabs are at once);
+  //   - then the valid claim with the smallest `since` (how long after it went free on its claimant's own screen it was
+  //     touched; a touch inside the hold counts as the hold's end) wins; equal → the nearest, as before.
+  // A remote claimant is valid at its newest sample or any it sent in the last claimAge s; a host actor where it is
+  // now or where it touched it (within claimAge). force: decide now (the overtime window's grace runs out).
+  _grant(force = false) {
     if (this.phaseT > 0 || !this.claims.length) return;
+    if (this.grantAt == null) { this.grant0 = this.clock; this.grantAt = this.clock + this._claimWait(); if (!force && this.grantAt > this.clock) return; }
+    else if (!force && this.clock < this.grantAt) return;
+    // (a remote claim that landed in the last tick, not yet valid at its samples: they follow it within a tick — a
+    // little longer, never past claimWait plus a tick from the first claim)
+    const tick = 1 / 20 + 1 / 60;
+    if (!force && this.wire.newest && this.clock < this.grant0 + K.claimWait + tick && this.claims.some((c) => c.remote && this.clock - c.at < tick && !this._claimPos(c))) { this.grantAt = this.clock + 1 / 60; return; }
+    this.grantAt = null;
     const W = this.otWin;
-    let best = null, bd = Infinity;
+    let best = null, bk = Infinity, bd = Infinity;
     for (const c of this.claims) {
       const a = c.a;
       if (!this.match.actors.includes(a)) continue;
       // (the window's close: only claims sent before it count, for claimAge after it)
       if (W.closeT != null && c.ts > W.closeT) continue;
-      const p = a.remote ? this._newest(a) : a.pos;
-      if (!p || !this.canPick(a, p, a.remote ? K.claimSlack : 0)) continue;
-      const d = Math.hypot(p.x - this.pos.x, p.z - this.pos.z);
-      if (d < bd) { bd = d; best = c; }
+      const p = this._claimPos(c);
+      if (!p) continue;
+      const d = Math.hypot(p.x - this.pos.x, p.z - this.pos.z), k = Math.max(K.pickHold, c.since ?? 0);
+      if (k < bk - 0.004 || (Math.abs(k - bk) <= 0.004 && d < bd)) { bk = Math.min(bk, k); bd = d; best = c; }
     }
     for (const c of this.claims) if (c !== best && c.remote) { this.wire.toGuest(c.a.nid, { why: 'refused' }); this.stats.refused++; }
     this.claims.length = 0;
     if (!best) return;
+    this.stats.grantLog = this.stats.grantLog || [];
+    this.stats.grantLog.push({ nid: best.a.nid ?? -1, remote: !!best.remote, since: +(best.since ?? 0).toFixed(3) });
+    if (this.stats.grantLog.length > 40) this.stats.grantLog.shift();
     this.preGrant = { touched: this.touched, lastCarrier: this.lastCarrier, overtime: this.overtime, otWin: { ...this.otWin }, pos: this.pos.clone(), restNode: this.restNode, q: this.q + 1 };
     this.stats.grants++;
     this._rec(['p', best.a.nid ?? -1]);
@@ -290,6 +316,38 @@ export class Bazookarp {
     if (best.a.remote) this.remote.sampleT = this._newestT(best.a);
     // S39a: the winning team takes it back in overtime
     if (this.overtime && best.a.team === 1 - this.otLosing) this._end(1 - this.otLosing, 'retake');
+  }
+  // [karp-face] where a claim is judged (null: not valid now)
+  _claimPos(c) {
+    const a = c.a;
+    if (!a.remote) {
+      if (this.canPick(a)) return a.pos;
+      return c.p && this.clock - c.at <= K.claimAge && this.canPick(a, c.p) ? c.p : null;
+    }
+    const p = this._newest(a);
+    if (p && this.canPick(a, p, K.claimSlack)) return p;
+    // (any sample it sent in the last claimAge s: a swimmer that ran through the spot — SPEC §7.3)
+    const buf = a.net?.buf, n = buf && buf.length ? buf[buf.length - 1] : null;
+    if (n) for (let i = buf.length - 2; i >= 0 && buf[i].t >= n.t - K.claimAge; i--) {
+      const s = buf[i], q = (this._np2 || (this._np2 = new V3())).set(s.x, s.y, s.z);
+      if (this.canPick(a, q, K.claimSlack)) return q;
+    }
+    return null;
+  }
+  // [karp-face] how long the host holds a grant open for claims still in flight: the round trip (plus a tick for its
+  // samples) to each guest that hasn't claimed yet but whose player could have touched it as early — alive, and at its
+  // newest sample within reach of a run (claimNear m past pickR) — at most claimWait; a remote claim not yet valid at
+  // its samples waits a tick for them
+  _claimWait() {
+    let w = 0;
+    for (const a of this.match.actors) {
+      if (!a.remote || !a.alive || this.claims.some((c) => c.a === a)) continue;
+      const s = this.wire.newest?.(a);
+      if (!s || Math.hypot(s.x - this.pos.x, s.z - this.pos.z) > K.pickR + K.claimNear) continue;
+      w = Math.max(w, (this.wire.rttTo?.(a) ?? 0) + 1 / 20 + 1 / 60);
+    }
+    if (this.wire.newest && this.claims.some((c) => c.remote && !this._claimPos(c))) w = Math.max(w, 1 / 20 + 1 / 60);
+    return Math.min(K.claimWait, w);
   }
   // (its own vector: canPick() reuses _v / _v2 — with _v2 here every remote claimant once measured 0 m and won every race)
   _newest(a) {
@@ -306,7 +364,8 @@ export class Bazookarp {
     a.character?.setWeapon?.('sp_karp');   // [karp-face] the carp launcher (karpModel.js)
     this.holder = a; this.holderTeam = a.team; this.grantT = this.clock;
     this._hr = a.remote; this._sampQ = null; this.blastHold = null;   // [karp-face]
-    this.fuse = K.fuse; this.rate = 1; this.rateWhy = null; this._fz = null;   // ([karp-face] a fresh fuse: no old snapshot to read on from)
+    // ([karp-face] a fresh fuse: a follower reads it on from the grant, never from an older snapshot's)
+    this.fuse = K.fuse; this.rate = 1; this.rateWhy = null; this._fz = { fuse: K.fuse, rate: 1, t: this.wire.hostNow(), from: null };
     this.remote = { half: -1, zone: false, rate: 1, why: null, foot: null, sampleT: -1 };
     this.base = null;
     this.touched = true;
@@ -665,6 +724,8 @@ export class Bazookarp {
       if (W.left <= 0) { W.closeT = this.wire.now(); W.grace = K.claimAge; }
     } else {
       W.grace -= dt;
+      if (W.grace <= 0 && this.phase === 'free' && this.claims.length) this._grant(true);   // ([karp-face] a grant still held open for claims in flight: decide now)
+      if (this.winner != null) return;
       if (W.grace <= 0) { W.open = false; this.stats.windows.closed++; if (!(this.holder && this.holderTeam === this.otLosing)) this._end(1 - this.otLosing, 'no-pickup'); }
     }
   }
@@ -685,16 +746,13 @@ export class Bazookarp {
   }
 
   // ================================================================== online: snapshots, records
-  // [karp-face] the time base snapshots are stamped with: the MATCH clock (time played, plus overtime), which netmatch
-  // keeps in step on every screen (within 0.2 s) — the engine's own clock starts when each screen built its match, which
-  // can be seconds apart, so a guest's "how old is this snapshot" read off it was off by that much (SPEC §7.2's rule)
-  _tb() {
-    const m = this.match;
-    return Number.isFinite(m.duration) && Number.isFinite(m.time) ? Math.max(0, m.duration - m.time) + (this.overtime ? this.overtimeT : 0) : this.clock;
-  }
+  // [karp-face] snapshots are stamped with the host's WIRE clock (its tick clock, the one every peer's netmatch already
+  // measures an offset to): a follower reads a snapshot's age as wire.hostNow(sender) − t — the sender's clock through
+  // that peer's offset plus the one-way delay. (The match clock it used before is only kept within 0.2 s on a guest and
+  // trails the host's by the one-way delay: at ×3 the carrier's ring ran up to 0.6 s long under netlag 150.)
   _snap() {
     const H = this.holder;
-    return ['s', this.q, r2(this._tb()), PHASES.indexOf(this.phase), r2(this.pos.x), r2(this.pos.y), r2(this.pos.z), H ? H.nid ?? -1 : -1,
+    return ['s', this.q, r2(this.wire.hostNow()), PHASES.indexOf(this.phase), r2(this.pos.x), r2(this.pos.y), r2(this.pos.z), H ? H.nid ?? -1 : -1,
       Math.round(this.shell.meter), r2(this.fuse), this.holder?.remote ? this.remote.rate : this.rate, this.rateWhy === 'retreat' ? 1 : this.rateWhy === 'zone' ? 2 : 0,
       this.count[0], this.count[1], r2(this.overtimeT), this.overtime && this.otWin.open ? r2(this.otWin.left) : -1];
   }
@@ -716,10 +774,10 @@ export class Bazookarp {
       [r2(this.from.x), r2(this.from.y), r2(this.from.z)]);
     return s;
   }
-  netEvent(e, snap = false) {
+  netEvent(e, snap = false, from = null) {
     if (!Array.isArray(e) || !this.follower) return;
     const k = e[0], q = e[1];
-    if (k === 's' || k === 'S') { this._applySnap(e); return; }
+    if (k === 's' || k === 'S') { this._applySnap(e, from); return; }
     if (q <= this.lastQ) return;
     this.lastQ = q;
     const byNid = (n) => (n >= 0 ? this.match.actors.find((a) => a.nid === n) || null : null);
@@ -744,17 +802,18 @@ export class Bazookarp {
     }
     void snap;
   }
-  _applySnap(e) {
+  _applySnap(e, from) {
     const [, q, t, ph, x, y, z, hn, meter, fuse, rate, why, c0, c1, otT, win] = e;
+    // [karp-face] a snapshot older than the last discrete record this screen applied (the host took it before a grant,
+    // a drop, a plant or the end, and it played after that record on the timeline) changes NOTHING here: not the counts
+    // (a knockout's 0 went back up to the host's pre-'e' count), not the fuse (a fresh carrier's ring took the last
+    // carry's leftover), not the overtime clock. After the end, nothing at all
+    if (q < this.lastQ || this.winner != null) return;
     this.count = [c0, c1];
-    this.fuse = fuse; this.rate = rate; this.rateWhy = why === 1 ? 'retreat' : why === 2 ? 'zone' : null;
     if (this.overtime) this.overtimeT = otT;
     this.otWin.open = !!this.overtime && win >= 0;   // (a new host's window carries on from here: onHostChange)
     if (win >= 0) this.otWin.left = win;
     this.hostT = t;
-    this._fz = { fuse, rate, t };   // ([karp-face] a remote carrier's fuse is read forward from here: _followerTick)
-    this._fuseSync(fuse, rate, t);
-    if (q < this.lastQ) return;   // (older than the last discrete record: its phase / holder / position are stale)
     let phase = PHASES[ph];
     // (the grant this screen declined, until the host's 'u': it stays free here)
     if (phase === 'carried' && this._declined && this._declined.nid === hn && q <= this._declined.q) phase = 'free';
@@ -762,6 +821,14 @@ export class Bazookarp {
       const a = this.match.actors.find((o) => o.nid === hn);
       if (a && this.holder !== a) this._applyGrant(a);
     } else if (this.holder && phase !== 'carried') this._release(this.holder);
+    // [karp-face] the fuse is this snapshot's holder's: only for that same carrier (a snapshot about the last one never
+    // touches a new carrier's fuse); its age on the host's clock (the wire's: the sender's tick clock through the peer
+    // offset, plus the one-way delay) — a remote carrier's fuse is read forward from here (_followerTick)
+    if (this.holder && (this.holder.nid ?? -1) === hn) {
+      this.fuse = fuse; this.rate = rate; this.rateWhy = why === 1 ? 'retreat' : why === 2 ? 'zone' : null;
+      const age = this.wire.hostNow(from) - t;
+      if (age > -0.05 && age < 1.5) { this._fz = { fuse, rate, t, from }; this._fuseSync(fuse, rate, t, from); }
+    }
     if (phase !== this.phase) {
       if ((phase === 'shielded' || phase === 'reforming') && this.shell.state === 'none') this.shell.form(_v.set(x, y, z), K.shell.reformHp, phase === 'reforming' ? 0.4 : 0);
       if (phase === 'free' || phase === 'carried' || phase === 'resetting') this.shell.clear();
@@ -805,7 +872,7 @@ export class Bazookarp {
     if (this.holder && this.holder === G.local) this.fuse -= dt * (this.holder.carry?.j?.rate || 1);
     // [karp-face] someone else's carrier: the host's fuse now, read forward from the newest snapshot by the match clock
     // (at most 0.6 s on: a stalled stream doesn't run it away) — the marker, the Carp Line and the pause strip show it
-    else if (this.holder && this._fz) this.fuse = Math.max(0, this._fz.fuse - this._fz.rate * Math.min(0.6, Math.max(0, this._tb() - this._fz.t)));
+    else if (this.holder && this._fz) this.fuse = Math.max(0, this._fz.fuse - this._fz.rate * Math.min(0.6, Math.max(0, this.wire.hostNow(this._fz.from) - this._fz.t)));
   }
   // the carrier's own HUD fuse (§7.2): run locally at the local rate; a host snapshot may move it forward at once, back
   // by at most 0.2 s a second
@@ -819,9 +886,9 @@ export class Bazookarp {
     this.hud.fast = rate > 1;
     this.hud.why = !H.remote && H.carry?.j ? H.carry.j.why : this.rateWhy;
   }
-  _fuseSync(fuse, rate, t) {
+  _fuseSync(fuse, rate, t, from = null) {
     if (!this.holder || this.holder.remote) return;
-    const hostNow = fuse - rate * Math.max(0, this._tb() - t);
+    const hostNow = fuse - rate * Math.max(0, this.wire.hostNow(from) - t);
     const S = this.hud;
     if (S.fuseShown > hostNow + K.fuseSync.fwd) S.fuseShown = hostNow;
     else if (S.fuseShown < hostNow - K.fuseSync.fwd) S.fuseShown = Math.min(hostNow, S.fuseShown + K.fuseSync.back / K.snapHz);
@@ -846,7 +913,7 @@ export class Bazookarp {
       return;
     }
     this.q = Math.max(this.q, this.lastQ);
-    this.claims.length = 0; this.preGrant = null; this.pendingLoss = null; this._declined = null; this.blastHold = null; this._sampQ = null;
+    this.claims.length = 0; this.preGrant = null; this.pendingLoss = null; this._declined = null; this.blastHold = null; this._sampQ = null; this.grantAt = null;
     // [karp-face] shell hits this screen batched for the old host (its kh) count here now
     const kh = G.objTargets?.takeHits?.(); if (kh) this.netHits(kh);
     const H = this.holder;

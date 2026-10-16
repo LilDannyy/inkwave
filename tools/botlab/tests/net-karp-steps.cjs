@@ -350,6 +350,88 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
       !!cl && cl.at != null && cl.at - cl.closeT >= 0.25 && c15a.holder === bNid && c15b.holder === bNid && c15a.winner == null && c15a.overtime, { host: { holder: c15a.holder, winner: c15a.winner, reason: c15a.reason, ot: c15a.overtime }, guest: c15b.holder, closed: cl });
   }
 
+  if (part === 'snap') {
+    // [karp-face] review round 1 (the blocker and its twin): a snapshot the host took BEFORE a discrete record plays on a
+    // guest AFTER it (records go at once, snapshots ride the timeline). It must change nothing there: not a new carrier's
+    // fuse (the old code synced B's own ring to the last carry's leftover and kept it there: 5 grabs in 6 at ~5 s, red,
+    // ticking, while the host's fuse was ~58), not a follower's view of a fresh carrier's fuse, not the counts after a
+    // knockout (the old code put the guest's 0 back up to the host's pre-'e' count, 2 runs in 2).
+    const grabBy = async (c, team, nid) => {
+      const kp = await J(A, `__G.match.karp.pos.toArray()`);
+      await put(c, kp[0], kp[1], kp[2] + (team ? 3.2 : -3.2));
+      await c.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const a = __G.match.local; a.pos.set(${kp[0]}, ${kp[1]}, ${kp[2]} + ${team ? 0.5 : -0.5}); a.vel.set(0, 0, 0); }); }); return 1; })()`);
+      await wait(250);
+      await burst(team);
+      await A.until(`__G.match.karp.holder && __G.match.karp.holder.nid === ${nid}`, 5000, 30).catch(() => {});
+      await B.until(`!!__G.match.karp.holder && __G.match.karp.holder.nid === ${nid}`, 3000, 10).catch(() => {});
+    };
+    const LEFT = 7, rows = [], rows2 = [];
+    for (let k = 0; k < 5; k++) {
+      await alive(A); await alive(B);
+      // A carries; its carry ends with the host's fuse at LEFT (k = 4: at 0 — a Carp Blast's leftover)
+      await toPond();
+      await put(B, 0, 0, 14);
+      await grabBy(A, 0, aNid);
+      await A.js(`(() => { const K = __G.match.karp; K.fuse = ${k === 4 ? 0.3 : LEFT}; return 1; })()`);
+      await wait(k === 4 ? 900 : 300);
+      await alive(A);
+      await toPond();
+      await put(A, 0, 0, -14);
+      // B grabs: B's own ring (fuseShown) for 1.5 s, sampled every frame-ish
+      await B.js(`(() => { window.__fz = []; window.__fzI = setInterval(() => { const K = __G.match.karp; if (K.holder === __G.match.local) window.__fz.push(+K.hud.fuseShown.toFixed(2)); }, 8); return 1; })()`);
+      await grabBy(B, 1, bNid);
+      await wait(1500);
+      const fz = await J(B, `(() => { clearInterval(window.__fzI); return window.__fz; })()`);
+      const host = await J(A, `+__G.match.karp.fuse.toFixed(2)`), shown = await J(B, `+__G.match.karp.hud.fuseShown.toFixed(2)`);
+      rows.push({ min: fz.length ? Math.min(...fz) : null, n: fz.length, host, shown });
+      // B's carry ends at LEFT; A grabs: B's view of A's fuse (the marker over A's head) for 0.9 s
+      await A.js(`(() => { const K = __G.match.karp; K.fuse = ${LEFT}; return 1; })()`);
+      await wait(300);
+      await toPond();
+      await put(B, 0, 0, 14);
+      await B.js(`(() => { window.__fz2 = []; window.__fzI2 = setInterval(() => { const K = __G.match.karp; if (K.holder && K.holder.nid === ${aNid}) window.__fz2.push(+K.fuse.toFixed(2)); }, 8); return 1; })()`);
+      await grabBy(A, 0, aNid);
+      await wait(900);
+      const f2 = await J(B, `(() => { clearInterval(window.__fzI2); return window.__fz2; })()`);
+      const mk = await J(B, `(() => { const s = __inkwave.hud && __inkwave.hud.karp && __inkwave.hud.karp.state(); return s && s.marker ? s.marker.secs : null; })()`);
+      rows2.push({ min: f2.length ? Math.min(...f2) : null, n: f2.length, marker: mk });
+    }
+    R('17. B grabs after a carry that left the host\'s fuse at 7 s (and once at 0, a Carp Blast\'s): B\'s own ring starts at 60 and stays within 1 s of the host\'s (5 grabs, 1.5 s each)',
+      rows.every((r) => r.n > 20 && r.min >= 50 && Math.abs(r.shown - r.host) < 1), { rows });
+    R('17b. … and a follower\'s view of a fresh carrier\'s fuse (B\'s marker over A) never shows the last carry\'s leftover (5 grabs, 0.9 s each)',
+      rows2.every((r) => r.n > 20 && r.min >= 50 && r.marker >= 50), { rows: rows2 });
+    // ---- 18. a knockout: A's kid lands it on Alpha's weir, grabs again and walks into Bravo's Gate; B's count stays at
+    // the end record's numbers for 2 s after karp:end (no older snapshot puts them back)
+    await alive(A);
+    await toPond();
+    await put(B, -8, 0, -10);
+    const grabA = async () => {
+      await A.js(`(() => { const K = __G.match.karp, a = __G.match.local; import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const id = setInterval(() => { if (K.holder || !a.alive) { clearInterval(id); return; } a.pos.copy(K.pos); a.vel.set(0, 0, 0); }, 5); setTimeout(() => clearInterval(id), 3000); }); }); return 1; })()`);
+      await wait(300);
+      await burst(0);
+      await A.until(`__G.match.karp.holder === __G.match.local`, 6000, 30).catch(() => {});
+    };
+    await grabA();
+    // (karpbox: Alpha's weir A on its platform at z 28, up the ramp from z 20; the clamp's baseline reset for the move)
+    await A.js(`(() => { const K = __G.match.karp, a = __G.match.local; a.pos.set(0, 0, 21.5); a.vel.set(0, 0, 0); K.base = null; a.yaw = a.aimYaw = 0; a.intent.move.set(0, 0, 1); return 1; })()`);
+    await A.until(`__G.match.karp.lowered[0]`, 9000, 20).catch(() => {});
+    await A.js(`(() => { __G.match.local.intent.move.set(0, 0, 0); return 1; })()`);
+    await A.until(`__G.match.karp.phase === 'shielded'`, 6000, 50).catch(() => {});
+    await grabA();
+    const g = await J(A, `__G.match.karp.gates[0].pos.toArray()`);
+    await A.js(`(() => { const K = __G.match.karp, a = __G.match.local; a.pos.set(${g[0]}, ${g[1]}, ${g[2]} - 5); a.vel.set(0, 0, 0); K.base = null; a.yaw = a.aimYaw = 0; return 1; })()`);
+    await wait(600);
+    await B.js(`(() => { window.__kc = []; window.__e = null; import('./src/core/ctx.js').then((m) => m.on('karp:end', () => { window.__e = performance.now(); })); const id = setInterval(() => { const K = __G.match && __G.match.karp; if (!K) return; if (window.__e != null) window.__kc.push([Math.round(performance.now() - window.__e), K.count[0], K.count[1]]); if (window.__kc.length > 300) clearInterval(id); }, 8); return 1; })()`);
+    await A.js(`(() => { const a = __G.match.local; a.intent.move.set(0, 0, 1); return 1; })()`);
+    await A.until(`__G.match.karp.winner != null`, 8000, 10).catch(() => {});
+    const ea18 = await J(A, `({ winner: __G.match.karp.winner, reason: __G.match.karp.reason, count: __G.match.karp.count })`);
+    await wait(2300);
+    const kc = await J(B, `window.__kc`), badge = await J(B, `[...document.querySelectorAll('.iw-zc__num')].map((e) => e.textContent)`);
+    const span = kc.length ? kc[kc.length - 1][0] : 0, off = kc.filter((r) => r[1] !== ea18.count[0] || r[2] !== ea18.count[1]);
+    R('18. a knockout: on B the counts stay at the end record\'s for 2 s after karp:end (no older snapshot puts them back up), and the badges show them',
+      ea18.reason === 'knockout' && kc.length > 30 && span >= 1900 && off.length === 0 && badge.includes(String(ea18.count[0])), { host: ea18, samples: kc.length, spanMs: span, off: off.slice(0, 6), badge });
+  }
+
   // ---- 16. the end: the same results on both screens (counts, reason, winner, karpM, karpPops)
   await A.js(`(() => { const K = __G.match.karp; if (K.overtime) K._end(K.losing(), 'comeback'); else __G.match.time = 0.2; return 1; })()`);
   for (const c of [A, B]) await c.until(`!!__G.match.result`, 25000, 250).catch(() => {});

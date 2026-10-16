@@ -19,6 +19,8 @@ export class KarpWire {
   _emit(kind, d) { for (const f of this.h[kind] || []) f(d); }
   get isHost() { return true; }
   now() { return performance.now() / 1000; }
+  // [karp-face] the host's clock now (snapshots are stamped with it): offline and on the host, its own
+  hostNow() { return this.now(); }
   record() { this.log.rec++; }
   snapshot() { this.log.snap++; }
   toGuest() {}
@@ -55,7 +57,7 @@ export class NetWire extends KarpWire {
   snapshot(rec) { super.snapshot(); if (this.nm && G.netm === this.nm && this.nm.isHost) this.nm._rec(['ks', rec]); }
   toGuest(nid, msg) { const a = this.nm?.byNid.get(nid); if (a && a.owner) this.nm.s.tr?.sendTo(a.owner, { k: 'kd', nid, ...msg }); }
   _toHost(d) { const h = this._hostId(); if (h && !this.nm.isHost) this.nm.s.tr?.sendTo(h, d); }
-  claim(nid, ts) { super.claim(); this._toHost({ k: 'kc', nid, ts: Math.round(ts * 1000) / 1000 }); }
+  claim(nid, ts, since) { super.claim(); this._toHost({ k: 'kc', nid, ts: Math.round(ts * 1000) / 1000, ...(Number.isFinite(since) ? { fs: Math.round(since * 1000) / 1000 } : {}) }); }   // ([karp-face] fs: free since, its own screen)
   decline(nid, q) { super.decline(); this._toHost({ k: 'kx', nid, q }); }
   reportRate(nid, rate, why, half, zone) { super.reportRate(); this._toHost({ k: 'kr', nid, rate, why, half, zone: zone ? 1 : 0 }); }
   reportFoot(nid, x, y, z, half, zone) { super.reportFoot(); this._toHost({ k: 'kf', nid, x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, z: Math.round(z * 100) / 100, half, zone: zone ? 1 : 0 }); }
@@ -68,7 +70,7 @@ export class NetWire extends KarpWire {
     if (a.owner !== from) return;
     const p = this.nm.peers.get(from);
     switch (d.k) {
-      case 'kc': this._emit('claim', { actor: a, ts: (d.ts ?? 0) + (p ? p.off : 0) }); break;
+      case 'kc': this._emit('claim', { actor: a, ts: (d.ts ?? 0) + (p ? p.off : 0), since: d.fs }); break;
       case 'kx': this._emit('decline', { actor: a, q: d.q }); break;
       case 'kr': this._emit('rate', { actor: a, rate: d.rate, why: d.why, half: d.half, zone: !!d.zone }); break;
       case 'kf': this._emit('foot', { actor: a, x: d.x, y: d.y, z: d.z, half: d.half, zone: !!d.zone }); break;
@@ -81,6 +83,25 @@ export class NetWire extends KarpWire {
     const out = [];
     for (const s of buf) if (s.t > since && s.t <= p.tr) out.push({ t: s.t, x: s.x, y: s.y, z: s.z, alive: !!(s.f & 1) });
     return out;
+  }
+  // [karp-face] the host's clock now as this screen best knows it (a snapshot's age is hostNow(sender) − its t): on the
+  // host its own; on a guest the sender's tick clock through that peer's offset (netmatch's floor of receive − send: the
+  // clocks' difference plus the fastest one-way trip) plus the one-way delay — half this screen's round trip to the
+  // relay plus half the sender's (the lobby's ping)
+  hostNow(from) {
+    const nm = this.nm;
+    if (!nm || (nm.isHost && !from)) return this.now();
+    const id = from || this._hostId(), p = id ? nm.peers.get(id) : null;
+    return p && p.init ? this.now() - p.off + this.oneWay(id) : this.now();
+  }
+  oneWay(id) {
+    const mine = this.nm?.s?.tr?.rtt || 0, pl = this.nm?.s?.lobby?.players?.find((q) => q.id === id), theirs = pl && pl.ping > 0 ? pl.ping : mine;
+    return Math.min(0.4, (mine + theirs) / 2000);
+  }
+  // [karp-face] the host ↔ an actor's owner round trip through the relay (s): both relay round trips (ours, its lobby ping)
+  rttTo(a) {
+    const mine = this.nm?.s?.tr?.rtt || 0, pl = this.nm?.s?.lobby?.players?.find((q) => q.id === a?.owner);
+    return ((pl && pl.ping > 0 ? pl.ping : Math.max(mine, 40)) + mine) / 1000;
   }
   // the newest sample a remote claimant sent (§7.3: claims are judged where it really is, not where we draw it)
   newest(a) { const b = a?.net?.buf; return b && b.length ? b[b.length - 1] : null; }

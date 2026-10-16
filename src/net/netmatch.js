@@ -585,7 +585,7 @@ export class NetMatch {
       case 'bm': this.match?.boss?.onMove(e[2]); break;
       case 'z': this.match?.zones?.netEvent(e[2]); break;
       case 'tw': this.match?.tower?.netEvent(e[2]); break;
-      case 'ks': this.match?.karp?.netEvent(e[2], true); break;   // [b5-karp] the host's snapshots (its timeline)
+      case 'ks': this.match?.karp?.netEvent(e[2], true, from); break;   // [b5-karp] the host's snapshots (its timeline; [karp-face] its sender: their age)
       case 'pd': this.match?.pods?.netEvent(e[2]); break;
       case 'sm': this.match?.stage?.netEvent(e[2], e[3], from); break;   // [b5-stagehooks] a stage module's record
       case 'w': if (this.practice) G.game?.netWipe?.({ k: e[2], cx: e[3], cz: e[4], dur: e[5], reach: e[6] }); break;
