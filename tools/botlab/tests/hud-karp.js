@@ -85,9 +85,9 @@
   for (let i = 0; i < 240 && botAt < 0; i++) { dbg.step(1000 / 60); frames++; if (rateAt < 0 && J.rate > 1) rateAt = frames; if (S().bottom) botAt = frames; }
   zero(me); step(2 / 60);
   R('C1. DON\'T RETREAT! shows the same frame its own screen judges ×3', rateAt > 0 && botAt === rateAt && /DON'T RETREAT/.test(S().bottom?.[0] || ''), { rateAt, botAt, bottom: S().bottom });
-  const zn = Kp.R.zones[me.team][0];
-  const cx = zn.poly.reduce((a, q) => a + q[0], 0) / zn.poly.length, cz = zn.poly.reduce((a, q) => a + q[1], 0) / zn.poly.length;
-  { const d = V(P.x - cx, 0, P.z - cz).normalize(), q = V(cx + d.x * 6.5, 0, cz + d.z * 6.5); put(me, V(q.x, G.level.groundHeight(q.x, q.z, (zn.y1 ?? 5) + 0.5), q.z)); }
+  // (a floor node inside your own zone, outside the spawn barrier: on a raised spawn deck the zone ends at the deck's edge)
+  { let zq = null, zd = Infinity; for (const id of G.nav.validIds) { const n = G.nav.nodes[id]; if (n.zone >= 0 || Kp.field.inFreeZone(me.team, n) < 0) continue; const pd = G.level.spawnPads[me.team], d = Math.abs(Math.hypot(n.x - pd.x, n.z - pd.z) - 6); if (d < zd) { zd = d; zq = n; } }
+    if (zq) put(me, V(zq.x, zq.y, zq.z)); }
   J.mark = NaN; step(0.1);
   R('C2. in your own Carp-Free Zone: CARP-FREE ZONE!', /CARP-FREE ZONE/.test(S().bottom?.[0] || ''), { bottom: S().bottom, why: J.why });
   put(me, spot(P.x, P.z + dz * 4, P.y)); J.mark = NaN; step(0.2);
