@@ -1563,6 +1563,13 @@ face, chosen so the face is big enough:
 | 10 | all | the turntable ring | the top face of the forecourt terrace's centre block (x −5 … 5, z −66 … −52.4) |
 | 11 | 3 | "FLOOD LEVEL 3026 ▲" tide marks | the Boathouse's river face (x 21.5, z −24 … −12) |
 
+**As built on the Z (engine phase, second half; `stages/bluestone/murals.js`).** The faces moved with the layout: 4 the
+circus floor's top (the hour ring, XII toward Bravo, numerals' feet outward); 6 the hotel's lane wall over Degrayling Lane
+(its south face, 0–3 m); 7 the railway viaduct's lane face along Hoki Lane (z −25.5 … −49, 0.15–3.6 m: the viaduct is
+Hoki Lane's west wall on the Z); 8 Swimston's carriageway beside the tram (the platform line, TRAM STOP); 9 the GPO's north
+wall above its portico (3–6 m: the ghost sign); 11 the Royal Arcade's Swimston wall (3–6 m: the 3000s' light seams with the
+flood line). 5 and 10 are left to the art pass. `eras.murals` is unchanged.
+
 Everything else is on props, per era: the street names (enamel plates on corners: SWIMSTON ST, FLOUNDERS ST, DEGRAYLING
 LANE, HOKI LANE, LITTLE LANE, HOTEL LANE, CUSTOMS LANE, CENTRE PLAICE), the GPO's lettering, "CABLE TRAMWAY ENGINE HOUSE
 1885" on the spawn deck's face, the hoarding posters, "H.M. CUSTOMS: BONDED", "BRIDGE OPENS 1889", café menus,
