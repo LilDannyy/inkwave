@@ -34,7 +34,7 @@ export const PIPES = {
   capture: { r: 0.75, depth: 0.9, below: 0.3, above: 1.0, push: 0.5, cone: 45, hold: 0.08, window: 0.2 },
   pop: { out: 6.5, up: 6.0, highOut: 7.0, highUp: 8.5, start: 0.45, steer: 45, steerWin: 0.5, shieldMax: 0.8,
          upNozzle: { up: 10.5, side: 2.5 }, downNozzle: { down: 2.0 }, fan: 30, fanWin: 0.4 },
-  cooldown: 2.5,                       // s after touchdown (data: pipes.cooldown, 1.5–4)
+  cooldown: 2.5,                       // s after touchdown (stage data may tune this)
   chime: 1.0,                          // s before a pop: the exit's chime and faster pulse
   splat: 1.2,                          // m, the touchdown splat (addTurfNoSpecial)
   lane: 0.28,                          // m right of travel: opposite riders pass side by side
