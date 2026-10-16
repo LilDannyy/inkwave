@@ -269,6 +269,10 @@ export class KarpHud {
   // with the re-form): a call-out within 1.5 s of the last one replaces it instead of stacking under it
   _say(text, opts) {
     const H = this.hud, now = performance.now();
+    // ([karp-face] a kill call-out still popping in — a burst's WIPEOUT! comes the same frame as its SHELL BURST! — goes
+    // first: ours follows once its pop is over, below it — has-kcall — so neither is drawn over the other)
+    const kc = H.callouts?.querySelector('.iw-call'), kAge = kc ? kc.getAnimations?.()[0]?.currentTime ?? 1e9 : 1e9;
+    if (kAge < 380) { this.show.call = text; clearTimeout(this._sayLater); this._sayLater = setTimeout(() => this._say(text, opts), 380 - kAge); return; }
     if (now - (this._sayT || -1e9) < 1500 && H.zcalls) for (const el of [...H.zcalls.children]) el.remove();
     this._sayT = now; this.show.call = text;
     H._zCall(text, opts);
@@ -492,15 +496,12 @@ export class KarpHud {
   // animation aside it stands still) — and while it is live ours sit under it (has-kcall, --kcb); ours each frame
   _callRects() {
     const H = this.hud, out = [], kc = H.callouts?.querySelector('.iw-call') || null;
-    if (kc !== this._kc) {
-      this._kc = kc;
-      if (kc) {
-        const a = H.callouts.getBoundingClientRect(), x = a.left - (this._ox || 0), y = a.top - (this._oy || 0), hh = kc.offsetHeight / 2, hw = kc.offsetWidth / 2;
-        const u = Math.min(H.el.clientWidth / 100, (H.el.clientHeight * 1.7778) / 100);
-        this._kcR = { l: x - hw, r: x + hw, t: y - hh, b: y + hh };
-        H.el.style.setProperty('--kcb', `${Math.round(y + hh + 0.6 * u)}px`);
-      }
-      H.el.classList.toggle('has-kcall', !!kc);
+    if (kc !== this._kc) { this._kc = kc; if (kc) { this._kcH = kc.offsetHeight / 2; this._kcW = kc.offsetWidth / 2; } H.el.classList.toggle('has-kcall', !!kc); }
+    if (kc) {   // (its anchor each frame: the jump alerts' row moves the layer down while it is up — has-jal)
+      const a = H.callouts.getBoundingClientRect(), x = a.left - (this._ox || 0), y = a.top - (this._oy || 0), hh = this._kcH, hw = this._kcW;
+      const u = Math.min(H.el.clientWidth / 100, (H.el.clientHeight * 1.7778) / 100), b = Math.round(y + hh + 0.6 * u);
+      this._kcR = { l: x - hw, r: x + hw, t: y - hh, b: y + hh };
+      if (b !== this._kcb) { this._kcb = b; H.el.style.setProperty('--kcb', `${b}px`); }
     }
     if (kc) out.push(this._kcR);
     if (H.zcalls) for (const z of H.zcalls.children) { const r = z.getBoundingClientRect(); if (r.width > 0) out.push({ l: r.left - (this._ox || 0), r: r.right - (this._ox || 0), t: r.top - (this._oy || 0), b: r.bottom - (this._oy || 0) }); }
@@ -539,7 +540,7 @@ export class KarpHud {
     if (this.show.tagBoxes) this.show.tagBoxes.length = shown.length;
   }
   state() { return { on: this.on, ...this.show, cues: this.cues.played.slice(-12) }; }
-  dispose() { this._unsubs.forEach((u) => u()); this.cues.dispose(); for (const e of [this.line, this.mk, this.ret, this.bot, this.no, this.shellTag, this.tags]) e.remove(); }
+  dispose() { clearTimeout(this._sayLater); this._unsubs.forEach((u) => u()); this.cues.dispose(); for (const e of [this.line, this.mk, this.ret, this.bot, this.no, this.shellTag, this.tags]) e.remove(); }
 }
 
 // ================================================================================================ the maps (minimap.js)

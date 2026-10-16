@@ -213,13 +213,17 @@
     Kp.shell.m = 0; g.rig.pitch = -0.15;
     // I4. a kill call-out (WIPEOUT!) and ours at once: ours sits wholly under it
     clearCalls();
-    H._callout('WIPEOUT!', 'The whole team is splatted', true);
+    // (a burst's WIPEOUT! and SHELL BURST! come in the same frame: ours waits out the kill call-out's pop-in, then sits
+    // under it — the two popped in on top of each other at 960×600)
+    H._callout('WIPEOUT!', 'The whole team is splatted', true); const t4 = performance.now();
     H.karp._say('SHELL BURST!', { sub: 'GRAB THE BAZOOKARP!', icon: null });
-    step(1 / 60); await wait(700); step(1 / 60); await wait(450);
+    step(1 / 60);
+    let tz = null; for (let k = 0; k < 80 && tz == null; k++) { await wait(15); if (H.zcalls.firstElementChild) tz = Math.round(performance.now() - t4); }
+    step(1 / 60); await wait(400); step(1 / 60);
     const kcEl = H.callouts.querySelector('.iw-call'), zcEl = H.zcalls.firstElementChild;
     const kr = kcEl && kcEl.getBoundingClientRect(), zr4 = zcEl && zcEl.getBoundingClientRect();
     const subR = kcEl && kcEl.querySelector('.iw-call__sub')?.getBoundingClientRect();
-    R('I4. a kill call-out (WIPEOUT!) and our SHELL BURST! at once: ours sits wholly below it (its sub line too)', !!kr && !!zr4 && zr4.top >= Math.max(kr.bottom, subR ? subR.bottom : 0) - 1, { kill: kr && { t: Math.round(kr.top), b: Math.round(kr.bottom) }, sub: subR && Math.round(subR.bottom), ours: zr4 && { t: Math.round(zr4.top), b: Math.round(zr4.bottom) }, size: [innerWidth, innerHeight] });
+    R('I4. a kill call-out (WIPEOUT!) and our SHELL BURST! at once: ours waits out its pop-in (≥ 0.3 s), then sits wholly below it (its sub line too)', tz != null && tz >= 300 && !!kr && !!zr4 && zr4.top >= Math.max(kr.bottom, subR ? subR.bottom : 0) - 1, { after: tz, kill: kr && { t: Math.round(kr.top), b: Math.round(kr.bottom) }, sub: subR && Math.round(subR.bottom), ours: zr4 && { t: Math.round(zr4.top), b: Math.round(zr4.bottom) }, size: [innerWidth, innerHeight] });
     clearCalls(); step(1 / 60);
     // I5. the carrier's own fuse: 30 s small; 8.5 s big, beating
     put(me, spot(P.x, P.z + dz * 2, P.y)); grab(me); follow();
