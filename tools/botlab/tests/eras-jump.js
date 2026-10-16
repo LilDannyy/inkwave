@@ -10,7 +10,8 @@
 // fall    a kid on a vanishing top falls and lands (Practice's rewind: the Halo)
 // shove   a kid forced into an appearing piece is shoved out with its body fitting (straight up onto it; else round it /
 //         the nearest node), stats.eraShoves counts it
-// rescue  a kid on a piece that vanishes over water is rescued to a valid node, never splatted
+// rescue  a kid on a piece that vanishes over water is rescued to a valid node, never splatted; a kid on each of Alpha's
+//         Iron Bridge spans and garden tiles in the rewind is rescued once, onto ground that stays (final review 2, issue 2)
 // device  a sprinkler on a vanishing piece is destroyed (the module's walk of G.subs.items, after S.crushIn); a Drip Curtain
 //         resting on a vanishing roof (no face: the Degrayling crates at jump 1, the goods wagon at jump 2) is popped at
 //         its flip, not left standing in the air, and one on the street beside the crates stays (final review, issue 1)
@@ -226,6 +227,33 @@
     R('step 8: a kid on a piece that vanishes over water (the floating garden in the rewind) is rescued to a valid node, never splatted',
       on && E.stats.rescues > r0 && a.alive && gh > PLAYER.waterY + 0.3 && (a.stats?.deaths ?? 0) === deaths0, { on, rescues: E.stats.rescues - r0, alive: a.alive, at: [+a.pos.x.toFixed(1), +a.pos.y.toFixed(2), +a.pos.z.toFixed(1)], floor: gh });
     tAt(J.doneAt + 1.2);
+    // (final review 2, issue 2) a kid on each of Alpha's Iron Bridge spans and floating-garden tiles through the rewind:
+    // rescued ONCE, onto ground that stays (the old rule took the nearest node valid in the era still in force: a span or
+    // tile the front had not reached yet, and the kid hopped along them, up to six times across the river) — alive, on dry
+    // land, standing where era 1 has a node
+    {
+      const spots = L.blocks.filter((b) => (b.tag === 'iron-bridge' || b.tag === 'floating-garden') && b.center.z < 0 && b.axes[1].y > 0.9).sort((p, q) => W.groups[p.eraG].rg - W.groups[q.eraG].rg);
+      const rows = [], r2 = (v) => +v.toFixed(2);
+      for (const b of spots) {
+        E.debugJump(3, { instant: true });
+        const Jr = E.debugJump(1, { inS: 0 }), F = flipAt(b, Jr), top = E._topOf(b, b.center.x, b.center.z);
+        if (top === null) continue;
+        tAt(F - 0.12); calm(); if (!a.alive) { a.respawn?.(); calm(); }
+        put(a, b.center.x, top + 0.03, b.center.z); step(0.05);
+        const on = a.pos.y > top - 0.2, q0 = E.stats.rescues, d0 = a.stats?.deaths ?? 0, hops = [];
+        let last = a.pos.clone();
+        while (E.S.clock.t < Jr.doneAt + 0.4) { dbg.step(1000 / 60); calm(); if (a.pos.distanceTo(last) > 1.0) hops.push([r2(E.S.clock.t - Jr.at), r2(a.pos.x), r2(a.pos.y), r2(a.pos.z)]); last = a.pos.clone(); }
+        const nid = __G.nav.nearest(a.pos, 1.0, true), gh = L.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.5);
+        rows.push({ tag: b.tag, key: W.groups[b.eraG].key, rg: r2(W.groups[b.eraG].rg), on, rescues: E.stats.rescues - q0, hops, deaths: (a.stats?.deaths ?? 0) - d0, alive: a.alive,
+          end: [r2(a.pos.x), r2(a.pos.y), r2(a.pos.z)], dry: gh > PLAYER.waterY + 0.3, era1Node: nid >= 0 && !!__G.nav.eraValid[0][nid] });
+      }
+      // (a span over the quay needs no rescue: the kid drops onto it — 0 rescues is fine, more than one is the bug)
+      const bad = rows.filter((r) => !r.on || r.rescues > 1 || r.hops.length > 1 || r.deaths || !r.alive || !r.dry || !r.era1Node);
+      R('step 8 (final review 2, issue 2): a kid on each Iron Bridge span and floating-garden tile in the rewind is rescued once, onto ground that stays (never hopped along pieces the front has yet to take), alive, on dry land where era 1 has a node',
+        rows.length >= 6 && rows.some((r) => r.tag === 'iron-bridge') && rows.some((r) => r.tag === 'floating-garden') && rows.some((r) => r.rescues === 1) && bad.length === 0,
+        { spots: rows.length, rescued: rows.filter((r) => r.rescues === 1).length, bad: bad.length, rows });
+      E.debugJump(1, { instant: true });
+    }
     // the roof branch (ENGINE §4.2 rev 2; no garden-on-roof on the Z): a kid left on a roof top with nothing walkable
     // within 3.4 m under it after a flip — the Customs House's roof (9 m over its 3 m block) stands in for the vanished deck
     const roof = L.blocks.find((b) => b.tag === 'customs-house' && b.roof && b.center.z < 0), ry = roof.center.y + roof.half.y, r1 = E.stats.rescues;

@@ -946,8 +946,8 @@ export class StageEras {
     this._flipStats(on, off);
     (this._recentFlips || (this._recentFlips = [])).push({ t, ids: [...on, ...off] });
     while (this._recentFlips.length && t - this._recentFlips[0].t > 2.5) this._recentFlips.shift();
-    if (on.length) this._shove(on);
-    if (off.length) this._rescue(off);
+    if (on.length) this._shove(on, e);
+    if (off.length) this._rescue(off, e);
     this.stats.flips++;
     this.stats.flipLog.push({ key: g.key, t: +t.toFixed(4), r: +g.rg.toFixed(2), era: e, on: on.length, off: off.length });
     if (this.stats.flipLog.length > 400) this.stats.flipLog.shift();
@@ -1024,9 +1024,10 @@ export class StageEras {
   }
   // an own squidkid a piece just appeared in: up onto it if its feet are within 0.8 m below the top and the body fits
   // there, else the first fitting spot round it (16 directions × 0.5–4 m, over floor, nothing in the way), else the
-  // nearest valid nav node within 8 m outside the piece (a genuine teleport: proxies snap)
-  _shove(onIds) {
-    const L = this.W.level, Ph = G.physics;
+  // nearest nav node within 8 m outside the piece that is valid in the era the flip goes to `e` (a genuine teleport:
+  // proxies snap)
+  _shove(onIds, e = this.W.navEra) {
+    const L = this.W.level, Ph = G.physics, EV = this._eraValid(e);
     for (const a of this.m.actors) {
       if (!shovable(a)) continue;
       const id = onIds.find((i) => this._bodyIn(a, L.blocks[i]));
@@ -1046,8 +1047,8 @@ export class StageEras {
         const nav = G.nav;
         let best = -1, bd = 64;
         for (const n of nav.nodes) {
-          if (!nav.valid[n.id]) continue;
-          const d2 = (n.x - a.pos.x) ** 2 + (n.z - a.pos.z) ** 2;
+          if (!EV[n.id]) continue;
+          const d2 = (n.x - a.pos.x) ** 2 + (n.z - a.pos.z) ** 2 + (nav.valid[n.id] ? 0 : 4);   // (ground that stays first)
           if (d2 >= bd || L.pointInBlock(b, _p.set(n.x, n.y + 0.5, n.z), 0.6) || !this._floorOk(n)) continue;
           if (Ph && !Ph.bodyFits(_p.set(n.x, n.y + 0.02, n.z), PLAYER.radius, PLAYER.stepUp, PLAYER.height * 0.9, squid)) continue;
           bd = d2; best = n.id;
@@ -1074,9 +1075,15 @@ export class StageEras {
     }
     return { y: best, roof };
   }
+  // the nav's valid flags in era e (the union graph's per-era set; the era in force when there is none)
+  _eraValid(e) { const nav = G.nav; return (e && nav.eraValid && nav.eraValid[e - 1]) || nav.valid; }
   // an own squidkid left over water, or on a roof with nothing walkable within 3.4 m below it, after a piece went from
-  // under it: moved to the nearest valid nav node within 10 m with a puff (never splatted)
-  _rescue(offIds) {
+  // under it: moved with a puff (never splatted) to the nearest nav node within 10 m whose floor stands now and that is
+  // valid both in the era in force (until done, the era before) and in the era the flip goes to `e` — ground that stays
+  // whatever the front still has to take or bring (final review 2, issue 2: the nearest node valid in the era in force
+  // alone could be on a span or tile the front had not reached yet, so in Practice's rewind a kid hopped up to six times
+  // across the river as each went); with none, one valid in `e` with the body fitting now; then the old rule
+  _rescue(offIds, e = this.W.navEra) {
     const L = this.W.level, B = L.blocks;
     for (const a of this.m.actors) {
       if (!shovable(a)) continue;
@@ -1086,13 +1093,21 @@ export class StageEras {
       let bad = f.y === -Infinity || f.y < PLAYER.waterY + 0.25;
       if (!bad && f.roof) { const w = this._floorBelow(a.pos.x, a.pos.z, f.y - 0.05, true); bad = w.y < f.y - 3.4; }
       if (!bad) continue;
-      const nav = G.nav;
-      let best = -1, bd = 100;
+      const nav = G.nav, EV = this._eraValid(e), V0 = nav.valid, Ph = G.physics, squid = a.form === 'squid';
+      // (the nav still describes the era before until done: only a node whose floor stands now, over dry land — tested
+      //  nearest first, so the ground probe runs on a handful of nodes, not on every one within 10 m)
+      const cand = [];
       for (const n of nav.nodes) {
-        if (!nav.valid[n.id]) continue;
+        if (!EV[n.id] && !V0[n.id]) continue;
         const d2 = (n.x - a.pos.x) ** 2 + (n.z - a.pos.z) ** 2 + ((n.y - a.pos.y) * 0.5) ** 2;
-        // (the nav still describes the era before until done: only a node whose floor stands now, over dry land)
-        if (d2 < bd && this._floorOk(n)) { bd = d2; best = n.id; }
+        if (d2 < 100) cand.push([d2, n]);
+      }
+      cand.sort((p, q) => p[0] - q[0]);
+      const fits = (n) => !Ph || Ph.bodyFits(_p.set(n.x, n.y + 0.02, n.z), PLAYER.radius, PLAYER.stepUp, PLAYER.height * 0.9, squid);
+      let best = -1;
+      for (const ok of [(n) => EV[n.id] && V0[n.id], (n) => EV[n.id] && fits(n), (n) => V0[n.id]]) {
+        for (const [, n] of cand) if (ok(n) && this._floorOk(n)) { best = n.id; break; }
+        if (best >= 0) break;
       }
       if (best < 0) continue;
       const n = nav.nodes[best];
