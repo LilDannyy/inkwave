@@ -1135,20 +1135,21 @@ export async function runChecks(o = {}) {
 }
 // [fix1] the flags, numbered once: the top-down's discs and its key, the -flag-<n> pictures, the console and the JSON share
 // the numbers. Every FAIL / WARN check's flags with a place, in check order, then `extra` (#11's, from the driver); one
-// check's flags within 2 m of each other are one (its `also` counts the rest)
+// check's flags of one kind (the text without its numbers) within 2 m of each other are one (its `also` counts the rest)
 export function numberFlags(checks, extra = []) {
   const list = [];
   const add = (n, f) => {
     if (!f || !f.at) return;
     const at = [r1(+f.at[0]), r1(+f.at[1]), r1(+f.at[2])];
-    const near = list.find((q) => q.check === n && Math.hypot(q.at[0] - at[0], q.at[2] - at[2]) <= 2 && Math.abs(q.at[1] - at[1]) < 1.5);
+    const kind = String(f.what || '').replace(/×\d+|[\d.–\-\s]+/g, '');
+    const near = list.find((q) => q.check === n && q.kind === kind && Math.hypot(q.at[0] - at[0], q.at[2] - at[2]) <= 2 && Math.abs(q.at[1] - at[1]) < 1.5);
     if (near) { near.also = (near.also || 0) + 1; return; }
     const lk = f.look ? [f.look.x ?? f.look[0], f.look.y ?? f.look[1], f.look.z ?? f.look[2]].map((v) => r1(+v)) : null;
-    list.push({ check: n, at, what: String(f.what || ''), look: lk && lk.every(fin) ? lk : null });
+    list.push({ check: n, kind, at, what: String(f.what || ''), look: lk && lk.every(fin) ? lk : null });
   };
   for (const ck of Object.values(checks).sort((a, b) => a.n - b.n)) if (ck.status === 'FAIL' || ck.status === 'WARN') for (const f of ck.flags || []) add(ck.n, f);
   for (const f of extra || []) add(f.n ?? 11, f);
-  return list.map((f, i) => ({ i: i + 1, ...f }));
+  return list.map((f, i) => ({ i: i + 1, ...f, kind: undefined }));
 }
 function zoneTouches(z, p, r) {
   if (p.y < (z.y0 ?? -50) - 0.6 || p.y > (z.y1 ?? 50) + 0.6) return false;
