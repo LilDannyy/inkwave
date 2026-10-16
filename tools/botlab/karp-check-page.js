@@ -1065,9 +1065,15 @@ function walkProof(C, walks, made, o = {}) {
         fail = { at: P3(kid.pos), node: P3(q), edge: TYPE_NAME[ty] || '?', dead: fell };
         break;
       }
-      const dx = q.x - kid.pos.x, dz = q.z - kid.pos.z, l = Math.hypot(dx, dz) || 1;
+      // (standing on something right over the next node — a prop top a jump landed on — head for the one after: step off)
+      const tq = h < 0.6 && kid.pos.y - q.y > 0.8 && pi + 1 < p.length ? nodes[p[pi + 1]] : q;
+      const dx = tq.x - kid.pos.x, dz = tq.z - kid.pos.z, l = Math.hypot(dx, dz) || 1;
       if (l > 0.2) it.move.set(dx / l, 0, dz / l); else it.move.set(0, 0, 0);
-      let jump = q.y - kid.pos.y > PLAYER.stepUp - 0.05 && l < 1.6;
+      // a jump edge or a hop: jump within 1.6 m of the node; a walk edge only at a real riser (the floor 0.45 m ahead
+      // above the step-up: a stair's 0.4 m riser, not a ramp's slope)
+      let jump;
+      if (ty === ET.walk) { const fa = L.groundHeight(kid.pos.x + (dx / l) * 0.45, kid.pos.z + (dz / l) * 0.45, kid.pos.y + 1.4); jump = fa - kid.pos.y > PLAYER.stepUp - 0.03 && l < 1.6; }
+      else jump = q.y - kid.pos.y > PLAYER.stepUp - 0.05 && l < 1.6;
       if (ty === ET.gap && kid.grounded) { const ax = kid.pos.x + (dx / l) * 0.5, az = kid.pos.z + (dz / l) * 0.5; if (!(L.groundHeight(ax, az, kid.pos.y + 0.3) > kid.pos.y - 1.0)) jump = true; }
       if (t - bestT > 0.8 && t - jumpT > 1.0) jump = true;
       if (jump && kid.grounded) jumpT = t;
