@@ -12,7 +12,7 @@
 import * as THREE from 'three';
 import { G, clamp, angleDiff } from '../core/ctx.js';
 import { PLAYER, DIFFICULTY, SUB, SPECIALS, TOWER, weaponRange } from '../config.js';
-import { Hit } from './physics.js';
+import { Hit, GroundHit, makeContacts } from './physics.js';   // [b5-caldera] GroundHit, makeContacts: _flight
 import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
 import { Sight, SIGHT, SIGHT_STATS, teamKnown } from './botSight.js';
 import { SpecialSense, SPECIAL_AI, SPECIAL_STATS } from './botSpecials.js';   // enemy specials: dangers, the untouchable
@@ -1173,7 +1173,7 @@ export class BotBrain {
     if (this.noProg === 0) this._skipped = false;
     this.stuck = this.noProg;
     let pathHop = false;   // [b5-caldera] (a route's own hop up a step: only the arc check below)
-    if (this._needJump && this.jumpCd <= 0 && a.grounded) { it.jump = true; this.jumpCd = 0.6; this._needJump = false; pathHop = true; }
+    if (this._needJump && this.jumpCd <= 0 && a.grounded) { it.jump = true; this.jumpCd = 0.6; pathHop = this._needJump === true; this._needJump = false; }   // [b5-caldera] ('wiggle': a stuck hop)
     // [b5-caldera] no hop that comes down in the sea or the lava: at run speed a hop (a duel's dodge, a stuck hop, a kit's
     // own) flies 4–6 m, far past what the edge guard looks ahead (lava-bots.js: blaster / twins / brolly bots hopped off
     // the causeway into the drowning Casting Floor mid-fight); a route's hop up a step lands on dry ground and passes
@@ -1183,13 +1183,24 @@ export class BotBrain {
     // roll only where its whole slide stays on dry floor)
     if (it.jump && pathHop && it.fire && w.rollDist && !this._climbAim) it.fire = false;
     const rolls = it.jump && it.fire && w.rollDist && !pathHop;
-    if (it.jump && a.grounded && !a.climbing && !this._clHop && !this._climbAim && !gOff && (rolls ? !this._rollSafe(a, it.move, w.rollDist) : (!this._hopSafe(a, it.move) || (!pathHop && this._nearWetHi(a, 3.0))))) it.jump = false;
+    // [b5-caldera] fix round 3: a jump while firing (twins, dualies, the Cutlass) is checked as a roll AND as a hop — a
+    // Twinfire press in its roll lockout (or short of ink, or barely moving) is a plain hop, and its arc went unchecked
+    // (lava-bots edges: a twins bot hopped off the Horn Step's 1.2 m edge into the lava); a route's own hop with the sea or
+    // the lava within 1.5 m only where its flight, steered at the route's node as the brain steers it, comes down on that
+    // node's top (a Cutlass bot's hop up to the Ladle Road slid along the road's face and dropped into the lava beside it)
+    if (it.jump && a.grounded && !a.climbing && !this._clHop && !this._climbAim && !gOff) {
+      let bad;
+      if (rolls) bad = !this._rollSafe(a, it.move, w.rollDist) || !this._hopSafe(a, it.move) || this._nearWetHi(a, 3.0);
+      else bad = !this._hopSafe(a, it.move) || (!pathHop && this._nearWetHi(a, 3.0));
+      if (!bad && pathHop && !this._lavaEsc && this.path && this.pi < this.path.length && this._nearWetHi(a, 1.5) && !this._hopLands(a, G.nav.nodes[this.path[this.pi]])) bad = true;
+      if (bad) it.jump = false;
+    }
     // [b5-caldera] in the air: never let the flight come down on the sea or the lava — when the arc as it flies now would
     // land there, steer back the way it came (air control pulls it back over the floor it left)
     // (not in a route's own hop — up the Organ columns the arc meets the next column's face and the model drops it into the
     // seam: it pulled the lookout claimants back off every hop)
     if (it.jump && pathHop) this._hopPath = true; else if (a.grounded) this._hopPath = false;
-    if (!a.grounded && !gNear && !a.climbing && !gOff && !this._climbAim && !this._hopPath && !a.superJumpState && this._arcWet(a, a.vel.x, a.vel.z)) {
+    if (!a.grounded && !gNear && !a.climbing && !gOff && !this._climbAim && !this._hopPath && !a.superJumpState && (this._arcWet(a, a.vel.x, a.vel.z) || this._flightWet(a, it.move))) {   // [b5-caldera] fix round 3: _flightWet (air control keeps pulling it the brain's way: a twins hop drifted 1.3 m off the edge at 3 m/s while the ballistic arc still read the floor it left)
       const bx = (this._lastFoot?.x ?? a.pos.x) - a.pos.x, bz = (this._lastFoot?.z ?? a.pos.z) - a.pos.z, bl = Math.hypot(bx, bz);
       if (bl > 0.05) it.move.set(bx / bl, 0, bz / bl); else if (Math.hypot(a.vel.x, a.vel.z) > 0.05) it.move.set(-a.vel.x, 0, -a.vel.z).normalize();
     }
@@ -1442,6 +1453,66 @@ export class BotBrain {
     }
     return false;
   }
+  // [b5-caldera] fix round 3: a flight as the body flies it — actor.js's air rules (gravity with its fall and apex factors;
+  // air control toward the move at the kit's speed, airMinSpeed at least; a squid's own), the body pushed out of what it
+  // meets (the velocity into a face taken off: it slides along it) and the landing probe with the ledge assist — at 20 Hz
+  // from the body as it is with velocity (vx, vy, vz). steer(x, y, z) → [ux, uz] (the move this step) or null (none).
+  // → { x, y, z, gy (the top it lands on; −Infinity: nothing within maxT), wall (a face pushed it), t }
+  _flight(a, vx, vy, vz, steer, maxT = 1.5) {
+    const P = PLAYER, ph = G.physics, dt = 0.05, sq = a.form === 'squid';
+    const c = (this._flC ||= makeContacts()), gh = (this._flG ||= new GroundHit()), p = (this._flP ||= new THREE.Vector3());
+    const spd = sq ? null : Math.max(a.carry ? P.runSpeed * 0.8 : a.weaponRunner?.moveSpeed?.() ?? P.runSpeed, P.airMinSpeed);
+    const acc = sq ? P.squidAirAccel : P.airAccel, dec = sq ? P.squidAirDecel : P.airDecel;
+    const lift = sq ? P.squidBodyLift : P.stepUp, height = sq ? P.squidHeight : P.height, assist = sq ? P.squidStepUp : P.ledgeAssist;
+    p.copy(a.pos);
+    let wall = false;
+    const out = this._flO || (this._flO = { x: 0, y: 0, z: 0, gy: -Infinity, wall: false, t: 0 });
+    for (let t = dt; t <= maxT + 1e-6; t += dt) {
+      const u = steer ? steer(p.x, p.y, p.z) : null, sp = Math.hypot(vx, vz);
+      const tgt = sq ? Math.max(P.squidDrySpeed, sp) : spd, tvx = u ? u[0] * tgt : 0, tvz = u ? u[1] * tgt : 0;
+      const ex = tvx - vx, ez = tvz - vz, el = Math.hypot(ex, ez), r = (u ? acc : dec) * dt;
+      if (el <= r) { vx = tvx; vz = tvz; } else { vx += (ex / el) * r; vz += (ez / el) * r; }
+      let g = P.gravity; if (vy < 0) g *= P.fallGravityMul; if (Math.abs(vy) < P.apexBand) g *= P.apexGravityMul;
+      vy = Math.max(-P.maxFall, vy - g * dt);
+      const y0 = p.y;
+      p.x += vx * dt; p.y += vy * dt; p.z += vz * dt;
+      ph.collideBody(p, P.radius, lift, height, c, false, sq);
+      if (c.ceiling && vy > 0) vy = 0;
+      if (c.wall) { const n = c.wallNormal, vn = vx * n.x + vz * n.z; if (vn < 0) { vx -= n.x * vn; vz -= n.z * vn; wall = true; } }
+      if (vy <= 0.5) {
+        const top = Math.max(y0, p.y);
+        ph.groundProbe(p.x, p.y, p.z, top - p.y + assist, 0.02, P.footRadius, gh, sq);
+        if (gh.hit && gh.y >= p.y - 0.02 && vy <= 0) { out.x = p.x; out.y = gh.y; out.z = p.z; out.gy = gh.y; out.wall = wall; out.t = t; return out; }
+      }
+      if (p.y < PLAYER.waterY) break;
+    }
+    out.x = p.x; out.y = p.y; out.z = p.z; out.gy = -Infinity; out.wall = wall; out.t = maxT;
+    return out;
+  }
+  // [b5-caldera] fix round 3: a route's own hop onto node n — the take-off velocity as it is (vy: the jump's), the brain
+  // steering at n all the way (its look-ahead holds n until it is within reach): it comes down on n's top (within 0.35 m
+  // of its height, 1.2 m of it across) and on nothing the sea or the lava takes
+  _hopLands(a, n) {
+    if (!n) return false;
+    const vy0 = (a.submerged ? PLAYER.swimJumpVel : PLAYER.jumpVel) * (a.groundTeam === 2 ? 0.72 : 1);
+    const st = (x, y, z) => { const dx = n.x - x, dz = n.z - z, d = Math.hypot(dx, dz); return d > 0.3 ? [dx / d, dz / d] : null; };
+    const f = this._flight(a, a.vel.x, vy0, a.vel.z, st, 1.4);
+    if (!(f.gy > -Infinity) || Math.abs(f.gy - n.y) > 0.35 || Math.hypot(f.x - n.x, f.z - n.z) > 1.2) return false;
+    const SM = G.match?.stage;
+    return !(SM && SM.wet(f.x, f.z, f.gy, 0.5));
+  }
+  // [b5-caldera] fix round 3: in the air, the flight as the brain steers it now (the move held): does it come down on the
+  // sea or the lava, or on nothing within 1.5 s? (no move: the ballistic _arcWet answers)
+  // (asked again at most every 0.1 s of the flight, or at once when the move turns by more than ~25°: the answer is kept)
+  _flightWet(a, mv) {
+    const ml = Math.hypot(mv.x, mv.z);
+    if (ml < 0.05) return false;
+    const ux = mv.x / ml, uz = mv.z / ml, K = (this._fwK ||= { t: -1, ux: 0, uz: 0, v: false });
+    if (this.t - K.t < 0.1 && ux * K.ux + uz * K.uz > 0.9) return K.v;
+    const u = [ux, uz], f = this._flight(a, a.vel.x, a.vel.y, a.vel.z, () => u, 1.5), SM = G.match?.stage;
+    K.t = this.t; K.ux = ux; K.uz = uz;
+    return (K.v = !(f.gy > -Infinity) || !!(SM && SM.wet(f.x, f.z, f.gy, 0.5)));
+  }
   // [b5-caldera] a nav node (any: rider nodes too) within 1.5 m of (x, z) standing within 0.35 m of y
   _standable(x, y, z) {
     const N = G.nav, ix = Math.round((x - N.x0) / N.step), iz = Math.round((z - N.z0) / N.step);
@@ -1492,7 +1563,10 @@ export class BotBrain {
     // [b5-caldera] momentum first: where the body is carried in the next 0.3 s (+0.3 m) — a slide along a lava lip with
     // speed toward it went over (lava-bots.js trails) — brake against it
     const vx = a.vel.x, vz = a.vel.z, sp = Math.hypot(vx, vz);
-    if (sp > 1.0 && this._wetHi(px + vx * 0.3 + (vx / sp) * 0.3, pz + vz * 0.3 + (vz / sp) * 0.3, py)) { mv.set(-vx / sp, 0, -vz / sp); return; }
+    // (fix round 3: from 0.25 m/s, not 1 — a duel's strafe reversing on a lava lip drifted over it at 0.7–1.0 m/s while
+    // the move pointed back inland; a squid's carry 0.45 s: it brakes softer than a kid)
+    const ct = a.form === 'squid' ? 0.45 : 0.3;
+    if (sp > 0.25 && this._wetHi(px + vx * ct + (vx / sp) * 0.3, pz + vz * ct + (vz / sp) * 0.3, py)) { mv.set(-vx / sp, 0, -vz / sp); return; }
     // [b5-caldera] standing on a lip with the body's middle over the sea or the lava (the foot holds it): back onto the floor
     if (a.grounded && this._wet(px, pz, py)) {
       for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t); if (!this._wet(px + cx * 0.45, pz + cz * 0.45, py)) { mv.set(cx * 0.8, 0, cz * 0.8); return; } }
@@ -1524,6 +1598,11 @@ export class BotBrain {
     // (a swimmer carries on a couple of metres after it surfaces: the faster it goes, the further ahead it looks)
     const look = 0.6 + Math.hypot(a.vel.x, a.vel.z) * 0.22;
     for (const d of look > 1.5 ? [1.2, look] : [1.2]) if (!dry(a.pos.x + (move.x / l) * d, a.pos.z + (move.z / l) * d)) return true;
+    // [b5-caldera] fix round 3: and where its momentum carries it (the edge guard's look-ahead at swim-speed reach: 0.3 s
+    // + 0.3 m along the velocity) — a squid strafing a duel at 6–7 m/s along a 1.4 m lava lip swam over it while the move
+    // pointed back along the lip (lava-bots ledges); `dry` reads the lava with its look-ahead (wet … 0.5 → 8 s near it)
+    const sp = Math.hypot(a.vel.x, a.vel.z);
+    if (sp > 2 && G.match?.stage) { const ux = a.vel.x / sp, uz = a.vel.z / sp; for (const d of [0.6, 0.3 + sp * 0.3]) if (!dry(a.pos.x + ux * d, a.pos.z + uz * d)) return true; }
     return false;
   }
 
@@ -1533,6 +1612,12 @@ export class BotBrain {
     const a = this.a, l = Math.hypot(move.x, move.z);
     if (l < 0.05) return false;
     const ux = move.x / l, uz = move.z / l, gy = G.level.groundHeight(a.pos.x + ux * 1.1, a.pos.z + uz * 1.1, a.pos.y + 0.6);
+    // [b5-caldera] fix round 3: along its momentum too, at swim speed (a drop beside the lava the move doesn't point at)
+    const sp = Math.hypot(a.vel.x, a.vel.z);
+    if (sp > 2 && G.match?.stage) {
+      const vx = a.vel.x / sp, vz = a.vel.z / sp, gv = G.level.groundHeight(a.pos.x + vx * 1.1, a.pos.z + vz * 1.1, a.pos.y + 0.6);
+      if (gv > -Infinity && gv <= a.pos.y - 0.5) for (const d of [2.2, 3.4]) if (this._wet(a.pos.x + vx * d, a.pos.z + vz * d, gv)) return true;
+    }
     if (gy === -Infinity || gy > a.pos.y - 0.5) return false;   // level ahead (the open sea ahead: _avoidWater / _squidWouldDrop)
     for (const d of [2.2, 3.4, 4.6]) if (this._wet(a.pos.x + ux * d, a.pos.z + uz * d, gy)) return true;
     return false;
@@ -3210,7 +3295,7 @@ export class BotBrain {
   _wiggle(t) {
     this.wiggleT = t; this.wiggleYaw = Math.random() * Math.PI * 2;
     this.path = null; this.goalTimer = 0; this.repath = 0;
-    if (this.a.grounded) this._needJump = true;
+    if (this.a.grounded) this._needJump = 'wiggle';   // [b5-caldera] (a stuck hop, not a route's own: the hop guards' ring applies — lava-bots: a wiggle's random heading flew a blade off the Race head into the lava)
   }
   _unstick(dt, move) {
     const a = this.a;
