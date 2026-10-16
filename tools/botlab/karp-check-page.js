@@ -811,7 +811,7 @@ export async function runChecks(o = {}) {
     // them, level.js; squids pass them, lowGap above). nav drops a walk edge for anything at waist height (nav._blocked)
     // and the field adds none over it, so a 1.4 m wall or a 1.2 m railing across a way in reads as a wall. Candidates: two
     // field nodes ≤ 3.5 m apart (flat), from the drop rule's 3.4 m down to the hop rule's 1.8 m up, not joined by 6 m of
-    // walking, the waist line blocked, the obstacle's top along the line ≤ CK.vault.top (2.25 m) above the higher end (a kid's 1.8 m, a
+    // walking, the waist line blocked (nav's, or a ray 0.3 / 0.6 m up, grates too), the obstacle's top along the line ≤ CK.vault.top (2.25 m) above the higher end (a kid's 1.8 m, a
     // swim-jump's 2.2 m) with 1.5 m of air above it, and floor under the whole line (else it is a gap: the gap probes'
     // business). Tried when it can matter, at most two per takeoff (the best gains) and one per 1.5 m of the same place;
     // a made one is a #7d find (vault) or, from outside a Gate's ring to inside it, a #7a entrance with its own sight line
@@ -834,7 +834,11 @@ export async function runChecks(o = {}) {
           const flat = hd(n, q); if (flat < 0.9 || flat > CK.vault.flat) return;
           if (!worth(i, j)) return;
           if (walkSet(C, i, 6).has(j)) return;
-          if (!nav._blocked(n, q, Math.max(n.y, q.y))) return;
+          // ([fix3b] blocked by nav's waist line, or by anything at 0.3 / 0.6 m over the higher end, grates and rails too:
+          // a bollard or a kerb below nav's waist line keeps nav's nodes off the line but not a body — review 3's calamari
+          // pair (15.95, −0.1, −38) → (17.5, −0.1, −36), 10.4 m, passed nav's test and was no candidate)
+          const hy = Math.max(n.y, q.y);
+          if (!nav._blocked(n, q, hy) && ray(n.x, hy + 0.3, n.z, q.x, hy + 0.3, q.z) && ray(n.x, hy + 0.6, n.z, q.x, hy + 0.6, q.z)) return;
           const pr = profile(n, q); if (!pr || pr.rise > CK.vault.top) return;
           nums.vault.cand++;
           const l = byFrom.get(i) || []; l.push({ kind: 'vault', from: i, to: j, gain: gainDir(C, i, j), top: r2(pr.top) }); byFrom.set(i, l);
