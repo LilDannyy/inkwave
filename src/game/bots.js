@@ -19,7 +19,7 @@ import { SpecialSense, SPECIAL_AI, SPECIAL_STATS } from './botSpecials.js';   //
 import { surfWant } from './sp-surf-bots.js';   // Surf N' Turf: when to pop it (the throw itself: botSpecials act → surfOwnAim)
 import { devShootAim } from './deployables-bots.js';   // [b5-deploy] nothing better to shoot: enemy beacons / sprinklers / buoys
 import { karpPlan, karpSync, karpEngage, karpGoal, karpFightNav, karpCarrierAct, karpAim, karpPathArgs, karpPathFallback, karpShellAvoid, KARP_W,
-  karpMove, karpPaintAim, karpSpecial, karpStrikeAt, karpJump, karpShields, karpSteerOk, karpRefillSpot } from './botsKarp.js';   // [b5-karp] [b5-karp-bots]
+  karpMove, karpPaintAim, karpSpecial, karpStrikeAt, karpJump, karpShields, karpSteerOk, karpRefillSpot, KARP_FB_STEPS, karpFallbackNote } from './botsKarp.js';   // [b5-karp] [b5-karp-bots]
 export { SIGHT, SIGHT_STATS, teamKnown, SPECIAL_AI, SPECIAL_STATS };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
@@ -2985,7 +2985,7 @@ export class BotBrain {
     const KA = this.a.carry ? karpPathArgs(this) : null, SA = KA ? null : G.match?.karp ? karpShellAvoid(this) : null;
     let p = KA ? nav.path(s, g, this.a.team, undefined, true, KA.avoid, KA.cost) : nav.path(s, g, this.a.team, undefined, rule, SA, this.sp.cost());   // (… and round those areas; climbs: _climbRule) [b5-karp-bots] KA.cost: dangers + its route's corridor
     if (!p && SA && SA !== karpShellAvoid(this, true)) p = nav.path(s, g, this.a.team, undefined, rule, karpShellAvoid(this, true), this.sp.cost());   // [b5-karp-bots] (no way round the full swell — a narrow bridge: round the shell itself)
-    if (!p && KA) { const F = karpPathFallback(this); if (F) p = nav.path(s, g, this.a.team, undefined, true, F.avoid, F.cost); if (!p) { const F2 = karpPathFallback(this, 2); if (F2) p = nav.path(s, g, this.a.team, undefined, true, F2.avoid, F2.cost); } }   // [b5-karp] (no forward path: a short ×3 beats standing still) [b5-karp-bots] level 2: through its own free zone
+    if (!p && KA) for (const [lv, sl] of KARP_FB_STEPS) { const F = karpPathFallback(this, lv, sl); if (F) p = nav.path(s, g, this.a.team, undefined, true, F.avoid, F.cost); if (p) { karpFallbackNote(this, F); break; } }   // [b5-karp] (no forward path: a short ×3 beats standing still) [b5-karp-bots] the rules loosened least first; level 2: through its own free zone
     // climbs are off after a failed one and there's no way there without one (a pit whose only way out is up a wall): up
     // one anyway, the failed one last — unless too dry to ink it (no route: the tank refills while it stands)
     if (!p && !KA && rule === true && this.a.ink >= PLAYER.inkMax * CLIMB.ink) p = nav.path(s, g, this.a.team, undefined, this._climbRule(true), SA, this.sp.cost());

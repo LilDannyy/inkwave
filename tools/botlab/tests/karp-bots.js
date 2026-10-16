@@ -37,6 +37,7 @@
   const { KARP_BOT, KARP_AI, karpPlan, resetKarpStats, karpEngage } = await import('./src/game/botsKarp.js');
   const karpPerchLook = (await import('./src/game/botsKarp.js')).karpPerchLook || null;   // (absent before fix round 1)
   const { SIGHT, teamKnown } = await import('./src/game/botSight.js');
+  const { revealedTo } = await import('./src/game/reveal.js');
   const { specialDangers } = await import('./src/game/botSpecials.js');
   const { SUB_KITS } = await import('./src/game/kits/registry.js');
   const THREE = await import('three');
@@ -68,7 +69,7 @@
     Kp?.dispose(); G.level.layout.bazookarp = def;
     m.time = 250; m.state = 'playing'; m.result = null;
     // (a clean slate: the last scenario's specials, projectiles, devices, ink and shots gone — as bot-climb.js does)
-    for (const a of m.actors) { if (a.specialActive) G.specials.end(a, 'test'); a.superJumpState = null; }
+    for (const a of m.actors) { if (a.specialActive) G.specials.end(a, 'test'); a.superJumpState = null; a.special = 0; a.status.track = 0; a.status.reveal = 0; }   // (no special left charged by an earlier group: S's barrage fired in Y(b)'s wait and took the grab away)
     G.specials.clear(); G.projectiles.clear(); G.subs.clear(); G.paint.clear();
     for (const it of [...(G.subs?.items || [])]) G.subs._destroy?.(it);
     KARP_GUN.clear();
@@ -118,7 +119,7 @@
     // (c) the danger is what keeps a bot that only walks by out: Alpha's ranged bots start on Bravo's side of the shell
     // (6.5 m out), noticing the danger first, then walk round to their own ring spots with Bravo's side at 72 % — round
     // outside 5.3 m (the full swell's 2.9 m otherwise)
-    check('A(c) with Bravo\'s side at 72 % Alpha\'s ranged bots on the far side of the shell walk round it to their own ring outside 5.3 m (the danger area: without it they cut round the full swell)', () => {
+    check('A(c) with Bravo\'s side at 72 % Alpha\'s ranged bots on the far side of the shell walk round it to their own ring outside 5.3 m (the danger area and the ≥ 50 % keep-out: without them they cut round the full swell)', () => {
       fresh();
       for (const a of m.actors) a.setWeapon(['shooter', 'blaster', 'spinner', 'bucket'][a.slot % 4]);
       for (const a of A) wake(a, 'normal');
@@ -130,7 +131,19 @@
       step(6, () => { pinMeter(-0.72); for (const a of m.actors) { a.invuln = 2; a.hp = PLAYER.hp; } for (const a of A) minA = Math.min(minA, hd(a.pos, c)); });
       const home = A.filter((a) => a.pos.z < -1).length;
       return { ok: minA >= 5.3 && home >= 3, info: { minA, home } };
-    }, flip(KARP_AI.diff.normal, { danger: null }));
+    }, () => { const u1 = flip(KARP_AI.diff.normal, { danger: null })(), u2 = flip(KARP_AI, { keepOut: false })(); return () => { u2(); u1(); }; });
+    // (d) the shell swelling fast is the danger before 70 %: Bravo's side climbing 60 %/s, at 50 % the danger area already
+    // stands for Alpha (its side projected 1 s on bursts it); a still meter at 50 % has none
+    check('A(d) a shell swelling fast toward Bravo\'s burst is a danger for Alpha before 70 %: climbing 60 %/s it stands at 50 %; held still at 50 % it does not', () => {
+      fresh();
+      for (const a of A) wake(a, 'normal');
+      Kp.shell.add = () => {};
+      let f = 0.2; step(0.5, () => { f = Math.min(0.5, f + 0.6 / 60); pinMeter(-f); });
+      const rising = specialDangers().filter((d) => d.src === 'karpshell' && d.team === 1).length;
+      step(0.8, () => pinMeter(-0.5));
+      const still = specialDangers().filter((d) => d.src === 'karpshell' && d.team === 1).length;
+      return { ok: rising === 1 && still === 0, info: { rising, still, meter: +(Kp.shell.meter / Kp.shell.hp).toFixed(2) } };
+    }, flip(KARP_AI, { swellAhead: 0 }));
     // easy ignores the meter (the danger area is off for an easy team)
     fresh();
     for (const a of m.actors) wake(a, 'easy');
@@ -173,7 +186,7 @@
     }, flip(KARP_AI, { refillBand: false }));
     // (d) the other side at 60 % (out on the ring, no danger yet): a foe of theirs stands by the shell (3.4 m out on our side
     // — safe from its own team's burst); our melee breakers right by it fight it, but never follow it in past 4.8 m
-    check('B(d) at 60 % of theirs a melee breaker fights a foe standing by the shell from the ring\'s edge, never in past 4.8 m (their burst would splat it there)', () => {
+    check('B(d) at 60 % of theirs a melee breaker fights a foe standing by the shell from the ring\'s edge, never in past 4.6 m (the burst reaches the chest, 1 m up, 4.5 m from the centre 1.3 m up: 4.49 m out on the floor)', () => {
       fresh();
       for (const a of A) a.setWeapon(mel[a.slot % 4]);
       for (const a of A) wake(a, 'normal');
@@ -183,7 +196,7 @@
       put(foe, 0, fz);
       let minD = Infinity, fight = 0;
       step(4, (i) => { pinMeter(-0.6); keepAlive(A); foe.hp = PLAYER.hp; foe.invuln = 99; foe.pos.set(0, floorY(0, fz), fz); foe.vel.set(0, 0, 0); for (const a of A) a.invuln = 2; if (i > 20) for (const a of A) { minD = Math.min(minD, hd(a.pos, Kp.shell.center())); if (a.bot.mode === 'fight' && a.bot.target === foe) fight++; } });
-      return { ok: minD >= 4.8 && fight > 30, info: { minD, fightFrames: fight } };
+      return { ok: minD >= 4.6 && fight > 30, info: { minD, fightFrames: fight } };
     }, flip(KARP_AI, { keepOut: false }));
   }
 
@@ -403,7 +416,8 @@
       step(7, (i) => { hold(x, z); if (i > 300) { const P2 = karpPlan(); for (const a of A) if (P2.roleOf(a) === 'keeper' && a.alive) { dB.push(hd(a.pos, wB)); dA.push(hd(a.pos, wA)); } } });
       const P2 = karpPlan(), obj = P2.defendObj(0);
       const mB = dB.reduce((s, v) => s + v, 0) / Math.max(1, dB.length), mA = dA.reduce((s, v) => s + v, 0) / Math.max(1, dA.length);
-      res.push({ carrierAt: [x, z], want: near, defends: obj?.key, meanToB: mB, meanToA: mA, n: dB.length, ok: dB.length > 30 && obj?.key === (near === 'B' ? 'w11' : 'w10') && (near === 'B' ? mB : mA) <= 9.5 });
+      const kInfo = A.filter((a) => P2.roleOf(a) === 'keeper' && a.alive).map((a) => ({ n: a.name, toSpot: a.bot.kSpot ? +hd(a.pos, a.bot.kSpot).toFixed(1) : null, mode: a.bot.mode, toA: +hd(a.pos, wA).toFixed(1), toB: +hd(a.pos, wB).toFixed(1) }));
+      res.push({ carrierAt: [x, z], want: near, defends: obj?.key, keepers: kInfo, meanToB: mB, meanToA: mA, n: dB.length, ok: dB.length > 30 && obj?.key === (near === 'B' ? 'w11' : 'w10') && (near === 'B' ? mB : mA) <= 9.5 });
     }
     R('I(b) two weirs: the keeper holds the weir on the carrier\'s route (it switches with the carrier)', res.every((r) => r.ok), res);
   }
@@ -453,13 +467,13 @@
     // (the jump to P1 is the test's: a real carrier can't cover 12 m between two of the bot's looks, ≤ 0.25 s, so the bot's
     // next look comes at once — till then its fight memory still says "seen" and a fight's route goes to the foe itself)
     squid(10, 12); w.bot._perceive();
-    let toP1 = Infinity, goals = 0, legit = 0; const dbgJ = [];
+    let toP1 = Infinity, goals = 0, legit = 0, firstLegit = null; const dbgJ = [];
     // (a goal by P1 is a wall-hack only if neither this bot nor its team knows the carrier is there: from the alley's open
     // end a bot may really see the wake — then it may go)
-    step(4, () => { squid(10, 12); c.hp = PLAYER.hp; c.invuln = 99; const b = w.bot; if (b.path && b.goal >= 0) { const n = G.nav.nodes[b.goal]; const kk = S.get(c), tk = (G.actors.filter((o) => o.team === 0 && o.bot).map((o) => o.bot.sight.get(c)).filter(Boolean)); const knows = (kk && hd(kk.pos, p1) < 4) || tk.some((q) => hd(q.pos, p1) < 4); if (knows) legit++; else { if (hd(n, p1) < 3.5 && dbgJ.length < 3) { const Pq = karpPlan(), fk = Pq.foes[0].find((f) => f.e === c); dbgJ.push({ t: +G.time.toFixed(2), mode: b.mode, role: b.kRole, tgt: b.target?.name, tk: b.tk ? [b.tk.src, +b.tk.pos.x.toFixed(1), +b.tk.pos.z.toFixed(1), b.tk.seen] : null, kLast: b.kLast ? [+b.kLast.x.toFixed(1), +b.kLast.z.toFixed(1)] : null, kExp: !!b.kExp, fk: fk ? [+fk.pos.x.toFixed(1), +fk.pos.z.toFixed(1), fk.seen, +(G.time - fk.t).toFixed(2)] : null, hidden: Kp.hidden(c), w: [+w.pos.x.toFixed(1), +w.pos.z.toFixed(1)], goal: [n.x, n.z], pathLen: b.path.length }); } toP1 = Math.min(toP1, hd(n, p1)); goals++; } } });
+    step(4, () => { squid(10, 12); c.hp = PLAYER.hp; c.invuln = 99; const b = w.bot; if (b.path && b.goal >= 0) { const n = G.nav.nodes[b.goal]; const kk = S.get(c), tk = (G.actors.filter((o) => o.team === 0 && o.bot).map((o) => o.bot.sight.get(c)).filter(Boolean)); const knows = (kk && hd(kk.pos, p1) < 4) || tk.some((q) => hd(q.pos, p1) < 4); if (knows) { legit++; if (!firstLegit) { const who = G.actors.find((o) => o.team === 0 && o.bot && o.bot.sight.get(c) && hd(o.bot.sight.get(c).pos, p1) < 4); const q = who && who.bot.sight.get(c); firstLegit = { t: +G.time.toFixed(2), who: who?.name, at: who ? [+who.pos.x.toFixed(1), +who.pos.z.toFixed(1)] : null, src: q?.src, seen: q?.seen, reveal: revealedTo(c, 0), sub: c.submerged, form: c.form, los: who ? G.physics.los(V(who.pos.x, who.pos.y + 1.4, who.pos.z), V(c.pos.x, c.pos.y + 0.3, c.pos.z)) : null }; } } else { if (hd(n, p1) < 3.5 && dbgJ.length < 3) { const Pq = karpPlan(), fk = Pq.foes[0].find((f) => f.e === c); dbgJ.push({ t: +G.time.toFixed(2), mode: b.mode, role: b.kRole, tgt: b.target?.name, tk: b.tk ? [b.tk.src, +b.tk.pos.x.toFixed(1), +b.tk.pos.z.toFixed(1), b.tk.seen] : null, kLast: b.kLast ? [+b.kLast.x.toFixed(1), +b.kLast.z.toFixed(1)] : null, kExp: !!b.kExp, fk: fk ? [+fk.pos.x.toFixed(1), +fk.pos.z.toFixed(1), fk.seen, +(G.time - fk.t).toFixed(2)] : null, hidden: Kp.hidden(c), w: [+w.pos.x.toFixed(1), +w.pos.z.toFixed(1)], goal: [n.x, n.z], pathLen: b.path.length }); } toP1 = Math.min(toP1, hd(n, p1)); goals++; } } });
     const k = S.get(c);
     c.update = cu;
-    R('J(b) an interceptor doesn\'t track a hidden carrier through a wall: while nobody of its team has seen it there, its goal stays off the carrier\'s real spot behind the alley wall', role === 'intercept' && toP1 > 3.5 && goals > 30, { role, goalNearestP1: toP1, goals, framesSeenLegitimately: legit, mem: k ? [k.pos.x, k.pos.z] : null, dbg: dbgJ });
+    R('J(b) an interceptor doesn\'t track a hidden carrier through a wall: while nobody of its team has seen it there, its goal stays off the carrier\'s real spot behind the alley wall', role === 'intercept' && toP1 > 3.5 && goals > 30, { role, goalNearestP1: toP1, goals, framesSeenLegitimately: legit, firstLegit, mem: k ? [k.pos.x, k.pos.z] : null, dbg: dbgJ });
   }
 
   // ============================================================================ K. the knockback push

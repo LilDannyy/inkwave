@@ -54,7 +54,9 @@ export const KARP_AI = {
   spShell: 0.4,            // our side of the meter from which breakers throw a bomb-type special at the shell (SPEC §8.6)
   spThreat: 15,            // m: a known foe this close to our carrier is a threat (escorts' specials, the Bubble Guard's share)
   // (switches for the karp-bots checks' "teeth" runs: each check is shown to fail with its feature off)
-  perch: true, keepOut: true, refillBand: true, reformOut: true,
+  perch: true, keepOut: true, refillBand: true, reformOut: true, fbSteps: true,
+  swellAhead: 1.0,         // s: the shell danger also stands once the meter's rate would burst it within this long
+  clearAt: null,           // (a lever for the balance pass, off: from this share of ours the breakers fight the foes in range — "clear the ring" before our burst)
   jumpR: 35,               // a respawned bot super jumps to the carrier this far off
   diff: {
     easy:   { id: 'easy',   full: true,  lob: false, lead: false, push: 0, repick: 3,   danger: null, icpt: 1, grab: 0.6 },
@@ -62,7 +64,7 @@ export const KARP_AI = {
     hard:   { id: 'hard',   full: false, lob: true,  lead: true,  push: 2, repick: 1.0, danger: 0.6,  icpt: 2, grab: 0, sides: true, threat: true },
   },
 };
-export const KARP_BOT = { stats: { fbAt: [], carrierShots: 0, retreatFallback: 0, grabs: 0, breakT: 0, push: 0, dodges: 0, splashes: 0, routeInk: 0, picks: 0, routes: {}, keeperT: 0, icptT: 0, jumps: 0, specials: 0, roles: {} } };
+export const KARP_BOT = { stats: { fbAt: [], carrierShots: 0, retreatFallback: 0, fbSoft: 0, grabs: 0, breakT: 0, push: 0, dodges: 0, splashes: 0, routeInk: 0, picks: 0, routes: {}, keeperT: 0, icptT: 0, jumps: 0, specials: 0, roles: {} } };
 export function resetKarpStats() { const S = KARP_BOT.stats; for (const k in S) S[k] = Array.isArray(S[k]) ? [] : typeof S[k] === 'object' ? {} : 0; }
 
 const V3 = THREE.Vector3;
@@ -519,7 +521,7 @@ export function karpEngage(b, P) {
       break;
     case 'break':
       // the shell first (first pop 6–12 s): a foe in close range, or one inside the ring (on the shell)
-      if (sit === 'shell') return d < Math.min(rng * 0.75, 10) || (hd(t.pos, P.restPos()) < KARP_AI.ring[0] && d < rng * 1.1);
+      if (sit === 'shell') return d < Math.min(rng * 0.75, 10) || (hd(t.pos, P.restPos()) < KARP_AI.ring[0] && d < rng * 1.1) || (KARP_AI.clearAt != null && P.side(a.team) >= KARP_AI.clearAt && d < rng * 1.1);
       break;
     case 'intercept': return (H && t.actor === H) || t === H || d < rng * 1.1;
     case 'keeper': { const s = b.kSpot; return d < rng * 1.15 || (!!s && hd(t.pos, s) < 10); }
@@ -630,20 +632,39 @@ export function karpGoal(b, P) {
 function shellKey(b, P, role) {
   const t = b.a.team, our = P.side(t), df = DF(b), c = P.restPos();
   const out = P.Kp.phase === 'reforming' || P.Kp.phase === 'resetting' ? 1 : 0;   // (the shell standing again: the close-in spots back)
-  return `${role}|${our >= KARP_AI.grabAt ? 1 : 0}|${-our >= KARP_AI.meleeOut ? 1 : 0}|${df.danger != null && -our >= df.danger ? 1 : 0}|${c.x.toFixed(0)},${c.z.toFixed(0)}|${out}`;
+  const ahead = meleeOf(b.a) && KARP_AI.swellAhead > 0 && sides(P, t).theirAhead >= KARP_AI.meleeOut ? 1 : 0;   // (melee: the swell seen coming)
+  return `${role}|${our >= KARP_AI.grabAt ? 1 : 0}|${-our >= KARP_AI.meleeOut ? 1 : 0}|${df.danger != null && -our >= df.danger ? 1 : 0}|${c.x.toFixed(0)},${c.z.toFixed(0)}|${out}|${ahead}`;
+}
+// the shell's meter rate (fraction of hp a second, + toward Alpha) over the last half second: the shell swells with the
+// meter for all to see (karpDangers keeps the history, every frame; shellWant reads it)
+function trackMeter(S, now) {
+  const Hm = S._kHist || (S._kHist = []);
+  if (!Hm.length || Hm[Hm.length - 1][0] !== now) Hm.push([now, S.meter]);
+  while (Hm.length > 2 && now - Hm[1][0] >= 0.5) Hm.shift();
+  const h0 = Hm[0], span = now - h0[0];
+  return span >= 0.2 ? (S.meter - h0[1]) / span / (S.hp || 1) : 0;
+}
+// team t's side of the meter, and the other side projected swellAhead s on at its rate → { our, their, theirAhead }
+function sides(P, t) {
+  const S = P.Kp.shell, our = P.side(t), their = -our;
+  const r = S.state === 'intact' ? trackMeter(S, G.time) * (t === 0 ? -1 : 1) : 0;
+  return { our, their, theirAhead: their + Math.max(0, r) * KARP_AI.swellAhead };
 }
 // how far from the shell's centre a breaker stands by role (SPEC §8.2) → { want, slot, close }: the grabber 3.12 m at ≥ 85 %
 // of ours, a melee breaker max(2.5, r' + 0.88) + 0.3 m while the other side is under 50 % (close in), else the 7 m ring
 function shellWant(b, P, role) {
-  const a = b.a, t = a.team, our = P.side(t), their = -our, df = DF(b), R = P.Kp.shell.radius() || K.shell.r;
+  const a = b.a, t = a.team, { our, their, theirAhead } = sides(P, t), df = DF(b), R = P.Kp.shell.radius() || K.shell.r;
   const danger = df.danger != null && their >= df.danger;
+  // (a melee breaker also moves out while the other side, swelling fast, would pass 50 % within the second — matches had
+  // melee grabbers splatted 3.6–4.3 m out by bursts that came 0.1–0.2 s after the 70 % danger: the meter jumps)
+  const outM = their >= KARP_AI.meleeOut || (KARP_AI.swellAhead > 0 && theirAhead >= KARP_AI.meleeOut);
   let want, slot = P.auxOf(a);
   // (re-forming or resetting — SPEC §8.1: everyone repositions 6–8 m from the resting spot, outside the burst radius; the
   // close-in and the grab spots wait for the shell to stand)
   const out = KARP_AI.reformOut && (P.Kp.phase === 'reforming' || P.Kp.phase === 'resetting');
   if (out) want = 7;
   else if (role === 'grab' && our >= KARP_AI.grabAt) { want = KARP_AI.grabR; slot = 1.5; }
-  else if (meleeOf(a)) want = their >= KARP_AI.meleeOut || danger ? 7 : Math.max(2.5, Math.max(R, K.shell.r + (K.shell.rMax - K.shell.r) * Math.min(1, Math.abs(our) + 0.15) ** 2) + PLAYER.radius + 0.5) + 0.3;   // (r a little ahead of the meter: it swells)
+  else if (meleeOf(a)) want = outM || danger ? 7 : Math.max(2.5, Math.max(R, K.shell.r + (K.shell.rMax - K.shell.r) * Math.min(1, Math.abs(our) + 0.15) ** 2) + PLAYER.radius + 0.5) + 0.3;   // (r a little ahead of the meter: it swells)
   else want = 7;
   if (danger) want = Math.max(want, KARP_AI.dangerR + 0.7);
   if (role === 'grab' && slot !== 1.5) slot = 1.5 + (meleeOf(a) ? 0 : 1);
@@ -747,7 +768,16 @@ export function karpFightNav(b, P) {
   if (a.carry) { karpGoal(b, P); return true; }
   if (!KARP_AI.enabled) { if (b.kRole === 'grab') { karpGoal(b, P); return true; } return false; }
   if (role === 'grab' && P.sit[a.team] === 'free' && !(a.hp < 40)) { karpGoal(b, P); return true; }
-  if (role === 'keeper') { const s = b.kSpot; if (s && hd(a.pos, s) > 3 && hd(b.tv.pos, s) > 6) { karpGoal(b, P); return true; } if (s) { b.path = null; b.repath = 0.3; return true; } return false; }
+  if (role === 'keeper') {
+    // (never more than 6 m off its spot: away from it, back to it — fighting on the way; a foe by the spot, the usual fight
+    // footwork there; on it with the foe further off, it holds. It used to hold wherever it stood whenever the foe was near
+    // its spot: a second keeper dealt while it was out intercepting stood 14 m off its weir — karp-bots I(b))
+    const s = b.kSpot; if (!s) return false;
+    const dS = hd(a.pos, s), fS = hd(b.tv.pos, s);
+    if (dS > 6 || (dS > 3 && fS > 6)) { karpGoal(b, P); return true; }
+    if (fS <= 6) return false;
+    b.path = null; b.repath = 0.3; return true;
+  }
   if ((role === 'lead' || role === 'flank' || role === 'anchor') && H) {
     if (hd(b.tv.pos, H.pos) > KARP_AI.escortR || hd(a.pos, H.pos) > 18) { karpGoal(b, P); return true; }
     return false;
@@ -994,10 +1024,23 @@ export function karpMove(b, P, dt, move, it) {
   // (a melee bot once the other side is ≥ 50 % — SPEC §8.2: it moves out to the ring and guards it — never back in past the
   // burst's 4.5 m + 0.6: fighting a foe that stands by the shell (theirs, safe from its own burst), refilling, walking by, it
   // stops at the edge; a burst splatted melee breakers 3.2–3.7 m out in matches. Not the grabber at ≥ 85 % of ours)
-  if (KARP_AI.keepOut && !esc && S.state === 'intact' && meleeOf(a) && -P.side(a.team) >= KARP_AI.meleeOut && Math.abs(a.pos.y - Kp.pos.y) < 2.5 && !(b.kRole === 'grab' && P.side(a.team) >= KARP_AI.grabAt)) {
-    const RO = K.shell.burstR + 0.6, inward = -(move.x * nx + move.z * nz);
-    if (h < RO - 0.2) { move.set(nx, 0, nz); it.squid = false; }
-    else if (h < RO + 0.4 && inward > 0) { move.x += inward * nx; move.z += inward * nz; }
+  if (keepOut(b, P)) {
+    // (judged where it will be in 0.25 s at its speed toward the centre: a roll or a run carries it on)
+    const RO = K.shell.burstR + 0.6, inward = -(move.x * nx + move.z * nz), hq = h - Math.max(0, -(a.vel.x * nx + a.vel.z * nz)) * 0.25;
+    if (hq < RO - 0.2) { move.set(nx, 0, nz); it.squid = false; }
+    else if (hq < RO + 0.4 && inward > 0) { move.x += inward * nx; move.z += inward * nz; }
+  }
+  // (a breaker refilling by the shell holds its band: a squid slides about on its puddle, and the step onto our ink can be
+  // a step in toward the shell — never in past the band's inner edge nor out past its outer one; B(b2) saw 2.62 / 5.23 m)
+  if (KARP_AI.refillBand && !esc && b.mode === 'refill' && S.state === 'intact') {
+    const band = shellBand(b, P);
+    if (band) {
+      const [lo, hi] = band, vr = a.vel.x * nx + a.vel.z * nz, hq = h + vr * 0.25, outward = move.x * nx + move.z * nz;
+      if (hq < lo - 0.05) move.set(nx * 0.7, 0, nz * 0.7);
+      else if (hq < lo + 0.25 && outward < 0) { move.x -= outward * nx; move.z -= outward * nz; }
+      if (hq > hi + 0.15) move.set(-nx * 0.7, 0, -nz * 0.7);
+      else if (hq > hi - 0.25 && outward > 0) { move.x -= outward * nx; move.z -= outward * nz; }
+    }
   }
   // the shell guard: never a step into touch range (the body's closest point to its centre within r + 0.38 + margin)
   const by = clamp(c.y, a.pos.y + 0.3, a.pos.y + 1.2), d3 = Math.hypot(h, by - c.y), reach = R + PLAYER.radius;
@@ -1097,6 +1140,14 @@ export function karpShields(b, S) {
   S.push(d);
 }
 
+// once the other side is ≥ 50 % (SPEC §8.2: the melee breakers out on the ring, guarding it), no bot of ours steps back in
+// past the burst's 4.5 m + 0.6 — fighting a foe that stands by the shell (theirs is safe from its own burst), refilling,
+// walking past (karpMove; karpShellIn for the melee kits' lunges and leaps). The meter can jump 30 % in one charger shot:
+// matches had bursts splat fighters and refills 3.2–4.5 m out with the 70 % danger standing for under half a second
+function keepOut(b, P) {
+  const a = b.a, Kp = P.Kp;
+  return KARP_AI.keepOut && !b.sp.esc && Kp.shell.state === 'intact' && -P.side(a.team) >= KARP_AI.meleeOut && Math.abs(a.pos.y - Kp.pos.y) < 2.5;
+}
 // a bot's lunge / leap from (x0, z0) to (x1, z1) passing within touch range of the Roe Shell's full swell (+ pad)? The
 // melee kits ask it (kits/blade.js lungeSafe, kits/mitts.js landingOk): bots never step into its sting this way — the
 // footwork guard (karpMove) can't stop a move the weapon itself makes
@@ -1106,7 +1157,10 @@ export function karpShellIn(a, x0, z0, x1, z1, pad = 0.4) {
   const c = S.center(), R = Math.max(S.radius(), K.shell.rMax) + PLAYER.radius + pad;
   if (Math.abs(a.pos.y + 0.8 - c.y) > R + 1) return false;
   const dx = x1 - x0, dz = z1 - z0, L2 = dx * dx + dz * dz, u = L2 > 1e-6 ? clamp(((c.x - x0) * dx + (c.z - z0) * dz) / L2, 0, 1) : 0;
-  return Math.hypot(x0 + dx * u - c.x, z0 + dz * u - c.z) < R;
+  if (Math.hypot(x0 + dx * u - c.x, z0 + dz * u - c.z) < R) return true;
+  // (the other side ≥ 50 %: nor one that ends in past the ring's edge — the burst would splat it there)
+  const P = karpPlan();
+  return !!(P && a.bot && keepOut(a.bot, P) && Math.hypot(x1 - c.x, z1 - c.z) < K.shell.burstR + 0.4);
 }
 
 // ================================================================================================ route rules (_pathTo)
@@ -1148,19 +1202,37 @@ export function karpPathArgs(b) {
   b.kArgs = { avoid, retreat, cost, noClimb: true }; b.kArgsT = now;
   return b.kArgs;
 }
-// the same without the retreat part (no forward path at all: accept a short ×3 rather than stand still); level 2 (still
+// no forward path at all (_pathTo): the carrier's route rules loosened step by step, least first — the retreat mark's slack
+// from 6 m to 7.5 m (a dip the engine forgives: its ×3 starts at 8), then 11 m, then none — so it takes the way with the
+// least going back, not just the shortest (halyard's own-corridor re-forms took up to 23 s of ×3 a match); level 2 (still
 // none: its own free zones the only way on) without the zones either, their nodes costly — a ×3 for the zone, never a
-// carrier standing still. One episode per 3 s counts (carrierRetreatFallback: each re-plan in a dead end is the same one)
-export function karpPathFallback(b, level = 1) {
+// carrier standing still. Each step → { avoid, cost, noClimb, level, slack }; karpFallbackNote counts the one it took
+export const KARP_FB_STEPS = [[1, 7.5], [1, 11], [1, Infinity], [2, Infinity]];
+export function karpPathFallback(b, level = 1, slack = Infinity) {
   const a = b.a, P = karpPlan();
   if (!P) return null;
+  if (!KARP_AI.fbSteps && slack < Infinity) return null;   // (the A/B switch: straight to no mask at all, as before)
   const N = P.N, base = P.avoidFor(a.team), sm = P.shellMask, Z = P.masks(a.team).zone, avoid = b.kFbA && b.kFbA.length === N ? b.kFbA : (b.kFbA = new Uint8Array(N));
-  for (let i = 0; i < N; i++) avoid[i] = (base[i] && !(level >= 2 && Z[i])) || sm[i] ? 1 : 0;
-  if (!(G.time - (b.kFbT ?? -9) < 3)) { KARP_BOT.stats.retreatFallback++; const L = Array.isArray(KARP_BOT.stats.fbAt) ? KARP_BOT.stats.fbAt : (KARP_BOT.stats.fbAt = []); if (L.length < 6) { const F = P.Kp.field, J = a.carry && a.carry.j, n = G.nav.nearest(a.pos, 1.2, true); L.push([+a.pos.x.toFixed(1), +a.pos.y.toFixed(1), +a.pos.z.toFixed(1), level, a.team, n >= 0 ? +(F.L[a.team] - F.D[a.team][n]).toFixed(1) : null, J && Number.isFinite(J.mark) ? +J.mark.toFixed(1) : null]); } }   // (where: a stage builder's flag — [x, y, z, level, team, P here, the retreat mark])
-  b.kFbT = G.time;
+  const F = P.Kp.field, J = a.carry && a.carry.j, D = F.D[a.team], L = F.L[a.team];
+  const ret = slack < Infinity && J && Number.isFinite(J.mark) && J.half === a.team;
+  for (let i = 0; i < N; i++) avoid[i] = (base[i] && !(level >= 2 && Z[i])) || sm[i] || (ret && F.nodeHalf(i) === a.team && L - D[i] < J.mark - slack) ? 1 : 0;
   let cost = b.kArgs ? b.kArgs.cost : b.sp.cost();
   if (level >= 2) { const c = b.kFbC && b.kFbC.length === N ? b.kFbC : (b.kFbC = new Float32Array(N)); for (let i = 0; i < N; i++) c[i] = (cost ? cost[i] : 0) + (Z[i] ? 6 : 0); cost = c; }
-  return { avoid, cost, noClimb: true };
+  return { avoid, cost, noClimb: true, level, slack };
+}
+// the step a carrier's re-plan took (bots.js _pathTo, once it found a path): a dip the engine forgives (slack ≤ 7.5 m) is no
+// fallback (karp-match counts it apart: fbSoft); anything looser is carrierRetreatFallback — one count per 3 s episode (each
+// re-plan in a dead end is the same one), logged with [x, y, z, level, team, P here, the retreat mark, the slack]
+export function karpFallbackNote(b, F) {
+  const a = b.a, P = karpPlan(), S = KARP_BOT.stats;
+  if (!P || !F) return;
+  if (F.level === 1 && F.slack <= 7.5) { if (!(G.time - (b.kFbSoftT ?? -9) < 3)) S.fbSoft = (S.fbSoft || 0) + 1; b.kFbSoftT = G.time; return; }
+  if (!(G.time - (b.kFbT ?? -9) < 3)) {
+    S.retreatFallback++;
+    const L = Array.isArray(S.fbAt) ? S.fbAt : (S.fbAt = []);
+    if (L.length < 6) { const Fd = P.Kp.field, J = a.carry && a.carry.j, n = G.nav.nearest(a.pos, 1.2, true); L.push([+a.pos.x.toFixed(1), +a.pos.y.toFixed(1), +a.pos.z.toFixed(1), F.level, a.team, n >= 0 ? +(Fd.L[a.team] - Fd.D[a.team][n]).toFixed(1) : null, J && Number.isFinite(J.mark) ? +J.mark.toFixed(1) : null, Number.isFinite(F.slack) ? F.slack : null]); }
+  }
+  b.kFbT = G.time;
 }
 // a carrier's look-ahead (bots.js _steer cuts corners in straight lines): never across its own free zone or a
 // carrierBlock — they are no walls, so the line probes don't see them (unless it's in that zone already: out the shortest way)
@@ -1268,14 +1340,17 @@ export function karpDangers(A) {
   if (S.state === 'intact') {
     const m = S.meter / (S.hp || 1), lead = m > 0 ? 0 : 1, frac = Math.abs(m);
     const tb = G.actors.find((o) => o.team === 1 - lead && o.bot && o.bot.diff), thr = KARP_AI.diff[tb?.bot.diff.id || 'normal']?.danger;
-    if (thr != null && frac >= thr) {
+    // (the shell swells with the meter for all to see: one swelling fast toward its burst — its side projected 1 s on at the
+    // rate of the last half second — is the danger too, before the 70 %: a charger shot moves it 30 % at once)
+    const rate = trackMeter(S, now) * (m > 0 ? 1 : -1), proj = frac + Math.max(0, rate) * KARP_AI.swellAhead;
+    if (thr != null && (frac >= thr || (KARP_AI.swellAhead > 0 && proj >= 1))) {
       const c = S.center(), d = A.D(A.keyOf(S, 0), 'karpshell', lead, null);
       A.disc(d, c.x, Kp.pos.y, c.z, KARP_AI.dangerR, K.shell.burstR);
       d.yLo = Kp.pos.y - 2.5; d.yHi = Kp.pos.y + 3.5; d.tIn = 0.4; d.tOut = 5; d.lethal = 2; d.los = true; d.losY = K.shell.lift;
       d.vis = 'big'; d.hear = 14; d.linger = true; d.hit = 'karp-burst';
       A.see(d, c.x, c.y, c.z);
     }
-  }
+  } else S._kHist = null;   // (a re-formed shell's meter starts again)
 }
 
 // ================================================================================================ WP1's minimal set
