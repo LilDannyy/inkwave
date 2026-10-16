@@ -997,13 +997,15 @@ function seenFoeYaw(b, lo = 3, hi = 10.5) {
   }
   return best;
 }
+export const SENTRY_BOT = { minHp: 40 };   // [b5-int3] (bot.fight: not set down below this hp — it folds with its owner)
 const BOT = {
   rides: true,   // (set down on the moving tower's deck too: it rides it — bots.js _paintSub's !onT exception)
-  // a known foe it would see from there 3–10.5 m off (inside its 11 m reach — was 6–14 m, half of them past its reach),
-  // not hit in the last 1 s: 2.5 % a frame — down 0.9 m ahead toward that foe
+  // a known foe it would see from there 3–10.5 m off (inside its 11 m reach — was 6–14 m, half of them past its reach):
+  // 2.5 % a frame — down 0.9 m ahead toward that foe. ([b5-int3] mid-duel too — it was only when not hit for 1 s, which a
+  // duel never is (the duel probe: 9 set down in 60 rounds); not on its last legs (40 hp): it folds when its owner goes)
   fight(b, dist) {
     const a = b.a;
-    if (dist < 4 || dist > 12 || a.lastDamage < 1 || Math.random() > 0.025) return false;
+    if (dist < 4 || dist > 12 || a.hp < SENTRY_BOT.minHp || Math.random() > 0.025) return false;
     const y = seenFoeYaw(b);
     if (y == null) return false;
     b._sentrySrc = 'fight';
