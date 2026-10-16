@@ -1203,7 +1203,7 @@ export class BotBrain {
     // [b5-caldera] fix round 3: a route's own hop is flown at the node it was made for (as a player commits to a jump): a
     // goal picked again mid-air turned a hop off the Casting Floor round toward the next goal and dropped it into the lake
     if (this._hopPath && this._hopTo && !a.grounded && !gOff && !this._climbAim) { const n = this._hopTo, dx = n.x - a.pos.x, dz = n.z - a.pos.z, d = Math.hypot(dx, dz); if (d > 0.3) it.move.set(dx / d, 0, dz / d); }
-    if (!a.grounded && !gNear && !a.climbing && !gOff && !this._climbAim && !this._hopPath && !a.superJumpState && (this._arcWet(a, a.vel.x, a.vel.z) || this._flightWet(a, it.move))) {   // [b5-caldera] fix round 3: _flightWet (air control keeps pulling it the brain's way: a twins hop drifted 1.3 m off the edge at 3 m/s while the ballistic arc still read the floor it left)
+    if (!a.grounded && !gNear && !a.climbing && !gOff && !this._hopPath && !a.superJumpState && (this._arcWet(a, a.vel.x, a.vel.z) || this._flightWet(a, it.move))) {   // (fix round 3: a climb's own hop too, while not on the wall — a squid climb up the Ladle Road's face let go and flew off the Horn Step into the arm)   // [b5-caldera] fix round 3: _flightWet (air control keeps pulling it the brain's way: a twins hop drifted 1.3 m off the edge at 3 m/s while the ballistic arc still read the floor it left)
       const bx = (this._lastFoot?.x ?? a.pos.x) - a.pos.x, bz = (this._lastFoot?.z ?? a.pos.z) - a.pos.z, bl = Math.hypot(bx, bz);
       if (bl > 0.05) it.move.set(bx / bl, 0, bz / bl); else if (Math.hypot(a.vel.x, a.vel.z) > 0.05) it.move.set(-a.vel.x, 0, -a.vel.z).normalize();
     }
@@ -1580,7 +1580,18 @@ export class BotBrain {
     const ct = a.form === 'squid' ? 0.45 : 0.3, away = mv.x * vx + mv.z * vz < 0;
     if ((sp > 1.0 || (sp > 0.25 && away)) && this._wetHi(px + vx * ct + (vx / sp) * 0.3, pz + vz * ct + (vz / sp) * 0.3, py)) { mv.set(-vx / sp, 0, -vz / sp); return; }
     // [b5-caldera] standing on a lip with the body's middle over the sea or the lava (the foot holds it): back onto the floor
+    // (fix round 3: onto open floor at its own level — the mean of those directions, never into a wall: on the north head's
+    // coping sliver between the lake and the Ladle Road's face the first dry direction was the face, and pushed into it at
+    // a slant the body slid along it to the sliver's tip and off it: three bots in four lava-bots runs)
+    // (and of those the one nearest the way it wants to go — an escaper off a sinking stone onto a head's coping was turned
+    // back toward the stone, the first dry direction, and went in with it)
     if (a.grounded && this._wet(px, pz, py)) {
+      let sx = 0, sz = 0, bx = 0, bz = 0, bd = -2;
+      const ml = Math.hypot(mv.x, mv.z), ux = ml > 0.05 ? mv.x / ml : 0, uz = ml > 0.05 ? mv.z / ml : 0;
+      for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t), x = px + cx * 0.45, z = pz + cz * 0.45; if (!this._wet(x, z, py) && !G.level.pointInside(_wv.set(x, py + 0.3, z), 0)) { sx += cx; sz += cz; const d = cx * ux + cz * uz; if (d > bd) { bd = d; bx = cx; bz = cz; } } }
+      const sl = Math.hypot(sx, sz);
+      if (ml > 0.05 && bd > -2) { mv.set(bx * 0.8, 0, bz * 0.8); return; }
+      if (sl > 0.1) { mv.set((sx / sl) * 0.8, 0, (sz / sl) * 0.8); return; }
       for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t); if (!this._wet(px + cx * 0.45, pz + cz * 0.45, py)) { mv.set(cx * 0.8, 0, cz * 0.8); return; } }
     }
     const m = Math.hypot(mv.x, mv.z); if (m < 1e-4) return;
@@ -1591,7 +1602,7 @@ export class BotBrain {
     // [b5-caldera] on a tip (half or more of a 0.55 m ring round it over the sea or the lava — a coping wedge's point):
     // back toward the floor (the dry samples' mean), not along the edge to the point
     { let wn = 0, sx = 0, sz = 0;
-      for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t); if (this._wetHi(px + cx * 0.55, pz + cz * 0.55, py)) wn++; else { sx += cx; sz += cz; } }   // (a column or a wall beside it is no drop: _wetHi)
+      for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t), x = px + cx * 0.55, z = pz + cz * 0.55; if (this._wetHi(x, z, py)) wn++; else if (!G.level.pointInside(_wv.set(x, py + 0.3, z), 0)) { sx += cx; sz += cz; } }   // (a column or a wall beside it is no drop: _wetHi — nor a way back: fix round 3)
       const sl = Math.hypot(sx, sz);
       if (wn >= 4 && sl > 0.1) { mv.set((sx / sl) * m, 0, (sz / sl) * m); return; } }
     for (const ang of [0.8, -0.8, 1.45, -1.45]) {

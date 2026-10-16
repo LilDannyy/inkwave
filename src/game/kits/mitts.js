@@ -696,6 +696,12 @@ function landingOk(a, P) {
   if (b && (b.roof || b.perch || b.rail)) return false;
   if (Math.abs(P.pos.y - a.pos.y) > 4) return false;
   if (G.match?.stage?.wet(P.pos.x, P.pos.z, P.pos.y, 2)) return false;   // [b5-caldera] never onto floor a stage hazard takes (lava)
+  // [b5-caldera] fix round 3: … nor where it slides on into one — a leap lands at up to 11 m/s and carries on along its line
+  // (a bot's pounce onto the island's narrow SE coping slid off into the lake: lava-bots ledges)
+  if (G.match?.stage) {
+    const dx = P.pos.x - a.pos.x, dz = P.pos.z - a.pos.z, d = Math.hypot(dx, dz) || 1, SM = G.match.stage;
+    for (const k of [0.8, 1.6, 2.4]) { const x = P.pos.x + (dx / d) * k, z = P.pos.z + (dz / d) * k, gy = G.level.groundHeight(x, z, P.pos.y + 0.5); if (gy === -Infinity || SM.wet(x, z, gy, 2)) return false; }
+  }
   if (!G.nav) return true;
   const id = G.nav.nearest(P.pos, 0.6);
   if (id < 0) return false;
