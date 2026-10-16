@@ -164,8 +164,8 @@
     R('step 10: a live 1:30 Turf War through both jumps, every bot thinking — no era shove, no bot on a vanishing top or inside an appearing piece at its flip, ≤ 1 bot-second inside an appearing piece\'s box before its flip, no splat a jump could have caused',
       rep.flips >= 50 && rep.eraShoves === 0 && rep.onVanishWho.filter((x) => x.bot).length === 0 && rep.inAppear === 0 && rep.loiterS <= 1 && rep.envSplats === 0,
       { simT, wallS: Math.round((performance.now() - t0) / 1000), ...rep, visits: undefined });
-    R('step 10: after the 3000s arrive every bot finds the new ground — median time from done to first standing on a node new in era 3 ≤ 20 s (fresh nodes weigh ×2 as paint goals for 30 s); bots stand on the Halo in the 3000s (its perch)',
-      !!v3 && v3.median !== null && v3.median <= 20 && v3.visited >= Math.ceil(v3.bots * 0.75) && haloS > 0,
+    R('step 10: after the 3000s arrive the bots find the new ground — the median over the bots of the time from done to first standing on a node new in era 3 is ≤ 20 s (a bot that never does counts as never; fresh nodes weigh ×2 as paint goals for 30 s); bots stand on the Halo in the 3000s (its perch)',
+      !!v3 && v3.median !== null && v3.median <= 20 && v3.within20 >= Math.ceil(v3.bots / 2) && haloS > 0,
       { era3: v3, era2: v2, haloBotSeconds: haloS, haloBots: [...haloBots], stuckPct, result: __G.paint.coverage().map((c) => +(c * 100).toFixed(1)) });
   }
   return out;

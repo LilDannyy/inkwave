@@ -49,6 +49,8 @@ varying vec2 vEra;
 varying float vEraK;
 vec3 eraOneHot = vec3(1.0, 0.0, 0.0);
 float eraHasF(float m, float b) { return mod(floor(m / b + 0.01), 2.0); }
+// the warning's film tint on what is about to vanish: eras.colors.vanish's warm hue, its chroma ×4 (old film), luminance 1
+vec3 eraFilm() { float l = max(dot(uEraColV, vec3(0.299, 0.587, 0.114)), 0.01); return max(vec3(0.0), vec3(1.0) + (uEraColV / l - vec3(1.0)) * 4.0); }
 // the era bit of this fragment: shared ground by its side of the front, an era piece by its own flip (at its group's r_g)
 float eraBitHere() {
   if (vEra.x > 6.5) return (uEra.z >= 0.0 && length(vWPos.xz) < uEra.z) ? uEra.y : uEra.x;
@@ -89,7 +91,7 @@ const LV_FBASE = /* glsl */`
       // the warning: what is about to vanish flickers in a sepia film grain (up to 15 %)
       if (uEraW.z > 0.0 && hf > 0.5 && ht < 0.5) {
         float fl = step(0.45, fract(sin(floor(uEraT * 9.0) * 12.9898 + dot(floor(vWPos * 3.0), vec3(1.7, 3.1, 2.3))) * 43758.5453));
-        base = mix(base, vec3(elum) * vec3(1.12, 0.96, 0.74), uEraW.z * (0.08 + 0.07 * fl));
+        base = mix(base, vec3(elum) * eraFilm(), uEraW.z * (0.08 + 0.07 * fl));
       }
       // done: what is new pulses white-gold for 4 s
       if (uEraW.w > 0.0 && ht > 0.5 && hf < 0.5) base = mix(base, uEraColA, uEraW.w * (0.3 + 0.2 * sin(uEraT * 7.0)));
@@ -145,17 +147,19 @@ const PR_VMAIN = (attr, depth) => /* glsl */`
 const PR_FPARS = /* glsl */`
 uniform vec4 uEraW;
 uniform vec3 uEraColA;
+uniform vec3 uEraColV;
 uniform float uEraT;
 varying float vEraK;
 varying float vEraM;
 varying vec3 vEraWP;
-float eraHasF(float m, float b) { return mod(floor(m / b + 0.01), 2.0); }`;
+float eraHasF(float m, float b) { return mod(floor(m / b + 0.01), 2.0); }
+vec3 eraFilm() { float l = max(dot(uEraColV, vec3(0.299, 0.587, 0.114)), 0.01); return max(vec3(0.0), vec3(1.0) + (uEraColV / l - vec3(1.0)) * 4.0); }`;
 const PR_FCOLOR = /* glsl */`
 if (vEraM < 6.5) {
   if (vEraK < 0.999) { float en = fract(sin(dot(floor(vEraWP * 5.0), vec3(12.9898, 78.233, 37.719))) * 43758.5453); if (en > vEraK) discard; }
   float hf = eraHasF(vEraM, uEraW.x), ht = eraHasF(vEraM, uEraW.y);
   float elum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-  if (uEraW.z > 0.0 && hf > 0.5 && ht < 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, vec3(elum) * vec3(1.12, 0.96, 0.74), uEraW.z * (0.08 + 0.07 * step(0.5, fract(uEraT * 9.0 + vEraWP.x))));
+  if (uEraW.z > 0.0 && hf > 0.5 && ht < 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, vec3(elum) * eraFilm(), uEraW.z * (0.08 + 0.07 * step(0.5, fract(uEraT * 9.0 + vEraWP.x))));
   if (uEraW.w > 0.0 && ht > 0.5 && hf < 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, uEraColA, uEraW.w * (0.3 + 0.2 * sin(uEraT * 7.0)));
 }`;
 // a clone of a prop material whose parts carry `attr` = (era mask, r_g): absent → collapsed; dissolving at the flip
@@ -164,7 +168,7 @@ export function eraMaterial(base, U, attr = 'aTag') {
   const prev = base.onBeforeCompile, key0 = base.customProgramCacheKey ? base.customProgramCacheKey() : '';
   m.onBeforeCompile = (sh, r) => {
     if (prev && prev !== THREE.Material.prototype.onBeforeCompile) prev.call(m, sh, r);
-    for (const k of ['uEra', 'uEraW', 'uEraColA', 'uEraT']) sh.uniforms[k] = U[k];
+    for (const k of ['uEra', 'uEraW', 'uEraColA', 'uEraColV', 'uEraT']) sh.uniforms[k] = U[k];
     sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>\n${PR_VPARS(attr)}`).replace('#include <project_vertex>', `#include <project_vertex>\n${PR_VMAIN(attr, false)}`);
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>\n${PR_FPARS}`).replace('#include <color_fragment>', `#include <color_fragment>\n${PR_FCOLOR}`);
   };
@@ -293,13 +297,13 @@ function glyphTexture() {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   return t;
 }
-function bellTexture() {
+function bellTexture(col = '#f4e9c8') {
   if (typeof document === 'undefined') { const t = new THREE.DataTexture(new Uint8Array(4), 1, 1); t.needsUpdate = true; return t; }
   const c = document.createElement('canvas'); c.width = c.height = 128;
   const x = c.getContext('2d');
   x.fillStyle = 'rgba(30,26,20,.82)'; x.beginPath(); x.arc(64, 64, 58, 0, Math.PI * 2); x.fill();
-  x.strokeStyle = '#f4e9c8'; x.lineWidth = 6; x.stroke();
-  x.fillStyle = '#f4e9c8';
+  x.strokeStyle = col; x.lineWidth = 6; x.stroke();
+  x.fillStyle = col;
   x.beginPath(); x.moveTo(36, 84); x.quadraticCurveTo(40, 36, 64, 34); x.quadraticCurveTo(88, 36, 92, 84); x.closePath(); x.fill();
   x.fillRect(30, 82, 68, 8); x.beginPath(); x.arc(64, 96, 8, 0, Math.PI * 2); x.fill();
   for (const s of [-1, 1]) { x.beginPath(); x.arc(64 + s * 44, 50, 10, s < 0 ? Math.PI * 0.6 : -Math.PI * 0.4, s < 0 ? Math.PI * 1.4 : Math.PI * 0.4); x.stroke(); }
@@ -397,7 +401,7 @@ export class EraFx {
   _buildPhones() {
     const P = this.E.phones || [];
     this.phones = [];
-    const tex = bellTexture();
+    const tex = bellTexture(this.E.colors?.appear || '#f4e9c8');
     for (const sgn of [1, -1]) for (const p of P) {
       const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false }));
       sp.position.set(sgn * p[0], p[1] + 2.4, sgn * p[2]); sp.scale.setScalar(1.1); sp.visible = false; sp.renderOrder = 16;
@@ -465,7 +469,7 @@ export class EraFx {
       this.group.add(this.curtain);
     }
     const U = this.curtain.material.uniforms, pearl = jump.to === 3 || jump.to < jump.from;
-    U.uFoot.value.set(pearl ? '#e9ecf2' : '#c79a4e'); U.uBody.value.set(pearl ? '#f6f2ea' : '#f4e9c8');
+    U.uFoot.value.set(pearl ? '#e9ecf2' : '#c79a4e'); U.uBody.value.set(pearl ? '#f6f2ea' : this.E.colors?.appear || '#f4e9c8');
     this.curtain.visible = true;
   }
 
@@ -592,7 +596,13 @@ export class EraHud {
     this.stats = { places: 0 };
     const host = G.hud?.el;
     if (!host || typeof document === 'undefined') { this.el = null; return; }
-    if (!cssOn) { const st = document.createElement('style'); st.id = 'era-hud-css'; st.textContent = CSS; document.head.appendChild(st); cssOn = true; }
+    if (!cssOn) {
+      // (the chip's and the callouts' white-gold and warm grey are the layout's own: eras.colors)
+      const C = R.W.E.colors || {}, rgb = (hex, d) => { const m = /^#?([\da-f]{6})$/i.exec(hex || ''); if (!m) return d; const n = parseInt(m[1], 16); return `${n >> 16}, ${(n >> 8) & 255}, ${n & 255}`; };
+      const a = C.appear || '#f4e9c8', v = C.vanish || '#a9a49a';
+      const css = CSS.replaceAll('#f4e9c8', a).replaceAll('244, 233, 200', rgb(a, '244, 233, 200')).replaceAll('#a9a49a', v).replaceAll('169, 164, 154', rgb(v, '169, 164, 154'));
+      const st = document.createElement('style'); st.id = 'era-hud-css'; st.textContent = css; document.head.appendChild(st); cssOn = true;
+    }
     const N = R.W.names;
     this.el = document.createElement('div'); this.el.className = 'er-chip'; this.el.dataset.eras = '1';
     this.el.innerHTML = `${PHONE_ICON}<span class="er-names">${N.map((n, i) => `<b data-e="${i + 1}">${n}</b>`).join('<i>·</i>')}</span><span class="er-bar"><i></i></span><span class="er-next"></span><b class="er-count"></b>`;

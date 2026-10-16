@@ -101,14 +101,15 @@
     const Jp = E.debugJump(E.era === 3 ? 1 : E.era + 1, { inS: 10.05 });
     tAt(Jp.doneAt + 2.6);
     const places = C.stats.places - p0, said = calls.length - s0, frames = Math.round((Jp.doneAt + 2.6 - (Jp.at - 10.05)) * 60);
+    for (let i = 0; i < 40 && document.querySelector('.iw-call'); i++) await new Promise((r) => setTimeout(r, 150));   // (the earlier gameplay callouts gone)
     E.debugJump(E.era === 3 ? 1 : E.era + 1, { inS: 10.05 }); step(0.2); await settle();
-    const before = boxOf('.er-call');
+    const before = boxOf('.er-call'), gameBefore = !!document.querySelector('.iw-call');
     co('SPLATTED AGAIN!', 'a gameplay callout after the era\'s', false);
     await new Promise((r) => setTimeout(r, 0)); step(2 / 60); await settle();
     const after2 = { era: boxOf('.er-call'), game: boxOf('.iw-call') };
     R('step 9 (review 2, issue 3): the era band is laid out only when a callout is said or what it must clear changes (not every frame): a whole jump with its callouts lays it out a handful of times; a gameplay callout arriving after an era callout still pushes the band below it',
-      said >= 3 && places <= 10 && !!after2.era && !!after2.game && apart(after2.era, after2.game) && after2.era[0] >= after2.game[1] - 0.5,
-      { frames, said, places, before: before && before.map(Math.round), after: { era: after2.era?.map(Math.round), game: after2.game?.map(Math.round) } });
+      said >= 3 && places <= 10 && !gameBefore && !!before && !!after2.era && !!after2.game && apart(after2.era, after2.game) && after2.era[0] >= after2.game[1] - 0.5 && after2.era[0] > before[0] + 2,
+      { frames, said, places, gameBefore, before: before && before.map(Math.round), after: { era: after2.era?.map(Math.round), game: after2.game?.map(Math.round) } });
     tAt(E.next ? E.next.at + W.doneOff + 0.5 : E.S.clock.t);
   }
 
