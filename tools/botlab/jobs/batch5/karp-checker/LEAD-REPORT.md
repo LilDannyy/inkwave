@@ -1,7 +1,7 @@
 # Bazookarp WP4a: the checker and the stage kit (key `karp-checker`): lead report
 
 Worktree `st-b5-karp-checker`, branch `b5-karp-checker` from `b5-int3` b55f7472. Nothing pushed. Everything ran
-locally (the Mac mini is away), one Electron instance at a time under the shared SLOTS=3 lock. The machine was saturated
+locally (my task: the Mac mini unavailable), one Electron instance at a time under the shared SLOTS=3 lock. The machine was saturated
 the whole time (load average 230–760, all three slots busy with other builders), which matters only for the field's
 timing rows (§2.4).
 
