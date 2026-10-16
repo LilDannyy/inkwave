@@ -15,11 +15,14 @@
 //        with the module's audit switch (?era= / ?lava=, or the state's own `query`). Without one: every state in turn.
 //        CASES=clean,f1,…  (self-test) some cases   FLAGSHOTS=n  pictures of the first n flagged places (default 8)
 //        KITSHOTS=1  the kit up close too (a weir and a post, the Gate, a NO CARP sign, a carrierBlock's shimmer)
+//        KARP_SWIM=fail|warn|off  how #7 judges a move only the carrier swimming in its own ink makes (D34, the lead's
+//        choice; default CK.swim in karp-check-page.js): fail as any find; warn listed as a WARN (#7d on the kid alone);
+//        off not modelled. The RESULT line says which (swim=…), and splits #7d's finds by cause: 7d=layout/field/swim
 //        PROBE='[x, y, z, x, y, z]'  one move traced instead (#16's kid on the node pair nearest those points, every frame
 //        of every trial): why a listed hopVeto edge or #7d candidate is or isn't made; PROBE='walk:<text>' one of #16's
 //        walks (the one whose name holds <text>) again, every frame, with its path
 // Prints one line per check (OK / WARN / FAIL / SKIP with numbers), then
-//   RESULT <id> ok|fail L=… weir=… gate=… routes=… zones=… hops=…
+//   RESULT <id> ok|fail L=… weir=… gate=… routes=… zones=… hops=… walks=… swim=fail|warn|off 7d=<layout>/<field rule>/<swim-jump>
 // and writes <id>-karp.json (every number) and the pictures (JPEG < 300 KB) to OUT.
 const { app } = require('electron');
 const fs = require('fs');
@@ -75,10 +78,10 @@ app.on('browser-window-created', (_, win) => {
     const listStates = async () => js(`(() => { const F = window.__inkwave.match.karp.field; const S = (() => { try { return window.__inkwave.match.stage?.karpStates?.() || []; } catch { return []; } })(); return F.states.map((s, i) => ({ i, key: s.key, query: i ? (S.find((q) => String(q.key) === String(s.key))?.query || null) : null })); })()`);
     // ------------------------------------------------------------------------------------------- one stage, one state
     const checkOne = async (id, st, setup, tag, opts = {}) => {
-      const o = { state: st.i, phys: PHYS && opts.phys !== false };
+      const o = { state: st.i, phys: PHYS && opts.phys !== false, ...(process.env.KARP_SWIM || opts.swim ? { swim: opts.swim || process.env.KARP_SWIM } : {}), ...(opts.lightmap ? { lightmap: opts.lightmap } : {}) };
       if (process.env.KITSHOTS === '1' && st.i === 0) {   // the kit up close (a weir, a post, the Gate, a sign, a carrierBlock)
         const list = await js(`${mod}.then((m) => m.kitPictures())`);
-        for (const s of list) { const name = (tag ? tag + '-' : '') + s.name; fs.writeFileSync(path.join(OUT, name), Buffer.from(s.url.split(',')[1], 'base64')); console.log(`  kit picture: ${name}`); }
+        for (const s of list) { if (s.note) { console.log(`  kit pictures: ${s.note}`); continue; } const name = (tag ? tag + '-' : '') + s.name; fs.writeFileSync(path.join(OUT, name), Buffer.from(s.url.split(',')[1], 'base64')); console.log(`  kit picture: ${name}`); }
       }
       const rep = await js(`${mod}.then((m) => m.runChecks(${JSON.stringify(o)}))`);
       const drop = await js(`${mod}.then((m) => m.dropCoverage(${JSON.stringify(o)}))`);
@@ -134,7 +137,7 @@ app.on('browser-window-created', (_, win) => {
       const w = rep.checks[3]?.nums?.teams?.[0], hops = rep.checks[2]?.nums;
       const zoneN = rep.checks[9]?.nums?.zones?.filter((z) => z.team === 1).length ?? 0;
       const rt = rep.checks[5]?.nums?.rows?.filter((r) => r.team === 0).map((r) => (r.r2 ? 2 : 1));
-      console.log(`RESULT ${id}${rep.states.length > 1 ? '@' + rep.key : ''} ${ok ? 'ok' : 'fail'} L=${rep.L.join('/')} weir=${w?.weirs?.map((q) => q.count).join(',')} gate=${rep.checks[8]?.nums?.rows?.[0]?.dist} routes=${rt && rt.length ? Math.min(...rt) : 0}/2 zones=${zoneN} hops=${hops?.hops}+${hops?.gaps}${rep.checks[16]?.nums?.walkRoutes ? ` walks=${rep.checks[16].nums.walkRoutes.join('/')}+${rep.checks[16].nums.walkEntrances.join('/')}` : ''}${fails.length ? ' FAIL=' + fails.join(',') : ''}${skips.length ? ' SKIP=' + skips.join(',') : ''}`);
+      console.log(`RESULT ${id}${rep.states.length > 1 ? '@' + rep.key : ''} ${ok ? 'ok' : 'fail'} L=${rep.L.join('/')} weir=${w?.weirs?.map((q) => q.count).join(',')} gate=${rep.checks[8]?.nums?.rows?.[0]?.dist} routes=${rt && rt.length ? Math.min(...rt) : 0}/2 zones=${zoneN} hops=${hops?.hops}+${hops?.gaps}${rep.checks[16]?.nums?.walkRoutes ? ` walks=${rep.checks[16].nums.walkRoutes.join('/')}+${rep.checks[16].nums.walkEntrances.join('/')}` : ''} swim=${rep.swim}${(() => { const cz = rep.checks[7]?.nums?.cause; return cz ? ` 7d=${cz.layout}/${cz.field}/${cz.swim}${cz.waived ? ` (${cz.waived} waived)` : ''}` : ''; })()}${fails.length ? ' FAIL=' + fails.join(',') : ''}${skips.length ? ' SKIP=' + skips.join(',') : ''}`);
       if (shots.length) console.log(`  pictures (${OUT}): ${shots.join(', ')}`);
       // the flags, numbered as on the top-down (its discs and key) and in the -flag-<n> pictures; #11's carry places last
       const flags = await js(`${mod}.then((m) => m.numberFlags(window.__karpCheck.out.checks))`);
@@ -172,13 +175,15 @@ app.on('browser-window-created', (_, win) => {
       } else if (SELF) {
         const box = `import('./tools/botlab/karp-check-box.js')`;
         await boot('');
-        const cases = await js(`${box}.then((m) => m.CASES.map((c) => ({ id: c.id, check: c.check, what: c.what, expect: c.expect || null, notFail: c.notFail || null, expect16: c.expect16 || null, also: c.also || null, phys: !!c.phys, carry: !!c.carry, allStates: !!c.allStates, reach: c.reach || false })))`);
+        const cases = await js(`${box}.then((m) => m.CASES.map((c) => ({ id: c.id, check: c.check, what: c.what, expect: c.expect || null, notFail: c.notFail || null, expect16: c.expect16 || null, also: c.also || null, phys: !!c.phys, carry: !!c.carry, allStates: !!c.allStates, reach: c.reach || false, lightmap: c.lightmap || null, after: c.after || null, swim: c.swim || null, unplaced: !!c.unplaced, notFailText: c.notFailText || null })))`);
         const want = process.env.CASES ? process.env.CASES.split(',') : null;
         const res = [];
         for (const c of cases.filter((q) => !want || want.includes(q.id))) {
           await boot('');
           const setup = `${box}.then((m) => m.defineCase('${c.id}'))`;
           await start('karpbox', setup);
+          // ([fix4] a case's page hook after the match starts: a planted fault the data can't plant, e.g. x2s's reading)
+          if (c.after) await js(`${box}.then((m) => m.${c.after}())`);
           const sts = await listStates();
           if (c.reach) {
             // [fix2] the windows' calibration: #16's kid on every REACH row, set against the probes' windows (reachCalib)
@@ -206,7 +211,7 @@ app.on('browser-window-created', (_, win) => {
             console.log(`SELFTEST ${c.id.padEnd(10)} the module's states ${JSON.stringify(sts.map((q) => [q.key, q.query]))}: #15 ${runs.map((r) => `${r.key} ${r.c15}`).join(', ')} (state 'w' must FAIL, built from ?${sw?.query}) → ${pass ? 'PASS' : 'FAIL'}`);
             continue;
           }
-          const j = await checkOne('karpbox', sts[0], setup, `self-${c.id}`, { carry: c.id === 'clean' || c.carry, phys: c.id === 'clean' || c.phys, shots: c.id === 'clean' || c.check || c.notFail ? true : false, topOnly: c.id !== 'clean' });
+          const j = await checkOne('karpbox', sts[0], setup, `self-${c.id}`, { lightmap: c.lightmap, swim: c.swim, carry: c.id === 'clean' || c.carry, phys: c.id === 'clean' || c.phys, shots: c.id === 'clean' || c.check || c.notFail ? true : false, topOnly: c.id !== 'clean' });
           const failing = j.fails;
           // (the target check must FAIL for the fault planted: its text matches the case's `expect`, not a knock-on;
           // a notFail case proves a false FAIL gone: none of those checks may fail, and #16's text may be asked to match)
@@ -215,10 +220,13 @@ app.on('browser-window-created', (_, win) => {
           // [fix2] (also: more checks that must FAIL for their own reason; flagged: the target check's FAIL has a place on
           // the pictures — a numbered flag — as every FAIL with a place must)
           const alsoOk = (c.also || []).every(([n, re]) => failing.includes(n) && new RegExp(re).test(j.checks[n]?.text || ''));
-          const flagged = c.check == null || (j.flags || []).some((f) => f.check === c.check);
-          const pass = c.id === 'clean' ? j.result === 'ok' : c.check == null ? (c.notFail || []).every((n) => !failing.includes(n)) && why16 : failing.includes(c.check) && why && alsoOk && flagged;
-          res.push({ ...c, pass, failing, why, why16, alsoOk, flagged });
-          const what = c.id === 'clean' ? 'clean karpbox: every check OK' : c.check == null ? `${(c.notFail || []).map((n) => '#' + n).join(' ')} must NOT fail (${c.what})${c.expect16 ? (why16 ? ', #16 as expected' : ', #16 NOT as expected: /' + c.expect16 + '/') : ''}` : `#${c.check} must FAIL (${c.what})${c.expect ? (why ? ', for that reason' : ', NOT for that reason: /' + c.expect + '/') : ''}${c.also ? (alsoOk ? `, and ${c.also.map(([n]) => '#' + n).join(' ')} for theirs` : `, NOT ${c.also.map(([n, re]) => `#${n} /${re}/`).join(' ')}`) : ''}${flagged ? '' : ', but its FAIL has NO FLAG (no place on the pictures)'}`;
+          // ([fix4] unplaced: a FAIL with no place to flag — a stale lightmap)
+          const flagged = c.check == null || c.unplaced || (j.flags || []).some((f) => f.check === c.check);
+          // ([fix4] notFailText: [[n, re]] — check n's text must match too: a switch or a waiver proved by what it says)
+          const textOk = (c.notFailText || []).every(([n, re]) => new RegExp(re).test(j.checks[n]?.text || ''));
+          const pass = c.id === 'clean' ? j.result === 'ok' : c.check == null ? (c.notFail || []).every((n) => !failing.includes(n)) && why16 && textOk : failing.includes(c.check) && why && alsoOk && flagged;
+          res.push({ ...c, pass, failing, why, why16, alsoOk, flagged, textOk });
+          const what = c.id === 'clean' ? 'clean karpbox: every check OK' : c.check == null ? `${(c.notFail || []).map((n) => '#' + n).join(' ')} must NOT fail (${c.what})${c.expect16 ? (why16 ? ', #16 as expected' : ', #16 NOT as expected: /' + c.expect16 + '/') : ''}${c.notFailText ? (textOk ? `, ${c.notFailText.map(([n]) => '#' + n).join(' ')} saying so` : `, NOT saying ${c.notFailText.map(([n, re]) => `#${n} /${re}/`).join(' ')}`) : ''}` : `#${c.check} must FAIL (${c.what})${c.expect ? (why ? ', for that reason' : ', NOT for that reason: /' + c.expect + '/') : ''}${c.also ? (alsoOk ? `, and ${c.also.map(([n]) => '#' + n).join(' ')} for theirs` : `, NOT ${c.also.map(([n, re]) => `#${n} /${re}/`).join(' ')}`) : ''}${flagged ? '' : ', but its FAIL has NO FLAG (no place on the pictures)'}`;
           console.log(`SELFTEST ${c.id.padEnd(10)} ${what} → ${pass ? 'PASS' : 'FAIL'}${failing.length ? ' (failing: ' + failing.map((n) => '#' + n).join(' ') + ')' : ''}`);
         }
         console.log(`RESULT selftest ${res.filter((r) => r.pass).length}/${res.length}`);
@@ -246,13 +254,13 @@ app.on('browser-window-created', (_, win) => {
         }
         if (table.length > 1) {
           console.log('\n== all stages');
-          console.log('| stage | L (m) | weir counts | result | failing checks | hop + gap edges | #16 made / not made (hopVeto) | #16 walks: routes, entrances | beyond the rules made | rising gaps: tried / made | vaults: tried / made | made only by the swimming carrier | climbs ≤ 1.8 m hopped | #7d finds (gain > 10 m) | entrances A/B | s |');
-          console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+          console.log('| stage | L (m) | weir counts | result | failing checks | hop + gap edges | #16 made / not made (hopVeto) | #16 walks: routes, entrances | beyond the rules made | rising gaps: tried / made | vaults: tried / made | steps off the grid: tried / made | squid tubes: tried / made | made only by the swimming carrier | climbs ≤ 1.8 m hopped | #7d finds (gain > 10 m) | #7d by cause: layout / field rule / swim-jump | entrances A/B | s |');
+          console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
           for (const r of table) {
             if (r.err) { console.log(`| ${r.id} | error: ${r.err} |`); continue; }
             const c = r.j.checks, n16 = c[16]?.nums || {}, n7 = c[7]?.nums || {};
             const finds = (n7.d || []).length, ents = (n7.teams || []).map((t) => t.entrances.length).join('/');
-            console.log(`| ${r.id}${r.j.placeholder ? ' (placeholder)' : ''} | ${r.j.L.join(' / ')} | ${(c[3]?.nums?.teams?.[0]?.weirs || []).map((w) => w.count).join(', ')} | ${r.j.result} | ${r.j.fails.map((n) => '#' + n).join(' ')} | ${c[2]?.nums?.hops} + ${c[2]?.nums?.gaps} | ${n16.tried != null ? `${n16.tried - n16.failed} / ${n16.failed}${n16.failed ? ` (h ${n16.failedBy.hop}, g ${n16.failedBy.gapLevel}, g↓ ${n16.failedBy.gapDown})` : ''}` : '–'} | ${n16.walkRoutes ? `${n16.walkRoutes[0]}/${n16.walkRoutes[1]}, ${n16.walkEntrances[0]}/${n16.walkEntrances[1]}` : '–'} | ${n16.beyondMade ?? '–'} of ${n16.beyond ?? '–'} | ${n16.rise ? `${n16.rise.tried} / ${n16.rise.made}` : '–'} | ${n16.vault ? `${n16.vault.tried} / ${n16.vault.made}` : '–'} | ${n16.swim ? `${n16.swim.made} (${n16.swim.edges} edges, ${n16.swim.beyond} beyond, ${n16.swim.off} off-field)` : '–'} | ${n16.climbHops ? `${n16.climbHops.made} of ${n16.climbHops.tried}` : '–'} | ${finds}${finds ? ': ' + Object.entries((n7.d || []).reduce((m, f) => ({ ...m, [f.probe]: (m[f.probe] || 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ') : ''} | ${ents} | ${r.s} |`);
+            console.log(`| ${r.id}${r.j.placeholder ? ' (placeholder)' : ''} | ${r.j.L.join(' / ')} | ${(c[3]?.nums?.teams?.[0]?.weirs || []).map((w) => w.count).join(', ')} | ${r.j.result} | ${r.j.fails.map((n) => '#' + n).join(' ')} | ${c[2]?.nums?.hops} + ${c[2]?.nums?.gaps} | ${n16.tried != null ? `${n16.tried - n16.failed} / ${n16.failed}${n16.failed ? ` (h ${n16.failedBy.hop}, g ${n16.failedBy.gapLevel}, g↓ ${n16.failedBy.gapDown})` : ''}` : '–'} | ${n16.walkRoutes ? `${n16.walkRoutes[0]}/${n16.walkRoutes[1]}, ${n16.walkEntrances[0]}/${n16.walkEntrances[1]}` : '–'} | ${n16.beyondMade ?? '–'} of ${n16.beyond ?? '–'} | ${n16.rise ? `${n16.rise.tried} / ${n16.rise.made}` : '–'} | ${n16.vault ? `${n16.vault.tried} / ${n16.vault.made}` : '–'} | ${n16.step ? `${n16.step.tried} / ${n16.step.made}` : '–'} | ${n16.tube ? `${n16.tube.tried} / ${n16.tube.made}` : '–'} | ${n16.swim ? `${n16.swim.made} (${n16.swim.edges} edges, ${n16.swim.beyond} beyond, ${n16.swim.off} off-field)` : '–'} | ${n16.climbHops ? `${n16.climbHops.made} of ${n16.climbHops.tried}` : '–'} | ${finds}${finds ? ': ' + Object.entries((n7.d || []).reduce((m, f) => ({ ...m, [f.probe]: (m[f.probe] || 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ') : ''} | ${n7.cause ? `${n7.cause.layout} / ${n7.cause.field} / ${n7.cause.swim}${n7.cause.waived ? ` (${n7.cause.waived} waived)` : ''}` : '–'} | ${ents} | ${r.s} |`);
           }
           fs.writeFileSync(path.join(OUT, 'all-stages.json'), JSON.stringify(table.map((r) => ({ id: r.id, err: r.err, result: r.j?.result, fails: r.j?.fails, L: r.j?.L, s: r.s, c2: r.j?.checks?.[2]?.nums, c16: r.j?.checks?.[16]?.nums, c7: r.j?.checks?.[7]?.nums })), null, 1));
         }

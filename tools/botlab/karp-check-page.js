@@ -36,6 +36,13 @@ export const CK = {
   // vaults over a low wall or a railing: node pairs ≤ 3.5 m apart, the obstacle's top ≤ 2.25 m over the higher end with
   // 1.5 m of air above it
   vault: { flat: 3.5, top: 2.25, air: 1.5 },
+  // [fix4] review 4: steps whose face misses the 1 m grid (field node pairs up to two cells apart, diagonals too: 0.3–1.8 m
+  // up, 0.3–3.4 m down), and squid tubes beyond lowGap's 3 m (field node pairs 3–8 m apart, a kid's line blocked at its
+  // waist or its head)
+  step: { up: [0.3, 1.8], down: [0.3, 3.4], cells: 2 }, tube: { flat: 8, kidY: [0.6, 1.2] },
+  // [fix4] review 4: how #7 judges a move only the swimming carrier makes (D34, the lead's to choose; KARP_SWIM overrides):
+  // 'fail' as every find; 'warn' reported as a WARN (#7d on the kid alone, SPEC #16's words); 'off' not tried at all
+  swim: 'fail',
 };
 // [fix2] review 2: the kid's reach. REACH.air: the widest open gap (rim to rim, along the line) #16's kid jumps at a rise
 // dy (m, + up) — measured on the self-test's REACH rows (karp-check-box.js 'reach', the coyote jump included), rounded up;
@@ -64,10 +71,21 @@ const lerpTab = (A, dy) => { if (dy <= A[0][0]) return A[0][1]; for (let k = 1; 
 const reachAir = (dy, swim = false) => (swim ? Math.max(lerpTab(REACH.air, dy), lerpTab(REACH.swim, dy)) : lerpTab(REACH.air, dy));
 export const reachWin = (dy, swim = false) => (dy > CK.hopHigh[1] ? 0 : reachAir(dy, swim) + REACH.margin + 2 * REACH.rimBack);
 const GAPLIKE = new Set(['gap', 'long gap', 'rise gap', 'off gap']);
-const TYPE_NAME = ['', 'walk', 'jump', 'drop', 'climb', 'hop', 'gap', 'pipe', 'ride', 'hop over off-field ground', 'high hop', 'long gap', 'rising gap', 'jump onto off-field ground', 'squid climb onto off-field ground', 'vault over a low wall or rail', 'squid gap'];
+const TYPE_NAME = ['', 'walk', 'jump', 'drop', 'climb', 'hop', 'gap', 'pipe', 'ride', 'hop over off-field ground', 'high hop', 'long gap', 'rising gap', 'jump onto off-field ground', 'squid climb onto off-field ground', 'vault over a low wall or rail', 'squid gap', 'step off the nav grid'];
 // (10–13: moves #16's kid makes that no carrier-graph edge holds; made from outside a Gate's ring to inside it, each is a
 // #7a entrance with its own line of sight)
-const PHYS_TYPE = { 'high hop': 10, 'long gap': 11, 'rise gap': 12, 'off hop': 9, 'off gap': 13, vault: 15 };
+const PHYS_TYPE = { 'high hop': 10, 'long gap': 11, 'rise gap': 12, 'off hop': 9, 'off gap': 13, vault: 15, step: 17, 'squid tube': 16 };
+// [fix4] review 4: made only by the carrier swimming in its own ink (D34): the swim-jumps, and a squid tube swum (not
+// crawled dry). A squid crawling on dry floor is SPEC's own low-gap squid, not the swimming carrier
+const isSwim = (by) => by === 'swim' || by === 'swimRel' || by === 'squidInk';
+// [fix4] review 4: each #7d find's cause, so a builder can tell the layout's own shortcuts from what the field's rules miss
+// and from what only the swim-jump makes. 'swim': made only by the swimming carrier (D34); 'field': a move a kid makes
+// that the field's own rules could hold (WP0 could absorb it: a step off the grid, a rising gap, a gap beyond 3 m, a vault,
+// a drop beyond 3.4 m); 'layout': the rest (squid gaps and tubes, walls over 5.5 m, hops over 1.8 m, moves onto ground off
+// the field), which only the stage can close
+const FIELD_PROBES = new Set(['step', 'riseGap', 'longGap', 'vault', 'longDrop']);
+const causeOf = (f) => (isSwim(f.by) ? 'swim' : FIELD_PROBES.has(f.probe) ? 'field' : 'layout');
+const CAUSE_NAME = { layout: 'layout', field: 'field rule', swim: 'swim-jump' };
 const OFF_KINDS = new Set(['off hop', 'off gap']);
 const volNode = (v, x, y, z) => y >= (v.y0 ?? -50) - 0.25 && y <= (v.y1 ?? 50) + 0.25 && inPoly(v.poly, x, z);
 
@@ -104,6 +122,13 @@ function hopMasks(C) {
   C.hopF = f; C.hopR = r;
 }
 const hopPair = (C, a, b) => !!window.__karpHop && window.__karpHop.id === C.id && window.__karpHop.pairs.has(a + ':' + b);
+// [fix4] the build's layout hash, as the game checks a bake against it (level.js layoutLightmap): the level's own when the
+// game loaded a bake, else computed by layoutLightmap itself on this build, everything it sets put back after
+function levelHash(L, meta) {
+  if (L.layoutHash) return L.layoutHash;
+  const keep = L.faces.map((f) => f.light), ls = L.lightSize, lu = L.lightUsed;
+  try { L.layoutLightmap(meta.ppm || 5, meta.size || 1024); return L.layoutHash; } finally { L.faces.forEach((f, i) => { f.light = keep[i]; }); L.lightSize = ls; L.lightUsed = lu; delete L.layoutHash; }
+}
 // a clear straight line (the level's own raycast, solid blocks; grates let rays through as shots)
 let _rh = null;
 function rayClear(G, x0, y0, z0, x1, y1, z1) {
@@ -233,7 +258,9 @@ function edgeLen(C, a, b) { const F = C.F; for (let k = F.fs[a]; k < F.fs[a + 1]
 function edgeType(C, a, b) { const F = C.F; for (let k = F.fs[a]; k < F.fs[a + 1]; k++) if (F.ft[k] === b) return F.fy[k]; return 0; }
 // a team's own Carp-Free Zone nodes (its carrier routes avoid them: ×3 there)
 function zoneMask(C, t) { const m = new Uint8Array(C.N); for (const z of C.R.zones[t]) { if (!zoneOn(C, z)) continue; for (let i = 0; i < C.N; i++) { const n = C.nodes[i]; if (C.okN[i] && volNode(z, n.x, n.y, n.z)) m[i] = 1; } } return m; }
-const zoneOn = (C, z) => !z.eras || z.eras.map(String).includes(String(C.key));
+// ([fix4] review 4: strictly, as the engine's karpField._zoneOn — a zone written `eras: ['1']` on a stage whose state is keyed
+// 1 never exists in the game; #1 FAILs any entry that matches no state's key)
+const zoneOn = (C, z) => !z.eras || z.eras.includes(C.key);
 // avoid every node within `r` of the path's nodes, except within `free` m of either end
 function avoidNear(C, path, r = CK.disjoint, free = CK.endFree) {
   const m = new Uint8Array(C.N); if (!path.length) return m;
@@ -365,6 +392,9 @@ export async function runChecks(o = {}) {
   const C = ctx(o.state || 0), { G, F, R, Kp, nav, nodes, L, N } = C;
   const out = { id: C.id, state: C.state, key: C.key, states: F.states.map((s) => s.key), placeholder: !!Kp.placeholder, L: Kp.L.map(r2), checks: {}, draw: {}, ms: {} };
   const draw = out.draw;
+  // [fix4] review 4: KARP_SWIM (o.swim) — how a move only the swimming carrier makes is judged (CK.swim: the lead's D34)
+  C.swim = ['fail', 'warn', 'off'].includes(o.swim) ? o.swim : CK.swim; out.swim = C.swim;
+  if (C.swim === 'off') o = { ...o, kidOnly: true };
   const chk = (n, name, status, text, nums = {}, flags = []) => { out.checks[n] = { n, name, status, text, nums, flags }; return out.checks[n]; };
   const pond = R.pond, padY = L.spawnPads.map((p) => p.y);
   const pondNodes = trig(C, pond, 1.5, 0.8).length ? trig(C, pond, 1.5, 0.8) : [F.ownNode(pond)].filter((i) => i >= 0);
@@ -436,6 +466,15 @@ export async function runChecks(o = {}) {
       const said = new Set();
       bad.push(`${inPath.length} piece(s) or trigger(s) in a mover's path: ${inPath.filter((q) => { const k = q.what + q.sw.tag; if (said.has(k)) return false; said.add(k); return true; }).slice(0, 5).map((q) => `${q.what} in a mover's path (${q.sw.tag}${q.d ? `, ${r2(q.d)} m` : ''})`).join(', ')}${inPath.length > 5 ? ' …' : ''}`);
       for (const q of inPath.slice(0, 6)) flags.push({ at: q.at, what: `1: ${q.what} in a mover's path (${q.sw.tag})` });
+    }
+    // [fix4] review 4: every free zone's `eras` entry is one of the field's state keys, compared as the engine does (strict
+    // includes: '1' is not 1, and such a zone never exists in the game); `eras` on a noRetreat / carrierBlock / noRest is
+    // ignored by the engine (it honours eras on zones only: those volumes are always on), so that data would not do what it says
+    {
+      const keys = F.states.map((s) => s.key), def = R.def || {};
+      const mid = (v) => [r1(v.poly.reduce((a, p) => a + p[0], 0) / v.poly.length), r1(v.y0 ?? 0), r1(v.poly.reduce((a, p) => a + p[1], 0) / v.poly.length)];
+      (def.freeZones || []).forEach((z, zi) => { for (const e of z.eras || []) if (!keys.includes(e)) { bad.push(`free zone ${zi + 1}'s eras entry ${JSON.stringify(e)} matches no field state (keys ${JSON.stringify(keys)}): the engine never shows that zone`); flags.push({ at: mid(z), what: `1: free zone ${zi + 1}'s eras ${JSON.stringify(e)} matches no state` }); } });
+      for (const kind of ['noRetreat', 'carrierBlock', 'noRest']) (def[kind] || []).forEach((v, vi) => { if (v.eras) { bad.push(`${kind} ${vi + 1} carries eras ${JSON.stringify(v.eras)}, which the engine ignores (it is on in every state)`); flags.push({ at: mid(v), what: `1: ${kind} ${vi + 1}'s eras ignored by the engine` }); } });
     }
     chk(1, 'Data', bad.length ? 'FAIL' : 'OK', bad.length ? bad.join('; ') : `the Pond at (${r2(pond.x)}, ${r2(pond.y)}, ${r2(pond.z)}); ${weirs[0].length} weir(s), the Gate and ${R.zones[0].reduce((s, z) => s + (z.signs || []).length, 0)} sign(s) a side on floor, the mirror too; ${kit.length} kit pieces (post / sign tops roof, no ink)`,
       { kit: kit.length, problems: bad.length, floating, sweeps: sweeps.map((q) => ({ tag: q.tag, poly: q.poly.map((p) => p.map(r2)), y: [r2(q.y0), r2(q.y1)] })), inPath: inPath.map((q) => ({ what: q.what, at: q.at, mover: q.sw.tag })) }, flags);
@@ -609,7 +648,7 @@ export async function runChecks(o = {}) {
   }
   tm('6');
   // ----------------------------------------------------------------------------------------------- #7 no shortcut into a base
-  const cand = { high: [], long: [], off: [], rise: [], offGap: [], vault: [] };   // #7d's candidates beyond the hop / gap rules, rising gaps, vaults ([fix3]) and moves onto off-field ground (#16 tries them)
+  const cand = { high: [], long: [], off: [], rise: [], offGap: [], vault: [], step: [], tube: [] };   // #7d's candidates beyond the hop / gap rules, rising gaps, vaults ([fix3]) and moves onto off-field ground (#16 tries them)
   {
     const fl = [], bad = [], nums = { teams: [] };
     // (a) entrances into each Gate's 15 m ring
@@ -720,7 +759,7 @@ export async function runChecks(o = {}) {
     const offWorth = (i, ex, top) => { const fl1 = hd(nodes[i], nodes[top]); return ex.some((e) => canMatter(i, e, fl1 + hd(nodes[top], nodes[e]))); };
     nums.high = { tried: 0 }; nums.long = { tried: 0 }; nums.rise = { tried: 0 }; nums.offHop = { cand: 0, tried: 0 }; nums.offGap = { tried: 0 }; nums.climbOff = { tops: 0, noExit: 0 }; nums.vault = { cand: 0, tried: 0 };
     // ([fix3] review 3: a takeoff whose floor takes ink gets the swimming carrier's windows, REACH.swim)
-    const swimN = (i) => inkFloor(C, i);
+    const swimN = (i) => C.swim !== 'off' && inkFloor(C, i);   // ([fix4] KARP_SWIM=off: the kid's windows only)
     // ----- squid climbs onto ground off the field ([fix2] review 2): the tall-wall scan's tops over 5.5 m and nav's own
     // climb edges (1.3–5.5 m) onto a top the field doesn't hold (nav-invalid: no walk or drop back down) are followed through
     // the top's exits like the kid's moves onto off-field ground (below, after the climb scan). A squid climbs any inkable
@@ -849,6 +888,77 @@ export async function runChecks(o = {}) {
       kept.sort((p2, q2) => q2.gain - p2.gain);
       for (const c of kept) { const a = nodes[c.from], b = nodes[c.to]; if (cand.vault.some((v) => hd(nodes[v.from], a) < 1.5 && hd(nodes[v.to], b) < 1.5)) continue; cand.vault.push(c); nums.vault.tried++; }
     }
+    // ----- steps ([fix4] review 4): a low step, kerb or ledge whose face misses the 1 m grid. nav joins neighbour cells only
+    // (walks |dy| ≤ 0.5, diagonals too; jumps 0.5–1.25 m up and drops 0.5–3.4 m down orthogonal only), the field's hops are
+    // 1.25–1.8 m up between orthogonal neighbours ≤ 1.2 m apart, and nav keeps a floor node ≥ 0.46 m from a face: so where
+    // a step's face falls just past a cell centre its floor node and its top node stand two cells apart (or on a diagonal)
+    // with nothing joining them, and the gap probes want open air under the line, which a step over continuous floor never
+    // has. Review 4's 1.0 m and 0.8 m ledges into a ring (L1t, L2t) and a walkway's 1.0 m end (L3t) were no probe's
+    // candidate (about 45 % of face positions miss the grid so). Candidates: field node pairs up to two cells apart,
+    // diagonals included, 0.3–1.8 m up or 0.3–3.4 m down, no carrier-graph edge between them, not joined by 6 m of walking,
+    // floor under the whole line at the one end's height or the other's (a step, not a gap), the hop rule's waist and head
+    // tests (down: the waist line at the top, the head across, nothing hanging over the landing); tried when they can
+    // matter, the two best of each takeoff and one per 1 m of the same place. A made one is a #7d find (step) or, from
+    // outside a Gate's ring to inside it, a #7a entrance with its own sight line
+    nums.step = { cand: 0, tried: 0 };
+    {
+      const hasE = (a, b) => { for (let k = F.fs[a]; k < F.fs[a + 1]; k++) if (F.ft[k] === b) return true; return false; };
+      const byFrom = new Map();
+      for (let i = 0; i < N; i++) {
+        if (!C.okN[i]) continue;
+        const n = nodes[i];
+        cellsAround(n, CK.step.cells, (j, q) => {
+          if (j === i || !C.okN[j]) return;
+          const dy = q.y - n.y, up = dy > 0, h = Math.abs(dy), lim = up ? CK.step.up : CK.step.down;
+          if (h < lim[0] || h > lim[1] || hd(n, q) < 0.9 || hasE(i, j) || !worth(i, j) || walkSet(C, i, 6).has(j)) return;
+          const hiY = Math.max(n.y, q.y), loY = Math.min(n.y, q.y);
+          for (let u = 0.1; u < 0.95; u += 0.1) { const x = n.x + (q.x - n.x) * u, z = n.z + (q.z - n.z) * u; if (!(L.groundHeight(x, z, hiY + 0.05) > loY - 0.3)) return; }
+          if (nav._blocked(n, q, hiY)) return;
+          if (up ? !ray(n.x, n.y + 0.3, n.z, n.x, q.y + K.hop.head, n.z) || !ray(n.x, q.y + 1.0, n.z, q.x, q.y + 1.0, q.z) : !ray(n.x, n.y + 1.0, n.z, q.x, n.y + 1.0, q.z) || !nav._openAbove(q, n.y)) return;
+          nums.step.cand++;
+          const l = byFrom.get(i) || []; l.push({ kind: 'step', from: i, to: j, gain: gainDir(C, i, j) }); byFrom.set(i, l);
+        });
+      }
+      const kept = [];
+      for (const l of byFrom.values()) for (const c of l.sort((p2, q2) => q2.gain - p2.gain).slice(0, 2)) kept.push(c);
+      kept.sort((p2, q2) => q2.gain - p2.gain);
+      for (const c of kept) { const a = nodes[c.from], b = nodes[c.to]; if (cand.step.some((v) => hd(nodes[v.from], a) < 1.0 && hd(nodes[v.to], b) < 1.0)) continue; cand.step.push(c); nums.step.tried++; }
+    }
+    // ----- squid tubes ([fix4] review 4): lowGap stops at 3 m, but a squid crawls a low passage of any length — a culvert,
+    // the crawlspace under a deck or a veranda, a deep gap under a thick wall — and nav keeps no node where a kid's head
+    // (1.4 m) is inside geometry, so the nodes either side of a tube longer than ~2 m stand more than 3 m apart: review 4's
+    // 3.5 m culvert into a ring (T4) was no candidate. Candidates: field node pairs 3–8 m apart (flat), |dy| ≤ 0.6, the
+    // squid tube lowGap tests (rays 0.08 / 0.3 / 0.6 m up and ±0.28 m across at 0.3, through grates and rails; floor a
+    // squid stands on — not a grate — under the whole line), a kid's line blocked at its waist (0.6 m) or its head (1.2 m),
+    // grates and rails counting (a tube's roof or a barrier: not open floor), not joined by 6 m of walking, and able to
+    // matter in the move's own direction (D33, as every move beyond SPEC's windows: > 10 m nearer a Gate beating its own
+    // length by 6.2 m, or into a ring saving > 3 m; a tube goes both ways, so each way that can matter is a candidate).
+    // #16 proves each with a squid crawling it on dry floor (and, where the floor takes ink and KARP_SWIM allows, swimming
+    // it in its own ink): a made one is a #7d find (squidTube) or a #7a entrance with its own sight line
+    nums.tube = { cand: 0, tried: 0 };
+    {
+      const TF = CK.tube.flat, TC = Math.ceil(TF / nav.step), list = [];
+      const sq = (n, q, ox, oz, h) => ray(n.x + ox, n.y + h, n.z + oz, q.x + ox, q.y + h, q.z + oz, true);
+      for (let i = 0; i < N; i++) {
+        if (!C.okN[i]) continue;
+        const n = nodes[i];
+        cellsAround(n, TC, (j, q) => {
+          if (j <= i || !C.okN[j] || Math.abs(q.y - n.y) > 0.6) return;
+          const fl2 = hd(n, q); if (fl2 <= 3 || fl2 > TF) return;
+          const ways = [[i, j], [j, i]].filter(([u, v]) => canMatter(u, v, fl2)); if (!ways.length) return;
+          const [k0, k1] = CK.tube.kidY;
+          if (ray(n.x, n.y + k0, n.z, q.x, q.y + k0, q.z) && ray(n.x, n.y + k1, n.z, q.x, q.y + k1, q.z)) return;   // (open to a kid: not a tube)
+          const dx = (q.x - n.x) / fl2, dz = (q.z - n.z) / fl2, px = -dz * 0.28, pz = dx * 0.28;
+          if (!sq(n, q, 0, 0, 0.3) || !sq(n, q, px, pz, 0.3) || !sq(n, q, -px, -pz, 0.3) || !sq(n, q, 0, 0, 0.6) || !sq(n, q, 0, 0, 0.08)) return;
+          for (let s2 = 0.4; s2 < fl2 - 0.2; s2 += 0.4) { const u = s2 / fl2, x = n.x + (q.x - n.x) * u, z = n.z + (q.z - n.z) * u, y = n.y + (q.y - n.y) * u, f = L.groundHeight(x, z, y + 0.35, true); if (!(f > y - 0.6)) return; }
+          if (walkSet(C, i, 6).has(j)) return;
+          nums.tube.cand++;
+          for (const [u, v] of ways) list.push({ kind: 'squid tube', from: u, to: v, gain: gainDir(C, u, v) });
+        });
+      }
+      list.sort((p2, q2) => q2.gain - p2.gain);
+      for (const c of list) { const a = nodes[c.from], b = nodes[c.to]; if (cand.tube.some((v) => hd(nodes[v.from], a) < 1.5 && hd(nodes[v.to], b) < 1.5)) continue; cand.tube.push(c); nums.tube.tried++; }
+    }
     // hops onto off-field ground: a 0.5–2.25 m hop from the field onto nodes the field doesn't hold (nav-invalid: a top only
     // a hop reaches) up to two cells out (≤ 2.3 m flat, diagonals too: nav's 0.46 m clearance from a face leaves no node
     // beside a ledge whose face falls just past a cell centre, and its jump edges, like the field's hops, join orthogonal
@@ -934,9 +1044,8 @@ export async function runChecks(o = {}) {
     out._finds = finds;
     // (the physical ones — made high hops and long gaps — are added after #16 has tried them, below)
     const listed = [];
+    // ([fix4] waivers are applied with #7's finish, by flag group)
     for (const [k, v] of Object.entries(finds)) for (const f of v) {
-      const p = { x: f.a[0], z: f.a[2] };
-      if (waived(C, '7d', p)) continue;
       const offField = f.gain === 'off-field';
       listed.push({ probe: k, ...f, warnOnly: offField });
     }
@@ -1118,13 +1227,22 @@ export async function runChecks(o = {}) {
       for (const d of [...bz.single, ...bz.half]) if (!has([...tf.single, ...tf.half], d) && !mine(d)) { bad.push(`a piece in the Bazookarp build not tagged for it: ${d.tag || d.kind} ${JSON.stringify(d.min || d.center || d.low)} (onlyIn ${JSON.stringify(d.onlyIn)} notIn ${JSON.stringify(d.notIn)})`); if (at12(d) && fl12.length < 6) fl12.push({ at: at12(d), what: `12: ${d.tag || d.kind} not tagged for the mode` }); }
       for (const d of [...tf.single, ...tf.half]) if (!has([...bz.single, ...bz.half], d) && ![].concat(d.notIn || []).includes('bazookarp') && !(d.onlyIn && ![].concat(d.onlyIn).includes('bazookarp'))) { bad.push(`a Turf War piece missing from the Bazookarp build: ${d.tag || d.kind}`); if (at12(d) && fl12.length < 6) fl12.push({ at: at12(d), what: `12: ${d.tag || d.kind} missing from the mode's build` }); }
     }
-    if (!test) {
-      try { const r = await fetch(`./assets/lightmaps/${id}.bazookarp.json`); lm.exists = r.ok; } catch { lm.exists = false; }
-      lm.fresh = L.lightSize > 0 && !!lm.exists;
+    // [fix4] review 4: fresh = the bake's hash is the build's own (main.js _loadLightmap applies a bake only then, else the
+    // level's lightSize stays 0). o.lightmap (the self-test's x12s / x12f): a fixture JSON in place of the stage's own,
+    // the stage judged as baked, its hash '@level' standing for the build's own (the stale and the fresh branch, planted)
+    const fixture = o.lightmap || null;
+    if (!test || fixture) {
+      let meta = null;
+      try { const r = await fetch(fixture || `./assets/lightmaps/${id}.bazookarp.json`, { cache: 'no-cache' }); lm.exists = r.ok; if (r.ok) meta = await r.json(); } catch { lm.exists = false; }
+      if (meta) {
+        const build = levelHash(L, meta), bake = meta.hash === '@level' ? build : meta.hash;
+        lm.hash = { bake, build, fixture: !!fixture };
+        lm.fresh = bake === build && (fixture ? true : L.lightSize > 0);
+      } else lm.fresh = false;
       if (!lm.exists) bad.push(`no lightmap assets/lightmaps/${id}.bazookarp.json (baked on the Mac mini once the layout is final)`);
-      else if (!lm.fresh) bad.push('its lightmap is stale (the build differs from the bake)');
+      else if (!lm.fresh) bad.push(`its lightmap is stale (the build differs from the bake${lm.hash ? `: hash ${lm.hash.bake} baked, ${lm.hash.build} built` : ''})`);
     }
-    chk(12, 'Variant', bad.length ? 'FAIL' : 'OK', bad.length ? bad.slice(0, 4).join('; ') + (bad.length > 4 ? ` … ${bad.length}` : '') : test ? 'differs from Turf War only by bazookarp-tagged pieces and the kit; a test stage: never baked' : `differs only by tagged pieces and the kit; lightmap ${id}.bazookarp fresh`, { lightmap: lm, test: !!test, problems: bad.length }, fl12);
+    chk(12, 'Variant', bad.length ? 'FAIL' : 'OK', bad.length ? bad.slice(0, 4).join('; ') + (bad.length > 4 ? ` … ${bad.length}` : '') : test && !fixture ? 'differs from Turf War only by bazookarp-tagged pieces and the kit; a test stage: never baked' : `differs only by tagged pieces and the kit; lightmap ${id}.bazookarp fresh`, { lightmap: lm, test: !!test, problems: bad.length }, fl12);
   }
   // ----------------------------------------------------------------------------------------------- #13 deep spawns
   {
@@ -1220,7 +1338,7 @@ export async function runChecks(o = {}) {
   {
     const extra = F.extraEdgeList();
     const tests = extra.map((e) => ({ kind: e.type, from: e.from, to: e.to, len: e.len }));
-    const beyond = [...cand.high, ...cand.long, ...cand.rise, ...cand.vault];
+    const beyond = [...cand.high, ...cand.long, ...cand.rise, ...cand.vault, ...cand.step, ...cand.tube];
     const offAll = [...cand.off, ...cand.offGap];
     const n7 = out._7nums, HC = out._climbHops;
     let res = null;
@@ -1239,20 +1357,24 @@ export async function runChecks(o = {}) {
     // proves each one way, from → to, and a move that lands further from both Gates is no shortcut (H2q's 'long gap'
     // back out of the ring, 14.8 m the wrong way, was a find only by |ΔD|). The static probes keep |ΔD| (SPEC's "differs":
     // a squid gap goes both ways; a tall wall's top is read through the drop off it, which longDrop measures signed)
-    const probeOf = { 'high hop': 'highHop', 'long gap': 'longGap', 'rise gap': 'riseGap', vault: 'vault' };
+    const probeOf = { 'high hop': 'highHop', 'long gap': 'longGap', 'rise gap': 'riseGap', vault: 'vault', step: 'step', 'squid tube': 'squidTube' };
+    // ([fix4] KARP_SWIM=warn: a move only the swimming carrier makes is a WARN — its find, its way into a ring and its drop
+    // into one are listed, not judged; 'off': it was never tried)
+    const swimWarn = (r) => C.swim === 'warn' && isSwim(r.by);
+    out._swimW = { ents: [], drops: [] };
     const gainR = (r) => gainDir(C, r.from, r.to);
     // ([fix2] D33: and beats the move's own length by more than SAVE_FIND)
     const findR = (r) => { const g2 = gainR(r); return findable(g2, g2 - hd(nodes[r.from], nodes[r.to])); };
-    for (const r of made) { const g2 = gainR(r); if (findR(r) && !waived(C, '7d', nodes[r.from])) out._7d.push({ probe: probeOf[r.kind], a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(g2), save: r1(g2 - hd(nodes[r.from], nodes[r.to])), warnOnly: false, phys: true, by: r.by }); }
+    for (const r of made) { const g2 = gainR(r); if (findR(r)) out._7d.push({ probe: probeOf[r.kind], a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(g2), save: r1(g2 - hd(nodes[r.from], nodes[r.to])), warnOnly: swimWarn(r), swimW: swimWarn(r), phys: true, by: r.by }); }
     // ([fix3] a made move that ends inside a Gate's ring more than 2.5 m below where it left: a #7c drop, as the field's
     // own drop and gap edges are)
-    for (const r of made) { const a = nodes[r.from], b = nodes[r.to]; if (a.y - b.y <= CK.ringDrop) continue; for (const t of [0, 1]) if (hd(b, gates[t].pos) <= CK.ring) out._7drops.push({ team: t, from: P3(a), to: P3(b), dy: r1(a.y - b.y), type: `${r.kind} (made by #16's ${r.by === 'kid' ? 'kid' : 'swimming carrier'})` }); }
+    for (const r of made) { const a = nodes[r.from], b = nodes[r.to]; if (a.y - b.y <= CK.ringDrop) continue; for (const t of [0, 1]) if (hd(b, gates[t].pos) <= CK.ring) (swimWarn(r) ? out._swimW.drops : out._7drops).push({ team: t, from: P3(a), to: P3(b), dy: r1(a.y - b.y), type: `${r.kind} (made by #16's ${r.by === 'kid' ? 'kid' : 'swimming carrier'})` }); }
     // [fix1] every move the kid makes from outside a Gate's 15 m ring to inside it is an entrance (#7a) with its own line
     // of sight (to where it lands): the made high hops, long gaps and rising gaps here, the moves onto off-field ground
     // below (the field's own hop and gap edges are carrier-graph edges: #7a counts them already)
     // ([fix2] D33: one that saves more than CK.entGroup on the field's own way in — a run-and-jump that only cuts the
     // corner of a way in the field has already enters by it)
-    for (const r of made) for (const t of [0, 1]) { const g = gates[t].pos, a = nodes[r.from], b = nodes[r.to]; if (hd(a, g) > CK.ring && hd(b, g) <= CK.ring && C.D[t][r.from] - C.D[t][r.to] - hd(a, b) > CK.entGroup) out._aCross[t].push({ x: b.x, y: b.y, z: b.z, type: PHYS_TYPE[r.kind], from: r.from, to: r.to, phys: true, by: r.by, look: [b] }); }
+    for (const r of made) for (const t of [0, 1]) { const g = gates[t].pos, a = nodes[r.from], b = nodes[r.to]; if (hd(a, g) > CK.ring && hd(b, g) <= CK.ring && C.D[t][r.from] - C.D[t][r.to] - hd(a, b) > CK.entGroup) (swimWarn(r) ? out._swimW.ents : out._aCross[t]).push({ x: b.x, y: b.y, z: b.z, type: PHYS_TYPE[r.kind], from: r.from, to: r.to, phys: true, by: r.by, look: [b] }); }
     // the walks: a kid with the carrier's rules on every route 1 and route 2 of every leg and through every entrance into
     // each Gate's ring (one crossing per entrance: not a squid climb, a ride or a move #16 proves apart), a hop or gap edge
     // on the way taken by its own trials above when the walk itself doesn't make it
@@ -1286,15 +1408,15 @@ export async function runChecks(o = {}) {
       for (const t of [0, 1]) {
         // ([fix2] D33: the exit with the largest gain among those that beat the way's length by SAVE_FIND)
         let best = -1, bg = -Infinity; for (const q of off.exits) { const g2 = C.D[t][r.from] - C.D[t][q]; if (fin(g2) && findable(g2, g2 - lenTo(q)) && g2 > bg) { bg = g2; best = q; } }
-        if (best >= 0 && !waived(C, '7d', nodes[r.from])) out._7d.push({ probe: r.kind === 'off hop' ? 'offHop' : 'offGap', team: t, a: P3(a), b: P3(top), exit: P3(nodes[best]), gain: r1(bg), save: r1(bg - lenTo(best)), warnOnly: false, phys: true, by: r.by });
+        if (best >= 0) out._7d.push({ probe: r.kind === 'off hop' ? 'offHop' : 'offGap', team: t, a: P3(a), b: P3(top), exit: P3(nodes[best]), gain: r1(bg), save: r1(bg - lenTo(best)), warnOnly: swimWarn(r), swimW: swimWarn(r), phys: true, by: r.by });
         // a way into team t's ring over off-field ground: from outside the ring to an exit inside it that saves more than
         // CK.entGroup on the field's own way in (D33). One entrance per move, at its landing when that is in the ring (else
         // at its first exit there); seen when that ground's part over the ring or any of those exits is
         const gp = gates[t].pos, inEx = off.exits.filter((q) => hd(nodes[q], gp) <= CK.ring && C.D[t][r.from] - C.D[t][q] - lenTo(q) > CK.entGroup);
-        if (hd(a, gp) > CK.ring && inEx.length) { const at = hd(top, gp) <= CK.ring ? top : nodes[inEx[0]], over = out._exitsOf(r.to).ground.filter((q) => hd(nodes[q], gp) <= CK.ring).map((q) => nodes[q]); out._aCross[t].push({ x: at.x, y: at.y, z: at.z, type: PHYS_TYPE[r.kind], from: r.from, to: r.to, phys: true, by: r.by, look: [...over, ...inEx.map((q) => nodes[q])] }); }
+        if (hd(a, gp) > CK.ring && inEx.length) { const at = hd(top, gp) <= CK.ring ? top : nodes[inEx[0]], over = out._exitsOf(r.to).ground.filter((q) => hd(nodes[q], gp) <= CK.ring).map((q) => nodes[q]); (swimWarn(r) ? out._swimW.ents : out._aCross[t]).push({ x: at.x, y: at.y, z: at.z, type: PHYS_TYPE[r.kind], from: r.from, to: r.to, phys: true, by: r.by, look: [...over, ...inEx.map((q) => nodes[q])] }); }
         // ([fix2] an exit that drops > 2.5 m into a ring off that ground: a #7c drop)
         const dm = out._exitsOf(r.to).drop;
-        for (const q of off.exits.filter((e) => hd(nodes[e], gp) <= CK.ring)) { const dd = dm.get(q); if (dd && dd.dy > CK.ringDrop) out._7drops.push({ team: t, from: P3(nodes[dd.from]), to: P3(nodes[q]), dy: r1(dd.dy), type: `drop off off-field ground (a ${r.kind === 'off hop' ? 'hop' : 'jump'} up)` }); }
+        for (const q of off.exits.filter((e) => hd(nodes[e], gp) <= CK.ring)) { const dd = dm.get(q); if (dd && dd.dy > CK.ringDrop) (swimWarn(r) ? out._swimW.drops : out._7drops).push({ team: t, from: P3(nodes[dd.from]), to: P3(nodes[q]), dy: r1(dd.dy), type: `drop off off-field ground (a ${r.kind === 'off hop' ? 'hop' : 'jump'} up)` }); }
       }
       out._offMade.push({ kind: r.kind, a: P3(nodes[r.from]), top: P3(nodes[r.to]), exits: off.exits.length, by: r.by });
     }
@@ -1309,19 +1431,20 @@ export async function runChecks(o = {}) {
     const walkTxt = walkRes ? `; walks with the carrier's rules: routes ${wOk(wR)}/${wR.length}, entrances ${wOk(wE)}/${wE.length}${walkRes.proved ? ` (${walkRes.proved} hops / gaps / jumps on the way taken by their trials)` : ''}${wl.some((w) => w.mover) ? `, ${wl.filter((w) => w.mover).length} blocked by a parked mover (not judged)` : ''}${walkBad.length ? ` — NOT WALKED: ${walkBad.slice(0, 4).map((w) => `${w.what}${w.fail ? ` (stuck at ${JSON.stringify(w.fail.at)} on a ${w.fail.edge} edge${w.fail.dead ? ', fell' : ''})` : ` (${w.why})`}`).join('; ')}${walkBad.length > 4 ? ` … ${walkBad.length}` : ''}` : ''}` : '';
     const madeK = (k) => made.filter((r) => r.kind === k).length;
     // ([fix3] made by the swimming carrier only: the kid didn't, the swim-jump from its own ink did)
-    const swimMade = res ? res.list.filter((r) => r.ok && r.by && r.by !== 'kid') : [], swimK = (l) => l.filter((r) => r.by && r.by !== 'kid').length;
-    const swimTxt = res ? `; the swimming carrier (its own ink, 9.44 m/s, swimJumpVel; from ${res.list.filter((r) => r.swimOk).length} takeoffs whose floor takes ink): ${swimMade.length} made that the kid didn't (${swimK(res.list.filter((r) => r.ok && !r.beyond))} added edges, ${swimK(made)} beyond the rules, ${swimK(res.list.filter((r) => r.ok && OFF_KINDS.has(r.kind)))} onto off-field ground), ${res.swimTrials} swim trials` : '';
+    const swimMade = res ? res.list.filter((r) => r.ok && isSwim(r.by)) : [], swimK = (l) => l.filter((r) => isSwim(r.by)).length;
+    const swimTxt = C.swim === 'off' ? '; the swimming carrier not modelled (KARP_SWIM=off: the kid alone)' : res ? `; ${C.swim === 'warn' ? '[KARP_SWIM=warn: its moves a WARN] ' : ''}the swimming carrier (its own ink, 9.44 m/s, swimJumpVel; from ${res.list.filter((r) => r.swimOk).length} takeoffs whose floor takes ink): ${swimMade.length} made that the kid didn't (${swimK(res.list.filter((r) => r.ok && !r.beyond))} added edges, ${swimK(made)} beyond the rules, ${swimK(res.list.filter((r) => r.ok && OFF_KINDS.has(r.kind)))} onto off-field ground), ${res.swimTrials} swim trials` : '';
     const climbTxt = !HC.tried ? '; no climb of ≤ 1.8 m to try as a hop' : `; climbs of ≤ 1.8 m tried as hops: ${HC.made} of ${HC.tried} ${HC.proved ? 'made' : 'pass the hop rule (unproven: PHYS=0)'} (hops, not climbs, in the no-climb searches)`;
     chk(16, 'The hop and gap edges, proved physically', !ran ? 'SKIP' : fails.length || walkBad.length ? 'FAIL' : 'OK',
-      !ran ? `PHYS=0: not run (a RESULT ok needs it)${climbTxt}` : `${tests.length} added edges tried (${F.stats.hops} hops, ${F.stats.gaps} gaps): ${tests.length - fails.length} made, ${fails.length} not${fails.length ? ` (${byKind.hop} hops, ${byKind.gapLevel} gaps up / level, ${byKind.gapDown} gaps down)` : ''}${fails.length ? ' → hopVeto ' + JSON.stringify(veto.slice(0, 6)) + (veto.length > 6 ? ` … ${veto.length}` : '') : ''}; ${beyond.length} moves beyond the rules worth trying (> 10 m or into a ring; ${cand.high.length} high hops, ${cand.long.length} long gaps, ${cand.rise.length} rising gaps, ${cand.vault.length} vaults, out to ${n7.window?.kid ?? '?'} m from dry floor and ${n7.window?.swim ?? '?'} m from floor that takes ink): ${made.length} made (${madeK('high hop')} / ${madeK('long gap')} / ${madeK('rise gap')} / ${madeK('vault')}: to #7d, and #7a when into a ring); ${offAll.length} moves onto off-field ground worth trying (${cand.off.length} hops of ${n7.offHop?.cand ?? 0} from up to two cells out, ${cand.offGap.length} jumps across air): ${offMade.length} made (to #7d / #7a)` + swimTxt + climbTxt + walkTxt + (res ? ` · ${res.trials} trials, ${Math.round(res.ms / 1000)} s; walks ${Math.round((walkRes?.ms || 0) / 1000)} s; climb hops ${HC.trials} trials` : ''),
-      { tried: tests.length, failed: fails.length, failedBy: byKind, hopVeto: veto, beyond: beyond.length, beyondMade: made.length, rise: { tried: cand.rise.length, made: madeK('rise gap') }, high: { tried: cand.high.length, made: madeK('high hop') }, long: { tried: cand.long.length, made: madeK('long gap') }, vault: { cand: n7.vault?.cand ?? 0, tried: cand.vault.length, made: madeK('vault') }, swim: res ? { takeoffs: res.list.filter((r) => r.swimOk).length, made: swimMade.length, edges: swimK(res.list.filter((r) => r.ok && !r.beyond)), beyond: swimK(made), off: swimK(res.list.filter((r) => r.ok && OFF_KINDS.has(r.kind))), trials: res.swimTrials } : null, lowGap: n7.lowGap, offHops: { cand: n7.offHop?.cand ?? 0, tried: cand.off.length }, offGaps: { tried: cand.offGap.length }, offMadeN: offMade.length, coyote: res ? res.list.filter((r) => r.ok && /coyote|at the rim/.test(r.how || '')).length : 0, offMade: out._offMade, trials: res?.trials, ms: res?.ms,
+      !ran ? `PHYS=0: not run (a RESULT ok needs it)${climbTxt}` : `${tests.length} added edges tried (${F.stats.hops} hops, ${F.stats.gaps} gaps): ${tests.length - fails.length} made, ${fails.length} not${fails.length ? ` (${byKind.hop} hops, ${byKind.gapLevel} gaps up / level, ${byKind.gapDown} gaps down)` : ''}${fails.length ? ' → hopVeto ' + JSON.stringify(veto.slice(0, 6)) + (veto.length > 6 ? ` … ${veto.length}` : '') : ''}; ${beyond.length} moves beyond the rules worth trying (> 10 m or into a ring; ${cand.high.length} high hops, ${cand.long.length} long gaps, ${cand.rise.length} rising gaps, ${cand.vault.length} vaults, ${cand.step.length} steps off the grid, ${cand.tube.length} squid tubes, out to ${n7.window?.kid ?? '?'} m from dry floor and ${n7.window?.swim ?? '?'} m from floor that takes ink): ${made.length} made (${madeK('high hop')} / ${madeK('long gap')} / ${madeK('rise gap')} / ${madeK('vault')} / ${madeK('step')} / ${madeK('squid tube')}: to #7d, and #7a when into a ring); ${offAll.length} moves onto off-field ground worth trying (${cand.off.length} hops of ${n7.offHop?.cand ?? 0} from up to two cells out, ${cand.offGap.length} jumps across air): ${offMade.length} made (to #7d / #7a)` + swimTxt + climbTxt + walkTxt + (res ? ` · ${res.trials} trials, ${Math.round(res.ms / 1000)} s; walks ${Math.round((walkRes?.ms || 0) / 1000)} s; climb hops ${HC.trials} trials` : ''),
+      { tried: tests.length, failed: fails.length, failedBy: byKind, hopVeto: veto, beyond: beyond.length, beyondMade: made.length, rise: { tried: cand.rise.length, made: madeK('rise gap') }, high: { tried: cand.high.length, made: madeK('high hop') }, long: { tried: cand.long.length, made: madeK('long gap') }, vault: { cand: n7.vault?.cand ?? 0, tried: cand.vault.length, made: madeK('vault') }, step: { cand: n7.step?.cand ?? 0, tried: cand.step.length, made: madeK('step') }, tube: { cand: n7.tube?.cand ?? 0, tried: cand.tube.length, made: madeK('squid tube'), squidTrials: res?.squidTrials ?? 0 }, swimMode: C.swim, swim: res ? { takeoffs: res.list.filter((r) => r.swimOk).length, made: swimMade.length, edges: swimK(res.list.filter((r) => r.ok && !r.beyond)), beyond: swimK(made), off: swimK(res.list.filter((r) => r.ok && OFF_KINDS.has(r.kind))), trials: res.swimTrials } : null, lowGap: n7.lowGap, offHops: { cand: n7.offHop?.cand ?? 0, tried: cand.off.length }, offGaps: { tried: cand.offGap.length }, offMadeN: offMade.length, coyote: res ? res.list.filter((r) => r.ok && /coyote|at the rim/.test(r.how || '')).length : 0, offMade: out._offMade, trials: res?.trials, ms: res?.ms,
         climbHops: { tried: HC.tried, made: HC.made, proved: HC.proved, trials: HC.trials, madeAt: HC.madeAt, notMade: HC.notMade },
         walks: wl.map((w) => ({ ...w, path: undefined })), walkRoutes: walkRes ? [wOk(wR), wR.length] : null, walkEntrances: walkRes ? [wOk(wE), wE.length] : null, walkFailed: walkBad.length, made: made.map((r) => ({ kind: r.kind, a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(gainR(r)), how: r.how, by: r.by })) }, fl);
   }
   tm('16');
   // ----------------------------------------------------------------------------------------------- #7 finished (with #16's made candidates)
   {
-    const bad = [], fl = [], d = out._7d, nums = out._7nums;
+    const bad = [], fl = [], nums = out._7nums;
+    let d = out._7d;
     // (a) the entrances (every crossing into the 15 m ring; a move #16's kid makes from outside it to inside counts at
     // its landing, with its own line of sight)
     draw.entrances = []; nums.teams = [];
@@ -1334,7 +1457,7 @@ export async function runChecks(o = {}) {
         const plainSeen = !plain.length || plain.some(see);
         const physUnseen = phys.filter((p) => !(p.look || [p]).some(see));
         return { c: [r1(e.c.x), r1(e.c.y), r1(e.c.z)], w: r1(e.w), n: e.pts.length, types, seen: plainSeen && !physUnseen.length, plainSeen, plainTypes: [...new Set(plain.map((p) => TYPE_NAME[p.type] || 'ride'))],
-          moves: phys.length, physUnseen: physUnseen.map((p) => ({ at: [r1(p.x), r1(p.y), r1(p.z)], from: P3(nodes[p.from]), type: TYPE_NAME[p.type] + (p.by && p.by !== 'kid' ? ' (swim-jump)' : '') })), from: P3(nodes[e.pts[0].from] || e.c) };
+          moves: phys.length, physUnseen: physUnseen.map((p) => ({ at: [r1(p.x), r1(p.y), r1(p.z)], from: P3(nodes[p.from]), type: TYPE_NAME[p.type] + (isSwim(p.by) ? ' (swim-jump)' : '') })), from: P3(nodes[e.pts[0].from] || e.c) };
       });
       if (ents.length < CK.ents[0] || ents.length > CK.ents[1]) { bad.push(`(a) team ${t}: ${ents.length} entrances into its Gate's 15 m ring (2–5)`); fl.push({ at: P3(g), what: `7a: ${ents.length} entrances into the Gate's ring (2–5)` }); }
       for (const e of ents) {
@@ -1355,20 +1478,49 @@ export async function runChecks(o = {}) {
     // kid hops or jumps onto, or a squid climbs onto
     const dr = out._7drops.filter((x) => !waived(C, '7c', { x: x.to[0], z: x.to[2] }));
     if (dr.length) { bad.push(`(c) ${dr.length} drop(s) > 2.5 m into a Gate's ring: ${dr.slice(0, 4).map((x) => `t${x.team} ${x.dy} m at (${x.to[0]}, ${x.to[2]})${/off-field/.test(x.type) ? ` (${x.type})` : ''}`).join(', ')}`); for (const q of groups(dr.map((x) => ({ x: x.to[0], y: x.to[1], z: x.to[2], d: x })), 3).slice(0, 6)) fl.push({ at: [r1(q.c.x), r1(q.c.y), r1(q.c.z)], what: `7c: a ${q.pts[0].d.dy} m drop into the Gate's ring${/off-field/.test(q.pts[0].d.type) ? ' off off-field ground' : ''}`, move: [q.pts[0].d.from, q.pts[0].d.to] }); }
-    const hard = d.filter((f) => !f.warnOnly), soft = d.filter((f) => f.warnOnly);
-    if (hard.length) bad.push(`(d) ${hard.length} connection(s) the graph lacks gaining > 10 m: ${hard.slice(0, 5).map((f) => `${f.probe}${f.by && f.by !== 'kid' ? ' (swim-jump)' : ''} ${JSON.stringify(f.a)}→${JSON.stringify(f.b)} ${f.gain} m`).join(', ')}${hard.length > 5 ? ` … (by probe: ${Object.entries(hard.reduce((m2, f) => ({ ...m2, [f.probe]: (m2[f.probe] || 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ')})` : ''}`);
-    // [fix1] every #7d find gets a flag (and so a picture), the static probes' and the moves #16's kid made alike: the finds
-    // of one probe within 3 m of each other are one place
-    for (const gq of groups(d.map((f) => ({ x: f.a[0], y: f.a[1], z: f.a[2], f })), CK.entGroup).flatMap((gr) => { const by = new Map(); for (const p of gr.pts) { const k = p.f.probe + (p.f.warnOnly ? '?' : ''); if (!by.has(k)) by.set(k, []); by.get(k).push(p.f); } return [...by.values()]; })) {
-      const f0 = gq.reduce((a, b) => (fin(+b.gain) && (!fin(+a.gain) || +b.gain > +a.gain) ? b : a), gq[0]), gs = gq.map((f) => +f.gain).filter(fin);
-      fl.push({ at: f0.a, what: `7d ${f0.probe}${f0.by && f0.by !== 'kid' ? ' (swim-jump)' : ''}${gq.length > 1 ? ` ×${gq.length}` : ''}: ${f0.warnOnly ? (f0.noExit ? 'onto off-field ground with no way down but a climb' : 'to off-field ground') : `gain ${gs.length > 1 && Math.min(...gs) !== Math.max(...gs) ? `${Math.min(...gs)}–${Math.max(...gs)}` : f0.gain} m`}`, look: { x: f0.b[0], y: f0.b[1], z: f0.b[2] }, move: [f0.a, f0.b, ...(f0.exit ? [f0.exit] : [])] });
+    // [fix4] review 4: the data's waivers (D5) by flag group — `waive: [{ check: '7d', at: [x, z], why, probe?, r? }]`
+    // (Alpha's attack, mirrored): a find of that probe (of any, when the entry names none) within max(2, r) m of the spot is
+    // waived, and with it every find of its flag group (one probe and cause within one 3 m single-linkage cluster: what one
+    // numbered flag shows), so one entry covers a canal bank's whole run of jumps, not one 2 m spot of it. Then each find's
+    // cause (causeOf): layout, field rule or swim-jump
+    const wv = (R.def.waive || []).filter((w) => String(w.check) === '7d' && Array.isArray(w.at));
+    const wHit = (f) => wv.some((w) => (!w.probe || w.probe === f.probe) && [1, -1].some((sg) => Math.hypot(sg * w.at[0] - f.a[0], sg * w.at[w.at.length - 1] - f.a[2]) <= Math.max(2, +w.r || 0)));
+    const fgroups = [];
+    for (const gr of groups(d.map((f) => ({ x: f.a[0], y: f.a[1], z: f.a[2], f })), CK.entGroup)) {
+      const by = new Map(); for (const p of gr.pts) { p.f.cause = causeOf(p.f); const k = p.f.probe + '|' + p.f.cause + (p.f.warnOnly ? '?' : ''); if (!by.has(k)) by.set(k, []); by.get(k).push(p.f); }
+      fgroups.push(...by.values());
     }
+    let waivedN = 0, waivedG = 0; const keep = [];
+    for (const g2 of fgroups) { if (wv.length && g2.some(wHit)) { waivedN += g2.length; waivedG++; } else keep.push(g2); }
+    d = keep.flat();
+    const hard = d.filter((f) => !f.warnOnly), soft = d.filter((f) => f.warnOnly && !f.swimW), swimW = d.filter((f) => f.swimW);
+    const cause = { layout: 0, field: 0, swim: 0, waived: waivedN, waivedGroups: waivedG, swimMode: C.swim };
+    for (const f of [...hard, ...swimW]) cause[f.cause]++;
+    const byCause = (l) => ['layout', 'field', 'swim'].map((c) => [c, l.filter((f) => f.cause === c).length]).filter(([, n]) => n).map(([c, n]) => `${CAUSE_NAME[c]} ${n}`).join(', ');
+    const lbl = (f) => `${f.probe}${isSwim(f.by) ? ' (swim-jump)' : ''} [${CAUSE_NAME[f.cause]}]`;
+    if (hard.length) bad.push(`(d) ${hard.length} connection(s) the graph lacks gaining > 10 m: ${hard.slice(0, 5).map((f) => `${lbl(f)} ${JSON.stringify(f.a)}→${JSON.stringify(f.b)} ${f.gain} m`).join(', ')}${hard.length > 5 ? ` … (by probe: ${Object.entries(hard.reduce((m2, f) => ({ ...m2, [f.probe]: (m2[f.probe] || 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ')})` : ''}; by cause: ${byCause(hard)}${waivedN ? `; ${waivedN} waived (${waivedG} flag group(s))` : ''}`);
+    // [fix1] every #7d find gets a flag (and so a picture), the static probes' and the moves #16's kid made alike: the finds
+    // of one probe within 3 m of each other are one place ([fix4] and of one cause)
+    const repK = new Set(), mk = (a2, b2) => `${r1(+a2[0])},${r1(+a2[a2.length - 1])}>${r1(+b2[0])},${r1(+b2[b2.length - 1])}`;
+    for (const gq of keep) {
+      const f0 = gq.reduce((a2, b2) => (fin(+b2.gain) && (!fin(+a2.gain) || +b2.gain > +a2.gain) ? b2 : a2), gq[0]), gs = gq.map((f) => +f.gain).filter(fin);
+      repK.add(mk(f0.a, f0.b));
+      fl.push({ at: f0.a, what: `7d ${lbl(f0)}${gq.length > 1 ? ` ×${gq.length}` : ''}: ${f0.warnOnly && !f0.swimW ? (f0.noExit ? 'onto off-field ground with no way down but a climb' : 'to off-field ground') : `gain ${gs.length > 1 && Math.min(...gs) !== Math.max(...gs) ? `${Math.min(...gs)}–${Math.max(...gs)}` : f0.gain} m${f0.swimW ? ' (KARP_SWIM=warn)' : ''}`}`, look: { x: f0.b[0], y: f0.b[1], z: f0.b[2] }, move: [f0.a, f0.b, ...(f0.exit ? [f0.exit] : [])] });
+    }
+    // ([fix4] review 4: on the top-down only each flag's own move is drawn bold, the rest of its group thin — on the real
+    // stages thousands of bold finds swamped the map)
+    for (const e of draw.beyond || []) if (e.find) e.rep = repK.has(mk(e.a, e.b));
     // ([fix2] a WARN only for ground off the field with no way back down but a squid climb, and a squid gap whose far end
     // reads no count: a carrier there keeps its last count, and #9's plateau test sees only the field's own ground)
     const warnTxt = soft.length ? `WARN (d) ${soft.length} onto ground off the field with no way down to it but a climb, or with no count (a carrier could sit there on its last count; #9's plateaus see only field ground): ${soft.slice(0, 3).map((f) => `${f.probe} ${JSON.stringify(f.b)}`).join(', ')}` : '';
-    nums.drops = out._7drops.length; nums.climbShortcuts = out._7climbs.length; nums.d = d.map((f) => ({ probe: f.probe, a: f.a, b: f.b, gain: f.gain, phys: !!f.phys, by: f.by || null }));
-    chk(7, 'No shortcut into a base', bad.length ? 'FAIL' : soft.length ? 'WARN' : 'OK', [bad.join('; '), warnTxt, !bad.length ? nums.teams.map((t) => `team ${t.team}: ${t.entrances.length} entrances [${t.entrances.map((e) => e.types.join('/')).join(', ')}], all seen`).join(' | ') + `; no climb shortcut, no drop > 2.5 m into a ring, #7d: ${Object.entries(nums.finds).map(([k, v]) => `${k} ${v}`).join(', ')}, made beyond the rules ${d.filter((f) => f.phys).length}` : ''].filter(Boolean).join(' · '), nums, fl);
-    delete out._7bad; delete out._7fl; delete out._7nums; delete out._7drops; delete out._7climbs; delete out._finds; delete out._7d; delete out._aCross; delete out._offMade; delete out._exitsOf;
+    // ([fix4] KARP_SWIM=warn: what only the swimming carrier makes, listed and not judged)
+    const sw = out._swimW || { ents: [], drops: [] };
+    for (const p of sw.ents.slice(0, 6)) fl.push({ at: [r1(p.x), r1(p.y), r1(p.z)], what: `7a: a ${TYPE_NAME[p.type]} (swim-jump) into a ring (KARP_SWIM=warn)`, move: [P3(nodes[p.from]), [p.x, p.y, p.z]] });
+    const swimTxt = C.swim === 'warn' && (swimW.length || sw.ents.length || sw.drops.length) ? `WARN (KARP_SWIM=warn) made only by the swimming carrier: ${swimW.length} #7d find(s)${swimW.length ? ` (${swimW.slice(0, 3).map((f) => `${f.probe} ${JSON.stringify(f.a)}→${JSON.stringify(f.b)} ${f.gain} m`).join(', ')})` : ''}, ${sw.ents.length} way(s) into a ring, ${sw.drops.length} drop(s) > 2.5 m into one` : '';
+    nums.cause = cause; nums.swimWarn = { finds: swimW.length, ents: sw.ents.length, drops: sw.drops.length };
+    nums.drops = out._7drops.length; nums.climbShortcuts = out._7climbs.length; nums.d = d.map((f) => ({ probe: f.probe, a: f.a, b: f.b, gain: f.gain, phys: !!f.phys, by: f.by || null, cause: f.cause, warn: !!f.warnOnly }));
+    chk(7, 'No shortcut into a base', bad.length ? 'FAIL' : soft.length || swimTxt ? 'WARN' : 'OK', [bad.join('; '), warnTxt, swimTxt, !bad.length ? nums.teams.map((t) => `team ${t.team}: ${t.entrances.length} entrances [${t.entrances.map((e) => e.types.join('/')).join(', ')}], all seen`).join(' | ') + `; no climb shortcut, no drop > 2.5 m into a ring, #7d: ${Object.entries(nums.finds).map(([k, v]) => `${k} ${v}`).join(', ')}, made beyond the rules ${d.filter((f) => f.phys).length}${waivedN ? `, ${waivedN} waived (${waivedG} flag group(s))` : ''}` : ''].filter(Boolean).join(' · '), nums, fl);
+    delete out._swimW; delete out._7bad; delete out._7fl; delete out._7nums; delete out._7drops; delete out._7climbs; delete out._finds; delete out._7d; delete out._aCross; delete out._offMade; delete out._exitsOf;
   }
   // the routes for the picture
   draw.routes = legs.filter((l) => l.kind !== 'pg').map((l) => ({ team: l.team, leg: l.name, r1: (l.rt.r1 || []).map((i) => [r1(nodes[i].x), r1(nodes[i].z)]), r2: (l.rt.r2 || []).map((i) => [r1(nodes[i].x), r1(nodes[i].z)]) }));
@@ -1499,19 +1651,22 @@ export function proveEdges(C, list, o = {}) {
   // (the swim's landing: on b's floor along unbroken floor from b, no waist-high wall between)
   const floorRun = (b, p) => { const l = hd(b, p), n = Math.max(1, Math.ceil(l / 0.4)); for (let k = 1; k < n; k++) { const u = k / n, x = b.x + (p.x - b.x) * u, z = b.z + (p.z - b.z) * u; if (Math.abs(L.groundHeight(x, z, b.y + 0.4) - b.y) > 0.35) return false; } return !C.nav._blocked(b, p, Math.max(b.y, p.y)); };
   const undo = [];
-  let trials = 0, swimTrials = 0;
-  const one = (a, b, start, jumpAt, edgeP, dir, mode = 'kid') => {
+  let trials = 0, swimTrials = 0, squidTrials = 0;
+  // ([fix4] mode 'squid' / 'squidInk': a squid tube — squid form throughout, no jump, steering at the far node for
+  // `frames`, made within 0.6 m of it at its height: crawling on dry floor, or swimming its own ink)
+  const one = (a, b, start, jumpAt, edgeP, dir, mode = 'kid', frames = 0) => {
     trials++;
-    const swim = mode !== 'kid';
-    if (swim) swimTrials++;
+    const sq = mode === 'squid' || mode === 'squidInk', swim = mode !== 'kid' && !sq;
+    if (swim || mode === 'squidInk') swimTrials++;
+    if (sq) squidTrials++;
     kid.spawnAt(V.set(start.x, start.y + 0.05, start.z), Math.atan2(dir.x, dir.z));
     kid.invuln = 99; kid.alive = true; kid.form = 'kid'; kid.ink = PLAYER.inkMax ?? 100;
     kid.carry = carry();
-    it.move.set(0, 0, 0); it.jump = it.fire = it.sub = it.special = false; it.squid = swim;
+    it.move.set(0, 0, 0); it.jump = it.fire = it.sub = it.special = false; it.squid = swim || sq;
     for (let f = 0; f < 3; f++) kid.update(dt);
     if (!kid.grounded) { it.squid = false; return false; }
     let jumped = 0, ok = false;
-    for (let f = 0; f < (swim ? 150 : 120); f++) {
+    for (let f = 0; f < (frames || (swim ? 150 : 120)); f++) {
       const dx = b.x - kid.pos.x, dz = b.z - kid.pos.z, hb = Math.hypot(dx, dz);
       if (hb > 0.35) it.move.set(dx / hb, 0, dz / hb); else it.move.set(0, 0, 0);
       const along = (edgeP.x - kid.pos.x) * dir.x + (edgeP.z - kid.pos.z) * dir.z;   // metres still to go to the edge
@@ -1523,6 +1678,7 @@ export function proveEdges(C, list, o = {}) {
       kid.update(dt);
       if (o.trace && o.trace.length < 4000) o.trace.push([trials, f, r2(kid.pos.x), r2(kid.pos.y), r2(kid.pos.z), kid.grounded ? 1 : 0, it.jump ? 1 : 0, kid.alive ? 1 : 0, swim ? (kid.form === 'squid' ? (kid.submerged ? 2 : 1) : 0) : 0]);
       if (!kid.alive) break;
+      if (sq) { if (Math.hypot(kid.pos.x - b.x, kid.pos.z - b.z) <= 0.6 && Math.abs(kid.pos.y - b.y) <= 0.4) { ok = true; break; } if (kid.pos.y < -3) break; continue; }
       // made: grounded on the far node's floor — within 0.5 m of it, or on that floor within 3 m with a clear waist line
       // to it (a run-off or a jump that lands past the node is on its floor: a carrier walks the last steps)
       if (kid.grounded && Math.abs(kid.pos.y - b.y) <= 0.3) { const hb2 = Math.hypot(kid.pos.x - b.x, kid.pos.z - b.z); if (hb2 <= 0.5 || (hb2 <= 3 && !C.nav._blocked(b, kid.pos, Math.max(b.y, kid.pos.y)) && Math.abs(L.groundHeight((b.x + kid.pos.x) / 2, (b.z + kid.pos.z) / 2, b.y + 0.3) - b.y) <= 0.3) || (swim && hb2 <= 7 && floorRun(b, kid.pos))) { ok = true; break; } }
@@ -1542,27 +1698,38 @@ export function proveEdges(C, list, o = {}) {
     // along the line where the floor stands 0.3 m above the low end, not the midpoint)
     else if (e.kind === 'off hop' || e.kind === 'high hop') for (let u = 0.1; u < fl; u += 0.1) { const x = a.x + dir.x * u, z = a.z + dir.z * u; if (L.groundHeight(x, z, b.y + 0.05) > a.y + 0.3) { edgeP = { x, z }; break; } }
     // ([fix3] a vault is timed off the obstacle's near face: where the waist line first meets it)
+    // ([fix4] a step off the grid is timed off its face: up, where the floor first stands half its rise (at most 0.3 m)
+    // above the low end; down, where it first falls that far below the top)
+    else if (e.kind === 'step') { const up = b.y > a.y, hh = Math.min(0.3, Math.abs(b.y - a.y) / 2); for (let u = 0.1; u < fl; u += 0.1) { const x = a.x + dir.x * u, z = a.z + dir.z * u, f = L.groundHeight(x, z, Math.max(a.y, b.y) + 0.05); if (up ? f > a.y + hh : f < a.y - hh) { edgeP = { x, z }; break; } } }
     else if (e.kind === 'vault') { const hy = Math.max(a.y, b.y) + 0.5; if (!_rh) _rh = new (G.physics.raycast(new V3(), new V3(0, 1, 0), 0.01).constructor)(); const h = G.physics.raycast(new V3(a.x, hy, a.z), new V3(dir.x, 0, dir.z), fl, _rh, false); if (h.hit) edgeP = { x: h.point.x, z: h.point.z }; }
     // ([fix2] a move beyond the rules across air — a long, rising or off-field gap — also tries the jump at the rim and the
     // coyote jump 0.25 / 0.45 m past it: what a player running off the edge does; the field's own edges keep SPEC's five)
     const gapBeyond = e.beyond && GAPLIKE.has(e.kind);
     const swimOk = !o.kidOnly && inkFloor(C, e.from);
-    const modes = ['kid', ...(swimOk ? ['swim', ...(b.y - a.y >= 1.4 ? ['swimRel'] : [])] : [])];
+    // ([fix4] a squid tube: a squid crawling it on dry floor, then swimming it in its own ink)
+    const tube = e.kind === 'squid tube';
+    const modes = tube ? ['squid', ...(swimOk ? ['squidInk'] : [])] : ['kid', ...(swimOk ? ['swim', ...(b.y - a.y >= 1.4 ? ['swimRel'] : [])] : [])];
     let ok = false, how = null, by = null;
     for (const mode of modes) {
-      const swim = mode !== 'kid';
+      const swim = mode !== 'kid' && !tube;
       const coyote = gapBeyond ? (swim ? [0, -0.3, -0.6, -0.9] : [0, -0.25, -0.45]) : [];
-      for (const back of swim ? [2.0, 4.0] : [1.5, 3.0]) {
+      const backs = tube ? [0.8] : swim ? [2.0, 4.0] : [1.5, 3.0];
+      for (const back of backs) {
         // the run-up's start: back along the line from the low end, on floor at about its height (shortened if not)
         let st = null;
         // (down to standing on the low end itself: a narrow top with no floor behind it is still stepped off)
         for (const bb of [...Array.from({ length: Math.round(back / 0.3) }, (_, k) => back - k * 0.3), 0]) { if (st) break; const x = a.x - dir.x * bb, z = a.z - dir.z * bb, f = L.groundHeight(x, z, a.y + 0.4); if (f > a.y - 0.45 && f < a.y + 0.4 && G.physics.bodyFits(V.set(x, f + 0.02, z), PLAYER.radius, PLAYER.stepUp, PLAYER.height, false, 0.04)) st = { x, y: f, z }; }
-        if (!st && back === (swim ? 4.0 : 3.0)) st = { x: a.x, y: a.y, z: a.z };   // (the node itself: nav put it where a body fits)
+        if (!st && back === backs[backs.length - 1]) st = { x: a.x, y: a.y, z: a.z };   // (the node itself: nav put it where a body fits)
         if (!st) continue;
+        if (tube) {
+          if (mode === 'squidInk') inkLine(C, kid.team, st, { x: b.x, y: a.y, z: b.z }, 0.75, undo);
+          if (one(a, b, st, null, edgeP, dir, mode, Math.ceil(60 * (fl / 1.5 + 2)))) { ok = true; by = mode; how = mode === 'squid' ? 'a squid crawling it on dry floor' : 'a squid swimming it in its own ink'; }
+          break;
+        }
         // (a swim's run-up in its own ink, from the start to the edge and a step past it)
         if (swim) inkLine(C, kid.team, st, { x: edgeP.x + dir.x * 0.3, y: a.y, z: edgeP.z + dir.z * 0.3 }, 0.75, undo);
         // a down move is tried running off the edge first (no jump), then with the jump at the five distances
-        for (const j of [...(!swim && b.y < a.y - 0.6 ? [null] : []), 0.2, 0.5, 0.8, 1.1, 1.4, ...coyote]) { if (one(a, b, st, j, edgeP, dir, mode)) { ok = true; by = mode; how = (swim ? (mode === 'swimRel' ? 'swim-jump, letting go at the top, ' : 'swim-jump ') : '') + (j == null ? 'run-off' : j > 0 ? `jump ${j} m before the rim` : j === 0 ? 'jump at the rim' : `coyote jump ${-j} m past the rim`); break; } }
+        for (const j of [...(!swim && (b.y < a.y - 0.6 || (e.kind === 'step' && b.y < a.y)) ? [null] : []), 0.2, 0.5, 0.8, 1.1, 1.4, ...coyote]) { if (one(a, b, st, j, edgeP, dir, mode)) { ok = true; by = mode; how = (swim ? (mode === 'swimRel' ? 'swim-jump, letting go at the top, ' : 'swim-jump ') : '') + (j == null ? 'run-off' : j > 0 ? `jump ${j} m before the rim` : j === 0 ? 'jump at the rim' : `coyote jump ${-j} m past the rim`); break; } }
         if (ok) break;
       }
       if (ok) break;
@@ -1572,7 +1739,7 @@ export function proveEdges(C, list, o = {}) {
   }
   inkUndo(C, undo);
   kid.carry = null; kid.invuln = 0; kid.form = 'kid'; it.squid = false;
-  return { list: out, trials, swimTrials, ms: Math.round(performance.now() - t0) };
+  return { list: out, trials, swimTrials, squidTrials, ms: Math.round(performance.now() - t0) };
 }
 
 // ================================================================================================= #16's walks
@@ -1910,7 +2077,8 @@ export async function pictures(o = {}) {
       const tick = (e, style, w) => { const [X1, Y1] = px(e.a[0], e.a[1]), [X2, Y2] = px(e.b[0], e.b[1]); x.strokeStyle = style; x.lineWidth = w; x.beginPath(); x.moveTo(X1, Y1); x.lineTo(X2, Y2); x.stroke(); };
       for (const e of draw.beyond || []) if (!e.find) tick(e, 'rgba(255,0,255,0.35)', 1.5);
       for (const e of draw.extra || []) if (e.ok !== false) tick(e, e.ok ? 'rgba(60,255,60,0.4)' : 'rgba(160,160,160,0.6)', 1.1);   // (made: faint, so the FAILs stand out)
-      for (const e of draw.beyond || []) if (e.find) tick(e, '#f0f', 4);
+      for (const e of draw.beyond || []) if (e.find && !e.rep) tick(e, 'rgba(255,0,255,0.7)', 2);
+      for (const e of draw.beyond || []) if (e.find && e.rep !== false) tick(e, '#f0f', 4);
       for (const e of draw.extra || []) if (e.ok === false) tick(e, '#ff2020', 4);
       for (const w of draw.walkFails || []) { if (!w.at) continue; const [X, Y] = px(w.at[0], w.at[2]); x.strokeStyle = '#ff2020'; x.lineWidth = 4; x.beginPath(); x.arc(X, Y, 12, 0, 7); x.moveTo(X - 8, Y - 8); x.lineTo(X + 8, Y + 8); x.moveTo(X + 8, Y - 8); x.lineTo(X - 8, Y + 8); x.stroke(); }
       // the Gates (trigger, 15 m ring) and their entrances (arrows), the weirs (diamonds), the Pond
@@ -1945,7 +2113,7 @@ export async function pictures(o = {}) {
       x.font = '15px sans-serif'; x.fillStyle = '#ddd';
       x.fillText('Alpha attacks left → right. Shade: Alpha\'s count (darker = nearer its Gate), dots every 10 counts; white dots: the halfway line. Cyan / yellow: Alpha\'s routes Pond → weir / weir → Gate (dashed: route 2).', 16, H + 56);
       x.fillText('Diamonds: weirs · discs: Dragon Gates (dashed 15 m ring; arrows: entrances, red = unseen from the deck) · hatched: Carp-Free Zones (signs ⊘; green ring = signed entrance, red X = unsigned) · yellow dashed: noRetreat · red: carrierBlock', 16, H + 78);
-      x.fillText(`Ticks: hop / gap edges (faint green made by a kid, red not: hopVeto) · magenta: moves made beyond the rules (bold: a #7d find, > 10 m) · red ⊗: where #16's walking kid got stuck · purple: plateaus (red: FAIL) · red discs: the ${flags.length} flags, listed below`, 16, H + 100);
+      x.fillText(`Ticks: hop / gap edges (faint green made by a kid, red not: hopVeto) · magenta: moves made beyond the rules (bold: a numbered #7d flag's move, medium: the rest of its group) · red ⊗: where #16's walking kid got stuck · purple: plateaus (red: FAIL) · red discs: the ${flags.length} flags, listed below`, 16, H + 100);
       // the key: every flag, its check and what it is (the JSON's `flags` and the console have the same numbers)
       if (flags.length) {
         x.fillStyle = '#1b1b1b'; x.fillRect(0, H + 120, W, KH); x.font = '13px sans-serif'; x.textAlign = 'left';
@@ -2043,6 +2211,11 @@ export async function pictures(o = {}) {
 // from 45°, the Dragon Gate, a NO CARP sign, a carrierBlock's shimmer — for the kit's review
 export async function kitPictures() {
   const C = ctx(0), { G, m, R, L } = C, shots = [];
+  // ([fix4] review 4: a stage with no LAYOUT.bazookarp runs on the field's placeholder data, and the kit is built only from
+  // a stage's data (variants.js layoutFor): there is no kit to show — calamari's 'weir' picture showed an empty plaza)
+  if (C.Kp.placeholder) return [{ note: `${C.id}: placeholder data, no kit built (the kit comes from LAYOUT.bazookarp): no kit pictures` }];
+  // ([fix4] the kit alone: bazookarpFx's placeholder looks — the curtain, caps, lid and rings, WP2's to finish — hidden)
+  const fx = C.g.karpFx?.root || null, fxVis = fx ? fx.visible : null; if (fx) fx.visible = false;
   for (const a of m.actors) a.character.root.visible = false;
   const fog = G.scene.fog; G.scene.fog = null;
   const r = G.renderer, cv = r.domElement, size0 = r.getSize(new THREE.Vector2()), pr0 = r.getPixelRatio();
@@ -2071,18 +2244,18 @@ export async function kitPictures() {
     if (w) {
       const f = new V3(Math.sin(w.yaw), 0, Math.cos(w.yaw));   // the walking direction
       const lw = new V3(w.pos.x, w.pos.y + 1.1, w.pos.z);
-      await shot('weir', eye(w.pos, f, 7, 1.7, lw), lw, 'a weir from the attackers\' side (posts 5.4 m apart, the sill, the curtain)');
+      await shot('weir', eye(w.pos, f, 7, 1.7, lw), lw, 'a weir from the attackers\' side (posts 5.4 m apart, the sill; the curtain and caps are bazookarpFx\'s, hidden)');
       const s = new V3(Math.cos(w.yaw), 0, -Math.sin(w.yaw));
       await shot('weir-post', new V3(w.pos.x + s.x * 2.7 - f.x * 2.2 + s.x * 1.4, w.pos.y + 1.5, w.pos.z + s.z * 2.7 - f.z * 2.2 + s.z * 1.4), new V3(w.pos.x + s.x * 2.7, w.pos.y + 1.2, w.pos.z + s.z * 2.7), 'a weir post: footing, shaft, band, capital (roof, no ink)');
     }
     const g = R.gates[0].pos, fg = new V3(Math.sin(R.gates[0].yaw), 0, Math.cos(R.gates[0].yaw));
     const lg = new V3(g.x, g.y + 0.9, g.z);
-    await shot('gate', eye(g, fg, 7, 2.2, lg), lg, 'the Dragon Gate: the octagonal plinth, the gold-banded posts');
+    await shot('gate', eye(g, fg, 7, 2.2, lg), lg, 'the Dragon Gate: the plinth on its base course, the gold-banded posts (bazookarpFx\'s lid and arch hidden)');
     const sb = L.blocks.find((b) => b.tag === 'karp-sign-board' && b.center.z > 0);
     if (sb) { const n = sb.axes[2]; await shot('sign', new V3(sb.center.x + n.x * 2.6 + n.z * 0.6, sb.center.y - 0.1, sb.center.z + n.z * 2.6 - n.x * 0.6), sb.center.clone(), 'a NO CARP sign'); }
     const cb = (R.carrierBlock || []).find((v) => v.poly.every((p) => p[1] > 0)) || (R.carrierBlock || [])[0];
     if (cb) { const cx = cb.poly.reduce((a, p) => a + p[0], 0) / cb.poly.length, cz = cb.poly.reduce((a, p) => a + p[1], 0) / cb.poly.length, y = L.groundHeight(cx, cz, (cb.y1 ?? 1) + 0.5); await shot('carrierblock', new V3(cx + 6, (y > -50 ? y : 0) + 3.2, cz - 7), new V3(cx, (y > -50 ? y : 0) + 0.9, cz), 'a carrierBlock: the shimmer and the NO CARP glyph (carriers are pushed out, others pass)'); }
-  } finally { G.scene.fog = fog; for (const a of m.actors) a.character.root.visible = true; }
+  } finally { G.scene.fog = fog; for (const a of m.actors) a.character.root.visible = true; if (fx) fx.visible = fxVis; }
   return shots;
 }
 
