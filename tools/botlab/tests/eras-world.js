@@ -8,7 +8,8 @@
 //   claims nothing; a vanishing piece takes its ink (its cells stop counting at its flip, grid and atlas zeroed at
 //   done + 1 s); an appearing piece arrives blank (cleared at the warning); ground in both eras keeps its ink.
 // Part 3, nav: the union graph in era e costs the same as a fresh graph built in era e (200 random pairs per era, ±1 %);
-//   a route shut in era 1 and open in era 2; nodes of a later era valid only there; the merge time.
+//   a route shut in era 1 and open in era 2; nodes of a later era valid only there; the merge time; no node valid in the
+//   era before a match jump has an appearing piece in its body column (prop colliders included: the final review, issue 6).
 // Part 4, load: the world build with and without the era engine (loadMs), nav ×3 (ENGINE.md step 4: 4b if > 700 ms).
 // Part 5 (PAGE_ARGS='only=5'), the other stages: halyard, calamari and treehills build with no era world, their level
 //   program key and geometry are today's (no '-eras', no aEra attribute), and no block carries a presence.
@@ -217,6 +218,32 @@
     R('step 3: a route shut in era 1 and open in era 2 (Degrayling Lane: Swimston → the quay at mid-leg is much shorter from era 2)', c1 && c2 && c2 < c1 * 0.75, { era1: c1, era2: c2, from: A, to: B });
     R('step 3: the Halo\'s nodes are valid only in era 3', hn >= 0 && !U.eraValid[0][hn] && !U.eraValid[1][hn] && U.eraValid[2][hn] && U.nodes[hn].em === 4,
       { node: hn, y: hn >= 0 ? U.nodes[hn].y : null, em: hn >= 0 ? U.nodes[hn].em : null });
+    // (the final review, issue 6: "never inside a player" on the live world, prop colliders' tops included — the static
+    //  appearCheck sees layout blocks only, and the art pass will dress the stage) every nav node valid in the era before a
+    //  match jump against every block that appears in it: no part of a kid's body column over the node (radius 0.38 m,
+    //  0.1 … 3.35 m up) inside one. A planted node — valid in era 1 on the street under the café tables, as a dressed
+    //  crate's top would make one — is found, so the check can fail
+    const { PLAYER } = await import('./src/config.js');
+    const BL = L.blocks;
+    const appearNodes = (f, t, extra = []) => {
+      const J = E._info({ from: f, to: t, at: 1e6 }), V = U.eraValid[f - 1], app = J.appear.map((id) => BL[id]), bad = [];
+      for (const n of [...U.nodes.filter((x) => V[x.id]), ...extra]) {
+        for (const b of app) {
+          if (b.aabbMax.y < n.y + 0.05 || b.aabbMin.y > n.y + 3.4) continue;
+          if (n.x < b.aabbMin.x - 0.6 || n.x > b.aabbMax.x + 0.6 || n.z < b.aabbMin.z - 0.6 || n.z > b.aabbMax.z + 0.6) continue;
+          let hit = null;
+          for (const h of [0.1, 0.9, 1.7, 2.5, 3.35]) { for (let k = -1; k < 8 && !hit; k++) { const an = (k / 8) * Math.PI * 2, r = k < 0 ? 0 : PLAYER.radius; if (L.pointInBlock(b, p.set(n.x + Math.cos(an) * r, n.y + h, n.z + Math.sin(an) * r), 0)) hit = h; } if (hit) break; }
+          if (hit) { bad.push({ node: n.id ?? 'planted', at: [+n.x.toFixed(1), +n.y.toFixed(2), +n.z.toFixed(1)], piece: b.tag, h: hit }); break; }
+        }
+      }
+      return { appear: app.length, valid: V.reduce((a, v) => a + v, 0), bad };
+    };
+    const props = BL.filter((b) => b.hidden && b.solid !== false).length;
+    const r12 = appearNodes(1, 2), r23 = appearNodes(2, 3);
+    const cafe = BL.find((b) => b.tag === 'cafe' && b.center.z < 0), planted = appearNodes(1, 2, [{ id: undefined, x: cafe.center.x, y: cafe.aabbMin.y, z: cafe.center.z }]);
+    R('step 3 (final review, issue 6): no nav node a kid can stand on in the era before a match jump (prop colliders\' tops included) has a piece that appears in that jump inside its body column — jumps 1 → 2 and 2 → 3; a planted node under the café tables is caught',
+      r12.bad.length === 0 && r23.bad.length === 0 && r12.appear >= 20 && r23.appear >= 100 && planted.bad.some((x) => x.node === 'planted' && x.piece === 'cafe'),
+      { '1>2': { appear: r12.appear, nodes: r12.valid, bad: r12.bad.slice(0, 6) }, '2>3': { appear: r23.appear, nodes: r23.valid, bad: r23.bad.slice(0, 6) }, planted: planted.bad.filter((x) => x.node === 'planted'), propColliders: props });
   }
 
   // ================================================================================================ part 4 (last: it rebuilds the world)
