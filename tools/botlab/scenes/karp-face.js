@@ -1,6 +1,8 @@
 // [karp-face] Bazookarp's finished face, in pictures (hud-shots.cjs), on any stage with a Bazookarp layout:
 //   MAP=halyard MODE=bazookarp TIME=day PLAY=2 URLQ=wipmodes SCENES=tools/botlab/scenes/karp-face.js OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs
 //   PRE_ARGS='only=hud-start,hud-carry' (a comma list of scene names) runs a part
+//   TIME=dusk for the evening look ([karp-face] TIME=sunset isn't a stage time: mapTheme falls back to the stage's own
+//   look — the old 1080-halyard-sunset-* pictures were halyard's day)
 // The HUD states (hud-*), the looks (look-*), the maps (map-*), the menus (menu-*). Each scene stages the state with the
 // engine's own calls (a grant, a burst, a plant …) on the frozen clock and frames it with the follow camera or a fixed one.
 (async () => {
