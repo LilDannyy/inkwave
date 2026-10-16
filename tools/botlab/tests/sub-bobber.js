@@ -761,9 +761,12 @@
           return { snap, thrown: !!SN, shotsLive: shots, fireFrames: fireF, state: SN?.state, spot: SN ? v3(SN.spot) : null, blewBy: SN?.blast?.by === mate, foeHit: ev('hit').filter((x) => x.e.victim === foe).length > hit0,
             dbg: { mode: mate.bot.mode, sees: !!mate.bot.sight?.sees(foe), hp: mate.hp, ld: r2(mate.lastDamage), ink: r2(mate.ink), snapLog: (BOBBER_BOT.snapLog || []).slice(-6), scanWhy: BOBBER_BOT.scanWhy, holds: BOBBER_BOT.holds, fired: BOBBER_BOT.fired, snapShots: BOBBER_BOT.snapShots, aimYaw: r2(mate.bot.aimYaw), wep: mate.weapon.kind } };
         };
-        const away = snapTrial(true), face = snapTrial(false);
-        R('bots: a snap — a fighting bot throws a lone bobber onto the feet of a foe facing away from it and sets it off on that foe as it floats; a foe facing it (a duel) gets none',
-          away.snap && away.thrown && away.blewBy && away.foeHit && !face.snap, { away, face });
+        // (three trials at the foe facing away: each throws one onto its feet; the shot at a 0.2 m bobber through the gun's
+        // spread is a draw, so one set off on the foe of the three is the bar — none is what a bot without snaps gets)
+        const aways = [snapTrial(true), snapTrial(true), snapTrial(true)], face = snapTrial(false);
+        const atFeet = (x) => x.snap && x.thrown && x.spot && Math.hypot(x.spot[0], x.spot[2] - 7) < 1.2;
+        R(`bots: a snap — a fighting bot throws a lone bobber onto the feet of a foe facing away from it (${aways.filter(atFeet).length} of 3) and sets it off on that foe as it floats (${aways.filter((x) => x.blewBy && x.foeHit).length} of 3, at least 1); a foe facing it (a duel) gets none`,
+          aways.every(atFeet) && aways.some((x) => x.blewBy && x.foeHit) && !face.snap, { aways, face });
       }
       // a teammate bot with sight of a chain shoots it when a foe enters R(N) − 0.3 — several trials (PAGE_ARGS reps=N,
       // default 5), every one within the time: one lucky run proves nothing about a 0.2 m target
