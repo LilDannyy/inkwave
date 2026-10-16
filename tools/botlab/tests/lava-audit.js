@@ -143,7 +143,10 @@
       const bank = solidAt(x, H + 0.05, z);
       if (bank) {
         // inside a bank: how far in from its face toward the lava (march inward until no solid at the high mark)
-        let d = 0; while (d < 1.5 && solidAt(x - ox * d, H + 0.05, z - oz * d)) d += 0.05;
+        // (fix round 3: the face is where the solid ends for 0.15 m — a hairline crack between two bank blocks (the Rim
+        // Ridge's columns against the north head's, 5 cm) is no face the lava's edge could show along)
+        const sol = (dd) => solidAt(x - ox * dd, H + 0.05, z - oz * dd);
+        let d = 0; while (d < 1.5 && (sol(d) || sol(d + 0.05) || sol(d + 0.1))) d += 0.05;
         const top = lvl.groundHeight(x, z, 60);
         minIn = Math.min(minIn, d);
         if (d < 0.45 - 1e-6 || top < H + 0.3 - 1e-6) bad.push({ at: [r2(x), r2(z)], inset: r2(d), top: r2(top), tag: bank.tag || '#' + bank.id });
