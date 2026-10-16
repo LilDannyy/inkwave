@@ -361,7 +361,27 @@ Bluestone Junction's eras ([b5-eras], src/game/eras.js) send nothing of their ow
 each group's flip at J + r_g / 25, done) is a pure function of that clock on each screen, and a clock snap re-derives
 it at once (`seek`, `era:set`); `R.splatTime` stamps field 15 only from J − 1 to done + 1; each screen shoves, rescues
 and pops (S.crushIn, or the walk of `G.subs.items` until the subs package adds it) its own squidkids and devices only,
-whose existing records carry the result. (The two-client proof, `net-eras.cjs`, belongs to the next phase.)
+whose existing records carry the result. In detail:
+- **The jump on every screen.** A follower's stage clock follows the host's match clock (`duration − time`, eased within
+  1.5 s, snapped beyond: `seek('clock')`); the runtime holds the world at its clock's high-water mark between seeks, so a
+  clock easing back a little never re-fires an event or flips a group back. Groups flip on the two screens within the
+  clock skew of each other (measured < 0.4 s of wall time on two clients of one machine).
+- **The ink guard.** A splat from J − 1 to done + 1 carries its painter's stage time (field 15); the replaying screen
+  judges `inkOk(block, et)` at that time, so a splat on a piece around its flip (the guard: ± 0.5 s) inks the same cells
+  on every screen. Appearing pieces are cleared at the warning on each screen (before any replay of a splat on them can
+  land); vanished pieces at done + 1.
+- **Devices.** The owner's screen pops its own device stuck to a piece that vanishes (or caught in one that appears); its
+  ordinary end record ends the ghosts elsewhere.
+- **Practice.** The host's ticks carry the stage clock (no movers or pods on Bluestone: the registry's clock); followers
+  snap to it (`seek('clock')`), so a host who moves the clock (or a late tick) moves every screen. The rewind 3 → 1 runs
+  like any jump; each screen rescues its own squidkids over the river.
+- **A late joiner** (Practice) applies the era of the host's clock on its first tick (`seek('late')`, the start config's
+  stage snapshot); its `importGrid` copy has the union world's length in every era, and the era apply recounts the turf.
+- **A host change** needs no hand-over: the new host's match clock runs on, and the next jump comes on its clock.
+- **The results** are the host's counts, taken in the era in force at the whistle (the 3000s in a timed match).
+Tested by `tools/botlab/tests/net-eras.cjs` (CLIENTS=2 and a third client for the late join: flip skew, solid and the nav
+era after each done, a device on the Degrayling crates, the Iron Bridge's cells around its flip, the results; the host
+leaving between the jumps; Practice's clock, a late joiner in the 3000s and the rewind).
 
 **Tower Command.** Likewise: the host runs the rules and records control, checkpoints (reach / clear / refill),
 overtime and the end as `['tw', …]`, plus a position snapshot 10× a second (tower.js `netEvent`). Guests ease the
