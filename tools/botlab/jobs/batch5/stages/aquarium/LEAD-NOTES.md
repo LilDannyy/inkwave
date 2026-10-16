@@ -104,3 +104,6 @@ when the weekly usage resets) does exactly that list, one fix + one review, and 
   lead has sent the fixed-view probe (`tools/perf6.js`, default settings, day and dusk, both stages) to the Mac mini.
   If triangles stay over +12 % or cpuRender is not level there, the next round also turns the plates' lettering into
   murals / a texture (about 29 k triangles), starting with the eight biggest plates.
+- **Performance: CLOSED (2026-10-17, the Mac mini's fixed-view probe, quality high, 3 runs per cell, load 2–4).**
+  Aquarium is level with Halyard on draw calls (×0.93–1.03) and cpuRender (×0.93–0.98), day and dusk, and about
+  18 % UNDER on triangles per view (2.7 M vs 3.3 M). No lettering-to-mural work is needed. `aquarium/results/JOB-5.txt`.
