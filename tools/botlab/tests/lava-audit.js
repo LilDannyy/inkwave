@@ -11,6 +11,8 @@
 //            ≥ 4.5 m; physically, a kid's running jump never crosses one; what a swim jump and a jump + the Dash
 //            Pellet's 3.5 m air dash could cross, listed with the nav detour it saves (the lead's list). Every edge
 //            node, 16 headings, gaps to 11 m, every candidate (no sample cap), a crossing = a flight over lava
+//            (fix round 4: every gap-march sample past a 0.35 m seam is tried, the short ones too, and a flight that
+//            lands > 1 m off its line is counted, flagged off, its gain measured from where it landed)
 //   rule 45  the region's outline lies ≥ 0.5 m inside every bank it meets (never along a face), in solid bank whose top
 //            is ≥ HIGH + 0.3; open edges only at the lips (into a falls polygon)
 //   rule 46  the nav built with its grid shifted 0.25 m and 0.5 m (x, z): every step link still yields its edges, the
@@ -258,8 +260,9 @@
         }
         if (edge === null || far === null) continue;
         const gap = far - edge;
-        if (gap > 0.35 && gap < 4.4 && Math.abs(gy - nd.y) <= 1.25) gaps.push([r2(nd.x), r2(nd.y), r2(nd.z), Math.round((a * 180) / Math.PI), r2(gap), r2(gy)]);
-        else if (gap >= 4.4 && gap <= 11.0 && gy - nd.y <= 1.3) cands.push({ id: nd.id, x: nd.x, y: nd.y, z: nd.z, dx, dz, edge, far, gy, gap });
+        // (fix round 4, review 4: EVERY sample past a seam goes through the physical jumps — the 0.35–4.4 m ones were kept as
+        // information and never tried: 710 running-jump crossings at LOW and 1,152 at HIGH hid there)
+        if (gap > 0.35 && gap <= 11.0 && gy - nd.y <= 1.3) { cands.push({ id: nd.id, x: nd.x, y: nd.y, z: nd.z, dx, dz, edge, far, gy, gap }); if (gap < 4.4) gaps.push([r2(nd.x), r2(nd.y), r2(nd.z), Math.round((a * 180) / Math.PI), r2(gap), r2(gy)]); }
       }
     }
     // physically (the kid stepped on its own, actor.update): from 2.6 m behind the edge, running (and swimming in its own
@@ -291,10 +294,13 @@
       const along = (kid.pos.x - c.x) * c.dx + (kid.pos.z - c.z) * c.dz;
       const gb = kid.ground && lvl.blocks[kid.ground.block];
       const side = Math.abs((kid.pos.x - c.x) * c.dz - (kid.pos.z - c.z) * c.dx);   // (off the line it was aimed along)
-      return { crossed: kid.alive && kid.grounded && over && side <= 1.0 && along > c.edge + 0.5 && Math.abs(kid.pos.y - c.gy) < 0.3, along: r2(along), y: r2(kid.pos.y), alive: kid.alive, at: [r2(kid.pos.x), r2(kid.pos.z)], on: gb ? (gb.tag || (gb.dynamic ? 'rider' : '#' + gb.id)) : null };
+      // (fix round 4, review 4: a flight over the lava that lands on the far floor MORE than 1 m off its line is a crossing
+      // too — counted, flagged 'off' and its gain measured from where it landed; the 1 m filter dropped 28 / 48 of them)
+      return { crossed: kid.alive && kid.grounded && over && along > c.edge + 0.5 && Math.abs(kid.pos.y - c.gy) < 0.3, off: side > 1.0, side: r2(side), along: r2(along), y: r2(kid.pos.y), alive: kid.alive, at: [r2(kid.pos.x), r2(kid.pos.z)], at3: [kid.pos.x, kid.pos.y, kid.pos.z], on: gb ? (gb.tag || (gb.dynamic ? 'rider' : '#' + gb.id)) : null };
     };
     // the nav detour each of them saves ("gain": the walk the other way minus the jump; 999 = no way round on foot now)
-    const detour = (c) => { const m = nav.nearest(V(c.x + c.dx * (c.far + 0.4), c.gy, c.z + c.dz * (c.far + 0.4)), 0.6, true); if (m < 0) return null; const p = nav.path(c.id, m, 0); if (!p) return 999; let L = 0; for (let i = 1; i < p.length; i++) { const a = nav.nodes[p[i - 1]], b = nav.nodes[p[i]]; L += Math.hypot(b.x - a.x, b.z - a.z); } return Math.min(999, L - (c.far + 0.4)); };
+    // (an 'off' crossing: from where it landed — the walk to the node there minus the flight's own length)
+    const detour = (c, r) => { const off = r && r.off, q = off ? V(r.at3[0], r.at3[1], r.at3[2]) : V(c.x + c.dx * (c.far + 0.4), c.gy, c.z + c.dz * (c.far + 0.4)); const m = nav.nearest(q, 0.6, true); if (m < 0) return null; const p = nav.path(c.id, m, 0); if (!p) return 999; let L = 0; for (let i = 1; i < p.length; i++) { const a = nav.nodes[p[i - 1]], b = nav.nodes[p[i]]; L += Math.hypot(b.x - a.x, b.z - a.z); } return Math.min(999, L - (off ? Math.hypot(q.x - c.x, q.z - c.z) : c.far + 0.4)); };
     const runX = [], skillX = [];
     // (the dash jumps physically: the real Dash Pellet, an air dash pressed on the rise, at the apex and on the fall — 8 /
     // 18 / 30 frames after the jump — from a running jump and from a swim jump out of own ink; the farthest first)
@@ -302,10 +308,10 @@
     for (const c of cands) {
       const row = { from: [r2(c.x), r2(c.y), r2(c.z)], dir: Math.round((Math.atan2(c.dz, c.dx) * 180) / Math.PI), gap: r2(c.gap), edgeAt: [r2(c.x + c.dx * c.edge), r2(c.z + c.dz * c.edge)], farAt: [r2(c.x + c.dx * c.far), r2(c.z + c.dz * c.far)] };
       const run = tryJump(c, false);
-      if (run && run.crossed) { runX.push({ ...row, how: 'run', landed: run.at, on: run.on, gain: r2(detour(c)) }); continue; }
+      if (run && run.crossed) { runX.push({ ...row, how: 'run', off: run.off, side: run.side, landed: run.at, on: run.on, gain: r2(detour(c, run)) }); continue; }
       const sw = tryJump(c, true);
-      if (sw && sw.crossed) { skillX.push({ ...row, how: 'swim', landed: sw.at, on: sw.on, gain: r2(detour(c)) }); continue; }
-      for (const [s2, f] of dashTries) { const r = tryJump(c, s2, f); if (r && r.crossed) { skillX.push({ ...row, how: (s2 ? 'swim+dash@' : 'run+dash@') + f, landed: r.at, on: r.on, gain: r2(detour(c)) }); break; } }
+      if (sw && sw.crossed) { skillX.push({ ...row, how: 'swim', off: sw.off, side: sw.side, landed: sw.at, on: sw.on, gain: r2(detour(c, sw)) }); continue; }
+      for (const [s2, f] of dashTries) { const r = tryJump(c, s2, f); if (r && r.crossed) { skillX.push({ ...row, how: (s2 ? 'swim+dash@' : 'run+dash@') + f, off: r.off, side: r.side, landed: r.at, on: r.on, gain: r2(detour(c, r)) }); break; } }
     }
     if (sub0 && kid.subId !== sub0) kid.setSub?.(sub0);
     P.clear();
@@ -327,16 +333,22 @@
   R('rule 44 (information): the kid\'s jump reach on flat ground — metres from take-off to touch-down, the feet\'s peak over the take-off', true, reach);
   // (fix round 3, the lead's decision) the gate: a plain running jump crosses no lava gap; a swim jump or a jump + the Dash
   // Pellet's air dash is a skill route only where it saves at most 20 m against the dry way round (DESIGN §3.5 lists them)
-  R('rule 44: no unplanned jumps across lava at LOW or HIGH — physically a kid\'s plain running jump crosses no lava gap',
+  // (fix round 4, review 4) every crossing counted — the short gaps' and the 'off the line' ones too — with its numbers
+  const sum = (L) => ({ n: L.length, off: L.filter((x) => x.off).length, short: L.filter((x) => x.gap < 4.4).length, over5: L.filter((x) => !(x.gain <= 5)).length, over10: L.filter((x) => !(x.gain <= 10)).length, over20: L.filter((x) => !(x.gain <= 20)).length, over40: L.filter((x) => !(x.gain <= 40)).length, maxGain: L.reduce((m, x) => Math.max(m, x.gain ?? 0), 0) });
+  const top = (L, k) => [...L].sort((a, b) => (b.gain ?? -1) - (a.gain ?? -1)).slice(0, k).map((x) => ({ from: x.from, dir: x.dir, gap: x.gap, how: x.how, off: x.off || undefined, landed: x.landed, on: x.on, gain: x.gain }));
+  R('rule 44: no unplanned jumps across lava at LOW or HIGH — physically a kid\'s plain running jump crosses no lava gap (every gap-march sample past a 0.35 m seam, short ones included; a flight landing > 1 m off its line counted, flagged off)',
     !jumps.low.runCross.length && !jumps.high.runCross.length,
-    { low: { n: jumps.low.runCross.length, edges: jumps.low.edgesChecked, places: places(jumps.low.runCross) }, high: { n: jumps.high.runCross.length, edges: jumps.high.edgesChecked, places: places(jumps.high.runCross) } });
+    { low: { ...sum(jumps.low.runCross), edges: jumps.low.edgesChecked, places: places(jumps.low.runCross).length }, high: { ...sum(jumps.high.runCross), edges: jumps.high.edgesChecked, places: places(jumps.high.runCross).length } });
+  for (const lv of ['low', 'high']) { const pl = places(jumps[lv].runCross); for (let q = 0; q * 12 < pl.length; q++) R(`rule 44 running-jump places: ${lv} ${q}`, true, pl.slice(q * 12, (q + 1) * 12)); R(`rule 44 running jumps, the largest gains: ${lv}`, true, top(jumps[lv].runCross, 15)); }
   const over = (L) => L.filter((x) => !(x.gain <= 20));
   R('rule 44: the skill routes — every swim jump out of own ink and every jump + Dash Pellet air dash across lava saves ≤ 20 m against the dry way round (the lead\'s rule; the list: DESIGN §3.5)',
     !over(jumps.low.skill).length && !over(jumps.high.skill).length,
-    { low: { skill: jumps.low.skill.length, over20: over(jumps.low.skill).length, over40: jumps.low.skill.filter((x) => !(x.gain <= 40)).length }, high: { skill: jumps.high.skill.length, over20: over(jumps.high.skill).length, over40: jumps.high.skill.filter((x) => !(x.gain <= 40)).length } });
+    { low: sum(jumps.low.skill), high: sum(jumps.high.skill) });
   for (const lv of ['low', 'high']) { const pl = places(over(jumps[lv].skill)); for (let q = 0; q * 12 < pl.length; q++) R(`rule 44 places saving > 20 m: ${lv} ${q}`, true, pl.slice(q * 12, (q + 1) * 12)); }
-  // (the gap march's 0.35–4.4 m samples: kept as information — see the report)
-  R('rule 44 (information): the gap march\'s 0.35–4.4 m samples between standable floors over lava', true, { low: { n: jumps.low.gaps.length, eg: jumps.low.gaps.slice(0, 10) }, high: { n: jumps.high.gaps.length, eg: jumps.high.gaps.slice(0, 10) } });
+  // (the gap march's 0.35–4.4 m samples: in the gate above since fix round 4; here how many there are and what crossed them)
+  R('rule 44 (information): the gap march\'s 0.35–4.4 m samples between standable floors over lava — each one tried (in the gates above)', true, { low: { n: jumps.low.gaps.length, run: jumps.low.runCross.filter((x) => x.gap < 4.4).length, skill: jumps.low.skill.filter((x) => x.gap < 4.4).length, eg: jumps.low.gaps.slice(0, 6) }, high: { n: jumps.high.gaps.length, run: jumps.high.runCross.filter((x) => x.gap < 4.4).length, skill: jumps.high.skill.filter((x) => x.gap < 4.4).length, eg: jumps.high.gaps.slice(0, 6) } });
+  // (the whole lists, for DESIGN §3.5 and Bazookarp checker #16: PAGE_ARGS full=1)
+  if (/(^|[;&])full=1/.test(String(window.__pageArgs || ''))) R('rule 44 (information): every crossing (LOW, HIGH)', true, { low: { run: jumps.low.runCross, skill: jumps.low.skill }, high: { run: jumps.high.runCross, skill: jumps.high.skill } });   // (PAGE_ARGS full=1)
 
   } catch (e) { R('rule 44: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
