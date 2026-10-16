@@ -684,8 +684,12 @@ export async function runChecks(o = {}) {
       }
       // [fix1] jumps onto off-field ground across air (D2 beyond the neighbouring hop): from a field rim node to a rim node
       // the field doesn't hold (nav-invalid, not a spawn zone, not a carrierBlock) 1.2–3.8 m away (flat), from 3.4 m down
-      // to 1.8 m up, open air between, the waist line clear, the ground's own exits back onto the field. Tried when it can
-      // matter: its best exit > 10 m nearer a Gate, or an exit inside a Gate's ring reached from outside it
+      // to 1.8 m up, a real gap between (somewhere along the line no floor within 1 m below the LOWER end: a running jump
+      // onto a box across its own floor is the hop the off-hop probe tries from the box's foot, not a gap — measured
+      // against the line's own height, kelpline had 56 such pairs onto one box by its spawn), the waist line clear, the
+      // ground's own exits back onto the field. Tried when it can matter: its best exit > 10 m nearer a Gate, or an exit
+      // inside a Gate's ring reached from outside it
+      const gapAir = (n, q, flat) => { const lo = Math.min(n.y, q.y) - K.gap.airBelow, steps = Math.floor(flat / 0.25); for (let k = 1; k < steps; k++) { const u = (k * 0.25) / flat, x = n.x + (q.x - n.x) * u, z = n.z + (q.z - n.z) * u, y = n.y + (q.y - n.y) * u; if (!(L.groundHeight(x, z, y + 0.05) >= lo)) return true; } return false; };
       const cbN = (q) => (R.carrierBlock || []).some((v) => volNode(v, q.x, q.y, q.z));   // (R holds both halves' volumes)
       for (let i = 0; i < N; i++) {
         if (!rims[i]) continue;
@@ -694,7 +698,7 @@ export async function runChecks(o = {}) {
           if (C.okN[j] || q.zone >= 0 || !rim(q)) return;
           const dy = q.y - n.y, flat = hd(n, q);
           if (dy > K.hop.riseMax || dy < -K.gap.downMax || flat <= K.gap.flatMin || flat > CK.gapLong[1]) return;
-          if (!openAir(n, q, flat, dy) || nav._blocked(n, q, Math.max(n.y, q.y))) return;
+          if (!gapAir(n, q, flat) || nav._blocked(n, q, Math.max(n.y, q.y))) return;
           if (dy < -K.gap.upMax && !nav._openAbove(q, n.y)) return;
           if (cbN(q)) return;
           const exits = exitsOf(j); if (!exits.length) return;
