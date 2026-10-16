@@ -938,6 +938,10 @@ The layout also carries the Ladle Gantry (`onlyIn: 'bazookarp'`, §2.3), so the 
   its floor no floor to it (the Pour Floor and the Moorings, 0.6 up, stay its ground): **818 m², one piece**
   (`out/fix3/fix3-boss-homeground-maxrise.jpg`). `boss.roamAfter: 12`: having stood within 5 m of one spot for 12 s it picks
   its next goal ≥ 9 m away (with the squad on a terrace it settled at its preferred 10 m and played every move from there).
+  (Fix round 4, after review 4 — it could still keep to one Lakefront wedge for most of a round: the spot is 8 m round,
+  every further 12 s there counts again, and from the second count its goals favour the far side and the other half — up
+  to 30 m from the camp, its fight distance weighing less — and it walks there before its next move, for up to 8 s.
+  `boss-check.js` prints the seconds on each half and the longest spell within 6 m of one spot.)
   And, in the shared brain, a walk blocked straight at its waypoint (a charge left it off-centre on a 10 m causeway, where
   only a pose along the causeway fits) takes the heading a pose fits that best closes on the waypoint until the straight
   step fits again (it stood 80 s turning to and fro).
