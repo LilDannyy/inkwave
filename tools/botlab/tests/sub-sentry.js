@@ -684,7 +684,19 @@
       const bcd0 = b.bombCd;
       G.subs.use(mate, SUBS.sentry);
       const bcd = b.bombCd, down = K.items.some((x) => x.owner === mate && x.state !== 'dead');
-      R(`a fighting bot sets one down (bot.fight: a foe 4–12 m off it would see, not hit for 1 s, 2.5 % a frame; bombCd ${r2(bcd0)} s at the decision, then ${r2(bcd)} s, 10–14, once it is down)`, went && bcd0 === 1.5 && down && bcd >= 10 && bcd <= 14, { went, bombCd0: bcd0, down, bombCd: bcd });
+      R(`a fighting bot sets one down (bot.fight: a foe 4–12 m off it would see, 40 hp or more, 2.5 % a frame; bombCd ${r2(bcd0)} s at the decision, then ${r2(bcd)} s, 10–14, once it is down)`, went && bcd0 === 1.5 && down && bcd >= 10 && bcd <= 14, { went, bombCd0: bcd0, down, bombCd: bcd });
+      // ([b5-int3] mid-duel too — it was only when not hit for 1 s, which a duel never is — but not on its last legs: it folds
+      // when its owner goes)
+      reset();
+      mate.ink = PLAYER.inkMax; put(mate, V(0, 0, -8), 0); put(foe, V(0.5, 0, 1), Math.PI);
+      { const k2 = mate.bot.sight._k(foe); k2.seen = true; k2.pos.copy(foe.pos); k2.vel.set(0, 0, 0); k2.t = G.time; k2.src = 'sight'; }
+      let hitWent = false, lowWent = false;
+      mate.bot.bombCd = 0; mate.bot._sentryAim = null;
+      for (let i = 0; i < 400 && !hitWent; i++) { mate.lastDamage = 0.2; mate.hp = 80; hitWent = K.bot.fight(mate.bot, 9); }
+      mate.bot._sentryAim = null;
+      for (let i = 0; i < 400 && !lowWent; i++) { mate.lastDamage = 0.2; mate.hp = 30; lowWent = K.bot.fight(mate.bot, 9); }
+      mate.hp = PLAYER.hp;
+      R('a fighting bot sets one down mid-duel (just hit, 80 hp), never on its last legs (30 hp)', hitWent && !lowWent, { hitWent, lowWent });
     }
 
     // ============================================================================================ HUD + guide
