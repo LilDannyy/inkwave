@@ -140,7 +140,9 @@ export class Bazookarp {
     const prev = this.phase;
     this.phase = p; this.phaseT = t;
     if (p !== prev) emit('karp:phase', { phase: p, prev });
-    if (p === 'free' && prev !== 'free') { this.freeT0 = this.clock; this.grantAt = null; }   // [karp-face] each screen's own "free since" (claims, §7.3)
+    // [karp-face] each screen's own "free since" (claims, §7.3); a fresh free phase claims at once — a guest's re-send
+    // clock left over from its last claim (up to 0.3 s) held its first claim back: race1 / race2, every other round
+    if (p === 'free' && prev !== 'free') { this.freeT0 = this.clock; this.grantAt = null; this.claimT = 0; }
   }
   // (q carries on above the last one this screen applied as a follower: a new host's first record — even one made while
   // its leave handling still runs, before onHostChange — is never at or below what the other guests already applied)
