@@ -135,6 +135,9 @@ const CSS = `
 .iw-kmk__arrow::before { content: ''; position: absolute; left: calc(var(--u) * 2.1); top: calc(var(--u) * -.6); border: calc(var(--u) * .6) solid transparent; border-left: calc(var(--u) * .9) solid var(--kc); filter: drop-shadow(0 0 1px #000); }
 .iw-kmk.is-pin .iw-kmk__arrow { display: block; }
 .iw-hud.is-mapopen .iw-kmk, .iw-hud.is-mapopen .iw-kshell, .iw-hud.is-mapopen .iw-ktag { opacity: 0; }
+/* [karp-face] review round 3: the marker fades out of a live call-out's way, as the world tags do */
+.iw-kmk { transition: opacity .15s; }
+.iw-kmk.is-under { opacity: 0; }
 /* the carrier's reticle */
 .iw-kret { position: absolute; left: 50%; top: 50%; width: calc(var(--u) * 7.4); height: calc(var(--u) * 7.4); translate: -50% -50%; display: none; pointer-events: none; --fc: #fff; }
 .iw-hud.is-karpcarry .iw-kret { display: block; }
@@ -268,6 +271,15 @@ export class KarpHud {
       }),
       on('karp:burst', ({ team }) => this._call(team, 'SHELL BURST!', 'GRAB THE BAZOOKARP!', 'THEY BURST THE SHELL!', 'STOP THE GRAB!')),
       on('karp:pickup', ({ actor, team }) => { if (actor === G.match?.local) this._call(team, "YOU'VE GOT THE BAZOOKARP!", '60 s to land it — go!'); else this._call(team, "WE'VE GOT THE BAZOOKARP!", null, "THEY'VE GOT THE BAZOOKARP!", 'SPLAT THE CARRIER!'); }),
+      // ([karp-face] review round 3: a grant undone — 'u': its claimant had died before it arrived — takes back the pick-up
+      // call-out it put up (or that waits), which said somebody had it while the status pill said FREE — GRAB IT!)
+      on('karp:undo', () => {
+        const pick = /GOT THE BAZOOKARP!$/;
+        if (this._pend && pick.test(this._pend.text)) this._pend = null;
+        let took = false;
+        for (const el of [...(this.hud.zcalls?.children || [])]) if (pick.test(el.querySelector('.iw-zcall__txt')?.textContent || '')) { el.remove(); took = true; }
+        if (took || pick.test(this.show.call || '')) { this.show.call = null; this._sayT = -1e9; if (this.hud._zLive?.()) this._say('FREE — GRAB IT!', { small: true, icon: KARP_GLYPH }); }
+      }),
       on('karp:drop', ({ team, how }) => { if (how !== 'moved' && team >= 0 && !this._boomed(how)) this._call(team, 'WE LOST THE BAZOOKARP!', null, 'CARRIER DOWN!', null); }),
       on('karp:plant', ({ team }) => this._call(team, 'WEIR DOWN!', 'Their Dragon Gate is open!', 'THEY TOOK A WEIR!', 'Our Dragon Gate is open — defend it!')),
       // the Carp Blast's banner says where it goes next; the drop / reset that follows it at once no longer replaces it
@@ -399,20 +411,34 @@ export class KarpHud {
       const p = this._proj(H.pos.x, H.pos.y + (H.form === 'squid' ? 1.15 : 2.4), H.pos.z);
       if (p) {
         let x = p.x, y = p.y;
-        const inside = !p.behind && x > 40 && x < p.W - 40 && y > 70 && y < p.H - 40;
+        // ([karp-face] review round 3: the marker keeps out of the top bar — down to the Carp Line's status pill, as the
+        // world tags do: a carrier up on lockgate's Pond bridge, seen from below, had its marker drawn over the Carp Line.
+        // One that would sit there is pinned at the bar's lower edge like an off-screen one, its arrow up, the distance.
+        // The pill's size is measured when its text changes)
+        const u = Math.min(p.W / 100, (p.H * 1.7778) / 100), pill = this.mk.children[1];
+        if (this._mkKey !== pill.textContent + (f.rate > 1 ? 'f' : '') || !(this._mkH > 0)) { this._mkKey = pill.textContent + (f.rate > 1 ? 'f' : ''); this._mkW = pill.offsetWidth; this._mkH = pill.offsetHeight; }
+        const pw = this._mkW > 0 ? this._mkW : 5.4 * u, ph = this._mkH > 0 ? this._mkH : 2.5 * u, bar = this._topY > 0 ? this._topY + 4 : 0;
+        const inside = !p.behind && x > 40 && x < p.W - 40 && y > Math.max(70, bar + ph) && y < p.H - 40;
         let rot = 0;
         if (!inside) {
           let dx = x - p.W / 2, dy = y - p.H / 2; if (p.behind) { dx = -dx; dy = -dy; if (Math.abs(dx) + Math.abs(dy) < 1) dy = 1; }
           rot = Math.atan2(dy, dx);
-          const k = Math.min((p.W / 2 - 56) / Math.max(1e-3, Math.abs(Math.cos(rot))), (p.H / 2 - 64) / Math.max(1e-3, Math.abs(Math.sin(rot))));
-          x = p.W / 2 + Math.cos(rot) * k; y = p.H / 2 + Math.sin(rot) * k;
+          // (the pin's box: its top edge under the bar with room for the arrow above the pill — 3 u from its middle)
+          const cx = p.W / 2, cy = p.H / 2, c = Math.cos(rot), sn = Math.sin(rot), y0 = Math.min(cy - 8, Math.max(64, bar + 3.1 * u));
+          const kx = c > 1e-3 ? (p.W - 56 - cx) / c : c < -1e-3 ? (56 - cx) / c : Infinity, ky = sn > 1e-3 ? (p.H - 64 - cy) / sn : sn < -1e-3 ? (y0 - cy) / sn : Infinity;
+          const k = Math.min(kx, ky);
+          x = cx + c * k; y = cy + sn * k;
         }
         const secs = Math.max(0, Math.ceil(f.fuse)), dist = local ? Math.round(H.pos.distanceTo(local.pos)) : 0;
-        mk = { x: +x.toFixed(1), y: +y.toFixed(1), secs, fast: f.rate > 1, onScreen: inside, dist, team: H.team };
+        // ([karp-face] review round 3: and it fades out of the way of a live call-out, the kill call-out and the centre
+        // banner — OVERTIME!'s 'Stop th[🐟 57]hold!' on the defenders' screen, who look at the carrier — as the tags do)
+        const bx = inside ? { l: x - pw / 2, r: x + pw / 2, t: y - ph, b: y } : { l: x - pw / 2, r: x + pw / 2, t: y - ph / 2, b: y + ph / 2 + 1.4 * u };
+        const under = this._hits(calls, bx.l, bx.r, bx.t, bx.b);
+        this.mk.classList.toggle('is-under', under);
+        mk = { x: +x.toFixed(1), y: +y.toFixed(1), secs, fast: f.rate > 1, onScreen: inside, dist, team: H.team, under, raw: +p.y.toFixed(1), box: { l: +bx.l.toFixed(1), r: +bx.r.toFixed(1), t: +bx.t.toFixed(1), b: +bx.b.toFixed(1) } };
         this.mk.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
         this.mk.style.setProperty('--kc', G.teamHex?.[H.team] || '#ffd27a');
         this.mk.style.setProperty('--rot', `${rot.toFixed(3)}rad`);
-        const pill = this.mk.children[1];
         if (pill.children[1].textContent !== String(secs)) {
           pill.children[1].textContent = String(secs);
           if (secs <= 10) { this.mk.classList.remove('is-beat'); void this.mk.offsetWidth; this.mk.classList.add('is-beat'); }
@@ -636,6 +662,64 @@ function hatch(c, hex) {
   }
   return _P[key];
 }
+// [karp-face] review round 3: the halfway line as polylines [[x, z, x, z, …], …] in world metres — marching squares over
+// the nav grid's cells (each cell's value: D_0 − D_1 at its top node, the surface the TAB map shows), chained by the cell
+// edges they cross. A square across a step of more than 1.2 m (a wall, a raised deck's edge) has none: the line would
+// run along the cliff
+export function halfwayLines(F, nav) {
+  const D0 = F.D?.[0], D1 = F.D?.[1], ok = F.okN, nx = nav.nx, nz = nav.nz;
+  if (!D0 || !D1 || !nav.cells) return [];
+  const fv = new Float64Array(nx * nz).fill(NaN), hy = new Float64Array(nx * nz);
+  for (let c = 0; c < nx * nz; c++) {
+    let best = -1, by = -Infinity;
+    for (const id of nav.cells[c] || []) { if (ok && !ok[id]) continue; if (!Number.isFinite(D0[id]) || !Number.isFinite(D1[id])) continue; const y = nav.nodes[id].y; if (y > by) { by = y; best = id; } }
+    if (best >= 0) { fv[c] = D0[best] - D1[best]; hy[c] = by; }
+  }
+  const X = (ix) => nav.x0 + ix * nav.step, Z = (iz) => nav.z0 + iz * nav.step;
+  // the crossing on the edge between cells (ax, az) and (bx, bz): its key and point
+  const cross = (ax, az, bx, bz) => { const fa = fv[az * nx + ax], fb = fv[bz * nx + bx], k = fa / (fa - fb); return [`${ax},${az},${bx},${bz}`, X(ax) + (X(bx) - X(ax)) * k, Z(az) + (Z(bz) - Z(az)) * k]; };
+  const segs = [];
+  for (let iz = 0; iz < nz - 1; iz++) for (let ix = 0; ix < nx - 1; ix++) {
+    const c00 = iz * nx + ix, c10 = c00 + 1, c01 = c00 + nx, c11 = c01 + 1, q = [fv[c00], fv[c10], fv[c11], fv[c01]];
+    if (q.some((v) => Number.isNaN(v))) continue;
+    const ys = [hy[c00], hy[c10], hy[c11], hy[c01]];
+    if (Math.max(...ys) - Math.min(...ys) > 1.2) continue;
+    const pos = q.map((v) => v > 0), n = pos.filter(Boolean).length;
+    if (n === 0 || n === 4) continue;
+    // the square's four edges, counter-clockwise: bottom (00–10), right (10–11), top (01–11), left (00–01)
+    const E = [[ix, iz, ix + 1, iz], [ix + 1, iz, ix + 1, iz + 1], [ix, iz + 1, ix + 1, iz + 1], [ix, iz, ix, iz + 1]];
+    const corner = [[0, 1], [1, 2], [3, 2], [0, 3]];   // (each edge's two corners in q)
+    const hit = [0, 1, 2, 3].filter((k) => pos[corner[k][0]] !== pos[corner[k][1]]);
+    const pts = hit.map((k) => cross(...E[k]));
+    if (pts.length === 2) segs.push([pts[0], pts[1]]);
+    else if (pts.length === 4) {   // a saddle: pair by the centre's sign
+      const mid = (q[0] + q[1] + q[2] + q[3]) / 4 > 0;
+      if (mid === pos[0]) { segs.push([pts[0], pts[1]]); segs.push([pts[2], pts[3]]); } else { segs.push([pts[0], pts[3]]); segs.push([pts[1], pts[2]]); }
+    }
+  }
+  // chain the segments through the edge points they share
+  const at = new Map();
+  segs.forEach((sg, i) => { for (const p of sg) (at.get(p[0]) || at.set(p[0], []).get(p[0])).push(i); });
+  const used = new Uint8Array(segs.length), out = [];
+  const next = (key, from) => (at.get(key) || []).find((j) => j !== from && !used[j]);
+  for (let i = 0; i < segs.length; i++) {
+    if (used[i]) continue;
+    used[i] = 1;
+    const line = [segs[i][0], segs[i][1]];
+    for (const dir of [1, 0]) {   // grow from the tail, then from the head
+      let j = i, end = dir ? line[line.length - 1] : line[0];
+      for (;;) {
+        const k = next(end[0], j); if (k == null) break;
+        used[k] = 1; j = k;
+        const o = segs[k][0][0] === end[0] ? segs[k][1] : segs[k][0];
+        if (dir) line.push(o); else line.unshift(o);
+        end = o;
+      }
+    }
+    if (line.length >= 3) out.push(line.flatMap((p) => [p[1], p[2]]));
+  }
+  return out;
+}
 export function drawKarpMap(c, mm, tc, s, hex, t, layer = 'under') {
   const Kp = G.match && !G.match.attract ? G.match.karp : null;
   if (!Kp) return;
@@ -644,23 +728,27 @@ export function drawKarpMap(c, mm, tc, s, hex, t, layer = 'under') {
   c.save();
   if (layer === 'under') {
     // free zones
-    if (mm._kzFor !== Kp || mm._kzFlip !== mm.flip) {
-      mm._kzFor = Kp; mm._kzFlip = mm.flip;
+    if (mm._kzFor !== Kp || mm._kzFlip !== mm.flip || mm._kzState !== Kp.field.state) {
+      mm._kzFor = Kp; mm._kzFlip = mm.flip; mm._kzState = Kp.field.state;
       mm._kz = [0, 1].map((tm) => Kp.R.zones[tm].map((z) => { const p = new Path2D(); z.poly.forEach(([x, zz], i) => { mm.toCanvas(x, zz, tc); if (i) p.lineTo(tc.x, tc.y); else p.moveTo(tc.x, tc.y); }); p.closePath(); return p; }));
-      // the halfway line: nodes where the two walks are nearly equal (the field's own line)
-      const F = Kp.field, D0 = F.D?.[0], D1 = F.D?.[1], pts = [];
-      if (D0 && D1 && G.nav) for (const id of G.nav.validIds || []) { const a = D0[id], b = D1[id]; if (Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) < 0.9) { const n = G.nav.nodes[id]; mm.toCanvas(n.x, n.z, tc); pts.push(tc.x, tc.y); } }
-      mm._kHalf = pts;
+      // the halfway line: the field's own line (D_0 = D_1, where the halves meet), traced between the nav grid's cells
+      // ([karp-face] review round 3: it was a dot on each node whose two walks differ by < 0.9 m — on halyard a handful
+      // of 1.2 px dots near the map's edges, nothing across the middle)
+      const lines = G.nav ? halfwayLines(Kp.field, G.nav) : [], path = new Path2D();
+      for (const L of lines) for (let i = 0; i < L.length; i += 2) { mm.toCanvas(L[i], L[i + 1], tc); if (i) path.lineTo(tc.x, tc.y); else path.moveTo(tc.x, tc.y); }
+      mm._kHalf = lines.length ? path : null; mm._kHalfN = lines.reduce((n, L) => n + L.length / 2, 0);
     }
     for (const tm of [0, 1]) for (const p of mm._kz[tm]) {
       c.globalAlpha = 0.2; c.fillStyle = hex[tm]; c.fill(p);
       c.globalAlpha = 0.55; c.fillStyle = hatch(c, hex[tm]); c.fill(p);
       c.globalAlpha = 0.9; c.lineWidth = 0.4 * s; c.strokeStyle = hex[tm]; c.setLineDash([0.9 * s, 0.6 * s]); c.stroke(p); c.setLineDash([]);
     }
-    if (big > 1 && mm._kHalf?.length) {
-      c.globalAlpha = 0.75; c.fillStyle = '#ffffff';
-      const r = Math.max(1.2, 0.42 * s);
-      for (let i = 0; i < mm._kHalf.length; i += 2) { c.beginPath(); c.arc(mm._kHalf[i], mm._kHalf[i + 1], r, 0, TAU); c.fill(); }
+    if (big > 1 && mm._kHalf) {   // (the TAB map only: a dashed white line in a dark casing, readable on a light floor)
+      const dash = [Math.max(5, 1.5 * s), Math.max(3.5, 1.0 * s)];
+      c.lineCap = 'round'; c.lineJoin = 'round'; c.setLineDash(dash);
+      c.globalAlpha = 0.6; c.strokeStyle = '#15121c'; c.lineWidth = Math.max(3.2, 0.62 * s); c.stroke(mm._kHalf);
+      c.globalAlpha = 0.9; c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(1.6, 0.3 * s); c.stroke(mm._kHalf);
+      c.setLineDash([]); c.lineCap = 'butt';
     }
     // weirs: diamonds in the attacking team's ink, grey once lowered
     for (const list of Kp.weirs) for (const w of list) {

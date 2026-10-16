@@ -18,6 +18,8 @@
 //   J (review round 2) all four "Can't use" lines (the TAB map's super jump, the spawn barrier at most once per 3 s, a
 //     special); OVERTIME!'s instruction readable in real time with the stock centre banner left in; the call-outs' wait
 //     on play time (a stale kill call-out never holds ours)
+//   K (review round 3) the carrier's over-head marker: never in the top bar (pinned under it, its arrow up); faded off a
+//     live call-out's instruction and the centre banner; a grant undone takes its pick-up call-out back
 //   MAP=testbox MODE=bazookarp PAGE=tools/botlab/tests/hud-karp.js tools/botlab/run.sh tools/botlab/page.cjs
 (async () => {
   const g = window.__inkwave, m = g.match, dbg = g.debug, G = __G, Kp = m.karp, H = g.hud;
@@ -158,6 +160,15 @@
   let mapErr = null;
   try { const { drawKarpMap } = await import('./src/ui/hud-karp.js'); const mm = g.minimap; const c = mm.ctx; drawKarpMap(c, mm, { x: 0, y: 0 }, mm.s, G.teamHex, 1, 'under'); drawKarpMap(c, mm, { x: 0, y: 0 }, mm.s, G.teamHex, 1, 'over'); } catch (e) { mapErr = String(e); }
   R('G2. the map layer draws both layers without error', !mapErr, { mapErr });
+  // [karp-face] review round 3: the TAB map's halfway line — traced polylines through the Pond, across the map (it was a
+  // few dots on nodes whose two walks were within 0.9 m: on halyard nothing across the middle)
+  { let L4 = null, e4 = null; try { const { halfwayLines } = await import('./src/ui/hud-karp.js'); L4 = halfwayLines(Kp.field, G.nav); } catch (e) { e4 = String(e); }
+    const gx = G0.pos.x - P.x, gz = G0.pos.z - P.z, gl = Math.hypot(gx, gz) || 1, px = -gz / gl, pz = gx / gl;
+    let n4 = 0, near = Infinity, lo = Infinity, hi = -Infinity, nlo = Infinity, nhi = -Infinity;
+    for (const l of L4 || []) for (let i = 0; i < l.length; i += 2) { n4++; near = Math.min(near, Math.hypot(l[i] - P.x, l[i + 1] - P.z)); const q = l[i] * px + l[i + 1] * pz; lo = Math.min(lo, q); hi = Math.max(hi, q); }
+    for (const id of G.nav.validIds) { const nd = G.nav.nodes[id], q = nd.x * px + nd.z * pz; nlo = Math.min(nlo, q); nhi = Math.max(nhi, q); }
+    const span = (hi - lo) / Math.max(1, nhi - nlo);
+    R('G4. the TAB map\'s halfway line: traced lines through the Pond, across most of the map', !!L4 && L4.length >= 1 && n4 > 15 && near < 2.5 && span > 0.5, { err: e4, lines: L4 && L4.length, points: n4, pond: +near.toFixed(2), span: +span.toFixed(2) }); }
   // [karp-face] the hiss: a carrier's last 3 s, on the carrier (a teammate's screen hears it where the carrier is)
   { const A0 = G.audio, lp0 = A0.loop.bind(A0), loops = []; A0.loop = (n, o) => { const hnd = lp0(n, o); if (n === 'karp_hiss') loops.push({ pos: !!(o && o.pos) }); return hnd; };
     put(ally, spot(P.x + 2, P.z + dz * 4, P.y)); grab(ally); step(0.1);
@@ -352,6 +363,78 @@
     clearAll(); H._callout('WIPEOUT!', 'The whole team is splatted', true); H.karp._say('SHELL BURST!', { sub: 'GRAB THE BAZOOKARP!', icon: null });
     step(0.3); const at03 = H.zcalls.children.length; step(0.12); const at042 = H.zcalls.children.length;
     R('J5. the call-outs\' wait runs on play time: a stale kill call-out (0.6 s of play, no frame painted) doesn\'t hold ours; a fresh one holds it past 0.3 s and lets it up by 0.42 s', stale === 1 && at03 === 0 && at042 === 1 && m.state === 'playing', { stale, at03, at042, state: m.state });
+    clearAll(); step(0.1);
+  }
+
+  // ---- K. [karp-face] review round 3: the carrier's over-head marker keeps out of the top bar (pinned under it, its arrow
+  // up) and fades out of the way of a live call-out (OVERTIME!'s sub line) and the centre banner, as the world tags do
+  {
+    const wait = (ms) => new Promise((q) => setTimeout(q, ms));
+    const er = () => H.el.getBoundingClientRect();
+    const topY = () => H.karp.status.getBoundingClientRect().bottom - er().top;
+    const rel = (r) => { const o = er(); return { l: r.left - o.left, r: r.right - o.left, t: r.top - o.top, b: r.bottom - o.top }; };
+    const ov = (a, b) => Math.max(0, Math.min(a.r, b.r) - Math.max(a.l, b.l)) * Math.max(0, Math.min(a.b, b.b) - Math.max(a.t, b.t));
+    const clearAll = () => { if (H.zcalls) [...H.zcalls.children].forEach((e) => e.remove()); H.callouts?.querySelectorAll('.iw-call').forEach((e) => e.remove()); H.bannerLayer?.querySelectorAll('.iw-bn').forEach((b) => b.remove()); H.karp._sayT = -1e9; H.karp._pend = null; H.karp._hold = 0; };
+    const opMk = () => +getComputedStyle(H.karp.mk).opacity;
+    clearAll(); release(); step(0.1);
+    // an enemy carrier on the Pond in kid form, the viewer 12 m off facing it
+    put(me, spot(P.x, P.z - dz * 12, P.y)); facePond(me);
+    put(foe, spot(P.x, P.z, P.y)); grab(foe); step(0.1); follow();
+    const u = Math.min(H.el.clientWidth / 100, (H.el.clientHeight * 1.7778) / 100);
+    // K1. tilt the camera down until the marker's own point projects up in the top bar (above the status pill's bottom)
+    let raw1 = null, mk1 = null; const tr1 = [];
+    for (let k = 0; k < 60 && !raw1; k++) {
+      g.rig.pitch = -0.2 + k * 0.025; step(2 / 60); H.karp._topT = 0; step(1 / 60);
+      const p = H.karp._proj(foe.pos.x, foe.pos.y + 2.4, foe.pos.z), ty = topY();
+      tr1.push(p ? +p.y.toFixed(0) : null);
+      if (p && !p.behind && p.y > 6 && p.y < ty - 6 && p.x > 60 && p.x < p.W - 60) { raw1 = { y: +p.y.toFixed(1), top: +ty.toFixed(1), pitch: +g.rig.pitch.toFixed(3) }; mk1 = S().marker; }
+    }
+    R('K1. a carrier whose marker would sit up in the top bar (a raised Pond seen from below): pinned under the status pill — its pill and its arrow below the bar, the distance shown — never over the Carp Line',
+      !!raw1 && !!mk1 && !mk1.onScreen && mk1.box.t >= raw1.top - 0.5 && mk1.y - 3 * u >= raw1.top - 1 && mk1.dist > 0, { raw: raw1, marker: mk1, u: +u.toFixed(2), tried: raw1 ? undefined : tr1 });
+    // K2. a live OVERTIME! call-out with its instruction; tilt until the marker sits on the sub line: it fades out (and is
+    // back once the call-out is gone)
+    g.rig.pitch = -0.15; step(2 / 60); H.karp._topT = 0; step(1 / 60);
+    H._zCall('OVERTIME!', { team: foe.team, sub: 'Stop them — 10 s to hold!', icon: null });
+    await wait(450);
+    let hit2 = null; const tr2 = [];
+    for (let k = 0; k < 70 && !hit2; k++) {
+      g.rig.pitch = -0.45 + k * 0.015; step(2 / 60);
+      const z = H.zcalls.firstElementChild, sub = z?.querySelector('.iw-zcall__sub'), mk = S().marker;
+      if (!z || !sub || !mk) { tr2.push(null); continue; }
+      const sb = rel(sub.getBoundingClientRect());
+      tr2.push(mk.y);
+      if (mk.onScreen && ov(mk.box, sb) > 0) hit2 = { mk, sub: sb, cls: H.karp.mk.classList.contains('is-under') };
+    }
+    await wait(260);
+    const op2 = opMk();
+    if (H.zcalls) [...H.zcalls.children].forEach((e) => e.remove()); step(2 / 60); await wait(260); step(1 / 60);
+    const back2 = { under: S().marker?.under, op: opMk() };
+    R('K2. a marker that would sit on a live call-out\'s instruction (OVERTIME! / Stop them — 10 s to hold!) fades out of its way, and is back once the call-out is gone',
+      !!hit2 && hit2.mk.under && hit2.cls && op2 < 0.05 && back2.under === false && back2.op > 0.95, { hit: hit2, opacity: op2, back: back2, tried: hit2 ? undefined : tr2 });
+    // K3. the stock OVERTIME! centre banner: the same
+    clearAll(); g.rig.pitch = -0.15; step(2 / 60);
+    H._zBanner('OVERTIME!');
+    await wait(300);
+    let hit3 = null; const tr3 = [];
+    for (let k = 0; k < 70 && !hit3; k++) {
+      g.rig.pitch = -0.45 + k * 0.015; step(2 / 60);
+      const bt = H.bannerLayer.querySelector('.iw-bn[data-g="center"] .iw-bn__text'), mk = S().marker;
+      if (!bt || !mk) { tr3.push(null); continue; }
+      const bb = rel(bt.getBoundingClientRect());
+      tr3.push(mk.y);
+      if (mk.onScreen && ov(mk.box, bb) > 0) hit3 = { mk, word: bb, cls: H.karp.mk.classList.contains('is-under') };
+    }
+    await wait(260);
+    const op3 = opMk();
+    R('K3. … and off the stock OVERTIME! centre banner\'s word', !!hit3 && hit3.mk.under && hit3.cls && op3 < 0.05, { hit: hit3, opacity: op3, tried: hit3 ? undefined : tr3 });
+    clearAll(); g.rig.pitch = -0.15; release(); step(0.1);
+    // K4. a grant undone (the host's 'u': its claimant had died): the pick-up call-out goes and a small FREE — GRAB IT!
+    // says so — the call-out said somebody had it while the status pill said FREE
+    const { emit: em4 } = await import('./src/core/ctx.js');
+    const txt4 = () => [...H.zcalls.children].map((e) => e.querySelector('.iw-zcall__txt')?.textContent || '');
+    em4('karp:pickup', { actor: foe, team: foe.team }); const up4 = txt4();
+    em4('karp:undo', { actor: foe }); const after4 = txt4();
+    R('K4. a grant undone (u): the pick-up call-out is taken back, a small FREE — GRAB IT! instead', up4.some((t) => /THEY'VE GOT THE BAZOOKARP/.test(t)) && !after4.some((t) => /GOT THE BAZOOKARP/.test(t)) && after4.includes('FREE — GRAB IT!'), { up: up4, after: after4 });
     clearAll(); step(0.1);
   }
 
