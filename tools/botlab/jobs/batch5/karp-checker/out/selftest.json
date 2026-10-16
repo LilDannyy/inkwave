@@ -1,0 +1,869 @@
+[
+ {
+  "id": "clean",
+  "check": null,
+  "what": "the clean box",
+  "expect": null,
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f1",
+  "check": 1,
+  "what": "a NO CARP sign standing in the spawn zone",
+  "expect": "sign at .* in team \\d's spawn zone",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   1
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f2",
+  "check": 2,
+  "what": "a wall on Bravo's half only (a `single`): Alpha's walk 50 % longer, L_A ≠ L_B",
+  "expect": "\\(Δ (?:[3-9]|[1-9]\\d)(?:\\.\\d)? %\\)",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   2,
+   15
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f3",
+  "check": 3,
+  "what": "the weir at 85 % of the way (count ≈ 15)",
+  "expect": "weir 1 at count \\d+ \\([\\d.]+ %: band 45–60\\)",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   3,
+   15
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f4",
+  "check": 4,
+  "what": "the weir on a 3 m box only a climb reaches",
+  "expect": "Pond → weir 1 has no climb-free carrier route",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   3,
+   4,
+   5,
+   9,
+   15
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f5",
+  "check": 5,
+  "what": "the weir at the end of a 3 m dead-end corridor (one way in, 12 m long)",
+  "expect": "Pond → weir 1: no second route",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   1,
+   3,
+   5,
+   15
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f6",
+  "check": 6,
+  "what": "a third opening in the ring wall, straight in from the south: Pond → Gate ≈ 10 s",
+  "expect": "= [0-9](?:\\.\\d)? s walking \\(11\\.5–18\\)",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   3,
+   6
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f7",
+  "check": 7,
+  "what": "a 1.5 m non-inkable ledge through the ring wall into the Gate's ring that only a hop climbs, screened from the spawn deck",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[hop over off-field ground\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f8",
+  "check": 8,
+  "what": "the Gate 45° off the pad → Pond line",
+  "expect": "° off the pad → Pond line \\(±40°\\)",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   3,
+   5,
+   6,
+   8
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f9",
+  "check": 9,
+  "what": "a free-zone entrance with no sign",
+  "expect": "an entrance at .* with no sign within 2 m",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   9
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f10",
+  "check": 10,
+  "what": "low walls either side of the Pond: the own-half route walks back toward its own base",
+  "expect": "on its own half dips [\\d.]+ m in progress",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   10
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f11",
+  "check": 11,
+  "what": "a noRest polygon over 26 m of the routes: splats there find no resting spot within 12 m",
+  "expect": "drop coverage: \\d+ of \\d+ splats bad",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   11
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f12",
+  "check": 12,
+  "what": "a crate tagged notIn: 'turf' (it leaks into Zone Control and Tower Command too)",
+  "expect": "not tagged for it: kcheck-leak",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   12
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f13",
+  "check": 13,
+  "what": "the apron's crates gone (no cover between the deck and the Gate)",
+  "expect": "apron: 0 cover block",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   13
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f14",
+  "check": 14,
+  "what": "two 3 m walls 5.5 m out from the Pond (N and NE; mirrored S and SW): seen from 3 of 8",
+  "expect": "the shell seen from [0-5]/8 directions",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   14
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f15",
+  "check": 15,
+  "what": "a pillar 2 m from the weir",
+  "expect": "solid within 3 m: kcheck-pillar",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   15
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f16",
+  "check": 16,
+  "what": "an awning over the flank lane's 1.5 m step: the field adds the hop, no kid makes it",
+  "expect": "\\d+ made, [1-9]\\d* not \\([1-9]\\d* hops, \\d+ gaps up / level, \\d+ gaps down\\) → hopVeto",
+  "notFail": null,
+  "expect16": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   16
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "f16w",
+  "check": 16,
+  "what": "a 2.5 m thin fence across the Pond → weir approach with a 0.5 m slot on route 1's line: the graph walks through the slot (its centre ray passes), no carrier's 0.76 m body fits",
+  "expect": "NOT WALKED: team \\d Pond → weir 1, route 1",
+  "notFail": null,
+  "expect16": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   16
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x5",
+  "check": 5,
+  "what": "two weirs 8 m apart",
+  "expect": "the weirs 8 m apart \\(≥ 12\\)",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   3,
+   5,
+   15
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x7b",
+  "check": 7,
+  "what": "a climb shortcut: the ring's only opening far round by the deck, and an inkable stretch of its wall facing the Pond (a climb saves 30 %)",
+  "expect": "\\(b\\) \\d+ climb edge\\(s\\) on climb shortcuts saving > 20 %",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   3,
+   5,
+   6,
+   7,
+   9,
+   10
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x7d",
+  "check": 7,
+  "what": "a squid-only gap (0.7 m headroom) through the ring wall into the Gate's ring",
+  "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: lowGap",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x9a",
+  "check": 9,
+  "what": "a climb-only 3 m plateau with a zone over half of it",
+  "expect": "reachable by its carrier, the enemy only by climbing, \\d+/\\d+ nodes in its zones",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   9
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x9b",
+  "check": 9,
+  "what": "a noRetreat polygon over the spawn deck's zone",
+  "expect": "a noRetreat polygon within 3 m of",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   9
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "states",
+  "check": 15,
+  "what": "a stage module's second state (G.match.stage.karpStates(), its world on ?kcstate=w) puts a wall 2.6 m from the weir",
+  "expect": null,
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": true,
+  "pass": true,
+  "runs": [
+   {
+    "key": 0,
+    "query": null,
+    "c15": "OK",
+    "fails": []
+   },
+   {
+    "key": "w",
+    "query": "kcstate=w",
+    "c15": "FAIL",
+    "fails": [
+     15
+    ]
+   }
+  ],
+  "states": [
+   {
+    "key": 0,
+    "query": null
+   },
+   {
+    "key": "w",
+    "query": "kcstate=w"
+   },
+   {
+    "key": 1,
+    "query": null
+   }
+  ]
+ },
+ {
+  "id": "x9c",
+  "check": 9,
+  "what": "a free zone poking 2 m over the halfway line",
+  "expect": "node\\(s\\) not on its owner's half",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   9
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x7r",
+  "check": 7,
+  "what": "H2p: f7's ledge replaced by a 2.0 m moat and a 1.0 m landing just inside the ring (off the field), behind f7's screen: a running jump 1 m up across the moat",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[(rising gap|jump onto off-field ground)\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x7rb",
+  "check": 7,
+  "what": "H2bp: the same with a 1.3 m moat and a 1.5 m landing (a hop over a gap onto ground off the field)",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[(rising gap|jump onto off-field ground)\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x7rq",
+  "check": 7,
+  "what": "H2q: the 2.0 m moat and 1.0 m landing on the field (a ramp down from it into the ring), screened north of it: a rising gap into the ring",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[rising gap\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x7a",
+  "check": 7,
+  "what": "two more openings in the ring wall on the deck side (west): six entrances",
+  "expect": "\\(a\\) team \\d: (?:[6-9]|\\d{2}) entrances into its Gate's 15 m ring \\(2–5\\)",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x7c",
+  "check": 7,
+  "what": "a 3 m deck outside a west opening in the ring wall, up a ramp: its edge drops 3 m into the ring",
+  "expect": "\\(c\\) \\d+ drop\\(s\\) > 2\\.5 m into a Gate's ring",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x7t",
+  "check": 7,
+  "what": "a 5.8 m inkable platform up a long ramp: its far wall a squid climbs (nav stops at 5.5 m)",
+  "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*tallWall",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x7l",
+  "check": 7,
+  "what": "a 4 m platform up a long ramp: its far edge drops 4 m (nav stops at 3.4)",
+  "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*longDrop",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x7h",
+  "check": 7,
+  "what": "a 1.83 m ledge (no ink) in a west opening of the ring wall, a ramp down from it into the ring, the SW opening closed: a kid hops onto it from outside (just beyond the hop rule) instead of walking round to the SE opening",
+  "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*highHop",
+  "notFail": null,
+  "expect16": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   5,
+   7
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x7g",
+  "check": 7,
+  "what": "the GAP's far platform moved 1 m on and 0.5 m down: 3.6 m of air (just beyond the gap rule), the long way round 14 m more",
+  "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*longGap",
+  "notFail": null,
+  "expect16": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x3",
+  "check": 3,
+  "what": "the weir past its platform, 13 m from the ring",
+  "expect": "weir 1 → Gate [\\d.]+ m \\(≥ 25 m",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   3,
+   15
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x5b",
+  "check": 5,
+  "what": "a wall across the deck at z 15 with a 3 m gap on route 1: route 2 goes round by the flank lane",
+  "expect": "Pond → weir 1: route 2 [\\d.]+ m = [\\d.]+ × route 1 \\(≤ 1\\.6\\)",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   5
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x9d",
+  "check": 9,
+  "what": "a free zone over the weir's platform",
+  "expect": "zone \\d+ touches .*weir",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   9,
+   15
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x9e",
+  "check": 9,
+  "what": "a free zone on the floor across the Pond → weir routes",
+  "expect": "touches \\d+ route 1 / route 2 node",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   9
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x9f",
+  "check": 9,
+  "what": "an open-floor zone (6 × 8 m) signed at one corner only: one wide entrance, an end unsigned",
+  "expect": "a [\\d.]+ m entrance at .* needs a sign within 2 m of each end",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   9
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x9g",
+  "check": 9,
+  "what": "a free zone over the Gate",
+  "expect": "touches .*Gate",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   8,
+   9
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x13",
+  "check": 13,
+  "what": "two of the parapet's three openings closed",
+  "expect": "spawn deck: [0-2] way\\(s\\) off \\(≥ 3\\)",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   13
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x14",
+  "check": 14,
+  "what": "the floor east of the Pond cut away (open water x 3…14, z 0…10; mirrored)",
+  "expect": "^ring 4\\.5–10 m (?:[0-9]|[1-6][0-9])(?:\\.\\d)? % floor",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   14
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x15t",
+  "check": 15,
+  "what": "T1: a 0.2 m lamp post 2.2 m from the weir's centre, on its platform",
+  "expect": "solid within 3 m: kcheck-lamp",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   15
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x15a",
+  "check": 15,
+  "what": "the weir in the alley behind a chicane of two baffles: 8 m back along route 1 the baffle hides it",
+  "expect": "not seen from the (?:attackers'|defenders') approach",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   3,
+   5,
+   15
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x1",
+  "check": 1,
+  "what": "W5: the weir 2 m off its platform's centre line: its east post stands past the platform's edge",
+  "expect": "kit piece\\(s\\) not resting on floor: karp-weir-base",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   1
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x11",
+  "check": 11,
+  "what": "f16w's fence with its 0.5 m slot on route 1: the scripted carrier sticks at it",
+  "expect": "stuck episode\\(s\\)|the carry picked",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": true,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   11
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "x11r",
+  "check": 11,
+  "what": "a noRetreat polygon over each whole half: the retreat walk's ×3 never comes on",
+  "expect": "team \\d: retreat ×3 on at null m",
+  "notFail": null,
+  "expect16": null,
+  "phys": false,
+  "carry": true,
+  "allStates": false,
+  "pass": true,
+  "failing": [
+   9,
+   11
+  ],
+  "why": true,
+  "why16": true
+ },
+ {
+  "id": "w4",
+  "check": null,
+  "what": "W4: the weir's platform a 1.5 m inkable box, its ramps gone (nav gives it climb edges; a kid hops it)",
+  "expect": null,
+  "notFail": [
+   4,
+   9
+  ],
+  "expect16": "climbs of ≤ 1\\.8 m tried as hops: [1-9]\\d* of",
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "pass": true,
+  "failing": [],
+  "why": true,
+  "why16": true
+ }
+]

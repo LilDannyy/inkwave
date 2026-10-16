@@ -18,7 +18,8 @@
    "text": "the Pond at (0, 3.3, 0); 1 weir(s), the Gate and 2 sign(s) a side on floor, the mirror too; 60 kit pieces (post / sign tops roof, no ink)",
    "nums": {
     "kit": 60,
-    "problems": 0
+    "problems": 0,
+    "floating": []
    },
    "flags": []
   },
@@ -124,7 +125,7 @@
    "n": 5,
    "name": "Two routes to every checkpoint and to the Gate",
    "status": "FAIL",
-   "text": "team 0: Pond → weir 1: route 2 70.1 m = 2.55 × route 1 (≤ 1.6); team 0: weir 1 → Gate: route 2 49.7 m = 1.83 × route 1 (≤ 1.6); team 1: Pond → weir 1: route 2 70.1 m = 2.55 × route 1 (≤ 1.6); team 1: weir 1 → Gate: route 2 49.7 m = 1.83 × route 1 (≤ 1.6)",
+   "text": "team 0: Pond → weir 1: route 2 70.1 m = 2.55 × route 1 (≤ 1.6); team 1: Pond → weir 1: route 2 70.1 m = 2.55 × route 1 (≤ 1.6)",
    "nums": {
     "rows": [
      {
@@ -139,8 +140,8 @@
       "team": 0,
       "leg": "weir 1 → Gate",
       "r1": 27.2,
-      "r2": 49.7,
-      "ratio": 1.83,
+      "r2": 30.7,
+      "ratio": 1.13,
       "r3": 39.2
      },
      {
@@ -155,9 +156,9 @@
       "team": 1,
       "leg": "weir 1 → Gate",
       "r1": 27.2,
-      "r2": 49.7,
-      "ratio": 1.83,
-      "r3": 30.7
+      "r2": 30.7,
+      "ratio": 1.13,
+      "r3": 39.8
      }
     ],
     "hints": []
@@ -173,7 +174,7 @@
     "rows": [
      {
       "team": 0,
-      "shortest": 57.5,
+      "shortest": 57.3,
       "field": 58,
       "walk": 12.1,
       "swim": 6.1,
@@ -191,7 +192,7 @@
      },
      {
       "team": 1,
-      "shortest": 57.5,
+      "shortest": 57.3,
       "field": 57.9,
       "walk": 12.1,
       "swim": 6.1,
@@ -215,7 +216,7 @@
    "n": 7,
    "name": "No shortcut into a base",
    "status": "FAIL",
-   "text": "(c) 10 drop(s) > 2.5 m into a Gate's ring: t0 3.1 m at (8.5, 40.5), t0 3.3 m at (9.5, 40.5), t0 3.3 m at (9.5, 40.5), t0 3.2 m at (2.5, 59.5); (d) 14 connection(s) the graph lacks gaining > 10 m: longGap [-20.5,1.3,-15.5]→[-19.5,-0.64,-12.25] 10.5 m, longGap [-16.5,1.3,-14.5]→[-19.5,-0.64,-12.25] 11.2 m, longGap [-17.5,1.3,-8.5]→[-17.5,-1.52,-12.25] 15.7 m, longGap [16.5,1.3,9.5]→[19.5,-0.64,11.75] 10.6 m, longGap [17.5,1.3,15.5]→[17.5,-1.52,11.75] 15.4 m",
+   "text": "(c) 10 drop(s) > 2.5 m into a Gate's ring: t0 3.1 m at (8.5, 40.5), t0 3.3 m at (9.5, 40.5), t0 3.3 m at (9.5, 40.5), t0 3.2 m at (2.5, 59.5); (d) 4 connection(s) the graph lacks gaining > 10 m: offGap [20.5,1.08,-38.5]→[19.5,1.67,-41.5] 10.8 m, offGap [20.5,1.08,-38.5]→[20.5,1.67,-41.5] 10.8 m, offGap [-20.5,1.08,38.5]→[-20.5,1.67,41.5] 12.5 m, offGap [-20.5,1.08,38.5]→[-19.5,1.67,41.5] 12.5 m",
    "nums": {
     "teams": [
      {
@@ -237,6 +238,16 @@
          "climb"
         ],
         "seen": true,
+        "plainSeen": true,
+        "plainTypes": [
+         "walk",
+         "jump",
+         "drop",
+         "gap",
+         "climb"
+        ],
+        "moves": 0,
+        "physUnseen": [],
         "from": [
          -4.5,
          0,
@@ -256,6 +267,13 @@
          "gap"
         ],
         "seen": true,
+        "plainSeen": true,
+        "plainTypes": [
+         "walk",
+         "gap"
+        ],
+        "moves": 0,
+        "physUnseen": [],
         "from": [
          -15.5,
          0,
@@ -274,6 +292,12 @@
          "walk"
         ],
         "seen": true,
+        "plainSeen": true,
+        "plainTypes": [
+         "walk"
+        ],
+        "moves": 0,
+        "physUnseen": [],
         "from": [
          -11.5,
          2.4,
@@ -292,6 +316,12 @@
          "walk"
         ],
         "seen": true,
+        "plainSeen": true,
+        "plainTypes": [
+         "walk"
+        ],
+        "moves": 0,
+        "physUnseen": [],
         "from": [
          11.5,
          0,
@@ -315,6 +345,12 @@
          "walk"
         ],
         "seen": true,
+        "plainSeen": true,
+        "plainTypes": [
+         "walk"
+        ],
+        "moves": 0,
+        "physUnseen": [],
         "from": [
          -7.5,
          1.4,
@@ -333,6 +369,12 @@
          "walk"
         ],
         "seen": true,
+        "plainSeen": true,
+        "plainTypes": [
+         "walk"
+        ],
+        "moves": 0,
+        "physUnseen": [],
         "from": [
          9.5,
          2.4,
@@ -352,6 +394,13 @@
          "walk"
         ],
         "seen": true,
+        "plainSeen": true,
+        "plainTypes": [
+         "gap",
+         "walk"
+        ],
+        "moves": 0,
+        "physUnseen": [],
         "from": [
          14.5,
          1.95,
@@ -374,6 +423,16 @@
          "jump"
         ],
         "seen": true,
+        "plainSeen": true,
+        "plainTypes": [
+         "walk",
+         "climb",
+         "drop",
+         "gap",
+         "jump"
+        ],
+        "moves": 0,
+        "physUnseen": [],
         "from": [
          -15.5,
          0,
@@ -383,6 +442,14 @@
       ]
      }
     ],
+    "rise": {
+     "cand": 143,
+     "tried": 2
+    },
+    "offGap": {
+     "cand": 54,
+     "tried": 4
+    },
     "cand": {
      "high": 16,
      "long": 219
@@ -398,200 +465,64 @@
     "climbShortcuts": 0,
     "d": [
      {
-      "probe": "longGap",
-      "a": [
-       -20.5,
-       1.3,
-       -15.5
-      ],
-      "b": [
-       -19.5,
-       -0.64,
-       -12.25
-      ],
-      "gain": 10.5
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -16.5,
-       1.3,
-       -14.5
-      ],
-      "b": [
-       -19.5,
-       -0.64,
-       -12.25
-      ],
-      "gain": 11.2
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -17.5,
-       1.3,
-       -8.5
-      ],
-      "b": [
-       -17.5,
-       -1.52,
-       -12.25
-      ],
-      "gain": 15.7
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       16.5,
-       1.3,
-       9.5
-      ],
-      "b": [
-       19.5,
-       -0.64,
-       11.75
-      ],
-      "gain": 10.6
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       17.5,
-       1.3,
-       15.5
-      ],
-      "b": [
-       17.5,
-       -1.52,
-       11.75
-      ],
-      "gain": 15.4
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       19.5,
-       1.3,
-       15.5
-      ],
-      "b": [
-       19.5,
-       -0.64,
-       11.75
-      ],
-      "gain": 12.4
-     },
-     {
-      "probe": "longGap",
+      "probe": "offGap",
       "a": [
        20.5,
-       1.3,
-       15.5
+       1.08,
+       -38.5
+      ],
+      "b": [
+       19.5,
+       1.67,
+       -41.5
+      ],
+      "gain": 10.8,
+      "phys": true
+     },
+     {
+      "probe": "offGap",
+      "a": [
+       20.5,
+       1.08,
+       -38.5
       ],
       "b": [
        20.5,
-       -0.2,
-       11.75
+       1.67,
+       -41.5
       ],
-      "gain": 10.9
+      "gain": 10.8,
+      "phys": true
      },
      {
-      "probe": "longGap",
+      "probe": "offGap",
       "a": [
        -20.5,
-       1.3,
-       -8.95
-      ],
-      "b": [
-       -19.5,
-       -0.64,
-       -12.25
-      ],
-      "gain": 10.4
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -19.5,
-       1.3,
-       -8.95
+       1.08,
+       38.5
       ],
       "b": [
        -20.5,
-       -0.2,
-       -12.25
+       1.67,
+       41.5
       ],
-      "gain": 10.3
+      "gain": 12.5,
+      "phys": true
      },
      {
-      "probe": "longGap",
+      "probe": "offGap",
       "a": [
-       -19.5,
-       1.3,
-       -8.95
+       -20.5,
+       1.08,
+       38.5
       ],
       "b": [
        -19.5,
-       -0.64,
-       -12.25
+       1.67,
+       41.5
       ],
-      "gain": 11.4
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -19.5,
-       1.3,
-       -8.95
-      ],
-      "b": [
-       -18.5,
-       -1.08,
-       -12.25
-      ],
-      "gain": 12.5
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       -18.5,
-       1.3,
-       -8.95
-      ],
-      "b": [
-       -17.5,
-       -1.52,
-       -12.25
-      ],
-      "gain": 14.6
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       18.5,
-       1.3,
-       15.05
-      ],
-      "b": [
-       17.5,
-       -1.52,
-       11.75
-      ],
-      "gain": 14.3
-     },
-     {
-      "probe": "longGap",
-      "a": [
-       18.5,
-       1.3,
-       15.05
-      ],
-      "b": [
-       19.5,
-       -0.64,
-       11.75
-      ],
-      "gain": 12.1
+      "gain": 12.5,
+      "phys": true
      }
     ]
    },
@@ -627,6 +558,32 @@
       -40.5
      ],
      "what": "7c: a 3.3 m drop into the Gate's ring"
+    },
+    {
+     "at": [
+      20.5,
+      1.08,
+      -38.5
+     ],
+     "what": "7d offGap ×2: gain 10.8–10.8 m",
+     "look": {
+      "x": 19.5,
+      "y": 1.67,
+      "z": -41.5
+     }
+    },
+    {
+     "at": [
+      -20.5,
+      1.08,
+      38.5
+     ],
+     "what": "7d offGap ×2: gain 12.5–12.5 m",
+     "look": {
+      "x": -20.5,
+      "y": 1.67,
+      "z": 41.5
+     }
     }
    ]
   },
@@ -725,7 +682,7 @@
       ],
       "entrances": 1,
       "enemyT": 10.8,
-      "enemyWalk": 10.9,
+      "enemyWalk": 10.8,
       "ownerT": 0,
       "inZone": 2,
       "nodes": 8,
@@ -827,7 +784,7 @@
       ],
       "entrances": 1,
       "enemyT": 7.9,
-      "enemyWalk": 8,
+      "enemyWalk": 7.9,
       "ownerT": 4,
       "inZone": 0,
       "nodes": 2,
@@ -861,7 +818,7 @@
       ],
       "entrances": 1,
       "enemyT": 7.7,
-      "enemyWalk": 8.3,
+      "enemyWalk": 7.7,
       "ownerT": 3.5,
       "inZone": 0,
       "nodes": 2,
@@ -1286,7 +1243,7 @@
       ],
       "entrances": 1,
       "enemyT": 7.7,
-      "enemyWalk": 8.3,
+      "enemyWalk": 7.7,
       "ownerT": 3.5,
       "inZone": 0,
       "nodes": 2,
@@ -1303,7 +1260,7 @@
       ],
       "entrances": 1,
       "enemyT": 8.1,
-      "enemyWalk": 8.2,
+      "enemyWalk": 8.1,
       "ownerT": 4.1,
       "inZone": 0,
       "nodes": 2,
@@ -1371,7 +1328,7 @@
       ],
       "entrances": 1,
       "enemyT": 10.8,
-      "enemyWalk": 10.9,
+      "enemyWalk": 10.8,
       "ownerT": 0,
       "inZone": 2,
       "nodes": 8,
@@ -1813,7 +1770,7 @@
    "text": "team 0: a splat on the narrow walk by weir 1 rested on narrow floor; team 1: a splat on the narrow walk by weir 1 rested on narrow floor",
    "nums": {
     "drop": {
-     "samples": 198,
+     "samples": 188,
      "bad": [],
      "nBad": 0,
      "pond": 0,
@@ -1910,7 +1867,7 @@
        "main": {
         "picked": true,
         "plant": true,
-        "tWeir": 6.2,
+        "tWeir": 6.1,
         "w1": {
          "ok": true,
          "end": true,
@@ -1936,234 +1893,234 @@
       },
       "events": [
        {
-        "t": 0.2,
+        "t": 0,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 6.1,
+        "t": 5.9,
         "k": "rate",
         "team": 0,
         "how": "retreat"
        },
        {
-        "t": 9.9,
+        "t": 9.8,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 9.9,
+        "t": 9.8,
         "k": "rate",
         "team": 0,
         "how": "zone"
        },
        {
-        "t": 10.2,
+        "t": 10.1,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 10.2,
+        "t": 10.1,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 14.5,
+        "t": 14.4,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 14.5,
+        "t": 14.4,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 18.8,
+        "t": 18.6,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 18.8,
+        "t": 18.6,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 23,
+        "t": 22.9,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 23,
+        "t": 22.9,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 24.9,
+        "t": 24.8,
         "k": "rate",
         "team": 0,
         "how": "retreat"
        },
        {
-        "t": 27.3,
+        "t": 27.2,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 27.3,
+        "t": 27.2,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 31.6,
+        "t": 31.4,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 31.6,
+        "t": 31.4,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 35.8,
+        "t": 35.7,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 35.8,
+        "t": 35.7,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 36.9,
+        "t": 36.8,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 36.9,
+        "t": 36.8,
         "k": "reset",
         "how": "fall"
        },
        {
-        "t": 39.3,
+        "t": 39.2,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 43.5,
+        "t": 43.4,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 43.5,
+        "t": 43.4,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 45.8,
+        "t": 45.7,
         "k": "rate",
         "team": 0,
         "how": "retreat"
        },
        {
-        "t": 47.8,
+        "t": 47.7,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 47.8,
+        "t": 47.7,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 52.1,
+        "t": 52,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 52.1,
+        "t": 52,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 54.6,
+        "t": 54.5,
         "k": "rate",
         "team": 0,
         "how": "retreat"
        },
        {
-        "t": 56.3,
+        "t": 56.2,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 56.3,
+        "t": 56.2,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 60.6,
+        "t": 60.5,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 60.6,
+        "t": 60.5,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 63.5,
+        "t": 63.4,
         "k": "rate",
         "team": 0,
         "how": "retreat"
        },
        {
-        "t": 64.9,
+        "t": 64.8,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 64.9,
+        "t": 64.8,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 65.5,
+        "t": 65.4,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 65.5,
+        "t": 65.4,
         "k": "drop",
         "team": 0,
         "how": "fall",
@@ -2174,19 +2131,19 @@
         ]
        },
        {
-        "t": 66.3,
+        "t": 66.2,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 66.4,
+        "t": 66.3,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 66.4,
+        "t": 66.3,
         "k": "drop",
         "team": 0,
         "how": "splat",
@@ -2197,31 +2154,31 @@
         ]
        },
        {
-        "t": 68.4,
+        "t": 68.2,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 74.3,
+        "t": 74.2,
         "k": "rate",
         "team": 0,
         "how": "×1 "
        },
        {
-        "t": 74.3,
+        "t": 74.2,
         "k": "plant",
         "team": 0,
         "how": ""
        },
        {
-        "t": 75.7,
+        "t": 75.6,
         "k": "pickup",
         "team": 0,
         "how": ""
        },
        {
-        "t": 81.8,
+        "t": 81.7,
         "k": "end",
         "how": "knockout"
        }
@@ -2343,240 +2300,240 @@
       },
       "events": [
        {
-        "t": 0.4,
+        "t": 0,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 6.1,
+        "t": 5.7,
         "k": "rate",
         "team": 1,
         "how": "retreat"
        },
        {
-        "t": 9.5,
+        "t": 9.1,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 9.5,
+        "t": 9.2,
         "k": "rate",
         "team": 1,
         "how": "zone"
        },
        {
-        "t": 9.8,
+        "t": 9.4,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 9.8,
+        "t": 9.4,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 14.1,
+        "t": 13.7,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 14.1,
+        "t": 13.7,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 18.3,
+        "t": 18,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 18.3,
+        "t": 18,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 20.3,
+        "t": 19.9,
         "k": "rate",
         "team": 1,
         "how": "retreat"
        },
        {
-        "t": 22.6,
+        "t": 22.2,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 22.6,
+        "t": 22.2,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 26.9,
+        "t": 26.5,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 26.9,
+        "t": 26.5,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 31.1,
+        "t": 30.8,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 31.1,
+        "t": 30.8,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 35.4,
+        "t": 35,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 35.4,
+        "t": 35,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 36,
+        "t": 35.7,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 36,
+        "t": 35.7,
         "k": "reset",
         "how": "fall"
        },
        {
-        "t": 38.4,
+        "t": 38.1,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 40.7,
+        "t": 40.3,
         "k": "rate",
         "team": 1,
         "how": "retreat"
        },
        {
-        "t": 42.7,
+        "t": 42.3,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 42.7,
+        "t": 42.3,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 47,
+        "t": 46.6,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 47,
+        "t": 46.6,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 49.5,
+        "t": 49.1,
         "k": "rate",
         "team": 1,
         "how": "retreat"
        },
        {
-        "t": 51.2,
+        "t": 50.9,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 51.2,
+        "t": 50.9,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 55.5,
+        "t": 55.1,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 55.5,
+        "t": 55.1,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 58.3,
+        "t": 58,
         "k": "rate",
         "team": 1,
         "how": "retreat"
        },
        {
-        "t": 59.8,
+        "t": 59.4,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 59.8,
+        "t": 59.4,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 62.6,
+        "t": 62.2,
         "k": "rate",
         "team": 1,
         "how": "retreat"
        },
        {
-        "t": 64,
+        "t": 63.7,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 64,
+        "t": 63.7,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 65.1,
+        "t": 64.7,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 65.1,
+        "t": 64.7,
         "k": "drop",
         "team": 1,
         "how": "fall",
@@ -2587,19 +2544,19 @@
         ]
        },
        {
-        "t": 65.9,
+        "t": 65.5,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 66,
+        "t": 65.6,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 66,
+        "t": 65.6,
         "k": "drop",
         "team": 1,
         "how": "splat",
@@ -2610,31 +2567,31 @@
         ]
        },
        {
-        "t": 67.9,
+        "t": 67.6,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 73.8,
+        "t": 73.4,
         "k": "rate",
         "team": 1,
         "how": "×1 "
        },
        {
-        "t": 73.8,
+        "t": 73.4,
         "k": "plant",
         "team": 1,
         "how": ""
        },
        {
-        "t": 75.2,
+        "t": 74.8,
         "k": "pickup",
         "team": 1,
         "how": ""
        },
        {
-        "t": 81.4,
+        "t": 81,
         "k": "end",
         "how": "knockout"
        }
@@ -2817,17 +2774,29 @@
    "n": 15,
    "name": "Weir room",
    "status": "FAIL",
-   "text": "team 0 weir 1: solid within 3 m: prop collider, office, office-roof, office-parapet; team 0 weir 1: not seen from the defenders' approach; team 1 weir 1: solid within 3 m: office, office-roof, office-parapet, prop collider; team 1 weir 1: not seen from the defenders' approach",
+   "text": "team 0 weir 1: solid within 3 m: office (1.5 m), office-roof (1.5 m), office-parapet (1.5 m), prop collider (1.72 m); team 0 weir 1: not seen from the defenders' approach; team 1 weir 1: solid within 3 m: office (1.5 m), office-roof (1.5 m), office-parapet (1.5 m), prop collider (1.72 m); team 1 weir 1: not seen from the defenders' approach",
    "nums": {
     "rows": [
      {
       "team": 0,
       "i": 0,
       "solid": [
-       "prop collider",
-       "office",
-       "office-roof",
-       "office-parapet"
+       {
+        "nm": "office",
+        "d": 1.5
+       },
+       {
+        "nm": "office-roof",
+        "d": 1.5
+       },
+       {
+        "nm": "office-parapet",
+        "d": 1.5
+       },
+       {
+        "nm": "prop collider",
+        "d": 1.72
+       }
       ],
       "attackers": true,
       "defenders": false,
@@ -2837,10 +2806,22 @@
       "team": 1,
       "i": 0,
       "solid": [
-       "office",
-       "office-roof",
-       "office-parapet",
-       "prop collider"
+       {
+        "nm": "office",
+        "d": 1.5
+       },
+       {
+        "nm": "office-roof",
+        "d": 1.5
+       },
+       {
+        "nm": "office-parapet",
+        "d": 1.5
+       },
+       {
+        "nm": "prop collider",
+        "d": 1.72
+       }
       ],
       "attackers": true,
       "defenders": false,
@@ -2855,7 +2836,7 @@
       0.12,
       24
      ],
-     "what": "15: solid within 3 m of the weir"
+     "what": "15: solid within 3 m of the weir (office, 1.5 m)"
     },
     {
      "at": [
@@ -2863,7 +2844,7 @@
       0.12,
       -24
      ],
-     "what": "15: solid within 3 m of the weir"
+     "what": "15: solid within 3 m of the weir (office, 1.5 m)"
     }
    ]
   },
@@ -2871,7 +2852,7 @@
    "n": 16,
    "name": "The hop and gap edges, proved physically",
    "status": "FAIL",
-   "text": "492 added edges tried (66 hops, 426 gaps): 479 made, 13 not (0 hops, 0 gaps up / level, 13 gaps down) → hopVeto [[-4.5,3.05,-23.5,-4.5,0,-26.5],[-3.5,3.05,-23.5,-3.5,0,-26.5],[-3.5,3.05,-23.5,-0.5,0,-23.5],[3.5,3.05,23.5,0.5,0,23.5],[3.5,3.05,23.5,3.5,0,26.5],[4.5,3.05,23.5,4.5,0,26.5]] … 13; 235 candidates beyond the rules (16 high hops, 219 long gaps): 208 made (to #7d); 40 hops onto off-field ground: 40 made (to #7d / #7a); walks with the carrier's rules: routes 8/8, entrances 8/8 · 1522 trials, 4 s; walks 0 s",
+   "text": "492 added edges tried (66 hops, 426 gaps): 479 made, 13 not (0 hops, 0 gaps up / level, 13 gaps down) → hopVeto [[-4.5,3.05,-23.5,-4.5,0,-26.5],[-3.5,3.05,-23.5,-3.5,0,-26.5],[-3.5,3.05,-23.5,-0.5,0,-23.5],[3.5,3.05,23.5,0.5,0,23.5],[3.5,3.05,23.5,3.5,0,26.5],[4.5,3.05,23.5,4.5,0,26.5]] … 13; 237 candidates beyond the rules (16 high hops, 219 long gaps, 2 rising gaps worth trying of 143): 208 made (0 / 208 / 0: to #7d, and #7a when into a ring); 44 moves onto off-field ground (40 hops, 4 jumps across air worth trying of 54): 44 made (to #7d / #7a); climbs of ≤ 1.8 m tried as hops: 86 of 94 made (hops, not climbs, in the no-climb searches); walks with the carrier's rules: routes 8/8, entrances 8/8 · 1546 trials, 3 s; walks 0 s; climb hops 227 trials",
    "nums": {
     "tried": 492,
     "failed": 13,
@@ -2986,11 +2967,21 @@
       13.5
      ]
     ],
-    "beyond": 235,
+    "beyond": 237,
     "beyondMade": 208,
+    "rise": {
+     "cand": 143,
+     "tried": 2,
+     "made": 0
+    },
     "offHops": 40,
+    "offGaps": {
+     "cand": 54,
+     "tried": 4
+    },
     "offMade": [
      {
+      "kind": "off hop",
       "a": [
        13.5,
        2.25,
@@ -3001,9 +2992,10 @@
        3.7,
        -66.5
       ],
-      "exits": 2
+      "exits": 12
      },
      {
+      "kind": "off hop",
       "a": [
        12.5,
        2.4,
@@ -3014,9 +3006,10 @@
        3.7,
        -66.5
       ],
-      "exits": 2
+      "exits": 12
      },
      {
+      "kind": "off hop",
       "a": [
        10.5,
        0,
@@ -3027,9 +3020,10 @@
        1.36,
        -53.5
       ],
-      "exits": 3
+      "exits": 25
      },
      {
+      "kind": "off hop",
       "a": [
        11.5,
        0,
@@ -3040,9 +3034,10 @@
        1.36,
        -53.5
       ],
-      "exits": 3
+      "exits": 25
      },
      {
+      "kind": "off hop",
       "a": [
        12.5,
        0,
@@ -3053,9 +3048,10 @@
        1.36,
        -53.5
       ],
-      "exits": 3
+      "exits": 25
      },
      {
+      "kind": "off hop",
       "a": [
        -17.5,
        0,
@@ -3066,9 +3062,10 @@
        1.3,
        -49.5
       ],
-      "exits": 3
+      "exits": 17
      },
      {
+      "kind": "off hop",
       "a": [
        -16.5,
        0,
@@ -3079,9 +3076,10 @@
        1.3,
        -49.5
       ],
-      "exits": 3
+      "exits": 17
      },
      {
+      "kind": "off hop",
       "a": [
        -21.5,
        0,
@@ -3092,9 +3090,10 @@
        1.38,
        -49.5
       ],
-      "exits": 4
+      "exits": 27
      },
      {
+      "kind": "off hop",
       "a": [
        -20.5,
        0,
@@ -3105,9 +3104,10 @@
        1.38,
        -49.5
       ],
-      "exits": 4
+      "exits": 27
      },
      {
+      "kind": "off hop",
       "a": [
        -19.5,
        0,
@@ -3118,9 +3118,10 @@
        1.38,
        -49.5
       ],
-      "exits": 4
+      "exits": 27
      },
      {
+      "kind": "off hop",
       "a": [
        -18.5,
        0,
@@ -3131,9 +3132,10 @@
        1.38,
        -49.5
       ],
-      "exits": 4
+      "exits": 27
      },
      {
+      "kind": "off hop",
       "a": [
        -17.5,
        0,
@@ -3144,9 +3146,10 @@
        1.3,
        -49.5
       ],
-      "exits": 3
+      "exits": 17
      },
      {
+      "kind": "off hop",
       "a": [
        18.5,
        0,
@@ -3157,9 +3160,10 @@
        1.67,
        -45.5
       ],
-      "exits": 7
+      "exits": 25
      },
      {
+      "kind": "off hop",
       "a": [
        18.5,
        0,
@@ -3170,9 +3174,10 @@
        1.67,
        -44.5
       ],
-      "exits": 7
+      "exits": 25
      },
      {
+      "kind": "off hop",
       "a": [
        18.5,
        0,
@@ -3183,9 +3188,10 @@
        1.67,
        -43.5
       ],
-      "exits": 7
+      "exits": 25
      },
      {
+      "kind": "off hop",
       "a": [
        18.5,
        0,
@@ -3196,9 +3202,10 @@
        1.67,
        -42.5
       ],
-      "exits": 7
+      "exits": 25
      },
      {
+      "kind": "off hop",
       "a": [
        18.5,
        0,
@@ -3209,9 +3216,10 @@
        1.67,
        -41.5
       ],
-      "exits": 7
+      "exits": 25
      },
      {
+      "kind": "off hop",
       "a": [
        -20.5,
        0,
@@ -3222,9 +3230,10 @@
        1.36,
        -35.5
       ],
-      "exits": 3
+      "exits": 26
      },
      {
+      "kind": "off hop",
       "a": [
        -19.5,
        0,
@@ -3235,9 +3244,10 @@
        1.36,
        -35.5
       ],
-      "exits": 3
+      "exits": 26
      },
      {
+      "kind": "off hop",
       "a": [
        -18.5,
        0,
@@ -3248,9 +3258,10 @@
        1.36,
        -35.5
       ],
-      "exits": 3
+      "exits": 26
      },
      {
+      "kind": "off hop",
       "a": [
        18.5,
        0,
@@ -3261,9 +3272,10 @@
        1.36,
        35.5
       ],
-      "exits": 3
+      "exits": 26
      },
      {
+      "kind": "off hop",
       "a": [
        19.5,
        0,
@@ -3274,9 +3286,10 @@
        1.36,
        35.5
       ],
-      "exits": 3
+      "exits": 26
      },
      {
+      "kind": "off hop",
       "a": [
        20.5,
        0,
@@ -3287,9 +3300,10 @@
        1.36,
        35.5
       ],
-      "exits": 3
+      "exits": 26
      },
      {
+      "kind": "off hop",
       "a": [
        -18.5,
        0,
@@ -3300,9 +3314,10 @@
        1.67,
        41.5
       ],
-      "exits": 5
+      "exits": 24
      },
      {
+      "kind": "off hop",
       "a": [
        -18.5,
        0,
@@ -3313,9 +3328,10 @@
        1.67,
        42.5
       ],
-      "exits": 5
+      "exits": 24
      },
      {
+      "kind": "off hop",
       "a": [
        -18.5,
        0,
@@ -3326,9 +3342,10 @@
        1.67,
        43.5
       ],
-      "exits": 5
+      "exits": 24
      },
      {
+      "kind": "off hop",
       "a": [
        -18.5,
        0,
@@ -3339,9 +3356,10 @@
        1.67,
        44.5
       ],
-      "exits": 5
+      "exits": 24
      },
      {
+      "kind": "off hop",
       "a": [
        -18.5,
        0,
@@ -3352,9 +3370,10 @@
        1.67,
        45.5
       ],
-      "exits": 5
+      "exits": 24
      },
      {
+      "kind": "off hop",
       "a": [
        17.5,
        0,
@@ -3365,9 +3384,10 @@
        1.3,
        49.5
       ],
-      "exits": 3
+      "exits": 17
      },
      {
+      "kind": "off hop",
       "a": [
        18.5,
        0,
@@ -3378,9 +3398,10 @@
        1.38,
        49.5
       ],
-      "exits": 4
+      "exits": 27
      },
      {
+      "kind": "off hop",
       "a": [
        19.5,
        0,
@@ -3391,9 +3412,10 @@
        1.38,
        49.5
       ],
-      "exits": 4
+      "exits": 27
      },
      {
+      "kind": "off hop",
       "a": [
        20.5,
        0,
@@ -3404,9 +3426,10 @@
        1.38,
        49.5
       ],
-      "exits": 4
+      "exits": 27
      },
      {
+      "kind": "off hop",
       "a": [
        21.5,
        0,
@@ -3417,9 +3440,10 @@
        1.38,
        49.5
       ],
-      "exits": 4
+      "exits": 27
      },
      {
+      "kind": "off hop",
       "a": [
        16.5,
        0,
@@ -3430,9 +3454,10 @@
        1.3,
        49.5
       ],
-      "exits": 3
+      "exits": 17
      },
      {
+      "kind": "off hop",
       "a": [
        17.5,
        0,
@@ -3443,9 +3468,10 @@
        1.3,
        49.5
       ],
-      "exits": 3
+      "exits": 17
      },
      {
+      "kind": "off hop",
       "a": [
        -12.5,
        0,
@@ -3456,9 +3482,10 @@
        1.36,
        53.5
       ],
-      "exits": 3
+      "exits": 25
      },
      {
+      "kind": "off hop",
       "a": [
        -11.5,
        0,
@@ -3469,9 +3496,10 @@
        1.36,
        53.5
       ],
-      "exits": 3
+      "exits": 25
      },
      {
+      "kind": "off hop",
       "a": [
        -10.5,
        0,
@@ -3482,9 +3510,10 @@
        1.36,
        53.5
       ],
-      "exits": 3
+      "exits": 25
      },
      {
+      "kind": "off hop",
       "a": [
        -12.5,
        2.4,
@@ -3495,9 +3524,10 @@
        3.7,
        66.5
       ],
-      "exits": 2
+      "exits": 12
      },
      {
+      "kind": "off hop",
       "a": [
        -13.5,
        2.25,
@@ -3508,11 +3538,237 @@
        3.7,
        66.5
       ],
-      "exits": 2
+      "exits": 12
+     },
+     {
+      "kind": "off gap",
+      "a": [
+       20.5,
+       1.08,
+       -38.5
+      ],
+      "top": [
+       19.5,
+       1.67,
+       -41.5
+      ],
+      "exits": 25
+     },
+     {
+      "kind": "off gap",
+      "a": [
+       20.5,
+       1.08,
+       -38.5
+      ],
+      "top": [
+       20.5,
+       1.67,
+       -41.5
+      ],
+      "exits": 25
+     },
+     {
+      "kind": "off gap",
+      "a": [
+       -20.5,
+       1.08,
+       38.5
+      ],
+      "top": [
+       -20.5,
+       1.67,
+       41.5
+      ],
+      "exits": 24
+     },
+     {
+      "kind": "off gap",
+      "a": [
+       -20.5,
+       1.08,
+       38.5
+      ],
+      "top": [
+       -19.5,
+       1.67,
+       41.5
+      ],
+      "exits": 24
      }
     ],
-    "trials": 1522,
-    "ms": 4169,
+    "trials": 1546,
+    "ms": 3154,
+    "climbHops": {
+     "tried": 94,
+     "made": 86,
+     "proved": true,
+     "trials": 227,
+     "madeAt": [
+      [
+       -14.5,
+       0,
+       -49.5,
+       -14.5,
+       1.3,
+       -47.5
+      ],
+      [
+       -13.5,
+       0,
+       -49.5,
+       -13.5,
+       1.3,
+       -47.5
+      ],
+      [
+       -15.5,
+       0,
+       -48.5,
+       -14.5,
+       1.3,
+       -48.5
+      ],
+      [
+       -15.5,
+       0,
+       -48.5,
+       -14.5,
+       1.3,
+       -47.5
+      ],
+      [
+       -9.5,
+       0,
+       -48.5,
+       -10.5,
+       1.3,
+       -47.5
+      ],
+      [
+       -15.5,
+       0,
+       -47.5,
+       -14.5,
+       1.3,
+       -47.5
+      ],
+      [
+       -9.5,
+       0,
+       -47.5,
+       -10.5,
+       1.3,
+       -47.5
+      ],
+      [
+       1.5,
+       0,
+       -47.5,
+       2.5,
+       1.3,
+       -46.5
+      ],
+      [
+       2.5,
+       0,
+       -47.5,
+       3.5,
+       1.3,
+       -46.5
+      ],
+      [
+       2.5,
+       0,
+       -47.5,
+       2.5,
+       1.3,
+       -46.5
+      ],
+      [
+       3.5,
+       0,
+       -47.5,
+       4.5,
+       1.3,
+       -46.5
+      ],
+      [
+       3.5,
+       0,
+       -47.5,
+       3.5,
+       1.3,
+       -46.5
+      ]
+     ],
+     "notMade": [
+      [
+       1.5,
+       0,
+       -47.5,
+       1.5,
+       1.3,
+       -46.5
+      ],
+      [
+       1.5,
+       0,
+       -38.5,
+       1.5,
+       1.3,
+       -39.5
+      ],
+      [
+       -20.5,
+       -0.2,
+       -13.5,
+       -20.5,
+       1.3,
+       -15.5
+      ],
+      [
+       -20.5,
+       -0.2,
+       -10.5,
+       -20.5,
+       1.3,
+       -8.95
+      ],
+      [
+       20.5,
+       -0.2,
+       10.5,
+       20.5,
+       1.3,
+       8.95
+      ],
+      [
+       20.5,
+       -0.2,
+       13.5,
+       20.5,
+       1.3,
+       15.5
+      ],
+      [
+       -1.5,
+       0,
+       38.5,
+       -1.5,
+       1.3,
+       39.5
+      ],
+      [
+       -1.5,
+       0,
+       47.5,
+       -1.5,
+       1.3,
+       46.5
+      ]
+     ]
+    },
     "walks": [
      {
       "team": 0,
@@ -3556,11 +3812,11 @@
       "entrance": false,
       "ok": true,
       "mover": false,
-      "len": 49.7,
-      "t": 9.9,
+      "len": 30.7,
+      "t": 5.8,
       "proved": 0,
       "fail": null,
-      "nodes": 47
+      "nodes": 27
      },
      {
       "team": 1,
@@ -3604,23 +3860,23 @@
       "entrance": false,
       "ok": true,
       "mover": false,
-      "len": 49.7,
-      "t": 9.9,
+      "len": 30.7,
+      "t": 5.8,
       "proved": 0,
       "fail": null,
-      "nodes": 47
+      "nodes": 27
      },
      {
       "team": 0,
-      "what": "team 0 through the entrance at (8.2, 42.6) into its Gate's ring",
+      "what": "team 0 through the entrance at (8.4, 42.8) into its Gate's ring",
       "entrance": true,
       "ok": true,
       "mover": false,
-      "len": 26.2,
-      "t": 5.3,
+      "len": 25.5,
+      "t": 4.8,
       "proved": 0,
       "fail": null,
-      "nodes": 26
+      "nodes": 23
      },
      {
       "team": 0,
@@ -3696,7 +3952,7 @@
      },
      {
       "team": 1,
-      "what": "team 1 through the entrance at (-8.2, -42.6) into its Gate's ring",
+      "what": "team 1 through the entrance at (-8.3, -42.7) into its Gate's ring",
       "entrance": true,
       "ok": true,
       "mover": false,
@@ -3827,7 +4083,7 @@
        0.15,
        -51.5
       ],
-      "gain": 5.1
+      "gain": 3.5
      },
      {
       "kind": "long gap",
@@ -3841,7 +4097,7 @@
        0,
        -51.5
       ],
-      "gain": 5.1
+      "gain": 3.5
      },
      {
       "kind": "long gap",
@@ -3855,7 +4111,7 @@
        0.15,
        -52.5
       ],
-      "gain": 7.1
+      "gain": 1.5
      },
      {
       "kind": "long gap",
@@ -3869,7 +4125,7 @@
        0,
        -52.5
       ],
-      "gain": 7.1
+      "gain": 1.5
      },
      {
       "kind": "long gap",
@@ -3883,7 +4139,7 @@
        0,
        -52.5
       ],
-      "gain": 7
+      "gain": 1.6
      },
      {
       "kind": "long gap",
@@ -3897,7 +4153,7 @@
        0.15,
        -51.5
       ],
-      "gain": 5.7
+      "gain": 2.1
      },
      {
       "kind": "long gap",
@@ -4009,7 +4265,7 @@
        0.15,
        -52.5
       ],
-      "gain": 3.7
+      "gain": 0.6
      },
      {
       "kind": "long gap",
@@ -4023,7 +4279,7 @@
        0,
        -52.5
       ],
-      "gain": 3.7
+      "gain": 0.6
      },
      {
       "kind": "long gap",
@@ -4065,7 +4321,7 @@
        -1.9,
        -45.5
       ],
-      "gain": 6.2
+      "gain": -0.1
      },
      {
       "kind": "long gap",
@@ -4079,7 +4335,7 @@
        1.08,
        -51.5
       ],
-      "gain": 5.7
+      "gain": 2.5
      },
      {
       "kind": "long gap",
@@ -4121,7 +4377,7 @@
        -1.9,
        -45.5
       ],
-      "gain": 6.5
+      "gain": 0.8
      },
      {
       "kind": "long gap",
@@ -4345,7 +4601,7 @@
        -1.9,
        -40.5
       ],
-      "gain": 5.7
+      "gain": 1.1
      },
      {
       "kind": "long gap",
@@ -4373,7 +4629,7 @@
        -1.9,
        -40.5
       ],
-      "gain": 6.1
+      "gain": 1.4
      },
      {
       "kind": "long gap",
@@ -4401,7 +4657,7 @@
        -0.95,
        -39.5
       ],
-      "gain": 5.8
+      "gain": 5.4
      },
      {
       "kind": "long gap",
@@ -4415,7 +4671,7 @@
        0,
        -33.5
       ],
-      "gain": 4.6
+      "gain": 3.5
      },
      {
       "kind": "long gap",
@@ -4457,7 +4713,7 @@
        0,
        -26.5
       ],
-      "gain": 2.8
+      "gain": 2.1
      },
      {
       "kind": "long gap",
@@ -4471,7 +4727,7 @@
        0,
        -26.5
       ],
-      "gain": 6.5
+      "gain": 5.1
      },
      {
       "kind": "long gap",
@@ -4499,7 +4755,7 @@
        0,
        -26.5
       ],
-      "gain": 4.7
+      "gain": 3.7
      },
      {
       "kind": "long gap",
@@ -4527,7 +4783,7 @@
        0,
        -26.5
       ],
-      "gain": 4.8
+      "gain": 3.5
      },
      {
       "kind": "long gap",
@@ -4597,7 +4853,7 @@
        0,
        -23.5
       ],
-      "gain": 4.1
+      "gain": 2.5
      },
      {
       "kind": "long gap",
@@ -4639,7 +4895,7 @@
        0,
        -15.5
       ],
-      "gain": 2
+      "gain": -0.8
      },
      {
       "kind": "long gap",
@@ -4653,7 +4909,7 @@
        0,
        -15.5
       ],
-      "gain": 2.5
+      "gain": -0.1
      },
      {
       "kind": "long gap",
@@ -4667,7 +4923,7 @@
        0,
        -15.5
       ],
-      "gain": 3.5
+      "gain": 0.9
      },
      {
       "kind": "long gap",
@@ -4681,7 +4937,7 @@
        0.15,
        -13.5
       ],
-      "gain": 1.6
+      "gain": 1.4
      },
      {
       "kind": "long gap",
@@ -4695,7 +4951,7 @@
        0.68,
        -12.25
       ],
-      "gain": 3.5
+      "gain": 2
      },
      {
       "kind": "long gap",
@@ -4709,7 +4965,7 @@
        0.24,
        -12.25
       ],
-      "gain": 7.3
+      "gain": 1.3
      },
      {
       "kind": "long gap",
@@ -4723,7 +4979,7 @@
        -0.2,
        -12.25
       ],
-      "gain": 8.4
+      "gain": 0.2
      },
      {
       "kind": "long gap",
@@ -4737,7 +4993,7 @@
        0.24,
        -12.25
       ],
-      "gain": 8.3
+      "gain": 0.3
      },
      {
       "kind": "long gap",
@@ -4751,7 +5007,7 @@
        -0.2,
        -12.25
       ],
-      "gain": 9.4
+      "gain": -0.8
      },
      {
       "kind": "long gap",
@@ -4765,7 +5021,7 @@
        -0.64,
        -12.25
       ],
-      "gain": 10.5
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -4779,7 +5035,7 @@
        -0.2,
        -12.25
       ],
-      "gain": 9.9
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -4807,7 +5063,7 @@
        0.15,
        -14.5
       ],
-      "gain": 1.6
+      "gain": -0.2
      },
      {
       "kind": "long gap",
@@ -4835,7 +5091,7 @@
        -0.64,
        -12.25
       ],
-      "gain": 11.2
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -4849,7 +5105,7 @@
        0,
        -10.5
       ],
-      "gain": 0.9
+      "gain": 0.7
      },
      {
       "kind": "long gap",
@@ -4863,7 +5119,7 @@
        1.12,
        -12.25
       ],
-      "gain": 5.5
+      "gain": 4.4
      },
      {
       "kind": "long gap",
@@ -4877,7 +5133,7 @@
        0.24,
        -12.25
       ],
-      "gain": 7.1
+      "gain": 2.2
      },
      {
       "kind": "long gap",
@@ -4891,7 +5147,7 @@
        -1.52,
        -12.25
       ],
-      "gain": 15.7
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -4905,7 +5161,7 @@
        0.15,
        -9.5
       ],
-      "gain": 5.8
+      "gain": 3.2
      },
      {
       "kind": "long gap",
@@ -4919,7 +5175,7 @@
        0.15,
        -5.5
       ],
-      "gain": 7
+      "gain": 2.5
      },
      {
       "kind": "long gap",
@@ -4933,7 +5189,7 @@
        -0.65,
        -6.5
       ],
-      "gain": 9.2
+      "gain": -0.1
      },
      {
       "kind": "long gap",
@@ -4947,7 +5203,7 @@
        0.25,
        -4.5
       ],
-      "gain": 4.8
+      "gain": 3.4
      },
      {
       "kind": "long gap",
@@ -4975,7 +5231,7 @@
        -0.65,
        -6.5
       ],
-      "gain": 9.6
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -4989,7 +5245,7 @@
        0.25,
        -5.5
       ],
-      "gain": 5.7
+      "gain": 2.8
      },
      {
       "kind": "long gap",
@@ -5017,7 +5273,7 @@
        0.15,
        -5.5
       ],
-      "gain": 4.4
+      "gain": 3.8
      },
      {
       "kind": "long gap",
@@ -5059,7 +5315,7 @@
        0.25,
        5.5
       ],
-      "gain": 5.7
+      "gain": 2.8
      },
      {
       "kind": "long gap",
@@ -5073,7 +5329,7 @@
        -0.65,
        6.5
       ],
-      "gain": 9.6
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -5101,7 +5357,7 @@
        0.25,
        4.5
       ],
-      "gain": 4.8
+      "gain": 3.4
      },
      {
       "kind": "long gap",
@@ -5115,7 +5371,7 @@
        -0.65,
        6.5
       ],
-      "gain": 9.2
+      "gain": -0.1
      },
      {
       "kind": "long gap",
@@ -5129,7 +5385,7 @@
        0.15,
        5.5
       ],
-      "gain": 7
+      "gain": 3.1
      },
      {
       "kind": "long gap",
@@ -5143,7 +5399,7 @@
        0.15,
        9.5
       ],
-      "gain": 5.8
+      "gain": 2.6
      },
      {
       "kind": "long gap",
@@ -5157,7 +5413,7 @@
        0.68,
        11.75
       ],
-      "gain": 5.2
+      "gain": 2
      },
      {
       "kind": "long gap",
@@ -5171,7 +5427,7 @@
        -0.64,
        11.75
       ],
-      "gain": 10.6
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -5185,7 +5441,7 @@
        0,
        10.5
       ],
-      "gain": 1.5
+      "gain": 0.7
      },
      {
       "kind": "long gap",
@@ -5213,7 +5469,7 @@
        0.15,
        14.5
       ],
-      "gain": 2
+      "gain": -0.2
      },
      {
       "kind": "long gap",
@@ -5227,7 +5483,7 @@
        -1.52,
        11.75
       ],
-      "gain": 15.4
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -5255,7 +5511,7 @@
        -0.64,
        11.75
       ],
-      "gain": 12.4
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -5269,7 +5525,7 @@
        -0.2,
        11.75
       ],
-      "gain": 10.9
+      "gain": 0.6
      },
      {
       "kind": "long gap",
@@ -5283,7 +5539,7 @@
        0.24,
        11.75
       ],
-      "gain": 8.8
+      "gain": 2.7
      },
      {
       "kind": "long gap",
@@ -5311,7 +5567,7 @@
        0.15,
        13.5
       ],
-      "gain": 1.6
+      "gain": 1.4
      },
      {
       "kind": "long gap",
@@ -5325,7 +5581,7 @@
        0,
        15.5
       ],
-      "gain": 3.5
+      "gain": 0.9
      },
      {
       "kind": "long gap",
@@ -5339,7 +5595,7 @@
        0,
        15.5
       ],
-      "gain": 2.5
+      "gain": -0.1
      },
      {
       "kind": "long gap",
@@ -5353,7 +5609,7 @@
        0,
        15.5
       ],
-      "gain": 2
+      "gain": -0.8
      },
      {
       "kind": "long gap",
@@ -5395,7 +5651,7 @@
        0,
        23.5
       ],
-      "gain": 4.1
+      "gain": 2.5
      },
      {
       "kind": "long gap",
@@ -5465,7 +5721,7 @@
        0,
        26.5
       ],
-      "gain": 4.2
+      "gain": 3.5
      },
      {
       "kind": "long gap",
@@ -5493,7 +5749,7 @@
        0,
        26.5
       ],
-      "gain": 4.7
+      "gain": 3.7
      },
      {
       "kind": "long gap",
@@ -5521,7 +5777,7 @@
        0,
        26.5
       ],
-      "gain": 5.9
+      "gain": 5.1
      },
      {
       "kind": "long gap",
@@ -5535,7 +5791,7 @@
        0,
        26.5
       ],
-      "gain": 2.8
+      "gain": 2.1
      },
      {
       "kind": "long gap",
@@ -5577,7 +5833,7 @@
        0,
        33.5
       ],
-      "gain": 4.6
+      "gain": 2.9
      },
      {
       "kind": "long gap",
@@ -5591,7 +5847,7 @@
        -0.95,
        39.5
       ],
-      "gain": 5.8
+      "gain": 5.4
      },
      {
       "kind": "long gap",
@@ -5619,7 +5875,7 @@
        -1.9,
        40.5
       ],
-      "gain": 6.1
+      "gain": 1.4
      },
      {
       "kind": "long gap",
@@ -5661,7 +5917,7 @@
        -1.9,
        40.5
       ],
-      "gain": 5.7
+      "gain": 1.1
      },
      {
       "kind": "long gap",
@@ -5899,7 +6155,7 @@
        -1.9,
        45.5
       ],
-      "gain": 6.5
+      "gain": 0.8
      },
      {
       "kind": "long gap",
@@ -5941,7 +6197,7 @@
        1.08,
        51.5
       ],
-      "gain": 5.7
+      "gain": 2.5
      },
      {
       "kind": "long gap",
@@ -5955,7 +6211,7 @@
        -1.9,
        45.5
       ],
-      "gain": 6.2
+      "gain": -0.1
      },
      {
       "kind": "long gap",
@@ -5997,7 +6253,7 @@
        0.15,
        52.5
       ],
-      "gain": 2.4
+      "gain": 0.6
      },
      {
       "kind": "long gap",
@@ -6011,7 +6267,7 @@
        0,
        52.5
       ],
-      "gain": 2.4
+      "gain": 0.6
      },
      {
       "kind": "long gap",
@@ -6123,7 +6379,7 @@
        0.15,
        51.5
       ],
-      "gain": 5.7
+      "gain": 2.6
      },
      {
       "kind": "long gap",
@@ -6137,7 +6393,7 @@
        0.15,
        52.5
       ],
-      "gain": 7.1
+      "gain": 2
      },
      {
       "kind": "long gap",
@@ -6151,7 +6407,7 @@
        0,
        52.5
       ],
-      "gain": 7.1
+      "gain": 2
      },
      {
       "kind": "long gap",
@@ -6165,7 +6421,7 @@
        0,
        52.5
       ],
-      "gain": 7
+      "gain": 2
      },
      {
       "kind": "long gap",
@@ -6179,7 +6435,7 @@
        0.15,
        51.5
       ],
-      "gain": 5.1
+      "gain": 4
      },
      {
       "kind": "long gap",
@@ -6193,7 +6449,7 @@
        0,
        51.5
       ],
-      "gain": 5.1
+      "gain": 4
      },
      {
       "kind": "long gap",
@@ -6333,7 +6589,7 @@
        -0.2,
        -12.25
       ],
-      "gain": 7.3
+      "gain": 1.3
      },
      {
       "kind": "long gap",
@@ -6347,7 +6603,7 @@
        0.24,
        -12.25
       ],
-      "gain": 8.2
+      "gain": 1.1
      },
      {
       "kind": "long gap",
@@ -6361,7 +6617,7 @@
        -0.2,
        -12.25
       ],
-      "gain": 9.3
+      "gain": 0
      },
      {
       "kind": "long gap",
@@ -6375,7 +6631,7 @@
        -0.64,
        -12.25
       ],
-      "gain": 10.4
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -6389,7 +6645,7 @@
        -0.2,
        -12.25
       ],
-      "gain": 10.3
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -6403,7 +6659,7 @@
        -0.64,
        -12.25
       ],
-      "gain": 11.4
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -6417,7 +6673,7 @@
        -1.08,
        -12.25
       ],
-      "gain": 12.5
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -6431,7 +6687,7 @@
        -1.52,
        -12.25
       ],
-      "gain": 14.6
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -6445,7 +6701,7 @@
        0.15,
        -9.5
       ],
-      "gain": 6.9
+      "gain": 4.3
      },
      {
       "kind": "long gap",
@@ -6459,7 +6715,7 @@
        0.78,
        -8.5
       ],
-      "gain": 4.8
+      "gain": 4.1
      },
      {
       "kind": "long gap",
@@ -6473,7 +6729,7 @@
        -0.65,
        -6.5
       ],
-      "gain": 5.8
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -6501,7 +6757,7 @@
        0.25,
        2.25
       ],
-      "gain": 5.6
+      "gain": 0.7
      },
      {
       "kind": "long gap",
@@ -6515,7 +6771,7 @@
        0.25,
        -2.25
       ],
-      "gain": 5.6
+      "gain": 0.7
      },
      {
       "kind": "long gap",
@@ -6543,7 +6799,7 @@
        -0.65,
        6.5
       ],
-      "gain": 5.8
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -6557,7 +6813,7 @@
        0.78,
        8.5
       ],
-      "gain": 4.8
+      "gain": 3.5
      },
      {
       "kind": "long gap",
@@ -6571,7 +6827,7 @@
        0.15,
        9.5
       ],
-      "gain": 6.9
+      "gain": 3.7
      },
      {
       "kind": "long gap",
@@ -6585,7 +6841,7 @@
        -1.52,
        11.75
       ],
-      "gain": 14.3
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -6599,7 +6855,7 @@
        -0.64,
        11.75
       ],
-      "gain": 12.1
+      "gain": -1
      },
      {
       "kind": "long gap",
@@ -34978,6 +35234,16 @@
        "climb"
       ],
       "seen": true,
+      "plainSeen": true,
+      "plainTypes": [
+       "walk",
+       "jump",
+       "drop",
+       "gap",
+       "climb"
+      ],
+      "moves": 0,
+      "physUnseen": [],
       "from": [
        -4.5,
        0,
@@ -34997,6 +35263,13 @@
        "gap"
       ],
       "seen": true,
+      "plainSeen": true,
+      "plainTypes": [
+       "walk",
+       "gap"
+      ],
+      "moves": 0,
+      "physUnseen": [],
       "from": [
        -15.5,
        0,
@@ -35015,6 +35288,12 @@
        "walk"
       ],
       "seen": true,
+      "plainSeen": true,
+      "plainTypes": [
+       "walk"
+      ],
+      "moves": 0,
+      "physUnseen": [],
       "from": [
        -11.5,
        2.4,
@@ -35033,6 +35312,12 @@
        "walk"
       ],
       "seen": true,
+      "plainSeen": true,
+      "plainTypes": [
+       "walk"
+      ],
+      "moves": 0,
+      "physUnseen": [],
       "from": [
        11.5,
        0,
@@ -35061,6 +35346,12 @@
        "walk"
       ],
       "seen": true,
+      "plainSeen": true,
+      "plainTypes": [
+       "walk"
+      ],
+      "moves": 0,
+      "physUnseen": [],
       "from": [
        -7.5,
        1.4,
@@ -35079,6 +35370,12 @@
        "walk"
       ],
       "seen": true,
+      "plainSeen": true,
+      "plainTypes": [
+       "walk"
+      ],
+      "moves": 0,
+      "physUnseen": [],
       "from": [
        9.5,
        2.4,
@@ -35098,6 +35395,13 @@
        "walk"
       ],
       "seen": true,
+      "plainSeen": true,
+      "plainTypes": [
+       "gap",
+       "walk"
+      ],
+      "moves": 0,
+      "physUnseen": [],
       "from": [
        14.5,
        1.95,
@@ -35120,6 +35424,16 @@
        "jump"
       ],
       "seen": true,
+      "plainSeen": true,
+      "plainTypes": [
+       "walk",
+       "climb",
+       "drop",
+       "gap",
+       "jump"
+      ],
+      "moves": 0,
+      "physUnseen": [],
       "from": [
        -15.5,
        0,
@@ -44894,7 +45208,7 @@
      -19.5,
      -12.2
     ],
-    "find": true
+    "find": false
    },
    {
     "a": [
@@ -44949,7 +45263,7 @@
      -19.5,
      -12.2
     ],
-    "find": true
+    "find": false
    },
    {
     "a": [
@@ -44993,7 +45307,7 @@
      -17.5,
      -12.2
     ],
-    "find": true
+    "find": false
    },
    {
     "a": [
@@ -45213,7 +45527,7 @@
      19.5,
      11.8
     ],
-    "find": true
+    "find": false
    },
    {
     "a": [
@@ -45257,7 +45571,7 @@
      17.5,
      11.8
     ],
-    "find": true
+    "find": false
    },
    {
     "a": [
@@ -45279,7 +45593,7 @@
      19.5,
      11.8
     ],
-    "find": true
+    "find": false
    },
    {
     "a": [
@@ -45290,7 +45604,7 @@
      20.5,
      11.8
     ],
-    "find": true
+    "find": false
    },
    {
     "a": [
@@ -46159,7 +46473,7 @@
      -19.5,
      -12.2
     ],
-    "find": true
+    "find": false
    },
    {
     "a": [
@@ -46170,7 +46484,7 @@
      -20.5,
      -12.2
     ],
-    "find": true
+    "find": false
    },
    {
     "a": [
@@ -46181,7 +46495,7 @@
      -19.5,
      -12.2
     ],
-    "find": true
+    "find": false
    },
    {
     "a": [
@@ -46192,7 +46506,7 @@
      -18.5,
      -12.2
     ],
-    "find": true
+    "find": false
    },
    {
     "a": [
@@ -46203,7 +46517,7 @@
      -17.5,
      -12.2
     ],
-    "find": true
+    "find": false
    },
    {
     "a": [
@@ -46324,7 +46638,7 @@
      17.5,
      11.8
     ],
-    "find": true
+    "find": false
    },
    {
     "a": [
@@ -46335,7 +46649,7 @@
      19.5,
      11.8
     ],
-    "find": true
+    "find": false
    },
    {
     "a": [
@@ -46358,6 +46672,490 @@
      48.5
     ],
     "find": false
+   },
+   {
+    "a": [
+     13.5,
+     -66.5
+    ],
+    "b": [
+     12.5,
+     -66.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     12.5,
+     -65.5
+    ],
+    "b": [
+     12.5,
+     -66.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     10.5,
+     -54.5
+    ],
+    "b": [
+     10.5,
+     -53.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     11.5,
+     -54.5
+    ],
+    "b": [
+     11.5,
+     -53.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     12.5,
+     -54.5
+    ],
+    "b": [
+     12.5,
+     -53.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -17.5,
+     -50.5
+    ],
+    "b": [
+     -17.5,
+     -49.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -16.5,
+     -49.5
+    ],
+    "b": [
+     -17.5,
+     -49.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -21.5,
+     -48.5
+    ],
+    "b": [
+     -21.5,
+     -49.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -20.5,
+     -48.5
+    ],
+    "b": [
+     -20.5,
+     -49.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -19.5,
+     -48.5
+    ],
+    "b": [
+     -19.5,
+     -49.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -18.5,
+     -48.5
+    ],
+    "b": [
+     -18.5,
+     -49.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -17.5,
+     -48.5
+    ],
+    "b": [
+     -17.5,
+     -49.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     18.5,
+     -45.5
+    ],
+    "b": [
+     19.5,
+     -45.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     18.5,
+     -44.5
+    ],
+    "b": [
+     19.5,
+     -44.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     18.5,
+     -43.5
+    ],
+    "b": [
+     19.5,
+     -43.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     18.5,
+     -42.5
+    ],
+    "b": [
+     19.5,
+     -42.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     18.5,
+     -41.5
+    ],
+    "b": [
+     19.5,
+     -41.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -20.5,
+     -36.5
+    ],
+    "b": [
+     -20.5,
+     -35.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -19.5,
+     -36.5
+    ],
+    "b": [
+     -19.5,
+     -35.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -18.5,
+     -36.5
+    ],
+    "b": [
+     -18.5,
+     -35.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     18.5,
+     36.5
+    ],
+    "b": [
+     18.5,
+     35.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     19.5,
+     36.5
+    ],
+    "b": [
+     19.5,
+     35.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     20.5,
+     36.5
+    ],
+    "b": [
+     20.5,
+     35.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -18.5,
+     41.5
+    ],
+    "b": [
+     -19.5,
+     41.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -18.5,
+     42.5
+    ],
+    "b": [
+     -19.5,
+     42.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -18.5,
+     43.5
+    ],
+    "b": [
+     -19.5,
+     43.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -18.5,
+     44.5
+    ],
+    "b": [
+     -19.5,
+     44.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -18.5,
+     45.5
+    ],
+    "b": [
+     -19.5,
+     45.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     17.5,
+     48.5
+    ],
+    "b": [
+     17.5,
+     49.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     18.5,
+     48.5
+    ],
+    "b": [
+     18.5,
+     49.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     19.5,
+     48.5
+    ],
+    "b": [
+     19.5,
+     49.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     20.5,
+     48.5
+    ],
+    "b": [
+     20.5,
+     49.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     21.5,
+     48.5
+    ],
+    "b": [
+     21.5,
+     49.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     16.5,
+     49.5
+    ],
+    "b": [
+     17.5,
+     49.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     17.5,
+     50.5
+    ],
+    "b": [
+     17.5,
+     49.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -12.5,
+     54.5
+    ],
+    "b": [
+     -12.5,
+     53.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -11.5,
+     54.5
+    ],
+    "b": [
+     -11.5,
+     53.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -10.5,
+     54.5
+    ],
+    "b": [
+     -10.5,
+     53.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -12.5,
+     65.5
+    ],
+    "b": [
+     -12.5,
+     66.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     -13.5,
+     66.5
+    ],
+    "b": [
+     -12.5,
+     66.5
+    ],
+    "find": false
+   },
+   {
+    "a": [
+     20.5,
+     -38.5
+    ],
+    "b": [
+     19.5,
+     -41.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     20.5,
+     -38.5
+    ],
+    "b": [
+     20.5,
+     -41.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -20.5,
+     38.5
+    ],
+    "b": [
+     -20.5,
+     41.5
+    ],
+    "find": true
+   },
+   {
+    "a": [
+     -20.5,
+     38.5
+    ],
+    "b": [
+     -19.5,
+     41.5
+    ],
+    "find": true
    }
   ],
   "routes": [
@@ -46836,152 +47634,72 @@
       33.5
      ],
      [
-      -5.5,
+      -4.5,
       34.5
-     ],
-     [
-      -6.5,
-      34.5
-     ],
-     [
-      -7.5,
-      34.5
-     ],
-     [
-      -8.5,
-      34.5
-     ],
-     [
-      -9.5,
-      34.5
-     ],
-     [
-      -10.5,
-      34.5
-     ],
-     [
-      -11.5,
-      34.5
-     ],
-     [
-      -12.5,
-      35.5
-     ],
-     [
-      -13.5,
-      36.5
-     ],
-     [
-      -14.5,
-      37.5
-     ],
-     [
-      -14.5,
-      38.5
-     ],
-     [
-      -14.5,
-      39.5
-     ],
-     [
-      -14.5,
-      40.5
-     ],
-     [
-      -14.5,
-      41.5
-     ],
-     [
-      -14.5,
-      42.5
-     ],
-     [
-      -14.5,
-      43.5
-     ],
-     [
-      -14.5,
-      44.5
-     ],
-     [
-      -14.5,
-      45.5
-     ],
-     [
-      -14.5,
-      46.5
-     ],
-     [
-      -15.5,
-      47.5
-     ],
-     [
-      -15.5,
-      48.5
-     ],
-     [
-      -15.5,
-      49.5
-     ],
-     [
-      -14.5,
-      49.5
-     ],
-     [
-      -13.5,
-      49.5
-     ],
-     [
-      -12.5,
-      49.5
-     ],
-     [
-      -11.5,
-      49.5
-     ],
-     [
-      -10.5,
-      49.5
-     ],
-     [
-      -9.5,
-      49.5
-     ],
-     [
-      -8.5,
-      49.5
-     ],
-     [
-      -7.5,
-      49.5
-     ],
-     [
-      -6.5,
-      49.5
-     ],
-     [
-      -5.5,
-      49.5
      ],
      [
       -4.5,
-      49.5
+      35.5
+     ],
+     [
+      -4.5,
+      36.5
      ],
      [
       -3.5,
-      49.5
+      37.5
      ],
      [
       -2.5,
+      38.5
+     ],
+     [
+      -2.5,
+      39.5
+     ],
+     [
+      -2.5,
+      40.5
+     ],
+     [
+      -2.5,
+      41.5
+     ],
+     [
+      -2.5,
+      42.5
+     ],
+     [
+      -2.5,
+      43.5
+     ],
+     [
+      -2.5,
+      44.5
+     ],
+     [
+      -1.5,
+      45.5
+     ],
+     [
+      -0.5,
+      46.5
+     ],
+     [
+      -0.5,
+      47.5
+     ],
+     [
+      -0.5,
+      48.5
+     ],
+     [
+      -0.5,
       49.5
      ],
      [
-      -1.5,
+      -0.5,
       50.5
-     ],
-     [
-      -1.5,
-      51.5
      ]
     ]
    },
@@ -47429,183 +48147,103 @@
      ],
      [
       2.5,
-      -25.5
-     ],
-     [
-      3.5,
       -26.5
      ],
      [
+      3.5,
+      -27.5
+     ],
+     [
       4.5,
-      -27.5
-     ],
-     [
-      5.5,
-      -27.5
-     ],
-     [
-      6.5,
-      -27.5
-     ],
-     [
-      7.5,
-      -27.5
-     ],
-     [
-      8.5,
-      -27.5
-     ],
-     [
-      9.5,
-      -27.5
-     ],
-     [
-      10.5,
       -28.5
      ],
      [
-      11.5,
+      4.5,
       -29.5
      ],
      [
-      11.5,
+      4.5,
       -30.5
      ],
      [
-      11.5,
+      4.5,
       -31.5
      ],
      [
-      11.5,
+      4.5,
       -32.5
      ],
      [
-      11.5,
+      4.5,
       -33.5
      ],
      [
-      11.5,
+      4.5,
       -34.5
      ],
      [
-      12.5,
+      4.5,
       -35.5
      ],
      [
-      13.5,
+      4.5,
       -36.5
      ],
      [
-      14.5,
+      3.5,
       -37.5
      ],
      [
-      14.5,
+      2.5,
       -38.5
      ],
      [
-      14.5,
+      2.5,
       -39.5
      ],
      [
-      14.5,
+      2.5,
       -40.5
      ],
      [
-      14.5,
+      2.5,
       -41.5
      ],
      [
-      14.5,
+      2.5,
       -42.5
      ],
      [
-      14.5,
+      2.5,
       -43.5
      ],
      [
-      14.5,
+      2.5,
       -44.5
      ],
      [
-      14.5,
+      1.5,
       -45.5
      ],
      [
-      14.5,
+      0.5,
       -46.5
      ],
      [
-      15.5,
+      0.5,
       -47.5
      ],
      [
-      15.5,
+      0.5,
       -48.5
      ],
      [
-      15.5,
+      0.5,
       -49.5
      ],
      [
-      14.5,
-      -49.5
-     ],
-     [
-      13.5,
-      -49.5
-     ],
-     [
-      12.5,
-      -49.5
-     ],
-     [
-      11.5,
-      -49.5
-     ],
-     [
-      10.5,
-      -49.5
-     ],
-     [
-      9.5,
-      -49.5
-     ],
-     [
-      8.5,
-      -49.5
-     ],
-     [
-      7.5,
-      -49.5
-     ],
-     [
-      6.5,
-      -49.5
-     ],
-     [
-      5.5,
-      -49.5
-     ],
-     [
-      4.5,
-      -49.5
-     ],
-     [
-      3.5,
-      -49.5
-     ],
-     [
-      2.5,
-      -49.5
-     ],
-     [
-      1.5,
+      0.5,
       -50.5
-     ],
-     [
-      1.5,
-      -51.5
      ]
     ]
    }
@@ -47613,17 +48251,189 @@
  },
  "ms": {
   "1": 2,
-  "2": 353,
-  "6": 368,
-  "8": 573,
-  "9": 613,
-  "10": 620,
-  "15": 677,
-  "16": 5250,
-  "routes": 367,
-  "7d-low": 450,
-  "7d": 573,
-  "total": 5272
+  "2": 350,
+  "6": 922,
+  "8": 1160,
+  "9": 1193,
+  "10": 1199,
+  "15": 1263,
+  "16": 4632,
+  "climbHops": 909,
+  "routes": 921,
+  "7d-low": 1008,
+  "7d": 1160,
+  "total": 4633
+ },
+ "_climbHops": {
+  "tried": 94,
+  "made": 86,
+  "proved": true,
+  "trials": 227,
+  "ms": 555,
+  "notMade": [
+   [
+    1.5,
+    0,
+    -47.5,
+    1.5,
+    1.3,
+    -46.5
+   ],
+   [
+    1.5,
+    0,
+    -38.5,
+    1.5,
+    1.3,
+    -39.5
+   ],
+   [
+    -20.5,
+    -0.2,
+    -13.5,
+    -20.5,
+    1.3,
+    -15.5
+   ],
+   [
+    -20.5,
+    -0.2,
+    -10.5,
+    -20.5,
+    1.3,
+    -8.95
+   ],
+   [
+    20.5,
+    -0.2,
+    10.5,
+    20.5,
+    1.3,
+    8.95
+   ],
+   [
+    20.5,
+    -0.2,
+    13.5,
+    20.5,
+    1.3,
+    15.5
+   ],
+   [
+    -1.5,
+    0,
+    38.5,
+    -1.5,
+    1.3,
+    39.5
+   ],
+   [
+    -1.5,
+    0,
+    47.5,
+    -1.5,
+    1.3,
+    46.5
+   ]
+  ],
+  "madeAt": [
+   [
+    -14.5,
+    0,
+    -49.5,
+    -14.5,
+    1.3,
+    -47.5
+   ],
+   [
+    -13.5,
+    0,
+    -49.5,
+    -13.5,
+    1.3,
+    -47.5
+   ],
+   [
+    -15.5,
+    0,
+    -48.5,
+    -14.5,
+    1.3,
+    -48.5
+   ],
+   [
+    -15.5,
+    0,
+    -48.5,
+    -14.5,
+    1.3,
+    -47.5
+   ],
+   [
+    -9.5,
+    0,
+    -48.5,
+    -10.5,
+    1.3,
+    -47.5
+   ],
+   [
+    -15.5,
+    0,
+    -47.5,
+    -14.5,
+    1.3,
+    -47.5
+   ],
+   [
+    -9.5,
+    0,
+    -47.5,
+    -10.5,
+    1.3,
+    -47.5
+   ],
+   [
+    1.5,
+    0,
+    -47.5,
+    2.5,
+    1.3,
+    -46.5
+   ],
+   [
+    2.5,
+    0,
+    -47.5,
+    3.5,
+    1.3,
+    -46.5
+   ],
+   [
+    2.5,
+    0,
+    -47.5,
+    2.5,
+    1.3,
+    -46.5
+   ],
+   [
+    3.5,
+    0,
+    -47.5,
+    4.5,
+    1.3,
+    -46.5
+   ],
+   [
+    3.5,
+    0,
+    -47.5,
+    3.5,
+    1.3,
+    -46.5
+   ]
+  ]
  },
  "legs": [
   {
@@ -47640,14 +48450,14 @@
    "kind": "wg",
    "i": 0,
    "r1": 27.2,
-   "r2": 49.7
+   "r2": 30.7
   },
   {
    "team": 0,
    "leg": "Pond → Gate",
    "kind": "pg",
-   "r1": 57.5,
-   "r2": 82.5
+   "r1": 57.3,
+   "r2": 81.9
   },
   {
    "team": 1,
@@ -47663,14 +48473,281 @@
    "kind": "wg",
    "i": 0,
    "r1": 27.2,
-   "r2": 49.7
+   "r2": 30.7
   },
   {
    "team": 1,
    "leg": "Pond → Gate",
    "kind": "pg",
-   "r1": 57.5,
-   "r2": 82.5
+   "r1": 57.3,
+   "r2": 81.9
+  }
+ ],
+ "flags": [
+  {
+   "i": 1,
+   "check": 7,
+   "at": [
+    9.2,
+    -1.1,
+    40.5
+   ],
+   "what": "7c: a 3.1 m drop into the Gate's ring",
+   "look": null
+  },
+  {
+   "i": 2,
+   "check": 7,
+   "at": [
+    3,
+    0,
+    59.5
+   ],
+   "what": "7c: a 3.2 m drop into the Gate's ring",
+   "look": null
+  },
+  {
+   "i": 3,
+   "check": 7,
+   "at": [
+    -3,
+    0,
+    -59.5
+   ],
+   "what": "7c: a 3.2 m drop into the Gate's ring",
+   "look": null
+  },
+  {
+   "i": 4,
+   "check": 7,
+   "at": [
+    -9.2,
+    -1.1,
+    -40.5
+   ],
+   "what": "7c: a 3.3 m drop into the Gate's ring",
+   "look": null
+  },
+  {
+   "i": 5,
+   "check": 7,
+   "at": [
+    20.5,
+    1.1,
+    -38.5
+   ],
+   "what": "7d offGap ×2: gain 10.8–10.8 m",
+   "look": [
+    19.5,
+    1.7,
+    -41.5
+   ]
+  },
+  {
+   "i": 6,
+   "check": 7,
+   "at": [
+    -20.5,
+    1.1,
+    38.5
+   ],
+   "what": "7d offGap ×2: gain 12.5–12.5 m",
+   "look": [
+    -20.5,
+    1.7,
+    41.5
+   ]
+  },
+  {
+   "i": 7,
+   "check": 9,
+   "at": [
+    -12.9,
+    2.5,
+    -29.4
+   ],
+   "what": "9: climb-only plateau, 0/14 in a zone",
+   "look": null
+  },
+  {
+   "i": 8,
+   "check": 9,
+   "at": [
+    12.9,
+    2.5,
+    29.4
+   ],
+   "what": "9: climb-only plateau, 0/14 in a zone",
+   "look": null
+  },
+  {
+   "i": 9,
+   "check": 9,
+   "at": [
+    -4,
+    2.7,
+    -64.2
+   ],
+   "what": "9: unsigned zone entrance",
+   "look": null
+  },
+  {
+   "i": 10,
+   "check": 9,
+   "at": [
+    12,
+    2.4,
+    -63.5
+   ],
+   "what": "9: unsigned zone entrance",
+   "look": null
+  },
+  {
+   "i": 11,
+   "check": 9,
+   "at": [
+    1.8,
+    2,
+    -59
+   ],
+   "what": "9: unsigned zone entrance",
+   "look": null
+  },
+  {
+   "i": 12,
+   "check": 9,
+   "at": [
+    6.3,
+    2,
+    -59
+   ],
+   "what": "9: unsigned zone entrance",
+   "look": null
+  },
+  {
+   "i": 13,
+   "check": 9,
+   "at": [
+    -6.2,
+    2,
+    59
+   ],
+   "what": "9: unsigned zone entrance",
+   "look": null
+  },
+  {
+   "i": 14,
+   "check": 9,
+   "at": [
+    -1.7,
+    2,
+    59
+   ],
+   "what": "9: unsigned zone entrance",
+   "look": null
+  },
+  {
+   "i": 15,
+   "check": 9,
+   "at": [
+    -12,
+    2.4,
+    63.5
+   ],
+   "what": "9: unsigned zone entrance",
+   "look": null
+  },
+  {
+   "i": 16,
+   "check": 9,
+   "at": [
+    4,
+    2.7,
+    64.2
+   ],
+   "what": "9: unsigned zone entrance",
+   "look": null
+  },
+  {
+   "i": 17,
+   "check": 14,
+   "at": [
+    0,
+    3.3,
+    0
+   ],
+   "what": "14: cover 63.9 %, seen 4/8",
+   "look": null
+  },
+  {
+   "i": 18,
+   "check": 15,
+   "at": [
+    0,
+    0.1,
+    24
+   ],
+   "what": "15: solid within 3 m of the weir (office, 1.5 m)",
+   "look": null
+  },
+  {
+   "i": 19,
+   "check": 15,
+   "at": [
+    0,
+    0.1,
+    -24
+   ],
+   "what": "15: solid within 3 m of the weir (office, 1.5 m)",
+   "look": null
+  },
+  {
+   "i": 20,
+   "check": 16,
+   "at": [
+    -4.5,
+    3.1,
+    -23.5
+   ],
+   "what": "16: a gap edge no kid makes",
+   "look": [
+    -4.5,
+    0,
+    -26.5
+   ],
+   "also": 2
+  },
+  {
+   "i": 21,
+   "check": 16,
+   "at": [
+    3.5,
+    3.1,
+    23.5
+   ],
+   "what": "16: a gap edge no kid makes",
+   "look": [
+    0.5,
+    0,
+    23.5
+   ],
+   "also": 2
+  },
+  {
+   "i": 22,
+   "check": 16,
+   "at": [
+    -18.5,
+    1.3,
+    -15
+   ],
+   "what": "16: a gap edge no kid makes",
+   "look": [
+    -18.5,
+    -1.1,
+    -13.5
+   ],
+   "also": 1
   }
  ],
  "carry": [
@@ -47764,7 +48841,7 @@
     "main": {
      "picked": true,
      "plant": true,
-     "tWeir": 6.2,
+     "tWeir": 6.1,
      "w1": {
       "ok": true,
       "end": true,
@@ -47790,234 +48867,234 @@
    },
    "events": [
     {
-     "t": 0.2,
+     "t": 0,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 6.1,
+     "t": 5.9,
      "k": "rate",
      "team": 0,
      "how": "retreat"
     },
     {
-     "t": 9.9,
+     "t": 9.8,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 9.9,
+     "t": 9.8,
      "k": "rate",
      "team": 0,
      "how": "zone"
     },
     {
-     "t": 10.2,
+     "t": 10.1,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 10.2,
+     "t": 10.1,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 14.5,
+     "t": 14.4,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 14.5,
+     "t": 14.4,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 18.8,
+     "t": 18.6,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 18.8,
+     "t": 18.6,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 23,
+     "t": 22.9,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 23,
+     "t": 22.9,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 24.9,
+     "t": 24.8,
      "k": "rate",
      "team": 0,
      "how": "retreat"
     },
     {
-     "t": 27.3,
+     "t": 27.2,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 27.3,
+     "t": 27.2,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 31.6,
+     "t": 31.4,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 31.6,
+     "t": 31.4,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 35.8,
+     "t": 35.7,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 35.8,
+     "t": 35.7,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 36.9,
+     "t": 36.8,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 36.9,
+     "t": 36.8,
      "k": "reset",
      "how": "fall"
     },
     {
-     "t": 39.3,
+     "t": 39.2,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 43.5,
+     "t": 43.4,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 43.5,
+     "t": 43.4,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 45.8,
+     "t": 45.7,
      "k": "rate",
      "team": 0,
      "how": "retreat"
     },
     {
-     "t": 47.8,
+     "t": 47.7,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 47.8,
+     "t": 47.7,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 52.1,
+     "t": 52,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 52.1,
+     "t": 52,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 54.6,
+     "t": 54.5,
      "k": "rate",
      "team": 0,
      "how": "retreat"
     },
     {
-     "t": 56.3,
+     "t": 56.2,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 56.3,
+     "t": 56.2,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 60.6,
+     "t": 60.5,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 60.6,
+     "t": 60.5,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 63.5,
+     "t": 63.4,
      "k": "rate",
      "team": 0,
      "how": "retreat"
     },
     {
-     "t": 64.9,
+     "t": 64.8,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 64.9,
+     "t": 64.8,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 65.5,
+     "t": 65.4,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 65.5,
+     "t": 65.4,
      "k": "drop",
      "team": 0,
      "how": "fall",
@@ -48028,19 +49105,19 @@
      ]
     },
     {
-     "t": 66.3,
+     "t": 66.2,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 66.4,
+     "t": 66.3,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 66.4,
+     "t": 66.3,
      "k": "drop",
      "team": 0,
      "how": "splat",
@@ -48051,31 +49128,31 @@
      ]
     },
     {
-     "t": 68.4,
+     "t": 68.2,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 74.3,
+     "t": 74.2,
      "k": "rate",
      "team": 0,
      "how": "×1 "
     },
     {
-     "t": 74.3,
+     "t": 74.2,
      "k": "plant",
      "team": 0,
      "how": ""
     },
     {
-     "t": 75.7,
+     "t": 75.6,
      "k": "pickup",
      "team": 0,
      "how": ""
     },
     {
-     "t": 81.8,
+     "t": 81.7,
      "k": "end",
      "how": "knockout"
     }
@@ -48197,240 +49274,240 @@
    },
    "events": [
     {
-     "t": 0.4,
+     "t": 0,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 6.1,
+     "t": 5.7,
      "k": "rate",
      "team": 1,
      "how": "retreat"
     },
     {
-     "t": 9.5,
+     "t": 9.1,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 9.5,
+     "t": 9.2,
      "k": "rate",
      "team": 1,
      "how": "zone"
     },
     {
-     "t": 9.8,
+     "t": 9.4,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 9.8,
+     "t": 9.4,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 14.1,
+     "t": 13.7,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 14.1,
+     "t": 13.7,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 18.3,
+     "t": 18,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 18.3,
+     "t": 18,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 20.3,
+     "t": 19.9,
      "k": "rate",
      "team": 1,
      "how": "retreat"
     },
     {
-     "t": 22.6,
+     "t": 22.2,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 22.6,
+     "t": 22.2,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 26.9,
+     "t": 26.5,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 26.9,
+     "t": 26.5,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 31.1,
+     "t": 30.8,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 31.1,
+     "t": 30.8,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 35.4,
+     "t": 35,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 35.4,
+     "t": 35,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 36,
+     "t": 35.7,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 36,
+     "t": 35.7,
      "k": "reset",
      "how": "fall"
     },
     {
-     "t": 38.4,
+     "t": 38.1,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 40.7,
+     "t": 40.3,
      "k": "rate",
      "team": 1,
      "how": "retreat"
     },
     {
-     "t": 42.7,
+     "t": 42.3,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 42.7,
+     "t": 42.3,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 47,
+     "t": 46.6,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 47,
+     "t": 46.6,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 49.5,
+     "t": 49.1,
      "k": "rate",
      "team": 1,
      "how": "retreat"
     },
     {
-     "t": 51.2,
+     "t": 50.9,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 51.2,
+     "t": 50.9,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 55.5,
+     "t": 55.1,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 55.5,
+     "t": 55.1,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 58.3,
+     "t": 58,
      "k": "rate",
      "team": 1,
      "how": "retreat"
     },
     {
-     "t": 59.8,
+     "t": 59.4,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 59.8,
+     "t": 59.4,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 62.6,
+     "t": 62.2,
      "k": "rate",
      "team": 1,
      "how": "retreat"
     },
     {
-     "t": 64,
+     "t": 63.7,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 64,
+     "t": 63.7,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 65.1,
+     "t": 64.7,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 65.1,
+     "t": 64.7,
      "k": "drop",
      "team": 1,
      "how": "fall",
@@ -48441,19 +49518,19 @@
      ]
     },
     {
-     "t": 65.9,
+     "t": 65.5,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 66,
+     "t": 65.6,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 66,
+     "t": 65.6,
      "k": "drop",
      "team": 1,
      "how": "splat",
@@ -48464,31 +49541,31 @@
      ]
     },
     {
-     "t": 67.9,
+     "t": 67.6,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 73.8,
+     "t": 73.4,
      "k": "rate",
      "team": 1,
      "how": "×1 "
     },
     {
-     "t": 73.8,
+     "t": 73.4,
      "k": "plant",
      "team": 1,
      "how": ""
     },
     {
-     "t": 75.2,
+     "t": 74.8,
      "k": "pickup",
      "team": 1,
      "how": ""
     },
     {
-     "t": 81.4,
+     "t": 81,
      "k": "end",
      "how": "knockout"
     }
@@ -48496,7 +49573,7 @@
   }
  ],
  "drop": {
-  "samples": 198,
+  "samples": 188,
   "bad": [],
   "nBad": 0,
   "pond": 0,
@@ -48517,7 +49594,13 @@
   "lockgate-flag-5.jpg",
   "lockgate-flag-6.jpg",
   "lockgate-flag-7.jpg",
-  "lockgate-flag-8.jpg"
+  "lockgate-flag-8.jpg",
+  "lockgate-flag-9.jpg",
+  "lockgate-flag-10.jpg",
+  "lockgate-flag-11.jpg",
+  "lockgate-flag-12.jpg",
+  "lockgate-flag-13.jpg",
+  "lockgate-flag-14.jpg"
  ],
  "result": "fail",
  "fails": [
