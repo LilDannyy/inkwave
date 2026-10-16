@@ -11,6 +11,9 @@
 //   env: SUBS='all=bobber' · 'team0=…;team1=…' · per slot 'a,b,…' equips the subs ([b5-int3], as tower-match.cjs)
 //   env: DUR=300  OTMAX=120 (a stalled overtime isn't simulated to its 300 s cap)  OUT=file.json  DIFF=easy|normal|hard
 //        HUMAN=still|carry (Alpha's first kid: AFK at spawn / its own brain, never re-dealt)  KARP_DEF='two' | JSON (karpbox)
+//        [b5-karp-bots] PLAN='karpbox:normal:3,halyard:hard:2' (several matches in this one instance; OUT=dir/x.json →
+//        x-<map>-<diff>-<i>.json) · KARP_AI=0 (WP1's minimal bots) · KARP_TUNE='{"jumpR":30}' (KARP_AI fields) ·
+//        KARP_CFG='{"shell":{"reformHp":600}}' (BAZOOKARP numbers, deep) — what-ifs for the balance pass, never saved
 // Ends with `RESULT karp <id> win=A|B reason=… ko=… c=…/… pops=… carries=… blasts=… ot=…/<why>` and RESULT_JSON {…}.
 // (The missing-lightmap warning of a stage's .bazookarp variant is expected until WP4b bakes it: listed, not counted.)
 const { app } = require('electron');
@@ -60,12 +63,18 @@ app.on('browser-window-created', (_, win) => {
       if (!Kp) return { err: 'no Bazookarp engine (mode ' + m.mode + ')' };
       resetKarpStats(); resetSpecialStats();   // [b5-karp-bots] (objects too: route shares, roles)
       KARP_AI.enabled = ${process.env.KARP_AI === '0' ? 'false' : 'true'};   // [b5-karp-bots] KARP_AI=0: WP1's minimal bots (the A/B baseline)
+      // [b5-karp-bots] what-ifs for the balance pass, this page only: KARP_TUNE (KARP_AI fields), KARP_CFG (BAZOOKARP, deep)
+      { const deep = (o, d) => { for (const k in d) { if (d[k] && typeof d[k] === 'object' && !Array.isArray(d[k]) && o[k]) deep(o[k], d[k]); else o[k] = d[k]; } };
+        if (!window.__karpTune0) window.__karpTune0 = { ai: JSON.parse(JSON.stringify(KARP_AI)), cfg: JSON.parse(JSON.stringify(BAZOOKARP)) };
+        deep(KARP_AI, window.__karpTune0.ai); deep(BAZOOKARP, window.__karpTune0.cfg);
+        deep(KARP_AI, ${JSON.stringify(JSON.parse(process.env.KARP_TUNE || '{}'))}); deep(BAZOOKARP, ${JSON.stringify(JSON.parse(process.env.KARP_CFG || '{}'))});
+        if (Kp.shell.state === 'intact' && Kp.shell.hpMax !== BAZOOKARP.shell.hp && Kp.phase === 'shielded' && !Kp.touched) Kp.shell.form(Kp.pos, BAZOOKARP.shell.hp, 0); }   // (the opening shell was formed at the start)
       const KG = window.__G.karpGun; KG.stats = { fired: [0, 0, 0], landed: 0, blasts: 0, hits: 0, splats: 0, kicks: 0 };
       const HUMAN = '${HUMAN}', me = m.local;
       if (HUMAN === 'still' && me) { me.bot = null; me.intent.move.set(0, 0, 0); me.intent.fire = me.intent.squid = me.intent.jump = me.intent.sub = me.intent.special = false; }
       g.debug.freeze();
       const clock = () => +(m.duration - m.time + (Kp.overtime ? Kp.overtimeT : 0)).toFixed(1);
-      const X = { pops: [], pickups: [], carries: [], plants: [], gates: [], blasts: [], resets: [], moves: 0, drops: [], ot: null, end: null, specials: 0, jumps: 0, jumpsToCarrier: 0, bubbleOnCarrier: [], kos: [], splats: 0, burstSplats: 0, fuseSplats: 0 };
+      const X = { pops: [], pickups: [], carries: [], plants: [], gates: [], blasts: [], resets: [], moves: 0, drops: [], ot: null, end: null, specials: 0, jumps: 0, jumpsToCarrier: 0, bubbleOnCarrier: [], kos: [], splats: 0, burstSplats: 0, fuseSplats: 0, arrive: [null, null] };
       let cur = null;   // the carry in progress
       const offs = [
         on('karp:burst', (e) => X.pops.push({ t: clock(), team: e.team })),
@@ -97,6 +106,8 @@ app.on('browser-window-created', (_, win) => {
         g._skipRender = false;
         simT += CH * DT;
         if (m.state !== 'playing') continue;
+        // [b5-karp-bots] each team's first bot within 9 m of the Pond (the walk in: the floor under the first pop)
+        if (X.arrive[0] === null || X.arrive[1] === null) for (const a of m.actors) if (a.alive && X.arrive[a.team] === null && Math.hypot(a.pos.x - Kp.R.pond.x, a.pos.z - Kp.R.pond.z) < 9) X.arrive[a.team] = +simT.toFixed(1);
         // bots stuck (as tower-match: < 1 m over 3 s while wanting to move; not while charging); the carrier's own episodes
         for (const a of m.actors) {
           if (!a.bot) continue;
@@ -141,7 +152,7 @@ app.on('browser-window-created', (_, win) => {
       return {
         simT: +simT.toFixed(1), simMs: Math.round(simMs), state: m.state, map: '${MAP}', placeholder: Kp.placeholder, L: Kp.L.map((x) => +x.toFixed(1)),
         winner: Kp.winner, reason: Kp.reason, koT: koT, counts: [...Kp.count], best: Kp.bestM.map((b) => +b.toFixed(1)),
-        pops: S.pops, firstPop: S.firstPop, popT: S.popT, burstSplats: X.burstSplats, reforms: S.reforms, crushes: Kp.shell.stats.crushes,
+        pops: S.pops, firstPop: S.firstPop, arrive: X.arrive, popT: S.popT, burstSplats: X.burstSplats, reforms: S.reforms, crushes: Kp.shell.stats.crushes,
         pickups: S.pickups, carries: X.carries, blasts: S.blasts, resets: S.resets, moves: S.moves, plants: X.plants, gates: X.gates,
         ot: X.ot ? { why: X.ot.why, losing: X.ot.losing, len: +((X.end ? X.end.t : clock()) - X.ot.t).toFixed(1), end: Kp.reason, windows: S.windows } : null,
         fastT: { retreat: +(S.fastT.retreat || 0).toFixed(1), zone: +(S.fastT.zone || 0).toFixed(1) },
@@ -164,7 +175,7 @@ app.on('browser-window-created', (_, win) => {
     if (r.err) { console.log('HARNESS ' + r.err); app.exit(2); return; }
     const W = (t) => (t === 0 ? 'A' : t === 1 ? 'B' : '-');
     console.log(`== ${MAP} [bazookarp${r.placeholder ? ', placeholder data' : ''} L ${r.L.join('/')} m]: winner ${W(r.winner)} (${r.reason}) | counts ${r.counts.join(' vs ')} | best A ${r.best[0]} m B ${r.best[1]} m | ko ${r.koT ?? '-'} | OT ${r.ot ? r.ot.why + ' ' + r.ot.len + ' s → ' + r.ot.end : 'no'} | sim ${r.simT} s`);
-    console.log(`   shell: pops A ${r.pops[0]} B ${r.pops[1]} | first pop ${r.firstPop ?? '-'} s | pops at ${JSON.stringify(r.popT)} | burst splats ${r.burstSplats} | re-formed ${r.reforms} | devices crushed ${r.crushes}`);
+    console.log(`   shell: pops A ${r.pops[0]} B ${r.pops[1]} | first pop ${r.firstPop ?? '-'} s (first bots by the Pond at ${JSON.stringify(r.arrive)} s) | pops at ${JSON.stringify(r.popT)} | burst splats ${r.burstSplats} | re-formed ${r.reforms} | devices crushed ${r.crushes}`);
     console.log(`   pick-ups A ${r.pickups[0]} B ${r.pickups[1]} | carries ${r.carries.length}: ${r.carries.map((c) => `${W(c.team)}:${c.how}/${c.dur}s/${c.m}m`).join(' ')}`);
     console.log(`   plants ${JSON.stringify(r.plants)} | gates ${JSON.stringify(r.gates)} | Carp Blasts own ${r.blasts.own} enemy ${r.blasts.enemy} | resets ${JSON.stringify(r.resets)} | moved ${r.moves}`);
     console.log(`   fast fuse (s): retreat ${r.fastT.retreat} zone ${r.fastT.zone} | clamp rejections ${r.clamped} | carrierRetreatFallback ${r.retreatFallback} | carrier stuck ${r.carrierStuck.s} s (> 3 s episodes ${r.carrierStuck.eps.length}) | bots stuck ${r.stuckPct}% (holding on purpose ${r.holdPct}%)`);

@@ -33,7 +33,7 @@ import * as THREE from 'three';
 import { G, on, clamp, angleDiff } from '../core/ctx.js';
 import { BAZOOKARP as K, PLAYER, SPECIALS } from '../config.js';
 import { revealedTo } from './reveal.js';
-import { speedOf, radiusOf } from './karpGun.js';
+import { speedOf, radiusOf, kickOf } from './karpGun.js';
 import { teamKnown } from './botSight.js';
 import { SUB_KITS } from './kits/registry.js';
 import { Hit } from './physics.js';
@@ -645,6 +645,17 @@ function lobPitch(c, d, dy, high = false) {
   return be < 2.5 ? best : null;
 }
 const _cg = new V3();
+// would a Carp Shot of charge c aimed along yaw kick a off a drop (> 0.9 m) or into the water? (the kick's reach: its speed ×
+// its decay, on the ground; less in the air)
+function kickSafe(a, yaw, c) {
+  const L = G.level; if (!L) return true;
+  const reach = kickOf(c) * (a.grounded ? 1 : K.gun.kickAir) * K.gun.kickTau + 0.5, dx = -Math.sin(yaw), dz = -Math.cos(yaw);
+  for (let s = 0.5; s <= reach + 1e-3; s += 0.5) {
+    const gy = L.groundHeight(a.pos.x + dx * s, a.pos.z + dz * s, a.pos.y + 0.6);
+    if (!(gy > PLAYER.waterY + 0.2) || gy < a.pos.y - 0.9) return false;
+  }
+  return true;
+}
 const flightT = (c, d, p) => d / Math.max(1, speedOf(c) * Math.cos(p + (K.gun.lob * Math.PI) / 180));
 // the carrier's route and goal (paint and fight alike)
 function carryGoal(b, P) {
@@ -654,7 +665,13 @@ function carryGoal(b, P) {
   let goal = R ? R.T.pos : P.targets(t)[0].pos;
   // (the picked route itself: its node 12 m on from the carrier, the target in the last 12 m — a path straight to the
   // target would cut the corner of a longer route it picked round known foes; _pathTo's corridor cost keeps it close)
-  if (R && R.cum[RT.i] + 12 < R.len - 1) goal = P.ahead(t, 12, _cg);
+  // (unless that node is behind its retreat mark — a route that winds back first: then the target, and the route rules
+  // find the forward way if there is one)
+  if (R && R.cum[RT.i] + 12 < R.len - 1) {
+    P.ahead(t, 12, _cg);
+    const id = G.nav.nearest(_cg, 0.6), K2 = karpPathArgs(b);
+    if (id >= 0 && !(K2 && K2.avoid[id])) goal = _cg;
+  }
   // the fuse can't make it at this pace: over the halfway line first, so the blast drops it forward (§8.4)
   const J = a.carry.j, F = P.Kp.field;
   if (R && J && J.half === t && P.Kp.fuse * PLAYER.runSpeed * K.speedMul * 0.85 < R.len - R.cum[RT.i]) {
@@ -689,12 +706,15 @@ export function karpCarrierAct(b, P, { dt, it, move }) {
   const near = (r) => foes.filter((f) => f.d < r);
   const charging = !!(g && (g.charging || g.tap));
   const aimed = (yaw, pitch, tol = 0.12) => Math.abs(angleDiff(b.aimYaw, yaw)) < tol && Math.abs(b.aimPitch - pitch) < 0.12;
-  // hold a charge to want, then let go (a tap for a Splash); the shot only once aimed
+  // hold a charge to want, then let go (a tap for a Splash); the shot only once aimed — and never one whose kick (backwards
+  // along the aim, 0.75–1.8 m) would carry it off a ledge or into the water behind it (a sun deck's edge: down on its own
+  // side, behind its retreat mark)
   const shoot = (want, yaw, pitch, dist, kind) => {
     S.yaw = yaw; S.pitch = pitch; S.dist = dist; S.kind = kind;
-    if (charging) { it.fire = !(g.c >= want - 1e-3 && aimed(yaw, pitch)) || g.tap; }
-    else if ((!g || g.cd <= 0) && aimed(yaw, pitch, want > 0 ? 0.12 : 0.2) && (b.react <= 0.05 || (kind !== 'foe' && kind !== 'splash'))) { it.fire = true; KARP_BOT.stats.carrierShots++; if (kind === 'push') KARP_BOT.stats.push++; if (kind === 'splash') KARP_BOT.stats.splashes++; if (kind === 'ink') KARP_BOT.stats.routeInk++; if (kind === 'dodge') KARP_BOT.stats.dodges++; }
-    if (want <= 0 && charging && !g.tap && g.held > 0.05) it.fire = false;   // (a Splash: let go at once)
+    const safe = kickSafe(a, yaw, charging ? Math.max(g.c, want) : want);
+    if (charging) { it.fire = !(g.c >= want - 1e-3 && aimed(yaw, pitch) && safe) || (g.tap && safe); }
+    else if (safe && (!g || g.cd <= 0) && aimed(yaw, pitch, want > 0 ? 0.12 : 0.2) && (b.react <= 0.05 || (kind !== 'foe' && kind !== 'splash'))) { it.fire = true; KARP_BOT.stats.carrierShots++; if (kind === 'push') KARP_BOT.stats.push++; if (kind === 'splash') KARP_BOT.stats.splashes++; if (kind === 'ink') KARP_BOT.stats.routeInk++; if (kind === 'dodge') KARP_BOT.stats.dodges++; }
+    if (want <= 0 && charging && !g.tap && g.held > 0.05 && safe) it.fire = false;   // (a Splash: let go at once)
     it.squid = false;
     return { yaw, pitch, dist };
   };
@@ -997,7 +1017,7 @@ export function karpPathFallback(b, level = 1) {
   if (!P) return null;
   const N = P.N, base = P.avoidFor(a.team), sm = P.shellMask, Z = P.masks(a.team).zone, avoid = b.kFbA && b.kFbA.length === N ? b.kFbA : (b.kFbA = new Uint8Array(N));
   for (let i = 0; i < N; i++) avoid[i] = (base[i] && !(level >= 2 && Z[i])) || sm[i] ? 1 : 0;
-  if (!(G.time - (b.kFbT ?? -9) < 3)) { KARP_BOT.stats.retreatFallback++; const L = Array.isArray(KARP_BOT.stats.fbAt) ? KARP_BOT.stats.fbAt : (KARP_BOT.stats.fbAt = []); if (L.length < 6) L.push([+a.pos.x.toFixed(1), +a.pos.y.toFixed(1), +a.pos.z.toFixed(1), level]); }   // (where: a stage builder's flag)
+  if (!(G.time - (b.kFbT ?? -9) < 3)) { KARP_BOT.stats.retreatFallback++; const L = Array.isArray(KARP_BOT.stats.fbAt) ? KARP_BOT.stats.fbAt : (KARP_BOT.stats.fbAt = []); if (L.length < 6) { const F = P.Kp.field, J = a.carry && a.carry.j, n = G.nav.nearest(a.pos, 1.2, true); L.push([+a.pos.x.toFixed(1), +a.pos.y.toFixed(1), +a.pos.z.toFixed(1), level, a.team, n >= 0 ? +(F.L[a.team] - F.D[a.team][n]).toFixed(1) : null, J && Number.isFinite(J.mark) ? +J.mark.toFixed(1) : null]); } }   // (where: a stage builder's flag — [x, y, z, level, team, P here, the retreat mark])
   b.kFbT = G.time;
   let cost = b.kArgs ? b.kArgs.cost : b.sp.cost();
   if (level >= 2) { const c = b.kFbC && b.kFbC.length === N ? b.kFbC : (b.kFbC = new Float32Array(N)); for (let i = 0; i < N; i++) c[i] = (cost ? cost[i] : 0) + (Z[i] ? 6 : 0); cost = c; }

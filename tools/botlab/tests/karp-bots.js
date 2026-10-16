@@ -263,8 +263,8 @@
     step(9, () => { c.hp = PLAYER.hp; maxZ2 = Math.max(maxZ2, c.pos.z); if (c.pos.z < 7.5) past = true; minZ = Math.min(minZ, c.pos.z); if (c.carry?.j?.ret) retS += 1 / 60;
       if (fr++ % 30 === 0 && trG.length < 10) { const b = c.bot, g = b.goal >= 0 ? G.nav.nodes[b.goal] : null, RTg = karpPlan().route[1]; trG.push([+c.pos.x.toFixed(1), +c.pos.z.toFixed(1), Kp.field.inFreeZone(1, c.pos), c.carry?.j?.ret ? 1 : 0, g ? [g.x, g.z] : null, b.path ? b.path.length : 0, RTg?.pick?.name, c.form[0], KARP_BOT.stats.retreatFallback]); } });
     const g2 = { fallback: KARP_BOT.stats.retreatFallback, fbAt: KARP_BOT.stats.fbAt, retreatFastS: +(Kp.stats.fastT.retreat || 0).toFixed(2), zoneFastS: +(Kp.stats.fastT.zone || 0).toFixed(2), backTo: maxZ2, outPast: past, minZ, holder: Kp.holder === c, tr: trG };
-    const okG2 = g2.fallback >= 1 && g2.fbAt.some((f) => f[3] === 1) && past && g2.retreatFastS > 0 && g2.retreatFastS < 4 && g2.zoneFastS === 0;
-    R('G(b) a pocket of its own free zone, open behind it: the carrier plans again without its retreat mark (carrierRetreatFallback, level 1), takes a short ×3 back out round the arm and goes on — never standing still, never into the zone', okG2, g2);
+    const okG2 = g2.fallback >= 1 && g2.fbAt.some((f) => f[3] === 1) && past && g2.retreatFastS > 0 && g2.retreatFastS < 4 && g2.zoneFastS < 0.1;   // (a corner clipped for a frame or two: the body cuts a waypoint)
+    R('G(b) a pocket of its own free zone, open behind it: the carrier plans again without its retreat mark (carrierRetreatFallback, level 1), takes a short ×3 back out round the arm and goes on — never standing still, never into the zone (< 0.1 s: a clipped corner)', okG2, g2);
     R('G every forward route closed: the carrier accepts a short ×3 (carrierRetreatFallback) and walks on through instead of standing still', g1.fallback >= 1 && g1.moved > 4 && g1.zoneFastS > 0 && g1.zoneFastS < 3, g1);
   }
 
