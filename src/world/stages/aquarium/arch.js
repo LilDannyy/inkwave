@@ -157,7 +157,7 @@ export function registerArch(D, H, KIT, G) {
   D.aquarium_gantry = {
     desc: 'the feeding gantry over the Great Tank (single, world frame)',
     build(B) {
-      const SG = K.seagreen, SD = K.seagreenDk;
+      const SG = '#4a6d6a', SD = '#36524f';   // (the gantry's own darker, bluer sea-green: layout.js K.gantry)
       for (const [x, z] of [[5, -11], [-5, -11], [5, 11], [-5, 11]]) {
         B.box('paint', K.granite, 1.7, 0.5, 1.7, x, 0.25, z, { r: 0.04 });
         pbox(B, 'paint', K.graniteLt, 1.5, 0.08, 1.5, x, 0.54, z);
@@ -305,12 +305,13 @@ export function registerArch(D, H, KIT, G) {
         B.add('metal', H.extrudeGeo([[-0.22, 0], [0.2, 0], [-0.1, h]], 0.07, 0.012), K.bronzeLt, x, base - 0.04, 0, { ry: HP });
       }
       // ---- the upper jaw: a heavy arch over the ring (its front at x 12.74, behind the sign at 12.84), the jaw's side
-      // tips standing 0.4 m proud of the face left and right of the ring, a fang hanging from each; teeth into the gape
+      // tips standing out of the face left and right of the ring (to x 12.86: they stood 0.4 m out, on the mouth's approach —
+      // LEAD-REVIEW art round 2), a fang hanging from each; teeth into the gape
       B.add('metal', torG(1.28, 0.2, 10, 32, PI * 0.92), '#a8814a', 12.62, 0.8, 0, { ry: HP, rz: PI * 0.04, sz: 0.6 });
       B.add('metal', torG(1.5, 0.06, 6, 30, PI * 0.84), K.brassLt, 12.6, 0.8, 0, { ry: HP, rz: PI * 0.08 });
       for (const s of [-1, 1]) {
-        B.add('metal', H.extrudeGeo([[0, 0], [0.5, 0.1], [0.42, 0.62], [0, 1.0]], 0.2, 0.04), '#a8814a', 12.6, 0.95, s * 1.2, { ry: HP });
-        B.add('metal', cylGeo(0.07, 0, 0.42, 6), K.cream, 13.0, 0.78, s * 1.13, { rz: s * 0.08 });
+        B.add('metal', H.extrudeGeo([[0, 0], [0.22, 0.1], [0.18, 0.62], [0, 1.0]], 0.2, 0.04), '#a8814a', 12.6, 0.95, s * 1.2, { ry: HP });
+        B.add('metal', cylGeo(0.07, 0, 0.42, 6), K.cream, 12.78, 0.78, s * 1.13, { rz: s * 0.08 });
       }
       for (let i = 0; i < 13; i++) {
         const a = PI * 0.1 + (i / 12) * PI * 0.8, cz = Math.cos(a), cy = Math.sin(a), r0 = 1.12, len = i % 2 ? 0.17 : 0.24;
@@ -319,7 +320,7 @@ export function registerArch(D, H, KIT, G) {
       // ---- the lower jaw: bones from the hinge (behind and under the eye) down to the chin at the floor, a lip along
       // each, teeth standing up and inward along it
       for (const s of [-1, 1]) {
-        const P0 = [10.75, 1.3, s * 1.29], P1 = [13.12, 0.16, s * 1.17];
+        const P0 = [10.75, 1.3, s * 1.29], P1 = [12.66, 0.16, s * 1.17];
         strut(B, 'metal', K.bronzeLt, P0, P1, 0.24, { w: 0.13, h: 0.46 });
         strut(B, 'metal', K.bronzeDk, [P0[0], P0[1] - 0.26, s * 1.31], [P1[0], P1[1] - 0.2, s * 1.19], 0.08, { w: 0.1, h: 0.08 });
         // the hinge boss
@@ -329,8 +330,11 @@ export function registerArch(D, H, KIT, G) {
           B.add(NS('metal'), cylGeo(0, 0.032, 0.2, 5), K.cream, x, y + 0.08, s * 1.17, { rx: -s * 0.35 });
         }
       }
-      // the chin: the lower jaw's bar across the front at the floor (12 cm: a threshold you step over into the mouth)
-      pbox(B, 'metal', K.bronzeLt, 0.18, 0.12, 2.3, 13.12, 0.06, 0);
+      // the chin: the lower jaw's bar across the front at the floor, set into the head's face (12.53 … 12.71: it stood
+      // 0.4 m out on the mouth's approach, and riders walked through it — LEAD-REVIEW art round 2; the fangs and the jaw
+      // bones' ends and the side tips came back with it: nothing of the head stands more than 0.16 m in front of its collider's
+      // face at 12.7)
+      pbox(B, 'metal', K.bronzeLt, 0.18, 0.12, 2.3, 12.62, 0.06, 0);
       // ---- the eyes: lit amber in brass bezels, a brow ridge over each; gill covers and slits behind
       for (const s of [-1, 1]) {
         const ex = 11.55, ey = 1.55, ez = s * 1.265;

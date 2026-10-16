@@ -38,7 +38,7 @@ const C0 = [0, 0], EK = [25, 0], WK = [-25, 0];      // the court's centre, the 
 // blockout palette (DESIGN.md §5.4's colours, so the pictures already read as this place)
 const K = {
   terrazzo: '#d6cfc0', teak: '#8f7a63', render: '#ece6da', faience: '#9bb3a8', brass: '#b89a66', bronze: '#8a6a3c',
-  granite: '#55595d', glassblock: '#cfe0e0', seagreen: '#6e978a', rock: '#bfc5c7', rockUp: '#cdd2d3', kelp: '#5b5a33',
+  granite: '#55595d', glassblock: '#cfe0e0', seagreen: '#6e978a', gantry: '#4a6d6a', rock: '#bfc5c7', rockUp: '#cdd2d3', kelp: '#5b5a33',
   coral: '#c99a8a', jelly: '#f2eefa', steel: '#7d8a90', sand: '#cdbb93', window: '#4f7480', crate: '#b59a72',
   kiosk: '#e8dcc4', concrete: '#bdb8ad', bund: '#a9a59b', spawn: '#eae6de', canopy: '#c6d3d1', stone: '#cfc8b8',
   walk: '#bcd2d2', plant: '#d8d2c6', pump: '#8f9a9c', planter: '#9aa57a', planterStone: '#bdb5a3',
@@ -126,12 +126,13 @@ for (const [a, t0, t1] of [[-22.5, -0.79, 1.3], [-67.5, -0.79, 0.79], [-112.5, -
 // (`hidden` since the art pass's round 1: props.js draws the eel head and its neck over them, like every other stand-in;
 // they stay solid, off-limits and unpainted — they had no paint before either)
 H(B(9.5, 12.7, 0, 2.4, -1.3, 1.3, roofR(K.bronze, { tag: 'gulper-head', camHollow: true, hidden: true })), B(7.4, 9.5, 0, 1.9, -1.0, 1.0, roofR(K.bronze, { tag: 'gulper-neck', camHollow: true, hidden: true })));
-// the Feeding Gantry: four legs (inner faces 8.8 m apart: cover on the centre lanes; DESIGN.md had 6.0, but from the
+// the Feeding Gantry (a darker, bluer sea-green than the trims, K.gantry: at sunset #6e978a's sun faces went olive and
+// mustard and the crane outshouted the stage — LEAD-REVIEW art round 2): four legs (inner faces 8.8 m apart: cover on the centre lanes; DESIGN.md had 6.0, but from the
 // pads the near legs then hid half the bathysphere), beams at 16.8–17.8, the winch house;
 // Bathysphere No. 1 hangs at 13.05–15.95 (drawn by props.js; this is its off-limits collider)
-H(B(4.4, 5.6, 0, 16.8, -11.6, -10.4, roofR(K.seagreen, { tag: 'gantry-leg', pattern: PATTERN.metalpanel })), B(-5.6, -4.4, 0, 16.8, -11.6, -10.4, roofR(K.seagreen, { tag: 'gantry-leg', pattern: PATTERN.metalpanel })));
-H(B(4.5, 5.5, 16.8, 17.8, -11.6, 11.6, roofR(K.seagreen, { tag: 'gantry-beam', pattern: PATTERN.metalpanel })));
-S(B(-4.5, 4.5, 16.8, 17.8, -0.5, 0.5, roofR(K.seagreen, { tag: 'gantry-beam', pattern: PATTERN.metalpanel })), B(-1.5, 1.5, 17.8, 20.0, -1.5, 1.5, roofR(K.seagreen, { tag: 'winch-house', pattern: PATTERN.metalpanel })));
+H(B(4.4, 5.6, 0, 16.8, -11.6, -10.4, roofR(K.gantry, { tag: 'gantry-leg', pattern: PATTERN.metalpanel })), B(-5.6, -4.4, 0, 16.8, -11.6, -10.4, roofR(K.gantry, { tag: 'gantry-leg', pattern: PATTERN.metalpanel })));
+H(B(4.5, 5.5, 16.8, 17.8, -11.6, 11.6, roofR(K.gantry, { tag: 'gantry-beam', pattern: PATTERN.metalpanel })));
+S(B(-4.5, 4.5, 16.8, 17.8, -0.5, 0.5, roofR(K.gantry, { tag: 'gantry-beam', pattern: PATTERN.metalpanel })), B(-1.5, 1.5, 17.8, 20.0, -1.5, 1.5, roofR(K.gantry, { tag: 'winch-house', pattern: PATTERN.metalpanel })));
 S(B(-1.45, 1.45, 13.05, 15.95, -1.45, 1.45, glass({ tag: 'bathysphere' })));
 // the court's exhibits: moon-jelly columns (opaque milky glass, lit from inside), the SW touch-pool dais (a coral-rock
 // bed 1.0 with a 0.5 step), the SE diving-helmet bed (0.9) with the bronze helmet, the Tubeway map lectern
@@ -402,6 +403,20 @@ H(bladeBox(21, 24.5, 12.5, 16.8, FL, 3.2, roofR(K.render, { tag: 'express-stop-i
 // the plaza's sea edge: a granite coping (s 24.5 … 31) with the sea rail on it
 H(bladeBox(24.5, 31.2, 16.3, 16.85, FL, 0.1, cover(K.granite, { tag: 'sea-coping', paint: false })));
 H(bladeBox(24.5, 31.0, 16.5, 16.8, 0.1, 1.1, railO()));
+// the wing's small dressing made solid (LEAD-REVIEW art round 2: players ran through them — a bench, a rope barrier with
+// no rail, A-boards, a luggage stack; props.js draws each over its block): collision only, off-limits tops (you slide
+// off), never inked, none on the tower's track (≥ 0.5 m clear of its swept lane). Hidden pieces are not in the floor's
+// Cover: the floor tiles as before
+//   the Ticket Hall's bench against its south wall · FLOOR DRY by the queue step · FEEDINGS on the Gate Terrace by the
+//   lamp post · the stacked luggage against the queue planter (turned square to the blade, touching it)
+const SOLID = (tag) => roofR('#888888', { tag, hidden: true });
+H(B(2.45, 4.25, 0, 0.47, -46.56, -46.0, SOLID('bench')));
+H(O(10.65, -47.0, 0.66, 0.52, 0, 1.0, 153, SOLID('aboard')), O(-9.4, -30.4, 0.66, 0.52, 0, 1.0, 165.6, SOLID('aboard')));
+H(O(...W(28.5 - 0.16, 0.35 + 0.175).map(r3), 1.29, 0.92, 0, 1.1, -30, SOLID('luggage')));
+// the ferry queue's rope barrier along the penguin glass on the queue terrace (0.6), 0.2 m off the glass (no way between):
+// a `rail` (see- and shoot-through, never inked) whose railing is the stanchions' own prop (props.js leaves it out of the
+// generic railings); it stood in the timetable pillar on the plaza floor
+H(bladeBox(24.25, 26.95, -16.4, -16.2, 0.6, 1.6, railO({ tag: 'queue-rope' })));
 
 // ============================================================================================================ the Fin Pavilion
 // The spawn on the pavilion's curved roof terrace (3.4): a glass-block fascia along its front (a one-way 3.4 m drop),
@@ -520,12 +535,14 @@ const LAYOUT_AQUARIUM = {
   bazookarp: BAZOOKARP,
   boss: { floorY: 0 },
   intro: { from: [24, 16, 18], lookFrom: [0, 13, 0], toBack: 3.0 },
-  // the stage-select hero shot (art round 1: the South Gate's bare roof was a quarter of the frame): low over the sea off
-  // the west kelp drum, across the Sea Promenade into the court — the feeding gantry and Bathysphere No. 1 framing the
-  // Great Tank and its Glass Walk, the bronze gulper head, the colonnade and REEF HALL, the North Gate — with Inkopolis
-  // across the bay behind (DESIGN.md §5.8 framed it from the east; the bay's city stands east, so the frame looks east).
-  // scenes/aquarium-hero.js stages riders in the Gulper Run and the east Kelp Line for the stage art
-  art: { from: [-27, 13, -16], look: [3, 6.5, 2], fov: 64 },
+  // the stage-select hero shot (art round 2: inside the gantry its legs boxed the frame in and one hid the stage's name —
+  // LEAD-REVIEW art round 2): pulled back over the sea off the west kelp drum and up, outside the gantry, so its four legs
+  // read as one portal crane with Bathysphere No. 1 hanging in it; GULPER AQUARIUM on the South Gate's court face and both
+  // gatehouses' Tide Gauges stand clear of every leg (a projection search over cameras round the court: from 30° or more
+  // off the gantry's long axis a leg always crosses a gatehouse's name); the west kelp drum in front, the Reef Hall's
+  // glazed canopy below, Inkopolis and its port across the bay. scenes/aquarium-hero.js stages a Bravo rider rising up the
+  // drum's Kelp Line on its near side, against the kelp, and an Alpha rider on the Line's open run over the promenade
+  art: { from: [-45, 16.5, 9], look: [-2, 6, -0.5], fov: 66 },
   // promenade lamps at the sea rail (2), the ferry plaza (2), the Gate Terrace (1): their pools light the floor at dusk
   // (the colonnade's globes, the canopy pendants, the portholes and the neon are the props' own glow)
   decor: { lamps: [[-28.47, -10.36], [-22.16, -20.66], [26.54, -46.27], [-1.78, -61.82], [-9.6, -31.6]], palms: [], flags: [] },

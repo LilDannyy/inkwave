@@ -93,7 +93,7 @@ vec3 aqPort(vec2 p, float R, float aa, vec3 under, out float glass, out float ri
   vec3 w = mix(vec3(0.008, 0.03, 0.045), vec3(0.06, 0.16, 0.19), smoothstep(-1.0, 0.9, u.y));
   w += vec3(0.05, 0.08, 0.08) * smoothstep(0.25, 0.0, abs(u.x + 0.35 * u.y - 0.1)) * smoothstep(-0.6, 1.0, u.y);
   vec2 jb = (u - vec2(-0.18, 0.2)) / vec2(0.34, 0.24);
-  float bell = aqFill((length(jb) - 1.0) * 0.1, aa) * smoothstep(-0.55, 0.05, jb.y);
+  float bell = aqFill((length(jb) - 1.0) * 0.1, aa) * smoothstep(-0.12, 0.14, jb.y + 0.22 - 0.45 * (1.0 - min(1.0, jb.x * jb.x)));   // (a soft saucer: the margin hangs, the middle lifts)
   float tent = 0.0;
   for (int k = 0; k < 3; k++) { float x = -0.3 + 0.12 * float(k); tent = max(tent, aqFill(abs(u.x - x - 0.04 * sin(u.y * 14.0 + float(k))) - 0.012, aa) * step(u.y, 0.12) * step(-0.45, u.y) * smoothstep(-0.45, 0.1, u.y)); }
   w = mix(w, vec3(0.62, 0.62, 0.7), max(bell * 0.75, tent * 0.45));

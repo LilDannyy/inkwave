@@ -53,7 +53,7 @@ const atBox = (d, o = {}) => ({ pos: [(d.min[0] + d.max[0]) / 2, d.min[1] < 0 ? 
 const boxC = (d) => (d.kind === 'box' ? [(d.min[0] + d.max[0]) / 2, (d.min[2] + d.max[2]) / 2] : [d.center[0], d.center[2]]);
 
 export const PLACEMENTS = [
-  ...LAYOUT.half.filter((d) => d.rail).map(railFor),
+  ...LAYOUT.half.filter((d) => d.rail && d.tag !== 'queue-rope').map(railFor),
   ...LAYOUT.single.filter((d) => d.rail).map(railFor).map((p) => ({ ...p, mirror: false })),
   // ---- the building (world-frame builders at the origin; the twin turns them for Bravo)
   { type: 'aquarium_gatehouse', pos: [0, 0, 0], label: 'SOUTH GATE', mirror: false },
@@ -118,6 +118,8 @@ export const PLACEMENTS = [
   { type: 'aquarium_aboard', pos: [10.65, 0, -47.0], rotY: PI * 0.85, text: 'FLOOR DRY', sub: 'EVERYTHING IS' },
   { type: 'aquarium_aboard', pos: [-9.4, 0, -30.4], rotY: PI * 0.92, text: 'FEEDINGS', sub: '11:00 · 15:00' },
   { type: 'aquarium_bench', pos: [3.35, 0, -46.32], rotY: PI, len: 1.8 },
-  { type: 'aquarium_stanchions', pos: at0(W(25.5, -7.85)), rotY: -30 * DEG + PI / 2, len: 2.7, n: 4 },
-  { type: 'aquarium_luggage', pos: at0(W(28.5, 0.35)), rotY: 0.4 },
+  // (each now stands on its collider in layout.js — art round 2: the stanchions on the queue terrace along the penguin
+  // glass, the luggage turned square to the blade against the queue planter)
+  { type: 'aquarium_stanchions', pos: [W(25.6, -16.3)[0], 0.6, W(25.6, -16.3)[1]], rotY: PI / 3, len: 2.7, n: 4 },
+  { type: 'aquarium_luggage', pos: at0(W(28.5, 0.35)), rotY: -30 * DEG },
 ];
