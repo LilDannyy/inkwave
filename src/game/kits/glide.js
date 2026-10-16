@@ -1002,23 +1002,61 @@ export function dangerOf(it) {
 // gives a foe two seconds), and a cooking bot hit hard (under 55 hp, ≥ 0.4 s of cook to go) drops the cook to fight back
 // (abort); a hold cut short under half its plan's cook is let go unthrown, not sent on past the foe uncooked (drop).
 // Knobs for the balance pass (calm: no fight throw within that many s of being hit; off).
-export const GLIDE_BOT = { fight: 0.06, near: 7, mid: 9, far: 11, wMid: 0.5, wFar: 0.25, wOut: 0.08, committed: 2, slow: 1.5, fast: 4.5, lead: 0.5, paint: 0.0012, paintInk: 25, paintFoe: 24,
-  duel: 0.05, plantedC: 0, calm: 0, abort: 1, minD: 5, maxD: 11, drop: 1 };
+export const GLIDE_BOT = { fight: 0.06, near: 7, mid: 9, far: 11, wMid: 0.5, wFar: 0.25, wOut: 0.08, committed: 2, slow: 1.5, fast: 4.5, lead: 0.5, paint: 0.0004, paintInk: 25, paintFoe: 24,
+  duel: 0.05, plantedC: 0, calm: 0, abort: 1, minD: 5, maxD: 11, drop: 1,
+  // (others: the throw may go at another foe this bot sees than the one it fights, when that one is committed and its own
+  // isn't — fighting, or painting with a foe in sight; mateAim: a foe aiming within 25° of one of our teammates (and not
+  // along the line to us) counts as committed too; scan: how often a painting bot looks, s)
+  others: 1, mateAim: 1, scan: 0.2 };
+// [b5-int3] is foe e committed elsewhere, as bot a sees it: facing more than ~60° away from a, or aiming at one of a's
+// teammates (within 25°, 12 m, and that teammate not along the line to a)
+function committed(a, e) {
+  const ey = e.aimYaw ?? e.yaw, toA = Math.atan2(a.pos.x - e.pos.x, a.pos.z - e.pos.z);
+  if (Math.abs(angleDiff(ey, toA)) > 1.05) return true;
+  if (!GLIDE_BOT.mateAim) return false;
+  for (const m of G.actors) {
+    if (m.team !== a.team || m === a || !m.alive) continue;
+    const toM = Math.atan2(m.pos.x - e.pos.x, m.pos.z - e.pos.z);
+    if (Math.hypot(m.pos.x - e.pos.x, m.pos.z - e.pos.z) < 12 && Math.abs(angleDiff(ey, toM)) < 0.44 && Math.abs(angleDiff(toM, toA)) > 0.6) return true;
+  }
+  return false;
+}
+// [b5-int3] the nearest foe a sees (its own eyes) 5–11 m off on its level, under 4.5 m/s and committed — else null
+function committedFoe(brain) {
+  const a = brain.a, B = GLIDE_BOT;
+  let best = null, bd = 1e9;
+  for (const e of G.actors) {
+    if (e.team === a.team || !e.alive || !e.pos || !brain.sight?.sees?.(e)) continue;
+    const d = Math.hypot(e.pos.x - a.pos.x, e.pos.z - a.pos.z);
+    if (d < B.minD || d > B.maxD || d >= bd || Math.abs(e.pos.y - a.pos.y) > 1.2 || Math.hypot(e.vel?.x || 0, e.vel?.z || 0) > B.fast) continue;
+    if (committed(a, e)) { best = e; bd = d; }
+  }
+  return best;
+}
 function fight(brain, dist) {
-  const a = brain.a, t = brain.target, s = a.sub?.kind === KIND ? a.sub : S();
-  if (!t || !t.alive || !(brain.seeTimer > 0) || dist < GLIDE_BOT.minD || dist > GLIDE_BOT.maxD || Math.abs(t.pos.y - a.pos.y) > 1.2 || a.ink < s.inkCost + 5) return false;
+  const a = brain.a, s = a.sub?.kind === KIND ? a.sub : S();
+  if (a.ink < s.inkCost + 5) return false;
   if (GLIDE_BOT.calm && a.lastDamage < GLIDE_BOT.calm) return false;
+  let t = brain.target;
+  let ok = !!(t && t.alive && brain.seeTimer > 0 && dist >= GLIDE_BOT.minD && dist <= GLIDE_BOT.maxD && Math.abs(t.pos.y - a.pos.y) <= 1.2);
+  // ([b5-int3] its own foe duelling it, another this bot sees committed elsewhere: that one — GLIDE_BOT.others)
+  if (GLIDE_BOT.others && !(ok && committed(a, t))) { const o = committedFoe(brain); if (o) { t = o; ok = true; dist = Math.hypot(o.pos.x - a.pos.x, o.pos.z - a.pos.z); GLIDE_STATS.botOther = (GLIDE_STATS.botOther || 0) + (o === brain.target ? 0 : 1); } }
+  if (!ok) return false;
+  return fightAt(brain, t, dist, s);
+}
+function fightAt(brain, t, dist, s) {
+  const a = brain.a;
   // (mostly 5–9 m, where the cook shortens the fuse and grows the blast; [b5-int3] out to 11 m, maxD — past it a
   // near-uncooked 2.2 m blast a foe has two seconds to step out of)
   // ([b5-int3] at a foe committed — facing more than ~60° away from us, as a player sees it: busy with a teammate, it
   // steps out of a slow stone's lane late — twice the chance; at one facing us (duelling us) a twentieth: GLIDE_BOT.duel)
-  const away = Math.abs(angleDiff(t.aimYaw ?? t.yaw, Math.atan2(a.pos.x - t.pos.x, a.pos.z - t.pos.z))) > 1.05;
-  const tv = Math.hypot(t.vel?.x || 0, t.vel?.z || 0), planted = tv < GLIDE_BOT.slow, committed = away || (planted && !!GLIDE_BOT.plantedC);
+  const away = committed(a, t);
+  const tv = Math.hypot(t.vel?.x || 0, t.vel?.z || 0), planted = tv < GLIDE_BOT.slow, isC = away || (planted && !!GLIDE_BOT.plantedC);
   // ([b5-int3] not at a foe running or swimming past — over 4.5 m/s it is long gone from where the stone stops: the fight
   // log's uncooked stones sent 8–9 m ahead of foes at 6–10 m/s)
   if (tv > GLIDE_BOT.fast) return false;
   const B = GLIDE_BOT, wd = dist <= B.near ? 1 : dist <= B.mid ? B.wMid : dist <= B.far ? B.wFar : B.wOut;
-  if (Math.random() > B.fight * (1 + brain.diff.fireDiscipline) * wd * (committed ? B.committed : B.duel)) return false;
+  if (Math.random() > B.fight * (1 + brain.diff.fireDiscipline) * wd * (isC ? B.committed : B.duel)) return false;
   if (away) GLIDE_STATS.botAway = (GLIDE_STATS.botAway || 0) + 1;
   if (planted && !away) GLIDE_STATS.botPlanted = (GLIDE_STATS.botPlanted || 0) + 1;
   if (!brain._dryLine(a.pos.x, a.pos.y, a.pos.z, t.pos.x, t.pos.z) || !brain._fatLos(a.pos.x, a.pos.y - 0.15, a.pos.z, t.pos.x, t.pos.y - 0.15, t.pos.z)) return false;
@@ -1062,7 +1100,14 @@ function slideSinks(a, yaw, cook, s) {
 }
 function paint(brain) {
   const a = brain.a, s = a.sub?.kind === KIND ? a.sub : S();
-  if (Math.random() > GLIDE_BOT.paint || a.ink < s.inkCost + GLIDE_BOT.paintInk) return false;   // ([b5-int3] was 0.008, inkCost + 8)
+  // ([b5-int3] painting with a foe in sight busy elsewhere — with a teammate, at its own work — the stone is for that foe: a
+  // fight throw, the same plan as in a fight; looked for every GLIDE_BOT.scan s)
+  if (GLIDE_BOT.others && a.ink >= s.inkCost + 5 && G.time >= (brain._glScan ?? -1)) {
+    brain._glScan = G.time + GLIDE_BOT.scan;
+    const o = committedFoe(brain);
+    if (o && fightAt(brain, o, Math.hypot(o.pos.x - a.pos.x, o.pos.z - a.pos.z), s)) { GLIDE_STATS.botPaintFight = (GLIDE_STATS.botPaintFight || 0) + 1; return true; }
+  }
+  if (Math.random() > GLIDE_BOT.paint || a.ink < s.inkCost + GLIDE_BOT.paintInk) return false;   // ([b5-int3] was 0.008, inkCost + 8; then 0.0012 — the lead: fight throws a majority)
   // ([b5-int3] a foe the team knows near: the stone is kept for them)
   for (const e of G.actors) { if (e.team === a.team || !e.alive) continue; const k = teamKnown(a.team, e, 2.0); if (k && Math.hypot(k.pos.x - a.pos.x, k.pos.z - a.pos.z) < GLIDE_BOT.paintFoe) { GLIDE_STATS.botPaintKept = (GLIDE_STATS.botPaintKept || 0) + 1; return false; } }
   const fx = Math.sin(a.aimYaw), fz = Math.cos(a.aimYaw);
@@ -1133,6 +1178,7 @@ function botHold(a, st, inp, s) {
       // clonked off shins or fizzled)
       if (P.need0 == null) P.need0 = needNow;
       const need = Math.min(needNow, P.need0 + 0.3), dT = Math.hypot(t.pos.x - a.pos.x, t.pos.z - a.pos.z);
+      P.needL = need;   // ([b5-int3] the cook it needs now: botRelease's drop rule)
       keep = st.cook < need - 1e-6 && st.held < s.cookGrace + s.cookMax && dT > 4;
       if (keep && GLIDE_BOT.abort && a.lastDamage < 0.2 && a.hp < 55 && need - st.cook > 0.4) { GLIDE_STATS.botAbort = (GLIDE_STATS.botAbort || 0) + 1; inp.sub = false; inp.subReleased = false; a.weaponRunner.aimingSub = false; endHold(a, true); return; }
     }
@@ -1154,8 +1200,12 @@ function botRelease(a, st, inp, s) {
   // plan's cook: let go of it unthrown (no ink; a fizzle if it had cooked) rather than send a near-uncooked stone 12–15 m
   // on past its foe — the matches' fight log: 0–0.3 s cooks let go 6–10 m out, foes 9–15 m from the blasts. A foe come
   // inside 4.5 m still gets what's cooked: botHold's rule, and a melee bot's plant)
+  // ([b5-int3] but not a hold that ended on the cook the foe needs NOW (P.needL, botHold's last): a foe stepping back from
+  // 7 to 10 m mid-cook needs less, and the hold ends on it — a throw that stops on them, which this rule dropped: 11 of 26
+  // fight plans in six all-glide matches dropped, 10 thrown. A foe out of the slide's reach needs none: dropped, as before)
   const dT = P.t?.alive ? Math.hypot(P.t.pos.x - a.pos.x, P.t.pos.z - a.pos.z) : 99;
-  if (GLIDE_BOT.drop && P.mode === 'fight' && dT > 4.5 && st.cook < 0.5 * (P.need0 ?? 1.2)) {
+  const onMark = P.needL != null && P.needL > 0.05 && st.cook >= P.needL - 0.05;
+  if (GLIDE_BOT.drop && P.mode === 'fight' && dT > 4.5 && st.cook < 0.5 * (P.need0 ?? 1.2) && !onMark) {
     GLIDE_STATS.botDrop = (GLIDE_STATS.botDrop || 0) + 1;
     inp.sub = false; inp.subReleased = false; a.weaponRunner.aimingSub = false; endHold(a, true);
     return;
