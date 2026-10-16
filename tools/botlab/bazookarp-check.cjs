@@ -217,13 +217,13 @@ app.on('browser-window-created', (_, win) => {
         }
         if (table.length > 1) {
           console.log('\n== all stages');
-          console.log('| stage | L (m) | weir counts | result | failing checks | hop + gap edges | #16 made / not made (hopVeto) | #16 walks: routes, entrances | beyond the rules made | #7d finds (gain > 10 m) | entrances A/B | s |');
-          console.log('|---|---|---|---|---|---|---|---|---|---|---|---|');
+          console.log('| stage | L (m) | weir counts | result | failing checks | hop + gap edges | #16 made / not made (hopVeto) | #16 walks: routes, entrances | beyond the rules made | rising gaps: candidates / tried / made | climbs ≤ 1.8 m hopped | #7d finds (gain > 10 m) | entrances A/B | s |');
+          console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
           for (const r of table) {
             if (r.err) { console.log(`| ${r.id} | error: ${r.err} |`); continue; }
             const c = r.j.checks, n16 = c[16]?.nums || {}, n7 = c[7]?.nums || {};
             const finds = (n7.d || []).length, ents = (n7.teams || []).map((t) => t.entrances.length).join('/');
-            console.log(`| ${r.id}${r.j.placeholder ? ' (placeholder)' : ''} | ${r.j.L.join(' / ')} | ${(c[3]?.nums?.teams?.[0]?.weirs || []).map((w) => w.count).join(', ')} | ${r.j.result} | ${r.j.fails.map((n) => '#' + n).join(' ')} | ${c[2]?.nums?.hops} + ${c[2]?.nums?.gaps} | ${n16.tried != null ? `${n16.tried - n16.failed} / ${n16.failed}${n16.failed ? ` (h ${n16.failedBy.hop}, g ${n16.failedBy.gapLevel}, g↓ ${n16.failedBy.gapDown})` : ''}` : '–'} | ${n16.walkRoutes ? `${n16.walkRoutes[0]}/${n16.walkRoutes[1]}, ${n16.walkEntrances[0]}/${n16.walkEntrances[1]}` : '–'} | ${n16.beyondMade ?? '–'} of ${n16.beyond ?? '–'} | ${finds}${finds ? ': ' + (n7.d || []).slice(0, 3).map((f) => `${f.probe} ${f.gain}`).join(', ') : ''} | ${ents} | ${r.s} |`);
+            console.log(`| ${r.id}${r.j.placeholder ? ' (placeholder)' : ''} | ${r.j.L.join(' / ')} | ${(c[3]?.nums?.teams?.[0]?.weirs || []).map((w) => w.count).join(', ')} | ${r.j.result} | ${r.j.fails.map((n) => '#' + n).join(' ')} | ${c[2]?.nums?.hops} + ${c[2]?.nums?.gaps} | ${n16.tried != null ? `${n16.tried - n16.failed} / ${n16.failed}${n16.failed ? ` (h ${n16.failedBy.hop}, g ${n16.failedBy.gapLevel}, g↓ ${n16.failedBy.gapDown})` : ''}` : '–'} | ${n16.walkRoutes ? `${n16.walkRoutes[0]}/${n16.walkRoutes[1]}, ${n16.walkEntrances[0]}/${n16.walkEntrances[1]}` : '–'} | ${n16.beyondMade ?? '–'} of ${n16.beyond ?? '–'} | ${n16.rise ? `${n16.rise.cand} / ${n16.rise.tried} / ${n16.rise.made}` : '–'} | ${n16.climbHops ? `${n16.climbHops.made} of ${n16.climbHops.tried}` : '–'} | ${finds}${finds ? ': ' + Object.entries((n7.d || []).reduce((m, f) => ({ ...m, [f.probe]: (m[f.probe] || 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ') : ''} | ${ents} | ${r.s} |`);
           }
           fs.writeFileSync(path.join(OUT, 'all-stages.json'), JSON.stringify(table.map((r) => ({ id: r.id, err: r.err, result: r.j?.result, fails: r.j?.fails, L: r.j?.L, s: r.s, c2: r.j?.checks?.[2]?.nums, c16: r.j?.checks?.[16]?.nums, c7: r.j?.checks?.[7]?.nums })), null, 1));
         }
