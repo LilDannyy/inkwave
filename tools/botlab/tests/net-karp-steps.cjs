@@ -76,8 +76,10 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
 
   // ---- 5. grab share: N bursts, a Bravo host bot and B each 3 m from it, both running in on hearing the burst
   // (kid = true: the host's OWN player races B instead of a host bot)
-  const grabShare = async (N = 10, kid = false, swap = false) => {
-    const sg = swap ? -1 : 1;   // (swap: the host's racer on the −x side, B on the +x side)
+  // (swap: the host's racer on the −x side, B on the +x side; 'alt' (the default): the sides alternate round by round —
+  // karpbox's Pond is not symmetric: from its +x side a racer touches it 0.063 s later than from its −x side, and that
+  // side lost every race whoever stood there: race4 / racekid2 / 3 guest 16 / 16 from −x, raceswap1 host bot 12 / 12)
+  const grabShare = async (N = 10, kid = false, swap = 'alt') => {
     const bot = kid ? aNid : await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
     const wins = { bot: 0, guest: 0, none: 0 }, dec = [];
     // (each page's frame rate and sim speed meanwhile: a touch is timed on its own screen's simulation, so a page running
@@ -85,7 +87,9 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
     const fps0 = `(() => { window.__fr = 0; window.__frT = performance.now(); window.__frK = __G.match.karp.clock; if (!window.__frOn) { window.__frOn = 1; (function f() { window.__fr++; requestAnimationFrame(f); })(); } return 1; })()`;
     const fps1 = `(() => { const s = (performance.now() - window.__frT) / 1000; return { fps: +(window.__fr / s).toFixed(1), sim: +((__G.match.karp.clock - window.__frK) / s).toFixed(2) }; })()`;
     await A.js(fps0); await B.js(fps0);
+    const bySide = { hostMinusX: { host: 0, guest: 0 }, hostPlusX: { host: 0, guest: 0 } };
     for (let k = 0; k < N; k++) {
+      const sg = (swap === 'alt' ? k % 2 === 1 : swap) ? -1 : 1;
       await toPond();
       // (3 m either side of where it really rests — the Pond's resting point isn't exactly x 0: at ±3 from x 0, B stood
       // 0.3 m nearer and won every race in race3 once the race was fair)
@@ -103,6 +107,7 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
       await A.until(`!!__G.match.karp.holder`, 6000, 30).catch(() => {});
       const h = (await info(A)).holder;
       if (h === bot) wins.bot++; else if (h === bNid) wins.guest++; else wins.none++;
+      { const side = bySide[sg < 0 ? 'hostMinusX' : 'hostPlusX']; if (h === bot) side.host++; else if (h === bNid) side.guest++; }
       if (kid) await alive(A);
       // ([karp-face] the host's decision: each claim's since — after it went free on its own screen — and when it was in)
       dec.push(await J(A, `(() => { const g = (__G.match.karp.stats.grantLog || []).slice(-1)[0]; return g ? { wait: g.wait, won: g.won, c: g.claims.map((c) => [c.remote ? 'B' : 'bot', c.since, c.at, c.ok ? 1 : 0]), late: (g.late || []).map((l) => [l.since, l.after]) } : null; })()`));
@@ -110,7 +115,7 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
     }
     const wpn = await J(A, `(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}), g = __G.match.actors.find((o) => o.nid === ${bNid}); return { bot: b.weaponId, guest: g.weaponId }; })()`);
     const frames = { host: await J(A, fps1), guest: await J(B, fps1) };
-    R(`5${kid ? 'k' : ''}. grab share over ${N} bursts, ${kid ? 'the host\'s own player' : 'a host bot'} vs guest B at equal distance (reported; no threshold)`, wins.bot + wins.guest >= N - 2, { wins, wpn, frames, at: (await info(A)).pos, dec });
+    R(`5${kid ? 'k' : ''}. grab share over ${N} bursts, ${kid ? 'the host\'s own player' : 'a host bot'} vs guest B at equal distance, the sides alternating (reported; no threshold)`, wins.bot + wins.guest >= N - 2, { wins, bySide, wpn, frames, at: (await info(A)).pos, dec });
 
   };
 
@@ -412,9 +417,10 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
     R(`5f. the race's rule: the claimant that touched it first on its own screen wins, host bot or guest alike (each steps on 0.30 s / 0.36 s after it went free on its own screen; ${N} rounds, alternating)`, right >= N - 1, { right, N, rows });
   }
 
-  if (part === 'raceswap') { await zeroB(); await put(A, 0, 0, -14); await grabShare(12, false, true); await toPond(); }   // (sides swapped)
+  if (part === 'raceswap') { await zeroB(); await put(A, 0, 0, -14); await grabShare(12, false, true); await toPond(); }   // (the host's racer always on −x)
+  if (part === 'raceside') { await zeroB(); await put(A, 0, 0, -14); await grabShare(12, false, false); await toPond(); }   // (the host's racer always on +x)
 
-  if (part === 'racekid') { await zeroB(); await grabShare(16, true); await toPond(); }   // ([karp-face] the host's own player vs the guest)   // ([karp-face] the grab share alone)
+  if (part === 'racekid') { await zeroB(); await grabShare(16, true); await toPond(); }   // ([karp-face] the host's own player vs the guest)
 
   if (part === 'snap') {
     // [karp-face] review round 1 (the blocker and its twin): a snapshot the host took BEFORE a discrete record plays on a
@@ -504,7 +510,7 @@ module.exports = async ({ clients, R, wait, say, open }, part) => {
   await wait(800);
   const end = async (c) => J(c, `(() => { const r = __G.match.result; return r ? { mode: r.mode, winner: r.winner, reason: r.reason, counts: r.counts, st: __G.match.actors.map((a) => [a.nid, Math.round(a.stats.karpM || 0), a.stats.karpPops || 0]).sort((x, y) => x[0] - y[0]) } : null; })()`);
   const ea = await end(A), eb = await end(B);
-  R(`${part === 'lag' ? 'lag ' : ''}16. both screens show the same result: mode, winner, reason, counts and every player's karpM / karpPops`, !!ea && !!eb && ea.mode === 'bazookarp' && JSON.stringify(ea) === JSON.stringify(eb) && (part === 'racekid' || part === 'racefair' || part === 'raceswap' || ea.st.some((q) => q[1] > 0 || q[2] > 0)), { host: ea, guest: eb });   // (racekid: no burst, no carry made progress)
+  R(`${part === 'lag' ? 'lag ' : ''}16. both screens show the same result: mode, winner, reason, counts and every player's karpM / karpPops`, !!ea && !!eb && ea.mode === 'bazookarp' && JSON.stringify(ea) === JSON.stringify(eb) && (part === 'racekid' || part === 'racefair' || part === 'raceswap' || part === 'raceside' || ea.st.some((q) => q[1] > 0 || q[2] > 0)), { host: ea, guest: eb });   // (racekid: no burst, no carry made progress)
   const errs = [];
   for (const c of [A, B]) errs.push(...(c.log || []).filter((l) => /TypeError|ReferenceError|Uncaught/.test(l)));
   R('no page errors on either screen', errs.length === 0, errs.slice(0, 4));
