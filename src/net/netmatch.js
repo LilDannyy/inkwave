@@ -802,7 +802,17 @@ export class NetMatch {
   _result(d) {
     const m = this.match;
     if (!m || this.isHost) return;
-    if (m.result && (m.result.winner !== d.win || m.result.mode && m.result.mode !== d.mode)) issueLog.append('online-result-mismatch', 'local and host result screens disagreed', { local: { mode: m.result.mode || m.mode, winner: m.result.winner }, host: { mode: d.mode, winner: d.win } });
+    if (m.result) {
+      const local = m.result, arraysDiffer = (a, b) => Array.isArray(a) && Array.isArray(b) && (a.length !== b.length || a.some((v, i) => typeof v === 'number' && typeof b[i] === 'number' ? Math.abs(v - b[i]) > 0.01 : v !== b[i]));
+      const localCounts = local.counts, hostCounts = d.zc;
+      const mismatch = local.winner !== d.win || (local.mode && local.mode !== d.mode) || arraysDiffer(local.coverage, d.cov) || arraysDiffer(localCounts, hostCounts) ||
+        arraysDiffer(local.penalty, d.zp) || arraysDiffer(local.best, d.tb) || (local.reason && d.zr && local.reason !== d.zr) || (local.len !== undefined && d.tl !== undefined && Math.abs(local.len - d.tl) > 0.01) ||
+        (local.overtime !== undefined && local.overtime !== !!d.zo) || (local.boss !== undefined && JSON.stringify(local.boss) !== JSON.stringify(d.bo));
+      if (mismatch) issueLog.append('online-result-mismatch', 'local and host result screens disagreed', {
+        local: { mode: local.mode || m.mode, winner: local.winner, coverage: local.coverage, counts: localCounts, reason: local.reason, boss: local.boss },
+        host: { mode: d.mode, winner: d.win, coverage: d.cov, counts: hostCounts, reason: d.zr, boss: d.bo },
+      });
+    }
     for (const [nid, turf, splats, deaths, bossDmg, weakHits, assists, karpM, karpPops] of d.st || []) { const a = this.byNid.get(nid); if (a) { a.stats.turf = turf; a.stats.splats = splats; a.stats.deaths = deaths; if (bossDmg !== undefined) { a.stats.bossDmg = bossDmg; a.stats.weakHits = weakHits; } if (assists !== undefined) a.stats.assists = assists; if (karpM !== undefined) { a.stats.karpM = karpM; a.stats.karpPops = karpPops; } } }   // [b5-karp]
     if (d.mode !== 'boss') m.time = 0;   // (a boss win stops the clock where it was)
     m.result = d.mode === 'boss' ? { mode: 'boss', coverage: d.cov, winner: d.win, boss: d.bo }
