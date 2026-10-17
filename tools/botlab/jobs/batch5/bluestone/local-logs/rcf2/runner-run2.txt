@@ -1,0 +1,47 @@
+# head 5aa4b5f7 13:37:14
+### r4-era1
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":5922,"blocks":568,"solidBlocks":568,"propMeshes":3,"navNodes":4845,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":91,"tris":165407,"cpuRenderMs":1.57,"cpuSimMs":1.62},"coverage":[2.5,1.8]}
+### r4-era2
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6001,"blocks":590,"solidBlocks":590,"propMeshes":3,"navNodes":4995,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":123,"tris":304460,"cpuRenderMs":1.69,"cpuSimMs":1.64},"coverage":[3.2,4]}
+### r4-era3
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6453,"blocks":700,"solidBlocks":700,"propMeshes":3,"navNodes":5886,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":118,"tris":279735,"cpuRenderMs":1.86,"cpuSimMs":1.81},"coverage":[2.4,2]}
+### done
+# head 5aa4b5f7
+--- 13:39:09 regions 1 1
+### ink-regions era 1 run 1
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5495,"inked":0.63,"regions":{"circus":{"m2":1487,"share":0.271,"inked":0.69},"base":{"m2":978,"share":0.178,"inked":0.66},"knee":{"m2":835,"share":0.152,"inked":0.47},"swimston":{"m2":541,"share":0.099,"inked":0.86},"river":{"m2":492,"share":0.09,"inked":0.54},"knee-far":{"m2":416,"share":0.076,"inked":0.31},"hoki":{"m2":267,"share":0.049,"inked":0.78},"gpo-quay":{"m2":265,"share":0.048,"inked":0.71},"arcade":{"m2":210,"share":0.038,"inked":0.67},"halo":{"m2":3,"share":0.001,"inked":0.5}}}
+--- 13:39:50 regions 1 2
+### ink-regions era 1 run 2
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5495,"inked":0.772,"regions":{"circus":{"m2":1487,"share":0.271,"inked":0.8},"base":{"m2":978,"share":0.178,"inked":0.84},"knee":{"m2":835,"share":0.152,"inked":0.77},"swimston":{"m2":541,"share":0.099,"inked":0.87},"river":{"m2":492,"share":0.09,"inked":0.62},"knee-far":{"m2":416,"share":0.076,"inked":0.59},"hoki":{"m2":267,"share":0.049,"inked":0.78},"gpo-quay":{"m2":265,"share":0.048,"inked":0.67},"arcade":{"m2":210,"share":0.038,"inked":0.84},"halo":{"m2":3,"share":0.001,"inked":0.39}}}
+--- 13:40:25 regions 1 3
+### ink-regions era 1 run 3
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5495,"inked":0.693,"regions":{"circus":{"m2":1487,"share":0.271,"inked":0.78},"base":{"m2":978,"share":0.178,"inked":0.65},"knee":{"m2":835,"share":0.152,"inked":0.73},"swimston":{"m2":541,"share":0.099,"inked":0.85},"river":{"m2":492,"share":0.09,"inked":0.52},"knee-far":{"m2":416,"share":0.076,"inked":0.48},"hoki":{"m2":267,"share":0.049,"inked":0.67},"gpo-quay":{"m2":265,"share":0.048,"inked":0.66},"arcade":{"m2":210,"share":0.038,"inked":0.63},"halo":{"m2":3,"share":0.001,"inked":0.5}}}
+--- 13:41:06 regions 1 4
+### ink-regions era 1 run 4
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5495,"inked":0.647,"regions":{"circus":{"m2":1487,"share":0.271,"inked":0.65},"base":{"m2":978,"share":0.178,"inked":0.7},"knee":{"m2":835,"share":0.152,"inked":0.64},"swimston":{"m2":541,"share":0.099,"inked":0.79},"river":{"m2":492,"share":0.09,"inked":0.56},"knee-far":{"m2":416,"share":0.076,"inked":0.44},"hoki":{"m2":267,"share":0.049,"inked":0.61},"gpo-quay":{"m2":265,"share":0.048,"inked":0.65},"arcade":{"m2":210,"share":0.038,"inked":0.69},"halo":{"m2":3,"share":0.001,"inked":0.09}}}
+--- 13:41:42 done
+# head 9ef9e620
+--- 13:41:42 regions 3 1
+### ink-regions era 3 run 1
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6644,"inked":0.707,"regions":{"circus":{"m2":1624,"share":0.244,"inked":0.79},"base":{"m2":978,"share":0.147,"inked":0.76},"knee":{"m2":859,"share":0.129,"inked":0.69},"river":{"m2":593,"share":0.089,"inked":0.63},"swimston":{"m2":549,"share":0.083,"inked":0.8},"halo":{"m2":468,"share":0.07,"inked":0.51},"knee-far":{"m2":416,"share":0.063,"inked":0.39},"garden":{"m2":379,"share":0.057,"inked":0.75},"gpo-quay":{"m2":302,"share":0.045,"inked":0.85},"hoki":{"m2":267,"share":0.04,"inked":0.68},"arcade":{"m2":210,"share":0.032,"inked":0.69}}}
+--- 13:42:19 regions 3 2
+### ink-regions era 3 run 2
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6644,"inked":0.567,"regions":{"circus":{"m2":1624,"share":0.244,"inked":0.65},"base":{"m2":978,"share":0.147,"inked":0.62},"knee":{"m2":859,"share":0.129,"inked":0.52},"river":{"m2":593,"share":0.089,"inked":0.51},"swimston":{"m2":549,"share":0.083,"inked":0.85},"halo":{"m2":468,"share":0.07,"inked":0.24},"knee-far":{"m2":416,"share":0.063,"inked":0.28},"garden":{"m2":379,"share":0.057,"inked":0.62},"gpo-quay":{"m2":302,"share":0.045,"inked":0.64},"hoki":{"m2":267,"share":0.04,"inked":0.5},"arcade":{"m2":210,"share":0.032,"inked":0.46}}}
+--- 13:42:55 regions 3 3
+### ink-regions era 3 run 3
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6644,"inked":0.625,"regions":{"circus":{"m2":1624,"share":0.244,"inked":0.78},"base":{"m2":978,"share":0.147,"inked":0.7},"knee":{"m2":859,"share":0.129,"inked":0.46},"river":{"m2":593,"share":0.089,"inked":0.56},"swimston":{"m2":549,"share":0.083,"inked":0.79},"halo":{"m2":468,"share":0.07,"inked":0.46},"knee-far":{"m2":416,"share":0.063,"inked":0.22},"garden":{"m2":379,"share":0.057,"inked":0.5},"gpo-quay":{"m2":302,"share":0.045,"inked":0.74},"hoki":{"m2":267,"share":0.04,"inked":0.73},"arcade":{"m2":210,"share":0.032,"inked":0.64}}}
+--- 13:43:34 regions 3 4
+### ink-regions era 3 run 4
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6644,"inked":0.689,"regions":{"circus":{"m2":1624,"share":0.244,"inked":0.74},"base":{"m2":978,"share":0.147,"inked":0.74},"knee":{"m2":859,"share":0.129,"inked":0.63},"river":{"m2":593,"share":0.089,"inked":0.66},"swimston":{"m2":549,"share":0.083,"inked":0.91},"halo":{"m2":468,"share":0.07,"inked":0.52},"knee-far":{"m2":416,"share":0.063,"inked":0.32},"garden":{"m2":379,"share":0.057,"inked":0.77},"gpo-quay":{"m2":302,"share":0.045,"inked":0.75},"hoki":{"m2":267,"share":0.04,"inked":0.6},"arcade":{"m2":210,"share":0.032,"inked":0.71}}}
+--- 13:44:15 done
+--- 13:44:15 turf1 1
+### turf1 r1
+== bluestone [turf 180s]: turf 27.4% vs 39.3%
+   stuck 0% | splats 45 (water 1) | specials 1 | super jumps 23 | turf 27.4/39.3 | sim 180s in 23s (wall 23s) | {"cpuSimMs":0.74}
+   splats by cause {"shot":15,"roller":3,"blaster":1,"blast":6,"drop":8,"bow":5,"seeker":2,"slosh":2,"shaker":1,"water":1,"waddle":1}
+--- 13:44:55 turf1 2
+### turf1 r2
+== bluestone [turf 180s]: turf 33.6% vs 21.7%
+   stuck 0% | splats 47 (water 1) | specials 4 | super jumps 31 | turf 33.6/21.7 | sim 180s in 23s (wall 23s) | {"cpuSimMs":0.46}
+   splats by cause {"drop":8,"bow":10,"brush":5,"brolly":4,"shot":10,"slosh":6,"roller":1,"water":1,"sticky":1,"burst":1}
+# end 9ef9e620 13:45:34

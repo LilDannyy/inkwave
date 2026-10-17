@@ -1,0 +1,8 @@
+PASS H21: G.match.stage.karpStates() hands the carrier field one state per era (keys 1, 2, 3), each the nodes valid in that era: the Halo in the 3000s only, the Degrayling crates' footprint from TODAY, the street in all three  {"keys":[1,2,3],"halo":"001","crates":"011","street":"111","nodes":5952}
+FAIL H21: the field switches at each done to that era's state (1 → 2 → 3) and is built once, at load (never mid-match)  {"switches":[[33.97,2,2],[63.97,3,3],[74.22,1,1]],"builds":1,"dones":[33.96,63.96]}
+PASS H21 (rev 2): a carrier on ground a group opened before done (the crates' footprint, between their flip and done) has no own node in the state in force — the field keeps its last value; after done it reads  {"midJump":{"era":1,"stubState":0,"read":null,"crateSolid":false},"afterDone":{"era":2,"stubState":2,"read":95.81221008300781}}
+PASS H21: the drop spot never picks a node in a changing piece's box from the warning to done (G.match.stage.danger) — in a rewind's warning the nearest rest to a point on the Halo is a Halo node in its box, and the drop goes to the ground instead; nor a node a later era removes (restMask: valid in the era in force and every later one); in the 3000s a drop on the Halo stays on the Halo (Q19)  {"dropMid":[-9.5,0,-26.5],"dropWarn":[13.5,0,-8.5],"rewind":{"plain":[12.5,5.4,-3.5],"plainDanger":true,"drop":[12.5,0,-3.5],"dropDanger":false,"dangerAfterDone":false},"restOk":[{"e":1,"rests":4808,"bad":0},{"e":2,"rests":4892,"bad":0},{"e":3,"rests":5844,"bad":0}],"dropHalo":[12.5,5.4,-3.5]}
+PASS SKIP (the karp module is not on this branch: src/game/karpField.js absent) — part B runs at integration, when a bazookarp match builds match.karp  {"karpField":false}
+RESULT 4/5
+console errors: none
+CHAIN1 DONE

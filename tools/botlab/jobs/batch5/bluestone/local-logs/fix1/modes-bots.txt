@@ -1,0 +1,98 @@
+# local runs at d6fe777–28f45eb (see the report for which run saw which head); one Electron at a time
+### run2/boss2
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":487,"floorY":0,"box":[-25.8,25.8,-18.3,18.3],"cells":{"floor":7266,"wall":1218.5,"drop":12669.5,"pad":266}}
+FAIL overhang spots: the boss body cannot reach under the balcony or the verandas (nearest plan cell ≥ 4.8 m)  [{"at":[-16,-14],"plan":false,"nearestPlan_m":0.79},{"at":[16,14],"plan":false,"nearestPlan_m":0.79},{"at":[-5,-14],"plan":true,"nearestPlan_m":0.35},{"at":[5,14],"plan":false,"nearestPlan_m":0.35},{"at":[4.5,-17],"plan":true,"nearestPlan_m":0.35},{"at":[-4.5,17],"plan":false,"nearestPlan_m":0.35}]
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":352}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":18,"cells4m":6,"trail":[[9.5,-11.8],[10.2,-12.2],[13.5,-5.2],[13.5,-5.2],[14.4,-1.7],[14.4,-1.7],[14.4,-1.7],[14.4,-1.7],[14.7,-1],[17.1,1.1],[17.2,1.1],[17.2,1.1]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":5}
+PASS it plays its moves (charges included)  {"played":{"barrage":15,"sweep":2,"charge":1},"stuns":1,"hp":0.65,"dead":false}
+RESULT 5/7
+### run3/boss2
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":480,"floorY":0,"box":[-25.8,25.8,-18.3,18.3],"cells":{"floor":7262.5,"wall":1222,"drop":12669.5,"pad":266}}
+FAIL overhang spots: the boss body cannot reach under the balcony or the verandas (nearest plan cell ≥ 4.8 m)  [{"at":[-16,-14],"plan":false,"nearestPlan_m":1.27},{"at":[16,14],"plan":false,"nearestPlan_m":1.27},{"at":[-5,-14],"plan":false,"nearestPlan_m":1.06},{"at":[5,14],"plan":false,"nearestPlan_m":1.06},{"at":[4.5,-17],"plan":false,"nearestPlan_m":1.27},{"at":[-4.5,17],"plan":false,"nearestPlan_m":1.27}]
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":347}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":16,"cells4m":4,"trail":[[8.3,-10.2],[8.4,-11.3],[8.4,-11.3],[4.2,-11.1],[4.2,-11.1],[2,-11.3],[1.4,-11.3],[1,-11.4],[-0.2,-11.2],[-2,-11.1],[-4.8,-10.3],[-4.8,-10.3]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":5}
+PASS it plays its moves (charges included)  {"played":{"barrage":12,"sweep":2,"slam":2,"crablets":2},"stuns":0,"hp":0.48,"dead":false}
+RESULT 5/7
+### run2/halo3a
+PASS the match ran  {"simS":180,"state":"finish"}
+PASS the Halo report  {"era":"3","centreLive_s":130.25,"heldCentre_s":[0,85.25],"held_s":[32.75,85.25],"splats":38,"byHalo":0,"byHigh":1,"centreSplats":10,"centreSplatsByHalo":0,"victimsOnHalo":0,"botSecondsOnHalo":56.75,"haloShareOfCentreSplats":0}
+RESULT 2/2
+### run2/halo3b
+PASS the match ran  {"simS":180,"state":"finish"}
+PASS the Halo report  {"era":"3","centreLive_s":126,"heldCentre_s":[0,79.75],"held_s":[27,79.75],"splats":56,"byHalo":0,"byHigh":1,"centreSplats":18,"centreSplatsByHalo":0,"victimsOnHalo":0,"botSecondsOnHalo":3.5,"haloShareOfCentreSplats":0}
+RESULT 2/2
+### run2/halo2a
+PASS the match ran  {"simS":180,"state":"finish"}
+PASS the Halo report  {"era":"2","centreLive_s":113.5,"heldCentre_s":[0,55.75],"held_s":[13.5,72],"splats":42,"byHalo":0,"byHigh":0,"centreSplats":13,"centreSplatsByHalo":0,"victimsOnHalo":0,"botSecondsOnHalo":1.25,"haloShareOfCentreSplats":0}
+RESULT 2/2
+### run2/halo2b
+PASS the match ran  {"simS":183,"state":"finish"}
+PASS the Halo report  {"era":"2","centreLive_s":125.75,"heldCentre_s":[41,4],"held_s":[53.5,7.5],"splats":48,"byHalo":0,"byHigh":0,"centreSplats":24,"centreSplatsByHalo":0,"victimsOnHalo":0,"botSecondsOnHalo":1.75,"haloShareOfCentreSplats":0}
+RESULT 2/2
+### run2/zones1
+== bluestone [zones]: winner Alpha (time) | final 45 vs 63 (penalty +25.1/+27) | OT no
+   held A 116.3s B 64s neutral 119.5s | captures 8 (takeovers 4), control events 15, first capture @22.3s | rotations 7
+   stuck 0.4% | splats 66 (water 0) | specials 17 | super jumps 22 | turf 26.5/14.3 | sim 300s in 59s (wall 59s) | {"cpuSimMs":0.7}
+   splats by cause {"shot":31,"blaster":2,"bow":7,"zooka":4,"slosh":5,"blast":9,"crab":4,"drop":3,"waddle":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+### run2/zones3
+== bluestone [zones]: winner Alpha (time) | final 68 vs 79 (penalty +0/+11) | OT no
+   held A 98s B 47.3s neutral 154.5s | captures 10 (takeovers 5), control events 19, first capture @23.8s | rotations 6
+   stuck 0.1% | splats 80 (water 0) | specials 17 | super jumps 28 | turf 20.1/13.3 | sim 300s in 51s (wall 52s) | {"cpuSimMs":1.05}
+   splats by cause {"drop":16,"blade":7,"mitts":13,"shot":23,"zooka":3,"crab":4,"roller":8,"blower":1,"slosh":4,"boomerang":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+### run2/towercheck1
+== bluestone tower track · heading 0° · length 152.5 / 152.5 m (Alpha's / Bravo's side) · speed 1.91 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   checkpoints [{"team":0,"index":0,"d":62.75,"dur":10,"at":[2.25,0,31]},{"team":0,"index":1,"d":95,"dur":10,"at":[-14,0,47]},{"team":1,"index":0,"d":62.75,"dur":10,"at":[-2.25,0,-31]},{"team":1,"index":1,"d":95,"dur":10,"at":[14,0,-47]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 152.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -152.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[152.5,152.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### run2/towercheck2
+== bluestone tower track · heading 0° · length 152.5 / 152.5 m (Alpha's / Bravo's side) · speed 1.91 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   checkpoints [{"team":0,"index":0,"d":62.75,"dur":10,"at":[2.25,0,31]},{"team":0,"index":1,"d":95,"dur":10,"at":[-14,0,47]},{"team":1,"index":0,"d":62.75,"dur":10,"at":[-2.25,0,-31]},{"team":1,"index":1,"d":95,"dur":10,"at":[14,0,-47]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 152.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -152.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[152.5,152.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### run2/towercheck3
+== bluestone tower track · heading 0° · length 152.5 / 152.5 m (Alpha's / Bravo's side) · speed 1.91 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   checkpoints [{"team":0,"index":0,"d":62.75,"dur":10,"at":[2.25,0,31]},{"team":0,"index":1,"d":95,"dur":10,"at":[-14,0,47]},{"team":1,"index":0,"d":62.75,"dur":10,"at":[-2.25,0,-31]},{"team":1,"index":1,"d":95,"dur":10,"at":[14,0,-47]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 152.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -152.5 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[152.5,152.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+### run2/towermatch1
+== bluestone [tower len 152.5/152.5]: winner Alpha (time) | counts 35 vs 66 (score 35/66) | best push A 95m B 62.8m | OT no | sim 300s
+   held A 153.3s B 134.5s | contested 5.3s (8×) | neutral 12s | control changes 10 (takes 12) | idle→neutral 1
+   checkpoints cleared A 1 B 0 (reached 2/2, refills 1/2) | riders avg while held A 1.2 B 1.3 | mounts 31/19
+   teams: A [mitts/drainbow bow/strike shooter/kraken bucket/zipcaster] | B [shooter/stamp spinner/zipcaster brush/barrage_seeker charger/wail] | ride s by kind {"mitts":32,"bow":30,"shooter":198,"bucket":35,"spinner":47,"brush":13,"charger":8}
+   stuck 0.1% | by the tower's side 4.2% of bot-time, stuck there 0s (0 episodes) | splats 101 (water 0) | specials 16 (ready 21) | super jumps 45 | turf 17.4/22.6 | sim 300s in 58s (wall 58s) | {"cpuSimMs":1.01}
+   stuck {"t":282.3,"name":"Squiddo","w":"charger","mode":"fight","role":"perch","pos":[-7.9,0,-11.9],"tower":21.6,"path":false,"dur":0.5}
+   stuck {"t":289.8,"name":"Squiddo","w":"charger","mode":"fight","role":"perch","pos":[-5.3,0.14,-13.7],"tower":19.6,"path":false,"dur":0.5}
+   stuck {"t":135.3,"name":"Squiddo","w":"charger","mode":"refill","role":"perch","pos":[15,0,10.1],"tower":30.9,"path":true,"dur":0.25}
+   stuck {"t":144.3,"name":"Squiddo","w":"charger","mode":"fight","role":"perch","pos":[9.4,0,4.7],"tower":14.6,"path":false,"dur":0.25}
+   stuck {"t":185.3,"name":"Squiddo","w":"charger","mode":"fight","role":"perch","pos":[6.8,0,-17.5],"tower":11.7,"path":false,"dur":0.25}
+   stuck {"t":227.5,"name":"Riptide","w":"shooter","mode":"fight","role":"ride","pos":[0.9,1.69,-1.6],"tower":2.3,"path":false,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"map":"bluestone","winner":0,"reason":"time","counts":[35,66],"best":[95,62.8],"held":[153.3,134.5],"controlChanges":10,"cpClear":[1,0],"stuckPct":0.1,"console":1,"frameErrors":0,"mounts":[31,19],"ridersAvg":[1.2,1.3],"x":{"climbs":[30,17],"sjRider":6,"kills":101,"killsNear":[50,47],"attempts":150,"boarded":35,"aborted":113,"climbMounts":26,"sjMounts":1,"toBoard":{"med":2.25,"p80":6.25},"nearBoard":{"med":1.5,"p80":3,"under6":29,"n":31},"stanceT":[[286,13.75],[278.25,21.5]],"stanceSw":[6,8],"ridersThreat":[1.12,1.23],"ridersSafe":[2.92,1.94],"heldThreatS":[146.75,121.75],"heldSafeS":[6.5,12.75],"escortDist":10.9,"escortWithin12":72,"water":[],"offWhy":{"approach":5,"near:climb":
+### ink/ink1
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":7814,"inked":0.637,"regions":{"base":{"m2":2460,"share":0.315,"inked":0.79},"arm":{"m2":1530,"share":0.196,"inked":0.36},"circus":{"m2":1247,"share":0.16,"inked":0.67},"east":{"m2":963,"share":0.123,"inked":0.49},"swimston":{"m2":783,"share":0.1,"inked":0.77},"west":{"m2":695,"share":0.089,"inked":0.65},"alley":{"m2":135,"share":0.017,"inked":0.83},"river-works":{"m2":1,"share":0,"inked":0.04}}}
+PASS map (x −64 … 32 left to right, z 0 … −88 top to bottom; 0–9 inked tenths)  ["   0 ........................","  -4 ......031045289998766302","  -8 ...0100454685755866774.."," -12 ..00303257785868955452.."," -16 ...0134455665189944430.."," -20 ...0233434346369443.34.."," -24 ...003335354666941..13.."," -28 ....004802634669777331.."," -32 ....00480.664889988543.."," -36 .....00796767799414544.."," -40 .......289833698535533.."," -44 .........988..997565542."," -48 .........68835789787775."," -52 .........57626888688653."," -56 .........77988969869685."," -60 .........28767899679784."," -64 .........27988899899988."," -68 .........79888889898961."," -72 .........49977878778963.","
+RESULT 2/2
+### ink/ink3
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":9180,"inked":0.599,"regions":{"base":{"m2":2460,"share":0.268,"inked":0.68},"arm":{"m2":1530,"share":0.167,"inked":0.43},"circus":{"m2":1286,"share":0.14,"inked":0.66},"east":{"m2":1069,"share":0.116,"inked":0.69},"west":{"m2":986,"share":0.107,"inked":0.63},"swimston":{"m2":830,"share":0.09,"inked":0.74},"river-works":{"m2":440,"share":0.048,"inked":0.36},"halo":{"m2":272,"share":0.03,"inked":0.25},"garden":{"m2":172,"share":0.019,"inked":0.14},"alley":{"m2":135,"share":0.015,"inked":0.78}}}
+PASS map (x −64 … 32 left to right, z 0 … −88 top to bottom; 0–9 inked tenths)  ["   0 ........................","  -4 .....1111078555483668600","  -8 ...000024238335673568840"," -12 ..0000105768645354356430"," -16 ...112444666556666822420"," -20 ...143374656335785885660"," -24 ...33466547859688376489."," -28 ....3454138677699576784."," -32 ....04563.7465789779981."," -36 .....26992645577429577.."," -40 ......0266776587419668.."," -44 .....01026666.986497553."," -48 ......22258788988789874."," -52 .......0038865899658877."," -56 .........06884788479954."," -60 .........24575498669753."," -64 .........16686899788873."," -68 .........56357887797770."," -72 .........85538878877742.","
+RESULT 2/2

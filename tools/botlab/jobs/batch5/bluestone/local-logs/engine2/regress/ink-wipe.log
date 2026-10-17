@@ -1,0 +1,10 @@
+PASS the wave clears every cell (grid + counts)  {"before":26934,"after":0,"frames":91,"reach":80.2}
+PASS a screen whose wave runs behind (splats wait for its front) ends with the painter's exact turf  {"painter":9493,"it":9493}
+PASS a screen whose wave runs ahead (the passed ring masked off) ends with the painter's exact turf  {"painter":9493,"it":9493}
+PASS …and one far ahead too  {"painter":9493,"it":9493}
+PASS (the scenario keeps ink behind the front and after the wave)  {"painterInked":9493}
+PASS importGrid(exportGrid()) restores the grid and the counts exactly  {"bytes":4152,"counts":[2543,3160]}
+PASS importGrid refuses another stage's grid
+PASS offline Practice: the wave clears the stage; a second one waits its turn  {"had":23713,"after":0,"first":true,"second":false}
+RESULT 8/8
+console errors: none

@@ -721,7 +721,7 @@ export const BAZOOKARP = {
   // the Roe Shell: a tug-of-war meter ±hp (Alpha +, Bravo −); a burst splats the other team within burstR (with a line)
   shell: {
     r: 1.6, rMax: 2.3, lift: 1.3,          // radius at rest / about to burst; centre above its floor
-    hp: 1000, reformHp: 500,                // net damage to burst: the opening shell / every re-formed one
+    hp: 600, reformHp: 500,                 // net damage to burst: the opening shell / every re-formed one ([b5-karp-bots] 1000 → 600: the bots reach the Pond at 8–11 s, the first pop ran 13–18 s at 1000 / 11–15 at 800, SPEC §9.1 wants 6–12)
     regen: 200, regenDelay: 1.5,           // drift back toward 0 (/s) after this long with no hits
     reform: 0.8,                            // s to grow back after a drop / plant / reset / move
     hitCap: 220, specialMul: 0.5, contMul: 0.5,
@@ -733,6 +733,7 @@ export const BAZOOKARP = {
   pickR: 1.3, pickBelow: 0.6, pickAbove: 1.8, pickHold: 0.25,
   claimLockMax: 1.5, claimRetry: 0.3, claimSlack: 0.5,   // online (§7.3)
   claimAge: 0.4,              // s: a claim's sample age; the window-close grace; the wait for a decline (kx) after a death
+  claimWait: 0.3, claimNear: 6,   // [karp-face] the host's longest wait for claims in flight; m: a guest this far past pickR can't have touched it as early
   // the carrier
   speedMul: 0.8, chargeWalk: 2.4,         // × PLAYER's speeds, never the weapon's
   fuse: 60, fuseFast: 3, fuseWarn: 10,
@@ -772,8 +773,8 @@ export const BAZOOKARP = {
 // [b5-karp] battle modes under construction (the stages' `wip` flag, for modes): in no player-facing mode list — the
 // offline mode screen, the stage select's mode chip, the online lobby's mode picker, a room's mode setting, ?autostart's
 // mode — yet the harness still starts one by name (api.startMatch / MODE=bazookarp). The page option ?wipmodes (harness:
-// WIPMODES=1) lists them everywhere for testing. The lead removes a mode from this list when it ships.
-export const WIP_MODES = ['bazookarp'];
+// WIPMODES=1) can expose a future unplayable mode while it remains in this list.
+export const WIP_MODES = [];
 export const SHOW_WIP_MODES = typeof location !== 'undefined' && new URLSearchParams(location.search).has('wipmodes');
 export const modeListed = (id) => !WIP_MODES.includes(id) || SHOW_WIP_MODES;
 
@@ -809,10 +810,10 @@ export const MAPS = [
   { id: 'calamari', name: 'Calamari County', blurb: 'Callie and Marie\'s snowy home village: fight over the little station, up its footbridges and down the lanes to the harbour.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
   { id: 'spirhalite', name: 'Spirhalite Islands', blurb: 'An S-shaped chain of islets risen from the sea: hold the sandbar under the Great Arch, cross the lagoons or loop round by the causeway.', theme: 'golden', times: { day: 'golden', dusk: 'sunset' } },
   { id: 'treehills', name: 'Eco-Forest Treehills', blurb: 'Alterna\'s tiered forest biome under a simulated sky: grow your team\'s hedges from the sprout pods and hold the meadow plaza.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
-  // [b5-stages] batch 5's stages, under construction (wip: in no player's stage list until the lead removes the flag)
-  { id: 'bluestone', name: 'Bluestone Junction', blurb: 'Under the station clocks, Commander Tartar is winding the city forward: the streets jump from the 1880s to today to the 3000s, opening new routes and raising new ground as the match goes on.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, wip: true },
-  { id: 'aquarium', name: 'Gulper Aquarium', blurb: 'A 1936 aquarium on an islet in the bay: fight round the Great Tank and ride the clear Tubeway pipes from one side to the other.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, wip: true },
-  { id: 'caldera', name: 'Highmark Foundry', blurb: 'A foundry inside a breathing volcano. Every surge drowns the low floors, floats the Pumice Race and heaves the Organ Pipes up. Mind the high mark.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, wip: true },
+  // [b5-int4] playable but unfinished content stays in every picker with the public beta badge.
+  { id: 'bluestone', name: 'Bluestone Junction', blurb: 'Under the station clocks, Commander Tartar is winding the city forward: the streets jump from the 1880s to today to the 3000s, opening new routes and raising new ground as the match goes on.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, beta: true },
+  { id: 'aquarium', name: 'Gulper Aquarium', blurb: 'A 1936 aquarium on an islet in the bay: fight round the Great Tank and ride the clear Tubeway pipes from one side to the other.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, beta: true },
+  { id: 'caldera', name: 'Highmark Foundry', blurb: 'A foundry inside a breathing volcano. Every surge drowns the low floors, floats the Pumice Race and heaves the Organ Pipes up. Mind the high mark.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, beta: true },
   // (src/world/stages/cargo, ported from PR #8's rebuilt Kelpline) — online only, humans only, never a Boss Battle
   { id: 'cargo', name: 'Cargo Terminal', blurb: 'A container terminal at shift change: a gantry crane straddles the pier between two moored box ships.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, onlineOnly: true, noBots: true, noBoss: true },
 ];
@@ -821,7 +822,8 @@ export const MAPS = [
 //   noBots      humans only: "fill with bots" is forced off, a match needs 2+ players with one on each side, and a player
 //               who leaves mid-match is removed instead of handed to a bot; the menu backdrop runs without bots too
 //   noBoss      never a Boss Battle stage (a boss room switches away from it)
-//   wip         [b5-stages] unfinished (a stage under construction): in no player-facing stage list — the offline stage
+//   beta        [b5-int4] playable but unfinished: visible in all lists with a PUBLIC BETA badge
+//   wip         unfinished (a stage not playable): in no player-facing stage list — the offline stage
 //               select (Turf War, Zone Control, Tower Command, Boss Battle), the online lobby's stage picker, Random (the
 //               lobby's roll, the Practice stage swap, Practice's new stage), the stage the game boots on (the menu
 //               backdrop) and the room it opens — yet it still loads by id (api.startMatch: the botlab harness, MAP=<id>),

@@ -1,0 +1,46 @@
+# head d831e8ea 11:18:20
+### r4-era1-zones
+### r4-era1
+### r4-era3
+### done
+# head d831e8ea
+--- 11:19:59 zones 1
+### zones era 1
+== bluestone [zones]: winner Alpha (time) | final 58 vs 68 (penalty +4.9/+14.6) | OT no
+   held A 68.5s B 72s neutral 159.3s | captures 10 (takeovers 6), control events 20, first capture @37.7s | rotations 6
+   stuck 0% | splats 90 (water 0) | specials 11 | super jumps 34 | turf 25.7/30.7 | sim 300s in 49s (wall 49s) | {"cpuSimMs":0.73}
+   splats by cause {"shot":32,"blade":18,"drop":10,"slosh":7,"mitts":17,"zooka":3,"seeker":1,"boomerang":2}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+--- 11:21:08 zones 3
+### zones era 3
+== bluestone [zones]: winner Alpha (knockout) | final 0 vs 92 (penalty +0/+8) | OT no
+   held A 105s B 17.8s neutral 138.3s | captures 5 (takeovers 2), control events 9, first capture @23s | rotations 4
+   stuck 0.6% | splats 54 (water 2) | specials 13 | super jumps 25 | turf 40.9/13.8 | sim 261.3s in 50s (wall 50s) | {"cpuSimMs":1.25}
+   splats by cause {"shot":31,"zooka":3,"charger":11,"bow":4,"water":2,"zipcaster":1,"boomerang":1,"drop":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 1 unique warning/error line(s)
+--- 11:23:36 done
+# head 54deadb7
+--- 11:23:36 regions 1 1
+### ink-regions era 1 run 1
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5303,"inked":0.737,"regions":{"circus":{"m2":1496,"share":0.282,"inked":0.8},"base":{"m2":978,"share":0.184,"inked":0.8},"knee":{"m2":835,"share":0.157,"inked":0.78},"swimston":{"m2":541,"share":0.102,"inked":0.88},"knee-far":{"m2":423,"share":0.08,"inked":0.55},"river":{"m2":284,"share":0.054,"inked":0.21},"hoki":{"m2":267,"share":0.05,"inked":0.7},"gpo-quay":{"m2":264,"share":0.05,"inked":0.59},"arcade":{"m2":210,"share":0.04,"inked":0.74},"halo":{"m2":3,"share":0.001,"inked":0.22}}}
+--- 11:24:17 regions 1 2
+### ink-regions era 1 run 2
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"1","simS":180,"total_m2":5303,"inked":0.72,"regions":{"circus":{"m2":1496,"share":0.282,"inked":0.77},"base":{"m2":978,"share":0.184,"inked":0.78},"knee":{"m2":835,"share":0.157,"inked":0.69},"swimston":{"m2":541,"share":0.102,"inked":0.87},"knee-far":{"m2":423,"share":0.08,"inked":0.44},"river":{"m2":284,"share":0.054,"inked":0.45},"hoki":{"m2":267,"share":0.05,"inked":0.78},"gpo-quay":{"m2":264,"share":0.05,"inked":0.8},"arcade":{"m2":210,"share":0.04,"inked":0.63},"halo":{"m2":3,"share":0.001,"inked":0.37}}}
+--- 11:24:55 done
+# head 54deadb7
+--- 11:24:55 regions 3 1
+### ink-regions era 3 run 1
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6452,"inked":0.675,"regions":{"circus":{"m2":1633,"share":0.253,"inked":0.76},"base":{"m2":978,"share":0.152,"inked":0.74},"knee":{"m2":859,"share":0.133,"inked":0.65},"swimston":{"m2":549,"share":0.085,"inked":0.83},"halo":{"m2":468,"share":0.073,"inked":0.59},"knee-far":{"m2":423,"share":0.066,"inked":0.32},"river":{"m2":385,"share":0.06,"inked":0.52},"garden":{"m2":379,"share":0.059,"inked":0.59},"gpo-quay":{"m2":302,"share":0.047,"inked":0.78},"hoki":{"m2":267,"share":0.041,"inked":0.68},"arcade":{"m2":210,"share":0.032,"inked":0.6}}}
+--- 11:25:36 regions 3 2
+### ink-regions era 3 run 2
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6452,"inked":0.552,"regions":{"circus":{"m2":1633,"share":0.253,"inked":0.7},"base":{"m2":978,"share":0.152,"inked":0.62},"knee":{"m2":859,"share":0.133,"inked":0.41},"swimston":{"m2":549,"share":0.085,"inked":0.69},"halo":{"m2":468,"share":0.073,"inked":0.52},"knee-far":{"m2":423,"share":0.066,"inked":0.16},"river":{"m2":385,"share":0.06,"inked":0.4},"garden":{"m2":379,"share":0.059,"inked":0.53},"gpo-quay":{"m2":302,"share":0.047,"inked":0.63},"hoki":{"m2":267,"share":0.041,"inked":0.41},"arcade":{"m2":210,"share":0.032,"inked":0.55}}}
+--- 11:26:26 regions 3 3
+### ink-regions era 3 run 3
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6452,"inked":0.678,"regions":{"circus":{"m2":1633,"share":0.253,"inked":0.79},"base":{"m2":978,"share":0.152,"inked":0.81},"knee":{"m2":859,"share":0.133,"inked":0.48},"swimston":{"m2":549,"share":0.085,"inked":0.92},"halo":{"m2":468,"share":0.073,"inked":0.33},"knee-far":{"m2":424,"share":0.066,"inked":0.36},"river":{"m2":385,"share":0.06,"inked":0.56},"garden":{"m2":379,"share":0.059,"inked":0.74},"gpo-quay":{"m2":302,"share":0.047,"inked":0.87},"hoki":{"m2":267,"share":0.041,"inked":0.56},"arcade":{"m2":210,"share":0.032,"inked":0.69}}}
+--- 11:27:09 regions 3 4
+### ink-regions era 3 run 4
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6443,"inked":0.667,"regions":{"circus":{"m2":1633,"share":0.253,"inked":0.73},"base":{"m2":978,"share":0.152,"inked":0.75},"knee":{"m2":859,"share":0.133,"inked":0.62},"swimston":{"m2":549,"share":0.085,"inked":0.82},"halo":{"m2":468,"share":0.073,"inked":0.48},"knee-far":{"m2":415,"share":0.064,"inked":0.39},"river":{"m2":385,"share":0.06,"inked":0.52},"garden":{"m2":379,"share":0.059,"inked":0.69},"gpo-quay":{"m2":302,"share":0.047,"inked":0.79},"hoki":{"m2":267,"share":0.041,"inked":0.7},"arcade":{"m2":210,"share":0.033,"inked":0.64}}}
+--- 11:27:56 done
+# end 11:27:56

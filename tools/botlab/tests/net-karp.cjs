@@ -15,7 +15,14 @@
 //   the same result on both screens · no page errors
 //   CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' NET=tools/botlab/tests/net-karp.cjs tools/botlab/run.sh tools/botlab/netpage.cjs
 //   NET_ARGS: 'map=<id>' (default karpbox)
-module.exports = async ({ clients, R, wait, say, args, open }) => {
+//   [karp-face] NET_ARGS='part=face' (the rest of SPEC §10.2's two-client steps: net-karp-steps.cjs) · 'part=lag' (with
+//   URLQ='netlag=150&netjitter=60': the latency steps) — the migration steps are net-karp-host.cjs's
+module.exports = async (ctx) => {
+  const part = (/(?:^|[;&])part=(\w+)/.exec(ctx.args || '') || [])[1];
+  if (part === 'face' || part === 'lag' || part === 'snap' || part === 'race' || part === 'racekid' || part === 'racefair' || part === 'racerun' || part === 'raceswap' || part === 'raceside' || part === 'ottag') return require('./net-karp-steps.cjs')(ctx, part);
+  return base(ctx);
+};
+async function base({ clients, R, wait, say, args, open }) {
   // the mode is hidden (config WIP_MODES) and the kids' brains are stubbed: every client needs ?autopilot&wipmodes
   for (const c of clients.slice(0, 2)) {
     if (/[?&]wipmodes(&|=|$)/.test(c.url || '') && /[?&]autopilot(&|=|$)/.test(c.url || '')) continue;
@@ -31,7 +38,7 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   const code = await A.js(`__G.net.create('Hosty')`);
   await A.js(`__G.net.setSettings({ mode: 'bazookarp', map: ${JSON.stringify(MAP)}, time: 'day', botCount: 2, difficulty: 'easy' }); 1`);
   const mode = await J(A, `__G.net.lobby.mode`);
-  R('a room takes the hidden mode with ?wipmodes', mode === 'bazookarp', { mode });
+  R('a room takes the listed Bazookarp mode', mode === 'bazookarp', { mode });
   await B.js(`__G.net.join(${JSON.stringify(code)}, 'Guesty').then(() => 1)`);
   await A.until(`__G.net.lobby.players.length === 2`, 15000);
   const teams = await J(A, `__G.net.lobby.players.map((p) => p.team)`);
@@ -56,15 +63,27 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   const look = await J(B, `(() => { const F = __G.karpFx; return { shell: !!(F && F.shell && F.shell.visible), carp: !!(F && F.carp && F.carp.visible), at: F && F.shell ? F.shell.position.toArray().map((x) => +x.toFixed(2)) : null }; })()`);
   R('the guest sees the Bazookarp and the Roe Shell at the Pond (engine and look)', ib.phase === 'shielded' && ib.shell === 'intact' && look.shell && look.carp && Math.hypot(look.at[0], look.at[2]) < 0.5, { ib: { phase: ib.phase, shell: ib.shell }, look });
 
-  // ---- 1. B (Bravo) shoots the shell from 6 m: the host's meter goes Bravo's way (its hits ride B's tick as kh)
+  // ---- 1. B (Bravo) shoots the shell from 6 m for 5 s: the host's meter goes Bravo's way (its hits ride B's tick as kh);
+  // [karp-face] and B's OWN sends are counted (every message its transport puts on the socket, pings included): ≤ 30 in
+  // any 1 s (SPEC §10.2 step 1; the relay's per-socket peak alone didn't say whose). The host's shell can't burst meanwhile
   await put(B, 0, 0, 6);
+  await A.js(`(() => { __G.match.karp.shell.hpMax = 1e9; return 1; })()`);
   await wait(400);
+  await B.js(`(() => { const tr = __G.netm.s.tr; window.__sent = []; if (!tr.__raw0) { tr.__raw0 = tr._raw.bind(tr); tr._raw = (s) => { if (window.__sent) window.__sent.push([performance.now(), s.slice(0, 2)]); return tr.__raw0(s); }; } return 1; })()`);
   await B.js(`(() => { const a = __G.match.local, c = __G.match.karp.shell.center(); a.aimYaw = Math.atan2(c.x - a.pos.x, c.z - a.pos.z); a.yaw = a.aimYaw; a.aimPitch = Math.atan2(c.y - (a.pos.y + 1.2), 6); a.intent.fire = true; window.__karpAim = setInterval(() => { a.aimYaw = Math.atan2(c.x - a.pos.x, c.z - a.pos.z); a.yaw = a.aimYaw; a.ink = 100; }, 50); return 1; })()`);
-  await wait(2200);
-  await B.js(`(() => { clearInterval(window.__karpAim); __G.match.local.intent.fire = false; return 1; })()`);
+  await wait(5000);
+  const sent = await J(B, `(() => { clearInterval(window.__karpAim); __G.match.local.intent.fire = false; const s = window.__sent; window.__sent = null; return { t: s.map((q) => Math.round(q[0])), k: s.map((q) => q[1]), weapon: __G.match.local.weaponId }; })()`);
+  await A.js(`(() => { const S = __G.match.karp.shell; S.hpMax = 1000; S.m = Math.max(-600, Math.min(600, S.m)); return 1; })()`);
   await wait(400);
-  let ha = await info(A), hb = await info(B);
-  R('1. B\'s shots on the shell move the HOST\'s meter (summed on B\'s tick: kh); B\'s meter follows the host\'s', ha.meter < -40 && Math.abs(hb.meter - ha.meter) < 120, { host: ha.meter, guest: hb.meter });
+  // ([karp-face] review round 3: B's copy follows within a few snapshots — read until it has, at most 3 s: on a Mac at
+  // load 150 a fixed 400 ms read B's copy from before the host's clamp, −1728 against −636)
+  let ha = await info(A), hb = await info(B), t1 = Date.now();
+  while (Math.abs(hb.meter - ha.meter) >= 120 && Date.now() - t1 < 3000) { await wait(100); ha = await info(A); hb = await info(B); }
+  R('1. B\'s shots on the shell move the HOST\'s meter (summed on B\'s tick: kh); B\'s meter follows the host\'s', ha.meter < -40 && Math.abs(hb.meter - ha.meter) < 120, { host: ha.meter, guest: hb.meter, extraMs: Date.now() - t1 });
+  let peak1 = 0;
+  for (let i = 0; i < sent.t.length; i++) { let n = 0; for (let j = i; j < sent.t.length && sent.t[j] - sent.t[i] < 1000; j++) n++; peak1 = Math.max(peak1, n); }
+  const span1 = sent.t.length > 1 ? (sent.t[sent.t.length - 1] - sent.t[0]) / 1000 : 0;
+  R('1b. while B fires at the shell for 5 s, B itself sends ≤ 30 messages in any 1 s (expected ~20: its ticks; kh adds none)', sent.t.length > 40 && peak1 <= 30, { peak1s: peak1, total: sent.t.length, perSec: +(sent.t.length / Math.max(1e-3, span1)).toFixed(1), kinds: [...new Set(sent.k)], weapon: sent.weapon });
 
   // ---- 2. the host bursts it (Alpha), its kid walks in: 'b' and 'p' reach B at once; the host's carrier scores on both
   await put(B, 0, 0, 8);
@@ -126,12 +145,23 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   // (fix round 2) A's own screen logs the kid's hp at each Carp Shot hurt as it happens: read 1.9 s and a few round trips
   // later (seconds on a loaded Mac), the kid had already regenerated (regen starts 1.3 s after a hit, 22 hp/s)
   await A.js(`(() => { window.__aHurt = []; import('./src/core/ctx.js').then((m) => m.on('damage', (e) => { if (e.victim === __G.match.local && e.source === 'karp') window.__aHurt.push({ dmg: +(+e.amount).toFixed(2), hp: +e.victim.hp.toFixed(2), att: e.attacker && e.attacker.nid }); })); return 1; })()`);
+  // ([karp-face] A's screen hears and sees B's launches: a ghost's [0] emits karp:shot there too — the whomp, the mouth)
+  await A.js(`(() => { window.__aShots = []; import('./src/core/ctx.js').then((m) => m.on('karp:shot', (e) => window.__aShots.push({ nid: e.actor && e.actor.nid, ghost: !!e.ghost }))); return 1; })()`);
   const pairs = [];
+  // ([karp-face] review round 3: each read waits for the shot itself — B's own copy blown, then A's ghost of it blown (its
+  // [2] played there: A's kid judged) — instead of a fixed 1.9 s, which under netlag 40 + jitter 20 on a loaded Mac read
+  // before A's [2] had played: 18/21 once, then 21/21)
   const shoot = async (yaw) => {
+    const n0 = await J(B, `__G.karpGun.stats.fired.reduce((x, y) => x + y, 0)`);
     await B.js(`(() => { const a = __G.match.local; a.aimYaw = a.yaw = ${yaw}; a.aimPitch = 0; a.intent.fire = true; setTimeout(() => { a.intent.fire = false; }, 60); return 1; })()`);
-    await wait(1900);
+    await B.until(`__G.karpGun.stats.fired.reduce((x, y) => x + y, 0) > ${n0}`, 4000, 15).catch(() => {});
+    const gid = await J(B, `(() => { const s = __G.karpGun.shots.filter((q) => !q.ghost).pop(); return s ? s.gid : null; })()`);
+    if (gid != null) {
+      await B.until(`(() => { const s = __G.karpGun.byGid.get(${gid}); return !s || s.phase === 'done'; })()`, 6000, 15).catch(() => {});
+      await A.until(`(() => { const s = __G.karpGun.byGid.get(${gid}); return !!s && s.phase === 'done'; })()`, 6000, 15).catch(() => {});
+    }
     const mine = await J(B, `__G.karpGun.shots.filter((s) => !s.ghost && s.land).map((s) => ({ gid: s.gid, land: s.land.toArray().map((x) => +x.toFixed(2)) }))`);
-    const ghosts = await J(A, `__G.karpGun.shots.filter((s) => s.ghost).map((s) => ({ gid: s.gid, ph: s.phase, land: s.land && s.land.toArray().map((x) => +x.toFixed(2)) }))`);
+    const ghosts = await J(A, `__G.karpGun.shots.filter((s) => s.ghost || s.gid === ${gid}).map((s) => ({ gid: s.gid, ph: s.phase, land: s.land && s.land.toArray().map((x) => +x.toFixed(2)) }))`);
     for (const m of mine) if (!pairs.some((p) => p.gid === m.gid)) { const g = ghosts.find((q) => q.gid === m.gid); pairs.push({ gid: m.gid, shooter: m.land, ghost: g && g.land, d: g && g.land ? r2(Math.hypot(g.land[0] - m.land[0], g.land[1] - m.land[1], g.land[2] - m.land[2])) : null }); }
   };
   await shoot(Math.PI);
@@ -145,6 +175,8 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   const hits = await J(B, `window.__hits`);
   R('5b. the Splash hurts A\'s kid on A\'s own screen (the victim judges [2]: B\'s Carp Shot, its hp at that moment)', hpLow < hp0 - 15 && hp1.hurt.some((h) => h.att === bNid && h.dmg > 15), { hp0, hpLow, hp1 });
   R('5c. B gets its hit marker for A (A\'s [3] → a hit event with B as the attacker)', hits.some((h) => h.att === bNid && h.vic === aNid && h.w === 'karp' && h.rv), hits);
+  const aShots = await J(A, `({ ev: window.__aShots, fire: (__inkwave.hud && __inkwave.hud.karp && __inkwave.hud.karp.cues.played || []).filter((n) => n === 'karp_fire').length })`);
+  R('5d. A\'s screen hears B\'s launches: each ghost launch emits karp:shot there and plays the whomp (karp_fire)', aShots.ev.filter((e) => e.nid === bNid && e.ghost).length >= 2 && aShots.fire >= 2, aShots);
 
   // ---- 6. B retreats on its own half: DON'T RETREAT! on B's screen at once, the host's rate ×3 (B's kr)
   await put(B, 0.3, 0, 6);
@@ -187,6 +219,8 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   // B dies on its own screen the moment its grant plays there (after its claim left, before the grant arrived)
   await B.js(`(() => { const K = __G.match.karp, me = __G.match.local, ne = K.netEvent.bind(K); window.__died = 0; K.netEvent = (e, s) => { if (Array.isArray(e) && e[0] === 'p' && e[2] === me.nid && !window.__died) { window.__died = 1; me.splat(null, 'weapon'); } return ne(e, s); }; return 1; })()`);
   const pre8 = await J(A, `(() => { const K = __G.match.karp; return { touched: K.touched, lc: K.lastCarrier, win: K.otWin.left }; })()`);
+  await A.js(`(() => { window.__undoCalls = []; window.__pickCalls = []; const look = () => { const H = __inkwave.hud; return [...[...(H.zcalls ? H.zcalls.children : [])].map((e) => e.querySelector('.iw-zcall__txt')?.textContent || ''), H.karp.state().pend || '']; };
+    import('./src/core/ctx.js').then((m) => { m.on('karp:pickup', () => requestAnimationFrame(() => requestAnimationFrame(() => window.__pickCalls.push(look())))); m.on('karp:undo', () => requestAnimationFrame(() => requestAnimationFrame(() => window.__undoCalls.push(look())))); }); return 1; })()`);
   await A.js(`(() => { const K = __G.match.karp; K.shell.add(1, 2000, __G.match.actors.find((o) => o.nid === ${bNid})); K.phaseT = 0.6; return 1; })()`);
   await B.until(`__G.match.karp.phase === 'free'`, 3000, 20);
   await put(B, kp8[0] + 0.3, kp8[1], kp8[2]);
@@ -194,6 +228,12 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   await A.until(`__G.match.karp.stats.declined >= 1`, 4000, 30).catch(() => {});
   await wait(1000);
   const d8a = await info(A), d8b = await info(B), post8 = await J(A, `(() => { const K = __G.match.karp; return { touched: K.touched, lc: K.lastCarrier, win: K.otWin.left, open: K.otWin.open }; })()`);
+  // ([karp-face] review round 3: and no screen still says somebody has it — the host's HUD put up THEY'VE GOT THE BAZOOKARP!
+  // on the grant, and it stayed for its whole life after the 'u')
+  const calls8 = async (c) => J(c, `(() => { const H = __inkwave.hud, K = H && H.karp; return { live: [...(H && H.zcalls ? H.zcalls.children : [])].map((e) => e.querySelector('.iw-zcall__txt')?.textContent || ''), pend: K ? K.state().pend : null, atPick: window.__pickCalls || null, atUndo: window.__undoCalls || null }; })()`);
+  const c8a = await calls8(A), c8b = await calls8(B), GOT = /GOT THE BAZOOKARP/, got8 = (x) => [...x.live, x.pend || ''].some((t) => GOT.test(t));
+  R('8c. … and the host\'s pick-up call-out (THEY\'VE GOT THE BAZOOKARP!, up or waiting at the grant) goes with the u: none on either screen while it is free again',
+    (c8a.atPick || []).some((l) => l.some((t) => GOT.test(t))) && (c8a.atUndo || []).length >= 1 && c8a.atUndo.every((l) => !l.some((t) => GOT.test(t))) && !got8(c8a) && !got8(c8b), { host: c8a, guest: c8b });
   R('8. B, dead on its own screen when its grant arrives, declines it (kx); the host undoes it (u): nobody holds it on either screen, free at the same spot',
     d8b.rec.decline >= 1 && d8a.declined === 1 && d8a.holder == null && d8b.holder == null && d8a.phase === 'free' && d8b.phase === 'free' && Math.hypot(d8a.pos[0] - d8b.pos[0], d8a.pos[2] - d8b.pos[2]) < 0.5,
     { kx: d8b.rec.decline, hostDeclined: d8a.declined, holder: [d8a.holder, d8b.holder], phase: [d8a.phase, d8b.phase], pos: [d8a.pos, d8b.pos] });
@@ -209,4 +249,4 @@ module.exports = async ({ clients, R, wait, say, args, open }) => {
   const errs = [];
   for (const c of [A, B]) errs.push(...(c.log || []).filter((l) => /TypeError|ReferenceError|Uncaught/.test(l)));
   R('no page errors on either screen', errs.length === 0, errs.slice(0, 4));
-};
+}

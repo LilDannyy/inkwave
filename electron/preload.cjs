@@ -7,4 +7,6 @@ contextBridge.exposeInMainWorld('inkwaveNative', {
   setFullScreen: (on) => ipcRenderer.send('fs:set', !!on),
   onFullScreenChange: (cb) => { ipcRenderer.on('fs:changed', (_e, on) => cb(!!on)); },
   quit: () => ipcRenderer.send('app:quit'),   // the main menu's QUIT GAME (after its confirmation)
+  issue: (entry) => ipcRenderer.send('issue:append', entry),
+  buildCommit: () => ipcRenderer.sendSync('build:commit'),
 });

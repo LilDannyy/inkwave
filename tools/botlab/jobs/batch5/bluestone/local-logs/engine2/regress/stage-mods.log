@@ -1,0 +1,38 @@
+PASS a stage without a module key has no stage world and no stage run  {"sw":null,"stage":false,"ext":false,"hScale":1}
+PASS the layout key builds the module: G.stageWorld, match.stage, G.dummyWorld (worldAs), match.dummymod (matchAs)  {"started":true,"keys":["dummymod"]}
+PASS the world build calls every hook once, in order  {"calls":["world","prop","colliders","extraColliders","attachLevel","attachPaint","levelMaterial","levelMaterial:grate","afterMeshes","navEdges","attachNav","attachMinimap","attachEnv","ready"]}
+PASS the match runtime was made after the world was ready, and ticks (update and lateUpdate)  {"calls":["match","lateUpdate"]}
+PASS environment: a backdrop set (out.sets) with its instances, hidden; the theme overlay layers in; env.sea false hides the sea; addSurface  {"set":true,"inst":1,"overlay":"day","sea":false,"surface":true}
+PASS a custom block kind (from W.extraColliders) is solid; a block field rides a layout piece and a prop collider  {"kb":10,"fb":1,"h1":true}
+PASS physics.skip: a ray ignores blocks with that flag only while it is set  {"h2":false}
+PASS presence: a shared face against a state-2-only block is kept; that block's face against the shared one is hidden  {"shared":[10,11,12,-1,13,14],"state2":[15,-1,16,-1,17,18],"all":3}
+PASS a prop W.prop tagged merges into its own bucket (name @dm, aTag = bucketVec); W.colliders tagged its colliders  {"meshes":["props:wood@dm","props:paint@dm","props:blob@dm"],"colliders":2}
+PASS the level material carries the extension: program key + shared uniform  {"k0":"inkwave-level-v8","k1":"inkwave-level-v8-dummymod"}
+PASS every level-material slot (vertPars, vertMain, fragPars, fragBase, fragMural, fragEmissive, fragFinal, aoSample) lands at its anchor, once  {"vertPars":true,"vertMain":true,"fragPars":true,"fragBase":true,"fragMural":true,"fragEmissive":true,"fragFinal":true,"aoSample":true}
+PASS the special edge is in the graph (nearest nodes, its extra fields), none unresolved, hScale < 1  {"edges":[[643,675,3,0,32]],"problems":0,"hScale":0.09375}
+PASS the edge is taken while open (t 3: 2 nodes) and forbidden while shut (t 13: walks round)  {"open":2,"shut":33,"t":13.01666666666668}
+PASS nav.ext is this match's rule while the module runs
+PASS a nav rule's extra cost holds on a climb edge (the climb rule adds to it, never replaces it)  {"ce":[148,112],"gc0":13.25,"gc1":38.25}
+PASS one moving collider: its top is a pure function of the stage clock  {"t":7.716666666666723,"top":0.403,"want":0.40271364211016925}
+PASS a stage-clock snap (> 1 s) calls seek(t, 'clock')  {"seeks":[[3.02,"clock"],[13.02,"clock"],[7.52,"clock"],[13.73,"clock"]]}
+PASS G.level.noPlace: inside the world's disc, outside it, a device radius reaching in; the match runtime's own disc (R.noPlace) too  {"np":[true,false,true,true,false]}
+PASS G.level.liquidY: the module's surface in its region, the sea elsewhere  {"ly":0.24247604264932904,"want":0.24247604264932904,"lo":-1.6}
+PASS match.stage.under: below the surface in the region only
+PASS [b5-int2] device placement asks G.level.noPlace: a mine or a beacon planted in a no-place disc (the world's or the match runtime's) is refused, a sprinkler landing in one breaks; outside, as always  {"mineIn":0,"mineIn2":0,"mineOut":1,"beaconIn":0,"beaconOut":1,"sprinklerIn":"dead","sprinklerOut":"spray"}
+PASS [b5-int2] a device dropped from a moving floor (deployables _lost) breaks over the module's liquid (match.stage.under) or in its no-place disc; on the deck elsewhere it lands  {"pool":"dead","disc":"dead","deck":"mine"}
+PASS [b5-int2] S.crushIn → G.deploy.crushIn (shape, how, its count) once the deploy code has one; 0 while it has none (wave 1: the tower's crush(T) only)  {"hadCrushIn":"undefined","r0":0,"forwarded":"shell","r1":3}
+PASS a carried actor: the module owns its body (moved by it), no damage, no super jump, teammates land at its anchor  {"moved":1,"dmg":false,"hp":[100,100],"sj":false}
+PASS the camera override runs for the carried actor (cam + camAfter) and the probe's skip flag is cleared after  {"camN":30,"after":30,"target":true}
+PASS a kill in the module's hazard (R.kill before the sea check) splats with its cause; the splat card names it  {"alive":false,"cause":"dummy","kills":1,"card":"Fell in the dummy pool"}
+PASS wet floor: a bot reads the module's hazard floor as wet (and dry elsewhere); shoves never put anyone there  {"wetIn":true,"wetOut":false,"ff":[false,true]}
+PASS sink(): true (and fizzle) inside the hazard, false elsewhere  {"sk":[true,false],"fizzles":["test"]}
+PASS the minimap live layer draws the module (drawMap)  {"drawn":393}
+PASS minimap base: W.mapBlock leaves the custom block out, a non-solid block stays out, setBase(key, present) builds a base per state and swaps back to the cached one  {"mb0":{"extra":0,"shared":2,"s2":3},"mb1":{"s2":0,"shared":2},"mb2":{"shared":0,"s2":3},"mb3":0,"same":true,"ids":{"extra":10,"shared":2,"s2":3}}
+PASS frame.stage carries the module's own HUD object under its key  {"fr":{"dummymod":{"n":4}}}
+PASS netSnapshot / netRestore: the module's state and the clock come back, then seek(t, 'late')  {"snap":{"t":15.883,"m":{"dummymod":{"n":5}}},"n":5,"t":17.883}
+PASS bakeMode(on / off) reaches the module world
+PASS bakePasses: the module's world states for a per-state lightmap (one channel each, at most 3)  {"n":2}
+PASS a rebuild without the key disposes the module (world and run) and leaves no stage world, no nav rule, no extension  {"wd":true,"rd":true,"sw":null,"key":"inkwave-level-v8"}
+PASS …and its environment pieces go with it: the theme overlay cleared, the sea back, its surface and its backdrop set gone  {"overlay":null,"sea":true,"surface":false,"set":false}
+RESULT 36/36
+console errors: none

@@ -14,7 +14,7 @@
 //     that slipped in — at its true surface (r − 0.3: the device's body inside the sphere, not merely by it). Thrown subs
 //     glance off it (objTargets.bounce), so nothing comes to rest inside it and sprays from where shots can't reach.
 import * as THREE from 'three';
-import { G, clamp } from '../core/ctx.js';
+import { G, clamp, emit } from '../core/ctx.js';
 import { BAZOOKARP as K, PLAYER } from '../config.js';
 
 const S = K.shell;
@@ -68,11 +68,16 @@ export class KarpShell {
     if (Math.abs(this.m) >= this.hpMax - 1e-6) this.engine.onBurst(this.m > 0 ? 0 : 1, this.lastHit[this.m > 0 ? 0 : 1]);
   }
   // what a hit counts for: × 0.5 for a special (by its weapon id, or o.special: a barrage's bombs), at most 220
-  hitFilter(dmg, wid, o) {
-    const sp = G.objTargets ? G.objTargets.isSpecial(wid, o) : false;
+  hitFilter(dmg, wid, o, attacker) {
+    const sp = G.objTargets ? G.objTargets.isSpecial(wid, o, attacker) : false;
     return Math.min(S.hitCap, dmg * (sp ? S.specialMul : 1));
   }
-  flash(attacker, amount) { this.flashK = Math.min(1, this.flashK + amount / 120); this.flashTeam = attacker?.team ?? -1; }
+  flash(attacker, amount) {
+    this.flashK = Math.min(1, this.flashK + amount / 120); this.flashTeam = attacker?.team ?? -1;
+    // [karp-face] this screen's own hit: the tick and the flash (karp:hit, at most 10 a second)
+    const now = performance.now();
+    if (now - (this._hitT || 0) >= 100) { this._hitT = now; emit('karp:hit', { team: this.flashTeam, meter: this.m }); }
+  }
 
   // the segment a → b meets the shell (within pad) → { t, point } or null (only while intact: it blocks then)
   segHit(a, b, pad = 0) {

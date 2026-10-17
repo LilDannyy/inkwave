@@ -15,6 +15,7 @@ import { G, emit, clamp, lerp, angleDiff } from '../../core/ctx.js';
 import { PLAYER, WEAPONS, weaponRange } from '../../config.js';
 import { MAIN_KITS, netRec } from './registry.js';
 import { MELEE } from '../bots.js';
+import { karpShellIn } from '../botsKarp.js';   // [b5-karp-bots] (bots keep their lunges / leaps off the Roe Shell)
 import { registerWeaponModel } from '../character-weapons.js';
 import { Hit } from '../physics.js';
 import { WEAPON_ICONS } from '../../ui/ui-icons.js';
@@ -102,10 +103,12 @@ function heavy(R, K, w) {
 }
 function lungeSafe(a, fx, fz, d) {
   const L = G.level; if (!L) return false;
+  if (karpShellIn(a, a.pos.x, a.pos.z, a.pos.x + fx * d * 1.4, a.pos.z + fz * d * 1.4)) return false;   // [b5-karp-bots] bots don't lunge into the Roe Shell's sting
   for (const k of [0.5, 1, 1.4]) {
     const gy = L.groundHeight(a.pos.x + fx * d * k, a.pos.z + fz * d * k, a.pos.y + 0.6);
     if (!(gy > PLAYER.waterY + 0.25)) return false;             // sea / void ahead
     if (a.bot && !a.isLocal && gy < a.pos.y - 1.6) return false;  // bots don't lunge off ledges
+    if (a.bot && !a.isLocal && G.match?.stage?.wet(a.pos.x + fx * d * k, a.pos.z + fz * d * k, gy, 1)) return false;   // [b5-caldera] … nor onto a stage hazard's floor (lava)
   }
   return true;
 }

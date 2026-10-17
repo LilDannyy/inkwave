@@ -1,0 +1,11 @@
+== Bazookarp brief (Node nav, climbs off) LAVA=high
+OK   #1 L Pond → Gate 55–85 m (both teams within 2 %)  L_A 56.9 m, L_B 57.3 m, walking 11.8 s, swimming 6.0 s
+OK   #2 weir at 40–55 % of L  Pond → weir 24.2 m = 42.5 %
+OK   #3 weir → Gate ≥ 45 % of L and ≥ 25 m  32.7 m = 57.5 %
+OK   #4/#5 route 2 Pond → weir ≤ 1.6× and disjoint  37.5 m = 1.55× via (1,25) (-6,24) (-9,20) (-9,14) (-7,10) (-3,5)
+OK   #4/#5 route 2 weir → Gate ≤ 1.6× and disjoint  38.4 m = 1.17× via (-2,54) (5,52) (7,46) (6,40) (4,34) (1,28)
+OK   #6/#8 Gate 12–20 m from the pad, a level below, in the cone, seen from the deck  14.3 m, y 3.6 vs pad 4.8, 30.3° off the pad → Pond line, LOS from the deck's front true
+OK   #13 ≥ 3 ways off the deck, ≥ 2 cover blocks ≥ 1.2 m on the apron  ways off 3 [[3.5,56.5],[6.5,56.5],[9.5,56.5]]; apron blocks 3 covers-stack, manhole-covers, drain-grates
+OK   #14 Pond: ring coverage ≥ 70 %, seen from ≥ 6 of 8  ring 88 %, seen 8/8
+OK   #15 weir room clear 3 m, seen from ≥ 3 of 8  solids within 3 m: none; seen from 6/6 directions on floor
+OK   #5 2–5 entrances into the Gate's 15 m ring, seen from the deck  3 entrance groups (3 m), 3 seen: [[-9.7,41.4,3.2,14],[7,44.5,2.9,90],[-4.4,67.2,3.6,7]]

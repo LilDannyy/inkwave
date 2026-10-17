@@ -1,0 +1,17 @@
+== bluestone [turf 180s]: turf 32.7% vs 28%
+   roles (% of bot-time) {} | holding on purpose 0.5%
+   per bot: turf 957p, on-zone ink 0p, splats 6.1 → XP beyond the win/lose base ≈ 1202
+   stuck 0% | splats 49 (water 0) | specials 3 | super jumps 19 | turf 32.7/28 | sim 180s in 41s (wall 42s) | {"cpuSimMs":3.45}
+   loadouts A:blaster+burst A:shooter+tracer A:charger+sprinkler A:brolly+tracer B:twins+seeker B:roller+mist B:brolly+beacon B:spinner+curtain
+   by weapon (players, splats dealt, deaths, avg turf) blaster×1 7/5 1057p · shooter×1 11/6 1693p · charger×1 6/6 689p · brolly×2 5/12 551p · twins×1 9/6 1231p · roller×1 4/7 1100p · spinner×1 7/7 785p
+   splats by cause {"brolly":5,"shot":24,"roller":3,"blast":6,"charger":6,"jetpack":1,"drop":1,"booyah":1,"seeker":2}
+   special uses A {"jetpack":1,"booyah":1} B {"bubbler":1}
+   special ends A {"jetpack":{"splat":1},"booyah":{"throw":1}} B {"bubbler":{"time":1}} | zipcheer {"zipUses":0,"zips":0,"zipHits":0,"zipSaved":0,"orbs":1,"lifted":1,"liftM":2.2,"cheers":2,"helped":2,"orbCharge":0.24,"gains":2,"gainPts":14.4,"splatHeld":0,"dmgHeld":0,"thrown":1}
+   SURF uses 0 thrown 0 anchored 0 lost 0 popped 0 | rings 0 hits 0 (marks 0, ring splats 0) dodged 0 | ink 0 m² in 0 splats | turf from it A 0 of 4015 · B 0 of 3643 | assists A 6 B 7 {"jumps":0,"byDamage":13,"byJump":0,"credited":13} | bots {"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0}
+   enemy specials AI on | splatted by specials: A 0 {} · B 2 {"jetpack":1,"booyah":1} | K/D A 27/22 B 22/27 | {"noticed":17,"missed":1,"escapes":9,"evaded":1,"caught":4,"avoidedPath":4,"goalMoved":9,"guard":1,"backedOff":0,"retargeted":0,"heldFire":0,"knockShots":0,"reengaged":1,"bubbleHold":0,"popShots":0,"hops":0,"hunted":1,"splattedBy":{"jetpack":1,"booyah":1}}
+   sight: fighting 360 bot-s, trigger held 107 s | foe out of sight 36.2% of fight time, aim still on it 88.1% of that | shooting at nothing 23.9% of trigger time (23.2% straight at the hidden foe; 1.9% while it still thinks it sees it, 21.3% a charge held, 0.7% shots) | bots 21.11 ms per sim s (looking 0.9) | {"checks":5404,"rays":5432,"deferred":0,"seen":340,"lost":103,"cleared":3,"expired":14,"located":506,"jumps":63,"hits":2,"sprays":4,"memBombs":4,"hunts":82}
+   wall climbs (at the wall): {"tries":4,"done":3,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+   DEPLOY hits 1 (125 dmg) | shot down {"seeker":1} | crushed {} | rides 0 lifts 0 shoves 0 drops 0 | skitter thrown 7 popped 1 | bots (device AI on): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON

@@ -438,6 +438,7 @@ const _dAxis = new THREE.Vector3(), _dQ = new THREE.Quaternion(), _dC = new THRE
 const ANIM_OF = { twins: 'shooter', brush: 'roller', sp_blower: 'shooter', sp_jetgun: 'blaster', sp_stamp: 'roller' };
 // families too heavy / long for the idle and dance weapon twirls
 const NO_TWIRL = { roller: true, charger: true, spinner: true, bucket: true, sp_zooka: true, sp_stamp: true };
+ANIM_OF.sp_karp = 'sp_zooka'; NO_TWIRL.sp_karp = true;   // [karp-face] the Bazookarp rides the shoulder like the Zooka (karpModel.js)
 // ---- Canopy Brolly (kits/brolly.js): held and aimed like a shooter
 ANIM_OF.brolly = 'shooter';
 // ---- Sponge Mitts (kits/mitts.js): a sponge boxing glove in each fist (dual wield), a boxer's guard in front of the

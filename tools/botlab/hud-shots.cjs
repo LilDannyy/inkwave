@@ -6,6 +6,7 @@
 // (optional) starts a short animation, and the capture comes `wait` ms after the next painted frames (the stepped sim
 // holds painting back, so a burst started inside set() would be over before its first frame reaches the capture).
 //   MAP=halyard TIME=day MODE=turf SCENES=tools/botlab/tests/hud-lead-scenes.js OUT=/dir tools/botlab/run.sh tools/botlab/hud-shots.cjs
+//   URLQ='wipmodes' (extra page options); a scene may return { noCrop: true } to skip the top-bar crop
 const { app } = require('electron');
 const fs = require('fs');
 require(process.env.S + '/offscreen-boot.cjs');
@@ -26,7 +27,7 @@ app.on('browser-window-created', (_, win) => {
   let started = false;
   win.webContents.on('did-finish-load', async () => {
     if (started) return; started = true;
-    await win.loadURL('app://inkwave/index.html?autopilot');
+    await win.loadURL('app://inkwave/index.html?autopilot' + (process.env.URLQ ? '&' + process.env.URLQ : ''));   // [karp-face] URLQ: extra page options (wipmodes …)
     win.setContentSize(W, H);
     const js = (c) => win.webContents.executeJavaScript(c, true);
     for (let i = 0; i < 120; i++) { if (await js('!!window.__inkwave?.api')) break; await wait(250); }

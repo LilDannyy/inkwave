@@ -1,0 +1,10 @@
+[net] relay ws://127.0.0.1:60137
+[net] 2 clients up in 26.5 s
+HARNESS ERROR Error: c0: timed out (180000 ms) waiting for __G.net.state === 'match' && __G.match && !__G.match.attract && __G.match.state === 'playing' && !!__G.match.eras |     at c.until (/Users/danielosling/Desktop/1/st-b5-bluestone/tools/botlab/netpage.cjs:73:39) |     at async startMatch (/Users/danielosling/Desktop/1/st-b5-bluestone/tools/botlab/tests/net-eras.cjs:45:25) |     at async module.exports (/Users/danielosling/Desktop/1/st-b5-bluestone/tools/botlab/tests/net-eras.cjs:50:5)
+c0 netlog: 15.5 state {"state":"connecting"} || 15.8 state {"state":"lobby"} || 16.0 state {"state":"starting"} || 16.0 match {"phase":"start","late":false} || 19.4 state {"state":"match"} || 140.4 state {"state":"lobby"} || 140.4 match {"phase":"end"}
+c1 netlog: 0.3 state {"state":"connecting"} || 0.3 state {"state":"lobby"} || 0.3 join {"player":{"id":"QG8J","name":"Hosty","team":0,"weapon":"shooter","sub":null,"special":null,"ready":false,"ping":2,"host":true}} || 0.3 join {"player":{"id":"S8NT","name":"Guesty","team":1,"weapon":"shooter","sub":null,"special":null,"ready":false,"ping":0,"host":false}} || 0.5 state {"state":"starting"} || 0.5 match {"phase":"start","late":false} || 3.9 state {"state":"match"} || 124.8 state {"state":"lobby"} || 124.8 match {"phase":"end"}
+RESULT 0/1
+c0 console: none
+c1 console: none
+relay stats {"dropped":0,"rateKicks":0,"peakRate":28,"maxMsg":3237}
+outside requests refused: none

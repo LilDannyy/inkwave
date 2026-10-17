@@ -1,0 +1,120 @@
+JOB-1 raw results — automatic, by the Mac mini's b5-runner, 2026-10-04 11:19:30
+branch botlab-b5-caldera, ran at 6230da0, exit code 0, wall time 5min
+(a written-up JOB-1.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== matches (3 in parallel)
+== tower-check (rides, pictures)
+== perf: Halyard and Highmark (LOW, HIGH), same machine, one after the other
+RESULT done
+
+## last 15 lines of job.log
+== matches (3 in parallel)
+== tower-check (rides, pictures)
+== perf: Halyard and Highmark (LOW, HIGH), same machine, one after the other
+RESULT done
+
+## perf.txt
+### perf halyard
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":6288,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":199,"tris":1468167,"cpuRenderMs":1.82,"cpuSimMs":1.34},"coverage":[3.5,3]}
+CONSOLE 0 unique warning/error line(s)
+### perf caldera-low
+REPORT {"map":"caldera","mode":"turf","time":"day","loadMs":5686,"blocks":1929,"solidBlocks":1929,"propMeshes":6,"navNodes":4718,"bounds":{"minX":-36,"maxX":36,"minZ":-74,"maxZ":74},"perf":{"calls":107,"tris":213896,"cpuRenderMs":1.74,"cpuSimMs":1.45},"coverage":[1.4,3.6]}
+CONSOLE 1 unique warning/error line(s)
+### perf caldera-high
+REPORT {"map":"caldera","mode":"turf","time":"day","loadMs":5646,"blocks":1721,"solidBlocks":1721,"propMeshes":6,"navNodes":4298,"bounds":{"minX":-36,"maxX":36,"minZ":-74,"maxZ":74},"perf":{"calls":151,"tris":399189,"cpuRenderMs":1.59,"cpuSimMs":1.44},"coverage":[3.5,3.3]}
+CONSOLE 1 unique warning/error line(s)
+### perf halyard2
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":6352,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":131,"tris":990074,"cpuRenderMs":1.77,"cpuSimMs":1.38},"coverage":[3.3,4.9]}
+CONSOLE 0 unique warning/error line(s)
+
+## towercheck.txt
+== caldera tower track · heading 0° · length 96 / 96 m (Alpha's / Bravo's side) · speed 1.6 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 16 pieces · 13 runs, 0 inclines, 2 climbs, 1 drops · 96 m
+     DROP     s=  6.21  [0,1.8,6.21] → [0,1.2,6.21]  -0.6 m
+     CLIMB    s= 32.68  [-3.5,1.2,28.58] → [-3.5,2.4,28.58]  1.2 m  onto [{"id":1224,"tag":"terrace","centre":[-4.82,1.2,34.26],"size":[0.36,2.4,8.93]},{"id":1223,"tag":"terrace","centre":[-3.79,1.2,34.34],"size":[1.71,2.4,9.09]},{"id":1222,"tag":"terrace","centre":[-2.47,1.2,34.37],"size":[0.94,2.4,9.14]}]
+     CLIMB    s= 57.36  [13,2.4,35.56] → [13,3.6,35.56]  1.2 m  onto [{"id":1107,"tag":"yard","centre":[12.9,1.8,42.39],"size":[3,3.6,11.23]}]
+   side Bravo (s<0), the mirror — pieces in the JSON: 16 pieces · 13 runs, 0 inclines, 2 climbs, 1 drops · 96 m
+   checkpoints [{"team":0,"index":0,"d":23.1,"dur":13.33,"at":[0,1.2,22.5]},{"team":0,"index":1,"d":50.8,"dur":13.33,"at":[8,2.4,34]},{"team":0,"index":2,"d":75,"dur":13.33,"at":[4,3.6,43]},{"team":1,"index":0,"d":23.1,"dur":13.33,"at":[0,1.2,-22.5]},{"team":1,"index":1,"d":50.8,"dur":13.33,"at":[-8,2.4,-34]},{"team":1,"index":2,"d":75,"dur":13.33,"at":[-4,3.6,-43]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 96 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -96 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   pictures (/Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/caldera-JOB-1-1004-1114/tc): caldera-top.png, caldera-01-drop-s6.png, caldera-02-checkpoint1-s23.png, caldera-03-corner-s26.png, caldera-04-corner-s30.png, caldera-05-climb-s33.png, caldera-06-corner-s39.png, caldera-07-checkpoint2-s51.png, caldera-08-corner-s56.png, caldera-09-climb-s57.png, caldera-10-corner-s66.png, caldera-1
+   console errors: none
+RESULT_JSON {"map":"caldera","len":[96,96],"holes":0,"issues":0,"climbs":2,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+
+## towermatch.txt
+### towermatch
+== caldera [tower len 96/96]: winner Alpha (time) | counts 26 vs 52 (score 26/52) | best push A 75m B 50.8m | OT no | sim 300s
+   held A 165.3s B 119.3s | contested 3.8s (9×) | neutral 15.3s | control changes 15 (takes 16) | idle→neutral 1
+   checkpoints cleared A 2 B 1 (reached 4/2, refills 2/1) | riders avg while held A 1.14 B 1.36 | mounts 31/30
+   stuck 0% | by the tower's side 4.4% of bot-time, stuck there 0s (0 episodes) | splats 129 (water 0) | specials 14 (ready 16) | super jumps 50 | turf 21.5/19.9 | sim 300s in 91s (wall 91s) | {"cpuSimMs":0.2}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+
+## turf1.txt
+### turf1
+== caldera [turf 180s]: turf 37.3% vs 30.9%
+   per bot: turf 1317p, on-zone ink 0p, splats 5.3 → XP beyond the win/lose base ≈ 1527
+   stuck 0% | splats 43 (water 1) | specials 9 | super jumps 21 | turf 37.3/30.9 | sim 180s in 54s (wall 54s) | {"cpuSimMs":1.32}
+   splats by cause {"drop":6,"mitts":5,"brolly":5,"roller":2,"charger":3,"shot":18,"water":1,"seeker":1,"tracer":2}
+   stuck {"t":100.5,"name":"Zest","w":"charger","mode":"fight","role":"-","pos":[5.5,1.2,-6.8],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":166.5,"name":"Zest","w":"charger","mode":"fight","role":"-","pos":[-20.2,0,17.4],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+
+## turf2.txt
+### turf2
+== caldera [turf 180s]: turf 41.9% vs 33.7%
+   per bot: turf 1663p, on-zone ink 0p, splats 5.9 → XP beyond the win/lose base ≈ 1898
+   stuck 0.1% | splats 47 (water 0) | specials 12 | super jumps 21 | turf 41.9/33.7 | sim 180s in 54s (wall 54s) | {"cpuSimMs":0.67}
+   splats by cause {"mitts":13,"blast":3,"shot":18,"blade":7,"blaster":1,"jetpack":1,"roller":1,"drop":1,"zipcaster":1,"shaker":1}
+   stuck {"t":29.3,"name":"P1","w":"mitts","mode":"fight","role":"-","pos":[-4,2.71,-0.8],"path":true,"hold":false,"pod":"-","dur":0.75}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+
+## turfH.txt
+### turfH
+== caldera [turf 180s]: turf 44.9% vs 28.9%
+   per bot: turf 1422p, on-zone ink 0p, splats 4.9 → XP beyond the win/lose base ≈ 1617
+   stuck 0.2% | splats 40 (water 1) | specials 7 | super jumps 22 | turf 44.9/28.9 | sim 180s in 51s (wall 51s) | {"cpuSimMs":2.72}
+   splats by cause {"blaster":8,"blast":7,"bow":6,"drop":3,"kraken":1,"shot":8,"water":1,"jetpack":2,"brolly":2,"charger":2}
+   stuck {"t":167.3,"name":"Riptide","w":"spinner","mode":"retreat","role":"-","pos":[-0.9,1.2,29.6],"path":true,"hold":false,"pod":"-","dur":2.25}
+   stuck {"t":169.5,"name":"Bubbles","w":"charger","mode":"retreat","role":"-","pos":[-2.3,1.2,29.4],"path":false,"hold":false,"pod":"-","dur":0.75}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+
+## zones1.txt
+### zones1
+== caldera [zones]: winner Alpha (comeback) | final 73 vs 73 (penalty +0/+18.7) | OT 14.2s
+   held A 44.5s B 71.3s neutral 198.3s | captures 7 (takeovers 3), control events 13, first capture @105.5s | rotations 6
+   bots in the active zone 58% of the time | avg inside A 0.49 B 0.46 | within 12 m A 1.09 B 1.32
+   per bot: turf 1901p, on-zone ink 645p, splats 10.1 → XP beyond the win/lose base ≈ 2191
+   stuck 0.3% | splats 84 (water 3) | specials 18 | super jumps 39 | turf 27.5/22 | sim 314.3s in 87s (wall 87s) | {"cpuSimMs":2.58}
+   splats by cause {"drop":10,"water":3,"shot":35,"crab":5,"roller":2,"brush":4,"charger":8,"slosh":9,"seeker":2,"wail":1,"bow":4,"kraken":1}
+   stuck {"t":28,"name":"Loop","w":"charger","mode":"refill","role":"watch","pos":[-3.6,1.2,-21.3],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":41.5,"name":"Loop","w":"charger","mode":"refill","role":"watch","pos":[3,1.2,-15.4],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":12,"name":"Loop","w":"charger","mode":"paint","role":"watch","pos":[-0.9,1.2,-19],"path":true,"hold":true,"pod":"-","dur":0.5}
+   stuck {"t":75.8,"name":"Loop","w":"charger","mode":"fight","role":"watch","pos":[-1.9,3.6,-43.9],"path":false,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":171.8,"name":"Bubbles","w":"spinner","mode":"refill","role":"watch","pos":[15.3,2.4,30.1],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":230.3,"name":"Loop","w":"charger","mode":"paint","role":"watch","pos":[0.6,4.8,-65.1],"path":true,"hold":false,"pod":"-","dur":0.5}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+
+## zonesH.txt
+### zonesH
+== caldera [zones]: winner Alpha (time) | final 59 vs 88 (penalty +5.7/+9) | OT no
+   held A 77.8s B 33.5s neutral 188.5s | captures 8 (takeovers 4), control events 15, first capture @36.8s | rotations 7
+   bots in the active zone 46.2% of the time | avg inside A 0.39 B 0.35 | within 12 m A 1.14 B 0.84
+   per bot: turf 1688p, on-zone ink 429p, splats 9.6 → XP beyond the win/lose base ≈ 1827
+   stuck 0.4% | splats 77 (water 0) | specials 14 | super jumps 35 | turf 27/18.5 | sim 300s in 88s (wall 89s) | {"cpuSimMs":0.64}
+   splats by cause {"drop":5,"bow":13,"shot":22,"mitts":11,"charger":19,"zooka":2,"sticky":1,"brolly":2,"stamp":1,"strike":1}
+   stuck {"t":209,"name":"Sprinkle","w":"charger","mode":"paint","role":"watch","pos":[-9.1,4.65,-12.2],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":84,"name":"Juno","w":"charger","mode":"refill","role":"watch","pos":[16.6,3.6,40.8],"path":true,"hold":true,"pod":"-","dur":0.5}
+   stuck {"t":120.8,"name":"Juno","w":"charger","mode":"fight","role":"watch","pos":[6.2,1.2,25.3],"path":false,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":133.5,"name":"Juno","w":"charger","mode":"fight","role":"watch","pos":[1.9,1.2,13.1],"path":false,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":148.3,"name":"Sprinkle","w":"charger","mode":"paint","role":"watch","pos":[-10,4.65,-12.2],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":246,"name":"Juno","w":"charger","mode":"paint","role":"watch","pos":[16.3,3.6,36.6],"path":true,"hold":true,"pod":"-","dur":0.5}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON

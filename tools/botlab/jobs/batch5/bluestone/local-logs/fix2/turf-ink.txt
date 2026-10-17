@@ -1,0 +1,141 @@
+# Turf War 180 s, random loadouts, each era locked (ERA=n), and Halyard; total = both teams' ink. runA at 7e971fa (before Degrayling's half-opening, the Halo narrowing, W2 and the Hoki-stair fence fix), runC at 140a7a6 (the frozen head); same machine, same session
+era 1: n=4 mean 66.2 sd 4.1  runs 60.0 67.2 71.6 65.8
+era 2: n=4 mean 60.3 sd 3.7  runs 53.9 62.8 63.0 61.5
+era 3: n=4 mean 56.3 sd 3.3  runs 54.7 60.5 51.8 58.1
+Halyard: n=4 mean 72.5 sd 2.8  runs 71.7 68.8 72.8 76.6
+-- runC (final head)
+era 1: n=4 mean 65.5 sd 3.8  runs 68.5 69.9 62.1 61.4
+era 2: n=4 mean 63.4 sd 1.8  runs 63.9 60.4 65.1 64.3
+era 3: n=4 mean 53.7 sd 6.1  runs 56.1 61.5 44.8 52.3
+Halyard: n=2 mean 76.9 sd 0.4  runs 77.3 76.5
+-- pooled
+era 1: n=8 mean 65.8 sd 4.0  runs 60.0 67.2 71.6 65.8 68.5 69.9 62.1 61.4
+era 2: n=8 mean 61.9 sd 3.3  runs 53.9 62.8 63.0 61.5 63.9 60.4 65.1 64.3
+era 3: n=8 mean 55.0 sd 5.1  runs 54.7 60.5 51.8 58.1 56.1 61.5 44.8 52.3
+Halyard: n=6 mean 74.0 sd 3.1  runs 71.7 68.8 72.8 76.6 77.3 76.5
+### runA/turf1a
+== bluestone [turf 180s]: turf 23.7% vs 36.3%
+   stuck 0.1% | splats 43 (water 0) | specials 3 | super jumps 23 | turf 23.7/36.3 | sim 180s in 29s (wall 29s) | {"cpuSimMs":0.9}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runA/turf1b
+== bluestone [turf 180s]: turf 35.5% vs 31.7%
+   stuck 0% | splats 42 (water 0) | specials 6 | super jumps 21 | turf 35.5/31.7 | sim 180s in 29s (wall 29s) | {"cpuSimMs":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runA/turf1c
+== bluestone [turf 180s]: turf 34.8% vs 36.8%
+   stuck 0.1% | splats 39 (water 0) | specials 9 | super jumps 16 | turf 34.8/36.8 | sim 180s in 28s (wall 28s) | {"cpuSimMs":0.9}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runA/turf1d
+== bluestone [turf 180s]: turf 41% vs 24.8%
+   stuck 0% | splats 42 (water 0) | specials 6 | super jumps 20 | turf 41/24.8 | sim 180s in 27s (wall 27s) | {"cpuSimMs":0.99}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runA/turf2a
+== bluestone [turf 180s]: turf 31.4% vs 22.5%
+   stuck 0.2% | splats 38 (water 0) | specials 4 | super jumps 20 | turf 31.4/22.5 | sim 180s in 28s (wall 28s) | {"cpuSimMs":1.02}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runA/turf2b
+== bluestone [turf 180s]: turf 31.2% vs 31.6%
+   stuck 0% | splats 35 (water 0) | specials 5 | super jumps 14 | turf 31.2/31.6 | sim 180s in 31s (wall 31s) | {"cpuSimMs":1.38}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runA/turf2c
+== bluestone [turf 180s]: turf 37.8% vs 25.2%
+   stuck 0% | splats 47 (water 0) | specials 6 | super jumps 25 | turf 37.8/25.2 | sim 180s in 27s (wall 27s) | {"cpuSimMs":0.94}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runA/turf2d
+== bluestone [turf 180s]: turf 20% vs 41.5%
+   stuck 0% | splats 40 (water 0) | specials 3 | super jumps 13 | turf 20/41.5 | sim 180s in 28s (wall 28s) | {"cpuSimMs":0.84}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runA/turf3a
+== bluestone [turf 180s]: turf 25.8% vs 28.9%
+   stuck 0% | splats 47 (water 0) | specials 6 | super jumps 27 | turf 25.8/28.9 | sim 180s in 35s (wall 35s) | {"cpuSimMs":1.72}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runA/turf3b
+== bluestone [turf 180s]: turf 29.6% vs 30.9%
+   stuck 0.1% | splats 36 (water 0) | specials 8 | super jumps 13 | turf 29.6/30.9 | sim 180s in 29s (wall 29s) | {"cpuSimMs":0.92}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runA/turf3c
+== bluestone [turf 180s]: turf 33.7% vs 18.1%
+   stuck 0% | splats 43 (water 0) | specials 4 | super jumps 24 | turf 33.7/18.1 | sim 180s in 26s (wall 26s) | {"cpuSimMs":1.1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runA/turf3d
+== bluestone [turf 180s]: turf 27.2% vs 30.9%
+   stuck 0% | splats 42 (water 0) | specials 6 | super jumps 22 | turf 27.2/30.9 | sim 180s in 26s (wall 26s) | {"cpuSimMs":0.96}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runA/turfHa
+== halyard [turf 180s]: turf 38.2% vs 33.5%
+   stuck 0% | splats 35 (water 1) | specials 2 | super jumps 17 | turf 38.2/33.5 | sim 180s in 28s (wall 28s) | {"cpuSimMs":1.22}
+   stuck {"t":91,"name":"Fizz","w":"charger","mode":"paint","role":"-","pos":[-20.2,3.47,13.9],"path":true,"hold":false,"pod":"-","dur":0.25}
+### runA/turfHb
+== halyard [turf 180s]: turf 42.6% vs 26.2%
+   stuck 0.1% | splats 39 (water 1) | specials 3 | super jumps 20 | turf 42.6/26.2 | sim 180s in 21s (wall 21s) | {"cpuSimMs":1}
+   stuck {"t":127.3,"name":"Suki","w":"brolly","mode":"fight","role":"-","pos":[-21.2,0,50.8],"path":true,"hold":false,"pod":"-","dur":1.25}
+   stuck {"t":122.3,"name":"Suki","w":"brolly","mode":"paint","role":"-","pos":[-21.2,0,50.1],"path":true,"hold":false,"pod":"-","dur":0.75}
+### runA/turfHc
+== halyard [turf 180s]: turf 38.6% vs 34.2%
+   stuck 0.1% | splats 36 (water 2) | specials 2 | super jumps 15 | turf 38.6/34.2 | sim 180s in 19s (wall 19s) | {"cpuSimMs":1}
+   stuck {"t":86,"name":"Sprinkle","w":"spinner","mode":"paint","role":"-","pos":[8.9,1.97,65.5],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":62.5,"name":"Blotch","w":"charger","mode":"paint","role":"-","pos":[-20.1,2.6,13.5],"path":true,"hold":false,"pod":"-","dur":0.25}
+### runA/turfHd
+== halyard [turf 180s]: turf 28.2% vs 48.4%
+   stuck 0.1% | splats 43 (water 3) | specials 4 | super jumps 18 | turf 28.2/48.4 | sim 180s in 19s (wall 19s) | {"cpuSimMs":0.52}
+   stuck {"t":35.8,"name":"P1","w":"mitts","mode":"paint","role":"-","pos":[-4.5,0,-62.1],"path":true,"hold":false,"pod":"-","dur":0.75}
+### runC/turf1a
+== bluestone [turf 180s]: turf 27% vs 41.5%
+   stuck 0% | splats 30 (water 0) | specials 8 | super jumps 17 | turf 27/41.5 | sim 180s in 31s (wall 31s) | {"cpuSimMs":1.09}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runC/turf1b
+== bluestone [turf 180s]: turf 44% vs 25.9%
+   stuck 0% | splats 36 (water 0) | specials 9 | super jumps 13 | turf 44/25.9 | sim 180s in 25s (wall 25s) | {"cpuSimMs":0.77}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runC/turf1c
+== bluestone [turf 180s]: turf 29.1% vs 33%
+   stuck 0% | splats 39 (water 0) | specials 4 | super jumps 21 | turf 29.1/33 | sim 180s in 24s (wall 24s) | {"cpuSimMs":0.9}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runC/turf1d
+== bluestone [turf 180s]: turf 22.5% vs 38.9%
+   stuck 0% | splats 38 (water 0) | specials 5 | super jumps 16 | turf 22.5/38.9 | sim 180s in 29s (wall 29s) | {"cpuSimMs":0.66}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runC/turf2a
+== bluestone [turf 180s]: turf 30.4% vs 33.5%
+   stuck 0% | splats 46 (water 0) | specials 7 | super jumps 16 | turf 30.4/33.5 | sim 180s in 26s (wall 26s) | {"cpuSimMs":0.89}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runC/turf2b
+== bluestone [turf 180s]: turf 36.1% vs 24.3%
+   stuck 0% | splats 32 (water 0) | specials 6 | super jumps 17 | turf 36.1/24.3 | sim 180s in 28s (wall 28s) | {"cpuSimMs":0.86}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runC/turf2c
+== bluestone [turf 180s]: turf 40.4% vs 24.7%
+   stuck 0% | splats 38 (water 0) | specials 7 | super jumps 13 | turf 40.4/24.7 | sim 180s in 25s (wall 25s) | {"cpuSimMs":0.73}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runC/turf2d
+== bluestone [turf 180s]: turf 28.5% vs 35.8%
+   stuck 0% | splats 36 (water 0) | specials 5 | super jumps 18 | turf 28.5/35.8 | sim 180s in 25s (wall 25s) | {"cpuSimMs":0.7}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runC/turf3a
+== bluestone [turf 180s]: turf 30.3% vs 25.8%
+   stuck 0% | splats 41 (water 0) | specials 6 | super jumps 17 | turf 30.3/25.8 | sim 180s in 26s (wall 26s) | {"cpuSimMs":0.82}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runC/turf3b
+== bluestone [turf 180s]: turf 34.4% vs 27.1%
+   stuck 0% | splats 38 (water 0) | specials 9 | super jumps 18 | turf 34.4/27.1 | sim 180s in 27s (wall 27s) | {"cpuSimMs":0.91}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runC/turf3c
+== bluestone [turf 180s]: turf 19.6% vs 25.2%
+   stuck 0% | splats 50 (water 0) | specials 5 | super jumps 27 | turf 19.6/25.2 | sim 180s in 23s (wall 23s) | {"cpuSimMs":0.69}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runC/turf3d
+== bluestone [turf 180s]: turf 30.9% vs 21.4%
+   stuck 0% | splats 37 (water 0) | specials 6 | super jumps 22 | turf 30.9/21.4 | sim 180s in 23s (wall 23s) | {"cpuSimMs":0.81}
+   DIAG: 0 stuck episode(s) of 2 s or more
+### runC/turfHa
+== halyard [turf 180s]: turf 36.9% vs 40.4%
+   stuck 0.2% | splats 41 (water 3) | specials 2 | super jumps 18 | turf 36.9/40.4 | sim 180s in 18s (wall 19s) | {"cpuSimMs":0.61}
+   stuck {"t":153.5,"name":"P1","w":"mitts","mode":"paint","role":"-","pos":[-8.9,0,-64.5],"path":true,"hold":false,"pod":"-","dur":3}
+   stuck {"t":134,"name":"Zest","w":"bucket","mode":"fight","role":"-","pos":[17.8,0.23,-8.1],"path":true,"hold":false,"pod":"-","dur":0.25}
+### runC/turfHb
+== halyard [turf 180s]: turf 30.8% vs 45.7%
+   stuck 0.5% | splats 36 (water 2) | specials 4 | super jumps 14 | turf 30.8/45.7 | sim 180s in 19s (wall 19s) | {"cpuSimMs":0.85}
+   stuck {"t":148,"name":"Kelp","w":"twins","mode":"paint","role":"-","pos":[8.9,1.94,-64.5],"path":true,"hold":false,"pod":"-","dur":4}
+   stuck {"t":103.5,"name":"Zest","w":"blaster","mode":"paint","role":"-","pos":[8.9,0.07,67.5],"path":true,"hold":false,"pod":"-","dur":1.75}
+   stuck {"t":79,"name":"Wasabi","w":"blade","mode":"paint","role":"-","pos":[8.9,0.04,66.7],"path":true,"hold":false,"pod":"-","dur":1.5}
+   stuck {"t":121.5,"name":"Nori","w":"charger","mode":"paint","role":"-","pos":[-20.1,2.6,14],"path":true,"hold":false,"pod":"-","dur":0.25}

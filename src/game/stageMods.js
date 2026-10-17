@@ -187,7 +187,7 @@ const R_HOOKS = ['update', 'lateUpdate', 'seek', 'dispose',
   // nav + bots
   'navEdge', 'navNode', 'beforePath', 'botHold', 'botSteer', 'botAct', 'wet', 'goalWeight', 'sightLanding',
   // queries
-  'under', 'fizzle', 'liquidY', 'noPlace', 'restMask', 'danger', 'sweeps', 'state',
+  'under', 'fizzle', 'liquidY', 'noPlace', 'restMask', 'karpStates', 'danger', 'sweeps', 'state',   // [b5-caldera] karpStates
   // looks / HUD / camera
   'drawMap', 'diorama', 'prompt', 'hud', 'cam', 'camAfter'];
 
@@ -326,6 +326,9 @@ export class StageRun {
   noPlace(p, r = 0) { for (const R of this.h.noPlace) if (R.noPlace(p, r)) return true; return false; }
   // Bazookarp: 1 = standable at that rest / era / state, per nav node (Uint8Array) — the first module that answers
   restMask(state) { for (const R of this.h.restMask) { const m = R.restMask(state); if (m) return m; } return null; }
+  // [b5-caldera] Bazookarp's field states: flatten every module in order. Each [{ key, nodeOk(id), query? }] supports
+  // stage switching and the checker (query is the audit page state); empty on stages without stateful field routes.
+  karpStates() { const out = []; for (const R of this.h.karpStates) { const s = R.karpStates(); if (Array.isArray(s)) out.push(...s); } return out; }
   danger(pos, pad = 0.5) { for (const R of this.h.danger) if (R.danger(pos, pad)) return true; return false; }
   // the volumes a module's moving pieces cover over their whole travel ({ x, z, hx, hz, yaw, y0, y1 } boxes pushed into
   // out): Bazookarp's rest flags, like movers.js sweepRect(car) for the railcars

@@ -1,0 +1,29 @@
+== caldera [zones]: winner Alpha (comeback) | final 76 vs 76 (penalty +0/+13) | OT 5.9s
+   held A 77s B 28.8s neutral 200s | captures 9 (takeovers 4), control events 17, first capture @42.2s | rotations 6
+   teams: A [blaster/jetpack twins/bubbler roller/kraken blade/kraken] far 33%, near 38%, dead 24%, jump 5% | B [charger/wail twins/bubbler mitts/bubbler roller/barrage_sticky] far 45%, near 32%, dead 20%, jump 3%
+   bot-time: {"far":39,"near":35,"dead":22,"jump":4} (far by mode {"paint":2432,"refill":151,"fight":940,"retreat":295}) | specials ready 17
+   bots in the active zone 72% of the time | avg inside A 0.72 B 0.42 | within 12 m A 1.42 B 1.06
+   roles (% of bot-time) {"paint":48,"watch":12,"guard":4,"stage":8,"push":6} | holding on purpose 5.5%
+   per bot: turf 1880p, on-zone ink 838p, splats 12.5 → XP beyond the win/lose base ≈ 2466
+   stuck 0.3% | splats 101 (water 1) | specials 15 | super jumps 41 | turf 19.9/22.4 | sim 306s in 67s (wall 67s) | {"cpuSimMs":1.25}
+   penalties [{"team":0,"p":12,"start":100,"end":85.9},{"team":1,"p":12,"start":100,"end":85.9},{"team":0,"p":10,"start":97.9,"end":84},{"team":1,"p":13,"start":96,"end":78.3}]
+   control log 42.2:A@sideA 48.5:N@sideA 54.6:A@sideA 76.5:N@sideA 79.1:B@sideA 87.1:N@sideA 112.8:A@center 123.7:N@sideA 163.4:A@sideA 179.2:N@sideA 182:A@sideA 183.6:N@center 218.5:B@center 239.3:N@sideA 255.7:A@sideA 270:N@center 299.9:A@center
+   best shares per activation center@0-33s A55/B60 | sideA@34-88s A100/B100 | center@88-124s A100/B76 | sideA@124-183s A100/B75 | center@184-239s A38/B100 | sideA@239-270s A100/B47 | center@270-306s A100/B99
+   reachable cells center0:1520/1520 R6.9 nodes84 side1:1546/1546 R7.5 nodes91 side2:1546/1546 R7.5 nodes91 | retake pushes A 3 B 4
+   loadouts A:blaster+burst A:twins+seeker A:roller+seeker A:blade+shaker B:charger+mine B:twins+seeker B:mitts+boomerang B:roller+sticky
+   by weapon (players, splats dealt, deaths, avg turf) blaster×1 22/11 1678p · twins×2 23/26 1955p · roller×2 17/36 2510p · blade×1 11/12 1997p · charger×1 9/3 1102p · mitts×1 18/13 1330p
+   splats by cause {"charger":9,"drop":12,"mitts":18,"blast":17,"seeker":2,"blade":10,"shot":22,"burst":1,"roller":3,"blaster":4,"shaker":1,"water":1,"sticky":1}
+   special uses A {"kraken":2,"bubbler":1,"jetpack":1} B {"barrage":4,"bubbler":4,"wail":3}
+   SURF uses 0 thrown 0 anchored 0 lost 0 popped 0 | rings 0 hits 0 (marks 0, ring splats 0) dodged 0 | ink 0 m² in 0 splats | turf from it A 0 of 7173 · B 0 of 7863 | assists A 18 B 12 {"jumps":0,"byDamage":30,"byJump":0,"credited":30} | bots {"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0}
+   enemy specials AI on | splatted by specials: A 0 {} · B 0 {} | K/D A 45/55 B 55/46 | {"noticed":171,"missed":1,"escapes":79,"evaded":51,"caught":6,"avoidedPath":38,"goalMoved":104,"guard":15,"backedOff":8,"retargeted":9,"heldFire":4.033333333333324,"knockShots":0,"reengaged":14,"bubbleHold":0,"popShots":0,"hops":0,"hunted":4,"splattedBy":{}}
+   sight: fighting 606 bot-s, trigger held 192 s | foe out of sight 21.3% of fight time, aim still on it 84.5% of that | shooting at nothing 15.8% of trigger time (12% straight at the hidden foe; 0.8% while it still thinks it sees it, 14.8% a charge held, 0.3% shots) | bots 18.87 ms per sim s (looking 0.91) | {"checks":8686,"rays":12650,"deferred":0,"seen":1083,"lost":542,"cleared":47,"expired":14,"located":1170,"jumps":137,"hits":4,"sprays":5,"memBombs":2,"hunts":161}
+   wall climbs (at the wall): {"tries":2,"done":1,"stalled":0,"dry":0,"long":0}
+   stuck {"t":21,"name":"Drip","w":"charger","mode":"refill","role":"watch","pos":[-3,1.2,8.2],"path":true,"hold":true,"pod":"-","dur":0.75}
+   stuck {"t":44.3,"name":"Drip","w":"charger","mode":"paint","role":"watch","pos":[-2.8,1.8,1.6],"path":true,"hold":true,"pod":"-","dur":0.75}
+   stuck {"t":51.8,"name":"Drip","w":"charger","mode":"paint","role":"watch","pos":[-9,1.2,-4],"path":true,"hold":true,"pod":"-","dur":0.5}
+   stuck {"t":165.5,"name":"Drip","w":"charger","mode":"retreat","role":"watch","pos":[-0.4,1.2,-7.3],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":260.3,"name":"Drip","w":"charger","mode":"paint","role":"watch","pos":[-6.1,1.2,-1.1],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":64,"name":"Bubbles","w":"mitts","mode":"paint","role":"stage","pos":[-7.4,2.4,32.5],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":306,"simMs":67260,"state":"finish","stuckPct":0.3,"splats":101,"water":1,"specials":15,"jumps":41,"cov":[19.9,22.4],"teamKD":[{"k":45,"d":55,"sp":0,"by":{}},{"k":55,"d":46,"sp":0,"by":{}}],"spUses":[{"kraken":2,"bubbler":1,"jetpack":1},{"barrage":4,"bubbler":4,"wail":3}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":171,"missed":1,"escapes":79,"evaded":51,"caught":6,"avoidedPath":38,"goalMoved":104,"guard":15,"backedOff":8,"retargeted":9,"heldFire":4.033333333333324,"knockShots":0,"reengaged":14,"b

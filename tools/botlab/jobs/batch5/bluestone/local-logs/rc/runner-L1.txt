@@ -1,0 +1,96 @@
+# head 04fb8fd6
+--- 01:12:50 tower-check 1
+### tower-check era 1
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+--- 01:14:25 tower-check 2
+### tower-check era 2
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+--- 01:15:52 tower-check 3
+### tower-check era 3
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+--- 01:17:25 spawn-mid 1
+### spawn-mid era 1
+PASS spawn to mid  {"t0":{"m":74.3,"s":6.3,"straight":68.5},"t1":{"m":78.7,"s":6.67,"straight":68.5},"spawns":[[-21.5,-65],[21.5,65]],"mid":[0,0]}
+RESULT 1/1
+--- 01:17:44 size-budget 1
+### size-budget era 1
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1007}
+PASS paint atlas density  {"ppm":12.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4719,"cap":14157,"capNeeded":[6000,6000]}
+RESULT 3/3
+--- 01:18:01 climb-audit 1
+### climb-audit era 1
+PASS climb edges barred by a railing  {"climbs":160,"bad":[],"n":0}
+RESULT 1/1
+--- 01:18:18 cover-map 1
+### cover-map era 1
+PASS cover map  {"map":"bluestone","floorCells":4822,"within5m_pct":99.5,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+--- 01:18:34 stage-audit turf 1
+### stage-audit turf era 1
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+RESULT 2/3
+--- 01:18:52 stage-audit tower 1
+### stage-audit tower era 1
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+RESULT 3/4
+--- 01:19:10 spawn-mid 2
+### spawn-mid era 2
+PASS spawn to mid  {"t0":{"m":74.3,"s":6.3,"straight":68.5},"t1":{"m":78.7,"s":6.67,"straight":68.5},"spawns":[[-21.5,-65],[21.5,65]],"mid":[0,0]}
+RESULT 1/1
+--- 01:19:29 size-budget 2
+### size-budget era 2
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1015}
+PASS paint atlas density  {"ppm":12.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4869,"cap":14607,"capNeeded":[6000,6000]}
+RESULT 3/3
+--- 01:19:47 climb-audit 2
+### climb-audit era 2
+PASS climb edges barred by a railing  {"climbs":160,"bad":[],"n":0}
+RESULT 1/1
+--- 01:20:04 cover-map 2
+### cover-map era 2
+PASS cover map  {"map":"bluestone","floorCells":4982,"within5m_pct":99.5,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+--- 01:20:22 stage-audit turf 2
+### stage-audit turf era 2
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf"}
+RESULT 2/3
+--- 01:20:47 stage-audit tower 2
+### stage-audit tower era 2
+FAIL lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower"}
+RESULT 3/4
+--- 01:21:06 spawn-mid 3
+### spawn-mid era 3
+PASS spawn to mid  {"t0":{"m":71.8,"s":6.09,"straight":67},"t1":{"m":75.6,"s":6.41,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+--- 01:21:27 size-budget 3
+### size-budget era 3
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1086}
+PASS paint atlas density  {"ppm":11.9,"atlas":2048}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":5768,"cap":17304,"capNeeded":[6000,6000]}
+RESULT 3/3
+--- 01:21:46 climb-audit 3
+### climb-audit era 3
+PASS climb edges barred by a railing  {"climbs":182,"bad":[],"n":0}
+RESULT 1/1
+--- 01:22:03 cover-map 3
+### cover-map era 3
+PASS cover map  {"map":"bluestone","floorCells":5508,"within5m_pct":99.3,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":…}}
+RESULT 1/1
+--- 01:22:22 stage-audit turf 3

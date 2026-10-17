@@ -1,0 +1,5 @@
+HARNESS ERA_FROM=1 ERA_TO=2 FRONT=30: every game page loads with ?erafrom=1&erato=2&front=30
+PASS T3 (final review 2, issue 5): the frozen front (the split-time stage art) — inside r every group in the later era, outside it the earlier, solid as their era; the shader's front, both eras' meshes and the curtain at r; 5 s of clock and a clock snap move nothing  {"fromUrl":true,"F":{"from":1,"to":2,"front":30},"inside":38,"outside":14,"wrong":[],"solid":true,"before":{"phase":"jump","front":30,"uEra":[1,2,30,7.5],"eras":"2222222222222222111111122222222222222222221111111222","flips":0,"curtain":{"vis":true,"r":30},"meshes":"136"},"after":{"phase":"jump","front":30,"uEra":[1,2,30,7.5],"eras":"2222222222222222111111122222222222222222221111111222","flips":0,"curtain":{"vis":true,"r":30},"meshes":"136"},"fired":0}
+PASS T3: … and debugJump lets it go (the world whole in era 1, no curtain)  {"phase":"idle","eras":"1111111111111111111111111111111111111111"}
+RESULT 2/2
+console errors: none

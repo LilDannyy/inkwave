@@ -1,0 +1,158 @@
+### net-clock-lag start 02:06:34 load 23.97 37.51 35.67
+### net-clock-lag RESULT 4/4 02:14:51
+### nofix-net-clock-lag start 02:15:20 load 17.82 19.44 26.50
+### nofix-net-clock-lag RESULT 2/4 02:17:54
+### start net-clock-lag2 02:19:05 load 27.25 27.20 28.38
+### net-clock-lag2 739s :: RESULT 4/4 
+### start nofix-net-clock-lag2 02:31:47 load 25.37 28.03 28.13
+### nofix-net-clock-lag2 149s :: RESULT 2/4 
+### start eras-jump-rescue 02:35:22 load 20.66 26.43 27.50
+### eras-jump-rescue 167s :: RESULT 4/4 
+### start nofix-eras-jump-rescue 02:38:32 load 288.33 110.30 58.95
+### nofix-eras-jump-rescue 96s :: RESULT 2/3 
+### start eras-hud 02:41:54 load 104.48 103.59 66.58
+### eras-hud 91s :: RESULT 10/12 
+### start shots-fr2 02:43:25 load 45.12 84.23 62.83
+### shots-fr2 39s :: 
+### start probe-gpu 02:44:04 load 29.27 75.25 60.52
+### probe-gpu 35s :: RESULT 9/9 
+### start eras-hud2 02:46:50 load 15.96 51.31 53.30
+### eras-hud2 78s :: RESULT 12/12 
+### start nofix-eras-hud 02:48:08 load 19.69 43.53 50.11
+### nofix-eras-hud 105s :: RESULT 11/12 
+### start eras-jump-freeze 02:49:53 load 14.70 34.87 45.97
+### eras-jump-freeze 19s :: RESULT 2/2 
+### start eras-jump-freeze-url 02:50:12 load 16.42 33.94 45.37
+### eras-jump-freeze-url 21s :: HARNESS ERA_FROM=1 ERA_TO=2 FRONT=30: every game page loads with ?erafrom=1&erato=2&front=30 RESULT 2/2 
+### start harness-erafrom-bad 02:50:33 load 14.75 32.41 44.56
+### harness-erafrom-bad 0s :: HARNESS ERA_FROM=1 ERA_TO=1 FRONT=30: give all three (ERA_FROM ≠ ERA_TO, each 1, 2 or 3; FRONT in m, ≥ 0) and no ERA or PAGEQ era 
+### start harness-erafrom-era 02:50:33 load 14.75 32.41 44.56
+### harness-erafrom-era 0s :: HARNESS ERA_FROM=1 ERA_TO=2 FRONT=30: give all three (ERA_FROM ≠ ERA_TO, each 1, 2 or 3; FRONT in m, ≥ 0) and no ERA or PAGEQ era 
+### start stageart-1to2 02:50:33 load 14.75 32.41 44.56
+### stageart-1to2 40s :: HARNESS ERA_FROM=1 ERA_TO=2 FRONT=30: every game page loads with ?erafrom=1&erato=2&front=30 
+### start stageart-2to3 02:51:13 load 21.29 31.44 43.62
+### stageart-2to3 45s :: HARNESS ERA_FROM=2 ERA_TO=3 FRONT=30: every game page loads with ?erafrom=2&erato=3&front=30 
+### start stageart-1to2-crisp 02:52:24 load 20.63 29.36 41.88
+### stageart-1to2-crisp 39s :: HARNESS ERA_FROM=1 ERA_TO=2 FRONT=30: every game page loads with ?erafrom=1&erato=2&front=30 
+### start stageart-2to3-crisp 02:53:03 load 26.89 29.76 41.45
+### stageart-2to3-crisp 37s :: HARNESS ERA_FROM=2 ERA_TO=3 FRONT=30: every game page loads with ?erafrom=2&erato=3&front=30 
+### start eras-jump-freeze-url2 02:53:40 load 19.65 27.70 40.23
+### eras-jump-freeze-url2 19s :: HARNESS ERA_FROM=1 ERA_TO=2 FRONT=30: every game page loads with ?erafrom=1&erato=2&front=30 RESULT 2/2 
+### start eras-hud3 02:53:59 load 16.46 26.46 39.49
+### eras-hud3 53s :: RESULT 12/12 
+### start nofix-eras-hud2 02:54:52 load 13.06 23.93 37.80
+### nofix-eras-hud2 60s :: RESULT 10/12 
+### start eras-jump-first 02:55:52 load 11.27 21.43 35.92
+### eras-jump-first 25s :: RESULT 1/1 
+### start net-clock-lag3 02:56:25 load 9.56 19.90 34.78
+### net-clock-lag3 281s :: RESULT 4/4 
+### start net-clock 03:01:06 load 18.79 18.06 29.56
+### net-clock 126s :: RESULT 4/4 
+### start net-eras 03:03:12 load 25.26 19.41 28.43
+### net-eras 302s :: RESULT 14/14 
+### start net-eras-lag 03:08:14 load 9.91 16.36 24.61
+### net-eras-lag 140s :: RESULT 8/8 
+### start net-turf 03:10:34 load 8.56 13.97 22.43
+### net-turf 109s :: RESULT 9/9 
+### start net-stageclock 03:12:23 load 11.81 13.22 21.09
+### net-stageclock 46s :: RESULT 3/3 
+### start net-stagemods 03:13:09 load 10.39 12.62 20.46
+### net-stagemods 41s :: RESULT 10/10 
+### start net-practice 03:13:50 load 9.70 12.07 19.89
+### net-practice 104s :: RESULT 29/29 
+### start eras-jump-A 03:15:34 load 23.88 17.55 21.20
+### eras-jump-A 96s :: RESULT 15/15 
+### start eras-jump-B 03:17:10 load 17.42 16.91 20.56
+### eras-jump-B 61s :: RESULT 11/12 
+### start eras-world 03:18:11 load 15.08 16.48 20.16
+### eras-world 40s :: RESULT 19/19 
+### start eras-modes 03:18:51 load 14.81 16.20 19.88
+### eras-modes 171s :: RESULT 6/6 
+### start eras-bots 03:21:42 load 13.28 14.96 18.70
+### eras-bots 72s :: RESULT 4/5 
+### start eras-look 03:22:54 load 13.86 14.55 18.22
+### eras-look 47s :: RESULT 12/12 
+### start eras-karp 03:23:41 load 12.06 13.98 17.82
+### eras-karp 38s :: RESULT 5/5 
+### start eras-bake 03:24:19 load 18.00 15.25 18.11
+### eras-bake 18s :: RESULT 3/3 
+### start stage-mods 03:24:37 load 15.04 14.73 17.87
+### stage-mods 28s :: RESULT 36/36 
+### start turf-1 03:25:05 load 13.03 14.33 17.62
+### turf-1 44s :: == bluestone [turf 180s]: turf 25.2% vs 43.8% RESULT_JSON {"simT":180,"simMs":25996,"state":"finish","stuckPct":0,"splats":38,"water":1,"specials":7,"jumps":18,"cov":[25.2,43.8],"teamKD":[{"k":12,"d":26,"sp":2,"by":{"zooka":2}},{"k":26,"d":12,"sp":0,"by":{}}],"spUses":[{},{"barrage":3,"zooka":3,"bub
+### start turf-2 03:25:49 load 11.15 13.60 17.18
+### turf-2 43s :: == bluestone [turf 180s]: turf 28.3% vs 36.6% RESULT_JSON {"simT":180,"simMs":25668,"state":"finish","stuckPct":0,"splats":51,"water":1,"specials":4,"jumps":25,"cov":[28.3,36.6],"teamKD":[{"k":26,"d":24,"sp":0,"by":{}},{"k":24,"d":27,"sp":0,"by":{}}],"spUses":[{"zooka":1,"strike":1},{"barrage":2}],"
+### start probe-gpu2 03:26:36 load 7.74 12.35 16.53
+### probe-gpu2 28s :: RESULT 9/9 
+### start eras-jump-frames2 03:27:04 load 7.79 11.91 16.22
+### eras-jump-frames2 28s :: RESULT 3/4 
+### start probe-spike 03:28:48 load 6.76 10.39 15.13
+### probe-spike 22s :: RESULT 2/2 
+### start probe-spike2 03:29:27 load 5.95 9.82 14.73
+### probe-spike2 21s :: RESULT 2/2 
+### start probe-spike2-finish 03:29:48 load 6.01 9.58 14.53
+### probe-spike2-finish 21s :: RESULT 2/2 
+### start probe-spike-as-is-a 03:30:46 load 8.36 9.77 14.27
+### probe-spike-as-is-a 26s :: RESULT 2/2 
+### start probe-spike-nosay-a 03:31:12 load 18.42 11.78 14.85
+### probe-spike-nosay-a 25s :: RESULT 2/2 
+### start probe-spike-nohud-a 03:31:37 load 27.86 14.50 15.74
+### probe-spike-nohud-a 21s :: RESULT 2/2 
+### start probe-spike-as-is-b 03:31:58 load 22.67 14.19 15.60
+### probe-spike-as-is-b 20s :: RESULT 2/2 
+### start probe-spike-nosay-b 03:32:18 load 17.44 13.65 15.37
+### probe-spike-nosay-b 21s :: RESULT 2/2 
+### start probe-spike-nohud-b 03:32:39 load 13.51 13.00 15.09
+### probe-spike-nohud-b 23s :: RESULT 2/2 
+### start probe-spike-draws-c 03:33:37 load 10.60 12.38 14.74
+### probe-spike-draws-c 28s :: RESULT 2/2 
+### start probe-spike-draws-d 03:34:05 load 24.12 15.14 15.63
+### probe-spike-draws-d 26s :: RESULT 2/2 
+### start probe-spike-settle-a 03:34:53 load 27.00 17.21 16.37
+### probe-spike-settle-a 27s :: RESULT 2/2 
+### start probe-spike-settle-b 03:35:20 load 23.14 17.20 16.40
+### probe-spike-settle-b 27s :: RESULT 2/2 
+### start probe-spike-settle-c 03:35:47 load 18.58 16.64 16.22
+### probe-spike-settle-c 26s :: RESULT 2/2 
+### start probe-spike-heap-a 03:36:51 load 11.32 14.95 15.62
+### probe-spike-heap-a 151s :: RESULT 2/2 
+### start probe-spike-heap-b 03:39:22 load 26.20 17.51 16.42
+### probe-spike-heap-b 24s :: RESULT 2/2 
+### start probe-spike-w-asis-1 03:40:21 load 15.28 16.11 15.98
+### probe-spike-w-asis-1 21s :: RESULT 2/2 
+### start probe-spike-w-settle-1 03:40:42 load 13.01 15.54 15.77
+### probe-spike-w-settle-1 24s :: RESULT 2/2 
+### start probe-spike-w-nomap-1 03:41:06 load 10.39 14.72 15.47
+### probe-spike-w-nomap-1 24s :: RESULT 2/2 
+### start probe-spike-w-asis-2 03:41:30 load 9.91 14.25 15.28
+### probe-spike-w-asis-2 26s :: RESULT 2/2 
+### start probe-spike-w-settle-2 03:41:56 load 13.73 14.74 15.42
+### probe-spike-w-settle-2 29s :: RESULT 2/2 
+### start probe-spike-w-nomap-2 03:42:25 load 17.67 15.66 15.73
+### probe-spike-w-nomap-2 39s :: RESULT 2/2 
+### start probe-spike-w-asis-3 03:43:04 load 135.60 47.34 27.39
+### probe-spike-w-asis-3 26s :: RESULT 2/2 
+### start probe-spike-w-settle-3 03:43:30 load 99.23 45.95 27.47
+### probe-spike-w-settle-3 29s :: RESULT 2/2 
+### start probe-spike-w-nomap-3 03:43:59 load 64.79 42.67 26.92
+### probe-spike-w-nomap-3 27s :: RESULT 2/2 
+### start probe-spike-w-asis-4 03:44:26 load 47.31 40.34 26.53
+### probe-spike-w-asis-4 23s :: RESULT 2/2 
+### start probe-spike-w-settle-4 03:44:49 load 33.48 37.64 25.96
+### probe-spike-w-settle-4 28s :: RESULT 2/2 
+### start probe-spike-w-nomap-4 03:45:17 load 31.18 36.76 25.98
+### probe-spike-w-nomap-4 26s :: RESULT 2/2 
+### start eras-bots-2 03:45:50 load 22.74 34.04 25.42
+### eras-bots-2 207s :: RESULT 5/5 
+### start eras-bots-3 03:49:17 load 32.44 35.56 27.97
+### eras-bots-3 78s :: RESULT 4/5 
+### start eras-jump-frames-settled-a 03:50:45 load 19.23 30.66 26.85
+### eras-jump-frames-settled-a 185s :: RESULT 4/4 
+### start eras-jump-frames-settled-b 03:53:50 load 24.04 26.98 25.93
+### eras-jump-frames-settled-b 32s :: RESULT 4/4 
+### start eras-jump-frames-settled-c 03:54:22 load 21.09 25.85 25.55
+### eras-jump-frames-settled-c 33s :: RESULT 3/4 
+### start eras-bots-4 03:54:56 load 15.73 24.01 24.89
+### eras-bots-4 90s :: RESULT 5/5 
+### start eras-bots-prepos 03:56:26 load 22.35 25.09 25.28
+### eras-bots-prepos 31s :: RESULT 1/1 

@@ -1,0 +1,6 @@
+[20333:1009/131505.485667:ERROR:ui/gl/angle_platform_impl.cc:48] mtl_command_buffer.mm:690 (onCommandBufferCompleted): Completed MTLCommandBuffer failed, and error is Caused GPU Hang Error (00000003:kIOGPUCommandBufferCallbackErrorHang)
+PASS lightmap atlas fits 2048 at 8 ppm  {"used":1945}
+PASS paint atlas density  {"ppm":14.2,"atlas":4096}
+PASS A* reach spawn to far side (within the bots' search cap)  {"nodes":4419,"cap":13257,"capNeeded":[3000,3000]}
+RESULT 3/3
+console errors: none

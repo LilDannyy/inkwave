@@ -1,0 +1,20 @@
+# Turf War 180 s, random loadouts, each era locked (ERA=n), and Halyard, same machine; total = both teams' ink
+### turf1: == bluestone [turf 180s]: turf 31% vs 32.1% | stuck 0.1% | DIAG: 0 stuck episode(s) of 2 s or more
+### turf1b: == bluestone [turf 180s]: turf 28.6% vs 43% | stuck 0% | DIAG: 0 stuck episode(s) of 2 s or more
+### turf1c: == bluestone [turf 180s]: turf 34.6% vs 27.8% | stuck 0.1% | 
+### turf1d: == bluestone [turf 180s]: turf 21.3% vs 41.4% | stuck 0% | 
+### turf1e: == bluestone [turf 180s]: turf 31.1% vs 32.7% | stuck 0.1% | 
+### turf2: == bluestone [turf 180s]: turf 30.7% vs 22.3% | stuck 0.1% | DIAG: 0 stuck episode(s) of 2 s or more
+### turf2c: == bluestone [turf 180s]: turf 27.5% vs 29% | stuck 0.1% | 
+### turf2d: == bluestone [turf 180s]: turf 36.5% vs 19.8% | stuck 0% | 
+### turf2e: == bluestone [turf 180s]: turf 28.2% vs 33.3% | stuck 0.2% | 
+### turf3: == bluestone [turf 180s]: turf 23.1% vs 25.1% | stuck 0.1% | DIAG: 0 stuck episode(s) of 2 s or more
+### turf3b: == bluestone [turf 180s]: turf 25.2% vs 25% | stuck 0% | DIAG: 0 stuck episode(s) of 2 s or more
+### turf3c: == bluestone [turf 180s]: turf 29.5% vs 31.7% | stuck 0% | 
+### turf3d: == bluestone [turf 180s]: turf 38.2% vs 21.8% | stuck 0% | 
+### turf3e: == bluestone [turf 180s]: turf 28.8% vs 22.4% | stuck 0% | 
+### turfH: == halyard [turf 180s]: turf 34.9% vs 37% | stuck 0% | 
+### turfHb: == halyard [turf 180s]: turf 31% vs 41.2% | stuck 0% | 
+### turfHc: == halyard [turf 180s]: turf 39.3% vs 41.8% | stuck 0.2% | 
+### turfHd: == halyard [turf 180s]: turf 32.1% vs 45.3% | stuck 0.1% | 
+### turfHe: == halyard [turf 180s]: turf 29.6% vs 40% | stuck 0% | 

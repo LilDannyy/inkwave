@@ -8,6 +8,7 @@ import { G, emit } from '../core/ctx.js';
 import { MAPS, WEAPONS, WEAPON_ORDER, SUBS, SUB_ORDER, SPECIALS, SPECIAL_ORDER, MATCH, ZONES, TOWER, BOT_NAMES, TEAM_PALETTES, mapNoBots, mapBossOk, bossFallbackMap, noBotsStartBlock,
   ROOM_TIMES, roomTime, roomBotPlan, mapListed, listedMaps, BAZOOKARP, modeListed } from '../config.js';   // [b5-karp] BAZOOKARP, modeListed
 import { randomStyle } from '../game/character-style.js';
+import { karpStageListed } from '../world/karpStages.js';   // [karp-face]
 import { Transport } from './transport.js';
 import { NetMatch } from './netmatch.js';
 
@@ -22,7 +23,7 @@ const subOf = (id) => (SUBS[id] ? id : null), specialOf = (id) => (SPECIALS[id] 
 export const ROOM_MODES = ['turf', 'zones', 'tower', 'boss', 'practice', 'bazookarp'];   // [b5-karp] (append-only)
 const modeOk = (m) => (ROOM_MODES.includes(m) ? m : 'turf');
 // the stages a mode can use (Boss Battle: never a noBoss stage; never a wip one — config wip, ?wipstages aside [b5-stages])
-export const roomStages = (mode) => (mode === 'boss' ? listedMaps().filter((m) => mapBossOk(m.id)) : listedMaps());
+export const roomStages = (mode) => (mode === 'boss' ? listedMaps().filter((m) => mapBossOk(m.id)) : mode === 'bazookarp' ? listedMaps().filter((m) => karpStageListed(m.id)) : listedMaps());   // [karp-face] DECISIONS #10
 const pick = (a) => a[(Math.random() * a.length) | 0];
 
 export class NetSession {
@@ -269,6 +270,7 @@ export class NetSession {
     // switching a room on one to boss mode moves it to a boss-eligible stage; a noBots stage forces bots off (the host's
     // own choice comes back on the next stage)
     if (l.mode === 'boss' && l.map !== 'random' && !mapBossOk(l.map)) l.map = bossFallbackMap(wasMap === 'random' ? MAPS[0].id : wasMap);
+    if (l.mode === 'bazookarp' && l.map !== 'random' && !karpStageListed(l.map)) l.map = (roomStages('bazookarp')[0] || MAPS[0]).id;   // [karp-face] (a stage with no Bazookarp layout: hidden in this mode)
     l.botCount = mapNoBots(l.map) ? 0 : pref[kind];
     l.bots = roomBotPlan(l).total > 0 || (l.botCount < 0 && !mapNoBots(l.map));
     this._broadcastLobby();

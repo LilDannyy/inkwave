@@ -1,0 +1,45 @@
+== bluestone tower track · heading 0° · length 146.5 / 146.5 m (Alpha's / Bravo's side) · speed 1.83 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 22 pieces · 18 runs, 0 inclines, 2 climbs, 2 drops · 146.5 m
+     DROP     s=  9.99  [-9.99,1.3,0] → [-9.99,0,0]  -1.3 m
+     CLIMB    s= 28.09  [-13.5,0,13.29] → [-13.5,0.6,13.29]  0.6 m  onto [{"id":997,"tag":"degrayling","centre":[-13.5,-0.05,19.25],"size":[6,1.3,9.5]}]
+     DROP     s= 40.61  [-13.5,0.6,25.21] → [-13.5,0,25.21]  -0.6 m
+     CLIMB    s=104.29  [-21.5,0,48.79] → [-21.5,1,48.79]  1 m  onto [{"id":707,"tag":"terrace","centre":[-15.25,0.15,51.25],"size":[20.5,1.7,2.5]}]
+   side Bravo (s<0), the mirror — pieces in the JSON: 22 pieces · 18 runs, 0 inclines, 2 climbs, 2 drops · 146.5 m
+   checkpoints [{"team":0,"index":0,"d":62.75,"dur":10,"at":[2.25,0,31]},{"team":0,"index":1,"d":95,"dur":10,"at":[-14,0,47]},{"team":1,"index":0,"d":62.75,"dur":10,"at":[-2.25,0,-31]},{"team":1,"index":1,"d":95,"dur":10,"at":[14,0,-47]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   pictures (/private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/fix2/runB/tc1): bluestone-top.png, bluestone-01-drop-s10.png, bluestone-02-corner-s15.png, bluestone-03-climb-s28.png, bluestone-04-drop-s41.png, bluestone-05-corner-s45.png, bluestone-
+   console errors: none
+RESULT_JSON {"map":"bluestone","len":[146.5,146.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+== bluestone tower track · heading 0° · length 146.5 / 146.5 m (Alpha's / Bravo's side) · speed 1.83 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 22 pieces · 18 runs, 0 inclines, 2 climbs, 2 drops · 146.5 m
+     DROP     s=  9.99  [-9.99,1.3,0] → [-9.99,0,0]  -1.3 m
+     CLIMB    s= 28.09  [-13.5,0,13.29] → [-13.5,0.6,13.29]  0.6 m  onto [{"id":1032,"tag":"degrayling","centre":[-13.5,-0.05,19.25],"size":[6,1.3,9.5]}]
+     DROP     s= 40.61  [-13.5,0.6,25.21] → [-13.5,0,25.21]  -0.6 m
+     CLIMB    s=104.29  [-21.5,0,48.79] → [-21.5,1,48.79]  1 m  onto [{"id":739,"tag":"terrace","centre":[-15.25,0.15,51.25],"size":[20.5,1.7,2.5]}]
+   side Bravo (s<0), the mirror — pieces in the JSON: 22 pieces · 18 runs, 0 inclines, 2 climbs, 2 drops · 146.5 m
+   checkpoints [{"team":0,"index":0,"d":62.75,"dur":10,"at":[2.25,0,31]},{"team":0,"index":1,"d":95,"dur":10,"at":[-14,0,47]},{"team":1,"index":0,"d":62.75,"dur":10,"at":[-2.25,0,-31]},{"team":1,"index":1,"d":95,"dur":10,"at":[14,0,-47]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   pictures (/private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/fix2/runB/tc2): bluestone-top.png, bluestone-01-drop-s10.png, bluestone-02-corner-s15.png, bluestone-03-climb-s28.png, bluestone-04-drop-s41.png, bluestone-05-corner-s45.png, bluestone-
+   console errors: none
+RESULT_JSON {"map":"bluestone","len":[146.5,146.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+== bluestone tower track · heading 0° · length 146.5 / 146.5 m (Alpha's / Bravo's side) · speed 1.83 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 22 pieces · 18 runs, 0 inclines, 2 climbs, 2 drops · 146.5 m
+     DROP     s=  9.99  [-9.99,1.3,0] → [-9.99,0,0]  -1.3 m
+     CLIMB    s= 28.09  [-13.5,0,13.29] → [-13.5,0.6,13.29]  0.6 m  onto [{"id":1156,"tag":"degrayling","centre":[-13.5,-0.05,19.25],"size":[6,1.3,9.5]}]
+     DROP     s= 40.61  [-13.5,0.6,25.21] → [-13.5,0,25.21]  -0.6 m
+     CLIMB    s=104.29  [-21.5,0,48.79] → [-21.5,1,48.79]  1 m  onto [{"id":801,"tag":"terrace","centre":[-15.25,0.15,51.25],"size":[20.5,1.7,2.5]}]
+   side Bravo (s<0), the mirror — pieces in the JSON: 22 pieces · 18 runs, 0 inclines, 2 climbs, 2 drops · 146.5 m
+   checkpoints [{"team":0,"index":0,"d":62.75,"dur":10,"at":[2.25,0,31]},{"team":0,"index":1,"d":95,"dur":10,"at":[-14,0,47]},{"team":1,"index":0,"d":62.75,"dur":10,"at":[-2.25,0,-31]},{"team":1,"index":1,"d":95,"dur":10,"at":[14,0,-47]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -146.5 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   pictures (/private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/fix2/runA/tc3): bluestone-top.png, bluestone-01-drop-s10.png, bluestone-02-corner-s15.png, bluestone-03-climb-s28.png, bluestone-04-drop-s41.png, bluestone-05-corner-s45.png, bluestone-
+   console errors: none
+RESULT_JSON {"map":"bluestone","len":[146.5,146.5],"holes":0,"issues":0,"climbs":2,"drops":2,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}

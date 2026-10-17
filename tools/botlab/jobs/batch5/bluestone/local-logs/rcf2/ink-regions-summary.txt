@@ -1,0 +1,23 @@
+era 1: 8 runs; total inked 70.5 67.1 66.8 72.0 63.0 77.2 69.3 64.7
+   circus     m2  1487  mean  75.5  min  65  runs 76 80 77 79 69 80 78 65
+   base       m2   978  mean  72.6  min  65  runs 75 72 70 79 66 84 65 70
+   knee       m2   835  mean  63.5  min  47  runs 68 61 52 66 47 77 73 64
+   swimston   m2   541  mean  83.5  min  78  runs 83 78 86 84 86 87 85 79
+   river      m2   493  mean  54.1  min  45  runs 45 51 62 51 54 62 52 56
+   knee-far   m2   416  mean  47.2  min  23  runs 66 23 48 59 31 59 48 44
+   hoki       m2   267  mean  67.8  min  53  runs 72 73 53 60 78 78 67 61
+   gpo-quay   m2   265  mean  64.5  min  50  runs 62 62 50 73 71 67 66 65
+   arcade     m2   210  mean  71.5  min  63  runs 69 73 72 75 67 84 63 69
+   halo       m2     3  mean  34.0  min   9  runs 43 36 20 25 50 39 50 9
+era 3: 8 runs; total inked 69.2 58.1 70.2 67.8 70.7 56.7 62.5 68.9
+   circus     m2  1624  mean  74.9  min  65  runs 86 67 80 70 79 65 78 74
+   base       m2   978  mean  69.4  min  60  runs 74 60 64 75 76 62 70 74
+   knee       m2   859  mean  58.1  min  46  runs 55 50 65 65 69 52 46 63
+   river      m2   594  mean  58.5  min  47  runs 59 47 52 74 63 51 56 66
+   swimston   m2   549  mean  81.8  min  72  runs 84 72 85 78 80 85 79 91
+   halo       m2   468  mean  48.2  min  24  runs 42 57 71 43 51 24 46 52
+   knee-far   m2   416  mean  37.6  min  22  runs 44 39 56 41 39 28 22 32
+   garden     m2   379  mean  66.1  min  50  runs 70 53 65 77 75 62 50 77
+   gpo-quay   m2   302  mean  73.6  min  61  runs 78 61 80 72 85 64 74 75
+   hoki       m2   267  mean  63.4  min  50  runs 68 52 73 63 68 50 73 60
+   arcade     m2   210  mean  66.2  min  46  runs 65 66 77 72 69 46 64 71

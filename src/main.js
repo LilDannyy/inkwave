@@ -42,10 +42,12 @@ import { Showcase } from './game/showcase.js';
 import { ZoneMarks } from './fx/zoneMarks.js';
 import { TowerFx } from './fx/towerFx.js';
 import { BazookarpFx } from './fx/bazookarpFx.js';   // [b5-karp]
+import { KarpKitFx } from './fx/karpKitFx.js';   // [b5-karp-checker] the NO CARP boards, the carrierBlock shimmer
 import './game/karpGun.js';   // [b5-karp] the Carp Shot (G.karpGun, KIT_GHOSTS.karp)
 import { InkWipeFx } from './fx/inkWipeFx.js';
 import { cues } from './audio/cues.js';   // sfx-cues: sub / special audio cues (the loops, warnings, friend / foe mix)
 import { BOSS_MODE } from './boss/bossMode.js';
+import { issueLog } from './core/issueLog.js'; // [b5-int4] beta issue capture
 
 const params = new URLSearchParams(location.search);
 // dev-only: ?devstage lets an online-only stage (config onlineOnly — Cargo Terminal) boot as the backdrop and be walked
@@ -150,6 +152,7 @@ class Game {
     this.zoneMarks = new ZoneMarks(scene);   // Zone Control ground markings: build / clear themselves on 'match:state'
     this.towerFx = new TowerFx(scene);       // Tower Command: the tower, its light pillar, the path glow, checkpoint beacons
     this.karpFx = new BazookarpFx(scene);    // [b5-karp] Bazookarp: the shell, the carp, weirs, Gates (placeholder look)
+    this.karpKitFx = new KarpKitFx(scene);   // [b5-karp-checker] (self-driven: built / cleared on match:state)
     this.inkWipe = new InkWipeFx(scene);     // Practice: the clear-all-ink wave's light, steam and sound (paint.startWipe clears)
     await progress(0.4, 'Filling the harbor…');
     const B = G.level.bounds;
@@ -1248,7 +1251,7 @@ class Game {
       mapName: this.mapDef.name,
       ...(zr ? { mode: 'zones', zones: zr } : {}),
       ...(tr ? { mode: 'tower', tower: tr } : {}),
-      ...(kr ? { mode: 'tower', tower: { ...kr, karp: true } } : {}),   // [b5-karp] (the placeholder results: Tower Command's layout)
+      ...(kr ? { mode: 'bazookarp', karp: { ...kr, overtimeT: m.karp.overtimeT } } : {}),   // [b5-karp] [karp-face] (menus.js: its own results — CARRY IT HOME, CARRIED / POPS)
     };
     // your team on the podium
     const team = m.actors.filter((a) => a.team === myTeam);
@@ -1335,6 +1338,7 @@ class Game {
 
   _frame(dt) {
     const tA = performance.now();
+    issueLog.bots(dt);
     G.renderer.info.reset();
     G.time += dt;
     this.input.pollPad();
@@ -1437,6 +1441,7 @@ class Game {
     if (m && !m.attract && this.hud && (m.state === 'playing' || m.state === 'intro' || m.state === 'finish')) this._updateHud(dt);
     this.menus?.update?.(dt);
     this.input.endFrame();
+    issueLog.frame(performance.now() - tA);
   }
 
   // continuous sounds tied to the local player's state (swim gurgle, wall climb, enemy-ink sizzle)

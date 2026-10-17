@@ -1,0 +1,6 @@
+[81703:1016/160115.076664:ERROR:ui/gl/angle_platform_impl.cc:48] mtl_command_buffer.mm:690 (onCommandBufferCompleted): Completed MTLCommandBuffer failed, and error is Impacting Interactivity (0000000e:kIOGPUCommandBufferCallbackErrorImpactingInteractivity)
+PRE {"stage":"bluestone","quality":"high","era":2,"phase":"jump","jump":{"from":2,"to":3,"front":37.5,"wallMs":1857,"phase":"jump"},"ppm":11.86,"atlas":2048,"lightRows":1142,"lightFits":true,"lightmapApplied":false,"perf":{"calls":294,"tris":737886,"cpuRenderMs":12.18,"cpuSimMs":2.55},"stats":{"navMs":718,"navBuilds":[226,247,229],"mergeMs":16.2,"paintMs":38,"meshMs":10.899999976158142,"compileMs":43,"compiled":7,"bases":["1:swap 219","2:init 106","3:init 90"]}}
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/bs2/shots/bluestone-day-spawnA.png
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":8123,"blocks":712,"solidBlocks":700,"propMeshes":13,"navNodes":5952,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":294,"tris":731982,"cpuRenderMs":11.88,"cpuSimMs":2.61},"coverage":[2.5,5.2]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON

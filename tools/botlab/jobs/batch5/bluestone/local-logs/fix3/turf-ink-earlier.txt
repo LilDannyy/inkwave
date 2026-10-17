@@ -1,0 +1,13 @@
+# era-3 Turf War, match.cjs 180 s: the 6 runs before runA, at the 1.2 m garden terrace (ebc894f/b75fecd)
+### ink2/turf3a.log
+== bluestone [turf 180s]: turf 27.3% vs 30.6%
+### ink2/turf3b.log
+== bluestone [turf 180s]: turf 37.5% vs 25%
+### ink2/turf3c.log
+== bluestone [turf 180s]: turf 35.3% vs 24.4%
+### ink2/turf3d.log
+== bluestone [turf 180s]: turf 31.1% vs 34.4%
+### ink2/turf3e.log
+== bluestone [turf 180s]: turf 27.4% vs 28.5%
+### ink2/turf3f.log
+== bluestone [turf 180s]: turf 30.1% vs 32%

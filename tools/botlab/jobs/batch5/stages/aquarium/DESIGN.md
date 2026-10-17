@@ -547,7 +547,7 @@ walking it, which rule 26 forbids; the Express crosses diagonally, 55 m, at 0.73
 - **Pop:** 6.5 m/s out + 6.0 up, landing ≈ 3.1 m out; steer ±45° with the stick held in the last 0.5 s; jump held gives a
   high pop (≈ 3.8 m). Shielded while airborne (≤ 0.8 s), no firing until touchdown; touchdown paints a 1.2 m splat of the
   rider's ink (turf, but no special charge). A second rider popping from the same mouth within 0.4 s fans 30° aside.
-- **Cooldown:** 2.5 s from touchdown before any mouth takes that player again (a ring on the ink tank).
+- **Cooldown:** 3.5 s from touchdown before any mouth takes that player again (a ring on the ink tank; increased from 2.5 s by the lead's pipe camping set).
 
 ### 3.3 How each kind reads (shapes first, never team hues)
 
@@ -662,7 +662,7 @@ pipes: {
   mirror: true,                  // every leg gets its 180° twin (id + '~'), except `single: true` legs
   enter: 'any',                  // 'any' (kid or squid) | 'squid' (a kid bumps the mouth like a wall)
   speed: 18,                     // m/s, the default for every leg (12–24)
-  cooldown: 2.5,                 // s (1.5–4)
+  cooldown: 3.5,                 // s after the lead's pipe camping adjustment (was 2.5)
   modes: {                       // per match mode; omitted = every leg as listed
     bazookarp: { shut: [], carp: [] },   // nothing shut (no end within 15 m of a Gate); carriers refused on every leg
     boss: 'open',                // 'open' | 'off' (every leg shut, still drawn and solid)

@@ -1,0 +1,2 @@
+rows 1533 / 2048, faces 4674, blocks 1615
+yard:204r/387f  coping:154r/790f  island:128r/206f

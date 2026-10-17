@@ -116,3 +116,9 @@ longer emitted.
 | `bobber:trigger` | `{ actor, by, n, pos, team, ghost }` — [b5-subs] a Chain Bobber chain set off: its owner, who set it off (null: unknown), its size N, the first bobber; every screen (`ghost` on a replay) | kits/bobber.js |
 | `bobber:disarm` | `{ owner, by, pos, team }` — [b5-subs] enemy fire disarmed a Chain Bobber (it sags and pops, no blast) | kits/bobber.js |
 | `bomb:explode` (`kind: 'bobber'`) | `{ actor, pos, team, radius, kind }` — [b5-subs] one per bobber of a chain, at its hop (radius: the chain's R(N)) | kits/bobber.js |
+| `pipe:enter` | `{ actor, leg, k, to, eta }` — a capture (the owner), or the ride's `[0]` record (every other screen) | pipes.js |
+| `pipe:refuse` | `{ actor, end, why }` — why: oneway · shut · carp · special · cooldown · form (the owner's screen only) | pipes.js |
+| `pipe:exit-lit` / `pipe:chime` | `{ actor, end, team }` / `{ actor, end, pos }` — the suck is done, the exit lit in the rider's colour / 1.0 s before the pop (every screen, its own copy) | pipes.js |
+| `pipe:pop` / `pipe:land` | `{ actor, end, pos, dir, high }` / `{ actor, pos }` — out of the OUT mouth / touchdown (the cooldown starts) | pipes.js |
+| `pipe:abort` | `{ actor, why }` — why: splat (in the suck) · removed · reset · test | pipes.js |
+| `pipe:flow` | `{ leg, id, phase, dir, t }` — the tide: phase warn (T − 10) · close (T − 3) · flip (T) · open (T + 1); dir 'ab' UP, 'ba' DOWN (every screen, from its stage clock; the stage's Tide Gauges and the HUD follow it) | pipes.js |

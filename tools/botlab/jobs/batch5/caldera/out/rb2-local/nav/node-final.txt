@@ -1,0 +1,10 @@
+2e20ea1 Highmark Foundry blockout, round B fix 2: the casting bed's flask stack at the bed's north-west corner (cover-map's largest open circle on the terrace's tower run 6.0 -> 5.7 m)
+## tagcount
+island 33 {"gauge-deck":1,"gauge-machine-house":1,"valve-chest":1,"organ-stump":21,"ingot-stack":1,"stilling-drum":7,"ladle-stand":1}
+yard 36 {"surge-office":1,"ferry-castings":3,"drain-grates":2,"ingot-rack":2,"pattern-bay":1,"drum-stack":7,"cupola-house":1,"cupola-stack":7,"ladle-stand":1,"cable-drum":7,"moulding-floor":1,"lamp-post-rack":1,"flask-stack":1,"ingot-pile":1}
+rimHead 11 {"spatter-cone":7,"outcrop":2,"cairn":2}
+terrace 7 {"pattern-shop":1,"pattern-shop-porch":1,"sand-bin":1,"casting-bed":1,"flask-stack":1,"pattern-crates":1,"firebrick-store":1}
+lakefront 10 {"tide-board":1,"mooring-bollard":2,"ladle-cradle":1,"chain-bin":1,"capstan":1,"chain-bollard":2,"stone-crate":1,"winch-house":1}
+north 1 {"race-bollard":1}
+ladle 2 {"vent-hood":1,"ladle-stand":1}
+ridge 17 {"spatter-cone":7,"hummock":7,"outcrop":1,"cairn":2}

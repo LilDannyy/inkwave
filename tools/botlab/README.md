@@ -52,13 +52,18 @@ W=960 H=600 MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botl
 - **Online-only stages** (config `onlineOnly`, Cargo Terminal): `DEVSTAGE=1` boots every harness page with `?devstage`
   (src/main.js `DEV_STAGE`), so page tests, shots, tower checks, bakes and stage art run there offline (a solo walk: the
   stage is `noBots`, so no bot matches).
-- **Stages under construction** (config `wip`: Bluestone Junction, Gulper Aquarium, Highmark Foundry until the lead
-  removes the flag): every harness loads one by id as usual (`MAP=bluestone …`); players never see one in a stage
-  list. `WIPSTAGES=1` boots every harness page with `?wipstages` (config `SHOW_WIP`), which lists them everywhere. The
-  check: `MAP=bluestone PAGE=tools/botlab/tests/wip-stages.js tools/botlab/run.sh tools/botlab/page.cjs`, and the same
-  with `WIPSTAGES=1` (then every picker must list them).
+- **Playable beta stages** (config `beta`: Bluestone Junction, Gulper Aquarium, Highmark Foundry): listed in every
+  player picker with a PUBLIC BETA badge. `wip` remains the flag for stages that cannot be played. The checks are
+  `MAP=bluestone PAGE=tools/botlab/tests/beta-content.js tools/botlab/run.sh tools/botlab/page.cjs` and
+  `MAP=bluestone PAGE=tools/botlab/tests/wip-stages.js tools/botlab/run.sh tools/botlab/page.cjs` (with and without
+  `WIPSTAGES=1`).
 - **A stage module's audit switch:** `PAGEQ='era=2'` (any query) boots every harness page with it as well (a module
-  reads its own switch from `location.search`: `?era=`, `?lava=` …).
+  reads its own switch from `location.search`: `?era=`, `?lava=` …). `ERA=1|2|3` is the same as `PAGEQ='era=n'`
+  (Bluestone's era audit); any other `ERA` (`all`, a typo) or one that disagrees with `PAGEQ`'s era stops the harness at
+  boot with a `HARNESS` line. match.cjs / tower-match.cjs print the era a Bluestone match started in (`ERAS` line) and
+  tower-check its own `ERA` line, so a mislabelled per-era run shows in its log. `ERA_FROM=a ERA_TO=b FRONT=r` is
+  `PAGEQ='erafrom=a&erato=b&front=r'`: Bluestone frozen mid-jump (era a outside a front stopped at r m, era b inside it)
+  for the split-time stage art, e.g. `STAGES=bluestone ERA_FROM=1 ERA_TO=2 FRONT=30 … stageart.cjs` (all three or none).
 - **Useful page-script globals:**
   - `window.__inkwave` (the game): `.match`, `.match.local`, `.debug.freeze()` / `.step(ms)` / `.freezeBots()`
   - `window.__G` (shared systems)
@@ -117,7 +122,7 @@ Tower Command:
 - The rules and ink tests: `MAP=testbox MODE=tower PAGE=tools/botlab/tests/tower-rules.js tools/botlab/run.sh
   tools/botlab/page.cjs`, and the same with `tower-ink.js`.
 
-Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/jobs/batch5/bazookarp/SPEC.md):
+Bazookarp (batch 5, a public beta mode; the design is tools/botlab/jobs/batch5/bazookarp/SPEC.md):
 - **The mode is hidden.** It is in no player-facing list, but every harness starts it by name (`MODE=bazookarp`,
   `api.startMatch`). `WIPMODES=1` boots every harness page with `?wipmodes` (config `SHOW_WIP_MODES`), which lists it
   everywhere (the mode screen, the stage chip, the lobby picker, `setSettings`); a two-client test opens its clients
@@ -148,7 +153,84 @@ Bazookarp (batch 5, a wip mode: config `WIP_MODES`; the design is tools/botlab/j
 - Bot matches: `MAP=<id> tools/botlab/run.sh tools/botlab/karp-match.cjs` (an all-bot match stepped at 60 Hz: SPEC
   §10.3's numbers, a `RESULT karp …` line; env `DUR`, `OTMAX`, `DIFF`, `HUMAN=still|carry`, `KARP_DEF`, `OUT=file.json`),
   and `python3 tools/botlab/karp-agg.py *.json` (the §9.1 rows, INFO below 16 matches, a SUMMARY line).
+  [b5-karp-bots] `KARP_AI=0` plays WP1's minimal bots (the A/B baseline); the report adds the bots' route shares, the Carp
+  Shots they noticed (escaped / caught), the carrier's shots by kind, roles, keepers on their spot and holds (bots
+  standing on purpose are not "stuck"), each team's first bot by the Pond (the walk in: the floor under the first pop) and
+  where a carrierRetreatFallback happened (with the team, P there and the retreat mark). `PLAN='karpbox:normal:4,
+  halyard:hard:2'` plays several matches in one instance (one slot; `OUT=dir/x.json` → `x-<map>-<diff>-<i>.json`);
+  what-ifs for the balance pass, never saved: `KARP_TUNE='{"jumpR":30}'` (botsKarp's `KARP_AI`) and
+  `KARP_CFG='{"shell":{"reformHp":600}}'` (`BAZOOKARP`, deep; the opening shell is re-formed with its hp). The Mac mini JOB
+  template: `tools/botlab/jobs/batch5/karp-bots/JOB-1.sh` (`STAGES`, `HARD`, `TOTAL` — 8 matches a difficulty summed over
+  its stages, COMMON's cap — `SUBS`; `N` a stage is the lead's consolidated pass only). A stage builder copies it into its
+  own key's folder.
+- The bots (SPEC §8, src/game/botsKarp.js): `MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/karp-bots.js
+  tools/botlab/run.sh tools/botlab/page.cjs` — WP3's scenarios: breakers out of the burst at ≥ 70 % (60 % hard), melee
+  breakers' ring, no touch damage in 20 bursts, the grabber's 3.0–3.2 m wait and grab, an autopilot carrier's 3 carries,
+  kit-weapon carriers fire nothing of their own, the ×3 fallback (a sea-to-sea zone; G(b): a pocket of its own zone open
+  behind it — the retreat mask's own case), out of a Big Burst ≥ 16 of 20 (a breaker standing on its spot, from 18 m;
+  12 and 15 m reported), the keeper at the Gate and the weir on the route, no wall-hack and the 20 m wake, the knockback
+  push, our carrier's fuse danger (a guest carrier's too), the layout's route hints, super jumps to the carrier, the fuse →
+  over the halfway line, walkers round the shell; the other roles (R: escorts, the perch, the free phase's fighters,
+  re-forming), the specials' rules (S), the difficulty rows (Y), no wall-hack in the defending plan (W: a hidden carrier
+  never seen moves nothing), refills in the band and the 50 % keep-out (B(b2), B(d)), the swell seen coming (A(d))
+  (`PAGE_ARGS='only=A,…'`; `teeth=1` runs each newer check again with its feature off and requires it to fail;
+  `hwhat=1` H's 15 m what-ifs: a longer swell, a smaller Big Burst).
 - Pictures: tools/botlab/scenes/karp.js through hud-shots.cjs.
+- **The stage checker** (`[b5-karp-checker]`, SPEC §4.4): `MAP=<id> tools/botlab/run.sh tools/botlab/bazookarp-check.cjs`
+  checks a stage's `LAYOUT.bazookarp` against SPEC §9.1 — sixteen checks on the carrier graph (hop and gap edges in),
+  #16 with a kid stepped through `actor.update` with the carrier's rules (every hop / gap edge tried, every route and
+  every entrance into a Gate's ring walked), #11 with a scripted carrier on both teams — and
+  prints a line per check and `RESULT <id> ok|fail …`, writes `<id>-karp.json` and pictures (the top-down with the field,
+  routes, entrances, zones and flags; the Pond; each weir and the Gate from both sides; each zone; each flag). `MAP=all`
+  runs every shipped stage in one go and prints a table (`WIP=1` adds the stages under construction); env `OUT`,
+  `KARP_DEF`, `SHOTS=0`, `CARRY=0`, `PHYS=0`, `DEVSTAGE=1` (Cargo), `ERA=` / `LAVA=` / `KSTATE=` (one stage state; a stage
+  module offers its states through `G.match.stage.karpStates()`, each with the page query of its audit switch),
+  `PROBE='[x,y,z,x,y,z]'` (one move traced: #16's kid frame by frame, and what it stopped against). #7 also finds the
+  moves no edge holds that #16's kid really makes (rising gaps across air, jumps onto ground off the field, hops / gaps
+  just beyond the rules, vaults over a low wall or a railing): a find when worth > 10 m, an entrance (with its own line
+  of sight) when it lands inside a Gate's ring from outside it; an inkable step of ≤ 1.8 m the kid hops counts as a hop,
+  not a climb, in every no-climb search. #16 moves the carrier both ways SPEC §2.4 allows: running as a kid, and swimming
+  in its own ink (9.44 m/s, the swim-jump: about twice the kid's reach, onto ledges up to 2.2 m when it lets go of squid form at the top; 2.25 m never) from any takeoff whose floor
+  takes ink — the probes' windows are the measured reach of each (`REACH`, the self-test's `reach` / `reachs` rows). A
+  squid gap (lowGap) passes grates and rails, as a squid does. **[fix4]** Also: steps off the grid (a 0.3–1.8 m step up or
+  0.3–3.4 m down whose face misses the 1 m grid, so nav joins nothing across it) and squid tubes (3–8 m of low passage a
+  kid can't use: #16 crawls a squid through each). `KARP_SWIM=fail|warn|off` judges what only the swimming carrier makes
+  (D34: default `fail`); the RESULT line prints `swim=` and splits #7d's finds by cause, `7d=<layout>/<field rule>/<swim-jump>`.
+  A `waive` entry for #7d waives its whole numbered flag (`probe` and `r` optional).
+  The flagged places are numbered once — the top-down's discs and its key, the `-flag-<n>` pictures, the console and the
+  JSON's `flags`. The checks live in `tools/botlab/karp-check-page.js`. Self-test: `KARP_SELFTEST=1 tools/botlab/run.sh
+  tools/botlab/bazookarp-check.cjs` (karpbox's clean case must pass every check, and each planted fault of
+  `tools/botlab/karp-check-box.js` must FAIL its own check for its own reason, and each `notFail` case must leave its
+  checks unfailed; `CASES=clean,f7,…`). The per-stage builders' brief:
+  `tools/botlab/jobs/batch5/karp-stages/BUILDER.md`.
+- **The Bazookarp regression set** — run it (one at a time locally, or as a job on the Mac mini's runner when
+  tools/botlab/jobs/batch5/COMMON.md says it is up) after any change to the
+  mode, the Carp Field, the kit, the stage data or a stage's layout:
+  - `DEVSTAGE=1 MAP=karpbox MODE=bazookarp PAGE=tools/botlab/tests/karp-field.js tools/botlab/run.sh tools/botlab/page.cjs`
+    (the field on karpbox and every stage: L, holes, hop / gap edges, the reading sweep, the load cost; `PAGE_ARGS='only=<id>'`
+    for one stage);
+  - `bazookarp-rules.js`, `karp-gun.js`, `karp-loop.js` on karpbox (above) when the engine moved;
+  - `KARP_SELFTEST=1 … bazookarp-check.cjs` when the checker moved, and `MAP=<id> … bazookarp-check.cjs` on every stage
+    whose data or layout moved;
+  - the other modes unchanged: `node build/check-maps.mjs` (every stage, and `<id>.bazookarp` for a stage with data) and
+    `node tools/botlab/karp-layout-diff.mjs <base tree>` (Turf War / Zone Control / Tower Command / Boss Battle builds and
+    the stage cards byte-identical).
+- Online, the rest of SPEC §10.2 ([karp-face]): `NET_ARGS='part=face'` (steps 2–11, 16) and `NET_ARGS='part=lag'
+  URLQ='netlag=150&netjitter=60'` (hits, a grab, retreat, the fuse ring under ×3, a declined grant, the window's close)
+  through net-karp.cjs; net-karp-host.cjs `part=plant` / `part=shot` (`CLIENTS=3`: a plant / a Big Burst in the old
+  host's last 0.1 s) and `part=guestleave` (`CLIENTS=2`); the whole thing: `CLIENTS=3 Q0='autopilot&wipmodes'
+  Q1='autopilot&wipmodes' Q2='autopilot&wipmodes' WATCHDOG=2400000 NET=tools/botlab/tests/net-karp-full.cjs` — a real
+  5:00 match on halyard, autopilot kids and bots, the host leaving mid-match, played to the end on the other two screens
+  (the same result and results table), back to the lobby. The narrowed flush's regressions for the other modes:
+  `CLIENTS=3 Q0=autopilot Q1=autopilot Q2=autopilot NET=tools/botlab/tests/net-tower.cjs` (and `net-zones.cjs`).
+- The finished face: `MAP=testbox MODE=bazookarp PAGE=tools/botlab/tests/hud-karp.js` (the HUD, §6.1–6.5, the cues),
+  `hud-lead.js` with `MODE=bazookarp`, and `WIPMODES=1 MAP=halyard MODE=bazookarp PAGE=tools/botlab/tests/karp-menus.js`
+  (the pause strip, How to Play, the mode card, the stage select's and the lobby's stage lists — with `WIPSTAGES=1`
+  every stage, the placeholder ones tagged PREVIEW; without `WIPMODES` the mode hidden).
+- Pictures: tools/botlab/scenes/karp.js (WP1's) and tools/botlab/scenes/karp-face.js (every HUD state, the looks, the maps,
+  the menus: `MAP=halyard MODE=bazookarp TIME=day PLAY=2 URLQ=wipmodes SCENES=tools/botlab/scenes/karp-face.js OUT=/dir
+  tools/botlab/run.sh tools/botlab/hud-shots.cjs`, `W=960 H=600` for the small window, `PRE_ARGS='only=…'`) through
+  hud-shots.cjs.
 
 Stage set pieces:
 - Movers (Calamari County's railcars): `MAP=calamari MODE=turf PAGE=tools/botlab/tests/movers.js tools/botlab/run.sh

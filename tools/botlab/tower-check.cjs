@@ -39,6 +39,10 @@ app.on('browser-window-created', (_, win) => {
       for (let i = 0; i < 240; i++) { if (await js(`window.__inkwave.match?.state === 'playing' && !!window.__inkwave.match.tower`)) break; await wait(250); }
     };
     await start();
+    // [b5-eras] the stage state the check runs in (a stage module's audit switch: PAGEQ='era=2' or ERA=2): printed, so a
+    // mislabelled per-era run shows in its own log
+    { const st = await js(`(() => { const E = window.__inkwave.match && window.__inkwave.match.eras; return E ? { era: E.era, start: E.sched.start, fixed: E.sched.fixed || 0, jumps: E.sched.jumps.length, q: location.search } : null; })()`);
+      if (st) console.log(`ERA ${st.era} (started in era ${st.start}${st.fixed ? `, held there: ?era=${st.fixed}` : `, the normal schedule: ${st.jumps} jumps`}; page ${st.q})`); }
     // ---------------------------------------------------------------- the track
     const rep = await js(`(async () => {
       const g = window.__inkwave, m = g.match, T = m.tower, P = T.path, L = __G.level, { TOWER } = await import('./src/config.js');

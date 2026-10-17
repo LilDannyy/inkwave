@@ -1,0 +1,1319 @@
+{
+ "pass": true,
+ "rows": [
+  {
+   "dy": 2.3,
+   "air": 3.5,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 5,
+   "dyN": 2.3,
+   "from": [
+    26.5,
+    0.6,
+    -54.5
+   ],
+   "to": [
+    31.5,
+    2.9,
+    -54.5
+   ],
+   "winOn": 0,
+   "winOff": 0
+  },
+  {
+   "dy": 2.3,
+   "air": 4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 5,
+   "dyN": 2.3,
+   "from": [
+    26.5,
+    0.6,
+    -51.5
+   ],
+   "to": [
+    31.5,
+    2.9,
+    -51.5
+   ],
+   "winOn": 0,
+   "winOff": 0
+  },
+  {
+   "dy": 2.25,
+   "air": 3,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 4,
+   "dyN": 2.25,
+   "from": [
+    26.5,
+    0.6,
+    -48.5
+   ],
+   "to": [
+    30.5,
+    2.85,
+    -48.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2.25,
+   "air": 3.5,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 5,
+   "dyN": 2.25,
+   "from": [
+    26.5,
+    0.6,
+    -45.5
+   ],
+   "to": [
+    31.5,
+    2.85,
+    -45.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2.25,
+   "air": 4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 5,
+   "dyN": 2.25,
+   "from": [
+    26.5,
+    0.6,
+    -42.5
+   ],
+   "to": [
+    31.5,
+    2.85,
+    -42.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2.25,
+   "air": 4.5,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 6,
+   "dyN": 2.25,
+   "from": [
+    26.5,
+    0.6,
+    -39.5
+   ],
+   "to": [
+    32.5,
+    2.85,
+    -39.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2.2,
+   "air": 0.3,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 2,
+   "dyN": 2.2,
+   "from": [
+    26.5,
+    0.6,
+    -36.5
+   ],
+   "to": [
+    28.5,
+    2.8,
+    -36.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2.2,
+   "air": 3,
+   "made": true,
+   "how": "swim-jump, letting go at the top, jump 1.4 m before the rim",
+   "by": "swimRel",
+   "swim": true,
+   "flat": 4,
+   "dyN": 2.2,
+   "from": [
+    26.5,
+    0.6,
+    -33.5
+   ],
+   "to": [
+    30.5,
+    2.8,
+    -33.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2.2,
+   "air": 4,
+   "made": true,
+   "how": "swim-jump, letting go at the top, jump 0.5 m before the rim",
+   "by": "swimRel",
+   "swim": true,
+   "flat": 5,
+   "dyN": 2.2,
+   "from": [
+    26.5,
+    0.6,
+    -30.5
+   ],
+   "to": [
+    31.5,
+    2.8,
+    -30.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2.2,
+   "air": 4.5,
+   "made": true,
+   "how": "swim-jump, letting go at the top, jump at the rim",
+   "by": "swimRel",
+   "swim": true,
+   "flat": 6,
+   "dyN": 2.2,
+   "from": [
+    26.5,
+    0.6,
+    -27.5
+   ],
+   "to": [
+    32.5,
+    2.8,
+    -27.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2.2,
+   "air": 5,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 6,
+   "dyN": 2.2,
+   "from": [
+    26.5,
+    0.6,
+    -24.5
+   ],
+   "to": [
+    32.5,
+    2.8,
+    -24.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2.1,
+   "air": 0.3,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 2,
+   "dyN": 2.1,
+   "from": [
+    26.5,
+    0.6,
+    -21.5
+   ],
+   "to": [
+    28.5,
+    2.7,
+    -21.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2.1,
+   "air": 2.5,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 4,
+   "dyN": 2.1,
+   "from": [
+    26.5,
+    0.6,
+    -18.5
+   ],
+   "to": [
+    30.5,
+    2.7,
+    -18.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2.1,
+   "air": 3.5,
+   "made": true,
+   "how": "swim-jump, letting go at the top, jump 0.5 m before the rim",
+   "by": "swimRel",
+   "swim": true,
+   "flat": 5,
+   "dyN": 2.1,
+   "from": [
+    26.5,
+    0.6,
+    -15.5
+   ],
+   "to": [
+    31.5,
+    2.7,
+    -15.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2.1,
+   "air": 4.5,
+   "made": true,
+   "how": "swim-jump, letting go at the top, jump 0.2 m before the rim",
+   "by": "swimRel",
+   "swim": true,
+   "flat": 6,
+   "dyN": 2.1,
+   "from": [
+    26.5,
+    0.6,
+    -12.5
+   ],
+   "to": [
+    32.5,
+    2.7,
+    -12.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2.1,
+   "air": 5,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 6,
+   "dyN": 2.1,
+   "from": [
+    26.5,
+    0.6,
+    -9.5
+   ],
+   "to": [
+    32.5,
+    2.7,
+    -9.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2.1,
+   "air": 5.5,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 7,
+   "dyN": 2.1,
+   "from": [
+    26.5,
+    0.6,
+    -6.5
+   ],
+   "to": [
+    33.5,
+    2.7,
+    -6.5
+   ],
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999
+  },
+  {
+   "dy": 2,
+   "air": 0.3,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 2,
+   "dyN": 2,
+   "from": [
+    26.5,
+    0.6,
+    -3.5
+   ],
+   "to": [
+    28.5,
+    2.6,
+    -3.5
+   ],
+   "winOn": 7.699999999999999,
+   "winOff": 7.699999999999999
+  },
+  {
+   "dy": 2,
+   "air": 1.5,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 3,
+   "dyN": 2,
+   "from": [
+    26.5,
+    0.6,
+    -0.5
+   ],
+   "to": [
+    29.5,
+    2.6,
+    -0.5
+   ],
+   "winOn": 7.699999999999999,
+   "winOff": 7.699999999999999
+  },
+  {
+   "dy": 2,
+   "air": 2.5,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 4,
+   "dyN": 2,
+   "from": [
+    26.5,
+    0.6,
+    2.5
+   ],
+   "to": [
+    30.5,
+    2.6,
+    2.5
+   ],
+   "winOn": 7.699999999999999,
+   "winOff": 7.699999999999999
+  },
+  {
+   "dy": 2,
+   "air": 3.5,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 5,
+   "dyN": 2,
+   "from": [
+    26.5,
+    0.6,
+    5.5
+   ],
+   "to": [
+    31.5,
+    2.6,
+    5.5
+   ],
+   "winOn": 7.699999999999999,
+   "winOff": 7.699999999999999
+  },
+  {
+   "dy": 2,
+   "air": 4.5,
+   "made": true,
+   "how": "swim-jump jump at the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 6,
+   "dyN": 2,
+   "from": [
+    26.5,
+    0.6,
+    24.5
+   ],
+   "to": [
+    32.5,
+    2.6,
+    24.5
+   ],
+   "winOn": 7.699999999999999,
+   "winOff": 7.699999999999999
+  },
+  {
+   "dy": 2,
+   "air": 5,
+   "made": true,
+   "how": "swim-jump, letting go at the top, jump at the rim",
+   "by": "swimRel",
+   "swim": true,
+   "flat": 6,
+   "dyN": 2,
+   "from": [
+    26.5,
+    0.6,
+    27.5
+   ],
+   "to": [
+    32.5,
+    2.6,
+    27.5
+   ],
+   "winOn": 7.699999999999999,
+   "winOff": 7.699999999999999
+  },
+  {
+   "dy": 2,
+   "air": 5.5,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 7,
+   "dyN": 2,
+   "from": [
+    26.5,
+    0.6,
+    30.5
+   ],
+   "to": [
+    33.5,
+    2.6,
+    30.5
+   ],
+   "winOn": 7.699999999999999,
+   "winOff": 7.699999999999999
+  },
+  {
+   "dy": 1.8,
+   "air": 3,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 4,
+   "dyN": 1.8,
+   "from": [
+    26.5,
+    0.6,
+    33.5
+   ],
+   "to": [
+    30.5,
+    2.4,
+    33.5
+   ],
+   "winOn": 7.799999999999999,
+   "winOff": 7.799999999999999
+  },
+  {
+   "dy": 1.8,
+   "air": 4,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 5,
+   "dyN": 1.8,
+   "from": [
+    26.5,
+    0.6,
+    36.5
+   ],
+   "to": [
+    31.5,
+    2.4,
+    36.5
+   ],
+   "winOn": 7.799999999999999,
+   "winOff": 7.799999999999999
+  },
+  {
+   "dy": 1.8,
+   "air": 4.8,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 6,
+   "dyN": 1.8,
+   "from": [
+    26.5,
+    0.6,
+    39.5
+   ],
+   "to": [
+    32.5,
+    2.4,
+    39.5
+   ],
+   "winOn": 7.799999999999999,
+   "winOff": 7.799999999999999
+  },
+  {
+   "dy": 1.8,
+   "air": 5.6,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 7,
+   "dyN": 1.8,
+   "from": [
+    26.5,
+    0.6,
+    42.5
+   ],
+   "to": [
+    33.5,
+    2.4,
+    42.5
+   ],
+   "winOn": 7.799999999999999,
+   "winOff": 7.799999999999999
+  },
+  {
+   "dy": 1.5,
+   "air": 4,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 5,
+   "dyN": 1.5,
+   "from": [
+    26.5,
+    0.6,
+    45.5
+   ],
+   "to": [
+    31.5,
+    2.1,
+    45.5
+   ],
+   "winOn": 8.399999999999999,
+   "winOff": 8.399999999999999
+  },
+  {
+   "dy": 1.5,
+   "air": 5,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 6,
+   "dyN": 1.5,
+   "from": [
+    26.5,
+    0.6,
+    48.5
+   ],
+   "to": [
+    32.5,
+    2.1,
+    48.5
+   ],
+   "winOn": 8.399999999999999,
+   "winOff": 8.399999999999999
+  },
+  {
+   "dy": 1.5,
+   "air": 5.6,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 7,
+   "dyN": 1.5,
+   "from": [
+    26.5,
+    0.6,
+    51.5
+   ],
+   "to": [
+    33.5,
+    2.1,
+    51.5
+   ],
+   "winOn": 8.399999999999999,
+   "winOff": 8.399999999999999
+  },
+  {
+   "dy": 1.5,
+   "air": 6.2,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 8,
+   "dyN": 1.5,
+   "from": [
+    26.5,
+    0.6,
+    54.5
+   ],
+   "to": [
+    34.5,
+    2.1,
+    54.5
+   ],
+   "winOn": 8.399999999999999,
+   "winOff": 8.399999999999999
+  },
+  {
+   "dy": 1.2,
+   "air": 5,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 6,
+   "dyN": 1.2,
+   "from": [
+    -26.5,
+    0.6,
+    30.5
+   ],
+   "to": [
+    -32.5,
+    1.8,
+    30.5
+   ],
+   "winOn": 8.6,
+   "winOff": 8.6
+  },
+  {
+   "dy": 1.2,
+   "air": 5.8,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 7,
+   "dyN": 1.2,
+   "from": [
+    -26.5,
+    0.6,
+    33.5
+   ],
+   "to": [
+    -33.5,
+    1.8,
+    33.5
+   ],
+   "winOn": 8.6,
+   "winOff": 8.6
+  },
+  {
+   "dy": 1.2,
+   "air": 6.4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 8,
+   "dyN": 1.2,
+   "from": [
+    -26.5,
+    0.6,
+    36.5
+   ],
+   "to": [
+    -34.5,
+    1.8,
+    36.5
+   ],
+   "winOn": 8.6,
+   "winOff": 8.6
+  },
+  {
+   "dy": 1.2,
+   "air": 7,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 8,
+   "dyN": 1.2,
+   "from": [
+    -26.5,
+    0.6,
+    39.5
+   ],
+   "to": [
+    -34.5,
+    1.8,
+    39.5
+   ],
+   "winOn": 8.6,
+   "winOff": 8.6
+  },
+  {
+   "dy": 0.6,
+   "air": 6,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 7,
+   "dyN": 0.6,
+   "from": [
+    -26.5,
+    0.6,
+    42.5
+   ],
+   "to": [
+    -33.5,
+    1.2,
+    42.5
+   ],
+   "winOn": 9.6,
+   "winOff": 9.6
+  },
+  {
+   "dy": 0.6,
+   "air": 6.8,
+   "made": true,
+   "how": "swim-jump jump at the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 8,
+   "dyN": 0.6,
+   "from": [
+    -26.5,
+    0.6,
+    45.5
+   ],
+   "to": [
+    -34.5,
+    1.2,
+    45.5
+   ],
+   "winOn": 9.6,
+   "winOff": 9.6
+  },
+  {
+   "dy": 0.6,
+   "air": 7.4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 9,
+   "dyN": 0.6,
+   "from": [
+    -26.5,
+    0.6,
+    48.5
+   ],
+   "to": [
+    -35.5,
+    1.2,
+    48.5
+   ],
+   "winOn": 9.6,
+   "winOff": 9.6
+  },
+  {
+   "dy": 0.6,
+   "air": 8,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 9,
+   "dyN": 0.6,
+   "from": [
+    -26.5,
+    0.6,
+    51.5
+   ],
+   "to": [
+    -35.5,
+    1.2,
+    51.5
+   ],
+   "winOn": 9.6,
+   "winOff": 9.6
+  },
+  {
+   "dy": 0,
+   "air": 6.6,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 8,
+   "dyN": 0,
+   "from": [
+    -26.5,
+    0.6,
+    54.5
+   ],
+   "to": [
+    -34.5,
+    0.6,
+    54.5
+   ],
+   "winOn": 10.200000000000001,
+   "winOff": 10.200000000000001
+  },
+  {
+   "dy": 0,
+   "air": 7.4,
+   "made": true,
+   "how": "swim-jump jump at the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 9,
+   "dyN": 0,
+   "from": [
+    -26.5,
+    0.6,
+    0.5
+   ],
+   "to": [
+    -35.5,
+    0.6,
+    0.5
+   ],
+   "winOn": 10.200000000000001,
+   "winOff": 10.200000000000001
+  },
+  {
+   "dy": 0,
+   "air": 8,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 9,
+   "dyN": 0,
+   "from": [
+    -26.5,
+    0.6,
+    3.5
+   ],
+   "to": [
+    -35.5,
+    0.6,
+    3.5
+   ],
+   "winOn": 10.200000000000001,
+   "winOff": 10.200000000000001
+  },
+  {
+   "dy": 0,
+   "air": 8.6,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 10,
+   "dyN": 0,
+   "from": [
+    -26.5,
+    0.6,
+    -54.5
+   ],
+   "to": [
+    -36.5,
+    0.6,
+    -54.5
+   ],
+   "winOn": 10.200000000000001,
+   "winOff": 10.200000000000001
+  },
+  {
+   "dy": -1.2,
+   "air": 7.6,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 9,
+   "dyN": -1.2,
+   "from": [
+    -26.5,
+    1.8,
+    -51.5
+   ],
+   "to": [
+    -35.5,
+    0.6,
+    -51.5
+   ],
+   "winOn": 11.200000000000001,
+   "winOff": 11.200000000000001
+  },
+  {
+   "dy": -1.2,
+   "air": 8.4,
+   "made": true,
+   "how": "swim-jump coyote jump 0.9 m past the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 10,
+   "dyN": -1.2,
+   "from": [
+    -26.5,
+    1.8,
+    -48.5
+   ],
+   "to": [
+    -36.5,
+    0.6,
+    -48.5
+   ],
+   "winOn": 11.200000000000001,
+   "winOff": 11.200000000000001
+  },
+  {
+   "dy": -1.2,
+   "air": 9,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 10,
+   "dyN": -1.2,
+   "from": [
+    -26.5,
+    1.8,
+    -45.5
+   ],
+   "to": [
+    -36.5,
+    0.6,
+    -45.5
+   ],
+   "winOn": 11.200000000000001,
+   "winOff": 11.200000000000001
+  },
+  {
+   "dy": -1.2,
+   "air": 9.6,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 11,
+   "dyN": -1.2,
+   "from": [
+    -26.5,
+    1.8,
+    -42.5
+   ],
+   "to": [
+    -37.5,
+    0.6,
+    -42.5
+   ],
+   "winOn": 11.200000000000001,
+   "winOff": 11.200000000000001
+  },
+  {
+   "dy": -3.4,
+   "air": 8.8,
+   "made": true,
+   "how": "swim-jump jump 0.2 m before the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 10,
+   "dyN": -3.4,
+   "from": [
+    -26.5,
+    4,
+    -39.5
+   ],
+   "to": [
+    -36.5,
+    0.6,
+    -39.5
+   ],
+   "winOn": 12.600000000000001,
+   "winOff": 12.600000000000001
+  },
+  {
+   "dy": -3.4,
+   "air": 9.6,
+   "made": true,
+   "how": "swim-jump jump at the rim",
+   "by": "swim",
+   "swim": true,
+   "flat": 11,
+   "dyN": -3.4,
+   "from": [
+    -26.5,
+    4,
+    -36.5
+   ],
+   "to": [
+    -37.5,
+    0.6,
+    -36.5
+   ],
+   "winOn": 12.600000000000001,
+   "winOff": 12.600000000000001
+  },
+  {
+   "dy": -3.4,
+   "air": 10.4,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 12,
+   "dyN": -3.4,
+   "from": [
+    -26.5,
+    4,
+    -33.5
+   ],
+   "to": [
+    -38.5,
+    0.6,
+    -33.5
+   ],
+   "winOn": 12.600000000000001,
+   "winOff": 12.600000000000001
+  },
+  {
+   "dy": -3.4,
+   "air": 11,
+   "made": false,
+   "how": null,
+   "by": null,
+   "swim": true,
+   "flat": 12,
+   "dyN": -3.4,
+   "from": [
+    -26.5,
+    4,
+    -30.5
+   ],
+   "to": [
+    -38.5,
+    0.6,
+    -30.5
+   ],
+   "winOn": 12.600000000000001,
+   "winOff": 12.600000000000001
+  }
+ ],
+ "byDy": [
+  {
+   "dy": 2.3,
+   "made": 0,
+   "of": 2,
+   "swimMade": 0,
+   "swim": true,
+   "lastAir": null,
+   "firstNot": 3.5,
+   "worstFlat": null,
+   "winOn": 0,
+   "winOff": 0,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 2.25,
+   "made": 0,
+   "of": 4,
+   "swimMade": 0,
+   "swim": true,
+   "lastAir": null,
+   "firstNot": 3,
+   "worstFlat": null,
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 2.2,
+   "made": 3,
+   "of": 5,
+   "swimMade": 3,
+   "swim": true,
+   "lastAir": 4.5,
+   "firstNot": 5,
+   "worstFlat": 6.4,
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 2.1,
+   "made": 2,
+   "of": 6,
+   "swimMade": 2,
+   "swim": true,
+   "lastAir": 4.5,
+   "firstNot": 5,
+   "worstFlat": 6.4,
+   "winOn": 7.199999999999999,
+   "winOff": 7.199999999999999,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 2,
+   "made": 6,
+   "of": 7,
+   "swimMade": 6,
+   "swim": true,
+   "lastAir": 5,
+   "firstNot": 5.5,
+   "worstFlat": 6.9,
+   "winOn": 7.699999999999999,
+   "winOff": 7.699999999999999,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 1.8,
+   "made": 3,
+   "of": 4,
+   "swimMade": 3,
+   "swim": true,
+   "lastAir": 4.8,
+   "firstNot": 5.6,
+   "worstFlat": 6.7,
+   "winOn": 7.799999999999999,
+   "winOff": 7.799999999999999,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 1.5,
+   "made": 3,
+   "of": 4,
+   "swimMade": 3,
+   "swim": true,
+   "lastAir": 5.6,
+   "firstNot": 6.2,
+   "worstFlat": 7.5,
+   "winOn": 8.399999999999999,
+   "winOff": 8.399999999999999,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 1.2,
+   "made": 2,
+   "of": 4,
+   "swimMade": 2,
+   "swim": true,
+   "lastAir": 5.8,
+   "firstNot": 6.4,
+   "worstFlat": 7.7,
+   "winOn": 8.6,
+   "winOff": 8.6,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 0.6,
+   "made": 2,
+   "of": 4,
+   "swimMade": 2,
+   "swim": true,
+   "lastAir": 6.8,
+   "firstNot": 7.4,
+   "worstFlat": 8.7,
+   "winOn": 9.6,
+   "winOff": 9.6,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": 0,
+   "made": 2,
+   "of": 4,
+   "swimMade": 2,
+   "swim": true,
+   "lastAir": 7.4,
+   "firstNot": 8,
+   "worstFlat": 9.3,
+   "winOn": 10.200000000000001,
+   "winOff": 10.200000000000001,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": -1.2,
+   "made": 2,
+   "of": 4,
+   "swimMade": 2,
+   "swim": true,
+   "lastAir": 8.4,
+   "firstNot": 9,
+   "worstFlat": 10.3,
+   "winOn": 11.200000000000001,
+   "winOff": 11.200000000000001,
+   "inside": true,
+   "edgeOk": true
+  },
+  {
+   "dy": -3.4,
+   "made": 2,
+   "of": 4,
+   "swimMade": 2,
+   "swim": true,
+   "lastAir": 9.6,
+   "firstNot": 10.4,
+   "worstFlat": 11.5,
+   "winOn": 12.600000000000001,
+   "winOff": 12.600000000000001,
+   "inside": true,
+   "edgeOk": true
+  }
+ ]
+}

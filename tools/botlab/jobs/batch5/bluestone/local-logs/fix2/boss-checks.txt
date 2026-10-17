@@ -1,0 +1,54 @@
+### runA/boss1
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":553,"floorY":0,"box":[-25.8,25.8,-17.3,17.3],"cells":{"floor":6607,"wall":959,"drop":13588,"pad":266}}
+PASS overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.04,"pen":{"balconyN:a":{"pen_m":0.01,"at":[-18.25,-15.25]},"balconyN:b":{"pen_m":0.01,"at":[18.25,15.25]},"landing:a":{"pen_m":0.04,"at":[-10.25,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":null,"gallery:b":null,"verandaE1:a":{"pen_m":0.04,"at":[6.25,-15.75]},"verandaE1:b":{"pen_m":0.04,"at":[-8.25,15.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":439.5}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":28,"cells4m":6,"trail":[[9.2,-9.8],[8,-11.8],[8.2,-11.8],[10.1,-10.9],[10.1,-10.8],[11.1,-8.8],[11.7,7.5],[11.7,7.5],[11.3,3.6],[11.3,3.6],[11.3,3.3],[11.3,3.3]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":6}
+PASS it plays its moves (charges included)  {"played":{"barrage":11,"slam":5,"sweep":2,"charge":1,"crablets":1},"stuns":1,"hp":0.59,"dead":false}
+RESULT 6/7
+### runA/boss2
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":553,"floorY":0,"box":[-25.8,25.8,-17.3,17.3],"cells":{"floor":6607,"wall":959,"drop":13588,"pad":266}}
+PASS overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.04,"pen":{"balconyN:a":{"pen_m":0.01,"at":[-18.25,-15.25]},"balconyN:b":{"pen_m":0.01,"at":[18.25,15.25]},"landing:a":{"pen_m":0.04,"at":[-10.25,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":null,"gallery:b":null,"verandaE1:a":{"pen_m":0.04,"at":[6.25,-15.75]},"verandaE1:b":{"pen_m":0.04,"at":[-8.25,15.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":439.5}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":58,"cells4m":8,"trail":[[9.3,-9.8],[6.2,-13.7],[6.8,-13.8],[20.3,15.3],[20.5,15.3],[20.5,15.3],[20.7,15.1],[20.7,15.1],[20.7,15.1],[22.5,12.9],[17.3,2.3],[17.1,4]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3}
+PASS it plays its moves (charges included)  {"played":{"barrage":13,"slam":4,"charge":2,"crablets":1},"stuns":2,"hp":0.53,"dead":false}
+RESULT 6/7
+### runD/boss1
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":601,"floorY":0,"box":[-25.8,25.8,-17.3,17.3],"cells":{"floor":6565.5,"wall":999,"drop":13589.5,"pad":266}}
+PASS overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.04,"pen":{"balconyN:a":{"pen_m":0.01,"at":[-18.25,-15.25]},"balconyN:b":{"pen_m":0.01,"at":[18.25,15.25]},"landing:a":{"pen_m":0.04,"at":[-10.25,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":null,"gallery:b":null,"verandaE1:a":{"pen_m":0.04,"at":[6.25,-15.75]},"verandaE1:b":{"pen_m":0.04,"at":[-8.25,15.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":447}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":17,"cells4m":5,"trail":[[9.3,-9.8],[9.9,-8.9],[9,-10.1],[9,-10.1],[9.2,-11.6],[11.4,-12.8],[10.9,-5],[11,-5],[11.1,-4.6],[11.1,-4.6],[11.1,-4.6],[11.1,-4.6]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3}
+PASS it plays its moves (charges included)  {"played":{"barrage":11,"slam":7,"charge":1,"crablets":3},"stuns":1,"hp":0.4,"dead":false}
+RESULT 6/7
+### runD/boss2
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":601,"floorY":0,"box":[-25.8,25.8,-17.3,17.3],"cells":{"floor":6565.5,"wall":999,"drop":13589.5,"pad":266}}
+PASS overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":0.04,"pen":{"balconyN:a":{"pen_m":0.01,"at":[-18.25,-15.25]},"balconyN:b":{"pen_m":0.01,"at":[18.25,15.25]},"landing:a":{"pen_m":0.04,"at":[-10.25,-9.25]},"landing:b":{"pen_m":0.04,"at":[9.75,9.25]},"gallery:a":null,"gallery:b":null,"verandaE1:a":{"pen_m":0.04,"at":[6.25,-15.75]},"verandaE1:b":{"pen_m":0.04,"at":[-8.25,15.75]},"verandaE2:a":null,"verandaE2:b":null,"verandaW:a":null,"verandaW:b":null}}
+PASS home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":447}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":13,"cells4m":3,"trail":[[9.5,-9.9],[8.2,-12.8],[8.2,-12.8],[13.1,-6.3],[13.1,-6.3],[13.1,-6.3],[13.2,-6.2],[13.2,-6.2],[13.2,-6.2],[13.2,-6.2],[13.2,-6.2],[13.3,-6.2]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":8}
+PASS it plays its moves (charges included)  {"played":{"barrage":15,"sweep":2,"charge":1,"crablets":1},"stuns":1,"hp":0.46,"dead":false}
+RESULT 6/7
+### runB/bossH1
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":267,"floorY":0,"box":[-21.8,21.8,25.3,66.3],"cells":{"floor":3872.5,"wall":953,"drop":1869,"pad":25.5}}
+FAIL overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":1.53,"pen":{"balconyN:a":null,"balconyN:b":null,"landing:a":null,"landing:b":null,"gallery:a":null,"gallery:b":{"pen_m":0.55,"at":[0.75,25.75]},"verandaE1:a":null,"verandaE1:b":{"pen_m":1.53,"at":[-2.25,26.75]},"verandaE2:a":null,"verandaE2:b":{"pen_m":1.05,"at":[-0.75,31.25]},"verandaW:a":null,"verandaW:b":{"pen_m":1.52,"at":[1.25,44.25]}}}
+FAIL home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":0}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":16,"cells4m":5,"trail":[[0.2,51.7],[-0.5,46.3],[-1.2,40.5],[-0.9,37.3],[-0.4,35.7],[-0.4,35.6],[-0.4,35.6],[-0.4,35.6],[-0.4,35.6],[-0.4,35.6],[-0.4,35.6],[-0.4,35.6]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3}
+PASS it plays its moves (charges included)  {"played":{"barrage":19,"sweep":1,"slam":1},"stuns":0,"hp":0.7,"dead":false}
+RESULT 4/7
+### runB/bossH2
+PASS boss match running on the stage  {"mode":"boss"}
+PASS home ground (plannable area for the boss)  {"area_m2":267,"floorY":0,"box":[-21.8,21.8,25.3,66.3],"cells":{"floor":3872.5,"wall":953,"drop":1869,"pad":25.5}}
+FAIL overhangs: no pose of the boss reaches under the balcony, its landing, the gallery or a veranda (penetration ≤ 0.05 m)  {"worst_m":1.53,"pen":{"balconyN:a":null,"balconyN:b":null,"landing:a":null,"landing:b":null,"gallery:a":null,"gallery:b":{"pen_m":0.55,"at":[0.75,25.75]},"verandaE1:a":null,"verandaE1:b":{"pen_m":1.53,"at":[-2.25,26.75]},"verandaE2:a":null,"verandaE2:b":{"pen_m":1.05,"at":[-0.75,31.25]},"verandaW:a":null,"verandaW:b":{"pen_m":1.52,"at":[1.25,44.25]}}}
+FAIL home ground includes the circus ring (≥ 150 m² of it)  {"ring_m2":0}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":25,"cells4m":6,"trail":[[-0.1,49.6],[-0.8,43.4],[-1,38.2],[-0.7,34.9],[-0.7,31],[-1.1,31.1],[-0.6,29.4],[-0.6,29.4],[-0.6,29.4],[-0.6,29.4],[-0.6,29.4],[-0.3,27.4]]}
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":4}
+PASS it plays its moves (charges included)  {"played":{"barrage":16,"slam":2,"sweep":3},"stuns":0,"hp":0.76,"dead":false}
+RESULT 4/7

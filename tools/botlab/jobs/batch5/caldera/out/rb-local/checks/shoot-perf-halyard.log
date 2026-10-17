@@ -1,0 +1,3 @@
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/perf/halyard-day-top.png
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":7876,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":112,"tris":975784,"cpuRenderMs":2.59,"cpuSimMs":1.7},"coverage":[4.7,3.9]}
+CONSOLE 0 unique warning/error line(s)

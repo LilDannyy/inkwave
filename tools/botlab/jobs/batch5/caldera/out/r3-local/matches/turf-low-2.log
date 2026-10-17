@@ -1,0 +1,15 @@
+== caldera [turf 180s]: turf 28.2% vs 35.6%
+   roles (% of bot-time) {} | holding on purpose 0.2%
+   per bot: turf 1305p, on-zone ink 0p, splats 5.5 → XP beyond the win/lose base ≈ 1525
+   stuck 0% | splats 44 (water 0) | specials 9 | super jumps 27 | turf 28.2/35.6 | sim 180s in 47s (wall 47s) | {"cpuSimMs":1.41}
+   loadouts A:twins+seeker A:brolly+waddle A:brush+mist A:blaster+seeker B:bucket+sprinkler B:brush+mist B:mitts+boomerang B:spinner+curtain
+   by weapon (players, splats dealt, deaths, avg turf) twins×1 7/5 1653p · brolly×1 1/6 765p · brush×2 8/20 870p · blaster×1 6/2 1973p · bucket×1 5/5 1075p · mitts×1 11/5 1505p · spinner×1 6/1 1729p
+   splats by cause {"slosh":5,"brush":3,"mitts":10,"drop":5,"slam":1,"blast":6,"shot":8,"stamp":3,"crab":2,"brolly":1}
+   special uses A {"blower":3,"stamp":2} B {"slam":1,"crab":2,"blower":1}
+   SURF uses 0 thrown 0 anchored 0 lost 0 popped 0 | rings 0 hits 0 (marks 0, ring splats 0) dodged 0 | ink 0 m² in 0 splats | turf from it A 0 of 5121 · B 0 of 5320 | assists A 10 B 5 {"jumps":0,"byDamage":15,"byJump":0,"credited":15} | bots {"throws":0,"atFoes":0,"atObj":0,"atTurf":0,"noticed":0,"missed":0,"jumps":0,"shots":0}
+   enemy specials AI on | splatted by specials: A 3 {"slam":1,"crab":2} · B 3 {"stamp":3} | K/D A 20/24 B 24/20 | {"noticed":73,"missed":2,"escapes":30,"evaded":4,"caught":1,"avoidedPath":18,"goalMoved":36,"guard":1,"backedOff":7,"retargeted":7,"heldFire":2.933333333333328,"knockShots":0,"reengaged":5,"bubbleHold":2.28333333333333,"popShots":0,"hops":1,"hunted":3,"splattedBy":{"slam":1,"stamp":3,"crab":2}}
+   sight: fighting 304 bot-s, trigger held 67 s | foe out of sight 21% of fight time, aim still on it 79.2% of that | shooting at nothing 2.6% of trigger time (2.2% straight at the hidden foe; 1.1% while it still thinks it sees it, 0% a charge held, 1.5% shots) | bots 26.38 ms per sim s (looking 1.66) | {"checks":5444,"rays":4986,"deferred":0,"seen":368,"lost":135,"cleared":5,"expired":13,"located":538,"jumps":84,"hits":1,"sprays":3,"memBombs":4,"hunts":60}
+   wall climbs (at the wall): {"tries":1,"done":1,"stalled":0,"dry":0,"long":0}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":180,"simMs":46925,"state":"finish","stuckPct":0,"splats":44,"water":0,"specials":9,"jumps":27,"cov":[28.2,35.6],"teamKD":[{"k":20,"d":24,"sp":3,"by":{"slam":1,"crab":2}},{"k":24,"d":20,"sp":3,"by":{"stamp":3}}],"spUses":[{"blower":3,"stamp":2},{"slam":1,"crab":2,"blower":1}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":73,"missed":2,"escapes":30,"evaded":4,"caught":1,"avoidedPath":18,"goalMoved":36,"guard":1,"backedOff":7,"retargeted":7,"heldFire":2.933333333333328,"knockShots":0,"reengaged":5,"bu

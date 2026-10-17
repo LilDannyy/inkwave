@@ -13,6 +13,7 @@ import { G, on } from '../core/ctx.js';
 import { SPECIALS, SUB } from '../config.js';
 import { INK_ONE, INK_ONE_STATE } from '../world/inkOne.js';
 import { SUB_KITS } from './kits/registry.js';   // [b5-subs] kit devices' own marks (drawMap)
+import { drawKarpMap } from '../ui/hud-karp.js';   // [karp-face]
 
 const TAU = Math.PI * 2;
 let CURRENT = null;          // the live Minimap (a new one is built per stage layout)
@@ -409,6 +410,7 @@ export class Minimap {
     const Tw = G.match && !G.match.attract ? G.match.tower : null;
     if (Tw) this._drawTowerPath(c, Tw, hex, t);
     const tc = this._tc || (this._tc = { x: 0, y: 0 });
+    if (G.match?.karp && !G.match.attract) drawKarpMap(c, this, tc, s, hex, t, 'under');   // [karp-face] free zones, weirs, Gates (hud-karp.js)
     // spawn pads
     const pads = this.level.spawnPads || [];
     for (let team = 0; team < 2; team++) {
@@ -521,6 +523,7 @@ export class Minimap {
     G.specials?.drawMap(c, this, tc, s, hex, t);
     c.globalAlpha = 1;
     if (Tw) this._drawTowerIcon(c, Tw, hex, t);
+    if (G.match?.karp && !G.match.attract) drawKarpMap(c, this, tc, s, hex, t, 'over');   // [karp-face] the Bazookarp
     this._jumpLines(c, s, hex, t, me);
     void W; void H;
   }

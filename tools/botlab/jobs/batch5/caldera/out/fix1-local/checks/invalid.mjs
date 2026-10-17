@@ -1,0 +1,11 @@
+const ROOT = process.env.ROOT || '/Users/danielosling/Desktop/1/st-b5-caldera';
+const { LAYOUT } = await import('file://' + ROOT + '/src/world/stages/caldera/layout.js');
+const { layoutFor } = await import('file://' + ROOT + '/src/world/variants.js');
+const { Level } = await import('file://' + ROOT + '/src/world/level.js');
+const { Physics } = await import('file://' + ROOT + '/src/game/physics.js');
+const { NavGraph } = await import('file://' + ROOT + '/src/game/nav.js');
+const level = new Level(layoutFor(LAYOUT, process.env.MODE || 'turf'));
+const nav = new NavGraph(level, new Physics(level));
+const bad = nav.nodes.filter((n) => !nav.valid[n.id]);
+console.log('invalid', bad.length, 'of', nav.nodes.length);
+for (const n of bad) console.log(n.x.toFixed(1), n.y.toFixed(2), n.z.toFixed(1), 'exit', nav.exitable[n.id], 'nb', n.nb.length, n.nudged ? 'nudged' : '');

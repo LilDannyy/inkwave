@@ -1,0 +1,63 @@
+# head c13c5aca
+### zones top 1
+REPORT {"map":"bluestone","mode":"zones","time":"day","loadMs":12286,"blocks":534,"solidBlocks":534,"propMeshes":3,"navNodes":4727,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":
+### tower top 1
+REPORT {"map":"bluestone","mode":"tower","time":"day","loadMs":9853,"blocks":530,"solidBlocks":530,"propMeshes":3,"navNodes":4765,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":1
+### ink 3
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6429,"blocks":666,"solidBlocks":666,"propMeshes":3,"navNodes":5768,"bounds":{"minX":-42,"maxX":42,"minZ":-80,"maxZ":80},"perf":{"calls":13
+### crossmarket mid
+REPORT {"map":"crossmarket","mode":"turf","time":"day","loadMs":6515,"blocks":919,"solidBlocks":919,"propMeshes":18,"navNodes":4730,"bounds":{"minX":-31,"maxX":31,"minZ":-68,"maxZ":68},"perf":{"calls"
+### done
+# head c13c5aca
+--- 02:13:38 perf halyard
+### perf Halyard
+REPORT {"map":"halyard","mode":"turf","time":"day","loadMs":8044,"blocks":511,"solidBlocks":511,"propMeshes":23,"navNodes":4289,"bounds":{"minX":-24,"maxX":24,"minZ":-70,"maxZ":70},"perf":{"calls":156,"tris":1447016,"cpuRenderMs":2.42,"cpuSimMs":2.12},"coverage":[3.3,4.4]}
+--- 02:14:02 done
+# head c13c5aca
+--- 02:14:02 tower-check 3
+### tower-check era 3
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+--- 02:15:38 tower-check 1
+### tower-check era 1
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+--- 02:17:15 done
+# head bd0fc6aa
+--- 02:17:15 turf3 1
+### turf3 r1
+== bluestone [turf 180s]: turf 40.3% vs 20.6%
+   stuck 0% | splats 36 (water 0) | specials 3 | super jumps 14 | turf 40.3/20.6 | sim 180s in 37s (wall 37s) | {"cpuSimMs":1.28}
+   splats by cause {"brolly":4,"blast":3,"mitts":5,"slosh":1,"blade":5,"bow":9,"charger":2,"tracer":2,"jetpack":2,"mine":1,"waddle":1,"burst":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+--- 02:18:10 turf3 2
+### turf3 r2
+== bluestone [turf 180s]: turf 36.6% vs 36.2%
+   stuck 0.1% | splats 42 (water 0) | specials 7 | super jumps 13 | turf 36.6/36.2 | sim 180s in 37s (wall 37s) | {"cpuSimMs":1.01}
+   splats by cause {"mitts":15,"shot":7,"blast":10,"boomerang":2,"blaster":4,"blade":3,"tracer":1}
+   DIAG: 0 stuck episode(s) of 2 s or more
+--- 02:19:07 turf3 3
+### turf3 r3
+== bluestone [turf 180s]: turf 25.8% vs 39.4%
+   stuck 0.3% | splats 36 (water 0) | specials 7 | super jumps 21 | turf 25.8/39.4 | sim 180s in 41s (wall 42s) | {"cpuSimMs":1.38}
+   splats by cause {"blade":6,"roller":2,"bow":1,"drop":3,"blast":4,"shot":10,"charger":5,"crab":1,"mitts":4}
+   DIAG: 0 stuck episode(s) of 2 s or more
+--- 02:20:08 done
+# head bd0fc6aa
+--- 02:20:08 regions 3 1
+### ink-regions era 3 run 1
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6458,"inked":0.629,"regions":{"circus":{"m2":1635,"share":0.253,"inked":0.75},"base":{"m2":978,"share":0.151,"inked":0.72},"knee":{"m2":858,"share":0.133,"inked":0.47},"swimston":{"m2":549,"share":0.085,"inked":0.87},"halo":{"m2":468,"share":0.072,"inked":0.5},"knee-far":{"m2":427,"share":0.066,"inked":0.3},"river":{"m2":385,"share":0.06,"inked":0.56},"garden":{"m2":379,"share":0.059,"inked":0.6},"gpo-quay":{"m2":302,"share":0.047,"inked":0.66},"hoki":{"m2":267,"share":0.041,"inked":0.53},"arcade":{"m2":210,"share":0.032,"inked":0.57}}}
+--- 02:22:16 regions 3 2
+### ink-regions era 3 run 2
+PASS ink by region (both halves folded onto Alpha’s)  {"era":"3","simS":180,"total_m2":6458,"inked":0.672,"regions":{"circus":{"m2":1635,"share":0.253,"inked":0.83},"base":{"m2":978,"share":0.151,"inked":0.76},"knee":{"m2":858,"share":0.133,"inked":0.63},"swimston":{"m2":549,"share":0.085,"inked":0.88},"halo":{"m2":468,"share":0.072,"inked":0.22},"knee-far":{"m2":427,"share":0.066,"inked":0.39},"river":{"m2":385,"share":0.06,"inked":0.52},"garden":{"m2":379,"share":0.059,"inked":0.61},"gpo-quay":{"m2":302,"share":0.047,"inked":0.76},"hoki":{"m2":267,"share":0.041,"inked":0.52},"arcade":{"m2":210,"share":0.032,"inked":0.72}}}
+--- 02:26:25 done
+# head bd0fc6aa
+--- 02:26:25 zones 3

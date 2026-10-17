@@ -1,0 +1,40 @@
+# picture runs (shoot.cjs REPORT: loadMs, draw calls, triangles, cpuRender) — local, the Mac loaded by other builders
+### era 1
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6685,"blocks":1314,"solidBlocks":1314,"propMeshes":4,"navNodes":6920,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":129,"tris":376224,"cpuRenderMs":2.06,"cpuSimMs":2.43},"coverage":[2,1.8]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+REPORT {"map":"bluestone","mode":"zones","time":"day","loadMs":6964,"blocks":1314,"solidBlocks":1314,"propMeshes":4,"navNodes":6920,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":133,"tris":400398,"cpuRenderMs":2.05,"cpuSimMs":1.99},"coverage":[1.7,1.6]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+REPORT {"map":"bluestone","mode":"tower","time":"day","loadMs":6854,"blocks":1284,"solidBlocks":1284,"propMeshes":4,"navNodes":7136,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":155,"tris":318058,"cpuRenderMs":2.18,"cpuSimMs":1.55},"coverage":[0.4,0.8]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6488,"blocks":1314,"solidBlocks":1314,"propMeshes":4,"navNodes":6920,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":108,"tris":340366,"cpuRenderMs":1.59,"cpuSimMs":1.3},"coverage":[4.7,9.1]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+### era 2
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6700,"blocks":1370,"solidBlocks":1370,"propMeshes":4,"navNodes":7554,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":83,"tris":221343,"cpuRenderMs":1.82,"cpuSimMs":1.87},"coverage":[2.7,2.9]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+REPORT {"map":"bluestone","mode":"zones","time":"day","loadMs":6499,"blocks":1370,"solidBlocks":1370,"propMeshes":4,"navNodes":7554,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":92,"tris":224616,"cpuRenderMs":2.07,"cpuSimMs":1.56},"coverage":[1.3,1.2]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+REPORT {"map":"bluestone","mode":"tower","time":"day","loadMs":7624,"blocks":1340,"solidBlocks":1340,"propMeshes":4,"navNodes":7650,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":140,"tris":229699,"cpuRenderMs":5.22,"cpuSimMs":4.25},"coverage":[1.1,0.8]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":9909,"blocks":1370,"solidBlocks":1370,"propMeshes":4,"navNodes":7554,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":117,"tris":351293,"cpuRenderMs":2.17,"cpuSimMs":1.77},"coverage":[7.2,7.6]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+### era 3
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":11288,"blocks":1456,"solidBlocks":1456,"propMeshes":4,"navNodes":8122,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":264,"tris":1050139,"cpuRenderMs":4.6,"cpuSimMs":3.69},"coverage":[1.4,1.4]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+REPORT {"map":"bluestone","mode":"zones","time":"day","loadMs":7352,"blocks":1456,"solidBlocks":1456,"propMeshes":4,"navNodes":8122,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":254,"tris":952731,"cpuRenderMs":5.05,"cpuSimMs":3.29},"coverage":[0.9,1.4]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON
+REPORT {"map":"bluestone","mode":"tower","time":"day","loadMs":15633,"blocks":1426,"solidBlocks":1426,"propMeshes":4,"navNodes":8218,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":346,"tris":807872,"cpuRenderMs":5.3,"cpuSimMs":2.37},"coverage":[0.4,0.8]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+REPORT {"map":"bluestone","mode":"turf","time":"day","loadMs":6386,"blocks":1456,"solidBlocks":1456,"propMeshes":4,"navNodes":8122,"bounds":{"minX":-63,"maxX":63,"minZ":-85,"maxZ":85},"perf":{"calls":148,"tris":371980,"cpuRenderMs":2.64,"cpuSimMs":1.72},"coverage":[8,6.7]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone Unexpected token 'N', "Not found" is not valid JSON

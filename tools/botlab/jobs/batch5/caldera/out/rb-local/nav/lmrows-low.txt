@@ -1,0 +1,2 @@
+rows 1617 / 2048, faces 4997, blocks 1737
+yard:204r/387f  coping:168r/892f  island:128r/206f  rim-head:108r/154f  lakefront:85r/342f  terrace:79r/338f
