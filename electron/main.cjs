@@ -4,6 +4,34 @@ const { app, BrowserWindow, Menu, protocol, net, shell, powerSaveBlocker, ipcMai
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+function readBuildCommit() {
+  try {
+    const appRoot = path.join(__dirname, '..');
+    let gd = path.join(appRoot, '.git');
+    if (fs.statSync(gd).isFile()) gd = path.resolve(appRoot, fs.readFileSync(gd, 'utf8').trim().replace(/^gitdir:\s*/, ''));
+    let common = gd;
+    try { common = path.resolve(gd, fs.readFileSync(path.join(gd, 'commondir'), 'utf8').trim()); } catch {}
+    const head = fs.readFileSync(path.join(gd, 'HEAD'), 'utf8').trim();
+    if (!head.startsWith('ref: ')) return head;
+    const ref = head.slice(5), loose = path.join(common, ref);
+    if (fs.existsSync(loose)) return fs.readFileSync(loose, 'utf8').trim();
+    for (const line of fs.readFileSync(path.join(common, 'packed-refs'), 'utf8').split(/\r?\n/)) if (line.endsWith(` ${ref}`)) return line.split(' ')[0];
+  } catch {}
+  return process.env.INKWAVE_BUILD_COMMIT || 'unknown';
+}
+const BUILD_COMMIT = readBuildCommit();
+ipcMain.on('build:commit', (e) => { e.returnValue = BUILD_COMMIT; });
+
+const ISSUE_LIMIT = 5 * 1024 * 1024;
+const issuePath = () => path.join(app.getPath('userData'), 'issues.log');
+function appendIssue(row) {
+  try {
+    const file = issuePath(); fs.mkdirSync(path.dirname(file), { recursive: true });
+    if (fs.existsSync(file) && fs.statSync(file).size > ISSUE_LIMIT) { try { fs.renameSync(file, file + '.1'); } catch {} }
+    fs.appendFileSync(file, JSON.stringify(row).slice(0, 8192) + '\n');
+  } catch (e) { console.error('issue log write failed:', e.message); }
+}
+ipcMain.on('issue:append', (_e, row) => { if (row && typeof row === 'object') appendIssue(row); });
 
 const ROOT = path.join(__dirname, '..');
 
@@ -59,6 +87,10 @@ function createWindow() {
     webPreferences: { contextIsolation: true, sandbox: true, preload: path.join(__dirname, 'preload.cjs') },
   });
   win.loadURL('app://inkwave/index.html');
+  win.webContents.on('console-message', (_e, details) => {
+    const d = details || {}, level = typeof d.level === 'number' ? d.level : (d.level === 'error' ? 3 : d.level === 'warning' ? 2 : 1);
+    if (level >= 2) appendIssue({ at: new Date().toISOString(), kind: 'renderer-console', level, message: 'renderer console warning/error', line: d.lineNumber, source: String(d.sourceId || '').slice(0, 300) });
+  });
   // Keep any outbound links in the user's browser instead of inside the game window.
   win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
 
@@ -141,6 +173,7 @@ function buildMenu() {
 }
 
 app.whenReady().then(() => {
+  console.log(`INKWAVE issue log: ${issuePath()}`);
   nativeTheme.themeSource = 'dark';
   protocol.handle('app', async (req) => {
     const { pathname } = new URL(req.url);
@@ -156,6 +189,11 @@ app.whenReady().then(() => {
     // everything the game loads ships inside the app; nothing remote may run in the window
     const headers = new Headers(res.headers);
     headers.set('Content-Security-Policy', CSP);
+    if (pathname === '/index.html') {
+      let html = await res.text();
+      html = html.replace(/<head([^>]*)>/i, (m) => `${m}\n<meta name="inkwave-build" content="${BUILD_COMMIT}">`);
+      return new Response(html, { status: res.status, headers });
+    }
     return new Response(res.body, { status: res.status, headers });
   });
   buildMenu();

@@ -36,6 +36,7 @@ const TYPES = {
   '.flac': 'audio/flac', '.hdr': 'application/octet-stream', '.exr': 'application/octet-stream',
 };
 const META = '<meta name="inkwave-relay" content="same-origin">';
+const ISSUE_LIMIT = 20 * 1024 * 1024, issueRates = new Map();
 
 // the relay admits pages from this host (whatever name it was reached by), a quick tunnel, localhost, the LAN and the
 // desktop app (electron/main.cjs serves the game on its privileged app:// scheme — standard + secure — so its pages'
@@ -52,6 +53,26 @@ function originOk(origin, req) {
 }
 
 function serve(ROOT, req, res, url) {
+  if (url.pathname === '/issue') {
+    if (req.method !== 'POST') { res.writeHead(405, { Allow: 'POST' }); res.end(); return; }
+    if (!originOk(req.headers.origin, req)) { res.writeHead(403); res.end(); return; }
+    if (!/^application\/json(?:\s*;|$)/i.test(String(req.headers['content-type'] || ''))) { res.writeHead(415); res.end(); return; }
+    const ip = String(req.socket.remoteAddress || 'unknown'), now = Date.now();
+    let q = issueRates.get(ip) || []; q = q.filter((t) => now - t < 60000);
+    if (q.length >= 20) { res.writeHead(429); res.end(); return; } q.push(now); issueRates.set(ip, q);
+    let body = ''; req.on('data', (chunk) => { body += chunk; if (Buffer.byteLength(body) > 8192) { res.writeHead(413); res.end(); req.destroy(); } });
+    req.on('end', () => {
+      try {
+        const parsed = JSON.parse(body), list = Array.isArray(parsed.entries) ? parsed.entries : [parsed];
+        if (list.length > 500 || list.some((x) => !x || typeof x !== 'object')) throw new Error('invalid entries');
+        const file = path.join(ROOT, 'issues.log');
+        if (fs.existsSync(file) && fs.statSync(file).size > ISSUE_LIMIT) { try { fs.renameSync(file, file + '.1'); } catch {} }
+        fs.appendFileSync(file, list.map((x) => JSON.stringify(x).slice(0, 8192)).join('\n') + '\n');
+        res.writeHead(204); res.end();
+      } catch { if (!res.headersSent) { res.writeHead(400); res.end(); } }
+    });
+    return;
+  }
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405, { Allow: 'GET, HEAD' }); res.end(); return; }
   let rel;
   try { rel = decodeURIComponent(url.pathname); } catch { res.writeHead(400); res.end('bad path'); return; }
@@ -69,7 +90,12 @@ function serve(ROOT, req, res, url) {
     if (ext === '.html') {
       fs.readFile(file, 'utf8', (e, html) => {
         if (e) { res.writeHead(500); res.end(); return; }
-        const out = html.includes('name="inkwave-relay"') ? html : html.replace(/<head([^>]*)>/i, (m) => `${m}\n  ${META}`);
+        let build = 'unknown';
+        try { build = fs.readFileSync(path.join(ROOT, 'build-id.txt'), 'utf8').trim(); } catch {
+          try { build = require('child_process').execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); } catch {}
+        }
+        const tags = `${META}\n  <meta name="inkwave-build" content="${build.replace(/[^a-f0-9]/gi, '').slice(0, 40) || 'unknown'}">`;
+        const out = html.includes('name="inkwave-relay"') ? html.replace(/<head([^>]*)>/i, (m) => `${m}\n  ${tags}`) : html.replace(/<head([^>]*)>/i, (m) => `${m}\n  ${tags}`);
         const body = Buffer.from(out, 'utf8');
         res.writeHead(200, { ...headers, 'Content-Length': body.length });
         res.end(req.method === 'HEAD' ? undefined : body);

@@ -71,3 +71,13 @@ Four screenshots were visually inspected and committed as JPEGs under 300 KB:
 Key commits: `4db65ccc`, `dcbc17d3`, `08537605`, `05a5fcc5`, `e9b2bbbf`, `90a16a5b`, `3ba7ea7b`, `da40dbb9`, `59a2619b`, `7c0f59a1`, `69d6631e`, and screenshot commit `d63ed8c0`.
 
 Still open: run the `eras-jump` frames split at low load; rerun/capture `lava` and `lava-audit` failures with complete output; investigate the `lava-karp`, `net-karp`, and `sfx-cues` hangs and `bot-specials` failure; finish the online suite; run Bazookarp matches on karpbox and halyard; inspect the warning/error lines and rerun Bluestone Tower to meet the stuck target; complete final diff/status review. Push is held pending the user's direction.
+
+## Addendum: beta issue capture
+
+Implemented the Addendum's issue logging. `src/core/issueLog.js` uses a 500-entry ring and records timestamp, build commit, mode, stage, era/lava state and online status. It captures wrapped `console.error` / `console.warn`, `window.onerror`, unhandled rejections, in-game frames over 250 ms, bot no-progress episodes over 5 seconds, and a guest's local result disagreement with the host result. Player names and room-code-like strings are scrubbed.
+
+- Desktop JSONL: `<app.getPath('userData')>/issues.log`; rotates above 5 MiB. Startup prints the path. Renderer console warning/error events are forwarded too.
+- Hosted JSONL: `<site-root>/issues.log`; `POST /issue` enforces same-origin, an 8 KiB body cap and 20 requests/minute/IP, rotating above 20 MiB. `tools/host/export.sh` writes the build commit to `build-id.txt`; the host injects it into the page. The game posts buffered entries to the same origin at 10-second intervals and on unload.
+- Summary: `node tools/botlab/issues-summary.cjs <issues.log> [other.log ...]` prints grouped counts, stage, mode, first/last seen and an example message.
+
+Proof: `issue-log.js` page test PASS 2/2; `issue-host.cjs` PASS for JSONL append, same-origin rejection, 8 KiB cap and rate limit; `net-practice` PASS 29/29 with no client console errors. Syntax checks and `git diff --check` passed. The botlab page harness itself prints an Electron `console-message` deprecation warning; the app's warning/error forwarding uses the current details-object callback signature. No live hosted server was contacted.

@@ -47,6 +47,7 @@ import './game/karpGun.js';   // [b5-karp] the Carp Shot (G.karpGun, KIT_GHOSTS.
 import { InkWipeFx } from './fx/inkWipeFx.js';
 import { cues } from './audio/cues.js';   // sfx-cues: sub / special audio cues (the loops, warnings, friend / foe mix)
 import { BOSS_MODE } from './boss/bossMode.js';
+import { issueLog } from './core/issueLog.js'; // [b5-int4] beta issue capture
 
 const params = new URLSearchParams(location.search);
 // dev-only: ?devstage lets an online-only stage (config onlineOnly — Cargo Terminal) boot as the backdrop and be walked
@@ -1337,6 +1338,7 @@ class Game {
 
   _frame(dt) {
     const tA = performance.now();
+    issueLog.bots(dt);
     G.renderer.info.reset();
     G.time += dt;
     this.input.pollPad();
@@ -1439,6 +1441,7 @@ class Game {
     if (m && !m.attract && this.hud && (m.state === 'playing' || m.state === 'intro' || m.state === 'finish')) this._updateHud(dt);
     this.menus?.update?.(dt);
     this.input.endFrame();
+    issueLog.frame(performance.now() - tA);
   }
 
   // continuous sounds tied to the local player's state (swim gurgle, wall climb, enemy-ink sizzle)
