@@ -65,3 +65,26 @@ Mixed lobbies read 0–0.8 %. Fix: a held press times out (about 1.5 s) and the 
 the same match reading ≤ 1 % stuck and no `hold: true` episode over 2 s.
 Note: `new-stages` is now a9974492 (= b5-int3 merged); start by merging it into `b5-int4` (it only adds the merge commit
 and scratch docs on top of what this branch already has).
+
+## Addendum (2026-10-17, the lead): ship as BETA now, and keep an issue log for the lead's later review
+The user has decided: package and host this branch as it stands (bugs are acceptable in a PUBLIC BETA), but the
+desktop app and the hosted server must each keep a log of issues for review when the lead's usage resets. Build this
+before anything else, then commit; the lead merges, packages and hosts straight after.
+1. **In the game (shared by both builds):** a small module `src/core/issueLog.js` that collects, with a timestamp,
+   the build commit, mode, stage, era / lava state and whether online: every `console.error` / `console.warn` line
+   (wrap them), `window.onerror`, `unhandledrejection`, the harness-style FRAME ERRORS (a frame over 250 ms outside
+   loading), a bot stuck episode over 5 s, and any `match:end` whose result the screens disagreed on (the net results
+   check already detects this). Keep it cheap (a ring buffer of 500 entries, no per-frame allocation), and never log
+   room codes, names typed by players or anything personal beyond the player's chosen nickname.
+2. **Desktop app:** `electron/main.cjs` writes those entries, appended as JSON lines, to
+   `app.getPath('userData')/issues.log` (also forward the renderer's `console-message` events at warning level and
+   above there), rotating at 5 MB. Print the path once at start-up in the terminal.
+3. **Hosted web build:** `tools/host/selfhost.cjs` accepts `POST /issue` (JSON, ≤ 8 KB, same-origin only, rate
+   limited to 20 a minute per IP, no other method change) and appends the entries to `issues.log` next to its site
+   root, rotating at 20 MB; the game posts its buffer on each issue (batched, at most once every 10 s) and on
+   `beforeunload`. Nothing is sent to any other host.
+4. `tools/botlab/issues-summary.cjs`: reads either log and prints a table (count by kind, stage, mode, first and last
+   seen, one example line each) so the lead can review a week of play in one screen.
+5. Prove it: a page test `issue-log.js` (an error, a warning, a slow frame and a stuck bot each produce one entry with
+   the right fields; a hosted POST lands in the file; the rate limit holds), and `net-practice` still passes.
+Write what you built and where the logs live into `tools/botlab/jobs/batch5/int4/LEAD-REPORT.md`.
