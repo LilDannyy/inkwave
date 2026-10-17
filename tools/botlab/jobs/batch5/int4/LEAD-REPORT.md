@@ -40,7 +40,7 @@ Electron checks were launched through `tools/botlab/run.sh` with `BOTLAB_OUT=/Us
 | `sub-glide`, `sub-bobber`, `sub-sentry`, `sub-dash` | 65/65, 84/84, 50/50, 48/48 passed on the final code. |
 | `deployables`, `bot-specials`, `tower-rules`, `loadout-picker`, `beta-content` | 34/34, 18/19, 26/26, 23/23, 7/7. The `bot-specials` failure was the Bubble Blower counter-play check for a friendly bubble with an enemy behind a wall. |
 | `sfx-cues` | Not run; it is required alone as the final page test. |
-| `net-karp` (2 clients) | Started with the prescribed local runner, but no output had returned while system load rose above 50; status is unresolved. |
+| `net-karp` (2 clients) | Started with the prescribed local runner, but returned no output after more than 16 minutes while system load rose above 50; I stopped the runner I had launched. Unresolved, not a pass. |
 | `net-eras`, `net-lava`, `net-pipes`, `net-stagemods`, `net-lobbykit`, `net-practice`, and 3-client `net-karp` | Not run. |
 
 ## Bot matches
@@ -70,4 +70,4 @@ Four screenshots were visually inspected and committed as JPEGs under 300 KB:
 
 Key commits: `4db65ccc`, `dcbc17d3`, `08537605`, `05a5fcc5`, `e9b2bbbf`, `90a16a5b`, `3ba7ea7b`, `da40dbb9`, `59a2619b`, `7c0f59a1`, `69d6631e`, and screenshot commit `d63ed8c0`.
 
-Still open: run the `eras-jump` frames split at low load; rerun/capture `lava` and `lava-audit` failures with complete output; investigate the `lava-karp` hang and `bot-specials` failure; run `sfx-cues`; finish the online suite; run Bazookarp matches on karpbox and halyard; inspect the warning/error lines and rerun Bluestone Tower to meet the stuck target; complete final diff/status review and push `b5-int4` to `fork`.
+Still open: run the `eras-jump` frames split at low load; rerun/capture `lava` and `lava-audit` failures with complete output; investigate the `lava-karp` and `net-karp` hangs and `bot-specials` failure; run `sfx-cues`; finish the online suite; run Bazookarp matches on karpbox and halyard; inspect the warning/error lines and rerun Bluestone Tower to meet the stuck target; complete final diff/status review. Push is held pending the user's direction.
