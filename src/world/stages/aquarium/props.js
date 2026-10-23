@@ -53,6 +53,28 @@ const ob = (tag) => tagged(tag)[0];
 const atBox = (d, o = {}) => ({ pos: [(d.min[0] + d.max[0]) / 2, d.min[1] < 0 ? 0 : d.min[1], (d.min[2] + d.max[2]) / 2], rotY: 0, w: d.max[0] - d.min[0], d: d.max[2] - d.min[2], h: d.max[1] - Math.max(0, d.min[1]), ...o });
 const boxC = (d) => (d.kind === 'box' ? [(d.min[0] + d.max[0]) / 2, (d.min[2] + d.max[2]) / 2] : [d.center[0], d.center[2]]);
 
+// (fix round 6) the Kelp Ramp's parapet (layout.js runs k 8 … 11 round the E drum, r 7.65, 0.3 wide, 0.9 over the ramp): a
+// render pilaster over each of its three joints (the runs' 0.25 m overlaps stood 3 cm proud of the next run's court face in
+// a notch, 0.23 m to either side of the joint) and on both ends, and a KELP RAMP plate on its lowest run's court face
+const KELP_PARAPET = (() => {
+  const EKc = [25, 0], R = 7.65, um = R * Math.cos(7.5 * DEG), at = (a, r) => [EKc[0] + r * Math.cos(a * DEG), EKc[1] + r * Math.sin(a * DEG)];
+  const floorAt = ([x, z]) => (Math.hypot(x, z) > 21.0 ? 2.4 : 0);
+  const out = [];
+  for (const k of [8, 9, 10]) {
+    const bj = -90 - 15 * (k + 1), n = [Math.cos(bj * DEG), Math.sin(bj * DEG)], P = at(bj, R + 0.15 / Math.cos(7.5 * DEG));
+    const top = (2.4 * (k + 1)) / 12 + 0.9;   // (the faience speed lines run on across it: 0.26 / 0.34 / 0.42 under the top, as on the faces)
+    out.push({ type: 'aquarium_pilaster', pos: [P[0], 0, P[1]], rotY: Math.atan2(n[0], n[1]), w: 0.52, d: 0.07, b: 0.06, y0: floorAt(P), y1: top - 0.05, lines: [top - 0.26, top - 0.34, top - 0.42].filter((y) => y > floorAt(P) + 0.2) });
+  }
+  for (const [b0, b1, sgn, f, top] of [[-210, -225, -1, 0.25, 2.5], [-255, -270, 1, 0, 3.3]]) {
+    const A = at(b0, R), Bq = at(b1, R), M = Math.hypot(Bq[0] - A[0], Bq[1] - A[1]), v = [(Bq[0] - A[0]) / M, (Bq[1] - A[1]) / M];
+    const E = sgn < 0 ? [A[0] - v[0] * f, A[1] - v[1] * f] : [Bq[0] + v[0] * f, Bq[1] + v[1] * f], dn = [sgn * v[0], sgn * v[1]];
+    out.push({ type: 'aquarium_pilaster', pos: [E[0], 0, E[1]], rotY: Math.atan2(dn[0], dn[1]), w: 0.34, d: 0.055, b: 0.05, y0: floorAt(E), y1: top - (sgn < 0 ? 0.025 : 0) - 0.05 });   // (its cap's corners 8.3 cm off the end)
+  }
+  { const n = [Math.cos(-217.5 * DEG), Math.sin(-217.5 * DEG)], P = at(-217.5, um + 0.15);
+    out.push({ type: 'aquarium_plate', pos: [P[0], 0, P[1]], rotY: Math.atan2(n[0], n[1]), y: 1.2, w: 0.95, h: 0.24, lines: [['KELP RAMP', 0.08, '#dcc18c'], ['UP TO THE SEA PROMENADE', 0.04]] }); }
+  return out;
+})();
+
 export const PLACEMENTS = [
   ...LAYOUT.half.filter((d) => d.rail && d.tag !== 'queue-rope').map(railFor),
   ...LAYOUT.single.filter((d) => d.rail).map(railFor).map((p) => ({ ...p, mirror: false })),
@@ -154,7 +176,20 @@ export const PLACEMENTS = [
     return { type: 'aquarium_plate', pos: [n[0] * 9.0 + tt[0] * tm, 0, n[1] * 9.0 + tt[1] * tm], rotY: Math.atan2(n[0], n[1]), y: 0.12, w: 1.25, h: 0.11, lines: [['PLEASE DO NOT TAP THE GLASS', 0.045]] };
   }),
   { type: 'aquarium_raketrim', pos: [0, 0, 0], low: [...[pol(-152, 15.6)].map(([x, z]) => [x, 0, z])[0]], high: [...[pol(-152, 21.4)].map(([x, z]) => [x, 2.4, z])[0]], w: 6.0, t1: 5.35 },
-  { type: 'aquarium_raketrim', pos: [0, 0, 0], low: [...[pol(-120, 34.6)].map(([x, z]) => [x, 1.2, z])[0]], high: [...[pol(-120, 31.0)].map(([x, z]) => [x, 2.4, z])[0]], w: 5.0, t1: 3.35 },
+  { type: 'aquarium_raketrim', pos: [0, 0, 0], low: [...[pol(-120, 34.6)].map(([x, z]) => [x, 1.2, z])[0]], high: [...[pol(-120, 31.0)].map(([x, z]) => [x, 2.4, z])[0]], w: 5.0, t1: 3.2 },   // (fix round 6: to r 31.4, the nosing's face)
   { type: 'aquarium_raketrim', pos: [0, 0, 0], low: [9.0, 0, -36.2], high: [9.0, 1.2, -39.0], w: 2.0, t1: 2.75 },
   { type: 'aquarium_raketrim', pos: [0, 0, 0], low: [...[pol(-45, 13.5)].map(([x, z]) => [x, 0, z])[0]], high: [...[pol(-45, 7.2)].map(([x, z]) => [x, 2.4, z])[0]], w: 4.0, t1: 5.95 },
+  // ---- fix round 6 (LEAD-REVIEW 6; floorart.js draws the faces and tops under the ink): the Feeding Step's plates and brass
+  //      corner guards, the whale-tail benches' flukes and plate, the Kelp Ramp parapet's pilasters and plate, the trolley
+  //      stack's casters and push bars, the ice-cream cart's menu boards
+  ...[[1, PI / 2], [-1, -PI / 2]].map(([sx, ry]) => ({ type: 'aquarium_plate', pos: [sx * 2.0, 0, -8.5], rotY: ry, y: 0.2, w: 0.95, h: 0.24, lines: [['FEEDING DECK', 0.07, '#dcc18c'], ['KEEPERS ONLY', 0.042]] })),
+  { type: 'aquarium_cornerguard', pos: [1.87, 0, -9.67], t0: PI / 2, r: 0.14, y0: 0.1, y1: 1.05 },
+  { type: 'aquarium_cornerguard', pos: [-1.87, 0, -9.67], t0: PI, r: 0.14, y0: 0.1, y1: 1.05 },
+  { type: 'aquarium_fluke', pos: [-2.5, 0, -58.0], rotY: -PI / 2 },
+  { type: 'aquarium_fluke', pos: [0.5, 0, -58.0], rotY: PI / 2 },
+  { type: 'aquarium_plate', pos: [-1.0, 0, -58.6], rotY: PI, y: 0.86, w: 1.0, h: 0.2, lines: [['WHALE BENCH', 0.065, '#dcc18c'], ['GIFT OF THE 1936 SOCIETY', 0.036]] },
+  ...KELP_PARAPET,
+  { type: 'aquarium_trolleystack', ...atObox(ob('trolley-stack'), 0, { L: 2.0, S: 1.2, H: 1.4 }) },
+  ...[[-39.0, 0], [-40.5, PI]].map(([z, ry]) => ({ type: 'aquarium_plate', pos: [-5.5, 0, z], rotY: ry, y: 0.6, w: 1.0, h: 0.5, board: '#3f5a52',
+    lines: [['GELATO', 0.1, '#dcc18c'], ['VANILLA · PISTACHIO · LEMON', 0.04], ['SEA SALT CARAMEL · 2 SCOOPS', 0.04]] })),
 ];

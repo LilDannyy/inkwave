@@ -350,7 +350,24 @@ export function registerDress(D, H, KIT) {
     desc: 'the Tubeway map lectern (2.0 × 0.6, to 1.2)',
     build(B) {
       B.box('paint', K.render, 2.04, 0.95, 0.5, 0, 0.475, 0, { r: 0.06 });
-      speed(B, -1.0, 1.0, 0.3, { n: 2, gap: 0.1, t: 0.04 });
+      // (fix round 6, LEAD-REVIEW 6: its speed lines sat inside the body and its court face and ends were plain render) a
+      // black-granite skirting with a brass line, three faience speed lines round all four faces, 1 cm proud
+      pbox(B, 'paint', K.granite, 2.06, 0.13, 0.52, 0, 0.065, 0);
+      pbox(B, NS('metal'), K.brass, 2.07, 0.016, 0.53, 0, 0.138, 0);
+      for (const y of [0.62, 0.7, 0.78]) pbox(B, NS('gloss'), K.faience, 2.06, 0.035, 0.52, 0, y, 0);
+      // THE TUBEWAY route map on its court face (+z): a navy enamel plate in a brass frame — the network (the Great Tank's
+      // ring, the Gulper Run across it, the Arch Lines, the Kelp Lines up the drums, the Express) and the name
+      B.push(0, 0, 0.26, 0);
+      B.box('paint', K.navy, 1.36, 0.36, 0.02, 0, 0.385, 0.01, { r: 0.01 });
+      for (const yy of [0.205, 0.565]) pbox(B, NS('metal'), K.brass, 1.39, 0.018, 0.03, 0, yy, 0.012);
+      for (const xx of [-0.685, 0.685]) pbox(B, NS('metal'), K.brass, 0.018, 0.378, 0.03, xx, 0.385, 0.012);
+      letters(B, 'THE TUBEWAY', { h: 0.065, x: -0.33, y: 0.47, z: 0.021, c: K.brassLt, flat: true, mat: 'paint', wt: 0.18, track: 0.12 });
+      letters(B, 'ALL LINES', { h: 0.038, x: -0.33, y: 0.27, z: 0.021, c: K.cream, flat: true, mat: 'paint', wt: 0.18, track: 0.12 });
+      B.add(NS('paint'), torG(0.1, 0.009, 4, 22), K.cream, 0.36, 0.385, 0.022, {});
+      for (const [x0, y0, x1, y1, c] of [[0.14, 0.385, 0.58, 0.385, K.brassLt], [0.36, 0.25, 0.36, 0.52, '#9bd0c0'], [0.07, 0.31, 0.2, 0.42, K.cream], [0.52, 0.35, 0.65, 0.46, K.cream], [0.2, 0.5, 0.6, 0.27, '#e8c56b']])
+        strut(B, NS('paint'), c, [x0, y0, 0.022], [x1, y1, 0.022], 0.012, { h: 0.012 });
+      for (const [x, y] of [[0.14, 0.385], [0.58, 0.385], [0.36, 0.25], [0.36, 0.52], [0.07, 0.31], [0.65, 0.46], [0.2, 0.5], [0.6, 0.27]]) B.add(NS('paint'), sphG(0.016, 8, 4, HP), K.cream, x, y, 0.022, { rx: HP });
+      B.pop();
       B.push(0, 1.05, 0, 0, -0.55);
       B.box('metal', K.brass, 2.1, 0.08, 0.7, 0, 0, 0, { r: 0.02 });
       pbox(B, NS('gloss'), K.navy, 1.94, 0.02, 0.56, 0, 0.05, 0);
@@ -914,6 +931,85 @@ export function registerDress(D, H, KIT) {
         pbox(B, NS('metal'), K.brassDk, L, 0.012, 0.04, 0, ys(tm) - 0.0535 - 0.034 / Math.cos(rake), 0.002, { rz });
         B.pop();
       }
+    },
+  };
+
+  // ---------------------------------------------------------------------------------------------------- fix round 6
+  // (LEAD-REVIEW 6's list.) The faces and tops are drawn under the ink (floorart.js); here only what stands off them, within
+  // 8.5 cm of a face and below its walkable top: the Feeding Step's brass corner guards, the whale-tail benches' bronze
+  // flukes, the Kelp Ramp parapet's render pilasters over its joints and ends, the trolley stack's casters and push bars.
+  // a brass corner guard round a block's rounded vertical edge (pos = the edge's bevel axis at its foot; a quarter round of
+  // radius r from bearing t0 (three's theta: 0 = +z, π/2 = +x), y0 → y1), its two edges a little heavier
+  D.aquarium_cornerguard = {
+    desc: "a brass corner guard hugging a block's rounded vertical edge (quarter round, r, t0, y0 → y1)",
+    build(B, o) {
+      const r = o.r ?? 0.14, y0 = o.y0 ?? 0.1, y1 = o.y1 ?? 1.05, t0 = o.t0 ?? 0, h = y1 - y0;
+      B.add('metal', cylGeo(r, r, h, 10, true, t0, HP), K.brass, 0, (y0 + y1) / 2, 0, {});
+      for (const a of [t0 + 0.06, t0 + HP - 0.06]) cyl(B, 'metal', K.brassDk, 0.012, h, Math.sin(a) * (r + 0.004), (y0 + y1) / 2, Math.cos(a) * (r + 0.004), { seg: 6 });
+      for (const y of [y0 + 0.06, (y0 + y1) / 2, y1 - 0.06]) for (const a of [t0 + 0.35, t0 + HP - 0.35]) B.add(NS('metal'), sphG(0.011, 6, 4), K.brassLt, Math.sin(a) * (r + 0.003), y, Math.cos(a) * (r + 0.003), {});
+    },
+  };
+  // a whale's tail in bronze relief on a bench's end face (local +z out of it; pos its foot centre): the stalk rising from
+  // the floor, the two flukes spread under the bench's cap, its trailing edge notched — the bench's armrest (4.6 cm proud
+  // at most, its top 9 cm under the bench's top)
+  const flukeG = () => tpl('fluke6', () => {
+    const S = new THREE.Shape();
+    S.moveTo(-0.13, 0.04); S.lineTo(0.13, 0.04);
+    S.quadraticCurveTo(0.095, 0.35, 0.09, 0.6);
+    S.quadraticCurveTo(0.24, 0.66, 0.42, 0.82); S.quadraticCurveTo(0.53, 0.94, 0.565, 1.1);
+    S.quadraticCurveTo(0.42, 1.03, 0.25, 1.04); S.quadraticCurveTo(0.08, 1.05, 0.0, 0.965);
+    S.quadraticCurveTo(-0.08, 1.05, -0.25, 1.04); S.quadraticCurveTo(-0.42, 1.03, -0.565, 1.1);
+    S.quadraticCurveTo(-0.53, 0.94, -0.42, 0.82); S.quadraticCurveTo(-0.24, 0.66, -0.09, 0.6);
+    S.quadraticCurveTo(-0.095, 0.35, -0.13, 0.04);
+    const g = new THREE.ExtrudeGeometry(S, { depth: 0.022, bevelEnabled: true, bevelThickness: 0.009, bevelSize: 0.009, bevelSegments: 2, curveSegments: 6 });
+    g.translate(0, 0, 0.016);
+    return g;
+  });
+  D.aquarium_fluke = {
+    desc: "a whale-tail fluke in bronze relief on a bench end (local +z out of the face)",
+    build(B) {
+      B.add('metal', flukeG(), K.bronzeLt, 0, 0, 0, {});
+      // the fluke's ridge and a darker patina line along its trailing edge
+      pbox(B, NS('metal'), K.bronze, 0.03, 0.52, 0.012, 0, 0.32, 0.051);
+      for (const s of [-1, 1]) strut(B, NS('metal'), K.bronze, [s * 0.05, 0.98, 0.05], [s * 0.42, 1.03, 0.05], 0.014, { h: 0.01 });
+    },
+  };
+  // a render pilaster over a joint (or an end) of the Kelp Ramp's parapet (local +z out of the face, pos its foot centre):
+  // the parapet's granite skirting and brass line round its foot, a moulded cap under the parapet's top
+  D.aquarium_pilaster = {
+    desc: "a render pilaster with a granite foot and a moulded cap (w wide, d deep, back buried b; foot y0, top y1)",
+    build(B, o) {
+      const w = o.w ?? 0.5, d = o.d ?? 0.07, b = o.b ?? 0.05, y0 = o.y0 ?? 0, y1 = o.y1 ?? 1.0, zc = (d - b) / 2, dd = d + b;
+      pbox(B, 'paint', K.render, w, y1 - y0 - 0.05, dd, 0, (y0 + y1 - 0.05) / 2, zc);
+      pbox(B, 'paint', K.render, w + 0.03, 0.05, dd + 0.015, 0, y1 - 0.025, zc + 0.0075);
+      pbox(B, 'paint', K.renderSh, w + 0.01, 0.012, dd + 0.008, 0, y1 - 0.058, zc + 0.004);
+      pbox(B, 'paint', K.granite, w + 0.01, 0.15, dd + 0.01, 0, y0 + 0.075, zc + 0.005);
+      pbox(B, NS('metal'), K.brass, w + 0.012, 0.016, dd + 0.012, 0, y0 + 0.157, zc + 0.006);
+      for (const y of o.lines || []) pbox(B, NS('gloss'), K.faience, w + 0.006, 0.04, dd + 0.006, 0, y, zc + 0.003);
+    },
+  };
+  // the trolley stack's running gear (pos its foot centre, local x along it, L × S, top H): a caster pair under each of the
+  // nested trolleys on both long faces (its fork on a steel plate), and at the −x end the nested trolleys' brass push bars
+  // laid flat against the end, one over the next (all within 6.5 cm of a face, under the top)
+  D.aquarium_trolleystack = {
+    desc: "the nested luggage trolleys' casters and push bars (local x along the stack, L × S, top H)",
+    build(B, o) {
+      const L = o.L ?? 2.0, S = o.S ?? 1.2, H = o.H ?? 1.4;
+      for (let i = 0; i < 5; i++) {
+        const x = -L / 2 + 0.05 + 0.38 * i + 0.17;
+        for (const sz of [-1, 1]) {
+          cyl(B, 'rubber', K.rubber, 0.085, 0.035, x, 0.09, sz * (S / 2 + 0.03), { rx: HP, seg: 12 });
+          cyl(B, 'metal', K.steel, 0.035, 0.04, x, 0.09, sz * (S / 2 + 0.03), { rx: HP, seg: 8 });
+          pbox(B, 'metal', K.steelDk, 0.05, 0.1, 0.012, x, 0.17, sz * (S / 2 + 0.054));
+          pbox(B, NS('metal'), K.steelDk, 0.14, 0.03, 0.02, x, 0.23, sz * (S / 2 + 0.01));
+        }
+      }
+      for (let i = 0; i < 3; i++) {
+        const xo = -L / 2 - 0.018 - 0.016 * i, y = H - 0.22 - 0.07 * i, hw = S / 2 - 0.1 - 0.035 * i;
+        rod(B, 'metal', K.brassLt, [xo, y, -hw], [xo, y, hw], 0.016);
+        for (const sz of [-1, 1]) rod(B, 'metal', K.brass, [xo, y - 0.3, sz * hw], [xo, y, sz * hw], 0.014);
+      }
+      pbox(B, 'paint', K.cream, 0.006, 0.08, 0.12, -L / 2 - 0.012, 0.5, 0.25, { rz: 0.1 });
     },
   };
 

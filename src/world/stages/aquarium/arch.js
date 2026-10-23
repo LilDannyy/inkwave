@@ -131,6 +131,26 @@ export function registerArch(D, H, KIT, G) {
             letters(B, 'SHARK ARCH', { h: 0.24, y: 4.29, z: 0.17, c: K.brassDk, flat: true, mat: 'paint', track: 0.18 });
           });
         }
+        // (fix round 6, LEAD-REVIEW 6: the west pylon's radial face onto the promenade — 10 × 6.6 m of plain render over the
+        // Penguin Steps' head) fluted render ribs up it as on its wing face (clear of the Arch Line's mouth at r 28 and its
+        // sign), and between the first two a roundel plaque with the coiled gulper and the gate's name
+        if (sx < 0) {
+          const nx = Math.cos((aOut - 90) * DEG), nz = Math.sin((aOut - 90) * DEG), off = 0.4;
+          const onFace = (r) => { const [x, z] = pol(aOut, r); return [x + nx * off, z + nz * off]; };
+          for (const r of [21.75, 24.05, 26.0, 30.45]) {
+            const [x, z] = onFace(r);
+            face(B, x, 0, z, nx, nz, () => { B.box('paint', K.render, 0.34, 6.45, 0.16, 0, 5.625, 0.05, { r: 0.05 }); pbox(B, 'gloss', K.faience, 0.36, 0.05, 0.18, 0, 2.95, 0.06); pbox(B, 'paint', K.granite, 0.38, 0.15, 0.2, 0, 2.475, 0.06); });
+          }
+          const [x, z] = onFace(22.9);
+          face(B, x, 0, z, nx, nz, () => {
+            B.add('metal', torG(0.62, 0.06, 6, 32), K.brass, 0, 5.7, 0.1, {});
+            B.add('gloss', cylGeo(0.6, 0.6, 0.05, 32), K.navy, 0, 5.7, 0.08, { rx: HP });
+            B.add('metal', torG(0.36, 0.055, 6, 24, TAU * 0.86), K.brassLt, 0, 5.82, 0.13, { rz: 0.5 });
+            B.add('metal', sphG(0.1, 10, 8), K.brassLt, 0.33, 5.99, 0.14, { sx: 1.4, sy: 0.9 });
+            letters(B, label.split(' ')[0], { h: 0.11, y: 5.3, z: 0.11, c: K.cream, flat: true, mat: 'paint', wt: 0.2 });
+            letters(B, 'GATE', { h: 0.08, y: 5.17, z: 0.11, c: K.brassLt, flat: true, mat: 'paint', wt: 0.2, track: 0.16 });
+          });
+        }
         // the riser shafts' glazing in the hall walls: brass frames (Arch Line riders flash up and down behind it)
         {
           const x = sx * 5.97;
@@ -525,6 +545,26 @@ export function registerArch(D, H, KIT, G) {
         pbox(B, 'paint', '#5f7f75', 1.0, 2.1, 0.06, -0.3, 1.05 + 2.6, 0.03);
         letters(B, 'PLANT ROOM', { h: 0.16, x: -0.3, y: 2.65 + 2.25, z: 0.06, c: K.ink, flat: true, mat: 'paint' });
       });
+      // (fix round 6, LEAD-REVIEW 6: the plant room's face over the Kelp Balcony was render with three lines; DESIGN §5.1:
+      // "pumps and a vent in the wall over the balcony") its wall along bearing 15 from the drum (layout.js segBox, 0.8
+      // thick, top 6.08; the balcony at 3.6 on its far side): a louvred vent, a pipe run with a valve and a red handwheel
+      // overhead, a PLANT ROOM · NO ADMITTANCE plate
+      {
+        const n = [Math.cos(105 * DEG), Math.sin(105 * DEG)], [x, z] = pol(15, 6.075, [cx + 0.104, cz - 0.386]);
+        face(B, x + n[0] * 0.4, 0, z + n[1] * 0.4, n[0], n[1], () => {
+          pbox(B, 'paint', K.steelDk, 1.3, 0.95, 0.05, -0.5, 4.62, 0.025);
+          pbox(B, NS('metal'), K.steel, 1.38, 0.05, 0.07, -0.5, 5.12, 0.035); pbox(B, NS('metal'), K.steel, 1.38, 0.05, 0.07, -0.5, 4.12, 0.035);
+          for (let i = 0; i < 6; i++) pbox(B, NS('metal'), K.steel, 1.22, 0.045, 0.09, -0.5, 4.27 + i * 0.15, 0.07, { rx: 0.55 });
+          rod(B, 'metal', K.steel, [-1.62, 5.62, 0.14], [1.62, 5.62, 0.14], 0.075, { seg: 10 });
+          for (const xx of [-1.0, 0.6, 1.5]) cyl(B, 'metal', K.steelDk, 0.11, 0.035, xx, 5.62, 0.14, { rz: HP, seg: 12 });
+          for (const xx of [-1.35, 0.05, 1.3]) { pbox(B, NS('metal'), K.steelDk, 0.05, 0.22, 0.1, xx, 5.62, 0.06); }
+          B.box('metal', '#5f7f75', 0.26, 0.24, 0.24, 0.32, 5.62, 0.16, { r: 0.04 });
+          cyl(B, 'metal', K.steelDk, 0.02, 0.18, 0.32, 5.4, 0.16, { seg: 8 });
+          B.add('metal', torG(0.13, 0.016, 6, 18), K.red, 0.32, 5.3, 0.16, { rx: HP });
+          for (let k = 0; k < 3; k++) pbox(B, NS('metal'), K.red, 0.25, 0.014, 0.016, 0.32, 5.3, 0.16, { ry: (k * PI) / 3 });
+          sign(B, 'PLANT ROOM', 0.95, 4.35, { h: 0.1, w: 1.0, hh: 0.36, board: K.cream, c: K.ink, border: K.brass, track: 0.12, sub: 'NO ADMITTANCE', subH: 0.065, subC: K.red });
+        });
+      }
       // pipes from the plant room into the drum's foot (over the balcony's wall line, behind the drum)
       rod(B, 'metal', K.steel, [29.05, 5.2, -1.0], [29.3, 5.2, -1.0], 0.18, { seg: 10 });
       for (const [x, z, h] of [[31.6, -0.7, 0.9], [30.2, 0.6, 0.7]]) cyl(B, 'metal', K.steel, 0.32, h, x, 6.0 + h / 2, z, { seg: 12 });
@@ -623,7 +663,21 @@ export function registerArch(D, H, KIT, G) {
         B.push(x, 0, z, -a * DEG + HP);
         B.box('paint', K.render, 2.6, 0.34, 5.1, 0, 5.17, 0, { r: 0.08 });
         for (const y of [5.06, 5.19]) pbox(B, NS('gloss'), K.faience, 2.62, 0.03, 5.12, 0, y, 0);
-        for (const s of [-1, 1]) face(B, s * 1.22, 0, 0.6, s, 0, () => { pbox(B, 'metal', K.brassDk, 3.2, 3.6, 0.03, 0, 3.0, 0.015); roundel(B, 0, 3.3, 0.42, ['KELP', 'LINE'], { field: K.navy }); });
+        // (fix round 6, LEAD-REVIEW 6: each side was one flat 3.2 × 3.6 m dark-brass panel) a sea-green enamel panel in a
+        // moulded brass frame — a stepped border, rivets along it, three brass speed lines low across it — and the roundel
+        for (const s of [-1, 1]) face(B, s * 1.22, 0, 0.6, s, 0, () => {
+          pbox(B, 'metal', K.seagreenDk, 3.2, 3.6, 0.03, 0, 3.0, 0.015);
+          for (const [d, t, z, c] of [[0, 0.11, 0.045, K.brass], [0.13, 0.035, 0.055, K.brassLt]]) {
+            for (const yy of [1.2 + d + t / 2, 4.8 - d - t / 2]) pbox(B, 'metal', c, 3.2 - 2 * d, t, z, 0, yy, z / 2);
+            for (const xx of [-1.6 + d + t / 2, 1.6 - d - t / 2]) pbox(B, 'metal', c, t, 3.6 - 2 * d, z, xx, 3.0, z / 2);
+          }
+          rivets(B, [-1.545, 1.255, 0.045], [1.545, 1.255, 0.045], 0.26, { c: K.brassDk, r: 0.018 });
+          rivets(B, [-1.545, 4.745, 0.045], [1.545, 4.745, 0.045], 0.26, { c: K.brassDk, r: 0.018 });
+          rivets(B, [-1.545, 1.5, 0.045], [-1.545, 4.5, 0.045], 0.3, { c: K.brassDk, r: 0.018 });
+          rivets(B, [1.545, 1.5, 0.045], [1.545, 4.5, 0.045], 0.3, { c: K.brassDk, r: 0.018 });
+          for (const y of [1.75, 1.92, 2.09]) pbox(B, NS('metal'), K.brass, 2.84, 0.05, 0.035, 0, y, 0.03);
+          roundel(B, 0, 3.3, 0.42, ['KELP', 'LINE'], { field: K.navy });
+        });
         B.pop();
       }
     },
