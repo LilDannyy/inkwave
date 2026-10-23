@@ -1,0 +1,6 @@
+JOB-13 (beta1) @ ba2a4e89 — Mac mini b5-runner, 2026-10-24 04:11–04:19, exit 0. Short summary; details in JOB-13.raw.txt.
+- bot-stuck 5/6 ×3, but a different check each time: runs 1 and 2 'refill' (the roller from 6 %: run 1 still 5 % at 8 s, never 40 %; run 2
+  reaches 40 % at 10.2 s, just over), run 3 'tank' (a spot near (−0.64, …) not out within 6 s); karpspot 1/1.
+- karp-bots 42/42, 42/42, 40/42 (run 3: C — 2 karp-touch hits in 20 bursts, Pip (blade) role grab; and H — the Big Burst disc from 18 m).
+  B(b2), the check d3748e2e fixed, passed all 3.
+- Bazookarp matches: aquarium 0 / 1.1 %, halyard 0.4 / 1.6 % stuck; no episode over 5 s (halyard #2 logged one stuck-bot issue row).
