@@ -1002,9 +1002,9 @@ class Game {
   // Turf War on six stages, 2 s on Bluestone, 4.9 s on Gulper Aquarium): the stage modules' deferred work (Bluestone's era
   // bases and programs ran from an idle callback in the intro), the paint atlas's programs and mip chain, the minimap's
   // first full draw, every program the scene draws, hidden objects included (compiled in parallel), and one frame drawn
-  // with nothing culled — every
-  // mesh's geometry and textures uploaded, the shadow map, the post stack with the screen FX pass forced on (it is only
-  // switched on once something shows: its program was compiled as the intro ended). tools/botlab/first-frames.cjs.
+  // with nothing culled — every mesh's geometry and textures uploaded, the shadow map, the post stack with the screen FX
+  // pass forced on (it is only switched on once something shows: its program was compiled as the intro ended).
+  // tools/botlab/first-frames.cjs measures it.
   async _warmStage() {
     const r = G.renderer, sc = G.scene, cam = G.camera, t0 = performance.now();
     const step = (what, fn) => { try { fn(); } catch (e) { console.warn('[inkwave] warm ' + what, e); } };
