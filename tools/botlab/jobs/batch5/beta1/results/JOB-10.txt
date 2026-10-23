@@ -1,0 +1,6 @@
+JOB-10 (beta1) @ 395e9a4c — Mac mini b5-runner, 2026-10-24 02:07–02:59, exit 0. Highmark Foundry's lava-bots gate, final vs base, 6 runs each, alternating.
+- the gate (0 escape deaths, ≤ 1 fight death per 360 bot-trials): BASE passes 6/6 (escape / fight deaths per run: 0/1, 0/0, 0/0, 0/0, 0/0, 0/1);
+  FINAL passes 3/6 (0/2, 0/0, 0/0, 1/0, 0/4, 0/1) — 1 escape and 7 fight deaths in 2160 bot-trials, against the base's 0 and 2.
+- the final's deaths: run 1 Pip (brolly) and Kelp (brush) at ±12 z, 38.9–39.1 s, ledges / edges; run 4 Pip (mitts) escaping, edges, 38.8 s
+  at (−16.55, 0, 16.12); run 5 Zest (charger) ×2, Loop (brolly) on the ledges 35–43 s, Juno (mitts) on the stones 63.8 s.
+- so on this Mac the round's bots.js changes make the lava gate WORSE than the base it started from, not better.
