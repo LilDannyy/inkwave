@@ -128,8 +128,11 @@ module.exports = async ({ clients, R, wait, say, open, close }) => {
   // other cells replay the host's splat records at the netcode's 1 cm rounding, a blob's rim cell apart now and then (1 and
   // 3 cells of 438,753 in two of the last three runs, none a lava cell): reported, not the lava's. The joiner's grid is
   // the host's imported: exact, whole)
-  R('…and its paint (the imported grid) equals the host\'s, lava cells and all; the live guest\'s lava cells equal the host\'s too (the host painted the Slump cliff across the waterline at LOW — burned by the rise — and at HIGH)', jA.length === jC.length && jc.differ === 0 && jb.differ === 0 && gc.differ === 0 && gc.inked[0] > 100 && pA >= 18,
-    { lavaCells: { joiner: jc, guest: jb }, grid: { joiner: gc, guest: gb }, guestOtherCellsDiffer: gb.differ, painted: pA });
+  // (fix round 5, review 5 issue 6: and the live guest's other cells bounded again — a ratio ≥ 0.999 of the whole grid, as
+  // the results-screen check bounds its other cells: a rim cell apart now and then, never a region)
+  const gbRatio = 1 - gb.differ / Math.max(1, gb.n);
+  R('…and its paint (the imported grid) equals the host\'s, lava cells and all; the live guest\'s lava cells equal the host\'s too (the host painted the Slump cliff across the waterline at LOW — burned by the rise — and at HIGH), and its other cells agree to a ratio ≥ 0.999', jA.length === jC.length && jc.differ === 0 && jb.differ === 0 && gc.differ === 0 && gc.inked[0] > 100 && pA >= 18 && gbRatio >= 0.999,
+    { lavaCells: { joiner: jc, guest: jb }, grid: { joiner: gc, guest: gb }, guestOtherCellsDiffer: gb.differ, guestRatio: +gbRatio.toFixed(6), painted: pA });
   await wait(3200);
   await A.js(`__inkwave.api.practiceEnd(); 1`);
   for (const cl of [A, B, C]) await cl.until(`__G.net.state === 'lobby' && __G.mode === 'menu'`, 40000, 500);
