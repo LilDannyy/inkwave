@@ -7,7 +7,8 @@
 //        pressed into the step's face, 11.75 s in one Bazookarp match); and a bot at the step's face whose goal over the
 //        deck is re-picked every 0.35 s stands on the deck within 1.2 s, from every spot along both steps.
 // bobber a Chain Bobber bot run dry while laying a chain on bare ground lets the plan go and goes to refill, instead of
-//        sitting a squid on bare ground refilling at 4.5 ink/s until its plan times out (11.5 s episodes on Bluestone).
+//        sitting a squid on bare ground refilling at 4.5 ink/s until its plan times out (11.5 s episodes on Bluestone);
+//        and standing for its plan, its stand spot or its ambush it says it holds on purpose (perchUntil).
 (async () => {
   const g = window.__inkwave, G = window.__G, m = g.match, L = G.level, N = G.nav, out = [], R = (name, ok, info) => out.push({ name, ok: !!ok, info });
   const THREE = await import('three'), V3 = THREE.Vector3, r2 = (v) => Math.round(v * 100) / 100;
@@ -83,6 +84,20 @@
     }
     const bad = rows.filter((r) => r.planAt1 || r.worst > 3);
     R('bobber: a bot run dry mid-chain on bare ground lets its chain plan go to refill (within 1 s) and is never held there over 3 s (10 s watched)', rows.length >= 2 && bad.length === 0, { bad, rows });
+    // …and with ink it stands to lay the links (its plan), which is on purpose: it says so (perchUntil — what the botlab's
+    // stuck rule and the issue log read), as a Zone Control guard or a pod perch does
+    const lay = [];
+    for (const [x, z] of spots.slice(0, 2)) {
+      G.paint.clear(); fresh(x, 0.05, z);
+      bot.setSub('bobber'); bot.setWeapon('shooter'); b.reset(); b.setDifficulty('normal');
+      for (let f = 0; f < 6; f++) g.debug.step(1000 / 60);
+      bot.ink = 100; b.mode = 'paint';
+      b._bobPlan = { pts: [new V3(x + 3.4, 0, z), new V3(x, 0, z + 3.4), new V3(x - 3.4, 0, z)], i: 0, t0: G.time, m: G.match };
+      let held = 0, laying = 0;
+      for (let f = 0; f < 90; f++) { g.debug.step(1000 / 60); if (b._bobPlan) { laying++; if (b.holdingOnPurpose()) held++; } }
+      lay.push({ at: [x, z], laying, held });
+    }
+    R('bobber: laying its chain, the bot holds on purpose (every frame it stands for its plan)', lay.every((r) => r.laying > 10 && r.held >= r.laying - 2), lay);
   }
   g.debug.unfreeze();
   return out;
