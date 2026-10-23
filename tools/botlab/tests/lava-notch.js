@@ -129,6 +129,12 @@
             if (!hit || hit.rider || hit.d <= 0.3) continue;
             setT(T);
             if (!C.inRider(r, ex - ux * 0.6, ez - uz * 0.6, -0.05)) continue;
+            // (fix round 6: not from inside one of the lookout's crown pipes or its stub — a kid spawned in a pipe was pushed
+            // out past the crown and counted)
+            { const sx = ex - ux * 0.6, sz = ez - uz * 0.6; let inPart = false;
+              for (let k = 0; k < 9 && !inPart; k++) { const a2 = (k * Math.PI) / 4, rr = k === 8 ? 0 : 0.38, px = sx + Math.cos(a2) * rr, pz = sz + Math.sin(a2) * rr;
+                for (const y of [top + 0.3, top + 0.9]) { hp.set(px, y, pz); for (const id of lvl.queryBlocks(px - 0.01, pz - 0.01, px + 0.01, pz + 0.01, qb)) { const b = lvl.blocks[id]; if (b.solid && b.dynamic && lvl.pointInBlock(b, hp, 0.001)) inPart = true; } } }
+              if (inPart) { diag.startBlocked = (diag.startBlocked || 0) + 1; continue; } }
             diag.samples++; bs.samples++;
             const inside = [ex - ux * 0.6, top, ez - uz * 0.6], untilOff = 0.6 + d0 + hit.d + 0.6;
             const gOff = [0.6 + d0, 0.6 + d0 + hit.d, true];

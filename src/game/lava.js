@@ -538,8 +538,11 @@ export class LavaWorld {
   }
   // the nearest node every lava-reached node can walk to that the lava never reaches (multi-source Dijkstra, reversed);
   // sources = true: the nodes flagged in `kind` are the targets instead (the inland nodes)
+  // (fix round 6: the distances in float64 — in a Float32Array a node's stored distance rounded below the float64 one it
+  // was queued with, so the heap's stale-entry test skipped it and nothing behind it got an exit: two shelf nodes a half
+  // read "no way out" in lava-audit rule 14 once the north head's corner moved, though they walk to the others in 1 m)
   _exits(nav, kind, sources = false) {
-    const N = nav.nodes.length, dist = new Float32Array(N).fill(Infinity), exit = new Int32Array(N).fill(-1);
+    const N = nav.nodes.length, dist = new Float64Array(N).fill(Infinity), exit = new Int32Array(N).fill(-1);
     const radj = Array.from({ length: N }, () => []);
     for (const n of nav.nodes) for (const e of n.nb) if (e.type !== 'climb') radj[e.to].push([n.id, e.cost]);
     const heap = [], push = (id, d) => { heap.push([d, id]); let i = heap.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };

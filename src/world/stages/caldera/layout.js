@@ -127,6 +127,16 @@ for (const f of FLOORS) {
       fixed.push({ d, top: t2 });
     }
   }
+  // (fix round 6: the south head's shelf edge keeps its 1.1 m hop — the shelf's way out — where the chamfer by race 2
+  // (geo.js CHAMF2) meets it: the two copings overlap, and the colouring gave the long one 1.4, which the nav's 1.25 m jump
+  // edges don't reach — the shelf's worst exit grew to 14.2 m. The long one keeps 1.1; the chamfer's stands 1.3)
+  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], topOf = (d) => d.center[1] + d.size[1] / 2;
+  const nearL = (m, r, lo, hi) => (GROUNDS.lakefront?.ledges || []).find((d) => d.kind === 'obox' && Math.hypot(d.center[0] - m[0], d.center[2] - m[1]) < r && d.size[0] >= lo && d.size[0] <= hi);
+  const longE = nearL(mid(G.SLUMP_SW, G.CHAMF2), 1.2, 3, 99), chamf = nearL(mid(G.CHAMF2, G.TIP_S[0]), 0.9, 0.5, 2.5);
+  if (longE && chamf && topOf(longE) > topOf(chamf) + 0.05) {
+    // (the chamfer's coping takes 1.3: clear of the 1.1 shelf edge, the tip face's 1.4 and race 1's 1.5 wedge kerb it meets)
+    for (const [d, t] of [[longE, topOf(chamf)], [chamf, 1.3]]) { const y0 = d.center[1] - d.size[1] / 2; d.center[1] = G.r3((y0 + t) / 2); d.size[1] = G.r3(t - y0); }
+  }
 }
 // a lower floor's tucked columns are cut round the higher floors' columns they meet (both halves)
 for (const f of FLOORS) {
@@ -411,11 +421,14 @@ const raceKerb = ([sx, sz], yaw, [x0, x1], [z0, z1], top, tag = 'race-kerb') => 
     raceKerb(r1, Y, [-2.15, w1], [-0.4, endIn(r1, r2, -1) - SEAM], 1.2),                 //   and on along it, short of the shelf's edge, to race 2
     raceKerb(r1, Y, [0.85, 1.65], [-2.0, -r1[3] / 2 - SEAM], 1.2),                       //   south-east: the head's corner past its tip coping
     raceKerb(r5, Y, [-2.4, w5], [0, 1.95], 1.5),                                          // race 5, west: the north head's wedge out to the stone
-    raceKerb(r5, Y, [-2.15, w5], [endIn(r5, r4, 1) + SEAM, 0], 1.2),                     //   and on along it to race 4
-    raceKerb(r6, G.STONE2_YAW, [-2.9, -r6[2] / 2 - SEAM], [-1.65, -0.95], 1.1)); }        // race 6, north of its west end: the rim's curve out to it
+    raceKerb(r5, Y, [-2.15, w5], [endIn(r5, r4, 1) + SEAM, 0], 1.2)); void r6; }           //   and on along it to race 4
+// (fix round 6: race 6's kerb north of its west end is gone with the head's corner there — geo.js CUT6: the rim's curve
+// that left a notch beside the stone is now open lava, 2.2 m out along the Race's line, the Ladle Road's face beyond it)
 // the tail (Alpha's, the NW; drawn here in Alpha's frame): the Ladle Road's vent hood and ladle stand, two scree ramps up
 // the Rim Ridge's face, and on the Ridge a spatter cone, a hummock, outcrops and cairns
-{ const [x, z] = P(23.6, 162.5); add(O(x, z, 1.4, 1.4, 2.4, 3.8, -162.5, cover(K.ironDk, { tag: 'vent-hood' }))); }
+// (fix round 6: the vent hood 2.5° on round the Road (r 23.4, θ 160.0): with the Road's corner bitten back by race 6
+// — geo.js BITE6 — it closed the lane past it, and the corner behind it was a pocket the nav reached only round the hood)
+{ const [x, z] = P(23.4, 160.0); add(O(x, z, 1.4, 1.4, 2.4, 3.8, -160.0, cover(K.ironDk, { tag: 'vent-hood' }))); }
 { const [x, z] = P(24.6, 152.0); add(O(x, z, 1.4, 1.8, 2.4, 3.7, -152.0, cover(K.ironDk, { tag: 'ladle-stand' }))); }
 for (const a of [165.5, 154.5]) { const lo = P(G.RN - 2.75, a), hi = P(G.RN + 0.05, a); add(R([lo[0], 2.4, lo[1]], [hi[0], 3.6, hi[1]], 3, rock({ tag: 'scree-ramp', color: K.scoria, pattern: PATTERN.asphalt }))); }
 add(cone(-32.0, 1.6, 1.2, 4.5, 3.2, 3.6, 'spatter-cone'), cone(-27.2, 15.0, 0.8, 4.2, 2.1, 3.6, 'hummock'));
