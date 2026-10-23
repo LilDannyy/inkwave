@@ -41,7 +41,7 @@ const PROBE = (mapId, mode, play, idx) => `(async () => {
     const C = await import('./src/config.js'), MP = (await import('./src/game/match.js')).Match.prototype, setup0 = MP.setup;
     MP.setup = function (...x) {
       const r = setup0.apply(this, x);
-      this.actors.forEach((a, j) => { const k = ${idx} * 8 + j; a.setWeapon(j === 1 ? 'mitts' : C.WEAPON_ORDER[k % C.WEAPON_ORDER.length]); a.setSub(C.SUB_ORDER[k % C.SUB_ORDER.length]); a.setSpecial(C.SPECIAL_ORDER[k % C.SPECIAL_ORDER.length]); });
+      this.actors.forEach((a, j) => { const k = ${idx} * 8 + j; a.setWeapon(j === Math.min(1, this.actors.length - 1) ? 'mitts' : C.WEAPON_ORDER[k % C.WEAPON_ORDER.length]); a.setSub(C.SUB_ORDER[k % C.SUB_ORDER.length]); a.setSpecial(C.SPECIAL_ORDER[k % C.SPECIAL_ORDER.length]); });
       MP.setup = setup0;
       return r;
     };
@@ -99,12 +99,15 @@ const PROBE = (mapId, mode, play, idx) => `(async () => {
   const force = () => {
     const m = g.match, mitts = m.actors.find((a) => a.weapon?.kind === 'mitts' && a.bot);
     if (mitts) { let t = 0.4; const bu = mitts.bot.update; mitts.bot.update = function (dt) { const r = bu.call(this, dt); if (t > 0) { t -= dt; mitts.intent.fire = true; mitts.intent.squid = false; mitts.intent.special = false; mitts.intent.sub = false; } else mitts.bot.update = bu; return r; }; forced.punched = 1; }
+    if (!mitts && !m.actors.some((a) => a.bot)) forced.punched = -1;   // (a stage with no bots: DEVSTAGE's Cargo Terminal walk)
     const cam = G.camera.position, L = G.level, P = G.paint;
-    let best = null, bd = 1e9;
-    for (const f of L.faces) { if (!f.turf || !f.atlas || f.nu * f.nv < 4) continue; const d = Math.hypot(f.origin.x - cam.x, f.origin.z - cam.z); if (d < bd) { bd = d; best = f; } }
-    if (best && P?.flood) {
-      const f = best, cells = [], xs = [], zs = [];
-      for (let j = 0; j < f.nv; j++) for (let i = 0; i < f.nu; i++) { const k = f.grid + j * f.nu + i; if (!P.dead?.[k]) cells.push(k); const s = (i + 0.5) * f.cu, t2 = (j + 0.5) * f.cv; xs.push(f.origin.x + f.u.x * s + f.v.x * t2); zs.push(f.origin.z + f.u.z * s + f.v.z * t2); }
+    // (the turf faces nearest the camera, a floor's first: the first whose live cells a flood takes)
+    const faces = L.faces.filter((f) => f.turf && f.atlas && f.nu * f.nv >= 4).map((f) => ({ f, d: Math.hypot(f.origin.x - cam.x, f.origin.z - cam.z) - (f.normal?.y > 0.7 ? 1e3 : 0) })).sort((x, y) => x.d - y.d);
+    for (const { f } of faces.slice(0, 40)) {
+      if (!P?.flood || forced.flood) break;
+      const cells = [], xs = [], zs = [];
+      for (let j = 0; j < f.nv; j++) for (let i = 0; i < f.nu; i++) { const k = f.grid + j * f.nu + i; if (!P.dead?.[k] && P.live?.[k] !== 0) cells.push(k); const s = (i + 0.5) * f.cu, t2 = (j + 0.5) * f.cv; xs.push(f.origin.x + f.u.x * s + f.v.x * t2); zs.push(f.origin.z + f.u.z * s + f.v.z * t2); }
+      if (cells.length < 4) continue;
       const x0 = Math.min(...xs) - 1, x1 = Math.max(...xs) + 1, z0 = Math.min(...zs) - 1, z1 = Math.max(...zs) + 1;
       const region = { cells: Int32Array.from(cells), polys: [[[x0, z0], [x1, z0], [x1, z1], [x0, z1]]], y0: f.origin.y - 50, y1: f.origin.y + 50 };
       forced.flood = !!P.flood(region, 0, { center: [(x0 + x1) / 2, (z0 + z1) / 2], y: f.origin.y, dur: 0.4 });
@@ -222,12 +225,12 @@ app.on('browser-window-created', (_, win) => {
         for (const f of F.filter((x) => x.ms >= Math.min(BAR, 50) || x.gap >= BAR).slice(0, 12)) console.log(`   frame @${f.t} ms [${f.state}] ${f.ms} ms (after a ${f.gap} ms gap) | programs +${f.programs}${f.progNames ? ' ' + JSON.stringify(f.progNames) + ' used by ' + JSON.stringify(f.progWho || []) : ''} textures +${f.textures} geometries +${f.geometries} | ${JSON.stringify(f.parts)}`);
         for (const x of r.between.slice(0, 10)) console.log(`   between frames @${x.at} ms: ${x.ms} ms in ${x.what}`);
         { const n = F.slice(0, 3); console.log(`   first frames: ${n.map((f) => `${f.ms} ms (programs +${f.programs}, textures +${f.textures}) ${JSON.stringify(f.parts)}`).join(' · ')}`); }
-        console.log(`   lineup ${r.lineup.join(' ')} | warm ${r.warmMs} ms | forced: punch ${r.forced.punched ? 'held' : 'NO MITTS'} (fists seen ${r.forced.fistsSeen}), flood ${r.forced.flood ? 'on' : 'NONE'}`);
+        console.log(`   lineup ${r.lineup.join(' ')} | warm ${r.warmMs} ms | forced: punch ${r.forced.punched === -1 ? 'none (no bots)' : r.forced.punched ? 'held' : 'NO MITTS'} (fists seen ${r.forced.fistsSeen}), flood ${r.forced.flood ? 'on' : 'NONE'}`);
         const ok = r.done && over.length === 0 && gaps.length === 0;
         console.log(`${ok ? 'PASS' : 'FAIL'} ${id} first frames under ${BAR} ms, and no gap between them over ${BAR} ms  ${JSON.stringify({ worstIntro: wi && wi.ms, worstPlay: wp && wp.ms, over: over.length, worstGap: wg && wg.gap, gaps: gaps.length, loadMs: r.loadMs })}`);
         pass += ok; total++;
         const progF = F.filter((f) => f.programs > 0), nProg = progF.reduce((n, f) => n + f.programs, 0);
-        const okP = r.done && nProg === 0 && r.forced.fistsSeen > 0 && r.forced.flood;
+        const okP = r.done && nProg === 0 && (r.forced.fistsSeen > 0 || r.forced.punched === -1) && r.forced.flood;
         console.log(`${okP ? 'PASS' : 'FAIL'} ${id} no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  ${JSON.stringify({ programs: nProg, inFrames: progF.length, punched: r.forced.fistsSeen > 0, flood: r.forced.flood, first: progF.slice(0, 3).map((f) => ({ at: f.t, state: f.state, ms: f.ms, n: f.programs, who: (f.progWho || []).slice(0, 3) })) })}`);
         pass += okP; total++;
         if (EXTRA > 0) {
