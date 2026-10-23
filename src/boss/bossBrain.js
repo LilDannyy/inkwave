@@ -14,6 +14,7 @@ const TURN = [0, 1.25, 1.45, 1.75];        // turn rate (rad/s)
 const COOL = [0, 1.05, 0.8, 0.6];          // gap between moves (+ up to COOL_RND)
 const COOL_RND = [0, 0.8, 0.6, 0.45];
 const PREF = [0, 10, 9, 8];                // preferred distance to its mark
+const HALF_AFTER = 25;                      // [b5-caldera] s on one half (roamAfter stages) before the other half's goals gain
 const r3 = (x) => Math.round(x * 1000) / 1000;
 const _v = new THREE.Vector3();
 
@@ -224,21 +225,30 @@ export class BossBrain {
       if (this._camps >= 2) this._reloc = { t: b.bt };
     }
     if (this._reloc && b.bt - this._reloc.t > 8) this._reloc = null;
+    // [b5-caldera] fix round 6 (review 6 issue 5): the half it stands on (z < 0 / z ≥ 0, the stages are 180° turns) and since
+    // when — after HALF_AFTER s on one half its goals on the other gain (_pickGoal): boss-check had whole 120 s rounds on one
+    // half in 3 of 10
+    const hs = b.pos.z < 0 ? -1 : 1;
+    if (!this._half || this._half.s !== hs) this._half = { s: hs, t0: b.bt };
   }
 
   _pickGoal(t) {
     const b = this.b, nav = b.nav, pad = nav.pads[0], RA = nav.level?.layout?.boss?.roamAfter;
     this.goalT = 3 + this.rnd() * 2.5;
     let best = null, bs = -Infinity;
+    // [b5-caldera] fix round 6 (roamAfter stages): long on one half — its fight distance matters less (as when camped twice)
+    // and the other half's goals gain (see _roam: _half)
+    const longHalf = RA > 0 && !!this._half && b.bt - this._half.t0 > HALF_AFTER;
     for (let i = 0; i < 16; i++) {
       const [x, z] = nav.randomPoint(this.rnd);
       const ci = nav.cell(x, z);
       let s = Math.min(nav.Dw[ci], 6) * 0.7 + Math.min(nav.Dv[ci], 4) * 0.4 - Math.hypot(x - b.pos.x, z - b.pos.z) * 0.07 + this.rnd() * 1.5;
-      if (t) s -= (this._camps >= 2 ? 0.3 : 1) * Math.abs(Math.hypot(x - t.pos.x, z - t.pos.z) - PREF[b.phase]);   // [b5-caldera] fix round 4 (camped twice: its fight distance matters less than getting away)
+      if (t) s -= (this._camps >= 2 || longHalf ? 0.3 : 1) * Math.abs(Math.hypot(x - t.pos.x, z - t.pos.z) - PREF[b.phase]);   // [b5-caldera] fix round 4 (camped twice: its fight distance matters less than getting away) / fix round 6 (long on one half)
       else s -= Math.hypot(x - b.home.x, z - b.home.z) * 0.2;
       if (Math.hypot(x - pad.x, z - pad.z) < 18) s -= 12;   // never camps the squad's spawn
       if (this._anchor?.camped && Math.hypot(x - this._anchor.x, z - this._anchor.z) < 9) s -= 8;   // [b5-caldera] (_roam)
       if (this._camps >= 2 && this._campAt) s += Math.min(Math.hypot(x - this._campAt.x, z - this._campAt.z), 30) * 0.5 + (Math.sign(z) !== Math.sign(this._campAt.z) ? 8 : 0);   // [b5-caldera] fix round 4 (_roam: camped twice — far, and the other half: the stages are 180° turns)
+      if (longHalf && (z < 0 ? -1 : 1) !== this._half.s) s += 8;   // [b5-caldera] fix round 6 (the other half)
       // [b5-caldera] fix round 4 (roamAfter stages): never a goal where it can't turn round — it walked into the tip of the
       // west Lakefront wedge, could neither turn nor step, and stood there 70 s (boss-check)
       if (RA > 0) { let ok = 0; for (let k = 0; k < 8; k++) if (nav.turnOk(x, z, (k * Math.PI) / 4)) ok++; if (ok < 6) s -= 20; }
