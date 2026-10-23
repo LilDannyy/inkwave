@@ -31,7 +31,7 @@ import { SUBS, PLAYER, subViewScale } from '../config.js';
 import { Physics, Hit } from './physics.js';
 import { getSubDef } from './character-weapons.js';
 import { getPlasticMaterial, getInkMaterial } from './character-mats.js';
-import { MAIN_KITS, SUB_KITS, KIT_GHOSTS, netRec, netId, netHurt, netMuted } from './kits/registry.js';
+import { MAIN_KITS, SUB_KITS, KIT_GHOSTS, netRec, netId, netHurt, netMuted, subKindsOf } from './kits/registry.js';
 import { StatusFx } from './statusFx.js';
 import { DEPLOY, rayCapsule, devBody, devKind, DEV_R } from './deployables.js';   // [b5-deploy] devices can be shot; the tower crushes them
 const r2 = (x) => Math.round(x * 100) / 100;
@@ -247,6 +247,36 @@ export class SubSystem {
     if (sub.kind === 'beacon') this._beaconFx(it);
     G.cues?.sub(sub.kind, 'throw', { owner: a, at: pos, range: sub.kind === 'mine' ? 14 : 30 });   // sfx-cues: placed (a mine is heard only close by)
     return it;
+  }
+
+  // [b5-beta1] what the built-in subs build on first use, as stand-ins compiled at the match's load (main.js _warmStage;
+  // the kit subs warm themselves: kits/registry.js warmKits): each carried kind's prop, the Point Sensor's cloud and the
+  // Murk's (one look), the Drip Curtain's sheet and meter, a Lure Mine's see-through look, a Hop Beacon's lights and
+  // sonar; and the tracked / poisoned looks (statusFx.js). Kept per kind: their materials are never disposed.
+  warm(actors) {
+    const out = [], kinds = new Set();
+    for (const a of actors) for (const k of subKindsOf(a)) if (!SUB_KITS[k] && k !== 'bomb') kinds.add(k);
+    const W = this._warmSets || (this._warmSets = new Map());
+    const make = (k) => {
+      const prop = this._prop(k, 0), list = [prop], d = prop.userData.def, sub = SUBS[k] || {};
+      if (k === 'scan' || k === 'mist') list.push(new THREE.Mesh(this.cloudGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4, depthWrite: false })));
+      if (k === 'curtain') {
+        list.push(new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShaderMaterial({ uniforms: { uColor: { value: new THREE.Color() }, uTime: { value: 0 }, uLife: { value: 1 } },
+          vertexShader: CURTAIN_VS, fragmentShader: CURTAIN_FS, transparent: true, depthWrite: false, side: THREE.DoubleSide })));
+        list.push(new THREE.Mesh(new THREE.PlaneGeometry(1, METER_H), new THREE.ShaderMaterial({ uniforms: { uColor: { value: new THREE.Color() }, uFill: { value: 1 }, uTime: { value: 0 }, uAspect: { value: 1 } },
+          vertexShader: METER_VS, fragmentShader: METER_FS, transparent: true, depthWrite: false, side: THREE.DoubleSide })));
+      }
+      if (k === 'mine') list.push(new THREE.Mesh(ghostGeo(d.body), this._mineGhostMat(0, 0)), new THREE.Mesh(ghostGeo(d.ink), this._mineGhostMat(0, 1)));
+      if (k === 'beacon') {
+        const it = { mesh: this._prop(k, 0), team: 0, uses: sub.uses || 2, sub };
+        this._beaconFx(it);
+        list.push(it.mesh, new THREE.Mesh(PIP_GEO, this._pipMat(0, 'last')), new THREE.Mesh(PIP_GEO, this._pipMat(0, 'off')));
+      }
+      return list;
+    };
+    for (const k of kinds) { if (!W.has(k)) { try { W.set(k, make(k)); } catch (e) { W.set(k, []); console.warn('[inkwave] sub warm', k, e); } } out.push(...W.get(k)); }
+    out.push(...this.statusFx.warm(actors));
+    return out;
   }
 
   // prop meshes: an outer node (world transform) → inner (offset while flying so it tumbles about its middle) → model

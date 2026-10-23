@@ -736,7 +736,9 @@ function threatOf(it) {
 }
 
 // ================================================================================================= registration
+let warmSet = null;   // [b5-beta1] a walker and its sensing circle as stand-ins (registry.js warmKits)
 SUB_KITS.waddle = {
+  warm() { return warmSet || (warmSet = [makeMesh(0, subViewScale('waddle')).outer, makeRing(G.teamColors[0])]); },
   use,
   ghost,
   netHurt(gid, dmg) { const it = items.find((x) => !x.ghost && x.gid === gid && x.state !== 'dead'); if (it) hurt(it, dmg); },

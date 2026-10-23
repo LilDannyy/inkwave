@@ -730,7 +730,9 @@ function threatOf(t) {
 }
 
 // =============================================================================================== register
+let warmSet = null;   // [b5-beta1] a torpedo and its ring as stand-ins, its droplets into the scene (registry.js warmKits)
 SUB_KITS.torpedo = {
+  warm() { dropsMesh(); return warmSet || (warmSet = [buildRig(0, subViewScale('torpedo')), makeRing(0)]); },
   use,
   ghost,
   netHurt(gid, dmg) { const t = own(gid); if (t) hurt(t, dmg); },

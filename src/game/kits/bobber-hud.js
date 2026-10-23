@@ -119,6 +119,8 @@ function guideObjs() {
   G.scene?.add(GD.group);
   return GD;
 }
+// [b5-beta1] the local player's aim guide, built now and handed to the match's warm (kits/bobber.js warm)
+export function guideWarm() { const g = guideObjs(); if (g) g.group.visible = false; return g ? g.group : null; }
 export function guideOff() { if (GD) GD.group.visible = false; if (D) { D.n.classList.remove('is-on'); D.L.nOn = false; } BOBBER_HUD.guide = null; }
 const _pt = { x: 0, y: 0 };
 function guide(a) {

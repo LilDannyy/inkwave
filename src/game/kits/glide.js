@@ -1240,7 +1240,12 @@ function botAimAt(a) {
 }
 
 // ================================================================================================= registration
+let warmSet = null;   // [b5-beta1] a stone, its hit flash and the fist's glow as stand-ins (registry.js warmKits)
 SUB_KITS[KIND] = {
+  warm(actors) {
+    if (!warmSet) { const m = makeMesh(0, vs0()); warmSet = [m.outer, new THREE.Mesh(m.body.geometry, flashMat(0)), new THREE.Mesh(m.ink.geometry, flashMat(0)), makeGlow(G.teamColors[0])]; }
+    return actors.some((a) => a?.isLocal && a.sub?.kind === KIND) ? [...warmSet, guide.mesh] : warmSet;   // (the local player's slide guide)
+  },
   noArc: true,                                     // (it draws its own guide: the slide's path and its blast ring)
   use,
   hold,

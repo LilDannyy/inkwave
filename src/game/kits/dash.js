@@ -187,7 +187,17 @@ const ribbons = [];
 const ribPool = [];
 function ribbonFor(a) {
   let R = ribPool.pop();
-  if (!R) {
+  if (!R) R = newRibbon();
+  R.a = a; R.pts.length = 0; R.t = 0; R.end = -1;
+  R.mesh.material.uniforms.uColor.value.copy(G.teamColors[a.team]);
+  R.mesh.visible = true;
+  G.scene?.add(R.mesh);
+  ribbons.push(R);
+  return R;
+}
+function newRibbon() {
+  let R = null;
+  {
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(RIB_N * 2 * 3), 3));
     g.setAttribute('aK', new THREE.BufferAttribute(new Float32Array(RIB_N * 2), 1));
@@ -201,11 +211,6 @@ function ribbonFor(a) {
     mesh.onBeforeRender = (r, scene, c, geo) => { geo.drawRange.count = scene.overrideMaterial ? 0 : Infinity; };   // (out of the AO pass)
     R = { mesh, pts: [], t: 0, a: null };
   }
-  R.a = a; R.pts.length = 0; R.t = 0; R.end = -1;
-  R.mesh.material.uniforms.uColor.value.copy(G.teamColors[a.team]);
-  R.mesh.visible = true;
-  G.scene?.add(R.mesh);
-  ribbons.push(R);
   return R;
 }
 function ribbonTick(R, dt) {
@@ -569,7 +574,16 @@ function prompt(a, dt) {
 }
 
 // ================================================================================================= registration
+let warmSet = null;   // [b5-beta1] a dash's ribbon and its pellet as stand-ins (registry.js warmKits)
+function warmLooks() {
+  if (warmSet) return warmSet;
+  const R = newRibbon();
+  const d = getSubDef(KIND), m = new THREE.Group();
+  m.add(new THREE.Mesh(d.body, getPlasticMaterial()), new THREE.Mesh(d.ink, getInkMaterial(G.teamColors[0])));
+  return (warmSet = [R.mesh, m]);
+}
 SUB_KITS[KIND] = {
+  warm: warmLooks,
   onPress: true,                                   // acts on the press (WeaponRunner.trySubPress), never the release
   noArc: true,                                     // (no hold, no guide: nothing is thrown)
   use,

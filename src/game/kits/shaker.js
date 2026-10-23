@@ -596,7 +596,9 @@ function pips() {
 }
 
 // ================================================================================================= registration
+let warmSet = null;   // [b5-beta1] a thrown shaker as a stand-in (registry.js warmKits)
 SUB_KITS.shaker = {
+  warm() { return warmSet || (warmSet = [makeMesh(0, subViewScale('shaker')).outer]); },
   use,
   hold,
   ghost,

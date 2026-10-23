@@ -1141,7 +1141,15 @@ function restate() {
     SENTRY_STATS.restated = (SENTRY_STATS.restated || 0) + 1;
   }
 }
+let warmSet = null;   // [b5-beta1] a sentry, its hit flash and its lock line as stand-ins (registry.js warmKits)
 SUB_KITS[KIND] = {
+  warm(actors) {
+    if (!warmSet) {
+      const m = makeMesh(0, subViewScale(KIND)), line = new THREE.Mesh(LINE_GEO, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, depthWrite: false }));
+      warmSet = [m.outer, new THREE.Mesh(m.hub.geometry, flashMat(0)), line];
+    }
+    return actors.some((a) => a?.isLocal && a.sub?.kind === KIND) ? [...warmSet, guideMesh().root] : warmSet;   // (the local player's placing guide)
+  },
   noArc: true,                    // (SUBS.sentry.placed hides the bomb arc too: the kit draws its own guide)
   blocked: (a, sub) => !findSpot(a, sub).ok,
   blockedWhy: (a, sub) => { const S = findSpot(a, sub); return S.ok ? '' : WHY[S.why] || ''; },

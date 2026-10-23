@@ -491,7 +491,9 @@ function hold(runner, dt, inp, sub) {
 }
 
 // =============================================================================================== register
+let warmSet = null;   // [b5-beta1] a bolt's head and trail as stand-ins (registry.js warmKits: their programs at the match's load)
 SUB_KITS.tracer = {
+  warm() { return warmSet || (warmSet = [buildHead(0), makeRibbon(0, 0.5)]); },
   ghost,
   use, hold, tick, clear: clearAll, noArc: true,
   _bolts: bolts,   // test / tooling access

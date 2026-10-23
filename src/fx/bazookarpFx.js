@@ -313,6 +313,11 @@ export class BazookarpFx {
     this.discGeo = new THREE.CircleGeometry(1, 40);
     this.spoutGeo = new THREE.CylinderGeometry(0.35, 1.1, 4.5, 20, 1, true);
     this.spoutGeo.translate(0, 2.25, 0);
+    // [b5-beta1] a hidden spout kept for the match: each Big Burst's own material is disposed when it fades, which
+    // released the shader and recompiled it at every burst (and the first in play); this one holds it, compiled at the
+    // match's load (main.js _warmStage builds this look then)
+    const keep = new THREE.Mesh(this.spoutGeo, new THREE.ShaderMaterial({ uniforms: { uCol: { value: new THREE.Color() }, uTime: { value: 0 }, uA: { value: 0 } }, vertexShader: CURTAIN_VS, fragmentShader: SPOUT_FS, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+    keep.visible = false; root.add(keep);
     this.ringFx = [];   // expanding shock rings (burst, blast, Carp Blast)
     this.spouts = [];
     this.scene.add(root);

@@ -382,6 +382,14 @@ export class StatusFx {
     this.recs.set(a, r);
     return r;
   }
+  // [b5-beta1] a match is about to be shown (subs.js warm → main.js _warmStage): one player's look record (its arrow,
+  // both draws) and the tracking line, built now — into the scene, hidden, as they are kept — so their programs are
+  // compiled at the load (they were built at the first track: a Point Sensor's burst, a mine, a Wave Breaker)
+  warm(actors) {
+    const a = actors && actors[0];
+    if (a) { const r = this._rec(a); if (!r.line) r.line = this._mkLine(); }
+    return [];
+  }
   // whose eyes the looks follow: StatusFx.viewer (tests, pictures) or the local player; their team (no player: the
   // subs' view team — a spectator sees what a team sees)
   eyes() { return this.viewer || G.local || null; }

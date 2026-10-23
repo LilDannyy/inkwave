@@ -723,7 +723,9 @@ function heldTick(a, s, dt) {
   H.look.emitter.rotation.y += dt * 4;
   H.look.lampMat.emissiveIntensity = 0.8 + 0.8 * (0.5 + 0.5 * Math.sin(s.t * 7));
 }
+let warmSet = null;   // [b5-beta1] a Wave Breaker buoy and its ring as stand-ins (specials.js warm: compiled at the match's load)
 export const IMPL = {
+  warm() { if (!warmSet) { const g = new THREE.Group(); g.add(makeBuoy(0).group); new RingRibbon(g, 0, {}); warmSet = [g]; } return warmSet; },
   start(a, s) {
     Object.assign(s, { speed: D.moveSpeed, noSquid: true, aimFace: true, raise: true, showArc: true, bomb: { kind: 'surf', throwSpeed: D.throwSpeed, inkCost: 0 }, dur: 0, thrown: false });
     a.character.subPropHidden = true;

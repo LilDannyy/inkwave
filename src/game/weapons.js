@@ -1028,6 +1028,19 @@ export class Projectiles {
     if (near) G.audio?.play('shoot_charger', { pos: m, volume: 0.6, pitch: 1.08 - 0.16 * charge });
   }
 
+  // [b5-beta1] stand-ins for what is built on first use — a charger's beam / laser sight (built at the first charge: a
+  // 63 ms frame at the first frame of play), a bomb and its cap, a Splashdown Storm's cloud puffs — compiled at the
+  // match's load (main.js _warmStage); kept, their materials never disposed (the programs stay cached)
+  warm() {
+    if (!this._warmSet) {
+      const cloud = (k) => new THREE.Mesh(this.cloudGeo, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, emissive: 0xffffff, emissiveIntensity: k, transparent: true, opacity: 0.97 }));
+      const bomb = new THREE.Mesh(this.bombGeo, this._bombMat(0).clone()); bomb.castShadow = true;
+      this._warmSet = [new THREE.Mesh(this.ribbonGeo, makeRibbonMaterial(0)), bomb,
+        new THREE.Mesh(this.bombCapGeo, new THREE.MeshStandardMaterial({ color: 0x2a2a30, roughness: 0.4, metalness: 0.6 })), cloud(0.16)];
+    }
+    return this._warmSet;
+  }
+
   // pooled charger beam ribbon (stays in the scene, hidden when idle)
   _beamMesh() {
     let m = this.beamPool.pop();

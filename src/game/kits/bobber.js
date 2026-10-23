@@ -55,7 +55,7 @@ import { DEPLOY_STATS } from '../deployables.js';
 import { BobberDraw, bobAt, DRAW_STATS } from './bobber-draw.js';
 import { WSCALE, B_EYE, worldGeometry } from './bobber-model.js';
 import { botKit, botAct, botDangers, preferFor, botThrowOk, botLog, webHit, holdThrow, webThrow, idleNow } from './bobber-bots.js';
-import { hudTick, hudClear, kitPrompt, guideOff, onChainHud, onDisarmHud, onRefusedHud, onThrowHud } from './bobber-hud.js';
+import { hudTick, hudClear, kitPrompt, guideOff, guideWarm, onChainHud, onDisarmHud, onRefusedHud, onThrowHud } from './bobber-hud.js';
 import '../../audio/sfx-bobber.js';
 
 const KIND = 'bobber';
@@ -1036,6 +1036,13 @@ export function shotProbe(prev, pos) {
   return best;
 }
 const kit = SUB_KITS[KIND] = {
+  // [b5-beta1] both teams' instanced bobber sets (built at the first bobber drawn) and the local player's aim guide, now
+  // (registry.js warmKits: compiled at the match's load)
+  warm(actors) {
+    const out = [draw._set(0).group, draw._set(1).group];
+    if (actors.some((a) => a?.isLocal && a.sub?.kind === KIND)) { const g = guideWarm(); if (g) out.push(g); }
+    return out;
+  },
   use,
   ghost,
   netHurt: netHurtOwn,

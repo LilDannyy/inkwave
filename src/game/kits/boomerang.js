@@ -632,7 +632,9 @@ const bot = {
 };
 THROWN[KIND] = true;   // Zone Control: lobbed onto enemy ink on a zone (the flat throw hovers over the patch)
 
+let warmSet = null;   // [b5-beta1] a thrown boomerang (its spin blur too) as a stand-in (registry.js warmKits)
 SUB_KITS[KIND] = {
+  warm() { return warmSet || (warmSet = [makeMesh(0, subViewScale(KIND))]); },
   use, tick, clear, hold, bot, ghost, noArc: true,
   blocked: (a) => active(a),
   // test / debug access
