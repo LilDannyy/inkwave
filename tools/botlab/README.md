@@ -65,7 +65,10 @@ W=960 H=600 MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botl
     tower-match.cjs and karp-match.cjs adds each episode's plans, as on match.cjs; `DIAG=2` (match.cjs, karp-match.cjs)
     takes them every 1 s with what the bot was doing (the move it asked for, speed, trigger, jump, target);
   - `MAP=aquarium MODE=turf PAGE=tools/botlab/tests/bot-stuck.js …page.cjs`: the stuck bots it found, each a scene
-    (`step`: a route planned mid-hop starts from the floor under the bot — Gulper Aquarium's Feeding Steps);
+    (`step`: a route planned mid-hop starts from the floor under the bot — Gulper Aquarium's Feeding Steps; `bobber`:
+    the Chain Bobber's dry plan and its holds; `refill`: every weapon refills from 6 / 10 % at a bare refill spot; `tank`:
+    a bot stranded on the Great Tank's sand bed super jumps out); with `MAP=halyard MODE=bazookarp PAGE_ARGS='only=karpspot'`
+    a Bazookarp breaker's refill spot is never the one it just ran dry at;
   - `tools/botlab/run.sh tools/botlab/first-frames.cjs` (`STAGES=a,b`, `MODE`, `BAR=100`, `PLAY=3`; `DEVSTAGE=1` adds
     Cargo Terminal): each stage's first match from a fresh page, in real time, every frame from the moment it is on
     screen through the intro and 3 s of play, and the waits between them; each frame over BAR with its parts (sim,

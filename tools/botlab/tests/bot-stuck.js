@@ -12,6 +12,8 @@
 // refill a bot at its refill spot on bare ground with 6 / 10 % (every weapon) has 40 % back (a charger
 //        held its draw at what the tank allows for good: no shot, no puddle, and a held trigger stops the kid's refill) —
 //        within 8 s (most 1.1–2.4 s; the charger: never).
+// tank   a bot on the Great Tank's sand bed (inside the glass, y −0.6: the nav has no way out of it) heading for a goal
+//        outside: out within 6 s (a super jump), from 4 spots — it pressed into the rim 4–9.25 s (JOB-5), for good here.
 // karpspot (MAP=halyard MODE=bazookarp PAGE_ARGS='only=karpspot'): a Bazookarp breaker's refill spot by the shell is
 //        never the spot it ran dry at in the last 6 s (bots.js _refillBad: its puddle went off a ledge's lip, where it can't
 //        swim): ≥ 3 m from it, or none (the usual search) — 20 picks in a live match. Sent back there, a breaker hovered
@@ -129,6 +131,25 @@
     // bug it is for was 'never')
     const bad = rows.filter((r) => r.t40 === null || r.t40 > 8);
     R(`refill: every weapon (${WEAPON_ORDER.length}) at its refill spot on bare ground (6 % and 10 %) has 40 % back within 8 s`, bad.length === 0, { bad, rows });
+  }
+  if (want('tank') && !G.match?.karp) {
+    const rows = [];
+    for (const [x, z, gx, gz] of [[6.64, 1.79, 18.5, -20], [2.84, 6.21, 1.5, 12], [-1, 6.8, -0.5, 16.5], [0, -3, -14, -12]]) {
+      const y = L.groundHeight(x, z, 1.0);
+      fresh(x, y + 0.05, z);
+      b._pickPaintGoal = function () { this.goalTimer = 2; this._pathTo(new V3(gx, L.groundHeight(gx, gz, 6), gz), 0.8); };
+      b.mode = 'paint'; b.goalTimer = 0;
+      let outAt = null, jumped = false;
+      for (let f = 0; f < 10 * 60 && outAt === null; f++) {
+        g.debug.step(1000 / 60);
+        if (bot.superJumpState) jumped = true;
+        if (bot.alive && !bot.superJumpState && bot.grounded && (Math.hypot(bot.pos.x, bot.pos.z) > 7.6 || bot.pos.y > 1)) outAt = +(f / 60).toFixed(2);   // (outside the glass, or up on its lid)
+      }
+      rows.push({ at: [x, r2(y), z], outAt, jumped, end: [r2(bot.pos.x), r2(bot.pos.y), r2(bot.pos.z)] });
+      delete b._pickPaintGoal;
+    }
+    const bad = rows.filter((r) => r.at[1] > -0.5 || r.outAt === null || r.outAt > 6);
+    R('tank: a bot on the Great Tank\'s sand bed (inside the glass, no way out on foot) heading out is out within 6 s (4 spots)', bad.length === 0, { bad, rows });
   }
   if (want('karpspot') && G.match?.karp) {
     // a live Bazookarp match: each time a breaker / grabber by the shell has a refill spot there, mark that spot as one it

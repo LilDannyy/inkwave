@@ -44,6 +44,7 @@ export const CHARGES = { charger: true, spinner: true, splatling: true };
 // a wall: a try beats standing there)
 export const CLIMB = { stall: 1.75, off: 12, max: 8, ink: 0.2, dry: 40, unreach: 150, reach: { brush: { max: 2.0 }, roller: { min: 1.8 } } };
 export const CLIMB_STATS = { tries: 0, done: 0, stalled: 0, dry: 0, long: 0 };
+export const STRAND_STATS = { jumps: 0, log: [] };   // [b5-beta1] stranded bots' super jumps out (tests / probes; log: the last 20)
 
 // ============================================================================================ Zone Control team plan
 // Shared by every bot in a zones match (one per ZoneControl): each zone's paint cells mapped to the nav nodes you'd
@@ -708,6 +709,26 @@ export class BotBrain {
         if (ok) { this.path = null; this.goalTimer = 0; }
       }
     }
+    // [b5-beta1] stranded: standing where the nav has no way out at our level — no node to start from but a ledge over
+    // 0.45 m above (Gulper Aquarium's Great Tank sand bed, inside its glass: bots pressed into the rim 4–9.25 s, JOB-5; a
+    // route from the rim node walks on, no hop) — for 1.5 s → super jump out, to the nearest teammate (or the spawn), as a
+    // player would. (Checked every 0.5 s.)
+    if ((this._strandChk = (this._strandChk || 0) - dt) <= 0) {
+      this._strandChk = 0.5;
+      const nav = G.nav;
+      this._stranded = !!nav && a.grounded && !a.climbing && !a.pipe && !a.carry && !G.match?.lava && nav.nearest(a.pos, 0.45, true) < 0 && nav.nearest(a.pos, 1.2, true) >= 0;   // (a stage with lava: its escapes have it)
+    }
+    if (this._stranded && !a.superJumpState) {
+      this.strandAcc = (this.strandAcc || 0) + dt;
+      if (this.strandAcc > 1.5 && G.match?.playing() && a.canSuperJump()) {
+        let mate = null, md = Infinity;
+        for (const o of G.actors) { if (o === a || o.team !== a.team || !o.alive || o.superJumpState) continue; const d = o.pos.distanceTo(a.pos); if (d > 6 && d < md) { md = d; mate = o; } }
+        if (a.superJump(mate || G.level.spawnPads[a.team].clone())) {
+          STRAND_STATS.jumps++; STRAND_STATS.log.push([+G.time.toFixed(2), a.name, +a.pos.x.toFixed(2), +a.pos.y.toFixed(2), +a.pos.z.toFixed(2)]); if (STRAND_STATS.log.length > 20) STRAND_STATS.log.shift();
+          this.path = null; this.goalTimer = 0; this.strandAcc = 0; this._stranded = false;
+        }
+      }
+    } else this.strandAcc = 0;
     if (a.superJumpState || (G.match?.stage && G.match.stage.botHold(this))) { it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; this.mvMag = 0; return; }   // [b5-stagehooks] botHold (riding a pipe)
     if (!G.match || !G.match.playing()) { it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; this.mvMag = 0; return; }
     this.think -= dt; this.jumpCd -= dt; this.bombCd -= dt; this.strafeT -= dt; this.paintPause -= dt; this.dodgeCd -= dt;
