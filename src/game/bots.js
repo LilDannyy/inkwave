@@ -716,7 +716,9 @@ export class BotBrain {
     if ((this._strandChk = (this._strandChk || 0) - dt) <= 0) {
       this._strandChk = 0.5;
       const nav = G.nav;
-      this._stranded = !!nav && a.grounded && !a.climbing && !a.pipe && !a.carry && !G.match?.lava && nav.nearest(a.pos, 0.45, true) < 0;   // (a stage with lava: its escapes have it)
+      // (judged at the floor under it, hops and all: a stranded bot hops — the unstick's — and a check mid-hop reset it)
+      const fy = !nav || a.climbing || a.pipe || a.carry || G.match?.lava ? -Infinity : G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.1);
+      this._stranded = fy > -Infinity && a.pos.y - fy < 1.5 && nav.nearest(_vStart.set(a.pos.x, fy, a.pos.z), 0.45, true) < 0;   // (a stage with lava: its escapes have it)
     }
     if (this._stranded && !a.superJumpState) {
       this.strandAcc = (this.strandAcc || 0) + dt;
