@@ -6,7 +6,8 @@
 // drowning floor); an edge with an end on drowning floor (at HIGH that end is masked by the field's state) is kept.
 // Generated from the built field (Bazookarp variant): tools/botlab/tests/lava-karp.js K8 checks that the field has none
 // left and prints the entries to paste when the nav moves (the crossing list for checker #16:
-// tools/botlab/jobs/batch5/stages/caldera/out/fix5/rule44-crossings.json)
+// tools/botlab/jobs/batch5/stages/caldera/out/fix6/rule44-crossings.json; the carrier's own swim jumps over the lava, which
+// the Bazookarp layout is judged against per stage — the lead after review 6 —: jobs/batch5/karp-stages/caldera-carrier-crossings.json)
 export const KARP_VETO = [
   // (edges the field adds on Bravo's half only, in Alpha's frame: their turn is the edge)
   [-15.5, 1.4, -1.5, -17.5, 1.25, 0.5], [-20.5, 1.25, -10.5, -23.5, 0, -10.5], [-22.5, 1.25, -4.5, -25.5, 0, -4.5],

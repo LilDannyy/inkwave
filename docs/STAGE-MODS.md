@@ -166,7 +166,8 @@ ready() { this.apply(1, { instant: true }); }
 
 - **Special edges**: `W.navEdges(level)` → `[{ a: [x, y, z], b: [x, y, z], cost, type: 'pipe', key, len, …any }]`
   (pipes: `type: 'pipe'`; lava, fix round 5: the layout's `lava.walks` — `type: 'walk'` links both ways between two static
-  floors the 1 m grid misses, e.g. Highmark's 0.85 m between the gauge deck's corner and the lava's edge).
+  floors the 1 m grid misses, e.g. Highmark's 0.85 m between the gauge deck's corner and the lava's edge; fix round 6: and
+  a nudged node in a pocket on the Ladle Road by the scree ramp, joined by the grid only to the Rim Ridge above).
   `NavGraph._extraEdges` links the nearest node within 0.8 m (xz) and 0.6 m (y) of each end; specs that don't resolve
   go to `nav.edgeProblems`. Edges keep every extra field. `nav.hScale` (= min(1, cost ÷ straight distance) over the
   special edges) scales A*'s heuristic so a cheap long edge is never skipped; 1 on every other stage.
@@ -309,7 +310,7 @@ clone with the era vertex collapse). Untagged placements are merged exactly as t
 | `botHold(b)` | `BotBrain.update`'s super-jump early return | true = the bot does nothing this frame (riding) |
 | `edgeTypes: ['pipe']` + `botSteer(b, edge, out)` | `_steer`, after the waypoint advance, when the next edge's type is yours (and the ledge-replan exception) | return `out` (the move) or null |
 | `beforePath(b)` | `_pathTo`, before `nav.path` | set your per-bot nav rule state (`this.botX = …`) |
-| `botAct(b, dt, it, move, vis)` | after the pods' bot hook | an aim (Vector3) to take over, or null. Bot fields it may set for this frame ([b5-caldera]): `b.stageUrgent` (run it ahead of a threat's footwork), `b.guardOff` (a straight run at a step: no edge / water guard), `b._needJump = true` (ask for a hop) with `b.hopAt` (fix round 4: the `{ x, y, z }` the hop is for — `_tail` judges it by the flight steered at that spot, `_hopLands`, and flies it there; a refused ask's press costs no cool-down), `b.hopCheck = true` (fix round 4: the hop is judged by that flight even with the guards off — `b.guardOff` — a lookout claimant's column hop, with no lava at its heels a wasted hop is the worse risk; an escape's step leaves it unset) |
+| `botAct(b, dt, it, move, vis)` | after the pods' bot hook | an aim (Vector3) to take over, or null. Bot fields it may set for this frame ([b5-caldera]): `b.stageUrgent` (run it ahead of a threat's footwork), `b.guardOff` (a straight run at a step: no edge / water guard), `b._needJump = true` (ask for a hop) with `b.hopAt` (fix round 4: the `{ x, y, z }` the hop is for — `_tail` judges it by the flight steered at that spot, `_hopLands`, and flies it there; a refused ask's press costs no cool-down), `b.hopCheck = true` (fix round 4: the hop is judged by that flight even with the guards off — `b.guardOff` — a lookout claimant's column hop, with no lava at its heels a wasted hop is the worse risk; an escape's step leaves it unset). `guardOff`, `hopAt` and `hopCheck` are this frame's only: bots.js clears them just before calling `botAct` (fix round 6 — a brain stopped between a set and its read left `guardOff` on, and the next frame's asked hop skipped the lava check) |
 | `wet(x, z, gy, ahead)` | `_wet`, `_avoidWater`, `_squidWouldDrop` (ahead 0.5), `stageKit.floorFor` (ahead 1) | true = feet on that floor would be in your hazard (now or within `ahead` s) |
 | `goalWeight(id)` | `_pickPaintGoal` | × on a paint goal's score (eras' fresh nodes ×2) |
 | `sightLanding(e)` | `botSight` `check` / `recheck` | a Vector3: remember this enemy there (`src: 'jump'`), never target it |
