@@ -9,12 +9,17 @@
 // bobber a Chain Bobber bot run dry while laying a chain on bare ground lets the plan go and goes to refill, instead of
 //        sitting a squid on bare ground refilling at 4.5 ink/s until its plan times out (11.5 s episodes on Bluestone);
 //        and standing for its plan, its stand spot or its ambush it says it holds on purpose (perchUntil).
-// refill a bot at its refill spot on bare ground, its tank too low for its weapon to shoot (a charger's draw held at
-//        its cap, a roller's trigger held with nothing coming out), lets go and refills (40 % back within 6 s).
+// refill a bot at its refill spot on bare ground with 6 / 10 % (every weapon) has 40 % back (a charger
+//        held its draw at what the tank allows for good: no shot, no puddle, and a held trigger stops the kid's refill) —
+//        within 8 s (most 1.1–2.4 s; the charger: never).
+// karpspot (MAP=halyard MODE=bazookarp PAGE_ARGS='only=karpspot'): a Bazookarp breaker's refill spot by the shell is
+//        never the spot it ran dry at in the last 6 s (bots.js _refillBad: its puddle went off a ledge's lip, where it can't
+//        swim): ≥ 3 m from it, or none (the usual search) — 20 picks in a live match. Sent back there, a breaker hovered
+//        at 3 %, painting off the lip, 4.75–25.5 s (halyard's upper decks).
 (async () => {
   const g = window.__inkwave, G = window.__G, m = g.match, L = G.level, N = G.nav, out = [], R = (name, ok, info) => out.push({ name, ok: !!ok, info });
   const THREE = await import('three'), V3 = THREE.Vector3, r2 = (v) => Math.round(v * 100) / 100;
-  const { PLAYER } = await import('./src/config.js');
+  const { PLAYER, WEAPON_ORDER } = await import('./src/config.js');
   const only = (/only=([\w,]+)/.exec(String(window.__pageArgs || '')) || [])[1]?.split(',') || null, want = (k) => !only || only.includes(k);
   g.debug.freeze();
   const idle = function () { const it = this.a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; };
@@ -108,20 +113,47 @@
     // refilled (the base: ink unchanged for 10 s). Each must have 40 of 100 back within 6 s, from 6 and from 10
     const rows = [];
     const here0 = N.nearest(new V3(0, 0.05, 12.5), 1.2, true), at = N.nodes[here0];
-    for (const w of ['charger', 'roller', 'splatling', 'shooter']) for (const ink0 of [6, 10]) {
+    for (const w of WEAPON_ORDER) for (const ink0 of [6, 10]) {
       G.paint.clear(); fresh(at.x, at.y + 0.05, at.z);
-      bot.setWeapon(w); delete b._pickRefill; b.reset(); b.setDifficulty('normal');
+      bot.setWeapon(w); delete b._pickRefill; b.reset(); b.setDifficulty('normal'); b._refillBad = null;   // (not the last run's)
       for (let f = 0; f < 6; f++) g.debug.step(1000 / 60);
       const here = N.nearest(bot.pos, 1.2, true);
       b._pickRefill = function () { this.path = [here]; this.pi = 1; this.goal = here; this.repath = 1; };
       bot.ink = ink0; b.mode = 'refill'; b.refillUntil = 0.9; b.path = [here]; b.pi = 1; b.goal = here; b.repath = 1;
-      let t40 = null;
-      for (let f = 0; f < 8 * 60 && t40 === null; f++) { g.debug.step(1000 / 60); if (bot.ink >= 40) t40 = +(f / 60).toFixed(1); }
-      rows.push({ w, ink0, t40 });
+      let t40 = null, held = 0, sq = 0, n = 0;
+      for (let f = 0; f < 10 * 60 && t40 === null; f++) { g.debug.step(1000 / 60); n++; if (bot.intent.fire) held++; if (bot.form === 'squid') sq++; if (bot.ink >= 40) t40 = +(f / 60).toFixed(1); }
+      rows.push(t40 === null ? { w, ink0, t40, ink8: Math.round(bot.ink), fireHeld: r2(held / n), squid: r2(sq / n) } : { w, ink0, t40 });
       delete b._pickRefill;
     }
-    const bad = rows.filter((r) => r.t40 === null || r.t40 > 6);
-    R('refill: a charger, a roller, a splatling and a shooter at their refill spot on bare ground (6 % and 10 %) have 40 % back within 6 s', bad.length === 0, { bad, rows });
+    // (the bar: 8 s — most kits take 1.1–2.4 s, some draws 4–5 s, the slowest seen 7 s (twins at 10 %, once in three); the
+    // bug it is for was 'never')
+    const bad = rows.filter((r) => r.t40 === null || r.t40 > 8);
+    R(`refill: every weapon (${WEAPON_ORDER.length}) at its refill spot on bare ground (6 % and 10 %) has 40 % back within 8 s`, bad.length === 0, { bad, rows });
+  }
+  if (want('karpspot') && G.match?.karp) {
+    // a live Bazookarp match: each time a breaker / grabber by the shell has a refill spot there, mark that spot as one it
+    // found no use for (as bots.js does when it ran dry there) and ask again
+    const K = await import('./src/game/botsKarp.js');
+    g.debug.unfreeze(); g.debug.freeze();
+    for (const a of m.actors) if (a.bot && a.bot.update === idle) delete a.bot.update;
+    const rows = [];
+    for (let f = 0; f < 200 * 60 && rows.length < 20 && m.state !== 'finish'; f++) {
+      g.debug.step(1000 / 60);
+      if (f % 30 || m.state !== 'playing') continue;
+      const P = K.karpPlan(); if (!P) continue;
+      for (const a of m.actors) {
+        if (!a.bot || a === m.local || !a.alive || a.carry || rows.length >= 20) continue;
+        const B = a.bot, s0 = K.karpRefillSpot(B, P);
+        if (!s0) continue;
+        const was = B._refillBad, at = { x: s0.x, y: s0.y, z: s0.z };
+        B._refillBad = { x: at.x, z: at.z, t: B.t };
+        const s1 = K.karpRefillSpot(B, P), d = s1 ? Math.hypot(s1.x - at.x, s1.z - at.z) : null;
+        B._refillBad = was;
+        rows.push({ who: a.name, role: B.kRole, spot: [r2(at.x), r2(at.y), r2(at.z)], again: s1 ? [r2(s1.x), r2(s1.y), r2(s1.z)] : null, d: d === null ? null : r2(d) });
+      }
+    }
+    const bad = rows.filter((r) => r.d !== null && r.d < 3);
+    R('karpspot: a breaker\'s refill spot by the shell is never within 3 m of the one it just found no use for (20 picks; none: the usual search)', rows.length >= 10 && bad.length === 0, { n: rows.length, bad: bad.slice(0, 5), rows: rows.slice(0, 6) });
   }
   g.debug.unfreeze();
   return out;

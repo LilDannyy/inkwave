@@ -699,7 +699,11 @@ export function karpRefillSpot(b, P) {
   if (!band) return null;
   const a = b.a, c = P.restPos(), st = b._kst || (b._kst = { own: 0, enemy: 0, empty: 0, n: 0 });
   const [lo, hi] = band, base = Math.atan2(a.pos.x - c.x, a.pos.z - c.z);
-  let best = null, bd = Infinity;
+  // [b5-beta1] never back to a spot bots.js found no use for in the last 6 s (_refillBad: its puddle landed off a ledge's
+  // lip, so it ran dry there — sent back to it, a breaker hovered at 3 % painting off the lip: 4.75–25.5 s on halyard);
+  // the band's nearest other spot instead, bare or not (bots.js paints its puddle there), else null (the usual search)
+  const RB = b._refillBad && b.t - b._refillBad.t < 6 ? b._refillBad : null;
+  let best = null, bd = Infinity, alt = null, ad = Infinity;
   for (let k = 0; k < 16; k++) {
     const ang = base + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.39;
     for (const u of [0.25, 0.75]) {
@@ -709,13 +713,16 @@ export function karpRefillSpot(b, P) {
       if (id < 0) continue;
       const n = G.nav.nodes[id], h = hd(n, c);
       if (h < lo || h > hi || Math.abs(n.y - a.pos.y) > 1.2 || n.zone >= 0) continue;
+      if (RB && Math.hypot(n.x - RB.x, n.z - RB.z) < 3) continue;   // [b5-beta1]
       const d = hd(n, a.pos);
+      if (RB && d < ad) { ad = d; alt = n; }
       if (d >= bd) continue;
       G.paint.regionStats(n.x, n.y, n.z, 1.0, b.inkTeam, st);
       if (st.n && st.own > 0.6) { bd = d; best = n; }
     }
   }
   if (best) return _rf.set(best.x, best.y, best.z);
+  if (RB) return alt ? _rf.set(alt.x, alt.y, alt.z) : null;   // [b5-beta1]
   const n = shellSpot(b, P, b.kRole);
   return n ? _rf.set(n.x, n.y, n.z) : null;
 }
