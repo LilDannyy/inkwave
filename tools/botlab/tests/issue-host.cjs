@@ -2,11 +2,13 @@
 // The hosted issue log (tools/host/selfhost.cjs POST /issue): JSONL append, same-origin, the 8 KiB cap, the rate limit.
 // [b5-beta1] The log is written beside the site root, never inside it (its rotation too), and GET /issues.log answers 404
 // even when an older server left one in the root. The limit is per player behind cloudflared (every request from
-// 127.0.0.1): a loopback peer's CF-Connecting-IP, then X-Forwarded-For, keys a 20-a-minute bucket; with neither — or from
-// a peer that isn't loopback (headers anyone could forge) — the peer's own address keys a 200-a-minute bucket.
+// 127.0.0.1): by default a loopback peer's CF-Connecting-IP, only with CF-Ray beside it (Cloudflare's edge sets both),
+// keys a 20-a-minute bucket; X-Forwarded-For only with trustProxy 'xff' (its last address); otherwise — no such header,
+// a forged one without CF-Ray, or a peer that isn't loopback — the peer's own address keys a 200-a-minute bucket. The
+// bucket map is capped (least recently used out), so a flood of made-up names neither grows it nor scans it.
 //   node tools/botlab/tests/issue-host.cjs
 const fs = require('fs'); const os = require('os'); const path = require('path');
-const { startSelfhost, issueBucket } = require('../../host/selfhost.cjs');
+const { startSelfhost, issueBucket, issueAllowed, RATE_CAP } = require('../../host/selfhost.cjs');
 (async () => {
   const base = fs.mkdtempSync(path.join(os.tmpdir(), 'inkwave-issue-')), root = path.join(base, 'site');
   fs.mkdirSync(root);
@@ -14,7 +16,7 @@ const { startSelfhost, issueBucket } = require('../../host/selfhost.cjs');
   const post = (body, origin = s.url, headers = {}) => fetch(s.url + '/issue', { method: 'POST', headers: { origin, 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) });
   let pass = 0, total = 0;
   const R = (ok, name) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`); pass += !!ok; total++; };
-  const cf = (ip) => ({ 'cf-connecting-ip': ip });
+  const cf = (ip) => ({ 'cf-connecting-ip': ip, 'cf-ray': '8d2f0c1e9a7b3c4d-AMS' });   // (as cloudflared passes them on)
   try {
     const ok = await post({ entries: [{ at: new Date().toISOString(), kind: 'probe', message: 'hosted test' }] }, s.url, cf('198.51.100.1'));
     R(ok.status === 204, 'hosted POST appends JSONL');
@@ -39,18 +41,35 @@ const { startSelfhost, issueBucket } = require('../../host/selfhost.cjs');
     R(a.slice(0, 20).every((x) => x === 204) && a[20] === 429, 'a player (CF-Connecting-IP) is held at 20 a minute');
     const other = await post({ entries: [] }, s.url, cf('203.0.113.8'));
     R(other.status === 204, 'another player behind the same tunnel is not: its own bucket');
+    // the fallback: no header — the peer's address, 200 a minute (everyone behind a header-less proxy shares it); a
+    // CF-Connecting-IP without CF-Ray (a client's own header through some other proxy) and an X-Forwarded-For (not
+    // trusted by default) land in that same bucket, so rotating made-up addresses buys nothing
     a = [];
-    for (let i = 0; i < 21; i++) a.push((await post({ entries: [] }, s.url, { 'x-forwarded-for': '192.0.2.44, 10.0.0.1' })).status);
-    const xo = await post({ entries: [] }, s.url, { 'x-forwarded-for': '192.0.2.45' });
-    R(a.slice(0, 20).every((x) => x === 204) && a[20] === 429 && xo.status === 204, 'without CF-Connecting-IP, the first X-Forwarded-For address keys the bucket (20 a minute each)');
-    // the fallback: no header — the peer's address, 200 a minute (everyone behind a header-less proxy shares it)
-    a = [];
-    for (let i = 0; i < 201; i++) a.push((await post({ entries: [] })).status);
-    R(a.slice(0, 200).every((x) => x === 204) && a[200] === 429, 'no forwarding header: the peer\'s address keys a bucket of 200 a minute');
-    // forged headers from a peer that is not loopback are not trusted
-    const fake = issueBucket({ socket: { remoteAddress: '203.0.113.99' }, headers: { 'cf-connecting-ip': '1.1.1.1', 'x-forwarded-for': '2.2.2.2' } });
-    const viaTunnel = issueBucket({ socket: { remoteAddress: '::ffff:127.0.0.1' }, headers: { 'cf-connecting-ip': '1.1.1.1' } });
-    R(fake.key === 'p:203.0.113.99' && fake.limit === 200 && viaTunnel.key === 'h:1.1.1.1' && viaTunnel.limit === 20, 'a direct peer\'s forwarding headers are ignored (its own address, 200); a loopback peer\'s are the player');
+    for (let i = 0; i < 201; i++) {
+      const h = i % 3 === 1 ? { 'cf-connecting-ip': `198.18.${i >> 8}.${i & 255}` } : i % 3 === 2 ? { 'x-forwarded-for': `198.19.${i >> 8}.${i & 255}` } : {};
+      a.push((await post({ entries: [] }, s.url, h)).status);
+    }
+    R(a.slice(0, 200).every((x) => x === 204) && a[200] === 429, 'no trusted header: the peer\'s address keys a bucket of 200 a minute — rotated CF-Connecting-IPs without CF-Ray and X-Forwarded-Fors included');
+    // which header names the player, per trustProxy (the unit: issueBucket)
+    const lo = (headers) => ({ socket: { remoteAddress: '::ffff:127.0.0.1' }, headers });
+    const fake = issueBucket({ socket: { remoteAddress: '203.0.113.99' }, headers: { 'cf-connecting-ip': '1.1.1.1', 'cf-ray': 'x', 'x-forwarded-for': '2.2.2.2' } });
+    const viaTunnel = issueBucket(lo({ 'cf-connecting-ip': '1.1.1.1', 'cf-ray': '8d2f-AMS' })), noRay = issueBucket(lo({ 'cf-connecting-ip': '1.1.1.1' }));
+    R(fake.key === 'p:203.0.113.99' && fake.limit === 200 && viaTunnel.key === 'h:1.1.1.1' && viaTunnel.limit === 20 && noRay.key === 'p:::ffff:127.0.0.1' && noRay.limit === 200,
+      'a direct peer\'s headers are ignored (its own address, 200); a loopback peer\'s CF-Connecting-IP names the player only with CF-Ray');
+    const xDef = issueBucket(lo({ 'x-forwarded-for': '192.0.2.44, 10.0.0.1' })), xT = issueBucket(lo({ 'x-forwarded-for': '192.0.2.44, 10.0.0.1' }), 'xff');
+    const xCf = issueBucket(lo({ 'cf-connecting-ip': '1.1.1.1', 'cf-ray': 'x' }), 'xff'), none = issueBucket(lo({ 'cf-connecting-ip': '1.1.1.1', 'cf-ray': 'x', 'x-forwarded-for': '2.2.2.2' }), 'none');
+    R(xDef.limit === 200 && xT.key === 'h:10.0.0.1' && xT.limit === 20 && xCf.limit === 200 && none.key === 'p:::ffff:127.0.0.1',
+      'X-Forwarded-For only with trustProxy xff, and then its last address (the one the proxy added); none trusts no header');
+    let threw = false; try { const s2 = await startSelfhost({ root, port: 0, host: '127.0.0.1', log() {}, trustProxy: 'any' }); await s2.close(); } catch (e) { threw = /trustProxy/.test(e.message); }
+    R(threw, 'an unknown trustProxy is refused at start');
+    // the bucket map under a flood of made-up names: capped at RATE_CAP, least recently used out, no scan per POST
+    const rates = new Map(), t0 = Date.now();
+    issueAllowed(rates, 'h:keep', 20, t0);
+    let w0 = process.hrtime.bigint();
+    for (let i = 0; i < RATE_CAP * 4; i++) { issueAllowed(rates, 'h:flood' + i, 20, t0 + 1); if (i % 1000 === 0) issueAllowed(rates, 'h:keep', 20, t0 + 1); }
+    const floodMs = Number(process.hrtime.bigint() - w0) / 1e6;
+    R(rates.size === RATE_CAP && rates.has('h:keep') && !rates.has('h:flood0') && rates.has('h:flood' + (RATE_CAP * 4 - 1)) && floodMs < 1500,
+      `a flood of ${RATE_CAP * 4} made-up names keeps ${rates.size} buckets (cap ${RATE_CAP}; the busy one kept, the oldest gone) in ${floodMs.toFixed(0)} ms`);
   } finally { await s.close(); fs.rmSync(base, { recursive: true, force: true }); }
   console.log(`RESULT ${pass}/${total}`);
   if (pass !== total) process.exitCode = 1;
