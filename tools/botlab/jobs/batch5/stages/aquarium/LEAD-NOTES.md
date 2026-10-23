@@ -107,3 +107,22 @@ when the weekly usage resets) does exactly that list, one fix + one review, and 
 - **Performance: CLOSED (2026-10-17, the Mac mini's fixed-view probe, quality high, 3 runs per cell, load 2–4).**
   Aquarium is level with Halyard on draw calls (×0.93–1.03) and cpuRender (×0.93–0.98), day and dusk, and about
   18 % UNDER on triangles per view (2.7 M vs 3.3 M). No lettering-to-mural work is needed. `aquarium/results/JOB-5.txt`.
+
+## After review 7 (2026-10-23): the kiosks, and the sweep becomes a tool
+
+Review 6's list is closed. Review 7's sweep (a new tool: every tagged block clustered, 3–8 eye positions each, 530
+views) found the one family no sweep had walked: the kiosks. This round, binding:
+1. **Adopt the sweep as a repo tool first:** copy the reviewer's `scratchpad/aqrev7/tools/sweep.cjs` into
+   `tools/botlab/stage-sweep.cjs` (MAP=, TIME=, OUT=; sheets per cluster; a list of clusters with no eye-level view),
+   document it in tools/botlab/README.md, and run it on this stage before and after your changes; attach the sheets.
+   Every later stage review uses it.
+2. **The Ticket Hall booth's glazing buried 2 cm inside its block** (both TICKETS faces blank): a bug; bring the glazing
+   proud of the face, both halves.
+3. **The South Promenade ice-cream kiosk's three bare faces** (its back is the centrepiece at the head of the Penguin
+   Steps), **the other three kiosks' backs, the luggage scale's three faces**: dress as the review specifies (pilasters
+   and the speed lines on every face; the flavours board on the ice-cream back; shutters or framed posters on the
+   sides; the scale's dial, plate and brass trim), within 8.5 cm, nothing over the cornice, no collider.
+4. Re-shoot the review's named cameras, re-run aquarium-art.js (with a pixel read of the kiosk back and the booth
+   glazing that fails at de3bd111), pipes.js, one Turf War match; the cards only if a card view changed.
+Accepted and unchanged: triangles, the boss, camping (cooldown 3.5), the Great Tank bot bug (the beta fix round), the
+skylights' tile, the pavilion stair flanks.
