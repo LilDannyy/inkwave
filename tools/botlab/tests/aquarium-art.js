@@ -11,6 +11,9 @@
 // rock faces and tops, the ice pile, the pump sets, the dais, the Ticket Hall, the stairs' flanks, the Kelp Balconies, the
 // pavilion's flank walls and the deckchair stacks are dressed under the ink (pixel reads, both halves), this round's props
 // stand within 8.5 cm of what they dress and off its walkable top, the grand stair has its granite nosing.
+// Fix round 6 (section 10, review 6's list): the Feeding Step's sides and top, the Kelp Ramps' parapets, the whale-tail benches,
+// the trolley stacks and the ice-cream carts drawn under the ink; the lectern, the deep Kelp stops and the plant rooms dressed;
+// this round's props within 8.5 cm and off walkable tops; the Penguin Steps' nosing out to r 31.4.
 //   MAP=aquarium MODE=turf PAGE=tools/botlab/tests/aquarium-art.js tools/botlab/run.sh tools/botlab/page.cjs
 (async () => {
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info });
@@ -367,7 +370,8 @@
       const TYPES = ['aquarium_plate', 'aquarium_penguinplaque', 'aquarium_baskinglumps', 'aquarium_pumpdress', 'aquarium_raketrim'];   // (the hut's windows: on an off-limits block, its round-1 roof overhangs it)
       const DRESSED = ['penguin-rocks', 'upper-rock', 'basking-rock', 'ice-pile', 'pump-set', 'touch-dais', 'touch-step', 'ticket-hall', 'helmet-bed', 'viewing-step', 'shark-bench', 'grand-stair', 'penguin-steps', 'ticket-stair', 'deck-ramp'];
       const kit5 = new PK(null, { headless: true });
-      let nIt = 0; for (const it of DF('aquarium')) if (TYPES.includes(it.type)) { kit5.add(it.type, it); nIt++; }
+      const R6 = ['FEEDING DECK', 'WHALE BENCH', 'KELP RAMP', 'GELATO'];   // (fix round 6's plates: section 10 reads them against their own blocks)
+      let nIt = 0; for (const it of DF('aquarium')) if (TYPES.includes(it.type) && !(it.type === 'aquarium_plate' && R6.includes(it.lines?.[0]?.[0]))) { kit5.add(it.type, it); nIt++; }
       const mir = (d) => (d.kind === 'box' ? { ...d, min: [-d.max[0], d.min[1], -d.max[2]], max: [-d.min[0], d.max[1], -d.min[2]] } : d.kind === 'obox' ? { ...d, center: [-d.center[0], d.center[1], -d.center[2]] } : { ...d, low: [-d.low[0], d.low[1], -d.low[2]], high: [-d.high[0], d.high[1], -d.high[2]] });
       const blocks = LY.half.filter((d) => DRESSED.includes(d.tag) && !(d.notIn === 'tower' && false)).flatMap((d) => [d, mir(d)]);
       // (footprint distance outside a piece, and its top over (x, z) when inside)
@@ -409,6 +413,140 @@
       R('the grand stair\'s head has its granite nosing on both halves (not inked, 8.5 cm proud) and no promenade cell reaches past it onto the stair',
         nos.length === 2 && nos.every((b) => b.faces.every((f) => f < 0 || !L.faces[f].paintable)) && ndef && Math.abs(ndef.center[1] + ndef.size[1] / 2 - 2.485) < 1e-6 && reach >= 20.95 - 0.02,
         { blocks: nos.length, top: ndef ? +(ndef.center[1] + ndef.size[1] / 2).toFixed(3) : null, cellsFrom: +reach.toFixed(3) });
+    }
+    m.actors.forEach((a, i) => { a.bot = brains[i]; });
+    G.paint.clear?.();
+  }
+  // 10. fix round 6 (LEAD-REVIEW 6, the list LEAD-NOTES "After review 6" binds): the Feeding Step's sides and top, the Kelp
+  // Ramps' parapets, the whale-tail benches, the trolley stacks and the ice-cream carts are drawn under the ink (pixel reads,
+  // both halves; the ink still shows on them), the lectern's court face, the deep Kelp stops' panels and the plant rooms'
+  // faces are dressed, this round's props stand within 8.5 cm of what they dress and off its walkable top, and the Penguin
+  // Steps' nosing now covers the promenade's cells at their head
+  {
+    const gl = G.renderer.getContext(), V = (a) => new G.camera.position.constructor(a[0], a[1], a[2]);
+    const DEG = Math.PI / 180, dir = (a) => [Math.cos(a * DEG), Math.sin(a * DEG)];
+    const lum = (c) => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
+    const px = (p) => { const v = V(p).project(G.camera), w = gl.drawingBufferWidth, h = gl.drawingBufferHeight, a = new Uint8Array(4 * 9); gl.readPixels(Math.round((v.x + 1) / 2 * w) - 1, Math.round((v.y + 1) / 2 * h) - 1, 3, 3, gl.RGBA, gl.UNSIGNED_BYTE, a); const c = [0, 0, 0]; for (let i = 0; i < 9; i++) for (let k = 0; k < 3; k++) c[k] += a[i * 4 + k] / 9; return c.map(Math.round); };
+    const shot = (from, look, n = 24) => { G.paint.clear?.(); g.rig.cinematic(V(from), V(from), V(look), V(look), 99, () => {}); for (let i = 0; i < n; i++) g.debug.step(1000 / 60); };
+    const tw = (p, s) => [s * p[0], p[1], s * p[2]];
+    const std = (cs) => { const l = cs.map(lum), m = l.reduce((a, b) => a + b, 0) / l.length; return +Math.sqrt(l.reduce((a, b) => a + (b - m) ** 2, 0) / l.length).toFixed(1); };
+    const brains = m.actors.map((a) => a.bot); for (const a of m.actors) a.bot = null;
+    g.debug.freeze?.();
+    // (a) the Feeding Step: its side faces render over a granite skirting, a faience speed line, a teak fascia (they were plain
+    // cream render), its top teak planks with a brass border (it was plain render), both halves
+    const fs = [];
+    for (const s of [1, -1]) {
+      shot(tw([4.6, 1.5, -7.6], s), tw([2.0, 0.6, -8.8], s));
+      const f = (y) => px(tw([2.005, y, -9.3], s));
+      const side = { s, body: f(0.5), skirt: f(0.045), line: f(0.7), fascia: f(1.12) };
+      shot(tw([0, 2.9, -12.8], s), tw([0, 1.2, -8.3], s));
+      const g9 = []; for (let i = 0; i < 7; i++) for (let j = 0; j < 5; j++) g9.push(px(tw([-1.2 + i * 0.4, 1.2, -9.4 + j * 0.37], s)));
+      fs.push({ ...side, topStd: std(g9), topRB: Math.round(g9.reduce((a, c) => a + c[0] - c[2], 0) / g9.length), border: px(tw([0.6, 1.2, -9.63], s)) });
+    }
+    R('the Feeding Step\'s sides are dressed (render over a granite skirting, a faience speed line, a teak fascia) and its top is teak planks in a brass border, both halves',
+      fs.every((c) => lum(c.body) > lum(c.skirt) + 30 && c.line[1] > c.line[0] + 3 && c.fascia[0] > c.fascia[2] + 8 && c.topStd > 5 && c.topRB > 8 && c.border[0] > c.border[2] + 25), fs);
+    // (b) the Kelp Ramp's parapet: its court face has the faience speed lines under its coping (it was plain render), its
+    // ramp face a granite skirting along the ramp, both halves
+    const kp = [];
+    for (const s of [1, -1]) {
+      const nC = dir(-37.5), oC = (y, k = 7.745) => [-25 + nC[0] * k, y, nC[1] * k];
+      shot(tw([-15.5, 1.7, -9.5], s), tw([-21.0, 2.4, -5.5], s));
+      const court = { s, body: px(tw(oC(1.9), s)), line: px(tw(oC(2.26), s)) };
+      const nI = dir(-52.5), iI = (y) => [-25 + nI[0] * 7.425, y, nI[1] * 7.425];
+      shot(tw([-19.0, 2.9, 0.5], s), tw([-21.5, 2.6, -5.0], s));
+      kp.push({ ...court, rampBody: px(tw(iI(2.25), s)), rampSkirt: px(tw(iI(1.97), s)) });
+    }
+    R('the Kelp Ramps\' parapets are dressed, both halves: faience speed lines along the court face under the coping, a granite skirting along the ramp face',
+      kp.every((c) => c.line[1] > c.line[0] + 3 && lum(c.body) > lum(c.line) + 8 && lum(c.rampBody) > lum(c.rampSkirt) + 30), kp);
+    // (c) the whale-tail bench: slats and brass rails on its long face (it was a plain plank box); (d) the trolley stack:
+    // the cage's bars over the shade inside; (e) the ice-cream cart: candy stripes round its skirt; both halves
+    const misc = [];
+    for (const s of [1, -1]) {
+      shot(tw([-1.0, 1.0, -60.25], s), tw([-1.0, 0.65, -58.6], s));   // (square to its long face, 1.65 m off: the slats resolve)
+      const slats = Array.from({ length: 65 }, (_, i) => px(tw([-1.9 + i * 0.0277, 0.65, -58.605], s)));   // (0.0277 m apart: never in step with the 0.1 m slats)
+      const rail = px(tw([-1.9, 0.8, -58.605], s)), kick = px(tw([-1.75, 0.04, -58.605], s)), apron = px(tw([-1.75, 0.3, -58.605], s));
+      shot(tw([6.2, 1.7, -56.9], s), tw([8.2, 0.7, -60.3], s));
+      const cage = Array.from({ length: 60 }, (_, i) => { const t = -0.8 + i * 0.027; return px(tw([7.905 + 0.866 * t, 1.1, -59.795 + 0.5 * t], s)); });   // (0.027 m apart over the 0.12 m bars)
+      shot(tw([-5.5, 1.7, -36.0], s), tw([-5.5, 0.7, -39.75], s));
+      const stripes = Array.from({ length: 13 }, (_, i) => px(tw([-6.1 + i * 0.1, 0.2, -38.995], s)));
+      const cl = cage.map(lum);
+      const sm = slats.map(lum).reduce((a, b) => a + b, 0) / slats.length;
+      misc.push({ s, slatStd: std(slats), slatCv: +(std(slats) / Math.max(sm, 1)).toFixed(3), kickRatio: +(lum(kick) / Math.max(lum(apron), 1)).toFixed(2), rail, cageSpan: Math.round(Math.max(...cl) - Math.min(...cl)), cageMean: Math.round(cl.reduce((a, b) => a + b, 0) / cl.length), stripeStd: std(stripes) });
+    }
+    R('the whale-tail benches have upright slats on their long faces (relative contrast, read square to the face: one half stands in the upper rock\'s shade), the trolley stacks are nested cages (bars over the shade), the ice-cream carts candy stripes, both halves',
+      misc.every((c) => c.slatCv > 0.1 && c.cageSpan > 20 && c.cageMean < 40 && c.stripeStd > 10), misc);
+    // (f) ink splatted on the Feeding Step's side and on the parapet's court face shows over their dressing
+    const inkR = [];
+    for (const [from, look, at, n] of [[[4.6, 1.5, -7.6], [2.0, 0.6, -8.8], [2.005, 0.7, -9.3], [1, 0, 0]], [[-15.5, 1.7, -9.5], [-21.0, 2.4, -5.5], [-25 + dir(-37.5)[0] * 7.745, 2.0, dir(-37.5)[1] * 7.745], [dir(-37.5)[0], 0, dir(-37.5)[1]]]]) {
+      shot(from, look);
+      const bare = px(at); G.paint.splat(V([at[0] + n[0] * 0.02, at[1], at[2] + n[2] * 0.02]), 0.4, 0, { instant: true }); for (let i = 0; i < 6; i++) g.debug.step(1000 / 60);
+      const ink = px(at); inkR.push({ bare, ink, moved: Math.abs(ink[0] - bare[0]) + Math.abs(ink[1] - bare[1]) + Math.abs(ink[2] - bare[2]) });
+    }
+    R('ink splatted on the Feeding Step\'s side and on the parapet\'s court face shows over their dressing (the art is under the ink)', inkR.every((c) => c.moved > 90), inkR);
+    // (g) the lectern's court face: THE TUBEWAY map's navy plate (it was plain render); the deep Kelp stop's side: a sea-green
+    // enamel panel (it was dark brass); the plant room's face over the Kelp Balcony: a louvred vent (it was render)
+    const fx = [];
+    for (const s of [1, -1]) {
+      shot(tw([-4.6, 1.6, -15.0], s), tw([-7.5, 0.6, -18.0], s));
+      const plate = px(tw([-7.5, 0.33, -17.729], s));
+      const C = [-20.58, -22.85], lx = [-0.743, 0.669], lz = [-0.669, -0.743], o = [C[0] - 1.22 * lx[0] + 0.6 * lz[0] - 0.05 * lx[0], C[1] - 1.22 * lx[1] + 0.6 * lz[1] - 0.05 * lx[1]];
+      shot(tw([-16.6, 4.1, -24.9], s), tw([-20.3, 3.0, -22.6], s));
+      const panel = px(tw([o[0], 2.6, o[1]], s));
+      const n = dir(105), u = dir(15), F = [25.104 + u[0] * 6.075 + n[0] * 0.42, -0.386 + u[1] * 6.075 + n[1] * 0.42];   // (the E drum's face; Alpha's: its twin)
+      shot(tw([27.2, 5.3, 5.6], -s), tw([30.5, 4.8, 1.6], -s));
+      const vent = px(tw([F[0] - u[0] * 0.5, 4.62, F[1] - u[1] * 0.5], -s)), wall = px(tw([F[0] + u[0] * 1.4, 5.25, F[1] + u[1] * 1.4], -s));
+      fx.push({ s, plate, panel, vent, wall });
+    }
+    R('the lectern\'s court face carries THE TUBEWAY map plate, the deep Kelp stop a sea-green enamel panel, the plant room\'s balcony face a louvred vent, both halves',
+      fx.every((c) => c.plate[2] > c.plate[0] + 10 && c.panel[1] > c.panel[0] + 5 && lum(c.wall) > lum(c.vent) + 30), fx);
+    // (h) this round's props: within 8.5 cm (horizontally) of a block they dress and never on its walkable top (a headless
+    // build of their placements alone, both halves)
+    {
+      const { PropKit: PK } = await import('./src/world/props.js'), { dressingFor: DF } = await import('./src/world/dressing.js');
+      const { LAYOUT: LY } = await import('./src/world/stages/aquarium/layout.js');
+      const TYPES = ['aquarium_cornerguard', 'aquarium_fluke', 'aquarium_pilaster', 'aquarium_trolleystack'];
+      const PLATES = ['FEEDING DECK', 'WHALE BENCH', 'KELP RAMP', 'GELATO'];
+      const DRESSED = ['feeding-step', 'whale-bench', 'kelp-parapet', 'trolley-stack', 'icecream-cart'];
+      const kit6 = new PK(null, { headless: true });
+      let nIt = 0; for (const it of DF('aquarium')) if (TYPES.includes(it.type) || (it.type === 'aquarium_plate' && PLATES.includes(it.lines?.[0]?.[0]))) { kit6.add(it.type, it); nIt++; }
+      const mir = (d) => (d.kind === 'box' ? { ...d, min: [-d.max[0], d.min[1], -d.max[2]], max: [-d.min[0], d.max[1], -d.min[2]] } : d.kind === 'obox' ? { ...d, center: [-d.center[0], d.center[1], -d.center[2]] } : { ...d, low: [-d.low[0], d.low[1], -d.low[2]], high: [-d.high[0], d.high[1], -d.high[2]] });
+      const blocks = LY.half.filter((d) => DRESSED.includes(d.tag)).flatMap((d) => [d, mir(d)]);
+      const fp = (d, x, z) => {
+        if (d.kind === 'box') { const dx = Math.max(d.min[0] - x, 0, x - d.max[0]), dz = Math.max(d.min[2] - z, 0, z - d.max[2]); return [Math.hypot(dx, dz), d.max[1], Math.min(x - d.min[0], d.max[0] - x, z - d.min[2], d.max[2] - z)]; }
+        if (d.kind === 'obox') { const a = d.rotY * DEG, c = Math.cos(a), s = Math.sin(a), dx = x - d.center[0], dz = z - d.center[2], u = dx * c - dz * s, v = dx * s + dz * c, hu = d.size[0] / 2, hv = d.size[2] / 2; return [Math.hypot(Math.max(Math.abs(u) - hu, 0), Math.max(Math.abs(v) - hv, 0)), d.center[1] + d.size[1] / 2, Math.min(hu - Math.abs(u), hv - Math.abs(v))]; }
+        const [lx, ly, lz] = d.low, [hx, hy, hz] = d.high, run = Math.hypot(hx - lx, hz - lz), ux = (hx - lx) / run, uz = (hz - lz) / run, dx = x - lx, dz = z - lz, al = dx * ux + dz * uz, lat = -dx * uz + dz * ux;
+        return [Math.hypot(Math.max(Math.abs(lat) - d.width / 2, 0), Math.max(-al, 0, al - run)), ly + (Math.max(0, Math.min(run, al)) * (hy - ly)) / run, Math.min(d.width / 2 - Math.abs(lat), al, run - al)];
+      };
+      const st = { n: 0, far: 0, atFar: null, onTop: 0, atTop: null };
+      const v3 = new G.camera.position.constructor();
+      for (const parts of kit6._buckets.values()) for (const p of parts) {
+        const P = p.g.attributes.position;
+        for (let i = 0; i < P.count; i++) {
+          v3.fromBufferAttribute(P, i).applyMatrix4(p.m); st.n++;
+          let best = 9, on = null, hugs = false;
+          for (const d of blocks) {
+            const [out, top, inset] = fp(d, v3.x, v3.z);
+            best = Math.min(best, out);
+            if (out === 0 && inset > 0.02 && v3.y > top + 0.003 && v3.y < top + 1.5) on = d;
+            if (out <= 0.085 && top > v3.y + 0.003) hugs = true;
+          }
+          if (on && !hugs) { st.onTop++; st.atTop = [on.tag, +v3.x.toFixed(2), +v3.y.toFixed(2), +v3.z.toFixed(2)]; }
+          if (best > st.far) { st.far = best; st.atFar = [+v3.x.toFixed(2), +v3.y.toFixed(2), +v3.z.toFixed(2)]; }
+        }
+      }
+      R('this round\'s props (the Feeding Step\'s plates and corner guards, the flukes, the parapet\'s pilasters and plate, the trolleys\' casters and push bars, the carts\' menu boards) stand within 8.5 cm of the blocks they dress and none on a walkable top, both halves',
+        nIt >= 24 && st.n > 3000 && st.far <= 0.085 && st.onTop === 0, { placements: nIt, verts: st.n, farthest: +st.far.toFixed(3), at: st.atFar, onTop: st.onTop, atTop: st.atTop });
+      // (i) the Penguin Steps' granite nosing (LEAD-REVIEW 6): out to r 31.4, so no promenade cell reaches past its face over
+      // the steps' top tread (they reached r 31.35 against its old r 31.2)
+      const ax = dir(-120.275), pr = [-ax[1], ax[0]];
+      let reach = 0;
+      for (const d of LY.half.filter((q) => q.tag === 'promenade')) for (const [x, z] of [[d.min[0], d.min[2]], [d.max[0], d.min[2]], [d.max[0], d.max[2]], [d.min[0], d.max[2]]]) {
+        const r = x * ax[0] + z * ax[1], l = x * pr[0] + z * pr[1];
+        if (Math.abs(l) < 2.45 && r > 29.5 && r < 33) reach = Math.max(reach, r);
+      }
+      const nd = LY.half.find((q) => q.tag === 'penguin-nosing'), a = nd.rotY * DEG, hu = nd.size[0] / 2, hv = nd.size[2] / 2;
+      const nr = Math.max(...[[1, 1], [1, -1], [-1, 1], [-1, -1]].map(([i, k]) => { const x = nd.center[0] + Math.cos(a) * hu * i + Math.sin(a) * hv * k, z = nd.center[2] - Math.sin(a) * hu * i + Math.cos(a) * hv * k; return x * ax[0] + z * ax[1]; }));
+      R('the Penguin Steps\' granite nosing covers the promenade\'s cells at their head (they ran out past it in a row of teak teeth)', nr >= 31.39 && reach > 30.5 && reach <= nr + 0.005, { nosingTo: +nr.toFixed(3), cellsTo: +reach.toFixed(3) });
     }
     m.actors.forEach((a, i) => { a.bot = brains[i]; });
     G.paint.clear?.();
