@@ -1,0 +1,169 @@
+JOB-5 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 06:12:29
+branch botlab-b5-caldera, ran at 85c101e3, exit code 0, wall time 20min
+(a written-up JOB-5.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== lava.js x3 (parallel)
+== boss-check x5 (3 + 2)
+== net-lava alone
+== lava-bots, two Zone Control matches
+== lava-audit (full=1), lava-notch, lava-karp
+== SUMMARY
+### lava-audit
+RESULT 42/43
+### boss-1
+RESULT 6/6
+### boss-2
+RESULT 6/6
+### boss-3
+RESULT 6/6
+### boss-4
+RESULT 6/6
+### boss-5
+RESULT 6/6
+### karp
+RESULT 10/10
+### lavabots
+RESULT 6/7
+### lavajs-1
+RESULT 58/59
+### lavajs-2
+RESULT 57/59
+### lavajs-3
+RESULT 58/59
+### net-lava
+RESULT 13/13
+### notch
+RESULT 3/3
+### zones-1
+RESULT 7/7
+### zones-2
+RESULT 7/7
+
+## last 15 lines of job.log
+RESULT 6/7
+### lavajs-1
+RESULT 58/59
+### lavajs-2
+RESULT 57/59
+### lavajs-3
+RESULT 58/59
+### net-lava
+RESULT 13/13
+### notch
+RESULT 3/3
+### zones-1
+RESULT 7/7
+### zones-2
+RESULT 7/7
+
+## audit.txt
+### lava-audit
+PASS rule 14: every drowning floor is ≤ 12 m walking from floor that never drowns (the paper said ≤ 10.0), and the way out never drops below it (by more than a step, 0.25 m)  {"nodes":418,"worstM":9.83,"worstAt":[11.5,0,-20.5],"noWay":[],"drops":[],"nDrops
+PASS rule 22: clear sky over every rider — nothing static anywhere over its travel or within 2.2 m over its HIGH top (columns sampled every 0.3 m, 0.1 m up)  {"bad":[],"riders":20}
+PASS rule 21: no pinch beside a Pumice stone at HIGH — every static top beside one is a seam (≤ 0.3 m) or ≥ 2.5 m away across open lava: straight out from each face (every 0.25 m), and (fix round 6) fanned out to ±67.5° from every 0.1 m of the outline,
+PASS rule 25: each lookout — cover ≤ 1.0 m tall along ≤ half its edge, ≥ 2 open sides, ≤ 22 m from both teams' dry floor at HIGH, its HIGH top ≤ 4.6 m over its climb's foot; its crown of pipes (fix round 6) a screen, not cover: ≥ 60 % open, no ga
+PASS rule 38: the surfaces in the region (below HIGH + 0.3) are mid-value rock — sRGB luminance ≥ 0.35 (#5f5f5f or lighter): the stain darkens them to ~0.7×, which is what reads as "the dark glazed floor floods"  {"dark":[],"colours":[{"hex":"#5f636b","lu
+PASS rule 45: the region's outline lies ≥ 0.5 m inside every bank it meets (never along a face), in bank ≥ HIGH + 0.3; open only at the lips, into a falls polygon (every outline texel); one fitted half, turned 180° (the mask is its own twin)  {"outline":1
+FAIL rule 42: no view out of the arena shows void — 96 rays below the horizon from each pad, the 24 highest spots on its outer ring, and over each lip from the Spillway Bridge and the Horn Step (fix round 5), all meet the level, the lava or far scenery (env.
+PASS rule 44: a plain running jump across the lava at LOW or HIGH saves at most 20 m against the dry way round, the largest under 15 m (the lead's option 1 and margin; the march takes any standable floor across the lava down to the lava, take-offs that drop on
+PASS rule 46: with the nav grid shifted 0.25 m and 0.5 m in x and in z, every step link still yields its edges and the climbs exist (island → A → B → L at LOW and at HIGH on both sides, the Race head → 5 stones → head at HIGH)  [{"shift":[0,0],"probl
+RESULT 42/43
+
+## boss.txt
+### boss-1
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":95,"cells4m":11,
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[120,0],"longestSpell_s":28,"at":[-9,-25.8],"camps":4,"backOuts":1}
+RESULT 6/6
+### boss-2
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":106,"cells4m":13,
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[83,37],"longestSpell_s":35,"at":[3.1,11.4],"camps":2,"backOuts":1}
+RESULT 6/6
+### boss-3
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":112,"cells4m":16,
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[115,5],"longestSpell_s":30,"at":[-2.1,-25.4],"camps":2,"backOuts":0}
+RESULT 6/6
+### boss-4
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":118,"cells4m":15,
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[72,48],"longestSpell_s":29,"at":[-2.4,-20.8],"camps":0,"backOuts":0}
+RESULT 6/6
+### boss-5
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":122,"cells4m":12,
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[120,0],"longestSpell_s":29,"at":[1.2,-24.5],"camps":0,"backOuts":0}
+RESULT 6/6
+
+## karp.txt
+### karp
+RESULT 10/10
+console errors: none
+
+## lavabots.txt
+### lavabots
+FAIL the gate: 0 escape deaths, ≤ 1 fight death per 360 bot-trials (360 here)  {"botTrials":360,"esc":0,"fight":2,"list":[["edges",8,"Nori","brolly","fight","fight",63.73,[-23.26,0.94,4.55]],["edges",19,"Moxie","mitts","fight","fight",35,[-14.32,-0.52,-1]]]}
+RESULT 6/7
+console errors: none
+
+## lavajs-1.txt
+### lavajs-1
+FAIL G8 the lava's glow is faded by how near open lava a face stands: the island's lake faces glow at HIGH, its dry middle and the machine house's foot never; the causeway's side over the Casting Floor glows only once the floor is under  {"rim":[{"deg":0,"rimAt":16.05,"face":0.898,"in3m":0.043},{"deg":40,"rimAt":11.45,"face":0.749,"in3m":0},{"deg":140,"rimAt":13.6,"face":0.647,"in3m":0},{"deg":180
+RESULT 58/59
+console errors: none
+
+## lavajs-2.txt
+### lavajs-2
+FAIL F10 the lookout claim: a claim for each team with a long- or mid-range kit; a claimant reaches its own lookout at HIGH and holds it (≥ 2 s); every claim let go at the fall warning  {"claims":[["Tako",0,"bow",34.417],["Nori",1,"spinner",34.417]],"claimed":[0,1],"upAt":[null,null],"seconds":[0,0],"long":[0,0],"held":0,"nClaims":4,"footOuts":0,"stalls":0,"busyOuts":3,"released":true,"t":61.017
+FAIL G8 the lava's glow is faded by how near open lava a face stands: the island's lake faces glow at HIGH, its dry middle and the machine house's foot never; the causeway's side over the Casting Floor glows only once the floor is under  {"rim":[{"deg":0,"rimAt":16.05,"face":0.898,"in3m":0.043},{"deg":40,"rimAt":11.45,"face":0.749,"in3m":0},{"deg":140,"rimAt":13.6,"face":0.647,"in3m":0},{"deg":180
+RESULT 57/59
+console errors: none
+
+## lavajs-3.txt
+### lavajs-3
+FAIL G8 the lava's glow is faded by how near open lava a face stands: the island's lake faces glow at HIGH, its dry middle and the machine house's foot never; the causeway's side over the Casting Floor glows only once the floor is under  {"rim":[{"deg":0,"rimAt":16.05,"face":0.898,"in3m":0.043},{"deg":40,"rimAt":11.45,"face":0.749,"in3m":0},{"deg":140,"rimAt":13.6,"face":0.647,"in3m":0},{"deg":180
+RESULT 58/59
+console errors: none
+
+## netlava.txt
+### net-lava
+(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.
+PASS a room on Highmark Foundry (Turf War 1:30, 4 bots)  {"map":"caldera","duration":90,"mode":"turf"}
+PASS both screens run the lava on the same schedule (turf:90)  {"a":{"t":0.112,"y":-0.6,"phase":"low","stones":"00000000000000","host":true,"key":"turf:90"},"b":{"t":0.1,"y":-0.6,"phase":"low","stones":"00000000000000","host":false,"key":"turf:90"}}
+PASS the guest plants a Lurk Mine and a Hop Beacon on the shelf before the rise; the host sees them (ghosts)  {"dev":{"t":0.7,"mine":[300001],"beacon":[300002]},"ghosts0":[300001,300002]}
+PASS the level agrees on both screens every 0.5 s through a rise and a fall (± 0.1 m)  {"n":140,"worst":{"d":0.003899999999999999,"at":[60.548,-0.0145,60.566,-0.0184]}}
+PASS the guest left standing on the shelf splats by lava (its own screen judges it); the host's feed shows cause lava, at the rise's deadly moment (30 + 3.8 s ± 0.6)  {"lavaB":[3,"lava",33.85],"deaths":[[2,"roller",20.73],[5,"blast",21.63],[3,"lava",33.85],[2,"jetpack",50.51],[4,"blast",58.03],[2,"roller",60.51],[0,"bow",68.71]]}
+PASS …its devices the lava covered are gone on both screens (the owner's sweep and its end records)  {"devAfter":{"host":[],"guest":[]}}
+PASS at the results screen the lava cells agree between the two screens at least as well as the same run's other cells do (splats across the waterline through a rise and a fall: the painter's stage time, field 15)  {"lava":{"n":76102,"differ":18,"ratio":0.99976,"inked":[1544,1543]},"other":{"n":368739,"differ":325,"ratio":0.99912,"inked":[56352,56329]},"painted":165,"diffWhere":{"n":18,"minY":-0.1
+PASS time-up at LOW (the final ebb); the same result on both screens  {"res":[0,0],"fin":{"y":-0.6,"phase":"low"}}
+PASS Practice runs its own loop (practice: rise at 20) between the stage's own levels  {"t":0.25,"y":-0.6,"phase":"low","stones":"00000000000000","host":true,"key":"practice"}
+PASS a late joiner at HIGH: its level and its stones agree with the host's (± 0.1 m) once its clock settles  {"host":{"t":42.173,"y":0.8,"phase":"high","stones":"11111111111111","host":true,"key":"practice"},"joiner":{"t":42.122,"y":0.8,"phase":"high","stones":"11111111111111","host":false,"key":"practice"},"skew":[0]}
+PASS …and its paint (the imported grid) equals the host's, lava cells and all; the live guest's lava cells equal the host's too (the host painted the Slump cliff across the waterline at LOW — burned by the rise — and at HIGH), and its other cells agree to a ratio ≥ 0.999  {"lavaCells":{"joiner":{"n":76102,"differ":0,"inked":[0,0]},"guest":{"n":76102,"differ":0,"inked":[0,0]}},"grid":{"join
+PASS a timed match: the host leaves mid-rise (35 s) — the new host's fall starts at 55 ± 0.4 s on its screen, and the stones turn deadly (the ledges dry) at 61.2 ± 0.4 s on both remaining screens  {"before":{"t":35.166,"y":0.1349,"phase":"rise","stones":"11111111111111","host":false,"key":"turf:90"},"fall":{"B":55.02,"C":55},"stonesDeadly":{"B":61.22,"C":61.22},"after":{"B":{"t":63.433,"y":-0.
+PASS …and both remaining screens show the same result at time-up  {"res3":[1,1]}
+RESULT 13/13
+c0 console: none
+c1 console: none
+c2 console: none
+
+## notch.txt
+### notch
+RESULT 3/3
+console errors: none
+
+## zones.txt
+### zones-1
+PASS zones 300: lava splats per team (and where), sea splats  {"lavaByTeam":[0,0],"deaths":[],"water":0,"byCause":{"shot":12,"blaster":2,"charger":18,"mitts":14,"blade":8,"drop":3,"blast":15,"crab":2,"burst":1,"zooka":2,"jetpack":2,"sentry":2,"kraken":3,"slosh":1,"zipcaster":1},"perBotPer3min":0}
+PASS no bot drowned by a rise it was warned of (any lava death in an announced surge with nobody credited)  {"n":0,"list":[]}
+PASS no falls into the sea  []
+PASS stuck: % of bot time; no episode ≥ 10 s; none at the Pumice Races  {"stuckPct":0.36,"longest":[],"atStones":[],"atOrgans":[{"t":112.7,"name":"Loop","pos":[10.6,1.8,8.6],"mode":"paint","dur":0.25,"stone":false,"organ":true,"crest":false,"lava":"low"},{"t":133.7,"name":"Loop","pos":[9.6,2.5,4.9],"mode":"paint","dur":0.25,"stone":false,"organ":true,"crest":false,"lava":"rise"},{"t":160.8,"name
+PASS the Slumps crossed (the shelf or a Race) and the Organ lookouts used (informational: the balance pass)  {"crossings":5,"lookout":{"organL":46.6,"organB":5,"organA":2.6},"burned":5993,"devices":0,"redirects":0,"stoneSteps":2}
+PASS an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)  {"lookTeam":[0,46.6],"lookLong":[0,44.2],"longKits":[[0,"charger"],[1,"spinner"]],"applies":true,"claims":15,"held":39.4,"organL":46.6,"log":[{"t":25.1,"team":0,"who":"Tako","kit":"charger","up":null,"held":0,"end":"busy","at":45.8},{"t":25.1,"team":1,"who":"Loop","kit":"spinner","up":null,"held":
+PASS the match  {"mode":"zones","simT":316.5,"wallS":239.2,"state":"finish","cov":[21.2,22.1],"winner":null,"phaseAtEnd":"low","yAtEnd":-0.6}
+RESULT 7/7
+### zones-2
+PASS zones 300: lava splats per team (and where), sea splats  {"lavaByTeam":[0,0],"deaths":[],"water":0,"byCause":{"drop":23,"mitts":14,"shot":29,"sentry":3,"slosh":5,"roller":1,"kraken":1,"crab":10,"sprinkler":1,"brush":1},"perBotPer3min":0}
+PASS no bot drowned by a rise it was warned of (any lava death in an announced surge with nobody credited)  {"n":0,"list":[]}
+PASS no falls into the sea  []
+PASS stuck: % of bot time; no episode ≥ 10 s; none at the Pumice Races  {"stuckPct":0.14,"longest":[],"atStones":[],"atOrgans":[{"t":141.3,"name":"Squiddo","pos":[9.2,4.95,10.7],"mode":"paint","dur":0.25,"stone":false,"organ":true,"crest":false,"lava":"high"},{"t":240.8,"name":"Squiddo","pos":[10.7,4.65,12.6],"mode":"retreat","dur":0.25,"stone":false,"organ":true,"crest":false,"lava":"high"},{"t
+PASS the Slumps crossed (the shelf or a Race) and the Organ lookouts used (informational: the balance pass)  {"crossings":4,"lookout":{"organA":2,"organB":2.3,"organL":47.5},"burned":9438,"devices":0,"redirects":0,"stoneSteps":2}
+PASS an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)  {"lookTeam":[9.8,37.7],"lookLong":[9.8,37.7],"longKits":[[0,"spinner"],[1,"spinner"]],"applies":true,"claims":11,"held":46.3,"organL":47.5,"log":[{"t":25.1,"team":1,"who":"Squiddo","kit":"spinner","up":null,"held":0,"end":"splatted","at":35},{"t":26.7,"team":0,"who":"Sprinkle","kit":"spinner","up"
+PASS the match  {"mode":"zones","simT":305.5,"wallS":213,"state":"finish","cov":[20.3,25.2],"winner":null,"phaseAtEnd":"low","yAtEnd":-0.6}
+RESULT 7/7
