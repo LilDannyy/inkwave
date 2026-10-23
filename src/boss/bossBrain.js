@@ -15,6 +15,8 @@ const COOL = [0, 1.05, 0.8, 0.6];          // gap between moves (+ up to COOL_RN
 const COOL_RND = [0, 0.8, 0.6, 0.45];
 const PREF = [0, 10, 9, 8];                // preferred distance to its mark
 const HALF_AFTER = 25;                      // [b5-caldera] s on one half (roamAfter stages) before the other half's goals gain
+const CROSS_FOR = 14;                       // [b5-caldera] s a goal on the other half is kept while it walks there
+const TURN_STUCK = 1;                       // [b5-caldera] s a turn may make no headway before it goes the long way (then through)
 const r3 = (x) => Math.round(x * 1000) / 1000;
 const _v = new THREE.Vector3();
 
@@ -88,7 +90,7 @@ export class BossBrain {
     this.retarget -= dt; this.goalT -= dt; this.cool -= dt;
     if (this.retarget <= 0 || !b.targetActor()) this._pickTarget();
     const t = b.targetActor();
-    if (this.cool <= 0 && t && !(this._reloc && !this.plan)) {   // [b5-caldera] fix round 4 (_roam: relocating, no new move)
+    if (this.cool <= 0 && t && !(this._reloc && !this.plan) && !(this._tl && !this.plan) && !(!this.plan && b.nav.level?.layout?.boss?.roamAfter > 0 && !b.nav.turnOk(b.pos.x, b.pos.z, b.yaw))) {   // [b5-caldera] fix round 4 (_roam: relocating, no new move) / fix round 6 (_walk: turning out of a wedge or a claw out of a wall, no new move)
       if (!this.plan) { this.plan = this._choose(t); if (this.plan) this.plan.t = 0; }
       const P = this.plan;
       if (P) {
@@ -123,6 +125,14 @@ export class BossBrain {
 
   _walk(dt, t) {
     const b = this.b, nav = b.nav, ph = b.phase;
+    // [b5-caldera] fix round 6 (roamAfter stages): a claw in a wall — a heading its turn's rule refuses where it stands, which
+    // only a move's end leaves (a charge, a sweep) — it first turns, through, to the nearest heading that rule takes (in
+    // 1/32 turns either way), and walks on from there (boss-check: wedged so at the Lower Surge Steps' foot it stood 87 s)
+    if (b.nav.level?.layout?.boss?.roamAfter > 0 && !this._tl?.free && !nav.turnOk(b.pos.x, b.pos.z, b.yaw)) {   // (not while it turns through: below)
+      let dir = 0;
+      for (let k = 1; k <= 16 && !dir; k++) for (const sg of [1, -1]) if (nav.turnOk(b.pos.x, b.pos.z, b.yaw + (sg * k * Math.PI) / 16)) { dir = sg; break; }
+      if (dir) { b.yaw += dir * TURN[ph] * dt; this.speed = 0; this.stuckT = 0; this._unwedgeT = (this._unwedgeT || 0) + dt; return; }
+    }
     if (!this.goal || this.goalT <= 0 || (this.path && this.pi >= this.path.length && this.goalT < 1.5)) this._pickGoal(t);
     let want = b.yaw, go = false;
     if (this.path && this.pi < this.path.length) {
@@ -141,7 +151,24 @@ export class BossBrain {
     } else if (DT && !go) this._detour = null;
     if (!go && t) want = Math.atan2(t.pos.x - b.pos.x, t.pos.z - b.pos.z);   // arrived: face its mark
     const dy = angleDiff(b.yaw, want);
-    this._turn(want, dt);
+    // [b5-caldera] fix round 6 (roamAfter stages): a turn that cannot go on — a claw meets a wall at the next heading and
+    // there is no room to sidle — for TURN_STUCK s turns the long way round; failing that too, it turns through (claws
+    // clip for a moment). A move's end left it in a heading where neither the turn toward its waypoint nor a step fit,
+    // and a step is only tried facing the waypoint: boss-check stood 87 and 105 s at the Lower Surge Steps' foot / the
+    // causeway's end, camps 8 and 9 back-outs (probe: from yaw 0 at (−7.7, −27.7) it never moved in 25 s)
+    const RT = b.nav.level?.layout?.boss?.roamAfter > 0, y0 = b.yaw;
+    let TL = this._tl;
+    if (TL && (b.bt > TL.until || Math.abs(dy) < 0.25)) TL = this._tl = null;
+    this._turn(want, dt, TL ? TL.dir : 0, !!TL?.free);
+    if (RT) {
+      const turned = Math.abs(angleDiff(y0, b.yaw)) > 1e-4;
+      this._tw = !turned && Math.abs(dy) > 0.05 ? (this._tw || 0) + dt : 0;
+      if (this._tw > TURN_STUCK) {
+        this._tw = 0;
+        this._tl = !TL ? { dir: -Math.sign(dy) || 1, until: b.bt + 5, free: false } : { dir: Math.sign(angleDiff(b.yaw, want)) || 1, until: b.bt + 3, free: true };
+        this._turnOuts = (this._turnOuts || 0) + 1;
+      }
+    }
     const vmax = SPEED[ph] * (go ? clamp(1 - Math.abs(dy) / 0.9, 0, 1) : 0);
     this.speed += clamp(vmax - this.speed, -4 * dt, 3 * dt);
     if (this.speed > 0.01) {
@@ -183,11 +210,12 @@ export class BossBrain {
   }
   // turn toward yaw at the phase's rate, only through headings its body fits. Hemmed in (a claw would meet a wall), it
   // sidles toward open floor while it turns — up the clearance field, never off it → false when it can't do either
-  _turn(want, dt) {
+  _turn(want, dt, dir = 0, free = false) {
     const b = this.b, nav = b.nav, dy = angleDiff(b.yaw, want);
     if (Math.abs(dy) < 1e-3) return true;
-    const ny = b.yaw + clamp(dy, -TURN[b.phase] * dt, TURN[b.phase] * dt);
-    if (nav.turnOk(b.pos.x, b.pos.z, ny)) { b.yaw = ny; return true; }
+    // [b5-caldera] (dir: ±1 the way round, free: through what its claws meet — see _walk's turn time-out)
+    const ny = dir ? b.yaw + dir * TURN[b.phase] * dt : b.yaw + clamp(dy, -TURN[b.phase] * dt, TURN[b.phase] * dt);
+    if (free || nav.turnOk(b.pos.x, b.pos.z, ny)) { b.yaw = ny; return true; }
     const room = (x, z) => nav.wallClear(x, z) + Math.min(nav.floorClear(x, z), 3) * 0.5;
     const r = SPEED[b.phase] * 0.55 * dt, here = room(b.pos.x, b.pos.z);
     let best = null, bs = here + 1e-3;
@@ -239,6 +267,19 @@ export class BossBrain {
     // [b5-caldera] fix round 6 (roamAfter stages): long on one half — its fight distance matters less (as when camped twice)
     // and the other half's goals gain (see _roam: _half)
     const longHalf = RA > 0 && !!this._half && b.bt - this._half.t0 > HALF_AFTER;
+    // [b5-caldera] fix round 6: a crossing once picked is kept (only re-pathed) until it stands on the other half, or for
+    // CROSS_FOR s — re-picked every 3–5.5 s and at each retarget, a goal over the line lost to one near its mark before it
+    // got there (boss-check on the Mac mini: 120 s on one half in 2 rounds of 5 with the bias alone)
+    if (this._cross) {
+      const C = this._cross;
+      if (RA > 0 && b.bt - C.t < CROSS_FOR && (b.pos.z < 0 ? -1 : 1) === C.from) {
+        const path = nav.path(b.pos.x, b.pos.z, C.goal[0], C.goal[1]);
+        if (path && path.length) { this.goal = C.goal; this.path = path; this.pi = !nav.isGoal(b.pos.x, b.pos.z) ? 0 : 1; return; }
+      }
+      this._cross = null;
+    }
+    // (and the other half's pull grows the longer it stays: +8 at HALF_AFTER s, +20 at 40 s more)
+    const pull = longHalf ? Math.min(20, 8 + 0.3 * (b.bt - this._half.t0 - HALF_AFTER)) : 0;
     for (let i = 0; i < 16; i++) {
       const [x, z] = nav.randomPoint(this.rnd);
       const ci = nav.cell(x, z);
@@ -248,13 +289,14 @@ export class BossBrain {
       if (Math.hypot(x - pad.x, z - pad.z) < 18) s -= 12;   // never camps the squad's spawn
       if (this._anchor?.camped && Math.hypot(x - this._anchor.x, z - this._anchor.z) < 9) s -= 8;   // [b5-caldera] (_roam)
       if (this._camps >= 2 && this._campAt) s += Math.min(Math.hypot(x - this._campAt.x, z - this._campAt.z), 30) * 0.5 + (Math.sign(z) !== Math.sign(this._campAt.z) ? 8 : 0);   // [b5-caldera] fix round 4 (_roam: camped twice — far, and the other half: the stages are 180° turns)
-      if (longHalf && (z < 0 ? -1 : 1) !== this._half.s) s += 8;   // [b5-caldera] fix round 6 (the other half)
+      if (longHalf && (z < 0 ? -1 : 1) !== this._half.s) s += pull;   // [b5-caldera] fix round 6 (the other half)
       // [b5-caldera] fix round 4 (roamAfter stages): never a goal where it can't turn round — it walked into the tip of the
       // west Lakefront wedge, could neither turn nor step, and stood there 70 s (boss-check)
       if (RA > 0) { let ok = 0; for (let k = 0; k < 8; k++) if (nav.turnOk(x, z, (k * Math.PI) / 4)) ok++; if (ok < 6) s -= 20; }
       if (s > bs) { bs = s; best = [x, z]; }
     }
     if (!best) return;
+    if (longHalf && (best[1] < 0 ? -1 : 1) !== this._half.s) this._cross = { t: b.bt, goal: best, from: this._half.s };   // [b5-caldera]
     this.goal = best;
     this.path = nav.path(b.pos.x, b.pos.z, best[0], best[1]);
     // [b5-caldera] fix round 5 (roamAfter stages): off its plan (a charge's end) or in a cell it can't turn round in, it walks to
