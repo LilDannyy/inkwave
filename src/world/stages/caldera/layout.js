@@ -99,6 +99,16 @@ for (const f of FLOORS) {
     : { kind: 'ledge', w: f.w || 1.0 }));
   GROUNDS[f.id] = fill(f.poly, { y0: f.y0, top: f.top, mk: f.mk, ledgeMk: () => coping({ color: f.drown ? '#625c58' : K.basaltDk }), edge: kinds });
 }
+// (fix round 6: Boss Battle's island keeps the old faces — geo.js ISLAND_BOSS, no bays by the second Race's piers: the lava
+// holds LOW there and the stones never rise — built as the island was, against every other floor)
+const ISLAND_F = FLOORS.find((f) => f.id === 'island'), ISLAND_BOSS_F = { ...ISLAND_F, id: 'islandBoss', poly: G.ISLAND_BOSS };
+{ const others = ALL.filter((g) => g !== ISLAND_F);
+  GROUNDS.islandBoss = fill(G.ISLAND_BOSS, { y0: ISLAND_F.y0, top: ISLAND_F.top, mk: ISLAND_F.mk, ledgeMk: () => coping({ color: K.basaltDk }),
+    edge: edgeKinds(ISLAND_BOSS_F, [...others, ISLAND_BOSS_F], (a, b) => (onNotch(a, b)
+      ? { kind: 'ledge', w: 0.6, mk: () => ({ color: '#5f6368', pattern: PATTERN.metalpanel, tag: 'socket-collar' }) }
+      : { kind: 'ledge', w: 1.0 })) }); }
+// (the two islands are each other's variant: neither counts the other's copings)
+const FIXF = [...FLOORS, ISLAND_BOSS_F], twinOf = (a, b) => (a.id === 'island' && b.id === 'islandBoss') || (a.id === 'islandBoss' && b.id === 'island');
 // (lava engine: ENGINE rule 6 — no flat top in the region within 0.3 m of LOW or HIGH. A gutter coping sunk 0.2 / 0.3 m
 // below a 1.2 floor where it meets a drowning ledge would stand 0.2 / 0.1 m over the HIGH surface: pale, above the rind,
 // and the 0.9 one deadly at HIGH (feet under L + 0.15). Each sinks 0.1 instead (1.10, a 1.1 m hop from the ledge), or
@@ -111,7 +121,7 @@ for (const f of FLOORS) {
     return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([i, k]) => [d.center[0] + c * hx * i + s * hz * k, d.center[2] - s * hx * i + c * hz * k]); };
   const near = (A, Bd) => { const a = fp(A), b = fp(Bd); const cx = (p) => p.reduce((s, q) => s + q[0], 0) / 4, cz = (p) => p.reduce((s, q) => s + q[1], 0) / 4;
     return Math.hypot(cx(a) - cx(b), cz(a) - cz(b)) < (Math.max(A.size[0], A.size[2]) + Math.max(Bd.size[0], Bd.size[2])) / 2 + 0.05; };
-  for (const f of FLOORS) {
+  for (const f of FIXF) {
     if (f.top < HI + 0.3 || !GROUNDS[f.id]) continue;
     for (const d of GROUNDS[f.id].ledges) {
       if (d.kind !== 'obox') continue;
@@ -120,7 +130,7 @@ for (const f of FLOORS) {
       if (![d.center, ...fp(d).map(([x, z]) => [x, 0, z])].some((p) => inR(p[0], p[2]))) continue;
       // (the first of 1.10 / 1.40 / 1.50 no overlapping coping — nor the Bazookarp gantry at 1.3 — shares within 8 cm)
       const tops = [];
-      for (const g of FLOORS) for (const o of GROUNDS[g.id]?.ledges || []) if (o !== d && o.kind === 'obox' && near(o, d)) tops.push(o.center[1] + o.size[1] / 2);
+      for (const g of FIXF) { if (twinOf(f, g)) continue; for (const o of GROUNDS[g.id]?.ledges || []) if (o !== d && o.kind === 'obox' && near(o, d)) tops.push(o.center[1] + o.size[1] / 2); }
       if (d.center[0] > 5 && d.center[0] < 12 && d.center[2] > -23 && d.center[2] < -8) tops.push(1.3);
       const t2 = [f.top - 0.1, f.top + 0.2, f.top + 0.3].find((t) => tops.every((u) => Math.abs(u - t) >= 0.08)) ?? f.top - 0.1;
       d.center[1] = G.r3((y0 + t2) / 2); d.size[1] = G.r3(t2 - y0);
@@ -168,7 +178,7 @@ const railSeg = (a, b, y, h = 1.0, t = 0.25, o = {}) => {
 
 // ---------------------------------------------------------------------------------------- the floors themselves
 for (const f of FLOORS) if (!f.single && !(f.drown && HIGH_BUILD)) add(groundOf(f.id));
-SINGLE.push(...groundOf('island'));
+SINGLE.push(...noBoss(groundOf('island')), ...groundOf('islandBoss').map((p) => ({ ...p, onlyIn: 'boss' })));
 // (a hidden deck slab inside the island: the environment's sea takes the stage's footprint from its deck slabs; at HIGH
 // the drowned ledges are gone. Blockout only: the lava engine's `env.sea: false` (ENGINE H22) removes the sea)
 SINGLE.push(B(-0.37, 0.41, -1.2, 0, -0.43, 0.39, { hidden: true, paint: false, tag: 'footprint' }));

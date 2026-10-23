@@ -160,6 +160,10 @@ export const PIER_W = 1.7, PIER_IN = 13.7;
 const ISLAND_E = [[0, -11.5], [5, -11.5], [7.8, -10.9], [10.4, -9.2], [12.6, -7.2], [14.4, -6.0], IE(PIER_IN, -PIER_W), IE(16.2, -PIER_W), IE(16.2, PIER_W), IE(PIER_IN, PIER_W), [15.4, 5.4], [13.6, 7.6], [12.8, 9.0]];
 const ISLAND_HALF = [...ISLAND_E, ...NOTCH_B, [5, 11.5]];
 export const ISLAND = [...ISLAND_HALF, ...rotPoly(ISLAND_HALF)];
+// (Boss Battle holds the lava at LOW — the Race's stones never rise — and keeps the old faces: no bays, its home ground
+// as it was. layout.js builds this outline with onlyIn 'boss' and ISLAND with notIn 'boss')
+const ISLAND_HALF_BOSS = [...ISLAND_E.slice(0, 6), IE(16.2, -2.2), IE(16.2, 2.6), ...ISLAND_E.slice(10), ...NOTCH_B, [5, 11.5]];
+export const ISLAND_BOSS = [...ISLAND_HALF_BOSS, ...rotPoly(ISLAND_HALF_BOSS)];
 export const CW = 5.0;                                       // the causeway's half-width (10 m: the HIGH middle band ≥ Halyard's floor)
 export const CAUSE_Z = -Math.sqrt(RS * RS - CW * CW);        // the causeway's foot on the shore (x ±5)
 const TC = [angOf(-CW, CAUSE_Z), angOf(CW, CAUSE_Z)];          // the foot's corners on the shore (θ)
