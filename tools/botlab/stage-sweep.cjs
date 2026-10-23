@@ -14,20 +14,22 @@
 //   clusters.txt   every cluster (tag.k, blocks, box, views), the NO EYE-LEVEL VIEW ones first
 // BEFORE=<an earlier run's OUT>: each sheet puts that run's shot (row "before") over this run's ("after"), and
 //   clusters.txt gives every cluster's largest per-view change (the share of the frame, in %, whose pixels moved by more
-//   than 20/255 at 320 × 180) and lists the CHANGED ones (over CHANGE, default 1 %; two runs of the same tree differ by
-//   0.35 % at most). SHEETS_ONLY=1 re-draws the sheets and the list from OUT's shots (with BEFORE: a new pairing).
+//   than 20/255 at 320 × 180) and lists the CHANGED ones (over CHANGE, default 1.5 %: two runs of one tree differ by
+//   0.6 % at most, 1.3 % in views of Gulper Aquarium's kelp drums, whose bubbles carry their drift from the boot).
+//   SHEETS_ONLY=1 re-draws the sheets and the list from OUT's shots (with BEFORE: a new pairing).
 // TWIN=1: Bravo's twins (every view turned (x, z) → (−x, −z); names, shots and sheets suffixed -B). ONLY=<regex>: only
 //   the views whose names match. MODE=turf (default) / zones / tower. W / H the shot size (1280 × 720).
 // The page runs the game's DEFAULT_SETTINGS (quality high; each view at fov 70), bots off, actors, HUD and paint
 // cleared; each picture is the frame painted after its own stepped frames, every view at the same moment (the match
-// clock at 2:50, the environment's clock at ENVT, default 100 s). WATCHDOG=ms (default 3,000,000).
+// clock at 2:50, the environment's and the Tubeway looks' clocks at ENVT, default 100 s, the page's performance.now
+// standing still), in one team palette (PALETTE, default the stage art's tangerine-cobalt). WATCHDOG=ms (3,000,000).
 const { app, nativeImage } = require('electron');
 const fs = require('fs');
 const path = require('path');
 require(process.env.S + '/offscreen-boot.cjs');
 const MAP = process.env.MAP || 'aquarium', TIME = process.env.TIME || 'day', MODE = process.env.MODE || 'turf';
 const OUT = process.env.OUT || `${process.env.BOTLAB_ROOT || '.'}/.botlab/sweep-${MAP}-${TIME}`;
-const TWIN = process.env.TWIN === '1', BEFORE = process.env.BEFORE || '', CHANGE = +(process.env.CHANGE || 1.0), SHEETS_ONLY = process.env.SHEETS_ONLY === '1';
+const TWIN = process.env.TWIN === '1', BEFORE = process.env.BEFORE || '', CHANGE = +(process.env.CHANGE || 1.5), SHEETS_ONLY = process.env.SHEETS_ONLY === '1';
 const ONLY = process.env.ONLY ? new RegExp(process.env.ONLY) : null;
 const W = +(process.env.W || 1280), H = +(process.env.H || 720);
 const SKIP = (process.env.SKIP ?? 'ground,promenade,feeding-deck,tank-bed,rail').split(',').filter(Boolean);
@@ -83,6 +85,9 @@ app.on('browser-window-created', (_, win) => {
     const noBots = `(() => { const g = window.__inkwave; for (const a of g.match?.actors || []) a.bot = null; return 1; })()`;
     for (let i = 0; i < 400; i++) { await js(noBots); if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
     await js(noBots);
+    // (one team palette for every run: a match draws its pair at random, and the spawn pads and the Tubeway's team glows
+    // took the new pair's colours)
+    await js(`(async () => { const { TEAM_PALETTES } = await import('./src/config.js'); const p = TEAM_PALETTES.find((q) => q.id === '${process.env.PALETTE || 'tangerine-cobalt'}'); if (p) window.__inkwave._setPalette(p); return 1; })()`);
     await wait(1500);
     const info = await js(`(() => { const g = window.__inkwave, L = __G.level; return { map: '${MAP}', time: '${TIME}', mode: '${MODE}', quality: g.settings.quality, fov: g.settings.fov, lightSize: L.lightSize, layoutHash: L.layoutHash, blocks: L.blocks.length, nav: __G.nav.nodes.length }; })()`);
     console.log('SETTINGS', ts(), JSON.stringify(info));
@@ -165,6 +170,9 @@ app.on('browser-window-created', (_, win) => {
       __G.paint.clear();
       g.hud?.setVisible(false); g.menus?.show(null);
       document.querySelectorAll('.iw-hud, .iw-ui, #fade').forEach((e) => { e.style.visibility = 'hidden'; });
+      // (the page's wall clock stands still while the views are shot: a look that times itself by performance.now — the
+      // kelp drums' bubbles drift on it — is the same in every run)
+      performance.now = () => 1e6;
       return 1;
     })()`);
     const stepPaint = async () => { const p0 = paints; await js(`window.__inkwave.debug.step(1000 / 60); 0`); for (let i = 0; i < 200 && paints <= p0; i++) await wait(25); };
@@ -179,7 +187,8 @@ app.on('browser-window-created', (_, win) => {
         // the stage did)
         if (g.match) g.match.time = 170;
         if (__G.env) __G.env.time = ${+(process.env.ENVT || 100)};
-        __G.paint.clear();
+        { const pl = g.match?.pipes?.W?.looks; if (pl && typeof pl.t === 'number') pl.t = ${+(process.env.ENVT || 100)}; }   // (the pipe engine's looks: its chevrons, bubbles)
+        __G.paint.clear(); __G.projectiles.clear(); __G.fx?.clear?.();
         g.settings.fov = P.fov || 70;
         g.rig.cinematic(V(P.from), V(P.from), V(P.look), V(P.look), 99, () => {});
         for (let i = 0; i < 3; i++) g.debug.step(1000 / 60);
