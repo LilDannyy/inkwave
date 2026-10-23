@@ -229,6 +229,7 @@ app.on('browser-window-created', (_, win) => {
       };
       // the bots' own cost: BotBrain.update wall time (ms per simulated second)
       const BM = await import('./src/game/bots.js'), BP = BM.BotBrain.prototype, bUpd = BP.update; let botMs = 0;
+      const strand0 = BM.STRAND_STATS ? BM.STRAND_STATS.jumps : 0;   // [b5-beta1] (stranded / pinned bots' super jumps out this match)
       BP.update = function (dt) { const q = performance.now(); try { return bUpd.call(this, dt); } finally { botMs += performance.now() - q; } };
       // (and the part of it spent looking: _perceive, plus botSight's between-looks target re-check where there is one)
       let seeMs = 0; const bPer = BP._perceive, SP = await import('./src/game/botSight.js').then((m) => m.Sight.prototype).catch(() => null), bRe = SP && SP.recheck;
@@ -353,7 +354,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
         botMsPerS: +(botMs / Math.max(1, simT)).toFixed(2), seeMsPerS: +(seeMs / Math.max(1, simT)).toFixed(2),
         frameErr, eps: eps.sort((a, b) => b.dur - a.dur).slice(0, 6), diagEps: ${DIAG} ? eps.filter((e) => e.dur >= 2) : undefined,
         over5: eps.filter((e) => e.dur > 5).length, issueStuck: (window.__issueLog?.snapshot() || []).slice(issue0).filter((e) => e.kind === 'stuck-bot'),   // [b5-beta1]
-        climbs: BM.CLIMB_STATS ? { ...BM.CLIMB_STATS } : null, holdPct: +(100 * holdS / Math.max(1, samples * 0.25)).toFixed(1),
+        climbs: BM.CLIMB_STATS ? { ...BM.CLIMB_STATS } : null, strand: BM.STRAND_STATS ? { jumps: BM.STRAND_STATS.jumps - strand0, log: BM.STRAND_STATS.log.slice(-(BM.STRAND_STATS.jumps - strand0)).slice(-8) } : null, holdPct: +(100 * holdS / Math.max(1, samples * 0.25)).toFixed(1),
         roles: Object.fromEntries(Object.entries(roleS).map(([k, v]) => [k, +(100 * v / Math.max(1, samples * 0.25)).toFixed(0)])),
         // sprout pods (src/game/pods.js): hedges grown per team, bot-seconds perched on tops / in cover, exits, detours, holds
         pods: m.pods ? { ...m.pods.state().stats, perched: +(m.pods.stats.perched || 0).toFixed(1) } : null,
@@ -415,6 +416,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     { const T = r.teamKD; console.log(`   enemy specials AI ${spAI} | splatted by specials: A ${T[0].sp} ${JSON.stringify(T[0].by)} · B ${T[1].sp} ${JSON.stringify(T[1].by)} | K/D A ${T[0].k}/${T[0].d} B ${T[1].k}/${T[1].d}${r.spStats ? ' | ' + JSON.stringify(r.spStats) : ''}`); }
     { const s = r.sight; console.log(`   sight: fighting ${s.fightS} bot-s, trigger held ${s.fireS} s | foe out of sight ${s.hidPct}% of fight time, aim still on it ${s.trackPct}% of that | shooting at nothing ${s.blindPct}% of trigger time (${s.blindTrackPct}% straight at the hidden foe; ${s.blindBelievedPct}% while it still thinks it sees it, ${s.blindChargePct}% a charge held, ${s.blindShotPct}% shots) | bots ${r.botMsPerS} ms per sim s (looking ${r.seeMsPerS})${s.stats ? ' | ' + JSON.stringify(s.stats) : ''}`); }
     if (r.climbs) console.log('   wall climbs (at the wall): ' + JSON.stringify(r.climbs));
+    if (r.strand) console.log(`   STRANDED / PINNED super jumps out: ${r.strand.jumps}${r.strand.jumps ? ' ' + JSON.stringify(r.strand.log) : ''}`);   // [b5-beta1]
     for (const e of DIAG ? [] : r.eps) console.log('   stuck ' + JSON.stringify(e));
     if (DIAG) { console.log(`   DIAG: ${r.diagEps.length} stuck episode(s) of 2 s or more`); for (const e of r.diagEps) { const { diag, ...rest } = e; console.log('   stuck ' + JSON.stringify(rest)); for (const d of diag) console.log('      plan ' + JSON.stringify(d)); } }
     console.log(`   STUCK episodes over 5 s: ${r.over5} | ISSUELOG stuck-bot entries this match: ${r.issueStuck.length}${r.issueStuck.length ? ' ' + JSON.stringify(r.issueStuck.map(({ at, kind, message, build, era, lava, online, ...x }) => x)).slice(0, 1500) : ''}`);   // [b5-beta1] the beta's own detector beside the harness

@@ -17,6 +17,11 @@
 // tank   a bot on the Great Tank's sand bed (inside the glass, y −0.6: the nav has no way out of it) heading for a goal
 //        outside: out within 6 s (a super jump), from 6 spots by the rim and mid-bed — it pressed into the rim 4–9.25 s
 //        (JOB-5), for good here.
+// pocket (MAP=bluestone PAGE_ARGS='only=pocket'; [b5-beta1, review 1]): JOB-8's 60.75 s Bluestone freeze, found — a curb
+//        corner by (5.82, 0, 46.37): a 0.66 m curb to the south (its route's first node behind it), a crate to the east, the
+//        canal to the west, so the stuck hop is never allowed (the hop guards keep 3 m off the water). The eras play no
+//        part (every block there is in every era). A bot put there with a goal elsewhere is out within 6 s (it super jumps
+//        once pinned 3 s: bots.js); 3 weapons × 3 goals. (Before: none of the 9 moved in 15 s.)
 // karpspot (MAP=halyard MODE=bazookarp PAGE_ARGS='only=karpspot'): a Bazookarp breaker's refill spot by the shell is
 //        never the spot it ran dry at in the last 6 s (bots.js _refillBad: its puddle went off a ledge's lip, where it can't
 //        swim): ≥ 3 m from it, or none (the usual search) — 20 picks in a live match. Sent back there, a breaker hovered
@@ -169,6 +174,21 @@
     }
     const bad = rows.filter((r) => r.at[1] > -0.5 || r.outAt === null || r.outAt > 6);
     R('tank: a bot on the Great Tank\'s sand bed (inside the glass, no way out on foot) heading out is out within 6 s (6 spots: by the rim and mid-bed)', bad.length === 0, { bad, rows });
+  }
+  if (want('pocket') && g.mapDef?.id === 'bluestone') {
+    const rows = [];
+    for (const w of ['blaster', 'shooter', 'roller']) for (const [gx, gz] of [[21.5, 22.5], [-20, 40], [0, -30]]) {
+      fresh(5.82, 0.02, 46.37);
+      bot.setWeapon(w); b.reset(); b.setDifficulty('normal');
+      b._pickPaintGoal = function () { this.goalTimer = 3; this._pathTo(new V3(gx, L.groundHeight(gx, gz, 6), gz), 0.8); };
+      b.mode = 'paint'; b.goalTimer = 0;
+      let outAt = null, jumped = false;
+      for (let f = 0; f < 10 * 60 && outAt === null; f++) { g.debug.step(1000 / 60); if (bot.superJumpState) jumped = true; if (Math.hypot(bot.pos.x - 5.82, bot.pos.z - 46.37) > 2.5) outAt = r2(f / 60); }
+      rows.push({ w, goal: [gx, gz], outAt, jumped });
+      delete b._pickPaintGoal;
+    }
+    const bad = rows.filter((r) => r.outAt === null || r.outAt > 6);
+    R('pocket: a bot wedged in Bluestone\'s curb corner (5.82, 0, 46.37: JOB-8\'s 60.75 s freeze) is out within 6 s (3 weapons × 3 goals)', bad.length === 0, { bad, rows });
   }
   if (want('karpspot') && G.match?.karp) {
     // a live Bazookarp match: each time a breaker / grabber by the shell has a refill spot there, mark that spot as one it
