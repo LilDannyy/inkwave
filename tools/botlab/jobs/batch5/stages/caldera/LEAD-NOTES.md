@@ -95,3 +95,24 @@ Review 6 found both gates "passing" only because the audits look in too few plac
 7. **net-lava.cjs** has never been run with its new bound: run it at a load average under 4, or push the scratch
    branch `botlab-b5-caldera` and let the Mac mini's runner do it (allowed this round; results come back on that
    branch). Rule 42 from the bridge and the lavafall side patch stay on the art-phase list.
+
+## After review 7 (2026-10-24): the roof slide into the lava, air steering, the Mitts leap
+
+Review 6's list holds (the corrected audits, the corners closed, carriers documented, F10 / F8b, the boss, net-lava
+13/13 on the Mac mini). This round, binding:
+1. **Roof tops must never slide a kid into the lava** (race 3's boulder kills 84 % of landings at HIGH; Organ L's
+   stub 47 %): the engine fix the review prefers, in `actor._roofExit` / `_roofExitDist`: refuse a way off whose
+   landing a stage hazard takes (`G.match.stage.wet` / the lava's `covers`), and hold the kid where it is when every
+   way is refused; a short tagged hook, with a check (the reviewer's probe-roofslide7b: 0 deaths over every flat roof
+   beside the lava at LOW and HIGH), and lava-audit gains that probe as a rule.
+2. **Rule 44 with air steering:** the march tries ±45° / ±90° after about 8 frames for take-offs on rider tops, so it
+   reproduces the crown's 16.5 m; then close the crown's north-east and north-west edges by geometry (the review's
+   pipes) until no steered running jump saves over 15 m.
+3. **The Mitts leap (the lead decides):** a leap is skill movement like a swim jump, accepted; but a leap off a roof
+   top is not (the kit's jump must respect actor.js's roof gate), and a leap's landing must obey the bots' 2 s
+   look-ahead (the lava-bots fight death: the air guard must not steer a kit leap). Write it into DESIGN §3.5 and the
+   audit's information row; list leaps in rule 44's information.
+4. **The carrier crossing list:** merge review 6's candidate set and say it is a lower bound that checker #7d must
+   extend on the real layout.
+5. **net-lava** at the final head, on the Mac mini (push `botlab-b5-caldera`), plus lava-bots once (≤ 1 fight death),
+   lava.js twice, boss-check 5, 2 Zone Control matches, check-maps every variant; the crown pictures for the lead.
