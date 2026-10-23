@@ -46,6 +46,21 @@ export const CLIMB = { stall: 1.75, off: 12, max: 8, ink: 0.2, dry: 40, unreach:
 export const CLIMB_STATS = { tries: 0, done: 0, stalled: 0, dry: 0, long: 0 };
 export const STRAND_STATS = { jumps: 0, log: [], pinned: 0 };   // [b5-beta1] stranded bots' super jumps out (tests / probes; log: the last 20; pinned: checks that found a bot pinned)
 const INK_STEP_R = [0.55, 0.95, 1.45, 2.05], INK_STEP_R_FAR = [0.55, 0.95, 1.45, 2.05, 2.75, 3.5];   // [b5-beta1] (_inkStep)
+// [b5-beta1, review 1] the nav's dead ends: nodes from which no route, by any edge the graph has (walk, hop, drop, climb,
+// whatever era or gate masks them), reaches either spawn deck — Gulper Aquarium's Great Tank: its 108 nodes, the rim's
+// with the sand bed's, have no edge out. Per nav (a reverse search from the spawn decks' nodes), built on first ask.
+const _navOut = new WeakMap();
+function navCanLeave(nav) {
+  let c = _navOut.get(nav);
+  if (c && c.n === nav.nodes.length) return c.ok;
+  const N = nav.nodes.length, rev = Array.from({ length: N }, () => []), ok = new Uint8Array(N), q = [];
+  for (let i = 0; i < N; i++) for (const e of nav.nodes[i].nb || []) if (e.to >= 0 && e.to < N) rev[e.to].push(i);
+  for (const pad of G.level?.spawnPads || []) { const s = pad ? nav.nearest(pad, 1.5, true) : -1; if (s >= 0 && !ok[s]) { ok[s] = 1; q.push(s); } }
+  if (!q.length) ok.fill(1);   // (no spawn deck on the graph: nothing is judged a dead end)
+  while (q.length) { const v = q.pop(); for (const u of rev[v]) if (!ok[u]) { ok[u] = 1; q.push(u); } }
+  _navOut.set(nav, c = { n: N, ok });
+  return ok;
+}
 
 // ============================================================================================ Zone Control team plan
 // Shared by every bot in a zones match (one per ZoneControl): each zone's paint cells mapped to the nav nodes you'd
@@ -720,7 +735,10 @@ export class BotBrain {
       const nav = G.nav;
       // (judged at the floor under it, hops and all: a stranded bot hops — the unstick's — and a check mid-hop reset it)
       const fy = !nav || a.climbing || a.pipe || a.carry || G.match?.lava ? -Infinity : G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.1);
-      const s = fy > -Infinity && a.pos.y - fy < 1.5 && nav.nearest(_vStart.set(a.pos.x, fy, a.pos.z), 0.45, true) < 0;   // (a stage with lava: its escapes have it)
+      // ([b5-beta1, review 1] …or the node it would start from is a dead end of the graph: a bot hopping up onto the tank's
+      // rim found the rim's nodes there and was no longer stranded — a spot out late, 1 run in 3 on the Mac mini, JOB-15)
+      const sn = fy > -Infinity && a.pos.y - fy < 1.5 ? nav.nearest(_vStart.set(a.pos.x, fy, a.pos.z), 0.45, true) : 0;
+      const s = fy > -Infinity && a.pos.y - fy < 1.5 && (sn < 0 || !navCanLeave(nav)[sn]);   // (a stage with lava: its escapes have it)
       // [b5-beta1, review 1] latched for 1 s: one check that finds the hopping bot over the rim (a node there, under it) no
       // longer restarts the 1.5 s count — bot-stuck 'tank' had a spot out at 8.67 s, 1 run in 3
       if (s) this._strandSeen = this.t;
@@ -728,19 +746,21 @@ export class BotBrain {
       // and replans spent — wedged where the nav says it can walk. Bluestone's curb corner by (5.8, 0, 46.4): its route
       // began past a 0.66 m curb, a crate on its other side, the canal behind it, so no stuck hop is allowed there (the
       // hop guards keep 3 m off the water) — a blaster stood there 60.75 s (JOB-8); out in ~4.5 s now
-      // (asking to move: along a route, or with none and not fighting — a route that won't plan from here; never while
-      // refilling with no route or in its ink, nor holding a spot on purpose. 5 of the last 7 checks, all within 0.6 m)
+      // (asking to move: along a route, or with none — a route that won't plan from here; never while refilling with no
+      // route or in its ink, nor holding a spot on purpose, nor drawing a shot. The last 7 checks, all within 0.6 m)
       const ph = this._pinH || (this._pinH = []);
       const free = a.alive && !a.climbing && !a.pipe && !a.carry && !a.specialActive && !G.match?.lava && !this.holdingOnPurpose() && !G.match?.tower?.riderList?.includes(a);
       const wr = a.weaponRunner, drawing = !!(wr && (wr.charging || wr.burstT > 0 || wr.streaming));   // (a draw / spin / stream in place: on purpose, as the harnesses judge it)
-      const trying = free && !drawing && (this.path ? this.mvMag > 0.2 && !(this.mode === 'refill' && a.submerged) : this.mode !== 'fight' && this.mode !== 'refill');
+      // (never in a fight: a duel's footwork keeps it about a spot, and a pinned fighter's foe moves on soon — matches had
+      // fighters jump out of 2–3 s pins by a wall; out of the fight, the watch takes it)
+      const trying = free && !drawing && this.mode !== 'fight' && (this.path ? this.mvMag > 0.2 && !(this.mode === 'refill' && a.submerged) : this.mode !== 'refill');
       ph.push(a.pos.x, a.pos.z, trying ? 1 : 0); if (ph.length > 21) ph.splice(0, 3);
       let pinned = free && ph.length >= 21, tries = 0;
       for (let i = 0; pinned && i < ph.length; i += 3) { tries += ph[i + 2]; if (Math.hypot(ph[i] - a.pos.x, ph[i + 1] - a.pos.z) > 0.6) pinned = false; }
-      pinned = pinned && tries >= 5;
+      pinned = pinned && tries >= 7;   // (every check: a charger standing to paint lines draws between them — on purpose)
       if (pinned) STRAND_STATS.pinned = (STRAND_STATS.pinned || 0) + 1;
       this._stranded = s || pinned || (this._strandSeen !== undefined && this.t - this._strandSeen < 1.0 && !a.climbing && !a.pipe && !a.carry && !G.match?.lava);
-      if (this._stranded) this._strandWhy = s || !pinned ? 'stranded' : 'pinned';
+      if (this._stranded) this._strandWhy = s ? (sn < 0 ? 'stranded' : 'dead end') : pinned ? 'pinned' : 'stranded';
     }
     if (this._stranded && !a.superJumpState) {
       this.strandAcc = (this.strandAcc || 0) + dt;
