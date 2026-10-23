@@ -69,10 +69,19 @@ W=960 H=600 MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botl
     the Chain Bobber's dry plan and its holds; `refill`: every weapon refills from 6 / 10 % at a bare refill spot; `tank`:
     a bot stranded on the Great Tank's sand bed super jumps out); with `MAP=halyard MODE=bazookarp PAGE_ARGS='only=karpspot'`
     a Bazookarp breaker's refill spot is never the one it just ran dry at;
-  - `tools/botlab/run.sh tools/botlab/first-frames.cjs` (`STAGES=a,b`, `MODE`, `BAR=100`, `PLAY=3`; `DEVSTAGE=1` adds
-    Cargo Terminal): each stage's first match from a fresh page, in real time, every frame from the moment it is on
-    screen through the intro and 3 s of play, and the waits between them; each frame over BAR with its parts (sim,
-    render, paint flush, HUD, minimap …) and the shader programs / textures / geometries new in it;
+  - `tools/botlab/run.sh tools/botlab/first-frames.cjs` (`STAGES=a,b`, `MODE`, `BAR=100`, `PLAY=3`, `EXTRA=20`,
+    `LINEUP=0`; `DEVSTAGE=1` adds Cargo Terminal): each stage's first match from a fresh page, in real time, every frame
+    from the moment it is on screen through the intro and 3 s of play, and the waits between them; each frame over BAR
+    with its parts (sim, render, paint flush, HUD, minimap …) and the shader programs (and who uses them) / textures /
+    geometries new in it. Three checks a stage: the frames and waits under BAR; no shader program compiled in those
+    frames, with a Sponge Mitts punch and a paint flood forced at the first frame of play; none in EXTRA s more of
+    stepped play with every special charged (the lineup turns with the stage: the 16 carry every weapon, sub and
+    special). `tools/botlab/first-frames-cold.sh` (same settings) runs each stage in its own Electron with the GPU shader
+    disk cache off; `TRACE=1` prints each main-thread task over 50 ms from a Chrome trace with what it spent its time in
+    (review 1: the lobby set's preload, a promise continuation no observer could name);
+  - `MAP=bluestone PAGE_ARGS='only=pocket' PAGE=tools/botlab/tests/bot-stuck.js …page.cjs`: JOB-8's 60.75 s freeze, a
+    curb corner a bot is wedged in, out within 6 s (a pinned bot super jumps); every match.cjs run prints its stranded /
+    pinned jumps (`STRANDED / PINNED`) and the stuck share with every hold on purpose counted beside the usual one;
   - `MAP=halyard PAGE=tools/botlab/tests/lightmaps.js …page.cjs`: every world a player can reach has its bake applied;
     an unbaked Bazookarp variant builds unlit with no warning; `node tools/botlab/tests/issue-host.cjs`: the hosted log.
 - **A stage module's audit switch:** `PAGEQ='era=2'` (any query) boots every harness page with it as well (a module
