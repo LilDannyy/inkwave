@@ -1,0 +1,234 @@
+JOB-17 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 10:15:25
+branch botlab-b5-beta1, ran at 016c9e2c, exit code 0, wall time 24min
+(a written-up JOB-17.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### beta1 JOB-17 head 016c9e2c
+[ffcold-1] RESULT 48/48
+[ffcold-2] RESULT 48/48
+[bot-stuck-1] RESULT 6/7
+[bot-stuck-2] RESULT 7/7
+[bot-stuck-3] RESULT 6/7
+[pocket] RESULT 1/1
+[karp-aquarium] RESULT karp aquarium win=B reason=knockout ko=37.9 c=100/0 pops=0/2 carries=2 blasts=0 ot=no
+[karp-halyard] RESULT karp halyard win=B reason=time ko=- c=53/45 pops=10/7 carries=17 blasts=0 ot=no
+### done
+
+## last 15 lines of job.log
+[zones-halyard]    STRANDED / PINNED super jumps out: 0
+[zones-halyard]    STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+[zones-halyard] CONSOLE 0 unique warning/error line(s)
+[zones-aquarium]    stuck 0.2% (0.6% counting holds on purpose) | splats 65 (water 0) | specials 15 | super jumps 19 | turf 21.1/34.2 | sim 300s in 59s (wall 59s) | {"cpuSimMs":0.72}
+[zones-aquarium]    STRANDED / PINNED super jumps out: 0
+[zones-aquarium]    STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+[zones-aquarium] CONSOLE 0 unique warning/error line(s)
+[karp-halyard]    fast fuse (s): retreat 13.5 zone 0 | clamp rejections 0 | carrierRetreatFallback 8 (a dip the engine forgives, no ×3: 5) | carrier stuck 0.75 s (> 3 s episodes 0) | bots stuck 0.3% (holding on purpose 12.4%)
+[karp-halyard]    STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+[karp-halyard] CONSOLE 0 unique warning/error line(s)
+[karp-halyard] RESULT karp halyard win=B reason=time ko=- c=53/45 pops=10/7 carries=17 blasts=0 ot=no
+[tower-bluestone]    stuck 0.3% | by the tower's side 4% of bot-time, stuck there 0.5s (1 episodes) | splats 107 (water 0) | specials 17 (ready 18) | super jumps 44 | turf 29.6/10.1 | sim 300s in 56s (wall 56s) | {"cpuSimMs":0.89}
+[tower-bluestone]    STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+[tower-bluestone] CONSOLE 0 unique warning/error line(s)
+### done
+
+## ffcold-1-stages.txt
+tidewater load 985 | intro 16.7 | play 9.1 | gap 17
+kelpline load 1484 | intro 20.3 | play 9.9 | gap 19
+halyard load 2098 | intro 13.5 | play 8 | gap 17.3
+saltpan load 1391 | intro 15.7 | play 10.4 | gap 16.2
+crossmarket load 1599 | intro 26.4 | play 7.7 | gap 16.9
+lockgate load 1447 | intro 24.6 | play 7 | gap 16.9
+terraces load 1537 | intro 17.1 | play 7.5 | gap 17.2
+nantai load 1857 | intro 25.7 | play 12.7 | gap 16.5
+craters load 1553 | intro 15.4 | play 9.2 | gap 17.1
+calamari load 1509 | intro 13.2 | play 7.8 | gap 17
+spirhalite load 1606 | intro 24.8 | play 7.2 | gap 17.2
+treehills load 1917 | intro 20.3 | play 14.4 | gap 16.3
+bluestone load 2056 | intro 24.9 | play 9.4 | gap 16.9
+aquarium load 1947 | intro 19.5 | play 8.8 | gap 18
+caldera load 1775 | intro 20.5 | play 8 | gap 16.5
+cargo load 1234 | intro 22.7 | play 8.2 | gap 17.6
+
+## ffcold-1.txt
+== tidewater [turf, world tidewater]: load 985 ms | 433 frames (253 intro, 180 play) | worst intro 16.7 ms @0 | worst play 9.1 ms @4964 | over 100 ms: 0 | worst gap between frames 17 ms @1632 (over 100: 0)
+   lineup shooter/bomb/slam mitts/sticky/storm brolly/burst/barrage blaster/shaker/barrage_sticky spinner/seeker/barrage_burst charger/waddle/barrage_seeker bow/torpedo/barrage_mist roller/tracer/bubbler | warm 61 ms | forced: punch held (fists seen 2), flood on
+PASS tidewater first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":16.7,"worstPlay":9.1,"over":0,"worstGap":17,"gaps":0,"loadMs":985}
+PASS tidewater no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS tidewater no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== kelpline [turf, world kelpline]: load 1484 ms | 432 frames (252 intro, 180 play) | worst intro 20.3 ms @4185 | worst play 9.9 ms @4235 | over 100 ms: 0 | worst gap between frames 19 ms @6625 (over 100: 0)
+   lineup brush/boomerang/sonar mitts/scan/strike mitts/curtain/zooka bucket/sprinkler/wail shooter/mine/kraken twins/beacon/blower brolly/mist/jetpack blaster/glide/stamp | warm 89 ms | forced: punch held (fists seen 4), flood on
+PASS kelpline first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":20.3,"worstPlay":9.9,"over":0,"worstGap":19,"gaps":0,"loadMs":1484}
+PASS kelpline no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS kelpline no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== halyard [turf, world halyard]: load 2098 ms | 431 frames (250 intro, 181 play) | worst intro 13.5 ms @4142 | worst play 8 ms @4525 | over 100 ms: 0 | worst gap between frames 17.3 ms @2109 (over 100: 0)
+   lineup spinner/sentry/booyah mitts/bobber/zipcaster bow/dash/crab roller/bomb/surf brush/sticky/drainbow blade/burst/barrage_waddle mitts/shaker/barrage_mystery bucket/seeker/slam | warm 127 ms | forced: punch held (fists seen 4), flood on
+PASS halyard first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":13.5,"worstPlay":8,"over":0,"worstGap":17.3,"gaps":0,"loadMs":2098}
+PASS halyard no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS halyard no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== saltpan [turf, world saltpan]: load 1391 ms | 434 frames (253 intro, 181 play) | worst intro 15.7 ms @4196 | worst play 10.4 ms @6195 | over 100 ms: 0 | worst gap between frames 16.2 ms @2630 (over 100: 0)
+   lineup shooter/waddle/storm mitts/torpedo/barrage brolly/tracer/barrage_sticky blaster/boomerang/barrage_burst spinner/scan/barrage_seeker charger/curtain/barrage_mist bow/sprinkler/bubbler roller/mine/sonar | warm 80 ms | forced: punch held (fists seen 2), flood on
+PASS saltpan first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":15.7,"worstPlay":10.4,"over":0,"worstGap":16.2,"gaps":0,"loadMs":1391}
+PASS saltpan no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS saltpan no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== crossmarket [turf, world crossmarket]: load 1599 ms | 432 frames (252 intro, 180 play) | worst intro 26.4 ms @4185 | worst play 7.7 ms @4251 | over 100 ms: 0 | worst gap between frames 16.9 ms @1753 (over 100: 0)
+   lineup brush/beacon/strike mitts/mist/zooka mitts/glide/wail bucket/sentry/kraken shooter/bobber/blower twins/dash/jetpack brolly/bomb/stamp blaster/sticky/booyah | warm 122 ms | forced: punch held (fists seen 4), flood on
+PASS crossmarket first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":26.4,"worstPlay":7.7,"over":0,"worstGap":16.9,"gaps":0,"loadMs":1599}
+PASS crossmarket no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS crossmarket no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== lockgate [turf, world lockgate]: load 1447 ms | 433 frames (253 intro, 180 play) | worst intro 24.6 ms @4193 | worst play 7 ms @4577 | over 100 ms: 0 | worst gap between frames 16.9 ms @1295 (over 100: 0)
+   lineup spinner/burst/zipcaster mitts/shaker/crab bow/seeker/surf roller/waddle/drainbow brush/torpedo/barrage_waddle blade/tracer/barrage_mystery mitts/boomerang/slam bucket/scan/storm | warm 115 ms | forced: punch held (fists seen 4), flood on
+PASS lockgate first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":24.6,"worstPlay":7,"over":0,"worstGap":16.9,"gaps":0,"loadMs":1447}
+PASS lockgate no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS lockgate no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== terraces [turf, world terraces]: load 1537 ms | 434 frames (253 intro, 181 play) | worst intro 17.1 ms @4200 | worst play 7.5 ms @4549 | over 100 ms: 0 | worst gap between frames 17.2 ms @1917 (over 100: 0)
+   lineup shooter/curtain/barrage mitts/sprinkler/barrage_sticky brolly/mine/barrage_burst blaster/beacon/barrage_seeker spinner/mist/barrage_mist charger/glide/bubbler bow/sentry/sonar roller/bobber/strike | warm 99 ms | forced: punch held (fists seen 2), flood on
+PASS terraces first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":17.1,"worstPlay":7.5,"over":0,"worstGap":17.2,"gaps":0,"loadMs":1537}
+PASS terraces no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS terraces no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== nantai [turf, world nantai]: load 1857 ms | 433 frames (252 intro, 181 play) | worst intro 25.7 ms @4180 | worst play 12.7 ms @4245 | over 100 ms: 0 | worst gap between frames 16.5 ms @1914 (over 100: 0)
+   lineup brush/dash/zooka mitts/bomb/wail mitts/sticky/kraken bucket/burst/blower shooter/shaker/jetpack twins/seeker/stamp brolly/waddle/booyah blaster/torpedo/zipcaster | warm 121 ms | forced: punch held (fists seen 4), flood on
+PASS nantai first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":25.7,"worstPlay":12.7,"over":0,"worstGap":16.5,"gaps":0,"loadMs":1857}
+PASS nantai no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS nantai no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== craters [turf, world craters]: load 1553 ms | 433 frames (252 intro, 181 play) | worst intro 15.4 ms @4188 | worst play 9.2 ms @5238 | over 100 ms: 0 | worst gap between frames 17.1 ms @1738 (over 100: 0)
+   lineup spinner/tracer/crab mitts/boomerang/surf bow/scan/drainbow roller/curtain/barrage_waddle brush/sprinkler/barrage_mystery blade/mine/slam mitts/beacon/storm bucket/mist/barrage | warm 155 ms | forced: punch held (fists seen 4), flood on
+PASS craters first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":15.4,"worstPlay":9.2,"over":0,"worstGap":17.1,"gaps":0,"loadMs":1553}
+PASS craters no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS craters no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== calamari [turf, world calamari]: load 1509 ms | 433 frames (253 intro, 180 play) | worst intro 13.2 ms @4195 | worst play 7.8 ms @6295 | over 100 ms: 0 | worst gap between frames 17 ms @312 (over 100: 0)
+   lineup shooter/glide/barrage_sticky mitts/sentry/barrage_burst brolly/bobber/barrage_seeker blaster/dash/barrage_mist spinner/bomb/bubbler charger/sticky/sonar bow/burst/strike roller/shaker/zooka | warm 108 ms | forced: punch held (fists seen 2), flood on
+PASS calamari first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":13.2,"worstPlay":7.8,"over":0,"worstGap":17,"gaps":0,"loadMs":1509}
+PASS calamari no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS calamari no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== spirhalite [turf, world spirhalite]: load 1606 ms | 432 frames (252 intro, 180 play) | worst intro 24.8 ms @4188 | worst play 7.2 ms @4356 | over 100 ms: 0 | worst gap between frames 17.2 ms @2107 (over 100: 0)
+   lineup brush/seeker/wail mitts/waddle/kraken mitts/torpedo/blower bucket/tracer/jetpack shooter/boomerang/stamp twins/scan/booyah brolly/curtain/zipcaster blaster/sprinkler/crab | warm 108 ms | forced: punch held (fists seen 4), flood on
+PASS spirhalite first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":24.8,"worstPlay":7.2,"over":0,"worstGap":17.2,"gaps":0,"loadMs":1606}
+PASS spirhalite no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS spirhalite no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== treehills [turf, world treehills]: load 1917 ms | 433 frames (252 intro, 181 play) | worst intro 20.3 ms @4185 | worst play 14.4 ms @4567 | over 100 ms: 0 | worst gap between frames 16.3 ms @235 (over 100: 0)
+   lineup spinner/mine/surf mitts/beacon/drainbow bow/mist/barrage_waddle roller/glide/barrage_mystery brush/sentry/slam blade/bobber/storm mitts/dash/barrage bucket/bomb/barrage_sticky | warm 159 ms | forced: punch held (fists seen 4), flood on
+PASS treehills first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":20.3,"worstPlay":14.4,"over":0,"worstGap":16.3,"gaps":0,"loadMs":1917}
+PASS treehills no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS treehills no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== bluestone [turf, world bluestone]: load 2056 ms | 433 frames (252 intro, 181 play) | worst intro 24.9 ms @4186 | worst play 9.4 ms @4319 | over 100 ms: 0 | worst gap between frames 16.9 ms @869 (over 100: 0)
+   lineup shooter/sticky/barrage_burst mitts/burst/barrage_seeker brolly/shaker/barrage_mist blaster/seeker/bubbler spinner/waddle/sonar charger/torpedo/strike bow/tracer/zooka roller/boomerang/wail | warm 148 ms | forced: punch held (fists seen 2), flood on
+PASS bluestone first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":24.9,"worstPlay":9.4,"over":0,"worstGap":16.9,"gaps":0,"loadMs":2056}
+PASS bluestone no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS bluestone no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== aquarium [turf, world aquarium]: load 1947 ms | 433 frames (252 intro, 181 play) | worst intro 19.5 ms @4187 | worst play 8.8 ms @4236 | over 100 ms: 0 | worst gap between frames 18 ms @3006 (over 100: 0)
+   lineup brush/scan/kraken mitts/curtain/blower mitts/sprinkler/jetpack bucket/mine/stamp shooter/beacon/booyah twins/mist/zipcaster brolly/glide/crab blaster/sentry/surf | warm 142 ms | forced: punch held (fists seen 4), flood on
+PASS aquarium first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":19.5,"worstPlay":8.8,"over":0,"worstGap":18,"gaps":0,"loadMs":1947}
+PASS aquarium no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS aquarium no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== caldera [turf, world caldera]: load 1775 ms | 434 frames (253 intro, 181 play) | worst intro 20.5 ms @4199 | worst play 8 ms @4580 | over 100 ms: 0 | worst gap between frames 16.5 ms @366 (over 100: 0)
+   lineup spinner/bobber/drainbow mitts/dash/barrage_waddle bow/bomb/barrage_mystery roller/sticky/slam brush/burst/storm blade/shaker/barrage mitts/seeker/barrage_sticky bucket/waddle/barrage_burst | warm 113 ms | forced: punch held (fists seen 4), flood on
+PASS caldera first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":20.5,"worstPlay":8,"over":0,"worstGap":16.5,"gaps":0,"loadMs":1775}
+PASS caldera no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS caldera no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== cargo [turf, world cargo]: load 1234 ms | 434 frames (253 intro, 181 play) | worst intro 22.7 ms @4191 | worst play 8.2 ms @4241 | over 100 ms: 0 | worst gap between frames 17.6 ms @3208 (over 100: 0)
+   lineup mitts/torpedo/barrage_seeker | warm 50 ms | forced: punch held (fists seen 2), flood on
+PASS cargo first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":22.7,"worstPlay":8.2,"over":0,"worstGap":17.6,"gaps":0,"loadMs":1234}
+PASS cargo no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS cargo no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+RESULT 48/48
+
+## ffcold-2-stages.txt
+tidewater load 982 | intro 14.7 | play 7.6 | gap 16.7
+kelpline load 1545 | intro 14.2 | play 8.5 | gap 16.7
+halyard load 2155 | intro 15.8 | play 7.6 | gap 16.6
+saltpan load 1357 | intro 16.4 | play 6.6 | gap 16.6
+crossmarket load 1469 | intro 15.6 | play 7.3 | gap 16.5
+lockgate load 1455 | intro 17 | play 7.2 | gap 16.6
+terraces load 1651 | intro 16.9 | play 10.3 | gap 16.5
+nantai load 1875 | intro 25.9 | play 10.6 | gap 16.9
+craters load 1570 | intro 13.5 | play 7.1 | gap 16.7
+calamari load 1470 | intro 15.1 | play 6.6 | gap 16.7
+spirhalite load 1620 | intro 16.4 | play 7 | gap 16.5
+treehills load 1701 | intro 15.3 | play 15.1 | gap 17
+bluestone load 1983 | intro 17.4 | play 13.8 | gap 18.1
+aquarium load 2031 | intro 23.6 | play 16.9 | gap 17.1
+caldera load 1777 | intro 17.5 | play 8.9 | gap 16.8
+cargo load 1235 | intro 24.6 | play 8.4 | gap 17.4
+
+## ffcold-2.txt
+== tidewater [turf, world tidewater]: load 982 ms | 434 frames (253 intro, 181 play) | worst intro 14.7 ms @0 | worst play 7.6 ms @5440 | over 100 ms: 0 | worst gap between frames 16.7 ms @1742 (over 100: 0)
+   lineup shooter/bomb/slam mitts/sticky/storm brolly/burst/barrage blaster/shaker/barrage_sticky spinner/seeker/barrage_burst charger/waddle/barrage_seeker bow/torpedo/barrage_mist roller/tracer/bubbler | warm 63 ms | forced: punch held (fists seen 2), flood on
+PASS tidewater first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":14.7,"worstPlay":7.6,"over":0,"worstGap":16.7,"gaps":0,"loadMs":982}
+PASS tidewater no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS tidewater no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== kelpline [turf, world kelpline]: load 1545 ms | 433 frames (253 intro, 180 play) | worst intro 14.2 ms @0 | worst play 8.5 ms @4248 | over 100 ms: 0 | worst gap between frames 16.7 ms @3349 (over 100: 0)
+   lineup brush/boomerang/sonar mitts/scan/strike mitts/curtain/zooka bucket/sprinkler/wail shooter/mine/kraken twins/beacon/blower brolly/mist/jetpack blaster/glide/stamp | warm 89 ms | forced: punch held (fists seen 4), flood on
+PASS kelpline first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":14.2,"worstPlay":8.5,"over":0,"worstGap":16.7,"gaps":0,"loadMs":1545}
+PASS kelpline no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS kelpline no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== halyard [turf, world halyard]: load 2155 ms | 433 frames (252 intro, 181 play) | worst intro 15.8 ms @4189 | worst play 7.6 ms @4572 | over 100 ms: 0 | worst gap between frames 16.6 ms @2206 (over 100: 0)
+   lineup spinner/sentry/booyah mitts/bobber/zipcaster bow/dash/crab roller/bomb/surf brush/sticky/drainbow blade/burst/barrage_waddle mitts/shaker/barrage_mystery bucket/seeker/slam | warm 131 ms | forced: punch held (fists seen 4), flood on
+PASS halyard first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":15.8,"worstPlay":7.6,"over":0,"worstGap":16.6,"gaps":0,"loadMs":2155}
+PASS halyard no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS halyard no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== saltpan [turf, world saltpan]: load 1357 ms | 433 frames (253 intro, 180 play) | worst intro 16.4 ms @4193 | worst play 6.6 ms @4212 | over 100 ms: 0 | worst gap between frames 16.6 ms @1945 (over 100: 0)
+   lineup shooter/waddle/storm mitts/torpedo/barrage brolly/tracer/barrage_sticky blaster/boomerang/barrage_burst spinner/scan/barrage_seeker charger/curtain/barrage_mist bow/sprinkler/bubbler roller/mine/sonar | warm 83 ms | forced: punch held (fists seen 2), flood on
+PASS saltpan first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":16.4,"worstPlay":6.6,"over":0,"worstGap":16.6,"gaps":0,"loadMs":1357}
+PASS saltpan no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS saltpan no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== crossmarket [turf, world crossmarket]: load 1469 ms | 432 frames (252 intro, 180 play) | worst intro 15.6 ms @0 | worst play 7.3 ms @4256 | over 100 ms: 0 | worst gap between frames 16.5 ms @2074 (over 100: 0)
+   lineup brush/beacon/strike mitts/mist/zooka mitts/glide/wail bucket/sentry/kraken shooter/bobber/blower twins/dash/jetpack brolly/bomb/stamp blaster/sticky/booyah | warm 134 ms | forced: punch held (fists seen 4), flood on
+PASS crossmarket first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":15.6,"worstPlay":7.3,"over":0,"worstGap":16.5,"gaps":0,"loadMs":1469}
+PASS crossmarket no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS crossmarket no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== lockgate [turf, world lockgate]: load 1455 ms | 431 frames (250 intro, 181 play) | worst intro 17 ms @4155 | worst play 7.2 ms @4188 | over 100 ms: 0 | worst gap between frames 16.6 ms @556 (over 100: 0)
+   lineup spinner/burst/zipcaster mitts/shaker/crab bow/seeker/surf roller/waddle/drainbow brush/torpedo/barrage_waddle blade/tracer/barrage_mystery mitts/boomerang/slam bucket/scan/storm | warm 102 ms | forced: punch held (fists seen 4), flood on
+PASS lockgate first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":17,"worstPlay":7.2,"over":0,"worstGap":16.6,"gaps":0,"loadMs":1455}
+PASS lockgate no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS lockgate no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== terraces [turf, world terraces]: load 1651 ms | 432 frames (252 intro, 180 play) | worst intro 16.9 ms @0 | worst play 10.3 ms @4573 | over 100 ms: 0 | worst gap between frames 16.5 ms @1523 (over 100: 0)
+   lineup shooter/curtain/barrage mitts/sprinkler/barrage_sticky brolly/mine/barrage_burst blaster/beacon/barrage_seeker spinner/mist/barrage_mist charger/glide/bubbler bow/sentry/sonar roller/bobber/strike | warm 115 ms | forced: punch held (fists seen 2), flood on
+PASS terraces first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":16.9,"worstPlay":10.3,"over":0,"worstGap":16.5,"gaps":0,"loadMs":1651}
+PASS terraces no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS terraces no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== nantai [turf, world nantai]: load 1875 ms | 433 frames (252 intro, 181 play) | worst intro 25.9 ms @4187 | worst play 10.6 ms @4253 | over 100 ms: 0 | worst gap between frames 16.9 ms @1887 (over 100: 0)
+   lineup brush/dash/zooka mitts/bomb/wail mitts/sticky/kraken bucket/burst/blower shooter/shaker/jetpack twins/seeker/stamp brolly/waddle/booyah blaster/torpedo/zipcaster | warm 121 ms | forced: punch held (fists seen 4), flood on
+PASS nantai first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":25.9,"worstPlay":10.6,"over":0,"worstGap":16.9,"gaps":0,"loadMs":1875}
+PASS nantai no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS nantai no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== craters [turf, world craters]: load 1570 ms | 433 frames (252 intro, 181 play) | worst intro 13.5 ms @4188 | worst play 7.1 ms @4587 | over 100 ms: 0 | worst gap between frames 16.7 ms @2405 (over 100: 0)
+   lineup spinner/tracer/crab mitts/boomerang/surf bow/scan/drainbow roller/curtain/barrage_waddle brush/sprinkler/barrage_mystery blade/mine/slam mitts/beacon/storm bucket/mist/barrage | warm 159 ms | forced: punch held (fists seen 4), flood on
+PASS craters first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":13.5,"worstPlay":7.1,"over":0,"worstGap":16.7,"gaps":0,"loadMs":1570}
+PASS craters no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS craters no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== calamari [turf, world calamari]: load 1470 ms | 432 frames (252 intro, 180 play) | worst intro 15.1 ms @4184 | worst play 6.6 ms @4234 | over 100 ms: 0 | worst gap between frames 16.7 ms @86 (over 100: 0)
+   lineup shooter/glide/barrage_sticky mitts/sentry/barrage_burst brolly/bobber/barrage_seeker blaster/dash/barrage_mist spinner/bomb/bubbler charger/sticky/sonar bow/burst/strike roller/shaker/zooka | warm 176 ms | forced: punch held (fists seen 2), flood on
+PASS calamari first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":15.1,"worstPlay":6.6,"over":0,"worstGap":16.7,"gaps":0,"loadMs":1470}
+PASS calamari no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS calamari no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== spirhalite [turf, world spirhalite]: load 1620 ms | 430 frames (250 intro, 180 play) | worst intro 16.4 ms @0 | worst play 7 ms @4334 | over 100 ms: 0 | worst gap between frames 16.5 ms @335 (over 100: 0)
+   lineup brush/seeker/wail mitts/waddle/kraken mitts/torpedo/blower bucket/tracer/jetpack shooter/boomerang/stamp twins/scan/booyah brolly/curtain/zipcaster blaster/sprinkler/crab | warm 107 ms | forced: punch held (fists seen 4), flood on
+PASS spirhalite first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":16.4,"worstPlay":7,"over":0,"worstGap":16.5,"gaps":0,"loadMs":1620}
+PASS spirhalite no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS spirhalite no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== treehills [turf, world treehills]: load 1701 ms | 434 frames (253 intro, 181 play) | worst intro 15.3 ms @0 | worst play 15.1 ms @4575 | over 100 ms: 0 | worst gap between frames 17 ms @1728 (over 100: 0)
+   lineup spinner/mine/surf mitts/beacon/drainbow bow/mist/barrage_waddle roller/glide/barrage_mystery brush/sentry/slam blade/bobber/storm mitts/dash/barrage bucket/bomb/barrage_sticky | warm 134 ms | forced: punch held (fists seen 4), flood on
+PASS treehills first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":15.3,"worstPlay":15.1,"over":0,"worstGap":17,"gaps":0,"loadMs":1701}
+PASS treehills no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS treehills no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== bluestone [turf, world bluestone]: load 1983 ms | 433 frames (252 intro, 181 play) | worst intro 17.4 ms @4189 | worst play 13.8 ms @5855 | over 100 ms: 0 | worst gap between frames 18.1 ms @40 (over 100: 0)
+   lineup shooter/sticky/barrage_burst mitts/burst/barrage_seeker brolly/shaker/barrage_mist blaster/seeker/bubbler spinner/waddle/sonar charger/torpedo/strike bow/tracer/zooka roller/boomerang/wail | warm 143 ms | forced: punch held (fists seen 2), flood on
+PASS bluestone first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":17.4,"worstPlay":13.8,"over":0,"worstGap":18.1,"gaps":0,"loadMs":1983}
+PASS bluestone no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS bluestone no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== aquarium [turf, world aquarium]: load 2031 ms | 431 frames (252 intro, 179 play) | worst intro 23.6 ms @4185 | worst play 16.9 ms @4253 | over 100 ms: 0 | worst gap between frames 17.1 ms @2453 (over 100: 0)
+   lineup brush/scan/kraken mitts/curtain/blower mitts/sprinkler/jetpack bucket/mine/stamp shooter/beacon/booyah twins/mist/zipcaster brolly/glide/crab blaster/sentry/surf | warm 148 ms | forced: punch held (fists seen 4), flood on
+PASS aquarium first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":23.6,"worstPlay":16.9,"over":0,"worstGap":17.1,"gaps":0,"loadMs":2031}
+PASS aquarium no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS aquarium no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== caldera [turf, world caldera]: load 1777 ms | 432 frames (252 intro, 180 play) | worst intro 17.5 ms @4185 | worst play 8.9 ms @4567 | over 100 ms: 0 | worst gap between frames 16.8 ms @2169 (over 100: 0)
+   lineup spinner/bobber/drainbow mitts/dash/barrage_waddle bow/bomb/barrage_mystery roller/sticky/slam brush/burst/storm blade/shaker/barrage mitts/seeker/barrage_sticky bucket/waddle/barrage_burst | warm 120 ms | forced: punch held (fists seen 4), flood on
+PASS caldera first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":17.5,"worstPlay":8.9,"over":0,"worstGap":16.8,"gaps":0,"loadMs":1777}
+PASS caldera no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS caldera no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== cargo [turf, world cargo]: load 1235 ms | 434 frames (253 intro, 181 play) | worst intro 24.6 ms @4194 | worst play 8.4 ms @4244 | over 100 ms: 0 | worst gap between frames 17.4 ms @1961 (over 100: 0)
+   lineup mitts/torpedo/barrage_seeker | warm 53 ms | forced: punch held (fists seen 2), flood on
+PASS cargo first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":24.6,"worstPlay":8.4,"over":0,"worstGap":17.4,"gaps":0,"loadMs":1235}
+PASS cargo no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS cargo no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+RESULT 48/48
