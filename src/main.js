@@ -205,7 +205,11 @@ class Game {
     await progress(0.85, 'Warming up…');
     this._warmup();
     // compile in parallel (KHR_parallel_shader_compile) so the loading screen keeps animating instead of freezing
-    try { await G.renderer.compileAsync(scene, camera); } catch { G.renderer.compile(scene, camera); }
+    // ([b5-beta1] for the composer's target, where the backdrop is drawn: with no target bound this built the screen's
+    // variant of every program, never used — the real ones compiled in the 'Warming up…' frames below; review 1, issue 1)
+    { const r = G.renderer, rt0 = r.getRenderTarget(); let p = null;
+      try { r.setRenderTarget(this.R.composer?.readBuffer || null); p = r.compileAsync(scene, camera); } catch { r.compile(scene, camera); } finally { r.setRenderTarget(rt0); }
+      try { await p; } catch { /* (compiled on first use) */ } }
     for (const m of this._warmMeshes || []) { G.scene.remove(m); }
     this._warmMeshes?.[0]?.geometry.dispose(); this._warmMeshes = null;
     await progress(0.93, 'Warming up…');
