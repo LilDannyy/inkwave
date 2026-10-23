@@ -1,0 +1,4 @@
+JOB-18 (beta1) @ 61d706d0 — Mac mini b5-runner, 2026-10-24 10:16–10:20, exit 0. Short summary.
+- bot-stuck ×6 on JOB-17's code: 7/7, 6/7, 7/7, 7/7, 7/7, 7/7. The one miss is 'tank' again (a bot on the Great Tank's sand bed not out
+  within 6 s); its full line, with the spot and times, is in the run's log (JOB-18.raw.txt). With JOB-17: 'tank' failed 3 of 9 runs, every
+  other check 9 of 9.
