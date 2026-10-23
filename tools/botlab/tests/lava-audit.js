@@ -8,12 +8,13 @@
 //            HIGH, its HIGH top ≤ 4.6 m over the floor its climb starts from
 //   rule 38  the surfaces in the region are mid-value rock (sRGB luminance ≥ 0.35), never black
 //   rule 42  no view out of the arena shows void (rays from the high ground and the pads, below the horizon)
-//   rule 44  no unplanned jumps across lava: every gap between standable floors over lava is a seam (≤ 0.3 m) or
-//            ≥ 4.5 m; physically, a kid's running jump never crosses one; what a swim jump and a jump + the Dash
-//            Pellet's 3.5 m air dash could cross, listed with the nav detour it saves (the lead's list). Every edge
-//            node, 16 headings, gaps to 11 m, every candidate (no sample cap), a crossing = a flight over lava
-//            (fix round 4: every gap-march sample past a 0.35 m seam is tried, the short ones too, and a flight that
-//            lands > 1 m off its line is counted, flagged off, its gain measured from where it landed)
+//   rule 44  jumps across the lava (the lead's decision after review 5: DESIGN §3.5's option 1): a plain running jump
+//            across lava saves at most 20 m against the dry way round (the gate; the lead's margin: the largest under
+//            15 m, printed); swim jumps out of own ink and jumps + the Dash Pellet's air dash are skill movement, listed
+//            with the nav detour they save, no gate (a Bazookarp carrier makes neither). Every edge node, 16 headings,
+//            gaps to 11 m, every candidate (no sample cap), a crossing = a flight over lava (fix round 4: every
+//            gap-march sample past a 0.35 m seam is tried, the short ones too, and a flight that lands > 1 m off its
+//            line is counted, flagged off, its gain measured from where it landed). PAGE_ARGS full=1: every crossing
 //   rule 45  the region's outline lies ≥ 0.5 m inside every bank it meets (never along a face), in solid bank whose top
 //            is ≥ HIGH + 0.3; open edges only at the lips (into a falls polygon)
 //   rule 46  the nav built with its grid shifted 0.25 m and 0.5 m (x, z): every step link still yields its edges, the
@@ -369,14 +370,18 @@
   // (fix round 4, review 4) every crossing counted — the short gaps' and the 'off the line' ones too — with its numbers
   const sum = (L) => ({ n: L.length, off: L.filter((x) => x.off).length, short: L.filter((x) => x.gap < 4.4).length, over5: L.filter((x) => !(x.gain <= 5)).length, over10: L.filter((x) => !(x.gain <= 10)).length, over20: L.filter((x) => !(x.gain <= 20)).length, over40: L.filter((x) => !(x.gain <= 40)).length, maxGain: L.reduce((m, x) => Math.max(m, x.gain ?? 0), 0) });
   const top = (L, k) => [...L].sort((a, b) => (b.gain ?? -1) - (a.gain ?? -1)).slice(0, k).map((x) => ({ from: x.from, dir: x.dir, gap: x.gap, how: x.how, off: x.off || undefined, landed: x.landed, on: x.on, gain: x.gain }));
-  R('rule 44: no unplanned jumps across lava at LOW or HIGH — physically a kid\'s plain running jump crosses no lava gap (every gap-march sample past a 0.35 m seam, short ones included; a flight landing > 1 m off its line counted, flagged off)',
-    !jumps.low.runCross.length && !jumps.high.runCross.length,
-    { low: { ...sum(jumps.low.runCross), edges: jumps.low.edgesChecked, places: places(jumps.low.runCross).length }, high: { ...sum(jumps.high.runCross), edges: jumps.high.edgesChecked, places: places(jumps.high.runCross).length } });
+  // (fix round 5, the lead's decision after review 5 — DESIGN §3.5 option 1: plain running jumps are judged by the 20 m
+  // skill-route bar; the round-3 gate "no running jump crosses at all" is retired: 750–1,250 crossings, most of them over
+  // 0.4–4.4 m corners between floors joined by land)
+  const runMax = Math.max(jumps.low.runCross.reduce((m, x) => Math.max(m, x.gain ?? 0), 0), jumps.high.runCross.reduce((m, x) => Math.max(m, x.gain ?? 0), 0));
+  R('rule 44: a plain running jump across the lava at LOW or HIGH saves at most 20 m against the dry way round (the lead\'s option 1; every gap-march sample past a 0.35 m seam tried, short ones included; a flight landing > 1 m off its line counted, flagged off, from where it landed)',
+    jumps.low.runCross.every((x) => x.gain <= 20) && jumps.high.runCross.every((x) => x.gain <= 20),
+    { largestM: r2(runMax), marginTarget: 'under 15 m', marginMet: runMax < 15, low: { ...sum(jumps.low.runCross), edges: jumps.low.edgesChecked, places: places(jumps.low.runCross).length }, high: { ...sum(jumps.high.runCross), edges: jumps.high.edgesChecked, places: places(jumps.high.runCross).length } });
   for (const lv of ['low', 'high']) { const pl = places(jumps[lv].runCross); for (let q = 0; q * 12 < pl.length; q++) R(`rule 44 running-jump places: ${lv} ${q}`, true, pl.slice(q * 12, (q + 1) * 12)); R(`rule 44 running jumps, the largest gains: ${lv}`, true, top(jumps[lv].runCross, 15)); }
   const over = (L) => L.filter((x) => !(x.gain <= 20));
-  R('rule 44: the skill routes — every swim jump out of own ink and every jump + Dash Pellet air dash across lava saves ≤ 20 m against the dry way round (the lead\'s rule; the list: DESIGN §3.5)',
-    !over(jumps.low.skill).length && !over(jumps.high.skill).length,
-    { low: sum(jumps.low.skill), high: sum(jumps.high.skill) });
+  // (fix round 5, option 1: swim and dash jumps over the lava are accepted skill movement — listed, no gate)
+  R('rule 44 (information): the skill routes — swim jumps out of own ink and jumps + the Dash Pellet\'s air dash across the lava, accepted as skill movement (the lead\'s option 1; a Bazookarp carrier makes neither); how many save over 20 / 40 m against the dry way round (the places: below; DESIGN §3.5)',
+    true, { low: sum(jumps.low.skill), high: sum(jumps.high.skill) });
   for (const lv of ['low', 'high']) { const pl = places(over(jumps[lv].skill)); for (let q = 0; q * 12 < pl.length; q++) R(`rule 44 places saving > 20 m: ${lv} ${q}`, true, pl.slice(q * 12, (q + 1) * 12)); }
   // (the gap march's 0.35–4.4 m samples: in the gate above since fix round 4; here how many there are and what crossed them)
   R('rule 44 (information): the gap march\'s 0.35–4.4 m samples between standable floors over lava — each one tried (in the gates above)', true, { low: { n: jumps.low.gaps.length, run: jumps.low.runCross.filter((x) => x.gap < 4.4).length, skill: jumps.low.skill.filter((x) => x.gap < 4.4).length, eg: jumps.low.gaps.slice(0, 6) }, high: { n: jumps.high.gaps.length, run: jumps.high.runCross.filter((x) => x.gap < 4.4).length, skill: jumps.high.skill.filter((x) => x.gap < 4.4).length, eg: jumps.high.gaps.slice(0, 6) } });
