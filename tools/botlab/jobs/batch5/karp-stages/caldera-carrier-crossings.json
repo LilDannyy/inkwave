@@ -1,0 +1,2855 @@
+{
+ "about": "Highmark Foundry (caldera): the Bazookarp carrier's swim jumps over the lava, for the Bazookarp layout builder (karp-stages/). The lead's decision after review 6 (caldera LEAD-NOTES): a carrier swims its own ink (SPEC S21, 9.44 m/s), so its swim jumps over the lava are skill movement like everyone's; what a carrier may bypass is judged PER STAGE by the Bazookarp checker's shortcut probes (#7d) when Highmark's Bazookarp layout is built: that layout must place the Pond, the weirs and the Gate so no carrier jump saves over 20 m on the carrier field or skips a weir, with rails where it must (squids pass rails: a rail stops the kid's hop, not the swim). Its dash jumps are out (a carrier holds no sub). Source: tools/botlab/tests/lava-audit.js rule 44 with PAGE_ARGS full=1 at the fix-round-6 geometry (Organ L's crown, the stone corners): every plain swim crossing the kid makes saving > 10 m, tried again with the carrier's movement (actor.carry set: speeds x 0.8) from the same take-off, run-up and heading; 'gain' = the nav walk from the take-off node to where it landed minus the flight (the kid's own gain beside it). Both halves (x, z in world metres; Bravo's are the 180-degree turns). Review 6's probe-carry44 (at 4faa8d6f) found LOW 176 / 116 over 20 m / max 48.3, HIGH 92 / 23 / 29.5 retrying the older audit's list; this list is the corrected audit's at the new geometry.",
+ "levels": {
+  "low": {
+   "summary": {
+    "n": 72,
+    "over10": 68,
+    "over15": 52,
+    "over20": 50,
+    "over40": 12,
+    "maxGain": 51.63
+   },
+   "crossings": [
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -9.5
+     ],
+     "dir": -135,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      -17.45,
+      -14.45
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 48.67,
+     "gain": 51.63
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      9.5
+     ],
+     "dir": 45,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      17.45,
+      14.45
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 48.67,
+     "gain": 51.63
+    },
+    {
+     "from": [
+      -11.5,
+      1.2,
+      -7.5
+     ],
+     "dir": -135,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      -17.58,
+      -13.58
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 46.74,
+     "gain": 50.61
+    },
+    {
+     "from": [
+      11.5,
+      1.2,
+      7.5
+     ],
+     "dir": 45,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      17.58,
+      13.58
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 46.74,
+     "gain": 50.61
+    },
+    {
+     "from": [
+      -11.5,
+      1.5,
+      -8.5
+     ],
+     "dir": -135,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      -17.44,
+      -14.44
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 45.86,
+     "gain": 48.82
+    },
+    {
+     "from": [
+      11.5,
+      1.5,
+      8.5
+     ],
+     "dir": 45,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      17.44,
+      14.44
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 45.86,
+     "gain": 48.82
+    },
+    {
+     "from": [
+      -11.5,
+      1.5,
+      -9.5
+     ],
+     "dir": -135,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      -17.51,
+      -15.51
+     ],
+     "landedY": 1.3,
+     "on": "coping",
+     "kidGain": 42.16,
+     "gain": 48.72
+    },
+    {
+     "from": [
+      11.5,
+      1.5,
+      9.5
+     ],
+     "dir": 45,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      17.51,
+      15.51
+     ],
+     "landedY": 1.3,
+     "on": "coping",
+     "kidGain": 42.16,
+     "gain": 48.72
+    },
+    {
+     "from": [
+      -12.5,
+      1.4,
+      -11.5
+     ],
+     "dir": -158,
+     "gap": 4.6,
+     "runup": 0.8,
+     "landed": [
+      -17.8,
+      -13.61
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 47.81,
+     "gain": 47.81
+    },
+    {
+     "from": [
+      12.5,
+      1.4,
+      11.5
+     ],
+     "dir": 23,
+     "gap": 4.6,
+     "runup": 0.8,
+     "landed": [
+      17.8,
+      13.61
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 47.81,
+     "gain": 47.81
+    },
+    {
+     "from": [
+      17.5,
+      1.3,
+      15.5
+     ],
+     "dir": -158,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      11.06,
+      10.9
+     ],
+     "landedY": 2.3,
+     "on": "lava:organL~:2",
+     "kidGain": 43,
+     "gain": 43.15
+    },
+    {
+     "from": [
+      -19.5,
+      1.2,
+      -15.5
+     ],
+     "dir": 23,
+     "gap": 5.4,
+     "runup": 2.6,
+     "landed": [
+      -12.47,
+      -11.89
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 41.75,
+     "gain": 42.19
+    },
+    {
+     "from": [
+      -22.5,
+      1.2,
+      -15.5
+     ],
+     "dir": 23,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      -12.34,
+      -11.29
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 37.2,
+     "gain": 38.92
+    },
+    {
+     "from": [
+      -19.5,
+      1.4,
+      -14.5
+     ],
+     "dir": 23,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      -10.78,
+      -10.67
+     ],
+     "landedY": 2.3,
+     "on": "lava:organL:0",
+     "kidGain": 45.33,
+     "gain": 38.92
+    },
+    {
+     "from": [
+      19.5,
+      1.4,
+      14.5
+     ],
+     "dir": -158,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      10.78,
+      10.67
+     ],
+     "landedY": 2.3,
+     "on": "lava:organL~:0",
+     "kidGain": 45.33,
+     "gain": 38.92
+    },
+    {
+     "from": [
+      22.5,
+      1.2,
+      15.5
+     ],
+     "dir": -158,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      12.34,
+      11.29
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 37.2,
+     "gain": 38.92
+    },
+    {
+     "from": [
+      20.5,
+      1.2,
+      16.5
+     ],
+     "dir": -158,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      11.07,
+      10.91
+     ],
+     "landedY": 2.3,
+     "on": "lava:organL~:2",
+     "kidGain": 36.06,
+     "gain": 36.1
+    },
+    {
+     "from": [
+      -20.5,
+      1.4,
+      -15.5
+     ],
+     "dir": 23,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      -10.67,
+      -10.41
+     ],
+     "landedY": 2.3,
+     "on": "lava:organL:0",
+     "kidGain": 43.66,
+     "gain": 35.96
+    },
+    {
+     "from": [
+      20.5,
+      1.4,
+      15.5
+     ],
+     "dir": -158,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      10.67,
+      10.41
+     ],
+     "landedY": 2.3,
+     "on": "lava:organL~:0",
+     "kidGain": 43.66,
+     "gain": 35.96
+    },
+    {
+     "from": [
+      -21.5,
+      1.2,
+      -15.5
+     ],
+     "dir": 23,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      -10.83,
+      -10.73
+     ],
+     "landedY": 2.3,
+     "on": "lava:organL:0",
+     "kidGain": 42.33,
+     "gain": 35.76
+    },
+    {
+     "from": [
+      21.5,
+      1.2,
+      15.5
+     ],
+     "dir": -158,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      10.83,
+      10.73
+     ],
+     "landedY": 2.3,
+     "on": "lava:organL~:0",
+     "kidGain": 42.33,
+     "gain": 35.76
+    },
+    {
+     "from": [
+      21.5,
+      1.2,
+      16.5
+     ],
+     "dir": -158,
+     "gap": 5.2,
+     "runup": 2.6,
+     "landed": [
+      11.17,
+      10.95
+     ],
+     "landedY": 2.3,
+     "on": "lava:organL~:2",
+     "kidGain": 35.54,
+     "gain": 35.75
+    },
+    {
+     "from": [
+      -23.5,
+      1.2,
+      -16.5
+     ],
+     "dir": 23,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      -10.86,
+      -10.77
+     ],
+     "landedY": 2.3,
+     "on": "lava:organL:0",
+     "kidGain": 43.88,
+     "gain": 35.01
+    },
+    {
+     "from": [
+      23.5,
+      1.2,
+      16.5
+     ],
+     "dir": -158,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      10.86,
+      10.77
+     ],
+     "landedY": 2.3,
+     "on": "lava:organL~:0",
+     "kidGain": 43.88,
+     "gain": 35.01
+    },
+    {
+     "from": [
+      -22.5,
+      1.2,
+      -17.5
+     ],
+     "dir": 23,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      -11.04,
+      -10.9
+     ],
+     "landedY": 2.3,
+     "on": "lava:organL:2",
+     "kidGain": 37,
+     "gain": 34.25
+    },
+    {
+     "from": [
+      22.5,
+      1.2,
+      17.5
+     ],
+     "dir": -158,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      11.04,
+      10.9
+     ],
+     "landedY": 2.3,
+     "on": "lava:organL~:2",
+     "kidGain": 37,
+     "gain": 34.25
+    },
+    {
+     "from": [
+      -21.5,
+      1.4,
+      2.5
+     ],
+     "dir": -23,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      -15.22,
+      -0.1
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 28.47,
+     "gain": 30.76
+    },
+    {
+     "from": [
+      15.5,
+      1.4,
+      -2.5
+     ],
+     "dir": 0,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      22.7,
+      -2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 24.9,
+     "gain": 29.6
+    },
+    {
+     "from": [
+      -15.5,
+      1.4,
+      2.5
+     ],
+     "dir": 180,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      -22.7,
+      2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 24.9,
+     "gain": 29.6
+    },
+    {
+     "from": [
+      15.5,
+      1.4,
+      -0.5
+     ],
+     "dir": -23,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      22.34,
+      -3.33
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.84,
+     "gain": 29.4
+    },
+    {
+     "from": [
+      -15.5,
+      1.4,
+      0.5
+     ],
+     "dir": 158,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      -22.34,
+      3.33
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.84,
+     "gain": 29.4
+    },
+    {
+     "from": [
+      -14.5,
+      1.3,
+      -0.5
+     ],
+     "dir": 158,
+     "gap": 5.6,
+     "runup": 1.5,
+     "landed": [
+      -22.35,
+      2.75
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 23.1,
+     "gain": 28.3
+    },
+    {
+     "from": [
+      14.5,
+      1.3,
+      0.5
+     ],
+     "dir": -23,
+     "gap": 5.6,
+     "runup": 1.5,
+     "landed": [
+      22.35,
+      -2.75
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 23.1,
+     "gain": 28.3
+    },
+    {
+     "from": [
+      21.5,
+      1.4,
+      -2.5
+     ],
+     "dir": 158,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      15.22,
+      0.1
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 25.64,
+     "gain": 27.93
+    },
+    {
+     "from": [
+      -23.5,
+      1.4,
+      -0.5
+     ],
+     "dir": 23,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      -15.37,
+      2.87
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.64,
+     "gain": 26.93
+    },
+    {
+     "from": [
+      23.5,
+      1.4,
+      0.5
+     ],
+     "dir": -158,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      15.37,
+      -2.87
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.64,
+     "gain": 26.93
+    },
+    {
+     "from": [
+      -13.5,
+      1.4,
+      -0.5
+     ],
+     "dir": 158,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      -22.37,
+      3.17
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.06,
+     "gain": 26.79
+    },
+    {
+     "from": [
+      13.5,
+      1.4,
+      0.5
+     ],
+     "dir": -23,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      22.37,
+      -3.17
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.06,
+     "gain": 26.79
+    },
+    {
+     "from": [
+      14.5,
+      1.2,
+      -2.5
+     ],
+     "dir": 0,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      22.7,
+      -2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 21.48,
+     "gain": 26.19
+    },
+    {
+     "from": [
+      -14.5,
+      1.2,
+      2.5
+     ],
+     "dir": 180,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      -22.7,
+      2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 21.48,
+     "gain": 26.19
+    },
+    {
+     "from": [
+      22.5,
+      1.4,
+      -2.5
+     ],
+     "dir": 158,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      15.29,
+      0.48
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 24.74,
+     "gain": 25.93
+    },
+    {
+     "from": [
+      -22.5,
+      1.4,
+      2.5
+     ],
+     "dir": -23,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      -15.29,
+      -0.48
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 24.74,
+     "gain": 25.93
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      -2.5
+     ],
+     "dir": 0,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      22.7,
+      -2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 19.48,
+     "gain": 24.19
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      2.5
+     ],
+     "dir": 180,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      -22.7,
+      2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 19.48,
+     "gain": 24.19
+    },
+    {
+     "from": [
+      23.5,
+      1.4,
+      -3.5
+     ],
+     "dir": 158,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      15.19,
+      -0.06
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 21.02,
+     "gain": 23.31
+    },
+    {
+     "from": [
+      -23.5,
+      1.4,
+      3.5
+     ],
+     "dir": -23,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      -15.19,
+      0.06
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 21.02,
+     "gain": 23.31
+    },
+    {
+     "from": [
+      12.5,
+      1.4,
+      -2.5
+     ],
+     "dir": 0,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      22.7,
+      -2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 18.07,
+     "gain": 22.77
+    },
+    {
+     "from": [
+      -12.5,
+      1.4,
+      2.5
+     ],
+     "dir": 180,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      -22.7,
+      2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 18.07,
+     "gain": 22.77
+    },
+    {
+     "from": [
+      24.5,
+      1.4,
+      -3.5
+     ],
+     "dir": 158,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      15.26,
+      0.33
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.12,
+     "gain": 21.31
+    },
+    {
+     "from": [
+      -24.5,
+      1.4,
+      3.5
+     ],
+     "dir": -23,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      -15.26,
+      -0.33
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.12,
+     "gain": 21.31
+    },
+    {
+     "from": [
+      26.5,
+      1.2,
+      -4.5
+     ],
+     "dir": 158,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      15.23,
+      0.17
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 16.47,
+     "gain": 18.76
+    },
+    {
+     "from": [
+      -26.5,
+      1.2,
+      4.5
+     ],
+     "dir": -23,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      -15.23,
+      -0.17
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 16.47,
+     "gain": 18.76
+    },
+    {
+     "from": [
+      23.5,
+      2.4,
+      -10.5
+     ],
+     "dir": 158,
+     "gap": 4.9,
+     "runup": 2.6,
+     "landed": [
+      12.84,
+      -6.08
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 13.06,
+     "gain": 13.36
+    },
+    {
+     "from": [
+      -23.5,
+      2.4,
+      10.5
+     ],
+     "dir": -23,
+     "gap": 4.9,
+     "runup": 2.6,
+     "landed": [
+      -12.84,
+      6.08
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 13.06,
+     "gain": 13.36
+    },
+    {
+     "from": [
+      24.5,
+      2.4,
+      -9.5
+     ],
+     "dir": 135,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      15.63,
+      -0.06
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 12.42,
+     "gain": 12.95
+    },
+    {
+     "from": [
+      -24.5,
+      2.4,
+      9.5
+     ],
+     "dir": -45,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      -15.63,
+      0.06
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 12.42,
+     "gain": 12.95
+    },
+    {
+     "from": [
+      -9.5,
+      1.3,
+      -22.5
+     ],
+     "dir": 45,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      -4.62,
+      -17.62
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.01,
+     "gain": 12.76
+    },
+    {
+     "from": [
+      9.5,
+      1.3,
+      22.5
+     ],
+     "dir": -135,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      4.62,
+      17.62
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.01,
+     "gain": 12.76
+    },
+    {
+     "from": [
+      -8.5,
+      1.3,
+      -22.5
+     ],
+     "dir": 45,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      -3.79,
+      -17.31
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.8,
+     "gain": 12.65
+    },
+    {
+     "from": [
+      8.5,
+      1.3,
+      22.5
+     ],
+     "dir": -135,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      3.79,
+      17.31
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.8,
+     "gain": 12.65
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -18.5
+     ],
+     "dir": -135,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      -9.57,
+      -22.79
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 11,
+     "gain": 12.6
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      18.5
+     ],
+     "dir": 45,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      9.57,
+      22.79
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 11,
+     "gain": 12.6
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -17.5
+     ],
+     "dir": -113,
+     "gap": 4,
+     "runup": 2.6,
+     "landed": [
+      -7.31,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.68,
+     "gain": 10.9
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      17.5
+     ],
+     "dir": 68,
+     "gap": 4,
+     "runup": 2.6,
+     "landed": [
+      7.31,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.68,
+     "gain": 10.9
+    },
+    {
+     "from": [
+      -3.5,
+      1.2,
+      -13.5
+     ],
+     "dir": -113,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      -7.49,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.96,
+     "gain": 10.37
+    },
+    {
+     "from": [
+      3.5,
+      1.2,
+      13.5
+     ],
+     "dir": 68,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      7.49,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.96,
+     "gain": 10.37
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -16.5
+     ],
+     "dir": -113,
+     "gap": 5,
+     "runup": 2.6,
+     "landed": [
+      -7.44,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.12,
+     "gain": 10.36
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      16.5
+     ],
+     "dir": 68,
+     "gap": 5,
+     "runup": 2.6,
+     "landed": [
+      7.44,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.12,
+     "gain": 10.36
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -15.5
+     ],
+     "dir": -113,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      -7.5,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.41,
+     "gain": 9.84
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      15.5
+     ],
+     "dir": 68,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      7.5,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.41,
+     "gain": 9.84
+    },
+    {
+     "from": [
+      -3.5,
+      1.2,
+      -20.5
+     ],
+     "dir": 113,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      -7.56,
+      -10.71
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 10.44,
+     "gain": 5.64
+    },
+    {
+     "from": [
+      3.5,
+      1.2,
+      20.5
+     ],
+     "dir": -67,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      7.56,
+      10.71
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 10.44,
+     "gain": 5.64
+    }
+   ]
+  },
+  "high": {
+   "summary": {
+    "n": 85,
+    "over10": 81,
+    "over15": 60,
+    "over20": 42,
+    "over40": 0,
+    "maxGain": 37.08
+   },
+   "crossings": [
+    {
+     "from": [
+      -12.5,
+      1.4,
+      -11.5
+     ],
+     "dir": -158,
+     "gap": 4.6,
+     "runup": 0.8,
+     "landed": [
+      -17.8,
+      -13.61
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 37.08,
+     "gain": 37.08
+    },
+    {
+     "from": [
+      12.5,
+      1.4,
+      11.5
+     ],
+     "dir": 23,
+     "gap": 4.6,
+     "runup": 0.8,
+     "landed": [
+      17.8,
+      13.61
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 37.08,
+     "gain": 37.08
+    },
+    {
+     "from": [
+      -22.5,
+      1.2,
+      -15.5
+     ],
+     "dir": 23,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      -12.34,
+      -11.29
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 31.83,
+     "gain": 34.79
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -9.5
+     ],
+     "dir": -135,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      -17.45,
+      -14.45
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 33.24,
+     "gain": 34.79
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      9.5
+     ],
+     "dir": 45,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      17.45,
+      14.45
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 33.24,
+     "gain": 34.79
+    },
+    {
+     "from": [
+      22.5,
+      1.2,
+      15.5
+     ],
+     "dir": -158,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      12.34,
+      11.29
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 31.83,
+     "gain": 34.79
+    },
+    {
+     "from": [
+      -17.5,
+      1.2,
+      -13.5
+     ],
+     "dir": 23,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      -11.29,
+      -10.26
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 32.5,
+     "gain": 34.2
+    },
+    {
+     "from": [
+      17.5,
+      1.2,
+      13.5
+     ],
+     "dir": -158,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      11.29,
+      10.26
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 32.5,
+     "gain": 34.2
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -10.5
+     ],
+     "dir": -158,
+     "gap": 5.2,
+     "runup": 1.5,
+     "landed": [
+      -19.04,
+      -13.21
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 35.1,
+     "gain": 33.29
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      10.5
+     ],
+     "dir": 23,
+     "gap": 5.2,
+     "runup": 1.5,
+     "landed": [
+      19.04,
+      13.21
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 35.1,
+     "gain": 33.29
+    },
+    {
+     "from": [
+      -11.5,
+      1.5,
+      -8.5
+     ],
+     "dir": -135,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      -17.44,
+      -14.44
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 31.26,
+     "gain": 32.8
+    },
+    {
+     "from": [
+      11.5,
+      1.5,
+      8.5
+     ],
+     "dir": 45,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      17.44,
+      14.44
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 31.26,
+     "gain": 32.8
+    },
+    {
+     "from": [
+      -19.5,
+      1.4,
+      -14.5
+     ],
+     "dir": 23,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      -11.29,
+      -10.26
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 28.47,
+     "gain": 31.55
+    },
+    {
+     "from": [
+      19.5,
+      1.4,
+      14.5
+     ],
+     "dir": -158,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      11.29,
+      10.26
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 28.47,
+     "gain": 31.55
+    },
+    {
+     "from": [
+      -12.5,
+      1.4,
+      -8.5
+     ],
+     "dir": -158,
+     "gap": 6.8,
+     "runup": 1.5,
+     "landed": [
+      -19.3,
+      -11.31
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 28.44,
+     "gain": 31.43
+    },
+    {
+     "from": [
+      12.5,
+      1.4,
+      8.5
+     ],
+     "dir": 23,
+     "gap": 6.8,
+     "runup": 1.5,
+     "landed": [
+      19.3,
+      11.31
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 28.44,
+     "gain": 31.43
+    },
+    {
+     "from": [
+      -14.5,
+      1.3,
+      -6.5
+     ],
+     "dir": -135,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      -19.35,
+      -11.35
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 32.01,
+     "gain": 31.34
+    },
+    {
+     "from": [
+      14.5,
+      1.3,
+      6.5
+     ],
+     "dir": 45,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      19.35,
+      11.35
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 32.01,
+     "gain": 31.34
+    },
+    {
+     "from": [
+      -11.5,
+      1.5,
+      -8.5
+     ],
+     "dir": -158,
+     "gap": 5.6,
+     "runup": 1.5,
+     "landed": [
+      -19.18,
+      -11.63
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 27.92,
+     "gain": 30.91
+    },
+    {
+     "from": [
+      11.5,
+      1.5,
+      8.5
+     ],
+     "dir": 23,
+     "gap": 5.6,
+     "runup": 1.5,
+     "landed": [
+      19.18,
+      11.63
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 27.92,
+     "gain": 30.91
+    },
+    {
+     "from": [
+      -13.5,
+      1.4,
+      -7.5
+     ],
+     "dir": -135,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      -18.45,
+      -12.36
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 29.04,
+     "gain": 30.85
+    },
+    {
+     "from": [
+      13.5,
+      1.4,
+      7.5
+     ],
+     "dir": 45,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      18.45,
+      12.36
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 29.04,
+     "gain": 30.85
+    },
+    {
+     "from": [
+      -23.5,
+      1.2,
+      -16.5
+     ],
+     "dir": 23,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      -10.07,
+      -10.03
+     ],
+     "landedY": 3.5,
+     "on": "lava:organB:1",
+     "kidGain": 29.61,
+     "gain": 29.46
+    },
+    {
+     "from": [
+      23.5,
+      1.2,
+      16.5
+     ],
+     "dir": -158,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      10.07,
+      10.03
+     ],
+     "landedY": 3.5,
+     "on": "lava:organB~:1",
+     "kidGain": 29.61,
+     "gain": 29.46
+    },
+    {
+     "from": [
+      -14.5,
+      1.4,
+      -3.5
+     ],
+     "dir": -113,
+     "gap": 6.6,
+     "runup": 2.6,
+     "landed": [
+      -17.93,
+      -11.77
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 27.09,
+     "gain": 29.42
+    },
+    {
+     "from": [
+      14.5,
+      1.4,
+      3.5
+     ],
+     "dir": 68,
+     "gap": 6.6,
+     "runup": 2.6,
+     "landed": [
+      17.93,
+      11.77
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 27.09,
+     "gain": 29.42
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      -5.5
+     ],
+     "dir": -135,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      -19.34,
+      -11.34
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 29.2,
+     "gain": 28.53
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -6.5
+     ],
+     "dir": -135,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      -18.56,
+      -12.44
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 26.22,
+     "gain": 27.89
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      6.5
+     ],
+     "dir": 45,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      18.56,
+      12.44
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 26.22,
+     "gain": 27.89
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      5.5
+     ],
+     "dir": 45,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      19.34,
+      11.34
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 29.2,
+     "gain": 25.12
+    },
+    {
+     "from": [
+      -11.5,
+      1.2,
+      -5.5
+     ],
+     "dir": -135,
+     "gap": 6,
+     "runup": 2.6,
+     "landed": [
+      -18.55,
+      -12.41
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 23.29,
+     "gain": 25.09
+    },
+    {
+     "from": [
+      11.5,
+      1.2,
+      5.5
+     ],
+     "dir": 45,
+     "gap": 6,
+     "runup": 2.6,
+     "landed": [
+      18.55,
+      12.41
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 23.29,
+     "gain": 25.09
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      -4.5
+     ],
+     "dir": -135,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      -19.53,
+      -10.53
+     ],
+     "landedY": 1.25,
+     "on": "lava:race2:0",
+     "kidGain": 22.86,
+     "gain": 24.43
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      4.5
+     ],
+     "dir": 45,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      19.53,
+      10.53
+     ],
+     "landedY": 1.25,
+     "on": "lava:race2~:0",
+     "kidGain": 22.86,
+     "gain": 24.43
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -4.5
+     ],
+     "dir": -135,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      -19.33,
+      -11.33
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 26.39,
+     "gain": 22.3
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      4.5
+     ],
+     "dir": 45,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      19.33,
+      11.33
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 26.39,
+     "gain": 22.3
+    },
+    {
+     "from": [
+      -14.5,
+      1.4,
+      -5.5
+     ],
+     "dir": 180,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      -21.38,
+      -5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4:0",
+     "kidGain": 19.81,
+     "gain": 22.02
+    },
+    {
+     "from": [
+      14.5,
+      1.4,
+      5.5
+     ],
+     "dir": 0,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      21.38,
+      5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4~:0",
+     "kidGain": 19.81,
+     "gain": 22.02
+    },
+    {
+     "from": [
+      20.5,
+      2.4,
+      -9.5
+     ],
+     "dir": 158,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      12.88,
+      -6.35
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 19.72,
+     "gain": 21.48
+    },
+    {
+     "from": [
+      -20.5,
+      2.4,
+      9.5
+     ],
+     "dir": -23,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      -12.88,
+      6.35
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 19.72,
+     "gain": 21.48
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      -5.5
+     ],
+     "dir": 180,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      -21.38,
+      -5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4:0",
+     "kidGain": 17.81,
+     "gain": 20.02
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      5.5
+     ],
+     "dir": 0,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      21.38,
+      5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4~:0",
+     "kidGain": 17.81,
+     "gain": 20.02
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -4.5
+     ],
+     "dir": -158,
+     "gap": 4.4,
+     "runup": 2.6,
+     "landed": [
+      -20.11,
+      -7.85
+     ],
+     "landedY": 1.25,
+     "on": "lava:race3:0",
+     "kidGain": 19.63,
+     "gain": 19.99
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      4.5
+     ],
+     "dir": 23,
+     "gap": 4.4,
+     "runup": 2.6,
+     "landed": [
+      20.11,
+      7.85
+     ],
+     "landedY": 1.25,
+     "on": "lava:race3~:0",
+     "kidGain": 19.63,
+     "gain": 19.99
+    },
+    {
+     "from": [
+      21.5,
+      2.4,
+      -9.5
+     ],
+     "dir": 158,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      12.78,
+      -5.89
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 17.65,
+     "gain": 18.28
+    },
+    {
+     "from": [
+      -21.5,
+      2.4,
+      9.5
+     ],
+     "dir": -23,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      -12.78,
+      5.89
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 17.65,
+     "gain": 18.28
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -5.5
+     ],
+     "dir": 180,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      -21.38,
+      -5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4:0",
+     "kidGain": 15.81,
+     "gain": 18.02
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      5.5
+     ],
+     "dir": 0,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      21.38,
+      5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4~:0",
+     "kidGain": 15.81,
+     "gain": 18.02
+    },
+    {
+     "from": [
+      -7.5,
+      1.2,
+      -9.5
+     ],
+     "dir": -158,
+     "gap": 3.2,
+     "runup": 2.6,
+     "landed": [
+      -9.35,
+      -11.04
+     ],
+     "landedY": 4.65,
+     "on": "lava:organL:1",
+     "kidGain": 17.79,
+     "gain": 17.83
+    },
+    {
+     "from": [
+      7.5,
+      1.2,
+      9.5
+     ],
+     "dir": 23,
+     "gap": 3.2,
+     "runup": 2.6,
+     "landed": [
+      9.35,
+      11.04
+     ],
+     "landedY": 4.65,
+     "on": "lava:organL~:1",
+     "kidGain": 17.79,
+     "gain": 17.83
+    },
+    {
+     "from": [
+      23.5,
+      2.58,
+      -11.5
+     ],
+     "dir": 158,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      13.17,
+      -6.56
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 15.25,
+     "gain": 17.69
+    },
+    {
+     "from": [
+      -23.5,
+      2.58,
+      11.5
+     ],
+     "dir": -23,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      -13.17,
+      6.56
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 15.25,
+     "gain": 17.69
+    },
+    {
+     "from": [
+      -7.5,
+      1.2,
+      -10.5
+     ],
+     "dir": -158,
+     "gap": 9.6,
+     "runup": 2.6,
+     "landed": [
+      -9.38,
+      -10.99
+     ],
+     "landedY": 4.65,
+     "on": "lava:organL:0",
+     "kidGain": 17.23,
+     "gain": 17.3
+    },
+    {
+     "from": [
+      7.5,
+      1.2,
+      10.5
+     ],
+     "dir": 23,
+     "gap": 9.6,
+     "runup": 2.6,
+     "landed": [
+      9.38,
+      10.99
+     ],
+     "landedY": 4.65,
+     "on": "lava:organL~:0",
+     "kidGain": 17.23,
+     "gain": 17.3
+    },
+    {
+     "from": [
+      -11.5,
+      1.2,
+      -5.5
+     ],
+     "dir": 180,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      -21.38,
+      -5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4:0",
+     "kidGain": 14.4,
+     "gain": 16.6
+    },
+    {
+     "from": [
+      11.5,
+      1.2,
+      5.5
+     ],
+     "dir": 0,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      21.38,
+      5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4~:0",
+     "kidGain": 14.4,
+     "gain": 16.6
+    },
+    {
+     "from": [
+      23.5,
+      2.4,
+      -10.5
+     ],
+     "dir": 158,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      12.84,
+      -6.08
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 14.47,
+     "gain": 16.18
+    },
+    {
+     "from": [
+      -23.5,
+      2.4,
+      10.5
+     ],
+     "dir": -23,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      -12.84,
+      6.08
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 14.47,
+     "gain": 16.18
+    },
+    {
+     "from": [
+      -6.5,
+      1.2,
+      -10.5
+     ],
+     "dir": -158,
+     "gap": 9.9,
+     "runup": 2.6,
+     "landed": [
+      -9.19,
+      -11.32
+     ],
+     "landedY": 4.65,
+     "on": "lava:organL:1",
+     "kidGain": 15.37,
+     "gain": 15.43
+    },
+    {
+     "from": [
+      6.5,
+      1.2,
+      10.5
+     ],
+     "dir": 23,
+     "gap": 9.9,
+     "runup": 2.6,
+     "landed": [
+      9.19,
+      11.32
+     ],
+     "landedY": 4.65,
+     "on": "lava:organL~:1",
+     "kidGain": 15.37,
+     "gain": 15.43
+    },
+    {
+     "from": [
+      -9.5,
+      1.3,
+      -22.5
+     ],
+     "dir": 45,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      -4.62,
+      -17.62
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.01,
+     "gain": 12.76
+    },
+    {
+     "from": [
+      9.5,
+      1.3,
+      22.5
+     ],
+     "dir": -135,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      4.62,
+      17.62
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.01,
+     "gain": 12.76
+    },
+    {
+     "from": [
+      -8.5,
+      1.3,
+      -22.5
+     ],
+     "dir": 45,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      -3.79,
+      -17.31
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.8,
+     "gain": 12.65
+    },
+    {
+     "from": [
+      8.5,
+      1.3,
+      22.5
+     ],
+     "dir": -135,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      3.79,
+      17.31
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.8,
+     "gain": 12.65
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -18.5
+     ],
+     "dir": -135,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      -9.57,
+      -22.79
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 11,
+     "gain": 12.6
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      18.5
+     ],
+     "dir": 45,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      9.57,
+      22.79
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 11,
+     "gain": 12.6
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -10.5
+     ],
+     "dir": -23,
+     "gap": 4.4,
+     "runup": 0.8,
+     "landed": [
+      -10.63,
+      -11
+     ],
+     "landedY": 4.65,
+     "on": "lava:organL:2",
+     "kidGain": 12.47,
+     "gain": 12.48
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      10.5
+     ],
+     "dir": 158,
+     "gap": 4.4,
+     "runup": 0.8,
+     "landed": [
+      10.63,
+      11
+     ],
+     "landedY": 4.65,
+     "on": "lava:organL~:2",
+     "kidGain": 12.47,
+     "gain": 12.48
+    },
+    {
+     "from": [
+      20.5,
+      2.4,
+      -7.5
+     ],
+     "dir": 113,
+     "gap": 4.9,
+     "runup": 2.6,
+     "landed": [
+      18.13,
+      -2.26
+     ],
+     "landedY": 1.25,
+     "on": "lava:race7~:0",
+     "kidGain": 10.38,
+     "gain": 11.91
+    },
+    {
+     "from": [
+      -20.5,
+      2.4,
+      7.5
+     ],
+     "dir": -67,
+     "gap": 4.9,
+     "runup": 2.6,
+     "landed": [
+      -18.13,
+      2.26
+     ],
+     "landedY": 1.25,
+     "on": "lava:race7:0",
+     "kidGain": 10.38,
+     "gain": 11.91
+    },
+    {
+     "from": [
+      20.5,
+      2.4,
+      -10.5
+     ],
+     "dir": 113,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      16.84,
+      -1.75
+     ],
+     "landedY": 1.25,
+     "on": "lava:race7~:0",
+     "kidGain": 13.11,
+     "gain": 11.83
+    },
+    {
+     "from": [
+      -20.5,
+      2.4,
+      10.5
+     ],
+     "dir": -67,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      -16.84,
+      1.75
+     ],
+     "landedY": 1.25,
+     "on": "lava:race7:0",
+     "kidGain": 11.7,
+     "gain": 11.83
+    },
+    {
+     "from": [
+      12.5,
+      2.4,
+      2.5
+     ],
+     "dir": 23,
+     "gap": 5.5,
+     "runup": 1.5,
+     "landed": [
+      20.58,
+      5.85
+     ],
+     "landedY": 1.25,
+     "on": "lava:race3~:0",
+     "kidGain": 10.95,
+     "gain": 11.69
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -17.5
+     ],
+     "dir": -113,
+     "gap": 4,
+     "runup": 2.6,
+     "landed": [
+      -7.31,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.68,
+     "gain": 10.9
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      17.5
+     ],
+     "dir": 68,
+     "gap": 4,
+     "runup": 2.6,
+     "landed": [
+      7.31,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.68,
+     "gain": 10.9
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -9.5
+     ],
+     "dir": -45,
+     "gap": 9.1,
+     "runup": 1.5,
+     "landed": [
+      -10.94,
+      -11.59
+     ],
+     "landedY": 4.65,
+     "on": "lava:organL:2",
+     "kidGain": 10.78,
+     "gain": 10.8
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      9.5
+     ],
+     "dir": 135,
+     "gap": 9.1,
+     "runup": 1.5,
+     "landed": [
+      10.94,
+      11.59
+     ],
+     "landedY": 4.65,
+     "on": "lava:organL~:2",
+     "kidGain": 10.78,
+     "gain": 10.8
+    },
+    {
+     "from": [
+      -3.5,
+      1.2,
+      -13.5
+     ],
+     "dir": -113,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      -7.49,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.96,
+     "gain": 10.37
+    },
+    {
+     "from": [
+      3.5,
+      1.2,
+      13.5
+     ],
+     "dir": 68,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      7.49,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.96,
+     "gain": 10.37
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -16.5
+     ],
+     "dir": -113,
+     "gap": 5,
+     "runup": 2.6,
+     "landed": [
+      -7.44,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.12,
+     "gain": 10.36
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      16.5
+     ],
+     "dir": 68,
+     "gap": 5,
+     "runup": 2.6,
+     "landed": [
+      7.44,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.12,
+     "gain": 10.36
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -15.5
+     ],
+     "dir": -113,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      -7.5,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.41,
+     "gain": 9.84
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      15.5
+     ],
+     "dir": 68,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      7.5,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.41,
+     "gain": 9.84
+    },
+    {
+     "from": [
+      -3.5,
+      1.2,
+      -20.5
+     ],
+     "dir": 113,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      -7.56,
+      -10.71
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 10.44,
+     "gain": 5.64
+    },
+    {
+     "from": [
+      3.5,
+      1.2,
+      20.5
+     ],
+     "dir": -67,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      7.56,
+      10.71
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 10.44,
+     "gain": 5.64
+    }
+   ]
+  }
+ }
+}

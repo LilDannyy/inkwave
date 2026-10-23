@@ -698,53 +698,77 @@ Colour is never the only signal: the arrows, the words, the pitch direction and 
 - **Nothing appears inside a player:** the stones rise from under the lava, where nobody can be alive, and become solid
   only at the kill height (anyone airborne over one lands on it). The Organs only move vertically inside their notch
   (0.15 m) and carry their riders; nothing is ever above them (clear sky, the nearest static piece ≥ 3.7 m away).
-- **Nothing pinches** (ENGINE rule 21; audited since the lava engine's fix round 4, passing since fix round 5): every gap
-  beside a rider is a ≤ 0.3 m seam (stones 0.25 to the heads and to each other, 0.2 to the Race kerbs; columns 0.20 and
-  0.15) or ≥ 2.5 m of open lava. Fix round 5 closed the three notches per half the audit found at HIGH (a walk or a swim
-  off the stone dropped into them: the reviewer's probe died 11 / 12 and 12 / 12): race 1's west side by the south head's
-  wedge (1.0–1.3 m) and its south-east corner past the end of the head's tip coping (0.7 m), race 5's west side by the north
-  head's wedge (0.95–1.25 m), race 6's north-west corner under the rim's curve (2.4 m). **The Race kerbs** (layout.js
-  `raceKerb`): copings in each stone's own frame, 0.2 m from it and into the bank behind — beside races 1 and 5 from the
-  head's wedge (top 1.5, over its 1.1–1.4 copings) on along the stone, in the strip short of the shelf's lake edge, to
-  0.2 m from race 2's / race 4's end (top 1.2; races 2 and 4 stand 0.9 m further west, and a kerb that stopped at the wedge
-  left a 1.4–1.9 m notch at their ends instead); the south head's north-east corner (1.2); north of race 6's west end
-  (1.1). At LOW they are a 1.1–1.5 m kerb along the shelf's lake edge by the two heads. No leap gaps.
-- **Jumps across the lava (rule 44) — decided by the lead after review 5: option 1** (the options below, kept for the
-  record). **Swim jumps and jumps + the Dash Pellet's air dash over the lava are skill movement** (own ink at the take-off,
-  a squid at speed or the sub spent, over open lava: the risk is the price) — listed, no gate; a Bazookarp carrier makes
-  neither, and **its field holds no edge over the lava** (LAYOUT.bazookarp.hopVeto, `karpVeto.js`: the 192 hop / gap
-  pairs karpField would add across it; lava-karp.js K8). **Plain running jumps are judged by the 20 m skill-route bar: no
-  running jump may save more than 20 m against the dry way round** (lava-audit's gate), **and the largest stays under
-  15 m** (the lead's margin). Bots never take any of them (the nav has no links over the lava).
-- **Rule 44 at fix round 5's final geometry** (lava-audit.js, the Race kerbs and the deck-corner walk link built; method as
-  measured whole in fix round 4: every nav node standing at the lava's edge now, 16 headings, the gap march in 0.1 m steps
-  out to 11 m; **every sample past a 0.35 m seam tried physically** — the kid stepped by the real physics from 2.6 m behind
-  the edge, running, then swimming out of its own ink, then with the real Dash Pellet's air dash pressed on the rise, at
-  the apex and on the fall; a crossing is a flight airborne over a lava cell that comes down alive on the far floor (within
-  0.3 m of its height, ≥ 0.5 m past the edge), wherever it lands — one landing > 1 m off its line counts, from where it
-  landed; "saves" = the nav walk the other way minus the flight). **The kid's reach on flat ground** (take-off to
-  touch-down at one level): running jump **3.9 m** (peak 1.35 m), swim jump **8.65 m** (a squid in the air keeps its
-  11.8 m/s; peak 1.70 m), run + air dash 6.9–7.1 m, swim + air dash 8.9–**10.4 m**. A drop adds to every one of them.
+- **Nothing pinches** (ENGINE rule 21): every gap beside a rider is a ≤ 0.3 m seam (stones 0.25 to the heads and to each
+  other, 0.2 to the Race kerbs; columns 0.20 and 0.15) or ≥ 2.5 m of open lava. **Measured since fix round 6 the way a foot
+  meets it** (review 6 found the straight-out march blind at the corners: races 4, 6 and 7 dropped kids walking off at an
+  angle): lava-audit rule 21 fans out from every 0.1 m of each stone's outline, corners included, to ±67.5° off the face
+  (every 7.5°), over a 0.05 m map of the static tops; a top within 2.5 m reached after a stretch of over 0.3 m where the
+  foot (0.24 m) touches nothing is a pinch (walking, a kid is unsupported 0.1 s over 0.3 m and drops 0.13 m of the 0.30 m
+  to the kill height). The physical proof is lava-notch.js's diagonals (the reviewer's probe-notch6 rebuilt: every solid
+  rider, outline every 7.5°, the normal and ±22.5 / 45 / 67.5°, walk / run / swim off and walk back on): **0 deaths in a
+  gap**. What closes them: **the Race kerbs** (fix round 5; layout.js `raceKerb`: copings in each stone's frame 0.2 m off
+  it, beside races 1 and 5 from the heads' wedges on to races 2 and 4, the south head's corner by race 1); and fix round 6's
+  corners (geo.js): **race 7's island end is a pier** the stone's width + 0.2 m a side, 2.5 m long (`PIER_W`, `PIER_IN`),
+  the island's edge beside it standing back at r ≤ 13.7 — past where such a walk reaches in 2.5 m (the face had run 0.7 /
+  1.1 m past the stone); **race 6's north side**: fix round 5's kerb is gone with the north head's corner by the landing
+  (`CUT6`, 2.35 m out along the Race's line) and the Ladle Road's corner over it (`BITE6`, 0.15 m past the walks' reach;
+  the rim had stood 2.0–2.5 m off the stone), the vent hood 2.5° round the Road so the lane past the bitten corner stays
+  open; **race 4**: the north head's south-west corner cut back in one straight edge (`CUT4`); **race 2**: the south head's
+  north-west tip chamfered off (`CHAMF2`, its coping 1.3, the shelf edge's keeping its 1.1 m hop). Under the cuts by races
+  4 and 2 the Slump shelf runs on (dry at LOW, drowned at HIGH); the lava region runs 0.5–0.6 m under the new banks
+  (`RIM_LAKE`). Boss Battle keeps the island's old faces (`ISLAND_BOSS`: the lava holds LOW there; the boss's home ground
+  818 m² as before). No leap gaps.
+- **Jumps across the lava (rule 44) — decided by the lead after review 5: option 1; corrected after review 6.** **Swim
+  jumps and jumps + the Dash Pellet's air dash over the lava are skill movement** (own ink at the take-off, a squid at
+  speed or the sub spent, over open lava: the risk is the price) — listed, no gate. **The Bazookarp carrier swims its own
+  ink** (SPEC S21, 9.44 m/s), so it makes the swim jumps too — fix round 5's sentence "a carrier makes neither" was false.
+  The lead's decision after review 6: a carrier's swim and dash jumps over the lava are skill movement in general, the same
+  as for everyone (its dash jumps are out anyway: it holds no sub); **what a carrier may bypass is judged per stage by the
+  Bazookarp checker's shortcut probes (#7d) when Highmark's Bazookarp layout is built** — that layout must place the Pond,
+  the weirs and the Gate so no carrier jump saves over 20 m on the carrier field or skips a weir, with rails where it must.
+  The carrier list for that builder: `jobs/batch5/karp-stages/caldera-carrier-crossings.json` (lava-audit's carrier row:
+  every swim crossing saving > 10 m tried again with actor.carry set — LOW 72, 50 over 20 m, the most 51.6 m; HIGH 85, 42
+  over 20 m, the most 37.1 m). The carrier *field* still holds no hop or gap edge over the lava (LAYOUT.bazookarp.hopVeto,
+  `karpVeto.js`, 201 pairs; lava-karp.js K8). **Plain running jumps are judged by the 20 m skill-route bar: no running jump
+  may save more than 20 m against the dry way round, and the largest stays under 15 m** (lava-audit's gate, the margin in
+  it since fix round 6). Bots never take any of them (the nav has no links over the lava).
+- **The lookout is no launch pad** (fix round 6, the lead after review 6). The corrected march found Organ L's HIGH top,
+  3.45 m over the Race and the causeway, launching plain running jumps onto race 1 (saving up to 38.6 m) and the causeway
+  (up to 22.9 m). A parapet low enough to see over is cleared by that jump (its peak is 1.35 m and the column's drop does
+  the rest); one a kid can't clear hides the lake. So the lava-facing rim carries **a crown of 12 basalt pipes** (the stage's
+  lava.js `CROWN`, rider parts): hexagonal, 0.26 m across, 2.0–2.2 m tall (over a kid's 1.8 m reach), clear gaps ≤ 0.52 m (a
+  kid is 0.76 m across), each square to its rim, un-inked (no squid climbs them); from the middle of the north-west edge round
+  the west corner, the south-west, south (the stub fills its middle) and south-east edges and the east corner to the middle
+  of the north-east edge. The north flat (the climb from B) stays open. **62 % open** along the crown's line: you see and
+  shoot between the pipes. Rule 25 measures the crown as a screen (≥ 60 % open, no gap a kid fits, pipes ≤ 0.3 m and
+  ≥ 2.0 m), its cover without it. The rider parts grow 36 → 60 (ENGINE R30's cap 40 → 64; Treehills runs ~60 dynamic
+  blocks).
+- **Rule 44 at fix round 6's final geometry** (lava-audit.js, `full=1`). **The march** (corrected after review 6): every
+  nav node standing at the lava's edge now, 16 headings, 0.1 m steps out to 11 m; the far floor is **any** standable floor
+  across the lava down to the lava itself (it took only floors within 1.3 m below the take-off before), a take-off may drop
+  onto a lower dry strip (≤ 3 m) before the lava, and each jump is tried from **2.6, 1.5 and 0.8 m** behind the edge; every
+  sample past a 0.35 m seam tried physically — the kid stepped by the real physics running, then swimming out of its own
+  ink, then with the real Dash Pellet's air dash pressed on the rise, at the apex and on the fall; a crossing is a flight
+  airborne over a lava cell that comes down alive on floor past it, wherever; "saves" = the nav walk from the take-off node
+  to where it landed minus the flight. At 4faa8d6f it reproduced review 6: HIGH 24 over 20 m, the most 38.57 (Organ L); LOW
+  15.9 (a nudged nav node in a pocket on the Ladle Road: a `walks` link, as the deck corner's). **The kid's reach on flat
+  ground**: running jump **3.9 m** (peak 1.35 m), swim jump **8.65 m** (peak 1.70 m), run + air dash 6.9–7.1 m, swim + air
+  dash 8.9–**10.4 m**. A drop adds to every one of them.
 
   | | LOW | HIGH |
   |---|---|---|
-  | **plain running jumps** | **752** crossings at 82 places (3 m cells, Alpha's frame); 686 over gaps < 4.4 m; 40 off their line | **1,161** at 100 places; 1,089 over gaps < 4.4 m; 56 off their line |
-  | …saving ≤ 5 m / 5–10 m / 10–15 m / > 15 m | 498 / 234 / **20** / 0 — **the most 12.5 m** | 873 / 273 / **15** / 0 — **the most 12.5 m** |
-  | **swim jumps, swim / run + air dash** | 1,732 (swim 1,135, swim + dash 413, run + dash 184) | 2,019 (swim 1,058, swim + dash 628, run + dash 333) |
-  | …saving > 20 m / > 40 m | 817 / 235 — the most 56.9 m | 202 / 4 — the most 40.8 m |
+  | **plain running jumps** | **1,100** crossings (1,060 over gaps < 4.4 m; 144 with a drop over 1.3 m, 106 over a dry strip first; 60 off their line) | **1,435** (1,387 < 4.4 m; 28 deep, 56 over a strip; 76 off) |
+  | …saving ≤ 5 m / 5–10 m / 10–15 m / > 15 m | 760 / 302 / **38** / 0 — **the most 13.55 m** | 1,058 / 337 / **40** / 0 — **the most 14.15 m** |
+  | **swim jumps, swim / run + air dash** | 1,092 (swim 980, swim + dash 377, run + dash 112 — a candidate counts once) | 1,981 (swim 1,568, swim + dash 623, run + dash 413) |
+  | …saving > 20 m / > 40 m | 352 / 151 — the most 56.5 m | 416 / 16 — the most 41.2 m |
+  | **the carrier's swim jumps** (of the swim crossings > 10 m) | 72 — 50 over 20 m, the most 51.6 m | 85 — 42 over 20 m, the most 37.1 m |
 
-  The running jumps saving more than 10 m (all corners between floors joined by land, both levels): the south bay — the
-  Lakefront's 1.2–1.3 m coping and kerb onto the causeway (−8.5, 1.3, −22.5 → −4.6, −19.8: 12.5 m; −6.5, 1.3, −22.5:
-  11.0 m), the island's 2.3 m deck at the socket notch down onto the causeway (−8.5, 2.3, −14.5: 12.5 m, LOW), between the
-  island's south-west coping and the Lakefront (10.7 m), Organ L's LOW top and the socket collar onto the causeway
-  (10.0–10.2 m), the south head's coping (10.0 m); at HIGH also the causeway onto Organ A's HIGH top (−7.5, 1.2, −9.5:
-  12.1 m). **The East Pool corner** (fix round 4: 19.3 / 17.3 m, the only crossings over 15 m) **was a nav hole, not a
-  shortcut**: the gauge deck's corner stands 0.85 m from the lava's edge at each deck stair and no 1 m grid cell's centre
-  fell on the copings there, so every route from the East Pool's coping to the deck stair's foot went over the deck
-  (23.7 m); a kid walks round the corner in 4.1 m (probe-walk). The lava's `walks` (a nav walk link round each corner,
-  LavaWorld.navEdges) close the hole for the bots and the measure: those crossings now save under 1 m. Every crossing,
-  with its take-off, heading, gap, kind, landing, floor and gain: `out/fix5/rule44-crossings.json` (for Bazookarp checker
-  #16; the audit prints it with `PAGE_ARGS full=1`).
+  The running jumps saving more than 12 m: at HIGH, off race 7 across the island's south bay onto its coping (14.15 m, the
+  largest: the bay is the pier's price, the walk round goes over the pier), the Ladle Road's bitten corner down across the
+  head's cut onto race 6 / 7 (12.3–13.0 m), the Lakefront's coping onto the causeway (12.5 m, both levels); at LOW, the quay's
+  2.3 m copings down onto the Casting Floor (12.4–13.6 m), the horn's 2.6 m coping onto the Casting Floor's (12.3 m), the
+  causeway onto the Lakefront's coping (12.1 m), the island's south-west coping onto the pier's (12.1 m). Every crossing:
+  `out/fix6/rule44-crossings.json`.
 - **The options the lead chose from** (fix round 4's, with its numbers): 1. *Accept swim / dash jumps over the lava as
   skill movement* and judge plain running jumps by the 20 m skill-route bar (chosen; the margin at the East Pool corner);
   2. *make the lava unjumpable* (every corner's gap past a running jump with its drop at ~2,000 corner samples, or solid

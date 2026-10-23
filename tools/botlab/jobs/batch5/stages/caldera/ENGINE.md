@@ -100,7 +100,7 @@ Lava kills at L + 0.15, the same as the sea. There is no grace hop.
 | `actor.js` `update()` sea check: `pos.y < fallDeathY && groundHeight(...) === -Infinity` | Below −1.45 with no floor means the sea. | Inside the region the lava's kill height (L + 0.15 ≥ −0.45 at Highmark's LOW) is always above the death plane, and the lava check runs first (H3). Outside it, a fall off an edge would say "Fell in the sea": Highmark walls every edge but the two Spillway lips, and the chutes past the lips are `falls` polygons that report `lava` (H3, rule 43). |
 | `actor.js` body-special branch (`_updateSpecial` → `G.specials.body`), slam / storm in `_updateSpecial` | Only `specials.body` checks the sea. Slam and storm do not. | One lava check after `_updateSpecial` covers every special (H3). |
 | `level.js` `addDynamic`: forces `paint: false, hidden: true` | Dynamic blocks are never inked or drawn. | Riders draw their own mesh (`lavaFx`). A float's deck takes ink through `BoxPaint`. A stone is bare crust, like a perch. |
-| `level.js` `queryBlocks`: every query scans all of `this.dyn` linearly | A few moving blocks. | Measured cost in §1.3. Rider parts are capped at 40 (§5 R30). A submerged rider is parked out of every query (moved 50 m down, `solid = false`). |
+| `level.js` `queryBlocks`: every query scans all of `this.dyn` linearly | A few moving blocks. | Measured cost in §1.3. Rider parts are capped at 64 (§5 R30; 40 until fix round 6). A submerged rider is parked out of every query (moved 50 m down, `solid = false`). |
 | `nav.js` `NavGraph._build`: built once from what is solid when `main._buildWorldNow` calls it; `blocked` is soft (+40) | Static geometry. Movers only ever block. | Rider tops need nodes, and a rider top that isn't there must be hard-closed. The graph is built at both rider poses and merged (H1, `LavaWorld.buildNav`), and `path()` gets time windows (H4). |
 | `nav.js` edges join neighbouring 1 m cells by height difference and a waist-height ray (`_blocked`). They never check that there is floor between the cells. | No gaps narrower than a cell. | Two nodes on either side of a lava gap wider than a seam would get a `walk` edge, and a bot would walk into the lava. `buildNav` removes every edge that crosses more than 0.3 m of nothing inside the region (§4.3). Highmark has no such gap on purpose (seams 0.25 / 0.20 / 0.15 m), so v1 builds **no** `leap` edges. |
 | `nav.js` jump edges join only orthogonal cells (line 104: `!(dx && dz)`, 0.5 < dy ≤ 1.25); `_clear` drops nodes within 0.46 m of a taller block; nodes sit at `bounds.min + 0.5` | A step up exists wherever the grid happens to put a node on each side. | Across a 0.20 m seam to a column 1.15 m higher, the lower node must lie 0.56–0.90 m from the seam for its orthogonal neighbour to land on the higher column: a 0.34 m window per seam, so a climb exists or not by the grid's offset (the engineer measured 7 of 16 offsets for revision 1's cluster). **Explicit `steps` links** (§4.3) add the edge pair across each listed seam whatever the offset. |
@@ -911,8 +911,9 @@ cost, Highmark's numbers:
     region. (C)
 
 **Counts**
-30. ≤ 40 rider parts (dynamic blocks) in total, twins included. Highmark: 30 (10 stones; 6 hex columns × 3 boxes; 2
-    stubs). (C)
+30. ≤ 64 rider parts (dynamic blocks) in total, twins included (fix round 6: 40 → 64 for Organ L's crown — the lead's
+    "a lookout must not be a launch pad" after review 6; Treehills runs ~60, §1.3). Highmark: 60 (14 stones and race 3's
+    two boulders; 6 hex columns × 3 boxes; 2 stubs; 24 crown pipes). (C)
 31. ≤ 4 gauges, ≤ 4 cascades, ≤ 12 vents, twins included. (C)
 32. Props below HIGH inside the region use the kit's `paint`, `gloss`, `metal`, `wood` or `rubber` buckets (they get
     the stain). No foliage, cloth, flags, inflatables or custom materials there. (A: a render scan)
