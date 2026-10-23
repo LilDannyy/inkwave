@@ -1,0 +1,11 @@
+JOB-6 (beta1) @ c2a5457c — Mac mini b5-runner, 2026-10-24 00:22–00:58, exit 0. Short summary; details in JOB-6.raw.txt.
+- stuck set (20 matches): all ≤ 0.9 %; ONE episode over 5 s — bazookarp halyard #4, 5.25 s at (4.2, 0, −20.6).
+- bot-stuck 4/6: 'refill' (12 weapons at their refill spot: the roller's ink stays at 6 %, fireHeld 0) and 'tank' (from (0, −0.6, −3) on the
+  sand bed no bot is out within 6 s, jumped false); its halyard karpspot check 1/1.
+- tank watch, 3 live aquarium Bazookarp matches: 0 / 1 / 0 entries onto the sand bed — the one (match 2, Moxie, 2.75 s) came in by a SUPER
+  JUMP landing (the trail descends from y 21.7, 'SJ').
+- page tests: karp-bots 42/42 then 41/42 (H: a bot where a Big Burst lands leaves its disc, normal, from 18 m); lava-bots 7/7 ×2;
+  lava 58/59 (F8c: escapes off a rising stone up the step) then 59/59; bot-climb 6/7 ×2 (forced climbs); holds, pipes 92/92, eras-world,
+  sub-bobber, issue-log full.
+- the base (1378ceb2 + d3e4f164's issueLog.js): bot-climb 0/1 then 1/1 — the same forced-climbs row fails on the base, so it predates
+  this round (flaky there too); lava 58/59 ×2 on the base, both F8 (bots die on the sinking stones) — which this round fixed.
