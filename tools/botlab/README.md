@@ -57,6 +57,18 @@ W=960 H=600 MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botl
   `MAP=bluestone PAGE=tools/botlab/tests/beta-content.js tools/botlab/run.sh tools/botlab/page.cjs` and
   `MAP=bluestone PAGE=tools/botlab/tests/wip-stages.js tools/botlab/run.sh tools/botlab/page.cjs` (with and without
   `WIPSTAGES=1`).
+- **The beta's issue log, reproduced** ([b5-beta1]; src/core/issueLog.js, the desktop's `issues.log` /
+  `node tools/botlab/issues-summary.cjs <log>`):
+  - every match harness (match.cjs, tower-match.cjs, karp-match.cjs) prints `STUCK episodes over 5 s` beside `ISSUELOG`,
+    the in-game log's stuck-bot entries of the same match (its watch now judges as the harnesses do: < 1 m over 3 s of
+    match time while wanting to move, holds on purpose left out — `BotBrain.holdingOnPurpose`); `DIAG=1` on
+    tower-match.cjs and karp-match.cjs adds each episode's plans, as on match.cjs;
+  - `tools/botlab/run.sh tools/botlab/first-frames.cjs` (`STAGES=a,b`, `MODE`, `BAR=100`, `PLAY=3`; `DEVSTAGE=1` adds
+    Cargo Terminal): each stage's first match from a fresh page, in real time, every frame from the moment it is on
+    screen through the intro and 3 s of play, and the waits between them; each frame over BAR with its parts (sim,
+    render, paint flush, HUD, minimap …) and the shader programs / textures / geometries new in it;
+  - `MAP=halyard PAGE=tools/botlab/tests/lightmaps.js …page.cjs`: every world a player can reach has its bake applied;
+    an unbaked Bazookarp variant builds unlit with no warning; `node tools/botlab/tests/issue-host.cjs`: the hosted log.
 - **A stage module's audit switch:** `PAGEQ='era=2'` (any query) boots every harness page with it as well (a module
   reads its own switch from `location.search`: `?era=`, `?lava=` …). `ERA=1|2|3` is the same as `PAGEQ='era=n'`
   (Bluestone's era audit); any other `ERA` (`all`, a typo) or one that disagrees with `PAGEQ`'s era stops the harness at
