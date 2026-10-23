@@ -1062,8 +1062,16 @@ export class BotBrain {
           if (move.lengthSq() > 1e-4) { move.normalize(); wantYaw = Math.atan2(move.x, move.z); }
           it.squid = false;
         } else if (inkFrac > 0.03) {
-          it.squid = false; it.fire = !CHARGES[w.kind] || a.weaponRunner.charging || this.aimPitch < -0.7;
-          wantPitch = -1.0;
+          it.squid = false; wantPitch = -1.0;
+          // [b5-beta1] …and a draw is let go: held "while charging" it was held for good once the charge stood at what the
+          // tank allows (a charger at 6–10 % charged to its cap and never shot: no puddle, and a held trigger stops the
+          // kid's refill too — it never refilled). Released at that cap or after 0.6 s of drawing, whichever comes first
+          const wr = a.weaponRunner;
+          if (CHARGES[w.kind] && wr.charging) {
+            this._drawT = (this._drawT || 0) + dt;
+            const cap = Math.min(1, a.ink / (w.inkFull || PLAYER.inkMax));
+            it.fire = !(this._drawT > 0.6 || (typeof wr.charge === 'number' && wr.charge >= cap - 0.02));
+          } else { this._drawT = 0; it.fire = !CHARGES[w.kind] || this.aimPitch < -0.7; }
         } else if (!this._refillBad || this.t - this._refillBad.t > 6) {
           // [b5-caldera] fix round 4: too dry to paint and no own ink to step onto here (the patch it was sent to is a level
           // off, behind a wall or across a gap): it looks elsewhere for 6 s instead of standing ~10 s for the kid's slow

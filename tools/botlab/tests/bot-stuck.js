@@ -9,6 +9,8 @@
 // bobber a Chain Bobber bot run dry while laying a chain on bare ground lets the plan go and goes to refill, instead of
 //        sitting a squid on bare ground refilling at 4.5 ink/s until its plan times out (11.5 s episodes on Bluestone);
 //        and standing for its plan, its stand spot or its ambush it says it holds on purpose (perchUntil).
+// refill a bot at its refill spot on bare ground, its tank too low for its weapon to shoot (a charger's draw held at
+//        its cap, a roller's trigger held with nothing coming out), lets go and refills (40 % back within 6 s).
 (async () => {
   const g = window.__inkwave, G = window.__G, m = g.match, L = G.level, N = G.nav, out = [], R = (name, ok, info) => out.push({ name, ok: !!ok, info });
   const THREE = await import('three'), V3 = THREE.Vector3, r2 = (v) => Math.round(v * 100) / 100;
@@ -98,6 +100,28 @@
       lay.push({ at: [x, z], laying, held });
     }
     R('bobber: laying its chain, the bot holds on purpose (every frame it stands for its plan)', lay.every((r) => r.laying > 10 && r.held >= r.laying - 2), lay);
+  }
+  if (want('refill')) {
+    // a bot at its refill spot on bare ground with a few % of ink paints a puddle to swim in — unless its weapon can't
+    // shoot on that: a charger drew its shot "while charging" and held the draw for good once it stood at what the tank
+    // allows; a roller held its trigger with nothing coming out; a held trigger stops the kid's refill, so neither ever
+    // refilled (the base: ink unchanged for 10 s). Each must have 40 of 100 back within 6 s, from 6 and from 10
+    const rows = [];
+    const here0 = N.nearest(new V3(0, 0.05, 12.5), 1.2, true), at = N.nodes[here0];
+    for (const w of ['charger', 'roller', 'splatling', 'shooter']) for (const ink0 of [6, 10]) {
+      G.paint.clear(); fresh(at.x, at.y + 0.05, at.z);
+      bot.setWeapon(w); delete b._pickRefill; b.reset(); b.setDifficulty('normal');
+      for (let f = 0; f < 6; f++) g.debug.step(1000 / 60);
+      const here = N.nearest(bot.pos, 1.2, true);
+      b._pickRefill = function () { this.path = [here]; this.pi = 1; this.goal = here; this.repath = 1; };
+      bot.ink = ink0; b.mode = 'refill'; b.refillUntil = 0.9; b.path = [here]; b.pi = 1; b.goal = here; b.repath = 1;
+      let t40 = null;
+      for (let f = 0; f < 8 * 60 && t40 === null; f++) { g.debug.step(1000 / 60); if (bot.ink >= 40) t40 = +(f / 60).toFixed(1); }
+      rows.push({ w, ink0, t40 });
+      delete b._pickRefill;
+    }
+    const bad = rows.filter((r) => r.t40 === null || r.t40 > 6);
+    R('refill: a charger, a roller, a splatling and a shooter at their refill spot on bare ground (6 % and 10 %) have 40 % back within 6 s', bad.length === 0, { bad, rows });
   }
   g.debug.unfreeze();
   return out;
