@@ -1,0 +1,6 @@
+JOB-5 (beta1) @ bfed37c0 — Mac mini b5-runner, 2026-10-23 22:54–23:22, exit 0. Short summary; details in JOB-5.raw.txt.
+- stuck set (18 matches): all ≤ 1 % except bazookarp on aquarium #1, 2.7 %. Two episodes over 5 s (5.25 s each): bazookarp aquarium #1 at
+  (6.8, −0.6, 1.5), 'refill' (the tank's sand bed level); zones aquarium #2 at (19.7, 0.7, 6.2), 'fight'. Halyard's DIAG=2 runs: none over 5 s.
+- full: bot-stuck 5/5, lava-bots #2 7/7, karp-bots 42/42, holds 325/325, sub-bobber 84/84.
+- not full: lava-bots #1 5/7 — one escape death on the edges trial (Riptide, twins, at (18, 0, −12.74), 39.1 s), so the gate's 0 escape deaths
+  fails; bot-climb 6/7 again (the forced-climbs row, as in JOB-4).
