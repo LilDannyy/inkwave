@@ -8,7 +8,10 @@
 //   a death is placed: before the gap, IN THE GAP (a notch), past the far floor (run off it into open lava)
 // controls: standing 2 s on each stone; walking the chains stone → stone across each 0.25 m seam (race 1 → … → 5, 6 → 7)
 //   MAP=caldera MODE=turf PAGE=tools/botlab/tests/lava-notch.js WATCHDOG=900000 tools/botlab/run.sh tools/botlab/page.cjs
-//   PAGE_ARGS: 'stones=race1,race5' to limit; 'old=1' only the fix-round-4 pinch samples (the 18); 'nokerb=1' the Race
+// diagonals (fix round 6, review 6: the reviewer's probe-notch6): off every solid rider (stones at HIGH, Organs at HIGH and
+//   LOW), its outline every 7.5° round its centre, at the normal and ±22.5 / 45 / 67.5° toward any static top within 2.5 m:
+//   walk, run, swim off and walk back on (from where a kid can stand on that top) — no death
+//   PAGE_ARGS: 'stones=race1,race5' to limit (riders by id); 'diag=0' / 'straight=0' skip a part; 'old=1' only the fix-round-4 pinch samples (the 18); 'nokerb=1' the Race
 //   kerbs taken out (not solid): the stage as it stood before fix round 5 — the check must fail (40 deaths in the gaps)
 (async () => {
   const g = window.__inkwave, out = [];
@@ -57,7 +60,7 @@
       where: ok ? null : !gap ? '?' : maxAlong < gap[0] ? 'before the gap' : maxAlong <= gap[1] + 0.15 ? 'IN THE GAP' : 'past the far floor' };
   };
   const rows = { n: 0, off: 0, swim: 0, on: 0, deaths: [], byStone: {} };
-  for (const RR of Lv.riders.filter((q) => q.r.sink && q.solid && (!only || only.includes(q.r.id)))) {
+  for (const RR of (/straight=0/.test(args) ? [] : Lv.riders.filter((q) => q.r.sink && q.solid && (!only || only.includes(q.r.id))))) {
     const r = RR.r, top = RR.top;
     const bs = (rows.byStone[r.id] = { samples: 0, deaths: 0 });
     for (const p of r.parts) {
@@ -88,7 +91,78 @@
       }
     }
   }
-  R((noKerb ? '[kerbs out: ' + kerbs + '] ' : '') + 'walking (0.5 / 1.0) and swimming off every stone toward the static top beside it, and walking back on, at HIGH: no death (' + (oldOnly ? 'the 18 old pinch samples' : 'every outline sample with a static top within 2.5 m') + ')', rows.n > 0 && !rows.deaths.length, rows);
+  if (!/straight=0/.test(args)) R((noKerb ? '[kerbs out: ' + kerbs + '] ' : '') + 'walking (0.5 / 1.0) and swimming off every stone toward the static top beside it, and walking back on, at HIGH: no death (' + (oldOnly ? 'the 18 old pinch samples' : 'every outline sample with a static top within 2.5 m') + ')', rows.n > 0 && !rows.deaths.length, rows);
+  // (fix round 6, review 6 issue 2: the walks above go straight out from samples that stop 0.1 m short of every corner, so
+  // the corner gaps — races 4, 6 and 7 — were never walked. The reviewer's probe-notch6, rebuilt: from every solid rider —
+  // the stones at HIGH, the Organs at HIGH and at LOW — its outline found every 7.5° round its centre, and from each point
+  // a kid heads out at the normal and at ±22.5 / 45 / 67.5° toward any static top within 2.5 m (from 1.5 m below the
+  // rider's top to 0.35 m over it): walking, running, swimming off, and walking back on from that top. Two fixes to the
+  // probe's own trials: the walk back on starts only where a kid can stand on that top (0.5, 0.3 or 0.15 m past its edge,
+  // static floor at its height) — the probe started some in the lava beside a narrow kerb and counted the death —, and a
+  // death is placed as the probe placed it. PAGE_ARGS diag=0 skips this)
+  const diag = { samples: 0, trials: 0, onSkipped: 0, deaths: [], byRider: {}, where: {} };
+  if (!/diag=0/.test(args)) {
+    const offs = [0, -22.5, 22.5, -45, 45, -67.5, 67.5];
+    for (const [lvName, T] of [['high', 50], ['low', 10]]) {
+      setT(T);
+      for (const RR0 of Lv.riders.filter((q) => q.solid && (!only || only.includes(q.r.id)))) {
+        const r = RR0.r;
+        if (lvName === 'low' && r.sink) continue;
+        setT(T);
+        const RR = Lv.riders.find((q) => q.r === r), top = RR.top;
+        const bs = (diag.byRider[r.id + (r.sink ? '' : '@' + lvName)] ||= { samples: 0, deaths: 0 });
+        let cx = 0, cz = 0, n = 0; for (const p of r.parts) if (p.body) { const q = C.partPose(r, p, top, {}); cx += q.cx; cz += q.cz; n++; } cx /= n; cz /= n;
+        for (let phi = 0; phi < 360; phi += 7.5) {
+          const ux0 = Math.cos((phi * Math.PI) / 180), uz0 = Math.sin((phi * Math.PI) / 180);
+          let s = 0; while (s < 8 && C.inRider(r, cx + ux0 * (s + 0.02), cz + uz0 * (s + 0.02), 0)) s += 0.02;
+          const ex = cx + ux0 * s, ez = cz + uz0 * s;
+          for (const o of offs) {
+            const a = ((phi + o) * Math.PI) / 180, ux = Math.cos(a), uz = Math.sin(a);
+            let d0 = 0; while (d0 < 3 && C.inRider(r, ex + ux * (d0 + 0.02), ez + uz * (d0 + 0.02), 0)) d0 += 0.02;
+            if (d0 > 2.5) continue;
+            let hit = null;
+            for (let d = d0 + 0.05; d <= d0 + 2.5 && !hit; d += 0.05) {
+              const x = ex + ux * d, z = ez + uz * d;
+              if (Lv.riders.some((q) => q !== RR && q.solid && C.inRider(q.r, x, z, 0) && q.top > top - 1.5 && q.top < top + 0.4)) { hit = { rider: true }; break; }
+              for (let y = top + 0.35; y >= top - 1.5; y -= 0.05) { const b = solidAt(x, y, z); if (b) { hit = { d: d - d0, y: lvl.groundHeight(x, z, top + 0.5), tag: b.tag || '#' + b.id }; break; } }
+            }
+            if (!hit || hit.rider || hit.d <= 0.3) continue;
+            setT(T);
+            if (!C.inRider(r, ex - ux * 0.6, ez - uz * 0.6, -0.05)) continue;
+            diag.samples++; bs.samples++;
+            const inside = [ex - ux * 0.6, top, ez - uz * 0.6], untilOff = 0.6 + d0 + hit.d + 0.6;
+            const gOff = [0.6 + d0, 0.6 + d0 + hit.d, true];
+            const tr = [];
+            for (const mag of [0.5, 1.0]) tr.push(['off' + mag, trial(inside, ux, uz, mag, untilOff, false, gOff)]);
+            tr.push(['swim', trial(inside, ux, uz, 1.0, untilOff, true, gOff)]);
+            if (hit.y > top - 0.4) {
+              let st = null;
+              for (const k of [0.5, 0.3, 0.15]) {
+                const x = ex + ux * (d0 + hit.d + k), z = ez + uz * (d0 + hit.d + k), gy = lvl.groundHeight(x, z, top + 0.5);
+                const b = Math.abs(gy - hit.y) < 0.15 ? solidAt(x, gy - 0.03, z) : null;
+                if (b && !b.dynamic && !Lv.covers(x, z, gy)) { st = [[x, gy, z], k]; break; }
+              }
+              if (st) tr.push(['on', trial(st[0], -ux, -uz, 0.5, st[1] + hit.d + 0.6, false, [st[1], st[1] + hit.d, false])]);
+              else diag.onSkipped++;
+            }
+            for (const [k, t] of tr) {
+              diag.trials++;
+              if (t.alive) continue;
+              bs.deaths++; diag.where[t.where] = (diag.where[t.where] || 0) + 1;
+              diag.deaths.push([r.id, lvName, phi, o, r2(ex), r2(ez), r2(hit.d), r2(hit.y), hit.tag, k, t.where, t.cause, t.at]);
+            }
+          }
+        }
+      }
+    }
+    setT(50);
+    // (a death 'past the far floor' is a kid that reached the top and ran on off its far side — a narrow strip crossed at an
+    // angle, e.g. Organ L's LOW top 1.1 m over the island's thin wedge tips beside it —: listed, not a notch; the gate is
+    // the probe's: no death in a gap, and none before it)
+    const notch = diag.deaths.filter((d) => d[10] !== 'past the far floor');
+    R((noKerb ? '[kerbs out] ' : '') + 'the diagonals (fix round 6, the reviewer\'s probe-notch6): off every solid rider (stones at HIGH, Organs at HIGH and LOW) from its outline every 7.5° at the normal and ±22.5 / 45 / 67.5° toward any static top within 2.5 m, walking / running / swimming off and walking back on: no death in a gap (nor before it)',
+      diag.samples > 0 && !notch.length, { ...diag, notchDeaths: notch.length, deaths: [...notch, ...diag.deaths.filter((d) => d[10] === 'past the far floor')].slice(0, 60) });
+  }
   // controls: stand 2 s on each stone; walk the chains stone → stone
   const stand = [];
   for (const RR of Lv.riders.filter((q) => q.r.sink && q.solid && (!only || only.includes(q.r.id)))) {
