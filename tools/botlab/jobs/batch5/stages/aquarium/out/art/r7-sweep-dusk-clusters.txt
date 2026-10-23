@@ -1,0 +1,215 @@
+# stage-sweep {"map":"aquarium","time":"day","mode":"turf","quality":"high","fov":82,"lightSize":2048,"layoutHash":"fe6fba15","blocks":1936,"nav":4778} BEFORE=/private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/aqr8/sweep/b3-sweep-dusk
+# 516 views of 155 clusters shot; 14 cluster(s) with no eye-level view
+
+NO EYE-LEVEL VIEW (14):
+  gantry-beam.0  3 block(s)  box (-5.5, 16.8, -11.6) … (5.5, 17.8, 11.6)
+  winch-house.0  1 block(s)  box (-1.5, 17.8, -1.5) … (1.5, 20, 1.5)
+  bathysphere.0  1 block(s)  box (-1.45, 13.05, -1.45) … (1.45, 15.95, 1.45)  hidden
+  arch-tank.0  1 block(s)  box (-6, 6, -31) … (6, 9, -19)  hidden
+  vault-rib.0  1 block(s)  box (-6, 5.8, -19.3) … (6, 6, -19)
+  vault-rib.1  1 block(s)  box (-6, 5.8, -22.25) … (6, 6, -21.95)
+  vault-rib.2  1 block(s)  box (-6, 5.8, -25.15) … (6, 6, -24.85)
+  vault-rib.3  1 block(s)  box (-6, 5.8, -28.05) … (6, 6, -27.75)
+  vault-rib.4  1 block(s)  box (-6, 5.8, -31) … (6, 6, -30.7)
+  drum-crown.0  8 block(s)  box (20.4, 9.4, -4.6) … (29.6, 10.7, 0.1)
+  drum-crown.1  8 block(s)  box (-29.6, 9.4, -4.6) … (-20.4, 10.7, 0.1)
+  drum-foot.1  8 block(s)  box (-29.6, -2, -4.6) … (-20.4, 0.4, 0.1)
+  ticket-canopy.0  1 block(s)  box (2.5, 6.6, -46.2) … (10.2, 6.8, -38.8)
+  pump-roof.0  6 block(s)  box (7.43, 6.4, -47.44) … (25.09, 6.9, -25.87)
+
+CHANGED (a view more than 1 % changed): 38
+  bubble-column.0  Δ 2.8 %
+  drum-glass.0  Δ 1.3 %
+  drum-glass.1  Δ 1.1 %
+  balustrade.1  Δ 2.2 %
+  lookout.0  Δ 4.0 %
+  telescope-bay.0  Δ 2.0 %
+  kiosk.0  Δ 7.2 %
+  kiosk.1  Δ 13.2 %
+  kelp-stop-deep.0  Δ 1.7 %
+  grand-stair.0  Δ 2.7 %
+  penguin-steps.0  Δ 12.4 %
+  penguin-nosing.0  Δ 4.2 %
+  ticket-hall.0  Δ 1.1 %
+  ticket-stair.0  Δ 2.0 %
+  queue-step.0  Δ 1.5 %
+  ticket-booth.0  Δ 7.9 %
+  luggage-scale.0  Δ 1.3 %
+  turnstile.0  Δ 6.3 %
+  canopy-column.0  Δ 2.1 %
+  canopy-column.1  Δ 5.3 %
+  canopy-column.3  Δ 4.1 %
+  truss-column.0  Δ 1.1 %
+  planter.1  Δ 1.7 %
+  ticket-machines.0  Δ 1.1 %
+  glass-sill.0  Δ 2.8 %
+  queue-terrace.0  Δ 2.4 %
+  ferry-kiosk.0  Δ 8.7 %
+  timetable.0  Δ 14.9 %
+  trolleys.0  Δ 12.3 %
+  topiary.0  Δ 2.6 %
+  trolley-stack.0  Δ 4.0 %
+  trolley.0  Δ 1.1 %
+  souvenir-kiosk.0  Δ 11.0 %
+  aboard.0  Δ 2.4 %
+  fascia.0  Δ 1.6 %
+  deck-coping.0  Δ 2.6 %
+  spawn-deck.0  Δ 2.0 %
+  pipe-glass.4  Δ 1.5 %
+
+CLUSTERS:
+  glass-walk.0  1 block(s)  6 view(s)  Δ 0.5 %  000-glass-walk.0.jpg  box (-7.5, 2.2, -1.2) … (7.5, 2.4, 1.2)
+  tank-glass.0  9 block(s)  8 view(s)  Δ 0.4 %  001-tank-glass.0.jpg  box (-7.5, -2, -7.5) … (7.5, 2.2, 1.43)
+  tank-kerb.0  9 block(s)  6 view(s)  Δ 0.3 %  002-tank-kerb.0.jpg  box (-7.5, -2, -7.5) … (7.5, 0.25, 1.49)
+  deck-rim.0  1 block(s)  3 view(s)  Δ 0.2 %  003-deck-rim.0.jpg  box (5.99, 2.2, -4.25) … (7.5, 2.5, -1.34)
+  deck-rim.1  1 block(s)  3 view(s)  Δ 0.6 %  004-deck-rim.1.jpg  box (1.34, 2.2, -7.5) … (4.25, 2.5, -5.99)
+  deck-rim.2  1 block(s)  3 view(s)  Δ 0.1 %  005-deck-rim.2.jpg  box (-4.25, 2.2, -7.5) … (-1.34, 2.5, -5.99)
+  deck-rim.3  1 block(s)  3 view(s)  Δ 0.3 %  006-deck-rim.3.jpg  box (-7.5, 2.2, -4.25) … (-5.99, 2.5, -1.34)
+  deck-nosing.0  1 block(s)  3 view(s)  Δ 0.7 %  007-deck-nosing.0.jpg  box (4.12, 2.2, -6.24) … (6.24, 2.5, -4.12)
+  deck-nosing.1  1 block(s)  3 view(s)  Δ 0.1 %  008-deck-nosing.1.jpg  box (-6.24, 2.2, -6.24) … (-4.12, 2.5, -4.12)
+  hatch.0  1 block(s)  3 view(s)  Δ 0.2 %  009-hatch.0.jpg  box (2.62, 2.4, -3.63) … (4.58, 3.6, -1.41)
+  hatch.1  1 block(s)  3 view(s)  Δ 0.4 %  010-hatch.1.jpg  box (-4.58, 2.4, -3.63) … (-2.62, 3.6, -1.41)
+  hopper.0  1 block(s)  3 view(s)  Δ 0.3 %  011-hopper.0.jpg  box (5.43, 2.4, -3.93) … (6.43, 3.6, -2.93)
+  hopper.1  1 block(s)  3 view(s)  Δ 0.4 %  012-hopper.1.jpg  box (-6.43, 2.4, -3.93) … (-5.43, 3.6, -2.93)
+  pole-rack.0  1 block(s)  3 view(s)  Δ 0.4 %  013-pole-rack.0.jpg  box (2.26, 2.4, -6.74) … (4.22, 3.4, -5.44)
+  feeding-step.0  1 block(s)  3 view(s)  Δ 0.4 %  014-feeding-step.0.jpg  box (-2, 0, -9.8) … (2, 1.2, -7.2)
+  deck-ramp.0  1 block(s)  6 view(s)  Δ 0.3 %  015-deck-ramp.0.jpg  box (3.02, -2.64, -11.36) … (11.36, 2.4, -3.02)
+  deck-stair.0  1 block(s)  6 view(s)  Δ 0.3 %  016-deck-stair.0.jpg  box (-11.36, -2.64, -11.36) … (-3.02, 2.4, -3.02)
+  viewing-step.0  1 block(s)  2 view(s)  Δ 0.1 %  017-viewing-step.0.jpg  box (6.63, -2, -4.17) … (8.81, 0.4, -1.67)
+  viewing-step.1  1 block(s)  2 view(s)  Δ 0.2 %  018-viewing-step.1.jpg  box (2.14, -2, -8.62) … (4.17, 0.4, -6.63)
+  viewing-step.2  1 block(s)  1 view(s)  Δ 0.2 %  019-viewing-step.2.jpg  box (-4.17, -2, -8.62) … (-2.14, 0.4, -6.63)
+  viewing-step.3  1 block(s)  2 view(s)  Δ 0.3 %  020-viewing-step.3.jpg  box (-8.81, -2, -4.17) … (-6.63, 0.4, -1.67)
+  gulper-head.0  1 block(s)  3 view(s)  Δ 0.2 %  021-gulper-head.0.jpg  box (9.5, 0, -1.3) … (12.7, 2.4, 1.3)
+  gulper-head.1  1 block(s)  3 view(s)  Δ 0.4 %  022-gulper-head.1.jpg  box (-12.7, 0, -1.3) … (-9.5, 2.4, 1.3)
+  gulper-neck.0  1 block(s)  3 view(s)  Δ 0.1 %  023-gulper-neck.0.jpg  box (7.4, 0, -1) … (9.5, 1.9, 1)
+  gulper-neck.1  1 block(s)  2 view(s)  Δ 0.2 %  024-gulper-neck.1.jpg  box (-9.5, 0, -1) … (-7.4, 1.9, 1)
+  gantry-leg.0  1 block(s)  3 view(s)  Δ 0.1 %  025-gantry-leg.0.jpg  box (4.4, 0, -11.6) … (5.6, 16.8, -10.4)
+  gantry-leg.1  1 block(s)  3 view(s)  Δ 0.3 %  026-gantry-leg.1.jpg  box (-5.6, 0, -11.6) … (-4.4, 16.8, -10.4)
+  jelly.0  4 block(s)  3 view(s)  Δ 0.3 %  027-jelly.0.jpg  box (5, -2, -18.5) … (8, 4.2, -15.5)
+  jelly.1  4 block(s)  3 view(s)  Δ 0.4 %  028-jelly.1.jpg  box (-17.75, -2, -4.4) … (-14.75, 4.2, -1.4)
+  touch-dais.0  1 block(s)  3 view(s)  Δ 0.1 %  029-touch-dais.0.jpg  box (-12, 0, -16) … (-6, 1, -12.6)
+  touch-step.0  1 block(s)  3 view(s)  Δ 0.1 %  030-touch-step.0.jpg  box (-12, 0, -12.6) … (-6, 0.5, -11.8)
+  touch-pool.0  1 block(s)  3 view(s)  Δ 0.3 %  031-touch-pool.0.jpg  box (-11.5, 1, -15.6) … (-6.5, 2, -13)
+  helmet-bed.0  1 block(s)  3 view(s)  Δ 0.1 %  032-helmet-bed.0.jpg  box (11.3, 0, -8) … (15.3, 0.9, -4)
+  helmet.0  4 block(s)  3 view(s)  Δ 0.3 %  033-helmet.0.jpg  box (12, 0.9, -7.3) … (14.6, 3.5, -4.7)
+  lectern.0  1 block(s)  3 view(s)  Δ 0.2 %  034-lectern.0.jpg  box (-8.5, 0, -18.3) … (-6.5, 1.2, -17.7)
+  pylon.0  36 block(s)  6 view(s)  Δ 0.6 %  035-pylon.0.jpg  box (5.87, -2, -30.62) … (10.67, 9.1, -18.79)
+  pylon.1  32 block(s)  6 view(s)  Δ 0.0 %  036-pylon.1.jpg  box (-10.94, -2, -30.62) … (-5.87, 9.1, -18.79)
+  shaft-glass.0  1 block(s)  2 view(s)  Δ 0.7 %  037-shaft-glass.0.jpg  box (6, 0, -28.25) … (6.15, 8.4, -26)
+  shaft-glass.1  1 block(s)  3 view(s)  Δ 0.2 %  038-shaft-glass.1.jpg  box (-6.15, 0, -28.25) … (-6, 8.4, -26)
+  bubble-column.0  4 block(s)  3 view(s)  Δ 2.8 %  039-bubble-column.0.jpg  box (-1.2, -2, -22.7) … (1.2, 5.8, -20.3)
+  shark-bench.0  1 block(s)  3 view(s)  Δ 0.7 %  040-shark-bench.0.jpg  box (3, 0, -30.3) … (5.4, 0.9, -29.7)
+  plinth.0  3 block(s)  3 view(s)  Δ 0.2 %  041-plinth.0.jpg  box (6.8, -2, -20.3) … (10.64, 0.55, -17.39)
+  plinth.1  4 block(s)  4 view(s)  Δ 0.1 %  042-plinth.1.jpg  box (11.86, -2, -17.36) … (18.22, 0.55, -10.71)
+  plinth.2  2 block(s)  3 view(s)  Δ 0.2 %  043-plinth.2.jpg  box (18.04, -2, -9.3) … (20.48, 0.55, -6.3)
+  plinth-step.0  2 block(s)  4 view(s)  Δ 0.1 %  044-plinth-step.0.jpg  box (9.79, -2, -18.8) … (16.67, 0.22, -12.68)
+  plinth-step.1  1 block(s)  3 view(s)  Δ 0.0 %  045-plinth-step.1.jpg  box (16.85, -2, -11.61) … (19.5, 0.22, -8.54)
+  lamp-column.0  1 block(s)  3 view(s)  Δ 0.4 %  046-lamp-column.0.jpg  box (8.52, -2, -19.3) … (9.72, 5.3, -18.09)
+  lamp-column.1  1 block(s)  3 view(s)  Δ 0.1 %  047-lamp-column.1.jpg  box (12.74, -2, -16.57) … (14, 5.3, -15.3)
+  lamp-column.2  1 block(s)  3 view(s)  Δ 0.1 %  048-lamp-column.2.jpg  box (16.2, -2, -12.85) … (17.46, 5.3, -11.6)
+  lamp-column.3  1 block(s)  3 view(s)  Δ 0.2 %  049-lamp-column.3.jpg  box (18.7, -2, -8.38) … (19.87, 5.3, -7.21)
+  canopy.0  12 block(s)  2 view(s)  Δ 0.1 %  050-canopy.0.jpg  box (8.53, 4.6, -28.66) … (29.83, 5.4, -5.1)
+  window-kerb.0  1 block(s)  2 view(s)  Δ 0.1 %  051-window-kerb.0.jpg  box (9.99, -2, -28.66) … (11.92, 0.45, -26.97)
+  window-kerb.1  3 block(s)  2 view(s)  Δ 0.1 %  052-window-kerb.1.jpg  box (27.17, -2, -11.42) … (29.83, 0.55, -6.06)
+  reef-window.0  1 block(s)  3 view(s)  Δ 0.7 %  053-reef-window.0.jpg  box (10.39, -2, -30.54) … (12.7, 5, -28.07)
+  reef-window.1  14 block(s)  4 view(s)  Δ 0.1 %  054-reef-window.1.jpg  box (16.12, -2, -27.56) … (32.47, 5.1, -1.32)
+  coral.0  4 block(s)  3 view(s)  Δ 0.2 %  055-coral.0.jpg  box (17.48, -2, -17.85) … (19.08, 1.6, -16.25)
+  coral.1  4 block(s)  3 view(s)  Δ 0.2 %  056-coral.1.jpg  box (21.49, -2, -14.19) … (23.09, 1.6, -12.59)
+  clam.0  4 block(s)  3 view(s)  Δ 0.5 %  057-clam.0.jpg  box (12.51, -2, -22.63) … (14.51, 1.2, -20.63)
+  drum-glass.0  8 block(s)  6 view(s)  Δ 1.3 %  058-drum-glass.0.jpg  box (20.5, -2, -4.5) … (29.5, 9.95, 4.5)
+  drum-glass.1  8 block(s)  6 view(s)  Δ 1.1 %  059-drum-glass.1.jpg  box (-29.5, -2, -4.5) … (-20.5, 9.95, 4.5)
+  drum-foot.0  8 block(s)  2 view(s)  Δ 0.1 %  060-drum-foot.0.jpg  box (20.4, -2, -4.6) … (29.6, 0.4, 0.1)
+  plant-room.0  1 block(s)  1 view(s)  Δ 0.5 %  061-plant-room.0.jpg  box (29, -2, -1.5) … (32.45, 6, 1.19)
+  plant-room.1  2 block(s)  1 view(s)  Δ 0.5 %  062-plant-room.1.jpg  box (-32.69, -2, -2.01) … (-29, 6.08, 1.5)
+  kelp-ramp.0  6 block(s)  5 view(s)  Δ 0.6 %  063-kelp-ramp.0.jpg  box (17.43, -2.59, -7.6) … (26.03, 1.23, 0.82)
+  kelp-ramp.1  6 block(s)  5 view(s)  Δ 0.4 %  064-kelp-ramp.1.jpg  box (-25.77, -2.57, -7.56) … (-17.41, 2.4, 0.98)
+  kelp-stop.0  1 block(s)  2 view(s)  Δ 0.4 %  065-kelp-stop.0.jpg  box (26.2, 0, -4.6) … (28.6, 2.6, -2.8)
+  pump-housing.0  1 block(s)  1 view(s)  Δ 0.1 %  066-pump-housing.0.jpg  box (28.6, 0, -4.6) … (30.4, 2.6, -1.5)
+  balustrade.0  1 block(s)  3 view(s)  Δ 0.7 %  067-balustrade.0.jpg  box (-20.53, -2, -7.24) … (-19.76, 3.3, -5.93)
+  balustrade.1  4 block(s)  3 view(s)  Δ 2.2 %  068-balustrade.1.jpg  box (-14.59, -2, -19.07) … (-9.53, 3.3, -15.36)
+  prom-coping.0  3 block(s)  3 view(s)  Δ 0.2 %  069-prom-coping.0.jpg  box (-17.27, -2, -15.65) … (-14.32, 2.5, -12.41)
+  prom-coping.1  2 block(s)  3 view(s)  Δ 0.6 %  070-prom-coping.1.jpg  box (-9.71, -2, -20.11) … (-7.18, 2.5, -18.71)
+  prom-coping.2  12 block(s)  4 view(s)  Δ 0.3 %  071-prom-coping.2.jpg  box (-31.01, -2, -25.85) … (-17.54, 2.6, -4.82)
+  prom-coping.3  2 block(s)  3 view(s)  Δ 0.0 %  072-prom-coping.3.jpg  box (-13.47, -2, -29.51) … (-10.56, 2.6, -27.92)
+  lookout.0  1 block(s)  3 view(s)  Δ 4.0 %  073-lookout.0.jpg  box (-20.22, -2, -16.6) … (-15.63, 3.6, -11.91)
+  lookout-balustrade.0  1 block(s)  3 view(s)  Δ 0.7 %  074-lookout-balustrade.0.jpg  box (-18.18, -2, -14.98) … (-15.63, 4.5, -11.91)
+  telescope-bay.0  1 block(s)  3 view(s)  Δ 2.0 %  075-telescope-bay.0.jpg  box (-27.23, -2, -20.4) … (-20.77, 3, -13.21)
+  kiosk.0  1 block(s)  3 view(s)  Δ 7.2 %  076-kiosk.0.jpg  box (-23.86, -2, -17.23) … (-20.38, 5, -13.75)
+  kiosk.1  1 block(s)  3 view(s)  Δ 13.2 %  077-kiosk.1.jpg  box (-15.61, -2, -23.94) … (-12.16, 5, -20.5)
+  deckchairs.0  1 block(s)  3 view(s)  Δ 0.6 %  078-deckchairs.0.jpg  box (-27.8, -2, -11.78) … (-25.98, 3.6, -9.95)
+  kelp-stop-deep.0  1 block(s)  3 view(s)  Δ 1.7 %  079-kelp-stop-deep.0.jpg  box (-23.11, -2, -25.48) … (-18.04, 5, -20.23)
+  grand-stair.0  1 block(s)  6 view(s)  Δ 2.7 %  080-grand-stair.0.jpg  box (-21.17, -2.6, -13.16) … (-11.88, 2.4, -4.41)
+  penguin-steps.0  1 block(s)  4 view(s)  Δ 12.4 %  081-penguin-steps.0.jpg  box (-19.75, -0.4, -31.71) … (-13.1, 2.4, -25.19)
+  penguin-nosing.0  1 block(s)  3 view(s)  Δ 4.2 %  082-penguin-nosing.0.jpg  box (-17.99, -2, -28.38) … (-13.32, 2.5, -25.25)
+  stair-nosing.0  1 block(s)  3 view(s)  Δ 0.5 %  083-stair-nosing.0.jpg  box (-20.39, -2, -12.74) … (-17.09, 2.48, -7.19)
+  ticket-hall.0  1 block(s)  5 view(s)  Δ 1.1 %  084-ticket-hall.0.jpg  box (2, 0, -46) … (10, 1.2, -39)
+  ticket-stair.0  1 block(s)  3 view(s)  Δ 2.0 %  085-ticket-stair.0.jpg  box (8, -1.57, -39.57) … (10, 1.2, -35.65)
+  queue-step.0  1 block(s)  3 view(s)  Δ 1.5 %  086-queue-step.0.jpg  box (7.4, 0, -47.2) … (10, 0.6, -46)
+  ticket-booth.0  1 block(s)  3 view(s)  Δ 7.9 %  087-ticket-booth.0.jpg  box (8.2, 1.2, -42) … (10, 3.7, -40)
+  luggage-scale.0  1 block(s)  3 view(s)  Δ 1.3 %  088-luggage-scale.0.jpg  box (2.6, 1.2, -40.85) … (3.8, 2.4, -39.85)
+  coat-pegs.0  1 block(s)  3 view(s)  Δ 0.3 %  089-coat-pegs.0.jpg  box (2.4, 1.2, -44.8) … (3.8, 2.3, -44.2)
+  turnstile.0  2 block(s)  3 view(s)  Δ 6.3 %  090-turnstile.0.jpg  box (8, 1.2, -45.1) … (9.8, 2.2, -44.5)
+  canopy-column.0  1 block(s)  3 view(s)  Δ 2.1 %  091-canopy-column.0.jpg  box (2.75, 1.2, -39.55) … (3.25, 6.6, -39.05)
+  canopy-column.1  1 block(s)  3 view(s)  Δ 5.3 %  092-canopy-column.1.jpg  box (9.45, 1.2, -39.55) … (9.95, 6.6, -39.05)
+  canopy-column.2  1 block(s)  3 view(s)  Δ 0.9 %  093-canopy-column.2.jpg  box (2.75, 1.2, -45.95) … (3.25, 6.6, -45.45)
+  canopy-column.3  1 block(s)  3 view(s)  Δ 4.1 %  094-canopy-column.3.jpg  box (9.45, 1.2, -45.95) … (9.95, 6.6, -45.45)
+  pump-wall.0  5 block(s)  4 view(s)  Δ 0.0 %  095-pump-wall.0.jpg  box (18.17, -2, -42.74) … (25.39, 7, -25.87)
+  truss-column.0  1 block(s)  3 view(s)  Δ 1.1 %  096-truss-column.0.jpg  box (17.49, 0, -45.62) … (18.09, 6.4, -45.02)
+  bund.0  3 block(s)  5 view(s)  Δ 0.1 %  097-bund.0.jpg  box (15.26, -2, -44.19) … (24.57, 1.2, -29.98)
+  sand-filter.0  4 block(s)  2 view(s)  Δ 0.0 %  098-sand-filter.0.jpg  box (17.81, -2, -34.89) … (20.41, 4.3, -32.29)
+  sand-filter.1  4 block(s)  2 view(s)  Δ 0.1 %  099-sand-filter.1.jpg  box (19.36, -2, -39.19) … (21.96, 4.3, -36.59)
+  sand-filter.2  4 block(s)  2 view(s)  Δ 0.3 %  100-sand-filter.2.jpg  box (21.09, -2, -43.39) … (23.69, 4.3, -40.79)
+  pump-set.0  2 block(s)  3 view(s)  Δ 0.2 %  101-pump-set.0.jpg  box (17.05, -2, -44.49) … (21.36, 1, -40)
+  salt-crates.0  1 block(s)  3 view(s)  Δ 0.0 %  102-salt-crates.0.jpg  box (17.7, 0, -31.8) … (19.3, 1.4, -30.2)
+  planter.0  4 block(s)  3 view(s)  Δ 0.2 %  103-planter.0.jpg  box (-9.4, -2, -34.4) … (-7.6, 1.3, -32.6)
+  planter.1  4 block(s)  3 view(s)  Δ 1.7 %  104-planter.1.jpg  box (10.1, -2, -37.5) … (11.9, 1.3, -35.7)
+  icecream-cart.0  1 block(s)  3 view(s)  Δ 0.1 %  105-icecream-cart.0.jpg  box (-6.2, 0, -40.5) … (-4.8, 1.4, -39)
+  post-box.0  4 block(s)  3 view(s)  Δ 0.4 %  106-post-box.0.jpg  box (-1.6, -2, -40.4) … (-0.4, 2.4, -39.2)
+  ticket-machines.0  1 block(s)  3 view(s)  Δ 1.1 %  107-ticket-machines.0.jpg  box (-0.7, 0, -35.6) … (1.7, 1.5, -34.8)
+  penguin-rocks.0  3 block(s)  5 view(s)  Δ 0.0 %  108-penguin-rocks.0.jpg  box (-22.72, -2, -52.26) … (-2.16, 1.2, -23.64)
+  upper-rock.0  1 block(s)  5 view(s)  Δ 0.6 %  109-upper-rock.0.jpg  box (-8.22, -2, -59.19) … (0.11, 2.4, -49.76)
+  penguin-glass.0  8 block(s)  5 view(s)  Δ 0.1 %  110-penguin-glass.0.jpg  box (-23.07, -2, -67.85) … (1.12, 4.4, -27.14)
+  glass-sill.0  1 block(s)  3 view(s)  Δ 2.8 %  111-glass-sill.0.jpg  box (-4.57, -2, -68.22) … (1.48, 0.4, -58.84)
+  keeper-hut.0  1 block(s)  3 view(s)  Δ 0.4 %  112-keeper-hut.0.jpg  box (-14.88, -2, -41.67) … (-12.14, 3.9, -38.93)
+  buckets.0  1 block(s)  3 view(s)  Δ 0.4 %  113-buckets.0.jpg  box (-9.6, 0, -46.6) … (-8.4, 2.4, -45.4)
+  ice-pile.0  1 block(s)  3 view(s)  Δ 0.2 %  114-ice-pile.0.jpg  box (-7.7, 0, -49.2) … (-6.3, 2.2, -47.8)
+  basking-rock.0  1 block(s)  3 view(s)  Δ 0.3 %  115-basking-rock.0.jpg  box (-8.2, 0, -40.5) … (-7, 2.2, -39.3)
+  outcrop.0  1 block(s)  3 view(s)  Δ 0.5 %  116-outcrop.0.jpg  box (-4.56, -2, -55.34) … (-2.34, 3.6, -52.91)
+  feeding-chute.0  1 block(s)  2 view(s)  Δ 0.4 %  117-feeding-chute.0.jpg  box (-10.74, -2, -50.31) … (-8.83, 2.6, -48.39)
+  cove.0  34 block(s)  4 view(s)  Δ 0.0 %  118-cove.0.jpg  box (-25.32, -2, -69.35) … (0.99, 0.55, -27.27)
+  queue-terrace.0  1 block(s)  3 view(s)  Δ 2.4 %  119-queue-terrace.0.jpg  box (-2.72, -2, -64.38) … (6.14, 0.6, -57.53)
+  ferry-kiosk.0  1 block(s)  3 view(s)  Δ 8.7 %  120-ferry-kiosk.0.jpg  box (3.16, -2, -60.7) … (5.89, 3, -57.97)
+  timetable.0  1 block(s)  3 view(s)  Δ 14.9 %  121-timetable.0.jpg  box (4.89, -2, -59.01) … (6.53, 2.2, -57.37)
+  trolleys.0  1 block(s)  3 view(s)  Δ 12.3 %  122-trolleys.0.jpg  box (2.06, -2, -61.1) … (3.96, 1.5, -59.31)
+  whale-bench.0  1 block(s)  3 view(s)  Δ 0.2 %  123-whale-bench.0.jpg  box (-2.5, 0, -58.6) … (0.5, 1.2, -57.4)
+  topiary.0  4 block(s)  3 view(s)  Δ 2.6 %  124-topiary.0.jpg  box (10.62, -2, -58.43) … (12.62, 1.2, -56.43)
+  trolley-stack.0  1 block(s)  3 view(s)  Δ 4.0 %  125-trolley-stack.0.jpg  box (7.04, -2, -61.34) … (9.38, 1.4, -59.3)
+  queue-planter.0  1 block(s)  3 view(s)  Δ 0.9 %  126-queue-planter.0.jpg  box (15.09, -2, -56.93) … (17.57, 1.3, -55.04)
+  trolley.0  1 block(s)  3 view(s)  Δ 1.1 %  127-trolley.0.jpg  box (6.2, 0, -52.3) … (8.2, 1.4, -51.3)
+  forklift.0  1 block(s)  3 view(s)  Δ 0.7 %  128-forklift.0.jpg  box (10, 0, -52.3) … (12, 2.2, -49.3)
+  souvenir-kiosk.0  1 block(s)  3 view(s)  Δ 11.0 %  129-souvenir-kiosk.0.jpg  box (18.81, -2, -53.25) … (22.23, 2.6, -49.83)
+  express-stop-in.0  1 block(s)  3 view(s)  Δ 0.3 %  130-express-stop-in.0.jpg  box (21.33, -2, -47.47) … (26.8, 3.2, -42.29)
+  express-stop-out.0  1 block(s)  3 view(s)  Δ 0.6 %  131-express-stop-out.0.jpg  box (-17.03, -2, -39.39) … (-12.65, 5, -34.2)
+  sea-coping.0  1 block(s)  2 view(s)  Δ 0.0 %  132-sea-coping.0.jpg  box (26.37, -2, -51.37) … (30.19, 0.1, -45.29)
+  bench.0  1 block(s)  2 view(s)  Δ 0.3 %  133-bench.0.jpg  box (2.45, 0, -46.56) … (4.25, 0.47, -46)
+  aboard.0  1 block(s)  3 view(s)  Δ 2.4 %  134-aboard.0.jpg  box (10.24, 0, -47.38) … (11.06, 1, -46.62)
+  aboard.1  1 block(s)  3 view(s)  Δ 0.1 %  135-aboard.1.jpg  box (-9.78, 0, -30.73) … (-9.02, 1, -30.07)
+  luggage.0  1 block(s)  3 view(s)  Δ 0.7 %  136-luggage.0.jpg  box (13.84, 0, -57.5) … (15.41, 1.1, -56.06)
+  queue-rope.0  1 block(s)  2 view(s)  Δ 0.0 %  137-queue-rope.0.jpg  box (-2.08, 0.6, -64.04) … (-0.55, 1.6, -61.6)
+  fascia.0  1 block(s)  8 view(s)  Δ 1.6 %  138-fascia.0.jpg  box (4.24, -2, -66.15) … (26.93, 3.38, -52.85)
+  pavilion-stair.0  1 block(s)  4 view(s)  Δ 0.0 %  139-pavilion-stair.0.jpg  box (26.48, -3.47, -61.4) … (34.3, 3.38, -50.86)
+  pavilion-stair.1  1 block(s)  4 view(s)  Δ 0.0 %  140-pavilion-stair.1.jpg  box (1.36, -3.47, -75.9) … (9.18, 3.38, -65.36)
+  deck-coping.0  12 block(s)  5 view(s)  Δ 2.6 %  141-deck-coping.0.jpg  box (5.94, -2, -76.01) … (34.36, 3.7, -58.8)
+  spawn-deck.0  15 block(s)  4 view(s)  Δ 2.0 %  142-spawn-deck.0.jpg  box (4.42, -2, -75.75) … (34.07, 3.38, -53.15)
+  deck-planter.0  1 block(s)  3 view(s)  Δ 0.2 %  143-deck-planter.0.jpg  box (25.23, -2, -58.93) … (27.96, 4.5, -56.19)
+  deck-planter.1  1 block(s)  3 view(s)  Δ 0.2 %  144-deck-planter.1.jpg  box (7.04, -2, -69.43) … (9.77, 4.5, -66.69)
+  skylight.0  1 block(s)  3 view(s)  Δ 0.1 %  145-skylight.0.jpg  box (20.51, -2, -63.44) … (24.79, 4.48, -57.62)
+  skylight.1  1 block(s)  3 view(s)  Δ 0.3 %  146-skylight.1.jpg  box (10.81, -2, -69.04) … (15.09, 4.48, -63.22)
+  fin-tower.0  1 block(s)  3 view(s)  Δ 0.0 %  147-fin-tower.0.jpg  box (18.9, -2, -74.27) … (25.85, 18, -68.24)
+  kelp-parapet.0  4 block(s)  3 view(s)  Δ 0.2 %  148-kelp-parapet.0.jpg  box (-25.58, -2.66, -7.87) … (-17.74, 3.3, -3.06)
+  kelp-balcony.0  4 block(s)  1 view(s)  Δ 0.4 %  149-kelp-balcony.0.jpg  box (-31.95, -2, -6.95) … (-25.89, 3.7, -0.89)
+  pipe-glass.0  12 block(s)  6 view(s)  Δ 0.0 %  150-pipe-glass.0.jpg  box (-12.7, -0.3, -0.8) … (12.7, 1.6, 0.8)
+  pipe-glass.1  19 block(s)  8 view(s)  Δ 0.8 %  151-pipe-glass.1.jpg  box (-10.23, -0.03, -28.16) … (9.85, 8.33, -25.42)
+  pipe-glass.2  33 block(s)  8 view(s)  Δ 0.8 %  152-pipe-glass.2.jpg  box (-16.68, -0.02, -46.64) … (26.27, 8.82, -31.43)
+  pipe-glass.3  9 block(s)  2 view(s)  Δ 0.6 %  153-pipe-glass.3.jpg  box (26.09, -0.02, -4.6) … (28.37, 9.55, 1.17)
+  pipe-glass.4  18 block(s)  6 view(s)  Δ 1.5 %  154-pipe-glass.4.jpg  box (-28.13, 2.38, -24.77) … (-18.35, 9.82, 1.18)
