@@ -62,7 +62,10 @@ W=960 H=600 MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botl
   - every match harness (match.cjs, tower-match.cjs, karp-match.cjs) prints `STUCK episodes over 5 s` beside `ISSUELOG`,
     the in-game log's stuck-bot entries of the same match (its watch now judges as the harnesses do: < 1 m over 3 s of
     match time while wanting to move, holds on purpose left out — `BotBrain.holdingOnPurpose`); `DIAG=1` on
-    tower-match.cjs and karp-match.cjs adds each episode's plans, as on match.cjs;
+    tower-match.cjs and karp-match.cjs adds each episode's plans, as on match.cjs; `DIAG=2` (match.cjs, karp-match.cjs)
+    takes them every 1 s with what the bot was doing (the move it asked for, speed, trigger, jump, target);
+  - `MAP=aquarium MODE=turf PAGE=tools/botlab/tests/bot-stuck.js …page.cjs`: the stuck bots it found, each a scene
+    (`step`: a route planned mid-hop starts from the floor under the bot — Gulper Aquarium's Feeding Steps);
   - `tools/botlab/run.sh tools/botlab/first-frames.cjs` (`STAGES=a,b`, `MODE`, `BAR=100`, `PLAY=3`; `DEVSTAGE=1` adds
     Cargo Terminal): each stage's first match from a fresh page, in real time, every frame from the moment it is on
     screen through the intro and 3 s of play, and the waits between them; each frame over BAR with its parts (sim,
