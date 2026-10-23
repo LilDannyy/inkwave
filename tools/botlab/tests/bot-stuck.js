@@ -5,7 +5,7 @@
 //        top of the hop, as an interceptor's is every second) starts from the floor under the bot — the step — not from
 //        the deck it is reaching for (it began on the deck, with a walk edge on from there and no hop asked for: the bot
 //        pressed into the step's face, 11.75 s in one Bazookarp match); and a bot at the step's face whose goal over the
-//        deck is re-picked every 0.35 s stands on the deck within 2.5 s, from every spot along both steps.
+//        deck is re-picked every 0.35 s stands on the deck within 1.2 s, from every spot along both steps.
 (async () => {
   const g = window.__inkwave, G = window.__G, m = g.match, L = G.level, N = G.nav, out = [], R = (name, ok, info) => out.push({ name, ok: !!ok, info });
   const THREE = await import('three'), V3 = THREE.Vector3, r2 = (v) => Math.round(v * 100) / 100;
