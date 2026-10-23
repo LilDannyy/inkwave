@@ -17,6 +17,7 @@ import { buildBackdrop } from './backdrop.js';
 import * as G from './geo.js';
 import { fill, edgeKinds, walls, cutColumns, rotBox, splitColumns } from './ground.js';
 import { LAVA, LAVA_VIEW, BLOCKOUT_LAVA, riderStandIns } from './lava.js';
+import { KARP_VETO } from './karpVeto.js';   // (fix round 5: the Carp Field's hop / gap edges over the lava)
 
 const { P, rotPoly, inPoly } = G;
 const HIGH_BUILD = BLOCKOUT_LAVA && LAVA_VIEW === 'high';
@@ -470,6 +471,9 @@ const BAZOOKARP = {
     gantry: [[-8.5, 10], [-8.5, 20.6], [-3, 25.5]],                                                     // the Ladle Gantry (bazookarp only)
     east: [[-3, 25.5], [-8.6, 24.2], [-8.6, 28.5], [-3, 33.5], [4.8, 35.2], [5.5, 38.6], [18, 50]],      // East Steps → Bay Stair
   },
+  // (the lava fix round 5, the lead's decision after review 5) the carrier field never relies on a jump over the lava: every
+  // hop / gap edge the field would add across it (karpVeto.js; lava-karp.js K8 keeps the list whole)
+  hopVeto: KARP_VETO,
 };
 
 // ============================================================================================================ the layout
