@@ -1,0 +1,582 @@
+JOB-8 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 01:49:05
+branch botlab-b5-beta1, ran at 457afc6e, exit code 0, wall time 28min
+(a written-up JOB-8.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### beta1 JOB-8 head 457afc6e
+[bot-stuck] RESULT 5/6
+[bot-stuck-2] RESULT 5/6
+[bot-stuck-karpspot] RESULT 1/1
+[karp-bots] RESULT 41/42
+[karp-bots-2] RESULT 40/42
+[holds] RESULT 325/325
+[pipes] RESULT 92/92
+[sub-bobber] RESULT 84/84
+[lava-bots] RESULT 7/7
+[lava-bots-2] RESULT 7/7
+[issue-log] RESULT 8/8
+[karp-halyard-3] RESULT karp halyard win=B reason=knockout ko=35.4 c=100/0 pops=0/4 carries=4 blasts=0 ot=no
+[karp-halyard-1] RESULT karp halyard win=B reason=knockout ko=287.5 c=17/0 pops=8/20 carries=28 blasts=0 ot=no
+[karp-halyard-2] RESULT karp halyard win=B reason=knockout ko=297.2 c=38/0 pops=17/10 carries=27 blasts=0 ot=no
+[karp-aquarium-2] RESULT karp aquarium win=A reason=knockout ko=215.7 c=0/51 pops=7/5 carries=12 blasts=0 ot=no
+[karp-aquarium-1] RESULT karp aquarium win=B reason=knockout ko=214.9 c=34/0 pops=9/9 carries=18 blasts=0 ot=no
+[karp-halyard-4] RESULT karp halyard win=B reason=stopped ko=- c=66/57 pops=8/9 carries=17 blasts=0 ot=stopped/held
+[karp-aquarium-3] RESULT karp aquarium win=B reason=knockout ko=64.4 c=74/0 pops=1/3 carries=4 blasts=0 ot=no
+[karp-bluestone-1] RESULT karp bluestone win=A reason=knockout ko=160.3 c=0/100 pops=9/3 carries=12 blasts=0 ot=no
+[karp-aquarium-4] RESULT karp aquarium win=A reason=time ko=- c=17/18 pops=13/11 carries=24 blasts=0 ot=no
+[karp-lockgate-2] RESULT karp lockgate win=A reason=knockout ko=37.9 c=0/100 pops=3/0 carries=3 blasts=0 ot=no
+[karp-lockgate-1] RESULT karp lockgate win=A reason=knockout ko=167.1 c=0/50 pops=14/3 carries=17 blasts=0 ot=no
+[karp-bluestone-2] RESULT karp bluestone win=B reason=knockout ko=294.9 c=100/0 pops=9/24 carries=33 blasts=0 ot=no
+### done
+
+## last 15 lines of job.log
+[tower-bluestone-1] CONSOLE 0 unique warning/error line(s)
+[tower-bluestone-2]    stuck 0.1% | by the tower's side 3.9% of bot-time, stuck there 1.3s (2 episodes) | splats 129 (water 0) | specials 16 (ready 19) | super jumps 60 | turf 15.8/28.6 | sim 336.8s in 81s (wall 81s) | {"cpuSimMs":0.89}
+[tower-bluestone-2]    STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+[tower-bluestone-2] CONSOLE 0 unique warning/error line(s)
+[turf-bluestone-2]    stuck 4.4% | splats 44 (water 0) | specials 2 | super jumps 16 | turf 23.7/33.9 | sim 180s in 28s (wall 28s) | {"cpuSimMs":0.87}
+[turf-bluestone-2]    STUCK episodes over 5 s: 1 | ISSUELOG stuck-bot entries this match: 1 [{"mode":"turf","stage":"bluestone","world":"bluestone","duration":5.25,"pos":[5.8,0,46.4],"botMode":"paint","role":null,"path":"1/45","next":[4.5,-0.3,44.5],"edgeIn":"walk","goal":[-10.5
+[turf-bluestone-2] CONSOLE 0 unique warning/error line(s)
+[turf-bluestone-1]    stuck 0% | splats 35 (water 0) | specials 5 | super jumps 17 | turf 25.6/34.5 | sim 180s in 29s (wall 29s) | {"cpuSimMs":0.77}
+[turf-bluestone-1]    STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+[turf-bluestone-1] CONSOLE 0 unique warning/error line(s)
+[tank-1] PASS tank: 0 entries, 0 actor-seconds on the sand bed in 50 s  []
+[tank-2] PASS tank: 0 entries, 0 actor-seconds on the sand bed in 97.15 s  []
+[tank-3] PASS tank: 0 entries, 0 actor-seconds on the sand bed in 54.76 s  []
+[tank-4] PASS tank: 0 entries, 0 actor-seconds on the sand bed in 185.01 s  []
+### done
+
+## karp-aquarium-1.txt
+== aquarium [bazookarp L 61.1/60.9 m]: winner B (knockout) | counts 34 vs 0 | best A 40.8 m B 60.9 m | ko 214.9 | OT no | sim 214.8 s
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 5.75 s (> 3 s episodes 1) | bots stuck 0.1% (holding on purpose 7.2%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp aquarium win=B reason=knockout ko=214.9 c=34/0 pops=9/9 carries=18 blasts=0 ot=no
+RESULT_JSON {"map":"aquarium","winner":1,"reason":"knockout","koT":214.9,"counts":[34,0],"pops":[9,9],"firstPop":12.88,"carries":18,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.1,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+
+## karp-aquarium-2.txt
+== aquarium [bazookarp L 61.1/60.9 m]: winner A (knockout) | counts 0 vs 51 | best A 61.1 m B 29.9 m | ko 215.7 | OT no | sim 215.5 s
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 1.75 s (> 3 s episodes 0) | bots stuck 0.2% (holding on purpose 10.1%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp aquarium win=A reason=knockout ko=215.7 c=0/51 pops=7/5 carries=12 blasts=0 ot=no
+RESULT_JSON {"map":"aquarium","winner":0,"reason":"knockout","koT":215.7,"counts":[0,51],"pops":[7,5],"firstPop":17.4,"carries":12,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.2,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+
+## karp-aquarium-3.txt
+== aquarium [bazookarp L 61.1/60.9 m]: winner B (knockout) | counts 74 vs 0 | best A 16.2 m B 60.9 m | ko 64.4 | OT no | sim 64.5 s
+   fast fuse (s): retreat 1.7 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 1) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.9% (holding on purpose 9.4%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp aquarium win=B reason=knockout ko=64.4 c=74/0 pops=1/3 carries=4 blasts=0 ot=no
+RESULT_JSON {"map":"aquarium","winner":1,"reason":"knockout","koT":64.4,"counts":[74,0],"pops":[1,3],"firstPop":13.22,"carries":4,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.9,"over5":0,"issueStuck":0,"clamped":0,"crushes":1,"console":0,"frameErrors":0}
+
+## karp-aquarium-4.txt
+== aquarium [bazookarp L 61.1/60.9 m]: winner A (time) | counts 17 vs 18 | best A 50.8 m B 50 m | ko - | OT no | sim 300 s
+   fast fuse (s): retreat 1.7 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 1) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.2% (holding on purpose 9%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp aquarium win=A reason=time ko=- c=17/18 pops=13/11 carries=24 blasts=0 ot=no
+RESULT_JSON {"map":"aquarium","winner":0,"reason":"time","koT":null,"counts":[17,18],"pops":[13,11],"firstPop":15.27,"carries":24,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.2,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+
+## karp-bluestone-1.txt
+== bluestone [bazookarp L 62.6/62.5 m]: winner A (knockout) | counts 0 vs 100 | best A 62.6 m B 0 m | ko 160.3 | OT no | sim 160.3 s
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.1% (holding on purpose 4.2%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp bluestone win=A reason=knockout ko=160.3 c=0/100 pops=9/3 carries=12 blasts=0 ot=no
+RESULT_JSON {"map":"bluestone","winner":0,"reason":"knockout","koT":160.3,"counts":[0,100],"pops":[9,3],"firstPop":11.37,"carries":12,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.1,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+
+## karp-bluestone-2.txt
+== bluestone [bazookarp L 62.6/62.5 m]: winner B (knockout) | counts 100 vs 0 | best A 0 m B 62.5 m | ko 294.9 | OT no | sim 294.8 s
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.2% (holding on purpose 7.4%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp bluestone win=B reason=knockout ko=294.9 c=100/0 pops=9/24 carries=33 blasts=0 ot=no
+RESULT_JSON {"map":"bluestone","winner":1,"reason":"knockout","koT":294.9,"counts":[100,0],"pops":[9,24],"firstPop":12.17,"carries":33,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.2,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+
+## karp-halyard-1.txt
+== halyard [bazookarp L 54.8/54.7 m]: winner B (knockout) | counts 17 vs 0 | best A 45.9 m B 54.7 m | ko 287.5 | OT no | sim 287.5 s
+   fast fuse (s): retreat 5.4 zone 0 | clamp rejections 0 | carrierRetreatFallback 4 (a dip the engine forgives, no ×3: 1) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0% (holding on purpose 11.3%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp halyard win=B reason=knockout ko=287.5 c=17/0 pops=8/20 carries=28 blasts=0 ot=no
+RESULT_JSON {"map":"halyard","winner":1,"reason":"knockout","koT":287.5,"counts":[17,0],"pops":[8,20],"firstPop":9.73,"carries":28,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0,"over5":0,"issueStuck":0,"clamped":0,"crushes":1,"console":0,"frameErrors":0}
+
+## karp-halyard-2.txt
+== halyard [bazookarp L 54.8/54.7 m]: winner B (knockout) | counts 38 vs 0 | best A 34.3 m B 54.7 m | ko 297.2 | OT no | sim 297 s
+   fast fuse (s): retreat 12.6 zone 0 | clamp rejections 0 | carrierRetreatFallback 5 (a dip the engine forgives, no ×3: 4) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.5% (holding on purpose 10.1%)
+   DIAG: 1 stuck episode(s) of 2 s or more
+   stuck {"t":86.5,"name":"Blotch","w":"blaster","mode":"paint","role":"grab","carry":false,"pos":[-4.1,0,20.3],"dur":4.25}
+      plan {"t":86.5,"mode":"paint","role":"grab","pos":[-4.14,0,20.33],"len":2,"pi":1,"next":[[-4.5,0,21.5],null],"edgeIn":"walk","goal":[-4.5,0,21.5],"noProg":0.33,"near":[-4.5,0,20.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"kid","mv":[0,0],"spd":0,"fire":true,"esc":false,"see":1,"tgt":"Suki","sit":"shell","shell":"intact","dK":6.95,"spot":[-4.5,0,
+      plan {"t":87.3,"mode":"paint","role":"grab","pos":[-4.14,0,20.33],"len":2,"pi":1,"next":[[-4.5,0,21.5],null],"edgeIn":"walk","goal":[-4.5,0,21.5],"noProg":1.08,"near":[-4.5,0,20.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"kid","mv":[0,0],"spd":0,"fire":true,"esc":false,"see":1,"tgt":"Suki","sit":"shell","shell":"intact","dK":6.95,"spot":[-4.5,0,
+      plan {"t":88.3,"mode":"paint","role":"grab","pos":[-4.14,0,20.33],"len":2,"pi":1,"next":[[-4.5,0,21.5],null],"edgeIn":"walk","goal":[-4.5,0,21.5],"noProg":0.57,"near":[-4.5,0,20.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"kid","mv":[0,0],"spd":0,"fire":true,"esc":false,"see":1,"tgt":"Suki","sit":"shell","shell":"intact","dK":6.95,"spot":[-4.5,0,
+      plan {"t":89.3,"mode":"paint","role":"grab","pos":[-4.14,0,20.33],"len":2,"pi":1,"next":[[-4.5,0,21.5],null],"edgeIn":"walk","goal":[-4.5,0,21.5],"noProg":0.05,"near":[-4.5,0,20.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"kid","mv":[0,0],"spd":0,"fire":true,"esc":false,"see":1,"tgt":"Coral","sit":"shell","shell":"intact","dK":6.95,"spot":[-4.5,0
+      plan {"t":90.3,"mode":"paint","role":"grab","pos":[-4.14,0,20.33],"len":2,"pi":1,"next":[[-4.5,0,21.5],null],"edgeIn":"walk","goal":[-4.5,0,21.5],"noProg":1.05,"near":[-4.5,0,20.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"kid","mv":[0,0],"spd":0,"fire":true,"esc":false,"see":1,"tgt":"Coral","sit":"shell","shell":"intact","dK":6.95,"spot":[-4.5,0
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp halyard win=B reason=knockout ko=297.2 c=38/0 pops=17/10 carries=27 blasts=0 ot=no
+RESULT_JSON {"map":"halyard","winner":1,"reason":"knockout","koT":297.2,"counts":[38,0],"pops":[17,10],"firstPop":10.17,"carries":27,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.5,"over5":0,"issueStuck":0,"clamped":0,"crushes":3,"console":0,"frameErrors":0}
+
+## karp-halyard-3.txt
+== halyard [bazookarp L 54.8/54.7 m]: winner B (knockout) | counts 100 vs 0 | best A 0 m B 54.7 m | ko 35.4 | OT no | sim 35.3 s
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0% (holding on purpose 9.5%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp halyard win=B reason=knockout ko=35.4 c=100/0 pops=0/4 carries=4 blasts=0 ot=no
+RESULT_JSON {"map":"halyard","winner":1,"reason":"knockout","koT":35.4,"counts":[100,0],"pops":[0,4],"firstPop":12.42,"carries":4,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+
+## karp-halyard-4.txt
+== halyard [bazookarp L 54.8/54.7 m]: winner B (stopped) | counts 66 vs 57 | best A 18.7 m B 23.8 m | ko - | OT held 3.4 s → stopped | sim 303.5 s
+   fast fuse (s): retreat 11.8 zone 0 | clamp rejections 0 | carrierRetreatFallback 7 (a dip the engine forgives, no ×3: 6) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.2% (holding on purpose 9.3%)
+   DIAG: 1 stuck episode(s) of 2 s or more
+   stuck {"t":29.3,"name":"Suki","w":"blaster","mode":"paint","role":"grab","carry":false,"pos":[3,1.3,-3.3],"dur":2}
+      plan {"t":29.3,"mode":"paint","role":"grab","pos":[3.05,1.3,-3.28],"len":2,"pi":1,"next":[[4.5,1.3,-3.5],null],"edgeIn":"walk","goal":[4.5,1.3,-3.5],"noProg":0.42,"near":[3.5,1.3,-3.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"kid","mv":[-0.49,0.06],"spd":0.48,"fire":true,"esc":false,"see":1,"tgt":"Squiddo","sit":"shell","shell":"intact","dK":7.6
+      plan {"t":30,"mode":"paint","role":"grab","pos":[3.02,1.3,-3.3],"len":2,"pi":1,"next":[[4.5,1.3,-3.5],null],"edgeIn":"walk","goal":[4.5,1.3,-3.5],"noProg":1.17,"near":[3.5,1.3,-3.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"kid","mv":[-0.44,0.06],"spd":0.72,"fire":true,"esc":false,"see":1,"tgt":"Squiddo","sit":"shell","shell":"intact","dK":7.62,"
+      plan {"t":31,"mode":"fight","role":"intercept","pos":[3.49,1.3,-3.88],"len":12,"pi":4,"next":[[0.5,1.3,-4.5],[0.5,1.11,-5.5]],"edgeIn":"walk","goal":[-0.5,0,-11.5],"noProg":0.12,"near":[3.5,1.3,-3.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"kid","mv":[0.82,-0.47],"spd":3.79,"fire":false,"esc":false,"see":1,"tgt":"Squiddo","sit":"theirs","shell":
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp halyard win=B reason=stopped ko=- c=66/57 pops=8/9 carries=17 blasts=0 ot=stopped/held
+RESULT_JSON {"map":"halyard","winner":1,"reason":"stopped","koT":null,"counts":[66,57],"pops":[8,9],"firstPop":9.88,"carries":17,"plants":0,"blasts":{"own":0,"enemy":0},"resets":{},"ot":{"why":"held","losing":0,"len":3.4,"end":"stopped","windows":{"opened":0,"paused":0,"closed":0}},"stuckPct":0.2,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+
+## karp-lockgate-1.txt
+== lockgate [bazookarp L 58/57.9 m]: winner A (knockout) | counts 0 vs 50 | best A 58 m B 29 m | ko 167.1 | OT no | sim 167.3 s
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0% (holding on purpose 6.1%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp lockgate win=A reason=knockout ko=167.1 c=0/50 pops=14/3 carries=17 blasts=0 ot=no
+RESULT_JSON {"map":"lockgate","winner":0,"reason":"knockout","koT":167.1,"counts":[0,50],"pops":[14,3],"firstPop":15.98,"carries":17,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+
+## karp-lockgate-2.txt
+== lockgate [bazookarp L 58/57.9 m]: winner A (knockout) | counts 0 vs 100 | best A 58 m B 0 m | ko 37.9 | OT no | sim 38 s
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.6% (holding on purpose 4.1%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp lockgate win=A reason=knockout ko=37.9 c=0/100 pops=3/0 carries=3 blasts=0 ot=no
+RESULT_JSON {"map":"lockgate","winner":0,"reason":"knockout","koT":37.9,"counts":[0,100],"pops":[3,0],"firstPop":16.32,"carries":3,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.6,"over5":0,"issueStuck":0,"clamped":0,"crushes":1,"console":0,"frameErrors":0}
+
+## pt-bot-stuck-2.txt
+PASS step: a route planned mid-hop starts from the floor under the bot (the Feeding Step, y 1.2), not from the deck it is reaching for  {"bad":[],"rows":[{"at":[-1.8,7.9],"start":[-1.5,1.2,8.5],"next":[-1.5,2.4,7.5],"edge":"jump"},{"at":[-1.5,7.9],"start":[-1.5,1.2,8.5],"next":[-1.5,2.4,7.5],"edge":"jump"},{"at":[-0.5,7.9],"start":[-0.5,1.2,7.5],"next":[-0.5,2.4,6.5],"edge":"jump"},{"at"
+PASS step: at the step's face, its goal over the deck re-picked every 0.35 s, a bot stands on the deck within 1.2 s (12 spots, both steps; mid-hop routes from the deck took up to 1.9 s)  {"slow":[],"worst":0.5,"runs":[0.43,0.43,0.48,0.48,0.43,0.43,0.43,0.43,0.5,0.5,0.45,0.43]}
+PASS bobber: a bot run dry mid-chain on bare ground lets its chain plan go to refill (within 1 s) and is never held there over 3 s (10 s watched)  {"bad":[],"rows":[{"at":[0,12.5],"planAt1":false,"ink3":19,"ink10":50,"worst":0,"mode":"refill"},{"at":[-6,13],"planAt1":false,"ink3":19,"ink10":50,"worst":0,"mode":"refill"},{"at":[0,-12.5],"planAt1":false,"ink3":62,"ink10":85,"worst":0,"mode
+PASS bobber: laying its chain, the bot holds on purpose (every frame it stands for its plan)  [{"at":[0,12.5],"laying":90,"held":90},{"at":[-6,13],"laying":90,"held":90}]
+PASS refill: every weapon (12) at its refill spot on bare ground (6 % and 10 %) has 40 % back within 10 s  {"bad":[],"rows":[{"w":"shooter","ink0":6,"t40":1.3},{"w":"shooter","ink0":10,"t40":1.1},{"w":"twins","ink0":6,"t40":1.3},{"w":"twins","ink0":10,"t40":1.4},{"w":"brolly","ink0":6,"t40":1.6},{"w":"brolly","ink0":10,"t40":1.4},{"w":"blaster","ink0":6,"t40":2.4},{"w":"blaster","ink0":1
+FAIL tank: a bot on the Great Tank's sand bed (inside the glass, no way out on foot) heading out is out within 6 s (6 spots: by the rim and mid-bed)  {"bad":[{"at":[2.84,-0.6,6.21],"outAt":null,"jumped":false,"end":[1.55,-0.6,6.67]}],"rows":[{"at":[6.64,-0.6,1.79],"outAt":4.05,"jumped":true,"end":[17.81,3.38,-62.6]},{"at":[2.84,-0.6,6.21],"outAt":null,"jumped":false,"end":[1.55,-0.6,6.67
+RESULT 5/6
+
+## pt-bot-stuck-karpspot.txt
+PASS karpspot: a breaker's refill spot by the shell is never within 3 m of the one it just found no use for (20 picks; none: the usual search)  {"n":20,"bad":[],"rows":[{"who":"Wasabi","role":"break","spot":[2.5,3.8,-1.5],"again":null,"d":null},{"who":"Wasabi","role":"break","spot":[2.5,3.8,-1.5],"again":null,"d":null},{"who":"Fizz","role":"break","spot":[6.5,3.8,-2.75],"again":[0.5,0.1,
+RESULT 1/1
+
+## pt-bot-stuck.txt
+PASS step: a route planned mid-hop starts from the floor under the bot (the Feeding Step, y 1.2), not from the deck it is reaching for  {"bad":[],"rows":[{"at":[-1.8,7.9],"start":[-1.5,1.2,8.5],"next":[-1.5,2.4,7.5],"edge":"jump"},{"at":[-1.5,7.9],"start":[-1.5,1.2,8.5],"next":[-1.5,2.4,7.5],"edge":"jump"},{"at":[-0.5,7.9],"start":[-0.5,1.2,7.5],"next":[-0.5,2.4,6.5],"edge":"jump"},{"at"
+PASS step: at the step's face, its goal over the deck re-picked every 0.35 s, a bot stands on the deck within 1.2 s (12 spots, both steps; mid-hop routes from the deck took up to 1.9 s)  {"slow":[],"worst":0.5,"runs":[0.43,0.43,0.48,0.48,0.43,0.43,0.43,0.43,0.5,0.5,0.45,0.43]}
+PASS bobber: a bot run dry mid-chain on bare ground lets its chain plan go to refill (within 1 s) and is never held there over 3 s (10 s watched)  {"bad":[],"rows":[{"at":[0,12.5],"planAt1":false,"ink3":19,"ink10":50,"worst":0,"mode":"refill"},{"at":[-6,13],"planAt1":false,"ink3":19,"ink10":50,"worst":0,"mode":"refill"},{"at":[0,-12.5],"planAt1":false,"ink3":34,"ink10":66,"worst":0,"mode
+PASS bobber: laying its chain, the bot holds on purpose (every frame it stands for its plan)  [{"at":[0,12.5],"laying":90,"held":90},{"at":[-6,13],"laying":90,"held":90}]
+FAIL refill: every weapon (12) at its refill spot on bare ground (6 % and 10 %) has 40 % back within 10 s  {"bad":[{"w":"roller","ink0":6,"t40":null,"ink8":39,"fireHeld":0.01,"squid":0,"heldDry":0.07},{"w":"roller","ink0":10,"t40":null,"ink8":0,"fireHeld":0.03,"squid":0,"heldDry":0.12},{"w":"mitts","ink0":6,"t40":null,"ink8":2,"fireHeld":0.03,"squid":0}],"rows":[{"w":"shooter","ink0":6,"
+PASS tank: a bot on the Great Tank's sand bed (inside the glass, no way out on foot) heading out is out within 6 s (6 spots: by the rim and mid-bed)  {"bad":[],"rows":[{"at":[6.64,-0.6,1.79],"outAt":4.22,"jumped":true,"end":[17.81,3.38,-62.6]},{"at":[2.84,-0.6,6.21],"outAt":4.12,"jumped":true,"end":[17.77,3.38,-62.61]},{"at":[-1,-0.6,6.8],"outAt":5.67,"jumped":true,"end":[17.71,3.38,-62.
+RESULT 5/6
+
+## pt-holds.txt
+PASS shooter: not a two-handed hold  "shooter"
+PASS shooter: the off hand unchanged in every state (vs the recorded baseline)  {"states":18,"maxHandCm":1.2,"maxGrip":0.012,"maxTwo":0.003}
+PASS twins: not a two-handed hold  "twins"
+PASS twins: the off hand unchanged in every state (vs the recorded baseline)  {"states":18,"maxHandCm":2.8,"maxGrip":0.01,"maxTwo":0}
+PASS spinner: not a two-handed hold  "spinner"
+PASS spinner: the off hand unchanged in every state (vs the recorded baseline)  {"states":18,"maxHandCm":2.2,"maxGrip":0.007,"maxTwo":0}
+PASS charger: not a two-handed hold  "charger"
+PASS charger: the off hand unchanged in every state (vs the recorded baseline)  {"states":18,"maxHandCm":1.9,"maxGrip":0.004,"maxTwo":0}
+PASS bow: not a two-handed hold  "bow"
+PASS bow: the off hand unchanged in every state (vs the recorded baseline)  {"states":18,"maxHandCm":0.9,"maxGrip":0.01,"maxTwo":0}
+PASS blade: not a two-handed hold  "blade"
+PASS blade: the off hand unchanged in every state (vs the recorded baseline)  {"states":18,"maxHandCm":3.1,"maxGrip":0.007,"maxTwo":0}
+PASS mitts: not a two-handed hold  "mitts"
+PASS mitts: the off hand unchanged in every state (vs the recorded baseline)  {"states":18,"maxHandCm":1.8,"maxGrip":0.015,"maxTwo":0}
+PASS bucket: not a two-handed hold  "bucket"
+PASS bucket: the off hand unchanged in every state (vs the recorded baseline)  {"states":18,"maxHandCm":2.6,"maxGrip":0.031,"maxTwo":0}
+PASS brush stand: the off hand on the weapon (≤ 2.5 cm) every frame  {"dMax":0,"at":0.8,"n":60}
+PASS brush stand: a natural elbow and wrist  {"elbow":[96.3,97.6],"bend":-1.38,"swing":17,"twist":21.1}
+PASS brush stand: the weapon clear of the head (≥ 0.135 m from its centre)  {"head":0.388,"at":0.63}
+PASS brush stand: the weapon not through the deck (lowest point ≥ -4.5 cm)  {"floor":0.01,"at":1.97,"root":0}
+PASS brush run: the off hand on the weapon (≤ 2.5 cm) every frame  {"dMax":0,"at":0.38,"n":66}
+PASS brush run: a natural elbow and wrist  {"elbow":[98.3,101.6],"bend":-1.38,"swing":20.1,"twist":26.8}
+PASS brush run: the weapon clear of the head (≥ 0.135 m from its centre)  {"head":0.398,"at":0.38}
+PASS brush run: the weapon not through the deck (lowest point ≥ -4.5 cm)  {"floor":0.036,"at":0.25,"root":0}
+PASS brush fire: the off hand on the weapon (≤ 2.5 cm) every frame  {"dMax":0,"at":1.1,"n":132}
+PASS brush fire: a natural elbow and wrist  {"elbow":[86.7,161.9],"bend":-0.35,"swing":71.9,"twist":82.6}
+PASS brush fire: the weapon clear of the head (≥ 0.135 m from its centre)  {"head":0.393,"at":0.13}
+PASS brush roll: the off hand on the weapon (≤ 2.5 cm) every frame  {"dMax":0,"at":1,"n":96}
+PASS brush roll: a natural elbow and wrist  {"elbow":[79.8,157.5],"bend":-0.3,"swing":69.9,"twist":72.7}
+PASS brush roll: the weapon clear of the head (≥ 0.135 m from its centre)  {"head":0.304,"at":1.53}
+PASS brush roll: the bristle head square to the path (≤ 5°) and on the midline (± 7 cm) every rolling frame  {"n":49,"offMean":0.7,"offMax":3,"latMeanCm":-2.8,"latMaxCm":4.4}
+PASS brush jump: the off hand on the weapon (≤ 2.5 cm) every frame  {"dMax":0,"at":0.8,"n":63}
+PASS brush jump: a natural elbow and wrist  {"elbow":[96.2,100.4],"bend":-1.34,"swing":18.7,"twist":21.4}
+PASS brush jump: the weapon clear of the head (≥ 0.135 m from its centre)  {"head":0.384,"at":0.57}
+PASS brush runjump: the off hand on the weapon (≤ 2.5 cm) every frame  {"dMax":0,"at":0.38,"n":63}
+PASS brush runjump: a natural elbow and wrist  {"elbow":[95.8,100.8],"bend":-1.35,"swing":19.6,"twist":25.8}
+PASS brush runjump: the weapon clear of the head (≥ 0.135 m from its centre)  {"head":0.385,"at":0.57}
+PASS brush fall: the off hand on the weapon (≤ 2.5 cm) every frame  {"dMax":0,"at":1.07,"n":96}
+PASS brush fall: a natural elbow and wrist  {"elbow":[93.7,99.3],"bend":-1.3,"swing":20.7,"twist":23.2}
+PASS brush fall: the weapon clear of the head (≥ 0.135 m from its centre)  {"head":0.381,"at":0.45}
+PASS brush spawn: the off hand on the weapon (≤ 2.5 cm) every frame  {"dMax":0,"at":1.4,"n":96}
+PASS brush spawn: a natural elbow and wrist  {"elbow":[89.8,98.5],"bend":-1.28,"swing":19,"twist":23.8}
+PASS brush spawn: the weapon clear of the head (≥ 0.135 m from its centre)  {"head":0.36,"at":0.35}
+PASS brush lobby: the off hand on the weapon (≤ 2.5 cm) every frame  {"dMax":0,"at":1.75,"n":142}
+PASS brush lobby: a natural elbow and wrist  {"elbow":[84.7,86.3],"bend":-1.38,"swing":11.1,"twist":7.7}
+PASS brush lobby: the weapon clear of the head (≥ 0.135 m from its centre)  {"head":0.304,"at":0.75}
+PASS brush lobby: the weapon not through the deck (lowest point ≥ -4.5 cm)  {"floor":0.102,"at":0,"root":0}
+PASS brush idle: the off hand on the weapon (≤ 2.5 cm) every frame  {"dMax":0,"at":5.65,"n":162}
+PASS brush idle: a natural elbow and wrist  {"elbow":[88.1,108.9],"bend":-1.35,"swing":14.5,"twist":19.8}
+PASS brush idle: the weapon clear of the head (≥ 0.135 m from its centre)  {"head":0.303,"at":4.95}
+PASS brush idle: the weapon not through the deck (lowest point ≥ -4.5 cm)  {"floor":0.086,"at":7.9,"root":0}
+PASS brush locker: the off hand on the weapon (≤ 2.5 cm) every frame  {"dMax":0,"at":4.5,"n":182}
+PASS brush locker: a natural elbow and wrist  {"elbow":[94,106.4],"bend":-1.41,"swing":11.4,"twist":8.8}
+PASS brush locker: the weapon clear of the head (≥ 0.135 m from its centre)  {"head":0.338,"at":3.45}
+PASS brush locker: the weapon not through the deck (lowest point ≥ -4.5 cm)  {"floor":0.086,"at":1.35,"root":0}
+PASS brush victory0: the off hand on the weapon (≤ 2.5 cm) every frame  {"dMax":0,"at":2.6,"n":78}
+PASS brush victory0: a natural elbow and wrist  {"elbow":[77.6,102.6],"bend":-1.17,"swing":24.9,"twist":86}
+PASS brush victory0: the weapon clear of the head (≥ 0.135 m from its centre)  {"head":0.305,"at":1.7}
+PASS brush victory0: the weapon not through the deck (lowest point ≥ -4.5 cm)  {"floor":0.532,"at":1.75,"root":0}
+PASS brush victory1: the off hand on the weapon (≤ 2.5 cm) every frame  {"dMax":0,"at":3.85,"n":94}
+
+## pt-issue-log.txt
+PASS captures error, warning, window.onerror, slow frame and stuck episode exactly once  ["console-error","console-warn","window-error","slow-frame","stuck-bot"]
+PASS entries include timestamp, build, mode, stage, era/lava and online fields  {"at":"2026-10-23T14:36:19.897Z","kind":"stuck-bot","message":"bot stuck episode exceeded 5 seconds","build":"457afc6e7ae8e42653b62ae94c0560c318877576","mode":"turf","stage":"halyard","world":"halyard","era":null,"lava":null,"online":false,"duration":5.25,"pos":[0,0,0],"botMode":"paint","role":null,"path":nul
+PASS a bot walking at 3 m/s with noProg ticking is not stuck (60 Hz)  []
+PASS a bot walking at 3 m/s with noProg ticking is not stuck (120 Hz)  []
+PASS holding a spot on purpose (zone guard, keeper, perch), dead, or riding the tower: not stuck  []
+PASS bots standing still while the match is paused, in its intro or at its finish: not stuck (they were logged together, in bursts)  0
+PASS a bot pressed into a wall: no entry before 5 s, one after, with where it was and what it was doing  {"early":0,"got":[{"at":"2026-10-23T14:36:19.898Z","kind":"stuck-bot","message":"bot stuck episode exceeded 5 seconds","build":"457afc6e7ae8e42653b62ae94c0560c318877576","mode":"turf","stage":"halyard","world":"halyard","era":null,"lava":null,"online":false,"duration":5.25,"pos":[-0.3
+PASS an entry in a lava / eras match: no throw, its era and lava phase as plain values, and the desktop IPC takes it  {"threw":null,"ipc":"ok","lava":"string","era":2,"world":"halyard","native":true}
+RESULT 8/8
+
+## pt-karp-bots-2.txt
+PASS A normal: with Bravo's side at 72 % the Alpha bots placed 4.2 m out leave the burst (4.5 m) and keep the 5.5 m ring from 1.5 s on (0.2 m of slack), still shooting it  {"minA":5.57,"samples":596,"breakT":19.77,"dangerKnown":0.7,"dbg":[]}
+PASS A hard: with Bravo's side at 62 % the Alpha bots placed 4.2 m out leave the burst (4.5 m) and keep the 5.5 m ring from 1.5 s on (0.2 m of slack), still shooting it  {"minA":5.6,"samples":596,"breakT":17.75,"dangerKnown":0.6,"dbg":[]}
+PASS A(c) with Bravo's side at 72 % Alpha's ranged bots on the far side of the shell walk round it to their own ring outside 5.3 m (the danger area and the ≥ 50 % keep-out: without them they cut round the full swell)  {"minA":5.55,"home":3}
+PASS A(d) a shell swelling fast toward Bravo's burst is a danger for Alpha before 70 %: climbing 60 %/s it stands at 50 %; held still at 50 % it does not  {"rising":1,"still":0,"meter":-0.5}
+PASS A easy: no shell danger area for an easy team (it ignores the meter); normal: one, for the team behind  {"easy":0,"normal":[{"team":1,"r":5.5}]}
+PASS B melee breakers (placed 2.9 m out): at 55 % of theirs out on the ring (5.5–9 m); at 75 % of ours ≥ 2.9 m from the centre and still close (≤ 5 m: in reach to hit it)  {"minOut":6.27,"maxOut":7.04,"minIn":4.05,"maxIn":4.11,"neutralCloseFrames":236,"shellR":1.6}
+FAIL B(b2) melee breakers closing in at 75 % of ours refill inside their band (≤ 5 m from the centre): never walking off to the ring or the spawn for ink  {"maxR":4.43,"minR":2.88,"refillFrames":1196}
+PASS B(d) at 60 % of theirs a melee breaker fights a foe standing by the shell from the ring's edge, never in past 4.6 m (the burst reaches the chest, 1 m up, 4.5 m from the centre 1.3 m up: 4.49 m out on the floor)  {"minD":4.86,"fightFrames":876}
+FAIL C no bot takes touch damage (karp-touch) in 20 bursts, all eight bots playing  {"bursts":20,"touches":1,"simS":56.62,"who":[{"n":"Juno","w":"roller","role":"grab","mode":"paint","ph":"shielded","d":2.66,"r":2.28,"esc":false,"side":0.99,"vel":[5.1,3.6],"mv":[-0.29,0.8],"form":"kid","spot":2.55,"sq":false,"fire":true,"grounded":true,"y":0,"kb":null,"st":"intact","hist":[[2.62,1.6,"gra
+PASS D the grabber waits 3.0–3.2 m out at ≥ 85 % of ours and grabs within 0.2 s after the 0.25 s hold (normal; 5 bursts)  [{"w":"shooter","role":"grab","rMin":3.17,"rMax":3.17,"spot":3.54,"mode":"paint","grabAfterHold":0.05},{"w":"roller","role":"grab","rMin":3.19,"rMax":3.19,"spot":3.54,"mode":"paint","grabAfterHold":0.03},{"w":"blaster","role":"grab","rMin":3.18,"rMax":3.18,"spot":
+PASS E an autopilot carrier finishes 3 scripted carries (Pond → weir, weir → Gate, own half → weir) with no retreat ×3, no own free zone, no stuck > 3 s  [{"from":[0,0],"t":5.53,"ret":0,"zone":0,"stuckFrames":0,"fallback":0},{"from":[0,28],"t":4.12,"ret":0,"zone":0,"stuckFrames":0,"fallback":0},{"from":[-4,-22],"t":10.18,"ret":0,"zone":0,"stuckFrames":0,"fallback":0}]
+PASS F carriers holding the mitts, blade, brolly, bow, roller, charger and twins, 3 carries each with a foe in sight: zero own-weapon shots, sub throws, sub:cantuse, specials, climbs, Mitts leaps and dodge rolls  [{"w":"mitts","done":3,"sum":0,"bad":{"fire":0,"sub":0,"cantuse":0,"special":0,"climb":0,"leap":0,"roll":0,"intentSub":0,"intentSpecial":0},"carpShots":1},{"w":"blade","done":3,
+PASS G(b) a pocket of its own free zone, open behind it: the carrier plans again without its retreat mark (carrierRetreatFallback, level 1), takes a short ×3 back out round the arm and goes on — never standing still, never into the zone (< 0.1 s: a clipped corner)  {"fallback":1,"fbAt":[[-2.6,0,15,1,1,-16.2,-13.3,11]],"retreatFastS":1.65,"zoneFastS":0,"backTo":21.36,"outPast":true,"mi
+PASS G every forward route closed: the carrier accepts a short ×3 (carrierRetreatFallback) and walks on through instead of standing still  {"fallback":1,"moved":28.59,"zoneFastS":0.63,"holder":true,"at":[0.5,-5.64]}
+PASS H a bot standing where a Big Burst lands leaves its disc before it blows (normal) — from 18 m, the range it passes at (§11 names none; from the carrier's usual 12–15 m it does not: the report rows below): 17 of 20 (≥ 16), 20 shots landed within 2.4 m of it  [{"ok":true,"landOff":1.29,"blowD":4.61,"knowT":0.28,"landT":0.92},{"ok":true,"landOff":0.33,"blowD":5.15,"knowT":0.28,"
+PASS H (report) the same from 12 m and 15 m (no threshold: physics, see the note)  {"12 m":{"escaped":"3 of 10","meanNotice":0.51,"meanLand":0.43},"15 m":{"escaped":"8 of 10","meanNotice":0.32,"meanLand":0.72}}
+PASS I(a) the keeper holds the open Gate: a keeper standing 3–9.5 m from it while Bravo carries  {"keepers":1,"n":179,"min":7.97,"max":8.3}
+PASS I(b) two weirs: the keeper holds the weir on the carrier's route (it switches with the carrier)  [{"carrierAt":[-9,-14],"want":"B","defends":"w11","keepers":[{"n":"P1","toSpot":7.5,"mode":"fight","toA":11.6,"toB":3.1}],"meanToB":8.02,"meanToA":12.78,"n":119,"ok":true},{"carrierAt":[2,-14],"want":"A","defends":"w10","keepers":[{"n":"Fizz","toSpot":0.3,"mode":"paint","toA":5.8,"toB":1
+PASS J(a) the wake: a hidden carrier is noticed at 15 m in the open (≤ 20 m), not at 23 m, not behind a wall; a non-carrier swimmer at 15 m is not; at 18 m a normal bot notices it, an easy one (awareness 16 m) does not  {"wallSeen":false,"wallMem":false,"wake15":true,"wake23":false,"plain15":false,"wake18":true,"easy18":false,"karpWakeR":20}
+PASS J(b) an interceptor doesn't track a hidden carrier through a wall: while nobody of its team has seen it there, its goal stays off the carrier's real spot behind the alley wall  {"role":"intercept","goalNearestP1":12.35,"goals":120,"framesSeenLegitimately":0,"firstLegit":null,"mem":[3,22],"dbg":[]}
+PASS K the knockback push in enemy ink: normal and hard fire Splash shots backwards (and get across 7.5 m of it faster than walking 6 m of it, 3.9 s), easy never  [{"diff":"normal","push":4,"across":3.17},{"diff":"hard","push":4,"across":2.88},{"diff":"easy","push":0,"across":4.95}]
+PASS L our carrier's last 3 s of fuse: a 5.5 m danger for its teammates (team-tagged so its own team reacts), never for the carrier itself; a teammate 3 m off gets out to ≥ 5.5 m  {"fz":{"team":1,"r":5.5,"not":true},"mateStart":2.71,"mateMax":6.94}
+PASS L(b) a remote (guest) carrier in its last 3 s of fuse is a danger to the host's bots on its team too  {"remote":true,"tIn":2.5}
+PASS M the layout's route hints are the carrier's candidates (and no other); two foes known on one move the pick to the other, and the carrier walks it  {"names":["west","east"],"first":"west","picks":["east"],"maxX":7.35,"planted":true,"shares":{"west":1,"east":1},"dbg":{"costs":null,"foes":[["Juno",-10,15,false],["Suki",-8,20,false]],"sameRT":false,"carrier":[-3.4,22.9],"holder":false,
+PASS N a respawned bot super jumps to our carrier ≥ 35 m away; a defender respawning while they carry stays home  {"jumpedTo":"P1","carrier":"P1","defenderJumped":false}
+PASS O a fuse that can't reach the weir at this pace on its own half: the carrier heads 2 m past the halfway line first (a blast there drops it forward)  {"kHalf":true,"goal":[-1.5,2.5],"margin":5}
+PASS P walkers treat the shell as an obstacle: a Skitter and a Waddle sent at a foe right behind the shell go round it (never inside, pressed against it under a quarter of the walk) and reach the foe  {"seeker":{"inside":0,"contactFrames":21,"walkFrames":110,"closestToFoe":1.15},"waddle":{"inside":0,"contactFrames":0,"walkFrames":200,"closestToFoe":1.12}}
+PASS R(a) escorts: the lead 8–14 m ahead on the carrier's route inking it, the flank 3–8 m beside it on the known threat's side, the anchor within 15 m  {"lead":{"along":11.22,"side":0.51},"flank":{"along":2.28,"side":-4.41},"foeSide":-1,"anchorD":8.26,"routeInk":0.64,"known":1}
+PASS R(b) the perch: a charger holds a spot 10–22 m from the shell with a line on it (shell phase), and 10–22 m from the known enemy carrier with a line on it (they carry)  {"shell":{"role":"perch","d":15.7,"los":true},"theirs":{"role":"perch","d":17.56,"los":true}}
+PASS R(c) the free phase: the grabber makes for the Bazookarp, the rest fight round it 3–8 m out on the other team's side  [{"role":"grab","d":0.13,"their":false},{"role":"fight","d":4.8,"their":true},{"role":"fight","d":5.34,"their":true},{"role":"fight","d":4.68,"their":true}]
+PASS R(d) re-forming / resetting: the breakers reposition to the ring (spots 5.8–9.6 m: SPEC 6–8 m, the ring's nodes) from the resting spot (outside the burst) while it flies back and re-forms, and close in again once it stands  {"before":[2.55,2.92,2.55,2.55],"duringMin":6.52,"duringMax":7.11,"minD":6.34,"after":[2.55,2.92,2.55,2.55],"frames":132,"phase":"shielded"}
+PASS S(a) a breaker keeps a bomb-type special (barrage) for the shell: held at 30 % of ours, thrown at 45 % (special:use)  {"at30":false,"used30":false,"at45":true,"used45":true}
+PASS S(b) an escort's special waits while nobody threatens our carrier (karpSpecial false), and is free to go once a known foe is within 15 m of it  {"role":"lead","calm":false,"threatened":null}
+PASS S(c) an interceptor fires its Vortex Strike at the known enemy carrier (karpSpecial true), and holds it while the carrier is unknown  {"roleHidden":"intercept","hidden":false,"usedHidden":false,"roleKnown":"intercept","known":true,"usedKnown":true}
+PASS S(d) the Bubble Guard's share: an escort holding one beside our carrier keeps it while nobody threatens the carrier, pops it once a known foe is within 15 m (special:use) and the carrier ends up inside a Bubble Guard  {"role":"lead","calm":false,"usedCalm":false,"usedThreatened":true,"carrierShieldFrames":106}
+PASS Y(a) interceptors by difficulty: easy 1 (the rest keep), normal ≥ 2, hard ≥ 2 approaching from both sides  {"easy":{"icpt":1,"keep":3,"sides":[-1]},"normal":{"icpt":3,"keep":1,"sides":[-1,1]},"hard":{"icpt":3,"keep":1,"sides":[-1,1]}}
+PASS Y(b) the grab after the burst's hold: easy within 0.6 s and not before 0.3 s, hard within 0.1 s  [{"diff":"easy","role":"carry","after":0.37,"atBurst":{"d":3.17,"mode":"paint","role":"grab","esc":false},"phase":"carried","holder":"P1","d":1.04,"mode":"paint"},{"diff":"easy","role":"carry","after":0.43,"atBurst":{"d":3.17,"mode":"paint","role":"grab","esc":false},"phase":"carried","h
+PASS Y(c) easy carriers never lob at a foe out of sight (always full charge, only with a line); normal ones lob over cover  {"easy":{"foeShotFrames":0,"seen":false},"normal":{"foeShotFrames":132,"seen":false}}
+PASS Y(d) hard carriers lead a foe crossing in the open at 4 m/s (the aim ahead of it), normal ones aim at where it is  {"hard":{"n":180,"meanLead":0.29},"normal":{"n":180,"meanLead":0.03}}
+PASS Y(e) the carrier's route re-pick period: easy 3 s, normal 1.5 s, hard 1 s  {"easy":{"med":3.02,"n":2},"normal":{"med":1.52,"n":4},"hard":{"med":1.02,"n":6}}
+PASS W(a) the plan, Alpha never having seen the hidden carrier: moving it from the alley (its pick-up) to the lane changes neither the defended weir, nor the perch's look, nor the interceptor, nor whether a perch takes a fight 8 m from it  {"west":{"at":[-10,-12],"known":false,"defends":"w11","look":[-5.5,-3.5],"icpt":"P1","engage":false},"east":{"at":[17,-10],"known":false,"defends":"w1
+PASS W(b) end to end: a carrier picked up in the alley (b1), or seen there in kid form (b2), then hidden in the lane: Alpha's keeper holds the alley's weir (w11) all along — its live spot behind the wall never moves it  {"b1":{"pick":[-10,-12],"show":null,"hide":[17,-10],"unknownFrames":480,"knownFromFrame":null,"keys":{"w11":480},"keeperSpots":["w11"],"keeperToW10":[11.5],"keeperToW11
+RESULT 40/42
+
+## pt-karp-bots.txt
+PASS A normal: with Bravo's side at 72 % the Alpha bots placed 4.2 m out leave the burst (4.5 m) and keep the 5.5 m ring from 1.5 s on (0.2 m of slack), still shooting it  {"minA":5.58,"samples":596,"breakT":23.22,"dangerKnown":0.7,"dbg":[]}
+PASS A hard: with Bravo's side at 62 % the Alpha bots placed 4.2 m out leave the burst (4.5 m) and keep the 5.5 m ring from 1.5 s on (0.2 m of slack), still shooting it  {"minA":5.68,"samples":596,"breakT":19.53,"dangerKnown":0.6,"dbg":[]}
+PASS A(c) with Bravo's side at 72 % Alpha's ranged bots on the far side of the shell walk round it to their own ring outside 5.3 m (the danger area and the ≥ 50 % keep-out: without them they cut round the full swell)  {"minA":5.57,"home":4}
+PASS A(d) a shell swelling fast toward Bravo's burst is a danger for Alpha before 70 %: climbing 60 %/s it stands at 50 %; held still at 50 % it does not  {"rising":1,"still":0,"meter":-0.5}
+PASS A easy: no shell danger area for an easy team (it ignores the meter); normal: one, for the team behind  {"easy":0,"normal":[{"team":1,"r":5.5}]}
+PASS B melee breakers (placed 2.9 m out): at 55 % of theirs out on the ring (5.5–9 m); at 75 % of ours ≥ 2.9 m from the centre and still close (≤ 5 m: in reach to hit it)  {"minOut":6.27,"maxOut":7.04,"minIn":3.98,"maxIn":4.11,"neutralCloseFrames":236,"shellR":1.6}
+PASS B(b2) melee breakers closing in at 75 % of ours refill inside their band (≤ 5 m from the centre): never walking off to the ring or the spawn for ink  {"maxR":4.15,"minR":3.02,"refillFrames":1196}
+PASS B(d) at 60 % of theirs a melee breaker fights a foe standing by the shell from the ring's edge, never in past 4.6 m (the burst reaches the chest, 1 m up, 4.5 m from the centre 1.3 m up: 4.49 m out on the floor)  {"minD":4.85,"fightFrames":876}
+PASS C no bot takes touch damage (karp-touch) in 20 bursts, all eight bots playing  {"bursts":20,"touches":0,"simS":62.98,"who":[]}
+PASS D the grabber waits 3.0–3.2 m out at ≥ 85 % of ours and grabs within 0.2 s after the 0.25 s hold (normal; 5 bursts)  [{"w":"shooter","role":"grab","rMin":3.17,"rMax":3.17,"spot":3.54,"mode":"paint","grabAfterHold":0.05},{"w":"roller","role":"grab","rMin":3.19,"rMax":3.19,"spot":3.54,"mode":"paint","grabAfterHold":0.05},{"w":"blaster","role":"grab","rMin":3.18,"rMax":3.18,"spot":
+PASS E an autopilot carrier finishes 3 scripted carries (Pond → weir, weir → Gate, own half → weir) with no retreat ×3, no own free zone, no stuck > 3 s  [{"from":[0,0],"t":5.53,"ret":0,"zone":0,"stuckFrames":0,"fallback":0},{"from":[0,28],"t":4.12,"ret":0,"zone":0,"stuckFrames":0,"fallback":0},{"from":[-4,-22],"t":10.18,"ret":0,"zone":0,"stuckFrames":0,"fallback":0}]
+PASS F carriers holding the mitts, blade, brolly, bow, roller, charger and twins, 3 carries each with a foe in sight: zero own-weapon shots, sub throws, sub:cantuse, specials, climbs, Mitts leaps and dodge rolls  [{"w":"mitts","done":3,"sum":0,"bad":{"fire":0,"sub":0,"cantuse":0,"special":0,"climb":0,"leap":0,"roll":0,"intentSub":0,"intentSpecial":0},"carpShots":1},{"w":"blade","done":3,
+PASS G(b) a pocket of its own free zone, open behind it: the carrier plans again without its retreat mark (carrierRetreatFallback, level 1), takes a short ×3 back out round the arm and goes on — never standing still, never into the zone (< 0.1 s: a clipped corner)  {"fallback":1,"fbAt":[[-2.6,0,15,1,1,-16.2,-13.3,11]],"retreatFastS":1.65,"zoneFastS":0,"backTo":21.36,"outPast":true,"mi
+PASS G every forward route closed: the carrier accepts a short ×3 (carrierRetreatFallback) and walks on through instead of standing still  {"fallback":1,"moved":28.59,"zoneFastS":0.63,"holder":true,"at":[0.5,-5.64]}
+FAIL H a bot standing where a Big Burst lands leaves its disc before it blows (normal) — from 18 m, the range it passes at (§11 names none; from the carrier's usual 12–15 m it does not: the report rows below): 15 of 20 (≥ 16), 20 shots landed within 2.4 m of it  [{"ok":false,"landOff":1.73,"blowD":1.08,"knowT":0.38,"landT":0.77,"tr":[[0.02,0,0,"","-","f",null,1.5],[0.12,0,0,"","-"
+PASS H (report) the same from 12 m and 15 m (no threshold: physics, see the note)  {"12 m":{"escaped":"1 of 10","meanNotice":0.33,"meanLand":0.51},"15 m":{"escaped":"7 of 10","meanNotice":0.36,"meanLand":0.71}}
+PASS I(a) the keeper holds the open Gate: a keeper standing 3–9.5 m from it while Bravo carries  {"keepers":1,"n":179,"min":6.02,"max":6.02}
+PASS I(b) two weirs: the keeper holds the weir on the carrier's route (it switches with the carrier)  [{"carrierAt":[-9,-14],"want":"B","defends":"w11","keepers":[{"n":"P1","toSpot":7.2,"mode":"fight","toA":11.1,"toB":2.6}],"meanToB":7.36,"meanToA":12.48,"n":119,"ok":true},{"carrierAt":[2,-14],"want":"A","defends":"w10","keepers":[{"n":"Zest","toSpot":0.3,"mode":"paint","toA":5.7,"toB":1
+PASS J(a) the wake: a hidden carrier is noticed at 15 m in the open (≤ 20 m), not at 23 m, not behind a wall; a non-carrier swimmer at 15 m is not; at 18 m a normal bot notices it, an easy one (awareness 16 m) does not  {"wallSeen":false,"wallMem":false,"wake15":true,"wake23":false,"plain15":false,"wake18":true,"easy18":false,"karpWakeR":20}
+PASS J(b) an interceptor doesn't track a hidden carrier through a wall: while nobody of its team has seen it there, its goal stays off the carrier's real spot behind the alley wall  {"role":"intercept","goalNearestP1":12.35,"goals":113,"framesSeenLegitimately":0,"firstLegit":null,"mem":[3,22],"dbg":[]}
+PASS K the knockback push in enemy ink: normal and hard fire Splash shots backwards (and get across 7.5 m of it faster than walking 6 m of it, 3.9 s), easy never  [{"diff":"normal","push":4,"across":3.33},{"diff":"hard","push":5,"across":3.17},{"diff":"easy","push":0,"across":3.7}]
+PASS L our carrier's last 3 s of fuse: a 5.5 m danger for its teammates (team-tagged so its own team reacts), never for the carrier itself; a teammate 3 m off gets out to ≥ 5.5 m  {"fz":{"team":1,"r":5.5,"not":true},"mateStart":2.71,"mateMax":6.52}
+PASS L(b) a remote (guest) carrier in its last 3 s of fuse is a danger to the host's bots on its team too  {"remote":true,"tIn":2.5}
+PASS M the layout's route hints are the carrier's candidates (and no other); two foes known on one move the pick to the other, and the carrier walks it  {"names":["west","east"],"first":"west","picks":["east"],"maxX":7.35,"planted":true,"shares":{"west":1,"east":1},"dbg":{"costs":null,"foes":[["Loop",-10,15,false],["Drip",-8,20,false]],"sameRT":false,"carrier":[-3.5,23],"holder":false,"l
+PASS N a respawned bot super jumps to our carrier ≥ 35 m away; a defender respawning while they carry stays home  {"jumpedTo":"P1","carrier":"P1","defenderJumped":false}
+PASS O a fuse that can't reach the weir at this pace on its own half: the carrier heads 2 m past the halfway line first (a blast there drops it forward)  {"kHalf":true,"goal":[-1.5,2.5],"margin":5}
+PASS P walkers treat the shell as an obstacle: a Skitter and a Waddle sent at a foe right behind the shell go round it (never inside, pressed against it under a quarter of the walk) and reach the foe  {"seeker":{"inside":0,"contactFrames":21,"walkFrames":110,"closestToFoe":1.15},"waddle":{"inside":0,"contactFrames":0,"walkFrames":200,"closestToFoe":1.12}}
+PASS R(a) escorts: the lead 8–14 m ahead on the carrier's route inking it, the flank 3–8 m beside it on the known threat's side, the anchor within 15 m  {"lead":{"along":11.22,"side":0.51},"flank":{"along":2.28,"side":-4.41},"foeSide":-1,"anchorD":8.26,"routeInk":0.81,"known":1}
+PASS R(b) the perch: a charger holds a spot 10–22 m from the shell with a line on it (shell phase), and 10–22 m from the known enemy carrier with a line on it (they carry)  {"shell":{"role":"perch","d":17.85,"los":true},"theirs":{"role":"perch","d":14.09,"los":true}}
+PASS R(c) the free phase: the grabber makes for the Bazookarp, the rest fight round it 3–8 m out on the other team's side  [{"role":"grab","d":0.46,"their":false},{"role":"fight","d":4.71,"their":true},{"role":"fight","d":5.3,"their":true},{"role":"fight","d":4.72,"their":true}]
+PASS R(d) re-forming / resetting: the breakers reposition to the ring (spots 5.8–9.6 m: SPEC 6–8 m, the ring's nodes) from the resting spot (outside the burst) while it flies back and re-forms, and close in again once it stands  {"before":[2.55,2.92,2.55,2.55],"duringMin":6.52,"duringMax":7.11,"minD":6.44,"after":[2.55,2.92,2.55,2.55],"frames":132,"phase":"shielded"}
+PASS S(a) a breaker keeps a bomb-type special (barrage) for the shell: held at 30 % of ours, thrown at 45 % (special:use)  {"at30":false,"used30":false,"at45":true,"used45":true}
+PASS S(b) an escort's special waits while nobody threatens our carrier (karpSpecial false), and is free to go once a known foe is within 15 m of it  {"role":"lead","calm":false,"threatened":null}
+PASS S(c) an interceptor fires its Vortex Strike at the known enemy carrier (karpSpecial true), and holds it while the carrier is unknown  {"roleHidden":"intercept","hidden":false,"usedHidden":false,"roleKnown":"intercept","known":true,"usedKnown":true}
+PASS S(d) the Bubble Guard's share: an escort holding one beside our carrier keeps it while nobody threatens the carrier, pops it once a known foe is within 15 m (special:use) and the carrier ends up inside a Bubble Guard  {"role":"lead","calm":false,"usedCalm":false,"usedThreatened":true,"carrierShieldFrames":121}
+PASS Y(a) interceptors by difficulty: easy 1 (the rest keep), normal ≥ 2, hard ≥ 2 approaching from both sides  {"easy":{"icpt":1,"keep":3,"sides":[-1]},"normal":{"icpt":3,"keep":1,"sides":[-1,1]},"hard":{"icpt":3,"keep":1,"sides":[-1,1]}}
+PASS Y(b) the grab after the burst's hold: easy within 0.6 s and not before 0.3 s, hard within 0.1 s  [{"diff":"easy","role":"carry","after":0.37,"atBurst":{"d":3.17,"mode":"paint","role":"grab","esc":false},"phase":"carried","holder":"P1","d":1.04,"mode":"paint"},{"diff":"easy","role":"carry","after":0.37,"atBurst":{"d":3.17,"mode":"paint","role":"grab","esc":false},"phase":"carried","h
+PASS Y(c) easy carriers never lob at a foe out of sight (always full charge, only with a line); normal ones lob over cover  {"easy":{"foeShotFrames":0,"seen":false},"normal":{"foeShotFrames":130,"seen":false}}
+PASS Y(d) hard carriers lead a foe crossing in the open at 4 m/s (the aim ahead of it), normal ones aim at where it is  {"hard":{"n":180,"meanLead":0.24},"normal":{"n":180,"meanLead":0.06}}
+PASS Y(e) the carrier's route re-pick period: easy 3 s, normal 1.5 s, hard 1 s  {"easy":{"med":3.02,"n":2},"normal":{"med":1.52,"n":4},"hard":{"med":1.02,"n":6}}
+PASS W(a) the plan, Alpha never having seen the hidden carrier: moving it from the alley (its pick-up) to the lane changes neither the defended weir, nor the perch's look, nor the interceptor, nor whether a perch takes a fight 8 m from it  {"west":{"at":[-10,-12],"known":false,"defends":"w11","look":[-5.5,-3.5],"icpt":"P1","engage":false},"east":{"at":[17,-10],"known":false,"defends":"w1
+PASS W(b) end to end: a carrier picked up in the alley (b1), or seen there in kid form (b2), then hidden in the lane: Alpha's keeper holds the alley's weir (w11) all along — its live spot behind the wall never moves it  {"b1":{"pick":[-10,-12],"show":null,"hide":[17,-10],"unknownFrames":480,"knownFromFrame":null,"keys":{"w11":480},"keeperSpots":["w11"],"keeperToW10":[11.5],"keeperToW11
+RESULT 41/42
+
+## pt-lava-bots-2.txt
+PASS the lava module runs
+PASS ledges (the rise warning: the Slump shelf, the Casting Floor, the ford, the bays): 20 trials × 6 bots — no crew bot dies in the lava during an escape (every death counted; fight deaths: the gate below)  {"lavaDeaths":0,"escapeDeaths":0,"fightDeaths":0,"botTrials":120,"alive":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6],"other":[["Drip","brolly",31.15],["Drip","slosh",31.37],["Drip",
+PASS stones (the fall warning: every stone of both Races, race6 / race7 included): 20 trials × 6 bots — no crew bot dies in the lava during an escape (every death counted; fight deaths: the gate below)  {"lavaDeaths":0,"escapeDeaths":0,"fightDeaths":0,"botTrials":120,"alive":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6],"other":[["Drip","brolly",66.07]],"escapes":640,"deaths":[]}
+PASS edges: the spots stand on dry floor (≥ HIGH + kill), both halves  [[-19.25,1.42,9.5,1.4],[-25.5,1.22,-1.5,1.3],[20.5,1.22,-20.5,1.2],[-7.5,1.42,-22.5,1.4],[15.5,1.22,-1.5,1.3],[-8.5,1.22,-5.5,1.3],[-25.5,1.22,-18.5,1.2],[4.5,1.22,-13.5,1.2],[10.5,1.52,-23.5,1.5],[19.5,1.42,-10.5,1.4],[-15.5,1.22,0.5,1.3],[-16.5,1.32,-21.5,1.3]]
+PASS edges (dry 1.2 m edges over the Casting Floor, the Spillway, the heads: a rise, then a fall): 20 trials × 6 bots — no crew bot dies in the lava during an escape (every death counted; fight deaths: the gate below)  {"lavaDeaths":0,"escapeDeaths":0,"fightDeaths":0,"botTrials":120,"alive":[6,5,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6],"other":[["Drip","slosh",32.2],["Drip","brolly",41.08
+PASS the gate: 0 escape deaths, ≤ 1 fight death per 360 bot-trials (360 here)  {"botTrials":360,"esc":0,"fight":0,"list":[]}
+PASS timing (wall s per scenario)  {"times":{"ledges":72.62,"stones":67.52,"edges":142.13},"trials":20,"hz":30,"total":282.27}
+RESULT 7/7
+
+## pt-lava-bots.txt
+PASS the lava module runs
+PASS ledges (the rise warning: the Slump shelf, the Casting Floor, the ford, the bays): 20 trials × 6 bots — no crew bot dies in the lava during an escape (every death counted; fight deaths: the gate below)  {"lavaDeaths":0,"escapeDeaths":0,"fightDeaths":0,"botTrials":120,"alive":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6],"other":[],"escapes":141,"deaths":[]}
+PASS stones (the fall warning: every stone of both Races, race6 / race7 included): 20 trials × 6 bots — no crew bot dies in the lava during an escape (every death counted; fight deaths: the gate below)  {"lavaDeaths":0,"escapeDeaths":0,"fightDeaths":0,"botTrials":120,"alive":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6],"other":[],"escapes":811,"deaths":[]}
+PASS edges: the spots stand on dry floor (≥ HIGH + kill), both halves  [[-19.25,1.42,9.5,1.4],[-25.5,1.22,-1.5,1.3],[20.5,1.22,-20.5,1.2],[-7.5,1.42,-22.5,1.4],[15.5,1.22,-1.5,1.3],[-8.5,1.22,-5.5,1.3],[-25.5,1.22,-18.5,1.2],[4.5,1.22,-13.5,1.2],[10.5,1.52,-23.5,1.5],[19.5,1.42,-10.5,1.4],[-15.5,1.22,0.5,1.3],[-16.5,1.32,-21.5,1.3]]
+PASS edges (dry 1.2 m edges over the Casting Floor, the Spillway, the heads: a rise, then a fall): 20 trials × 6 bots — no crew bot dies in the lava during an escape (every death counted; fight deaths: the gate below)  {"lavaDeaths":0,"escapeDeaths":0,"fightDeaths":0,"botTrials":120,"alive":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6],"other":[],"escapes":4534,"deaths":[]}
+PASS the gate: 0 escape deaths, ≤ 1 fight death per 360 bot-trials (360 here)  {"botTrials":360,"esc":0,"fight":0,"list":[]}
+PASS timing (wall s per scenario)  {"times":{"ledges":59.33,"stones":58.91,"edges":114.71},"trials":20,"hz":30,"total":232.94}
+RESULT 7/7
+
+## pt-pipes.txt
+PASS 0. the stage module for LAYOUT.pipes is registered and built: G.pipes (W), match.pipes (R), its world in G.stageWorld  {"keys":["pipes"],"W":true,"R":true}
+PASS 0. the ride camera's plans are built in idle time once the world rests: every directed leg (12) and every end's exit shot (14)  {"warm":true,"plans":12,"exits":14}
+PASS data: 4 definitions → 7 legs and 14 ends; 3 two-way (Gulper Run, both Arch Lines), 2 static one-way (the Expresses), 2 tidal one-way (the Kelp Lines)  {"defs":4,"legs":["gulper:two","arch:two","arch~:two","express:one","express~:one","kelp:tide","kelp~:tide"],"ends":14}
+PASS data: every leg's arc length matches the analytic fillet path within 1 cm (Gulper 25.4, Arch 27.8, Express 59.4, Kelp 41.8 m; 283.5 m in all)  {"worst":0,"lens":{"gulper":25.44,"arch":27.76,"arch~":27.76,"express":59.44,"express~":59.44,"kelp":41.84,"kelp~":41.84},"total":283.528}
+PASS data: the tangent is continuous (no step beyond the bend's own curvature: ≤ 0.1 m / bend + 0.5° between LUT samples)  {"maxStepDeg":3.183,"kinkDeg":0}
+PASS data: a twin is the exact 180° turn of its leg; the single Gulper Run is its own twin (reversed and turned)  {"twin":0,"gulper":0}
+PASS data: the stage passes every static §5 rule (checkPipes: counts, lengths, bends, runs, speeds, level ends, names, glass top, pads, zones, Gates, spacing, rule 30)  {"probs":[]}
+PASS data: each broken rule is reported (single symmetry, bend, level end, pad landing, name length, speed, zone, total length, tint, tide warning)  {"missed":[],"got":[["rule 23 single not symmetric","pipes rule 23: gulper is single but not its own 180° twin"],["rule 4 bend too tight at 24 m/s","pipes rule 4: express bend 1.6 m < 2.62 at 24 m/s"],["rule 7 end run not level","pipes rule
+PASS world: 168 glass pieces (≤ 200), hidden, roof, never inked, no faces; static hash blocks  {"pieces":168,"expected":168}
+PASS world: rays from 16 directions stop at the glass 0.80–1.13 m from the axis (the 1.60 m square collider round the 0.88 m tube; the Express span over the Gate Terrace)  {"dists":[0.8,0.866,1.131,0.866,0.8,0.866,1.131,0.866,0.8,0.866,1.131,0.866,0.8,0.866,1.131,0.866],"at":[-2.584,8,-34.86]}
+PASS world: physics.skip = 'pipe' lets a ray through the glass only while it is set (the ride camera's probe)  {"thru":false,"back":4}
+PASS world: a body cannot stand within 1.18 m of the axis (a kid or squid cannot pass the glass)  {"at11":false,"at125":true}
+PASS world: no nav node inside a glass piece  {"n":0}
+PASS world: layoutHash is the same with and without the glass (the lightmap layout doesn't change)  {}
+PASS world: bakeMode takes the glass and the stage's bakeClear tank glass out of the AO trace, and puts them back  {"bakeClear":55}
+PASS world: the minimap base leaves the glass out (W.mapBlock), the module draws the network
+PASS nav: one 'pipe' edge per IN → OUT pair (two-way 2, the Express 1, a tidal Kelp Line both directions from load), cost (suck + L/v + pop) × 6 + 2, len carried  {"got":{"express":1,"arch":2,"kelp~":2,"kelp":2,"gulper":2,"arch~":2,"express~":1},"costs":{"express:6":21.361,"arch:3":15.754,"arch:2":15.754,"kelp~:13":16.959,"kelp:10":16.959,"gulper:1":14.981,"gulper:0":14.981,"kelp~:12"
+PASS nav: A*'s heuristic is scaled by the cheapest pipe's cost per metre (hScale < 1 on this stage)  {"hScale":0.499,"computed":0.499}
+PASS nav: path() rides the Gulper Run east → west when it is cheaper, and walks round the deck when its key is shut  {"pipe":4,"walk":40}
+PASS nav: rule 25: both ends of every leg are walkable both ways with every pipe shut (pipes are shortcuts, never the only way)  {"bad":[]}
+PASS nav: the graph keeps the same nodes with and without the pipe edges (no area only a pipe reaches)  {"with":4778,"without":4778}
+PASS ride: standing still in the capture cylinder for 2 s or strafing across a mouth never captures (intent-gated)  {"still":true,"strafe":true}
+PASS ride: pushing into an open mouth captures 0.08–0.12 s after the body is in the cylinder (pipe:enter, the suck phase)  {"captured":true,"t":0.1,"frames":11,"phase":"suck"}
+PASS ride: the suck takes 0.25 s; the ride L/v ± 1 frame (Gulper 25.4 m at 18 m/s: 1.41 s)  {"suck":0.25,"ride":1.4,"want":1.413}
+PASS ride: every ride frame the rider is within 0.02 m of the centreline + 0.28 m lane − 0.3 m  {"off":0}
+PASS ride: untouchable from the suck's end to touchdown: damage() is false and no 'hit' event fires (ride and the shielded pop)  {"dmgOk":true,"hitEv":0,"hp":100}
+PASS ride: statuses ride along, their timers running (tracked)  {"before":3,"after":0.783}
+PASS ride: the 0.25 s suck takes damage; splatted there, the ride is cancelled (pipe:abort splat, its exit not lit)  {"inSuck":true,"tookHit":true,"aborted":true,"lit":0}
+PASS pop: a level pop with no input lands at the landing point, 3.1–3.7 m from the mouth (the real actor: ≈ 3.46 m; ENGINE.md §1.3 estimated 3.1), straight out  {"d":3.457,"turn":0,"popYaw":-1.571,"n":2.217,"landed":true,"firedDuring":false,"maxH":1.179,"thrown":0,"hardLand":0,"cd":3.5,"land":{"x":-16.157,"y":0,"z":0}}
+PASS pop: touchdown starts the 3.5 s cooldown, no hard-landing recovery; no fire until touchdown  {"cd":3.5,"hardLand":0,"fired":false}
+PASS pop: touchdown paints a 1.2 m splat of the rider's ink  {"own":1,"enemy":0,"empty":0,"n":6}
+PASS pop: jump held in the last 0.5 s gives a high pop (7.0 out / 8.5 up: ≥ 0.6 m further and ≥ 0.6 m higher than a level one; ENGINE.md estimated 4.3 m)  {"d":4.215,"maxH":1.883,"level":[3.457,1.179]}
+PASS pop: the stick held in the last 0.5 s steers the pop, by at most 45° (asked 70°)  {"turn":-45,"d":2.7}
+PASS pop: the steer through the real controller (camera-relative stick, the exit shot turning to show it): a stick held θ right of up turns the pop θ (±5°: 0°, 8°, 15°, 30°), keyboard D / A the full 45° right / left  {"rows":[{"label":"stick 0°","want":0,"captured":true,"turn":0,"cam":0},{"label":"stick 8°","want":-8,"captured":true,"turn":-8,"cam":-8},{"label":"stick 15°","w
+PASS pop: a sub held through the ride is not thrown at the pop; nothing fires until touchdown (Arch Line to the promenade)  {"thrown":0,"fired":false,"d":3.457}
+PASS pop: the Express rides 59.4 m at 24 m/s and pops onto Penguin Point's terrace (floor 1.2)  {"y":1.2,"d":3.457}
+PASS hit: a rider is never pushed (soft push, movers / pods / curtain shoves skip it); it can't super jump; a jump to it lands at its exit's landing  {"riding":true,"push":true,"shovable":false,"sj":false,"anchor":[-16.15,0],"moved":0.3}
+PASS hit: an enemy bot remembers a rider at its exit's landing (src 'jump'), never as a target in sight  {"src":"jump","seen":false,"pos":[-16.15,0]}
+PASS hit: a rider is revealed to the other team (its dot moves along the line on their map): 'pipe', with nothing else giving it away  {"why0":"hurt","why1":"pipe"}
+PASS hit: the deck and the tank stop a blast's line of sight to a Gulper rider (and the damage guard backs it)  {"los":false}
+PASS queue: two riders walk into the same mouth back to back and both ride (no queue, no lock)  {"aIn":true,"bIn":true,"gap":0.683}
+PASS queue: a second rider popping from the same mouth within 0.4 s fans 30° aside (to the right), so arrivals don't stack  {"dt":0.2,"dyaw":-30}
+PASS queue: two riders in opposite directions on the Gulper Run pass side by side, 0.56 m apart  {"minLat":0.56,"minD":0.563}
+PASS refuse: an OUT end refuses ('oneway'): "One way: this end is the exit", the flap rattles, a glass knock  {"cap":false,"why":"oneway","prompt":"One way: this end is the exit"}
+PASS refuse: the Bazookarp carrier is refused at every mouth ("Can't ride with the Bazookarp"; an OUT end says one way)  {"results":[["EAST GULPER","both","carp"],["WEST GULPER","both","carp"],["S. REEF HALL","both","carp"],["S. PROMENADE","both","carp"],["N. REEF HALL","both","carp"],["N. PROMENADE","both","carp"],["FERRY PLAZA","always","carp"],["PENGUIN POINT","never","oneway"],["FERR
+PASS refuse: a body-owning special ("Can't ride during a special"), the cooldown ("Pipe cooldown"), a kid at a squid-only stage ("Swim in as a squid")  {"o3":{"cap":false,"why":"special","prompt":"Can't ride during a special"},"o4":{"cap":false,"why":"cooldown","prompt":"Pipe cooldown"},"o5":{"cap":false,"why":"form","prompt":"Swim in as a squid"}}
+PASS refuse: facing an open IN end within 2.5 m: "Walk in to ride → WEST GULPER"  {"pr":"Walk in to ride → WEST GULPER"}
+PASS what: a bomb thrown into a mouth bounces off the glass (never past the mouth plane, never rides)  {"deepest":0.066}
+PASS what: a shot into a mouth stops at it (the end piece or its housing): shots never travel the pipe  {"dist":3,"pipe":true}
+PASS what: devices are never placed on a mouth's IN apron or a landing (G.level.noPlace), and place as anywhere 4 m away  {"apron":true,"land":true,"far":false}
+PASS what: the spawn decks' stair landings are device aprons too (pipes.aprons, both halves)  {"apOk":[["east stair landing",true,26.7,-50.6],["east stair landing",true,-26.7,50.6],["west stair landing",true,2.3,-64.7],["west stair landing",true,-2.3,64.7]]}
+PASS what: the tower never meets the glass: its swept volume (2.5 m square, 3.72 m headroom) keeps ≥ 1.0 m from every leg, and its track ≥ 2 m from every landing  {"minGap":1.02,"where":["gulper",11,0,0],"minPop":7.119}
+PASS tide: the Kelp Lines flip every 90 s starting UP; a 300 s mode flips at 90, 180 and 270 (0:30 left), Turf War once at 90; nothing changes in the last 15 s or in overtime  {"s300":[[0,"ab","run"],[85,"ab","warn"],[88,"ab","shut"],[90,"ba","shut"],[90.5,"ba","shut"],[91,"ba","run"],[180,"ab","shut"],[270,"ba","shut"],[290,"ba","run"],[320,"ba","run"]],"s180":["ab","ab","ba","ba","ba"]
+PASS tide: warn from T − 10, IN ends shut from T − 3, the new IN end open from T + 1
+PASS tide: live, pipe:flow fires warn → close → flip → open at T − 10 / T − 3 / T / T + 1 for both twins on the same tick  {"seen":[["kelp","warn",80],["kelp~","warn",80],["kelp","close",87],["kelp~","close",87],["kelp","flip",90],["kelp~","flip",90],["kelp","open",91],["kelp~","open",91]]}
+PASS tide: the HUD says "KELP LINES GOING DOWN IN 10" counting down, then "KELP LINES DOWN: dive from your promenade"; the pill under the clock turns ▲ UP → ▼ DOWN  {"txt":[[79,"TUBEWAY: walk into a pipe to ride · ⇄ both ways · ▶ one way · Kelp Lines UP","▲KELP UP"],[80,"KELP LINES GOING DOWN IN 10","▲KELP UP"],[81,"KELP LINES GOING DOWN IN 9","▲KELP UP"],[82,"KELP LIN
+PASS hud: in the entry hold (the lens still on the mouth) the ride chip sits low, off the mouth's own sign and above the countdown line  {"mode":"entry","chip":[540,683,972,786],"sign":[832,89,892,295],"line":[819,839],"h":945}
+PASS tide: riding through the warning, the countdown stays on screen; once the chase runs the ride chip sits in the top band, clear of the rider  {"ridingLine":"KELP LINES GOING DOWN IN 5","mode":"chase","chip":[230,333],"riderY":488,"h":945}
+PASS tide: a late joiner (a clock seek) inside the warning sees the countdown line, not only the red pill  {"before":"","after":"KELP LINES GOING DOWN IN 5"}
+PASS tide: the Kelp Lines' split-flaps carry "KELP LINE" over their words; both one-way kinds say the same at their OUT end ("EXIT ONLY"), under it where riders come FROM (not the exit's own name)  {"kelpOut":{"top":"EXIT ONLY","sub":"FROM S. REEF HALL","kind":"out"},"expressOut":{"top":"EXIT ONLY","sub":"FROM FERRY PLAZA","kind":"out"},"kelpIn":{"top":"▲ UP · IN","sub":"→ N. PROMEN
+
+## pt-sub-bobber.txt
+PASS deploy: on a floor it floats 1.0 m over it (±0.03), its spot rounded to 0.01 m, live once open (0.35 s)  {"spot":[0,1,0],"hover":1}
+PASS …and the owner records its spot [3, gid, x, y, z, hover]: exactly the rounded spot  [3,1,0,1,0,1]
+PASS deploy: against a wall, 0.45 m out from it at the hit height (1.5), clamped to 0.6 … 2.2 m over the floor below (3.5 → 2.2, 0.35 → 0.6)  {"w1":[13.55,1.47,3],"w2":[13.55,2.2,3],"w3":[13.55,0.6,3]}
+PASS deploy: off a ceiling it floats 1.0 m over the floor below  {"spot":[-6,1,10]}
+PASS deploy: over the sea it floats 1.0 m over the water (-0.6000000000000001)  {"spot":[30,-0.6,-6]}
+PASS deploy: off a (stand-in) Bazookarp shell it floats 0.45 m out from its surface  {"spot":[-8,1.03,-15.97],"fromCentre":2.05,"want":2.0500000000000003}
+PASS deploy: over (stand-in) lava rising −1.6 → 0.5 over 2 s it rides up to 1.5 (eased ≤ 1 m/s, re-checked every 0.25 s) and settles back to −0.6 as it falls; under(pos, −0.05) never matches it  {"y0":-0.6,"top":1.5,"yTop":1.5,"back":-0.6,"under":0}
+PASS deploy: refused within spawnBarrier + 2 = 6.2 m of the enemy pad (it fizzles, [2, gid, 3], "TOO CLOSE TO THEIR BASE"); just outside it floats  {"refused":"dead","rec":[[2,9,3]],"ok":"live","note1":"TOO CLOSE TO THEIR BASE"}
+PASS deploy: refused in a stage's no-place disc too, its note "NO ROOM TO FLOAT THERE" (not the base's)  {"state":"dead","note2":"NO ROOM TO FLOAT THERE"}
+PASS deploy: on a mover over the sea it rides it; when the block parks it re-floats 1.0 m over the sea (−0.6), keeps its chain and sends a new [3]  {"rode":true,"movedX":32.19,"y":-0.6,"chain":2,"new3":[[3,12,32.193333333333364,-0.6,-20,1]]}
+PASS tethers: two bobbers 4.9 m apart link; 5.1 m apart don't (linkRange 5)  {"ab":1,"cd":0}
+PASS tethers: a wall between two (4 m apart) blocks the link; a grate between doesn't  {"wall":0,"grate":1,"grateBlock":true}
+PASS tethers: at most 3 each, nearest first (the hub takes the three nearest; the farthest of four goes elsewhere)  {"hub":[2,3,3.6],"n4":1}
+PASS tethers: at equal distances the lower gid pair wins (a hub with four at 3.0 m takes the three lowest gids)  {"hub":[28,29,30],"all":[28,29,30,31]}
+PASS tethers: N (5) shows on the lamps: four lit, one white-hot for each link past four  {"lamps":[1.62,0.62,0.62,0.62],"n":5}
+PASS …a lone one: one lamp lit  [0.62,0,0,0]
+PASS tethers: the owner records its whole tether list [5] on every change; a ghost fed the records draws exactly that list (never linking itself)  {"counts":[1,2,3,4,5],"own":[[33,34],[34,35],[35,36],[36,37]],"ghost":[[33,34],[34,35],[35,36],[36,37]]}
+PASS trigger: the owner's shot on bobber 1 of a 4-chain blows all 4 breadth-first (1, 2, 3, 4) at 0.07 s hops (± 1 frame), each R 3.0, 180 / 35  {"order":[0,1,2,3],"dts":[0,0.067,0.133,0.2],"radius":[3,3,3,3],"n":4,"first":0.017}
+PASS trigger: a blown bobber leaves the spatial hash (after each of 10 four-chains, nothing is left in it) and the tether buffer is rewritten only as the sparks come and go (idle: never; 3 s after a chain: a handful of times, not 180)  {"hashed":[0,0,0,0,0,0,0,0,0,0],"idleWrites1s":0,"writes3sAfterChain":5}
+PASS trigger: a teammate's shot does the same (from bobber 2: 2, then 1 and 3, then 4), crediting the teammate  {"order":[1,0,2,3],"dts":[0,0.067,0.067,0.133],"by":"Nori"}
+PASS trigger: an own Splat Bomb sets the chain off (all 4 go)  {"blasts":4,"left":0}
+PASS trigger: a Glide Bomb-sized own blast (G.subs.damageArea: R 2.2, 40 to devices — the path the Glide's blast takes) sets the chain off (all 4 go)  {"blasts":4,"left":0}
+PASS trigger: a Dash Pellet-sized own blast (R 2.2, 25 to devices) sets the chain off (all 4 go)  {"blasts":4,"left":0}
+PASS trigger: an own roller's drum rolling into it sets the chain off (all 4 go)  {"blasts":4,"left":0}
+PASS trigger: the own Ink Tempest's rain sets the chain off (all 4 go)  {"blasts":4,"left":0}
+PASS trigger: an own chain's blast sets off a second chain 2 m away (its own N: a separate explosion, credited to the blast's owner)  [{"n":3,"owner":"me","by":"me"},{"n":2,"owner":"mate","by":"me"}]
+PASS damage: by chain size N = 1 … 8, at the centre 60 / 95 / 140 / 180 (held at 180 past 4) and at R 25 / 30 / 35 / 35 (held), R 1.8 / 2.2 / 2.6 / 3.0, then +0.2 a link to 3.8 at 8 (DECISIONS #20)  [{"N":1,"centre":60,"R":1.8,"n":1,"edge":25},{"N":2,"centre":95,"R":2.2,"n":2,"edge":30},{"N":3,"centre":140,"R":2.6,"n":3,"edge":35},{"N":4,"centre":180,"R":3,"n":4,"edge":35},{"N":5,"cent
+PASS damage: one chain is one explosion — a victim between two of its bobbers takes the larger blast, never the sum (the nearer first: one hit; the farther first: its damage, then only the excess)  {"nearFirst":{"took":74.31,"near":74.74,"far":34.75,"hits":1},"farFirst":{"took":74.31,"near":74.74,"far":34.75,"hits":2}}
+PASS damage: a wall between the bobber and a victim in its radius is cover  {"took":0}
+PASS disarm: an enemy Spritzer shot (36) is absorbed and disarms the one it hits — it sags and pops (no blast, no damage, one 'device:down' how 'shot'); the chain splits and the rest re-link  {"b":"dead","blasts":0,"downs":1,"a":1,"c":1}
+PASS disarm: an enemy Squall Spinner shot (26) is absorbed and disarms the one it hits — it sags and pops (no blast, no damage, one 'device:down' how 'shot'); the chain splits and the rest re-link  {"b":"dead","blasts":0,"downs":1,"a":1,"c":1}
+PASS disarm: an enemy Twinfire shot (30) is absorbed and disarms the one it hits — it sags and pops (no blast, no damage, one 'device:down' how 'shot'); the chain splits and the rest re-link  {"b":"dead","blasts":0,"downs":1,"a":1,"c":1}
+PASS disarm: a small hit (a Brolly pellet's 8) only wears it down: still live at 17 hp; 'device:hit' fired for the shooter's marker  {"hp":17,"hits":1}
+PASS disarm: an enemy Pop Pellet (real: R 2.1, 25 to devices) disarms the bobbers whose centre is within its radius + 0.2 (no blast from them)  {"ins":["dead"],"outs":["live"]}
+PASS disarm: an enemy Dash Pellet-sized blast (R 2.2, 25 to devices) disarms the bobbers whose centre is within its radius + 0.2 (no blast from them)  {"ins":["dead"],"outs":["live"]}
+PASS disarm: a lone enemy bobber going off (R 1.8, 25 to devices) disarms the bobbers whose centre is within its radius + 0.2 (no blast from them)  {"ins":["dead"],"outs":["live"]}
+PASS disarm: an enemy Splat Bomb disarms every bobber whose centre is within 3.1 + 0.2 = 3.3 m (3.25: gone), none at 3.4  {"at325":"dead","at34":"live","d":[3.25,3.4]}
+PASS disarm: enemy players walking through it do nothing (not solid; it triggers on nothing but fire)  {"state":"live","hp":25,"events":["bobber:link"]}
+PASS disarm: a ghost's shot or blast replayed here (netMuted) does nothing to a real bobber — the enemy's doesn't wear it down, a teammate's doesn't set it off (absorbed all the same: the shooter's screen judged it)  {"r":["live",25],"r2":"live"}
+PASS disarm: an enemy Ink Tempest's rain (standing fire, judged on the owner's screen) wears a bobber down and disarms it — no blast  {"t":0.75,"state":"dead"}
+PASS disarm: a charger beam stops on it (and disarms it)  {"len":5.9,"state":"dead"}
+PASS life: it lasts 30 s (blinking the last 3), then fizzles: no blast, no 'device:down', [2, gid, 0]  {"at29":"live","end":"dead","rec":[[2,40,0]],"t":30.1}
+PASS life: no cap but the hidden guard: the 25th bobber retires the oldest (it fizzles, [2, gid, 0])  {"n24":24,"now":24,"first":"dead"}
+PASS life: the owner splatted, their bobbers stay — and a teammate's shot still sets them off  {"dead":true,"stay":true,"blasts":2}
+PASS movers: a block driven through its float height (not its foot) crushes it within 0.1 s — one 'device:down' how 'crush', one count, [2, gid, 2]  {"dt":0.083,"downs":["crush"],"rec":[[2,66,2]]}
+PASS movers: G.deploy.crushIn with each shape (blocks, sphere, where) and the kit's lavaSweep end it with that how — one 'device:down' each  [{"how":"crush","n":1,"state":"dead","downs":["crush"]},{"how":"shell","n":1,"state":"dead","downs":["shell"]},{"how":"lava","n":1,"state":"dead","downs":["lava"]},{"how":"lavaSweep","n":1,"state":"dead","downs":["lava"]}]
+PASS movers: an era:flip with a block in `on` round its sphere ends it ('device:down' how 'flip'); one with its floor in `off` makes it re-float (5.0 → 1.0, still live, no event)  {"flips":["flip"],"y0":5,"y1":1,"floor":2}
+PASS movers: on a moving block it rides it (its foot on the block, floating 1.0 m over it; the owner's [4] ride word under its own kind)  {"moved":[1.48,0.39,0],"y":1.89,"r4":[4,73,-8,0.5,14,"test:plat",0,0.25,0,0,1,0]}
+PASS movers: a block rising under its foot lifts it onto its top (riding it); one sliding into its foot shoves it aside; one pinning it to a wall with nowhere to go crushes it (one 'device:down' how 'crush')  {"lifted":true,"shoved":true,"sx":[4,5.39],"pin":"dead","downs":["crush"]}
+PASS movers: every ending fires exactly one 'device:down' (shot down: one); an owner leaving (dropOwner) none  ["shot"]
+PASS movers: the (stand-in) Bazookarp shell takes exactly one blast a chain — G.objTargets.splash once, from the bobber nearest it, at the chain's size  {"calls":[{"c":[6.5,1,-24],"R":3.4,"mx":180,"mn":35,"wid":"bobber"}],"nearest":[6.5,1,-24]}
+PASS interact: Drainbow — a blast reaching a victim in an enemy bubble goes through its cut (from = the bobber) and lands halved  {"cuts":[{"vic":true,"dmg":60,"from":[0,1,0]}],"took":30}
+PASS interact: a foe in a Bubble Guard takes 0 from a chain (its hp untouched)  {"lost":0}
+PASS interact: the Mega Stamp's swing guard disarms an enemy bobber in front of it (not one behind / out of reach)  {"a":"dead","b":"live"}
+PASS interact: a chain's blast reaches the specials' world objects (specials.areaHit: an own Bubble Blower bubble goes off), as the owner's, own team  [{"r":1.8,"dmg":25,"team":0,"owner":true}]
+PASS interact: its sounds are built (bobber_throw, bobber_inflate, bobber_link, bobber_fuse, bobber_boom, bobber_disarm, bobber_expire, bobber_doo, bobber_snap)  []
+PASS net: a throw records [0, gid, x, y, z, vx, vy, vz] (rounded); the settle [3, gid, x, y, z, hover]  {"r0":[0,85,0,1.35,-8,0,3.65,11.81],"r3s":[3,85,0,1,-2,1]}
+PASS net: a shot on a ghost: enemy fire goes to its owner as a device hit ('bobber', its damage, the shooter as by); a teammate's ghost gets team fire on its own channel ('bobberPop', 1, by) — the ghosts untouched here till their owners answer  [{"dev":"bobber","id":77001,"d":36,"by":0,"to":4},{"dev":"bobberPop","id":77002,"d":1,"by":0,"to":1}]
+PASS net: the owner's copy takes a remote enemy hit (netHurt 30 → disarmed, [2, gid, 1]) and a remote team shot (bobberPop → the chain goes, [1, gid0, N, by …] with the shooter)  {"t1":[1,87,1,1],"t2":[2,86,1]}
+PASS net: a ghost chain [1, gid0, N, by, gid, hop …] blows every bobber here at its own hop times (paint: the owner's, none here); a victim this screen owns is judged here (its damage, the [6] hit record for the owner's marker)  {"blasts":2,"painted":0,"myHit":1,"r6":[[6,77003,95,0]]}
+
+## tank.txt
+
+## tower-bluestone-1.txt
+== bluestone [tower len 74/74]: winner Alpha (knockout) | counts 0 vs 86 (score 0/86) | best push A 74m B 13.8m | OT no | sim 156.8s
+   stuck 0.2% | by the tower's side 3.6% of bot-time, stuck there 0s (0 episodes) | splats 54 (water 0) | specials 9 (ready 10) | super jumps 19 | turf 23.7/7 | sim 156.8s in 56s (wall 56s) | {"cpuSimMs":0.89}
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"map":"bluestone","winner":0,"reason":"knockout","counts":[0,86],"best":[74,13.8],"held":[118,27.8],"controlChanges":4,"cpClear":[2,0],"stuckPct":0.2,"console":0,"frameErrors":0,"mounts":[15,8],"ridersAvg":[1.69,0.95],"x":{"climbs":[22,7],"sjRider":4,"kills":54,"killsNear":[11,43],"attempts":66,"boarded":18,"aborted":47,"climbMounts":16,"sjMounts":0,"toBoard":{"med":2,"p80":10.75},"ne
+
+## tower-bluestone-2.txt
+== bluestone [tower len 74/74]: winner Bravo (retake) | counts 28 vs 1 (score 28/1) | best push A 50.8m B 73.8m | OT 36.6s | sim 336.8s
+   stuck 0.1% | by the tower's side 3.9% of bot-time, stuck there 1.3s (2 episodes) | splats 129 (water 0) | specials 16 (ready 19) | super jumps 60 | turf 15.8/28.6 | sim 336.8s in 81s (wall 81s) | {"cpuSimMs":0.89}
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"map":"bluestone","winner":1,"reason":"retake","counts":[28,1],"best":[50.8,73.8],"held":[173,152.3],"controlChanges":9,"cpClear":[1,2],"stuckPct":0.1,"console":0,"frameErrors":0,"mounts":[27,35],"ridersAvg":[1.09,1.95],"x":{"climbs":[30,36],"sjRider":16,"kills":129,"killsNear":[82,42],"attempts":157,"boarded":43,"aborted":110,"climbMounts":37,"sjMounts":1,"toBoard":{"med":2.25,"p80":
+
+## turf-bluestone-1.txt
+== bluestone [turf 180s]: turf 25.6% vs 34.5%
+   stuck 0% | splats 35 (water 0) | specials 5 | super jumps 17 | turf 25.6/34.5 | sim 180s in 29s (wall 29s) | {"cpuSimMs":0.77}
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"simT":180,"simMs":28795,"state":"finish","stuckPct":0,"splats":35,"water":0,"specials":5,"jumps":17,"cov":[25.6,34.5],"teamKD":[{"k":21,"d":14,"sp":0,"by":{}},{"k":14,"d":21,"sp":0,"by":{}}],"spUses":[{"bubbler":1,"jetpack":1},{"barrage":1,"wail":2}],"spEnds":[{"bubbler":{"time":1},"jetpack":{"time":1}},{"wail":{"place":2},"barrage_waddle":{"time":1}}],"zipcheer":{"zipUses":0,"zips":
+
+## turf-bluestone-2.txt
+== bluestone [turf 180s]: turf 23.7% vs 33.9%
+   stuck 4.4% | splats 44 (water 0) | specials 2 | super jumps 16 | turf 23.7/33.9 | sim 180s in 28s (wall 28s) | {"cpuSimMs":0.87}
+   DIAG: 1 stuck episode(s) of 2 s or more
+   stuck {"t":119.5,"name":"Pip","w":"blaster","mode":"refill","role":"-","pos":[5.8,0,46.4],"path":true,"hold":false,"pod":"-","dur":60.75}
+      plan {"t":119.5,"mode":"refill","pos":[5.82,0,46.37],"len":6,"pi":1,"next":[[6.5,0,45.5],[6.5,1,46.5]],"edgeIn":"walk","goal":[7.5,0,48.5],"noProg":1.08,"near":[5.5,-0.34,45.75],"noClimb":false,"climbing":false,"climb":null,"ink":77}
+      plan {"t":124.3,"mode":"paint","pos":[5.82,0,46.37],"len":45,"pi":1,"next":[[4.5,-0.34,44.5],[3.5,-0.34,43.5]],"edgeIn":"walk","goal":[-10.5,0,15.5],"noProg":0.52,"near":[5.5,-0.34,45.75],"noClimb":false,"climbing":false,"climb":null,"ink":41}
+      plan {"t":129.3,"mode":"refill","pos":[5.82,0,46.39],"len":9,"pi":1,"next":[[6.5,0,44.5],[7.5,0,44.5]],"edgeIn":"walk","goal":[6.5,0,48.5],"noProg":0,"near":[5.5,-0.34,45.75],"noClimb":false,"climbing":false,"climb":null,"ink":19}
+      plan {"t":134.3,"mode":"refill","pos":[5.82,0,46.37],"len":9,"pi":1,"next":[[6.5,0,44.5],[7.5,0,44.5]],"edgeIn":"walk","goal":[6.5,0,49.5],"noProg":0,"near":[5.5,-0.34,45.75],"noClimb":false,"climbing":false,"climb":null,"ink":64}
+      plan {"t":139.3,"mode":"paint","pos":[5.82,0,46.37],"len":26,"pi":1,"next":[[5.5,-0.34,44.5],[5.5,-0.34,43.5]],"edgeIn":"walk","goal":[-4.5,-0.2,31.5],"noProg":0.35,"near":[5.5,-0.34,45.75],"noClimb":false,"climbing":false,"climb":null,"ink":76}
+      plan {"t":144.3,"mode":"paint","pos":[5.82,0,46.37],"len":0,"pi":1,"next":null,"edgeIn":"-","goal":[-2.5,-0.2,38.5],"noProg":0.33,"near":[5.5,-0.34,45.75],"noClimb":false,"climbing":false,"climb":null,"ink":24}
+      plan {"t":149.3,"mode":"refill","pos":[5.82,0,46.37],"len":9,"pi":1,"next":[[6.5,0,44.5],[7.5,0,44.5]],"edgeIn":"walk","goal":[6.5,0,48.5],"noProg":0,"near":[5.5,-0.34,45.75],"noClimb":false,"climbing":false,"climb":null,"ink":35}
+      plan {"t":154.3,"mode":"refill","pos":[5.82,0,46.37],"len":3,"pi":1,"next":[[6.5,0,44.5],[7.5,0,45.5]],"edgeIn":"walk","goal":[7.5,0,45.5],"noProg":0.18,"near":[5.5,-0.34,45.75],"noClimb":false,"climbing":false,"climb":null,"ink":80}
+      plan {"t":159.3,"mode":"paint","pos":[5.82,0,46.37],"len":20,"pi":1,"next":[[4.5,-0.34,44.5],[3.5,-0.34,43.5]],"edgeIn":"walk","goal":[-13.5,-0.34,36.5],"noProg":0.63,"near":[5.5,-0.34,45.75],"noClimb":false,"climbing":false,"climb":null,"ink":62}
+      plan {"t":164.3,"mode":"refill","pos":[5.82,0,46.37],"len":1,"pi":0,"next":[[5.5,-0.34,45.75],null],"edgeIn":"-","goal":[5.5,-0.34,45.75],"noProg":0,"near":[5.5,-0.34,45.75],"noClimb":false,"climbing":false,"climb":null,"ink":10}
+      plan {"t":169.3,"mode":"refill","pos":[5.82,0,46.37],"len":3,"pi":1,"next":[[4.5,-0.34,44.5],[3.5,-0.34,43.5]],"edgeIn":"walk","goal":[3.5,-0.34,43.5],"noProg":0.02,"near":[5.5,-0.34,45.75],"noClimb":false,"climbing":false,"climb":null,"ink":52}
+      plan {"t":174.3,"mode":"paint","pos":[5.82,0,46.37],"len":16,"pi":1,"next":[[6.5,0,44.5],[7.5,0,43.5]],"edgeIn":"walk","goal":[12.5,1.2,31.5],"noProg":0.47,"near":[5.5,-0.34,45.75],"noClimb":false,"climbing":false,"climb":null,"ink":97}
+      plan {"t":179.3,"mode":"paint","pos":[5.82,0,46.37],"len":36,"pi":1,"next":[[4.5,-0.34,44.5],[3.5,-0.34,43.5]],"edgeIn":"walk","goal":[-15.5,2.4,16.5],"noProg":0,"near":[5.5,-0.34,45.75],"noClimb":false,"climbing":false,"climb":null,"ink":47}
+   STUCK episodes over 5 s: 1 | ISSUELOG stuck-bot entries this match: 1 [{"mode":"turf","stage":"bluestone","world":"bluestone","duration":5.25,"pos":[5.8,0,46.4],"botMode":"paint","role":null,"path":"1/45","next":[4.5,-0.3,44.5],"edgeIn":"walk","goal":[-10.5,0,15.5],"noProg":0.6,"carry":false,"pipe":false,"climbing":false}]
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"simT":180,"simMs":27837,"state":"finish","stuckPct":4.4,"splats":44,"water":0,"specials":2,"jumps":16,"cov":[23.7,33.9],"teamKD":[{"k":16,"d":28,"sp":1,"by":{"barrage":1}},{"k":28,"d":16,"sp":0,"by":{}}],"spUses":[{},{"kraken":1,"barrage":1}],"spEnds":[{},{"kraken":{"time":1},"barrage":{"time":1}}],"zipcheer":{"zipUses":0,"zips":0,"zipHits":0,"zipSaved":0,"orbs":0,"lifted":0,"liftM":
+
+## zones-aquarium-1.txt
+== aquarium [zones]: winner Alpha (retake) | final 39 vs 73 (penalty +12/+12) | OT 5.3s
+   stuck 0.2% | splats 72 (water 0) | specials 16 | super jumps 24 | turf 25.4/27.4 | sim 305.3s in 111s (wall 111s) | {"cpuSimMs":1.07}
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"simT":305.3,"simMs":111323,"state":"finish","stuckPct":0.2,"splats":72,"water":0,"specials":16,"jumps":24,"cov":[25.4,27.4],"teamKD":[{"k":43,"d":29,"sp":5,"by":{"kraken":4,"crab":1}},{"k":29,"d":43,"sp":1,"by":{"zooka":1}}],"spUses":[{"zooka":3,"blower":1,"kraken":2},{"kraken":3,"strike":3,"crab":2,"barrage":2}],"spEnds":[{"zooka":{"time":2,"splat":1},"blower":{"time":1},"kraken":{"
+
+## zones-aquarium-2.txt
+== aquarium [zones]: winner Bravo (time) | final 60 vs 52 (penalty +4.9/+29) | OT no
+   stuck 0.5% | splats 73 (water 0) | specials 11 | super jumps 29 | turf 23.1/27.8 | sim 300s in 107s (wall 107s) | {"cpuSimMs":1.44}
+   DIAG: 2 stuck episode(s) of 2 s or more
+   stuck {"t":291,"name":"Nori","w":"brush","mode":"fight","role":"paint","pos":[0.4,1.71,-7.9],"path":true,"hold":false,"pod":"-","dur":2.75}
+      plan {"t":291,"mode":"fight","pos":[0.42,1.71,-7.88],"len":17,"pi":1,"next":[[0.5,2.4,-6.5],[0.5,2.4,-5.5]],"edgeIn":"jump","goal":[-1.5,1.2,8.5],"noProg":0.7,"near":[0.5,1.2,-7.5],"noClimb":false,"climbing":false,"climb":null,"ink":100}
+   stuck {"t":282.3,"name":"Wasabi","w":"shooter","mode":"fight","role":"paint","pos":[-1.5,1.2,7.9],"path":true,"hold":false,"pod":"-","dur":2.25}
+      plan {"t":282.3,"mode":"fight","pos":[-1.53,1.2,7.88],"len":16,"pi":2,"next":[[-1.5,2.4,6.5],[-1.5,2.4,5.5]],"edgeIn":"walk","goal":[-3.5,2.4,-5.5],"noProg":0.38,"near":[-1.5,2.4,7.5],"noClimb":false,"climbing":false,"climb":null,"ink":84}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"simT":300,"simMs":107138,"state":"finish","stuckPct":0.5,"splats":73,"water":0,"specials":11,"jumps":29,"cov":[23.1,27.8],"teamKD":[{"k":39,"d":34,"sp":1,"by":{"slam":1}},{"k":34,"d":39,"sp":0,"by":{}}],"spUses":[{"slam":3,"barrage":2,"booyah":1},{"slam":1,"booyah":2,"barrage":2}],"spEnds":[{"barrage_waddle":{"time":2},"booyah":{"throw":1}},{"booyah":{"throw":2},"barrage_mist":{"spla
+
+## zones-bluestone-1.txt
+== bluestone [zones]: winner Alpha (time) | final 44 vs 71 (penalty +0/+13) | OT no
+   stuck 0.7% | splats 83 (water 0) | specials 14 | super jumps 33 | turf 27.6/20.4 | sim 300s in 100s (wall 101s) | {"cpuSimMs":3.62}
+   DIAG: 1 stuck episode(s) of 2 s or more
+   stuck {"t":200,"name":"P1","w":"roller","mode":"paint","role":"paint","pos":[-0.5,1.3,5.1],"path":true,"hold":false,"pod":"-","dur":13}
+      plan {"t":200,"mode":"paint","pos":[-0.5,1.3,5.06],"len":2,"pi":2,"next":[null,null],"edgeIn":"-","goal":[-0.5,1.3,4.5],"noProg":0,"near":[-0.5,1.3,5.5],"noClimb":false,"climbing":false,"climb":null,"ink":100}
+      plan {"t":204.8,"mode":"paint","pos":[-0.5,1.3,4.96],"len":2,"pi":2,"next":[null,null],"edgeIn":"-","goal":[-0.5,1.3,5.5],"noProg":0,"near":[-0.5,1.3,4.5],"noClimb":false,"climbing":false,"climb":null,"ink":100}
+      plan {"t":209.8,"mode":"paint","pos":[-0.5,1.3,4.96],"len":2,"pi":2,"next":[null,null],"edgeIn":"-","goal":[-0.5,1.3,5.5],"noProg":0,"near":[-0.5,1.3,4.5],"noClimb":false,"climbing":false,"climb":null,"ink":100}
+   STUCK episodes over 5 s: 1 | ISSUELOG stuck-bot entries this match: 1 [{"mode":"zones","stage":"bluestone","world":"bluestone","duration":5.25,"pos":[-0.5,1.3,5],"botMode":"paint","role":"paint","path":"1/1","next":null,"edgeIn":null,"goal":[-0.5,1.3,4.5],"noProg":0,"carry":false,"pipe":false,"climbing":false}]
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"simT":300,"simMs":100455,"state":"finish","stuckPct":0.7,"splats":83,"water":0,"specials":14,"jumps":33,"cov":[27.6,20.4],"teamKD":[{"k":39,"d":44,"sp":0,"by":{}},{"k":44,"d":39,"sp":3,"by":{"slam":1,"kraken":2}}],"spUses":[{"slam":1,"kraken":2,"bubbler":1,"sonar":3},{"barrage":5,"blower":2}],"spEnds":[{"kraken":{"time":2},"bubbler":{"time":1},"sonar":{"time":3}},{"barrage":{"time":3
+
+## zones-bluestone-2.txt
+== bluestone [zones]: winner Bravo (knockout) | final 100 vs 0 (penalty +0/+0) | OT no
+   stuck 0.3% | splats 44 (water 0) | specials 3 | super jumps 22 | turf 12.8/27.7 | sim 164.5s in 50s (wall 50s) | {"cpuSimMs":3.51}
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"simT":164.5,"simMs":49831,"state":"finish","stuckPct":0.3,"splats":44,"water":0,"specials":3,"jumps":22,"cov":[12.8,27.7],"teamKD":[{"k":13,"d":31,"sp":0,"by":{}},{"k":31,"d":13,"sp":0,"by":{}}],"spUses":[{"kraken":1,"strike":1},{"strike":1}],"spEnds":[{"kraken":{"time":1},"strike":{"launch":1}},{"strike":{"launch":1}}],"zipcheer":{"zipUses":0,"zips":0,"zipHits":0,"zipSaved":0,"orbs"
