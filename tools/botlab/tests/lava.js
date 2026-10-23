@@ -695,12 +695,14 @@
       for (const deg of [0, 40, 140, 180, 220, 320]) {
         const a = (deg * Math.PI) / 180; let d0 = null;
         for (let d = 3; d < 30 && d0 === null; d += 0.05) if (lvl.groundHeight(Math.cos(a) * d, Math.sin(a) * d, 1.3) < 1.0) d0 = d;
-        if (d0 !== null) rim.push([deg, r3(d0), r3(W.proxAt(Math.cos(a) * (d0 - 0.12), Math.sin(a) * (d0 - 0.12), def.high)), r3(W.proxAt(Math.cos(a) * (d0 - 3), Math.sin(a) * (d0 - 3), def.high))]);
+        // (fix round 6: the dry middle 4.5 m in, not 3 — at 0° / 180° the rim is the end of the second Race's pier, 2.5 m long,
+        // and 3 m in stood by the lava bays beside its root: rightly in the glow's 1.25 m)
+        if (d0 !== null) rim.push([deg, r3(d0), r3(W.proxAt(Math.cos(a) * (d0 - 0.12), Math.sin(a) * (d0 - 0.12), def.high)), r3(W.proxAt(Math.cos(a) * (d0 - 4.5), Math.sin(a) * (d0 - 4.5), def.high))]);
       }
       const cw = [];
       for (const sx of [1, -1]) { let xe = null; for (let x = 0.5; x < 12 && xe === null; x += 0.05) if (lvl.groundHeight(sx * x, -16, 1.3) < 1.0) xe = x; if (xe !== null) cw.push([sx, r3(xe), r3(W.proxAt(sx * (xe - 0.1), -16, def.low)), r3(W.proxAt(sx * (xe - 0.1), -16, def.high)), lvl.groundHeight(sx * (xe + 0.4), -16, 1.0)]); }
       const house = [r3(W.proxAt(-10.5, 4.6, def.high)), r3(W.proxAt(-10.5, 4.6, def.low))];
-      R('G8 the lava\'s glow is faded by how near open lava a face stands: the island\'s lake faces glow at HIGH, its dry middle and the machine house\'s foot never; the causeway\'s side over the Casting Floor glows only once the floor is under',
+      R('G8 the lava\'s glow is faded by how near open lava a face stands: the island\'s lake faces glow at HIGH, its dry middle (4.5 m in) and the machine house\'s foot never; the causeway\'s side over the Casting Floor glows only once the floor is under',
         rim.length >= 5 && rim.every((r) => r[2] >= 0.6 && r[3] === 0) && house.every((v) => v === 0) && cw.some((c) => c[2] < 0.3 && c[3] >= 0.6), { rim: rim.map((r) => ({ deg: r[0], rimAt: r[1], face: r[2], in3m: r[3] })), house, causeway: cw, ms: W.proxMs });
     }
     const key = g.levelMat.customProgramCacheKey();
