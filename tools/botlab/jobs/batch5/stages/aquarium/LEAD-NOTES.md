@@ -126,3 +126,17 @@ views) found the one family no sweep had walked: the kiosks. This round, binding
    glazing that fails at de3bd111), pipes.js, one Turf War match; the cards only if a card view changed.
 Accepted and unchanged: triangles, the boss, camping (cooldown 3.5), the Great Tank bot bug (the beta fix round), the
 skylights' tile, the pavilion stair flanks.
+
+## After review 8 (2026-10-24): the last three faces
+
+Review 7's list is closed; the sweep tool is in the repo. Review 8 lists what is left; all of it this round, binding:
+1. **The Express OUT stop on Penguin Point** (a bug: its speed lines are drawn 0.3–0.6 m inside the rock terrace):
+   lift the lines over the stop's own floor and give both long faces the kiosk pass (skirting with a brass line,
+   corner pilasters, brass portholes or a framed ARRIVALS plate), as the review specifies; a pixel read in
+   aquarium-art.js that fails at a2f28b8d.
+2. **The Ticket Hall booth's render base** and **the Reef Window's short west run / the Service face** the review
+   names: the same language (skirting, pilasters, speed lines, a plate), within 8.5 cm, no collider.
+3. **aquarium-art.js section 8(c)** (the spawn decks' planters) is flaky: make it read where the ink cannot land, or
+   splat first; 3 runs clean.
+4. Nits: the dusk sheet titles; the three sweep cameras against a face (nudge them in the tool).
+Then the sweep before / after, the named cameras, pipes.js, one Turf War match. Nothing else is open on this stage.
