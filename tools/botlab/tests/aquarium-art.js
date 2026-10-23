@@ -18,6 +18,11 @@
 // kiosk's back carries its trade's board and the frieze's speed lines, the ice-cream kiosks' sides their shutters, the ferry
 // kiosks' free sides a door; the luggage scale's stencil and riveted panel under the ink; this round's props within 8.5 cm,
 // under the cornices and the scale's top (pixel reads, both halves; they fail at de3bd111).
+// Fix round 8 (section 12, review 8's list): the Express OUT stop's long faces carry their speed lines over the stop's own
+// floor (they were drawn inside the rock terrace), the Ticket Hall booth's base its price plates and skirting, the Reef
+// Window's short west run its speed lines and its open ends render jambs; this round's props within 8.5 cm of their blocks
+// and under their tops (pixel reads, both halves; they fail at a2f28b8d). Section 8 runs with the bots' brains off and its
+// planters' paint cleared before each read (8(c) failed once in two runs: Bravo's bots inked their deck's planter).
 //   MAP=aquarium MODE=turf PAGE=tools/botlab/tests/aquarium-art.js tools/botlab/run.sh tools/botlab/page.cjs
 (async () => {
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info });
@@ -190,6 +195,11 @@
     const px = (p) => { const v = V(p).project(G.camera), w = gl.drawingBufferWidth, h = gl.drawingBufferHeight, a = new Uint8Array(4 * 9); gl.readPixels(Math.round((v.x + 1) / 2 * w) - 1, Math.round((v.y + 1) / 2 * h) - 1, 3, 3, gl.RGBA, gl.UNSIGNED_BYTE, a); const c = [0, 0, 0]; for (let i = 0; i < 9; i++) for (let k = 0; k < 3; k++) c[k] += a[i * 4 + k] / 9; return c.map(Math.round); };
     const shot = (from, look, n = 24) => { g.rig.cinematic(V(from), V(from), V(look), V(look), 99, () => {}); for (let i = 0; i < n; i++) g.debug.step(1000 / 60); };
     g.debug.freeze?.();
+    // (fix round 8, LEAD-REVIEW 8: 8(c) read Bravo's planter red in one run of two — the bots, still thinking, inked their
+    // deck between the section's start and the read. Their brains are off for the section, as in sections 9–11, what they
+    // had in flight is cleared, and each planter view clears the paint with their bodies hidden)
+    const brains8 = m.actors.map((a) => a.bot); for (const a of m.actors) a.bot = null;
+    G.projectiles?.clear?.(); G.subs?.clear?.(); G.specials?.clear?.();
     const tw = (p, s) => [s * p[0], p[1], s * p[2]];   // (Alpha's point turned onto Bravo's twin)
     // (a) the Lookout's sea face, both halves: white render over a black-granite skirting with faience speed lines (it was
     // one dark brown slab); then team ink splatted on it still shows (the art is under the ink)
@@ -217,13 +227,16 @@
     }
     R('the telescope bays\' risers are dressed (both halves): render over a granite kerb', bay.every((c) => lum(c.riser) > lum(c.kerb) + 40), bay);
     // (c) the deck planters' faces are cream cast stone (they were green boxes): red over blue, red at least green
-    const dp = [];
+    const dp = [], shown = m.actors.map((a) => a.character?.root?.visible);
+    for (const a of m.actors) if (a.character?.root) a.character.root.visible = false;
     for (const s of [1, -1]) {
       // (its face toward mid, 0.6 m off its plate, between the speed lines and the coping)
       const b = PL.box[1], wm = (b.w[0] + b.w[1]) / 2, [fx, fz] = Wb(b.s[0], wm + 0.6), [cx, cz] = Wb(b.s[0] - 3, wm + 0.6);
+      G.paint.clear?.();
       shot(tw([cx, b.y0 + 1.0, cz], s), tw([fx, b.y0 + 0.6, fz], s));
       dp.push({ body: px(tw([fx, b.y0 + 0.78, fz], s)), plinth: px(tw([fx, b.y0 + 0.06, fz], s)) });
     }
+    m.actors.forEach((a, i) => { if (a.character?.root && shown[i] != null) a.character.root.visible = shown[i]; });
     R('the spawn decks\' planters are dressed, not green boxes (both halves): cast stone over a granite plinth, not green', dp.every((c) => lum(c.body) > lum(c.plinth) + 35 && c.body[1] - Math.max(c.body[0], c.body[2]) < 5), dp);
     // (d) the props this round adds stand within 8.5 cm of the faces they dress and off the walkable tops: the Lookout (its
     // deck 3.6), the telescope bay (3.0), every planter (its top)
@@ -288,6 +301,7 @@
     R('the touch pools\' rockery wraps every corner (≥ 4 cm out of both faces, rising ≥ 0.15 m over the rim) and rises ≥ 0.2 m over the rim on every side, both halves',
       cs.length === 8 && cs.every((c) => c.outX >= 0.04 && c.outZ >= 0.04 && c.up >= 0.15) && rs.length === 8 && rs.every((u) => u >= 0.2),
       { corners: Object.fromEntries(Object.entries(corner).map(([k, c]) => [k, [+c.outX.toFixed(3), +c.outZ.toFixed(3), +c.up.toFixed(2)]])), rim: Object.fromEntries(Object.entries(rimUp).map(([k, u]) => [k, +u.toFixed(2)])) });
+    m.actors.forEach((a, i) => { a.bot = brains8[i]; });
   }
   // 9. fix round 5 (LEAD-NOTES after review 5: the complete eye-level sweep, out/art/r5-sweep-*): every piece it marked bare
   // is drawn under the ink and reads as what it is, both halves; this round's props stand within 8.5 cm of the blocks they
@@ -683,6 +697,116 @@
       }
       R('this round\'s props (the kiosks\' skirting, pilasters, frieze, speed lines and boards; the scale\'s kick plates and maker\'s plate) stand within 8.5 cm of their blocks, under the kiosks\' cornices and the scale\'s top, both halves',
         nIt === 10 && st.n > 3000 && st.far <= 0.085 && st.over === 0, { placements: nIt, verts: st.n, farthest: +st.far.toFixed(3), at: st.atFar, overTop: st.over, atOver: st.atOver });
+    }
+    g.settings.fov = fov0;
+    m.actors.forEach((a, i) => { a.bot = brains[i]; });
+    G.paint.clear?.();
+  }
+  // 12. fix round 8 (LEAD-REVIEW 8, the list LEAD-NOTES "After review 8" binds): the Express OUT stop's long faces carry the
+  // IN stop's speed lines 0.62 m over the stop's own floor (they were drawn at 0.62 over the foundations' frame, inside
+  // Penguin Point's 1.2 m rock terrace), the Ticket Hall booth's base its price plates and granite skirting, the Reef
+  // Window's short west run its speed lines and its open ends (α −70, the Service Gate's −67 and −58) render jambs where
+  // the reef showed through; this round's props stand within 8.5 cm of their blocks and under their tops
+  {
+    const gl = G.renderer.getContext(), V = (a) => new G.camera.position.constructor(a[0], a[1], a[2]);
+    const DEG = Math.PI / 180;
+    const lum = (c) => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
+    const px = (p) => { const v = V(p).project(G.camera), w = gl.drawingBufferWidth, h = gl.drawingBufferHeight, a = new Uint8Array(4 * 9); gl.readPixels(Math.round((v.x + 1) / 2 * w) - 1, Math.round((v.y + 1) / 2 * h) - 1, 3, 3, gl.RGBA, gl.UNSIGNED_BYTE, a); const c = [0, 0, 0]; for (let i = 0; i < 9; i++) for (let k = 0; k < 3; k++) c[k] += a[i * 4 + k] / 9; return c.map(Math.round); };
+    const shot = (from, look, n = 24) => { G.paint.clear?.(); g.rig.cinematic(V(from), V(from), V(look), V(look), 99, () => {}); for (let i = 0; i < n; i++) g.debug.step(1000 / 60); };
+    const tw = (p, s) => [s * p[0], p[1], s * p[2]];
+    const med = (a) => { const b = [...a].sort((x, y) => x - y); return b[b.length >> 1]; };
+    const gr = (c) => c[1] - c[0];
+    const brains = m.actors.map((a) => a.bot); for (const a of m.actors) a.bot = null;
+    const fov0 = g.settings.fov; g.settings.fov = 70;
+    g.debug.freeze?.();
+    const { W: Wb } = await import('./src/world/stages/aquarium/geo.js');
+    // (a) the OUT stop (the blade frame bl(−3.7, −15.0): local x = w + 15, local z = −(s + 3.7); its long faces at local
+    // x ±1.2 on the 1.2 m terrace): its middle speed line (1.96) greener than the render between it and the lowest (1.89),
+    // on the court face from 2.6 m out and on the glass face from the 0.8 m strip beside the penguin glass, both halves
+    const blp = (lx, y, lz) => { const [x, z] = Wb(-3.7 - lz, -15.0 + lx); return [x, y, z]; };
+    const stop = [];
+    for (const s of [1, -1]) for (const [face, cx, cy, lzs] of [['court', 3.8, 2.9, [0.9, -0.9]], ['glass', -1.95, 2.0, [0.3, -0.3]]]) {
+      const fx = Math.sign(cx) * 1.2;
+      shot(tw(blp(cx, cy, 0), s), tw(blp(fx, 1.96, 0), s));
+      for (const lz of lzs) {
+        const line = px(tw(blp(fx + Math.sign(cx) * 0.046, 1.96, lz), s)), gap = px(tw(blp(fx + Math.sign(cx) * 0.003, 1.89, lz), s));
+        stop.push({ s, face, lz, line, gap, d: gr(line) - gr(gap) });
+      }
+    }
+    R('the Express OUT stop\'s long faces carry their faience speed lines over the stop\'s own floor (0.62 m over the 1.2 m terrace: greener than the render between them), both faces, both halves',
+      stop.length === 8 && stop.every((c) => c.d > 6), stop);
+    // (b) the booth's base (x 8.2 … 10, z −42 … −40, 1.2 → 2.2, its faces 3 cm out): on both TICKETS faces the navy price
+    // plate (1.47 … 1.83) darker than the render pilaster at the corner, and blue; on the plaza face (+x) the granite
+    // skirting darker than that face's pilaster, both halves
+    const booth = [];
+    for (const s of [1, -1]) {
+      const r = { s };
+      for (const [k, z, n, from, fxs] of [['north', -39.97, 1, [8.4, 2.6, -37.9], [-0.5, -0.25, -0.1]], ['south', -42.03, -1, [9.1, 2.6, -44.6], [-0.5, -0.25, 0.25, 0.5]]]) {
+        shot(tw(from, s), tw([9.1 + (k === 'north' ? -0.25 : 0), 1.65, z], s));
+        const zf = z + n * 0.013;   // (the plate's board, 1.2 cm proud of the base)
+        const fv = []; for (const x of fxs) for (const y of [1.5, 1.645, 1.8]) fv.push(px(tw([9.1 + x, y, zf], s)));
+        const pil = px(tw([9.1 - 0.87, 1.65, z + n * 0.021], s));
+        r[k] = { med: Math.round(med(fv.map(lum))), pil: Math.round(lum(pil)), blue: Math.round(med(fv.map((c) => c[2] - c[0]))) };
+      }
+      shot(tw([12.6, 1.7, -41.0], s), tw([10.0, 1.5, -41.0], s));
+      r.plaza = { skirt: Math.round(lum(px(tw([10.046, 1.27, -41.45], s)))), pil: Math.round(lum(px(tw([10.051, 1.75, -40.03], s)))) };
+      booth.push(r);
+    }
+    R('the Ticket Hall booth\'s base carries its price plates (navy, darker than the render pilaster at its corner) on both TICKETS faces and a granite skirting on its plaza face, both halves',
+      booth.every((c) => ['north', 'south'].every((k) => c[k].med < 0.62 * c[k].pil && c[k].blue > 0) && c.plaza.skirt < 0.6 * c.plaza.pil), booth);
+    // (c) the Reef Window: the short west run's outer face (the chord α −70 … −67; the outer wall's face r 32.55) carries
+    // the speed lines (0.76 greener than the render at 0.69), and its ends are render jambs carrying them too (the reef
+    // showed through the open ends): the Service Gate's α −67 and −58, each seen from across the gate, both halves
+    const pol = (a, r, y) => [r * Math.cos(a * DEG), y, r * Math.sin(a * DEG)];
+    const onChord = (ac, rm, lx, y, lz) => { const n = [Math.cos(ac * DEG), Math.sin(ac * DEG)], t = [Math.sin(ac * DEG), -Math.cos(ac * DEG)]; return [n[0] * (rm + lz) + t[0] * lx, y, n[1] * (rm + lz) + t[1] * lx]; };
+    const c67 = { ac: -68.5, rm: (30.5 + 32.5 * Math.cos(1.5 * DEG)) / 2, hl: 32.5 * Math.sin(1.5 * DEG) };
+    const da = 55.4 / 14, c58 = { ac: -58 + da / 2, rm: (30.5 + 32.5 * Math.cos((da / 2) * DEG)) / 2, hl: 32.5 * Math.sin((da / 2) * DEG) };
+    const reef = [];
+    for (const s of [1, -1]) {
+      const r = { s };
+      shot(tw(pol(-68.5, 35.3, 1.4), s), tw(pol(-68.5, 32.55, 0.8), s));
+      r.outer = [-0.35, 0.35].map((lx) => { const line = px(tw(onChord(c67.ac, c67.rm, lx, 0.76, 32.559 - c67.rm), s)), gap = px(tw(onChord(c67.ac, c67.rm, lx, 0.69, 32.551 - c67.rm), s)); return { line, gap, d: gr(line) - gr(gap) }; });
+      const jr = (c, e, lz) => { const line = px(tw(onChord(c.ac, c.rm, e * (c.hl + 0.041), 0.76, lz), s)), gap = px(tw(onChord(c.ac, c.rm, e * (c.hl + 0.031), 0.69, lz), s)); return { line, gap, d: gr(line) - gr(gap) }; };
+      shot(tw(pol(-58.8, 31.5, 1.6), s), tw(pol(-66.6, 31.6, 1.1), s));
+      r.j67 = [-0.4, 0.4].map((lz) => jr(c67, -1, lz));
+      shot(tw(pol(-66.2, 31.5, 1.6), s), tw(pol(-58.4, 31.6, 1.1), s));
+      r.j58 = [-0.4, 0.4].map((lz) => jr(c58, 1, lz));
+      reef.push(r);
+    }
+    R('the Reef Window\'s short west run carries the faience speed lines on its outer face, and the Service Gate\'s jambs are render jambs carrying the speed lines too (the reef showed through them), both halves',
+      reef.every((c) => c.outer.every((o) => o.d > 6) && [...c.j67, ...c.j58].every((j) => j.d > 6)), reef);
+    // (d) this round's props (the stop's faces, the booth's base, the window's jambs and run): within 8.5 cm in plan of the
+    // blocks they dress, none over a block's top (a headless build, both halves)
+    {
+      const { PropKit: PK } = await import('./src/world/props.js');
+      const { dressingFor: DF } = await import('./src/world/dressing.js');
+      const { LAYOUT: LY } = await import('./src/world/stages/aquarium/layout.js');
+      const kit8 = new PK(null, { headless: true });
+      const T8 = ['aquarium_stopfaces', 'aquarium_boothbase', 'aquarium_reefjambs'];
+      let nIt = 0; for (const it of DF('aquarium')) if (T8.includes(it.type)) { kit8.add(it.type, it); nIt++; }
+      const mir = (d) => (d.kind === 'box' ? { ...d, min: [-d.max[0], d.min[1], -d.max[2]], max: [-d.min[0], d.max[1], -d.min[2]] } : { ...d, center: [-d.center[0], d.center[1], -d.center[2]] });
+      const blocks = LY.half.filter((d) => ['express-stop-out', 'ticket-booth', 'reef-window'].includes(d.tag)).flatMap((d) => [d, mir(d)]);
+      const topOf = (d) => (d.kind === 'box' ? d.max[1] : d.center[1] + d.size[1] / 2);
+      const fp = (d, x, z) => {
+        if (d.kind === 'box') { const dx = Math.max(d.min[0] - x, 0, x - d.max[0]), dz = Math.max(d.min[2] - z, 0, z - d.max[2]); return Math.hypot(dx, dz); }
+        const a = d.rotY * DEG, c = Math.cos(a), sn = Math.sin(a), dx = x - d.center[0], dz = z - d.center[2], u = dx * c - dz * sn, v = dx * sn + dz * c;
+        return Math.hypot(Math.max(Math.abs(u) - d.size[0] / 2, 0), Math.max(Math.abs(v) - d.size[2] / 2, 0));
+      };
+      const st = { n: 0, far: 0, atFar: null, over: 0, atOver: null, per: {} };
+      const v3 = new G.camera.position.constructor();
+      for (const parts of kit8._buckets.values()) for (const p of parts) {
+        const P = p.g.attributes.position;
+        for (let i = 0; i < P.count; i++) {
+          v3.fromBufferAttribute(P, i).applyMatrix4(p.m); st.n++;
+          let best = 9, near = null;
+          for (const d of blocks) { const o = fp(d, v3.x, v3.z); if (o < best) { best = o; near = d; } }
+          if (near) st.per[near.tag] = Math.max(st.per[near.tag] || 0, +best.toFixed(3));
+          if (best > st.far) { st.far = best; st.atFar = [near?.tag, +v3.x.toFixed(2), +v3.y.toFixed(2), +v3.z.toFixed(2)]; }
+          if (near && v3.y > topOf(near) + 0.002) { st.over++; st.atOver = [near.tag, +v3.x.toFixed(2), +v3.y.toFixed(2), +v3.z.toFixed(2)]; }
+        }
+      }
+      R('this round\'s props (the OUT stop\'s skirting, pilasters, speed lines, portholes and ARRIVALS plate; the booth base\'s skirting, pilasters, speed lines, ledges, grilles and plates; the Reef Window\'s jambs, pilasters, lines and plate) stand within 8.5 cm of their blocks and under their tops, both halves',
+        nIt === 6 && st.n > 3000 && st.far <= 0.085 && st.over === 0, { placements: nIt, verts: st.n, farthest: +st.far.toFixed(3), at: st.atFar, perBlock: st.per, overTop: st.over, atOver: st.atOver });
     }
     g.settings.fov = fov0;
     m.actors.forEach((a, i) => { a.bot = brains[i]; });
