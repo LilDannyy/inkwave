@@ -388,6 +388,30 @@ add(armBox(-2.4, 9.4, 1.2, 1.2, 2.4, 3.6, cover(K.basaltDk, { tag: 'cairn' })));
 for (const a of [-157.0, -167.0]) { const r = G.SHO(a) - 0.75, [x, z] = P(r, a); add(O(x, z, 1.4, 1.4, 0, 1.3, -a, cover(K.scoria, { tag: 'slump-hornito' }))); }
 // the north Slump head: a mooring bollard back from both Races' landings
 { const [x, z] = P(26.6, 178.5); add(O(x, z, 1.0, 1.2, 1.2, 2.3, -178.5, cover(K.ironDk, { tag: 'race-bollard' }))); }
+// the Race kerbs (the lava fix round 5, the lead's decision after review 5 — ENGINE rule 21: every gap beside a rider is a
+// seam ≤ 0.3 m or ≥ 2.5 m of open lava). Three notches per half stood 0.7–2.4 m wide beside the Pumice stones at HIGH, and
+// a foot walking or swimming off the stone dropped into them: race 1's west side by the south head's wedge (1.0–1.3 m) and
+// its south-east corner past the end of the head's tip coping (0.7 m), race 5's west side by the north head's wedge
+// (0.95–1.25 m), race 6's north-west corner under the rim's curve (2.4 m). Each is closed by a kerb — a coping in its
+// stone's own frame (x across the Race, toward the island; z along it, toward the north head; the stone ±w/2 × ±d/2), its
+// face 0.2 m from the stone (a seam the stone rises and sinks past) and into the bank behind. Beside races 1 and 5 the kerb
+// runs on along the stone, in the strip between it and the shelf's lake edge, to 0.2 m from the next stone's end (races 2
+// and 4 stand 0.9 m further west: a kerb stopping at the wedge left a 1.4–1.9 m notch there instead). Tops 0.1 off the
+// copings each one overlaps (1.5 in the heads' wedges, over their 1.1–1.4 copings; 1.2 along the strips; the stone's HIGH 1.25)
+const raceKerb = ([sx, sz], yaw, [x0, x1], [z0, z1], top, tag = 'race-kerb') => {
+  const a = (yaw * Math.PI) / 180, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  return O(G.r3(sx + Math.cos(a) * cx + Math.sin(a) * cz), G.r3(sz - Math.sin(a) * cx + Math.cos(a) * cz), G.r3(x1 - x0), G.r3(z1 - z0), -1.1, top, yaw, coping({ tag }));
+};
+{ const [r1, r2, r4, r5, r6] = [G.STONES[0], G.STONES[1], G.STONES[3], G.STONES[4], G.STONES2[0]], SEAM = 0.2, Y = G.STONE_YAW;
+  // (the next stone's end in this stone's frame: race 2's south end over race 1, race 4's north end under race 5)
+  const endIn = (st, o, s) => { const a = (Y * Math.PI) / 180, dx = o[0] - st[0], dz = o[1] - st[1]; return dx * Math.sin(a) + dz * Math.cos(a) + (s * o[3]) / 2; };
+  const w1 = -r1[2] / 2 - SEAM, w5 = -r5[2] / 2 - SEAM;
+  add(raceKerb(r1, Y, [-2.35, w1], [-1.95, -0.4], 1.5),                                  // race 1, west: the south head's wedge out to the stone
+    raceKerb(r1, Y, [-2.15, w1], [-0.4, endIn(r1, r2, -1) - SEAM], 1.2),                 //   and on along it, short of the shelf's edge, to race 2
+    raceKerb(r1, Y, [0.85, 1.65], [-2.0, -r1[3] / 2 - SEAM], 1.2),                       //   south-east: the head's corner past its tip coping
+    raceKerb(r5, Y, [-2.4, w5], [0, 1.95], 1.5),                                          // race 5, west: the north head's wedge out to the stone
+    raceKerb(r5, Y, [-2.15, w5], [endIn(r5, r4, 1) + SEAM, 0], 1.2),                     //   and on along it to race 4
+    raceKerb(r6, G.STONE2_YAW, [-2.9, -r6[2] / 2 - SEAM], [-1.65, -0.95], 1.1)); }        // race 6, north of its west end: the rim's curve out to it
 // the tail (Alpha's, the NW; drawn here in Alpha's frame): the Ladle Road's vent hood and ladle stand, two scree ramps up
 // the Rim Ridge's face, and on the Ridge a spatter cone, a hummock, outcrops and cairns
 { const [x, z] = P(23.6, 162.5); add(O(x, z, 1.4, 1.4, 2.4, 3.8, -162.5, cover(K.ironDk, { tag: 'vent-hood' }))); }
