@@ -970,6 +970,14 @@ The layout also carries the Ladle Gantry (`onlyIn: 'bazookarp'`, §2.3), so the 
   because the pose it stood in did not fit either: on `roamAfter` stages the legs keep the full clearance, a boss off its
   plan walks to the path's first cell before its first leg, and out of a pose that doesn't fit a step need only keep the
   turn's rule (claws clear of walls, belly over floor).
+- **Fix round 6 (after review 6: whole rounds on one half, 3 in 10).** The brain keeps the half it stands on (z < 0 / z ≥ 0)
+  and since when: after 25 s there its goal picks weigh its fight distance at 0.3 and the other half's goals gain a pull
+  growing from +8 to +20 (at 65 s); a crossing once picked is kept, re-pathed, until it stands on the other half (14 s at
+  most). Two stalls the five-in-a-rows found (87 s at the Lower Surge Steps' foot, 105 s by Alpha's causeway end) were a
+  wedge: a move's end left it in a heading where neither the turn toward its waypoint nor a step fit. A turn without
+  headway for 1 s now goes the long way round, then through (claws clip for a moment); a heading the turn's rule refuses
+  where it stands first turns to the nearest one it takes; no new move meanwhile. Boss Battle keeps the island's old
+  faces (`ISLAND_BOSS`, no bays by race 7's pier): 818 m².
 - The engine adds the rider parts before `BossNav` builds (ENGINE H21), so the Organ columns are walls to it.
 - Verify with a copy of `tools/botlab/jobs/stretch/boss-check.js`: home ground, roams > 50 m, never idle ≥ 12 s, moves
   played.
