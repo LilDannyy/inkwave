@@ -116,7 +116,137 @@ export function registerDress(D, H, KIT) {
   });
 
   // ---------------------------------------------------------------------------------------------------- kiosk
-  // o.w / o.d / o.h: the block's size (local x, z) and height over pos; o.front: local +z faces the customers
+  // (fix round 7, LEAD-REVIEW 7: only the front was dressed; the other three faces were the body's plain render, its 18 cm
+  // chamfers showing the block's own cream at every corner, foot and head.) Every face now: a black-granite skirting with a
+  // brass line, a square render pilaster on each corner (a fluted face each way, 2 cm proud of the body) carrying a render
+  // frieze under the cornice with three faience speed lines that run round every face and across the pilasters; the
+  // trade's own boards on the plain faces — ice cream: the flavours board on the back (GELATO style), a striped service
+  // shutter on each side; souvenirs: a framed GULPER AQUARIUM GIFTS poster with a plush shark on the back; ferry: the FERRY
+  // TO INKOPOLIS route board on the back, a porthole service door on the free side. In the block's frame (BW × BD, local +z
+  // the front), z out of each face from the block's own face: everything within 8.5 cm of it, nothing over the cornice
+  // (its underside h − 0.345)
+  D.aquarium_kioskfaces = {
+    desc: "a kiosk's other faces (fix round 7): skirting, corner pilasters, the frieze's speed lines, the trade's boards (kind: icecream | souvenir | ferry)",
+    build(B, o) { const kind = o.kind || 'icecream'; kioskFaces(B, kind, o.w ?? 2.5, o.d ?? 2.5, o.h ?? 2.6, kind === 'souvenir' ? K.coral : kind === 'ferry' ? K.navy : K.faience); },
+  };
+  function kioskFaces(B, kind, BW, BD, h, band) {
+    const top = h - 0.345, y0 = 0.16;
+    // the skirting and its brass line, round the foot (over the body's foot chamfer)
+    pbox(B, 'paint', K.granite, BW + 0.104, y0, BD + 0.104, 0, y0 / 2, 0);
+    pbox(B, NS('metal'), K.brass, BW + 0.112, 0.016, BD + 0.112, 0, y0 + 0.006, 0);
+    // the corner pilasters (0.18 square, 5 cm proud of the block's faces: 2 cm over the body's), a flute up each outer face
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const cx = sx * (BW / 2 - 0.04), cz = sz * (BD / 2 - 0.04);
+      pbox(B, 'paint', K.render, 0.18, top - y0, 0.18, cx, (top + y0) / 2, cz);
+      pbox(B, NS('paint'), K.renderSh, 0.03, top - y0 - 0.34, 0.004, cx, (top + y0) / 2 - 0.04, sz * (BD / 2 + 0.052));
+      pbox(B, NS('paint'), K.renderSh, 0.004, top - y0 - 0.34, 0.03, sx * (BW / 2 + 0.052), (top + y0) / 2 - 0.04, cz);
+    }
+    const face = (s, fn) => { B.push(0, 0, 0, (s * PI) / 2); B.push(0, 0, (s % 2 ? BW : BD) / 2, 0); fn(s % 2 ? BD : BW); B.pop(); B.pop(); };
+    // the frieze between the pilasters (over the body's head chamfer, where the block showed), the three speed lines round
+    // it and across the pilasters; on a front whose serving window reaches into it (the ferry kiosk), only across them
+    const fz0 = top - 0.215, lines = [top - 0.17, top - 0.1, top - 0.03];
+    for (const s of [0, 1, 2, 3]) face(s, (L) => {
+      const win = s === 0 && fz0 < 2.01;
+      if (!win) pbox(B, 'paint', K.render, L - 0.2, 0.215, 0.05, 0, fz0 + 0.1075, 0.01);
+      for (const y of lines) {
+        if (win) for (const e of [-1, 1]) pbox(B, NS('gloss'), K.faience, 0.18, 0.035, 0.008, e * (L / 2 - 0.04), y - 0.0175, 0.054);
+        else pbox(B, NS('gloss'), K.faience, L + 0.116, 0.035, 0.03, 0, y - 0.0175, 0.043);
+      }
+    });
+    // the trade's boards (z from the block's face: the body's face is at 0.03)
+    if (kind === 'icecream') {
+      // the back: the flavours board in the ice-cream cart's GELATO style (cream letters on sea-green in a brass frame),
+      // a painted cone roundel, a row of scoops
+      face(2, () => {
+        const y = 1.06, bw = 1.9, bh = 0.92, zb = 0.03;
+        B.box('paint', '#3f5a52', bw, bh, 0.022, 0, y + bh / 2, zb + 0.011, { r: 0.008 });
+        for (const yy of [y, y + bh]) pbox(B, NS('metal'), K.brass, bw + 0.03, 0.024, 0.03, 0, yy, zb + 0.015);
+        for (const xx of [-bw / 2, bw / 2]) pbox(B, NS('metal'), K.brass, 0.024, bh + 0.02, 0.03, xx, y + bh / 2, zb + 0.015);
+        // the roundel: a cream disc in a brass ring, a cone with two scoops painted on it
+        const rx = -0.6, ry = y + bh / 2;
+        B.add('metal', torG(0.29, 0.022, 6, 28), K.brass, rx, ry, zb + 0.03, {});
+        B.add('paint', cylGeo(0.29, 0.29, 0.012, 28), K.cream, rx, ry, zb + 0.028, { rx: HP });
+        B.add('paint', latheG('cone', [[0, 0], [0.32, 0.9], [0.34, 0.95], [0, 0.95]], 12), K.mustard, rx, ry - 0.2, zb + 0.035, { s: 0.27, sz: 0.03 });
+        B.add('paint', sphG(0.38, 14, 10), '#e9b9b0', rx - 0.045, ry + 0.07, zb + 0.035, { s: 0.2, sz: 0.025 });
+        B.add('paint', sphG(0.38, 14, 10), '#f1e3d3', rx + 0.05, ry + 0.11, zb + 0.036, { s: 0.18, sz: 0.025 });
+        letters(B, 'ICE CREAM', { h: 0.15, x: 0.3, y: y + 0.6, z: zb + 0.023, c: K.cream, flat: true, mat: 'paint', wt: 0.19, track: 0.12 });
+        letters(B, 'CORNETS · WAFERS · 2 SCOOPS', { h: 0.052, x: 0.3, y: y + 0.45, z: zb + 0.023, c: K.brassLt, flat: true, mat: 'paint', wt: 0.2, track: 0.1 });
+        ['#f1e3d3', '#e9b9b0', '#b9c98a', '#6e4a32', '#ecd77a'].forEach((c, i) => {
+          const x = -0.14 + i * 0.22;
+          B.add('paint', cylGeo(0.062, 0.062, 0.01, 16), c, x, y + 0.24, zb + 0.027, { rx: HP });
+          B.add('paint', cylGeo(0.07, 0.07, 0.006, 16), K.cream, x, y + 0.24, zb + 0.023, { rx: HP });
+        });
+      });
+      // each side: a closed roller shutter (stripes in the awning's colours, slat lines), its box over it, guide rails, a
+      // brass bottom rail with a pull
+      for (const s of [1, 3]) face(s, () => {
+        const sw = 1.5, y = 1.12, sh = 0.82, zb = 0.03, n = 10;
+        for (let i = 0; i < n; i++) pbox(B, 'paint', i % 2 ? K.stripeA : band, sw / n, sh, 0.012, -sw / 2 + (i + 0.5) * (sw / n), y + sh / 2, zb + 0.006);
+        for (let j = 1; j < 12; j++) pbox(B, NS('paint'), K.renderSh, sw, 0.006, 0.014, 0, y + (j * sh) / 12, zb + 0.007);
+        B.box('paint', K.render, sw + 0.12, 0.13, 0.045, 0, y + sh + 0.065, zb + 0.0225, { r: 0.015 });
+        pbox(B, NS('gloss'), band, sw + 0.13, 0.022, 0.047, 0, y + sh + 0.03, zb + 0.0235);
+        for (const e of [-1, 1]) pbox(B, NS('metal'), K.steel, 0.035, sh + 0.02, 0.025, e * (sw / 2 + 0.017), y + sh / 2, zb + 0.0125);
+        pbox(B, NS('metal'), K.brass, sw + 0.02, 0.035, 0.03, 0, y + 0.017, zb + 0.015);
+        pbox(B, NS('metal'), K.brassLt, 0.14, 0.025, 0.022, 0, y + 0.06, zb + 0.041);
+      });
+    } else if (kind === 'souvenir') {
+      // the back: a framed poster — GULPER AQUARIUM over a plush shark on sea-blue, GIFTS under it
+      face(2, () => {
+        const y = 1.0, pw = 1.36, ph = 0.98, zb = 0.03;
+        B.box('paint', '#2f5f73', pw, ph, 0.018, 0, y + ph / 2, zb + 0.009, { r: 0.006 });
+        pbox(B, NS('paint'), K.cream, pw - 0.1, 0.012, 0.004, 0, y + ph - 0.08, zb + 0.02);
+        pbox(B, NS('paint'), K.cream, pw - 0.1, 0.012, 0.004, 0, y + 0.27, zb + 0.02);
+        for (const yy of [y, y + ph]) pbox(B, NS('metal'), K.brass, pw + 0.05, 0.03, 0.034, 0, yy, zb + 0.017);
+        for (const xx of [-pw / 2, pw / 2]) pbox(B, NS('metal'), K.brass, 0.03, ph + 0.03, 0.034, xx, y + ph / 2, zb + 0.017);
+        letters(B, 'GULPER AQUARIUM', { h: 0.075, y: y + ph - 0.18, z: zb + 0.019, c: K.cream, flat: true, mat: 'paint', wt: 0.2, track: 0.12 });
+        letters(B, 'GIFTS', { h: 0.15, y: y + 0.07, z: zb + 0.019, c: K.coralLt, flat: true, mat: 'paint', wt: 0.2, track: 0.16 });
+        // the plush shark (grey, white belly, fins, an eye), in low relief
+        const sx = 0, sy = y + 0.53, zs = zb + 0.03;
+        B.add('paint', sphG(0.38, 14, 10), K.plush, sx, sy, zs, { sx: 0.95, sy: 0.38, sz: 0.04 });
+        B.add('paint', sphG(0.3, 12, 8), K.white, sx + 0.02, sy - 0.05, zs + 0.004, { sx: 0.9, sy: 0.2, sz: 0.035 });
+        B.add('paint', cylGeo(0, 0.09, 0.2, 3), K.plush, sx - 0.02, sy + 0.17, zs, { sz: 0.12 });
+        B.add('paint', cylGeo(0, 0.09, 0.22, 3), K.plush, sx - 0.4, sy + 0.02, zs, { rz: 1.2, sz: 0.12 });
+        B.add('paint', cylGeo(0, 0.08, 0.2, 3), K.plush, sx - 0.39, sy - 0.08, zs, { rz: 1.95, sz: 0.12 });
+        B.add('paint', sphG(0.014, 8, 6), K.ink, sx + 0.24, sy + 0.04, zs + 0.006, {});
+      });
+    } else if (kind === 'ferry') {
+      // the back: the FERRY TO INKOPOLIS route board in the Ticket Hall plate's navy and brass (the route: two stops and a
+      // ferry between them)
+      face(2, () => {
+        const y = 1.1, bw = 1.62, bh = 0.66, zb = 0.03;
+        B.box('paint', K.navy, bw, bh, 0.022, 0, y + bh / 2, zb + 0.011, { r: 0.008 });
+        for (const yy of [y, y + bh]) pbox(B, NS('metal'), K.brass, bw + 0.03, 0.024, 0.032, 0, yy, zb + 0.016);
+        for (const xx of [-bw / 2, bw / 2]) pbox(B, NS('metal'), K.brass, 0.024, bh + 0.02, 0.032, xx, y + bh / 2, zb + 0.016);
+        letters(B, 'FERRY TO INKOPOLIS', { h: 0.085, y: y + bh - 0.15, z: zb + 0.023, c: K.brassLt, flat: true, mat: 'paint', wt: 0.2, track: 0.1 });
+        letters(B, 'SAILINGS EVERY 20 MINUTES', { h: 0.048, y: y + 0.06, z: zb + 0.023, c: K.cream, flat: true, mat: 'paint', wt: 0.2, track: 0.1 });
+        const ly = y + 0.3;
+        pbox(B, NS('paint'), K.cream, 1.1, 0.014, 0.004, 0, ly, zb + 0.024);
+        for (const e of [-1, 1]) {
+          B.add('paint', cylGeo(0.045, 0.045, 0.008, 16), K.brassLt, e * 0.58, ly, zb + 0.026, { rx: HP });
+          B.add('paint', cylGeo(0.025, 0.025, 0.01, 12), K.navy, e * 0.58, ly, zb + 0.028, { rx: HP });
+        }
+        letters(B, 'AQUARIUM', { h: 0.035, x: -0.58, y: ly - 0.1, z: zb + 0.023, c: K.cream, flat: true, mat: 'paint', wt: 0.2 });
+        letters(B, 'INKOPOLIS', { h: 0.035, x: 0.58, y: ly - 0.1, z: zb + 0.023, c: K.cream, flat: true, mat: 'paint', wt: 0.2 });
+        // the ferry on the line (a hull and its funnel)
+        pbox(B, NS('paint'), K.coralLt, 0.16, 0.035, 0.006, 0.05, ly + 0.035, zb + 0.026);
+        pbox(B, NS('paint'), K.cream, 0.08, 0.035, 0.006, 0.03, ly + 0.07, zb + 0.026);
+        pbox(B, NS('paint'), K.red, 0.025, 0.04, 0.006, 0.08, ly + 0.09, zb + 0.026);
+      });
+      // the free side (local −x; the timetable pillar stands against the front half of the other): a porthole service door
+      face(3, () => {
+        const dw = 0.78, y = y0 + 0.01, dh = top - 0.215 - y - 0.06, zb = 0.03;
+        B.box('paint', K.render, dw + 0.12, dh + 0.06, 0.02, 0, y + (dh + 0.06) / 2, zb + 0.01, { r: 0.006 });
+        B.box('paint', K.navy, dw, dh, 0.03, 0, y + dh / 2, zb + 0.015, { r: 0.01 });
+        // (its porthole: a brass ring 2.5 cm proud of the door, the glass just in front of it)
+        B.add('metal', torG(0.15, 0.015, 6, 20), K.brass, 0, y + dh * 0.7, zb + 0.04, {});
+        B.add('gloss', tpl('kdoorG', () => new THREE.CircleGeometry(0.14, 18)), '#3e5560', 0, y + dh * 0.7, zb + 0.032, {});
+        pbox(B, NS('metal'), K.brass, dw - 0.06, 0.16, 0.006, 0, y + 0.1, zb + 0.033);
+        rod(B, 'metal', K.brassLt, [dw / 2 - 0.1, y + dh * 0.45, zb + 0.032], [dw / 2 - 0.1, y + dh * 0.45 + 0.2, zb + 0.032], 0.014);
+        for (const yy of [y + 0.25, y + dh - 0.25]) pbox(B, NS('metal'), K.brassDk, 0.03, 0.12, 0.01, -dw / 2 + 0.02, yy, zb + 0.034);
+        letters(B, 'STAFF ONLY', { h: 0.045, y: y + dh * 0.7 - 0.27, z: zb + 0.031, c: K.cream, flat: true, mat: 'paint', wt: 0.2, track: 0.1 });
+      });
+    }
+  }
   D.aquarium_kiosk = {
     desc: 'a Deco kiosk round an off-limits block (kind: icecream | souvenir | ferry | timetable)',
     build(B, o) {
@@ -760,6 +890,26 @@ export function registerDress(D, H, KIT) {
       for (let i = 0; i < 10; i++) { const a = -2.2 + (i / 9) * 4.4; pbox(B, NS('paint'), K.ink, 0.012, 0.04, 0.01, Math.sin(a) * 0.18, h * 0.62 + Math.cos(a) * 0.18, 0.035, { rz: -a }); }
       pbox(B, NS('paint'), K.red, 0.012, 0.17, 0.01, 0.04, h * 0.62 + 0.06, 0.04, { rz: -0.5 });
       letters(B, 'LUGGAGE', { h: 0.06, y: h * 0.62 - 0.36, z: 0.012, c: K.ink, flat: true, mat: 'paint' });
+      B.pop();
+    },
+  };
+  // (fix round 7, LEAD-REVIEW 7: three of the scale's faces were plain olive brass; floorart.js draws their riveted panels
+  // and the LUGGAGE · WEIGH HERE · MAX 25 KG stencil under the ink.) A brass kick plate along every face's foot, and the
+  // maker's plate on the back (local −x) — 1.4 cm proud at most, well under the top
+  D.aquarium_scaletrim = {
+    desc: "the luggage scale's kick plates and maker's plate (fix round 7)",
+    build(B, o) {
+      const w = o.w ?? 1.2, d = o.d ?? 1.0, h = o.h ?? 1.2;
+      for (const s of [0, 1, 2, 3]) {
+        B.push(0, 0, 0, (s * PI) / 2); const L = s % 2 ? d : w; B.push(0, 0, (s % 2 ? w : d) / 2, 0);
+        pbox(B, NS('metal'), K.brassLt, L - 0.04, 0.09, 0.008, 0, 0.055, 0.004);
+        for (let i = 0; i < 5; i++) B.add(NS('metal'), sphG(0.008, 6, 4, HP), K.brassDk, -L / 2 + 0.08 + (i * (L - 0.16)) / 4, 0.055, 0.008, { rx: HP });
+        B.pop(); B.pop();
+      }
+      B.push(-w / 2, 0, 0, -HP);
+      B.box('metal', K.brassLt, 0.46, 0.13, 0.008, 0, h * 0.34, 0.004, { r: 0.004 });
+      letters(B, 'INKOPOLIS SCALE CO.', { h: 0.028, y: h * 0.34 + 0.015, z: 0.0085, c: K.ink, flat: true, mat: 'paint', wt: 0.2, track: 0.1 });
+      letters(B, 'EST. 1936 · NO. 47', { h: 0.022, y: h * 0.34 - 0.045, z: 0.0085, c: K.ink, flat: true, mat: 'paint', wt: 0.2, track: 0.1 });
       B.pop();
     },
   };

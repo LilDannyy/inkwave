@@ -488,6 +488,44 @@ vec3 aqParapet(float d, float hb, float aa, float big, float fine, out float rou
 }
 `;
 
+const R7_PARS = /* glsl */`
+// ---- fix round 7 (LEAD-REVIEW 7): the Ticket Hall's luggage scale (inkable cover, so under the ink; its dial, kick plates
+// and maker's plate are props): a recessed riveted panel on every face, LUGGAGE · WEIGH HERE · MAX 25 KG stencilled on the
+// two long faces in a 5 × 7 stencil letter (rows top to bottom, bit 4 the left column: L U G A E W I H R M X 2 5 K)
+const int AQF[98] = int[98](16, 16, 16, 16, 16, 16, 31, 17, 17, 17, 17, 17, 17, 14, 14, 17, 16, 23, 17, 17, 15, 14, 17, 17, 31, 17, 17, 17, 31, 16, 16, 30, 16, 16, 31, 17, 17, 17, 21, 21, 21, 10, 14, 4, 4, 4, 4, 4, 14, 17, 17, 17, 31, 17, 17, 17, 30, 17, 17, 30, 20, 18, 17, 17, 27, 21, 21, 17, 17, 17, 17, 17, 10, 4, 10, 17, 17, 14, 17, 1, 2, 4, 8, 31, 31, 16, 30, 1, 1, 17, 14, 17, 18, 20, 24, 20, 18, 17);
+const int AQT[26] = int[26](0, 1, 2, 2, 3, 2, 4, 5, 4, 6, 2, 7, -1, 7, 4, 8, 4, 9, 3, 10, -1, 11, 12, -1, 13, 2);
+float aqGlyph(int g, int col, int row) { return g < 0 ? 0.0 : float((AQF[g * 7 + row] >> (4 - col)) & 1); }
+// one line of AQT (n letters from off), centred on u = 0, its foot at v = 0, cell s metres (a letter 5 s wide, 7 s tall)
+float aqStencil(int off, int n, vec2 p, float s) {
+  float Wc = float(n) * 6.0 - 1.0;
+  vec2 c = p / s + vec2(Wc * 0.5, 0.0);
+  if (c.x < 0.0 || c.x >= Wc || c.y < 0.0 || c.y >= 7.0) return 0.0;
+  int i = int(c.x / 6.0); float cx = c.x - float(i) * 6.0;
+  if (cx >= 5.0) return 0.0;
+  return aqGlyph(AQT[off + i], int(cx), 6 - int(c.y));
+}
+// a face of the scale: u along it from its middle (to the viewer's right), hl its half length, h over its foot (0 … 1.2),
+// longF on the two long faces; the painted body is the block's own colour
+vec3 aqScaleFace(float u, float hl, float h, float longF, vec3 body, float aa, float fine, out float rough, out float metal) {
+  vec3 c = body * (0.98 + 0.06 * fine);
+  float e = min(hl - abs(u), min(h - 0.1, 1.2 - h));                    // (in from the frame's outline: the kick plate under it)
+  float fr = 1.0 - aqFill(e - 0.09, aa);                                // (the raised frame: e < 0.09)
+  c *= mix(1.06, 0.86, fr);                                             // (the panel sits back in its frame)
+  c *= 1.0 - 0.5 * aqFill(abs(e - 0.095) - 0.006, aa) * step(0.0, e);   // (the shadow line at the recess)
+  c *= 1.0 + 0.22 * aqFill(abs(e - 0.083) - 0.004, aa);                 // (the frame's lit inner edge)
+  // rivets down the frame's middle, every 10 cm
+  float dv = abs(abs(u) - (hl - 0.045)), dvy = abs(fract((h - 0.145) / 0.101 + 0.5) - 0.5) * 0.101;
+  float dh = min(abs(h - 0.145), abs(h - 1.155)), dhx = abs(fract((u + hl) / 0.1 + 0.5) - 0.5) * 0.1;
+  float rv = min(length(vec2(dv, dvy)) + (h < 0.13 || h > 1.17 ? 9.0 : 0.0), length(vec2(dhx, dh)) + (abs(u) > hl - 0.03 ? 9.0 : 0.0));
+  c *= 1.0 + 0.4 * aqFill(rv - 0.009, aa) - 0.4 * aqFill(abs(rv - 0.013) - 0.003, aa);
+  float st = 0.0;
+  if (longF > 0.5) st = max(aqStencil(0, 7, vec2(u, h - 0.8), 0.018), max(aqStencil(7, 10, vec2(u, h - 0.66), 0.012), aqStencil(17, 9, vec2(u, h - 0.52), 0.012)));
+  c = mix(c, vec3(0.05, 0.05, 0.055), st * (0.86 + 0.14 * fine));
+  rough = mix(mix(0.5, 0.42, fr), 0.7, st); metal = 0.45 * (1.0 - st);
+  return c;
+}
+`;
+
 const GLSL_PARS = /* glsl */`
 uniform float uAqNight;
 uniform vec4 uAqRose;
@@ -634,7 +672,7 @@ vec3 aqStoneFace(float t, float h, float H, float cope, float aa, float big, flo
 vec3 aqPlanterFace(float t, float h, float H, float cope, float aa, float big, float fine, out float rough, out float metal) {
   return aqStoneFace(t, h, H, cope, aa, big, fine, vec3(0.70, 0.64, 0.52), 1.0, rough, metal);
 }
-` + R5_PARS + R6_PARS;
+` + R5_PARS + R6_PARS + R7_PARS;
 
 // ---- fix round 4: the GLSL for the Lookouts, the telescope bays and the planters, from geo.js's numbers (Alpha's frame)
 const f4 = (v) => (+v).toFixed(4);
@@ -1165,6 +1203,18 @@ const R6_BEVELS = `{
       }
     }`;
 
+// ---- fix round 7: the luggage scale's faces (Alpha's frame: layout.js B(2.6, 3.8, 1.2, 2.4, −40.85, −39.85))
+const SCALEB = [2.6, 3.8, -40.85, -39.85];
+const R7_FACES = `if (y > 1.19 && y < 2.41) {
+      float t7, hl7, r7r, r7m;
+      vec2 td7;
+      if (aqBoxFace(q, nq, ${v4(SCALEB)}, t7, hl7, td7)) {
+        float aa7 = max(fwidth(vWPos.x) + fwidth(vWPos.z) + fwidth(y), 0.002);
+        float u7 = abs(nq.y) > 0.95 ? t7 * sign(nq.y) : -t7 * sign(nq.x);    // (to the right of a player facing the face)
+        base = aqScaleFace(u7, hl7, y - 1.2, step(0.95, abs(nq.y)), base, aa7, fine, r7r, r7m); gBaseRough = r7r; gTexORM.b = r7m; gTexStr *= 0.12;
+      }
+    }`;
+
 const GLSL_BASE = /* glsl */`
   // ---- Gulper Aquarium: floor art under the ink (src/world/stages/aquarium/floorart.js)
   if (vWNorm.y > 0.9) {
@@ -1333,6 +1383,8 @@ const GLSL_BASE = /* glsl */`
     ${R5B_FACES}
     // ---- fix round 6: the Feeding Step, the whale-tail bench, the ice-cream cart, the trolley stack, the Kelp Ramp's parapet
     ${R6_FACES}
+    // ---- fix round 7: the luggage scale (a riveted panel each face, the stencil on its long faces)
+    ${R7_FACES}
   } else if (vWNorm.y > 0.0) {
     // ---- fix round 4: the rounded edges of the Lookouts', the bays' and the planters' tops (level.js's bevels)
     vec2 q = vWPos.z > 0.0 ? -vWPos.xz : vWPos.xz;

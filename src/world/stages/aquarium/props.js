@@ -104,6 +104,11 @@ export const PLACEMENTS = [
   { type: 'aquarium_kiosk', ...atObox(ob('ferry-kiosk'), 0.6, { h: 2.4, kind: 'ferry' }) },
   { type: 'aquarium_kiosk', ...atObox(ob('timetable'), 0, { h: 2.2, kind: 'timetable' }) },
   { type: 'aquarium_kiosk', ...atObox(ob('souvenir-kiosk'), 0, { h: 2.6, kind: 'souvenir' }) },
+  // (fix round 7, LEAD-REVIEW 7: the kiosks' other faces — skirting, corner pilasters, the frieze's speed lines, the
+  // trade's boards — round the same blocks, in the same frames)
+  ...KIOSKS.map((p) => ({ ...p, type: 'aquarium_kioskfaces' })),
+  { type: 'aquarium_kioskfaces', ...atObox(ob('ferry-kiosk'), 0.6, { h: 2.4, kind: 'ferry' }) },
+  { type: 'aquarium_kioskfaces', ...atObox(ob('souvenir-kiosk'), 0, { h: 2.6, kind: 'souvenir' }) },
   // ---- Penguin Point
   { type: 'aquarium_hut', ...atObox(ob('keeper-hut'), 1.2, { h: 2.7 }) },
   { type: 'aquarium_buckets', pos: [-9.0, 1.2, -46.0], rotY: -30 * DEG, h: 1.2 },
@@ -147,6 +152,7 @@ export const PLACEMENTS = [
   ...tagged('ticket-machines').map((d) => ({ type: 'aquarium_ticketcanopy', ...atBox(d) })),
   ...tagged('icecream-cart').map((d) => ({ type: 'aquarium_cartdress', ...atBox(d) })),
   ...tagged('luggage-scale').map((d) => ({ type: 'aquarium_scale', ...atBox(d) })),
+  ...tagged('luggage-scale').map((d) => ({ type: 'aquarium_scaletrim', ...atBox(d) })),   // (fix round 7)
   ...tagged('coat-pegs').map((d) => ({ type: 'aquarium_pegs', ...atBox(d) })),
   // ---- the wing's small things, out of the lanes (art round 1: "none of §5.2's queue stanchions, stacked luggage, …")
   { type: 'aquarium_aboard', pos: [10.65, 0, -47.0], rotY: PI * 0.85, text: 'FLOOR DRY', sub: 'EVERYTHING IS' },
