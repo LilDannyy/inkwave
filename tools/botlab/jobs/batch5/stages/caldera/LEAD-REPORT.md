@@ -1,314 +1,201 @@
-# Highmark Foundry: the lava engine (the Bellows' breath) — after fix round 4
+# Highmark Foundry: the lava engine — fix round 5 (after review 5)
 
-The lava is a registry stage module (key `lava`). Fix round 4 answers the engine's fourth review (`LEAD-REVIEW.json`,
-verdict REDO: two major issues — an escape death in the lava-bots gate, rule 44 — and five minor ones). There is no new
-lead note for this round (`LEAD-NOTES.md` is round 3's), so each issue is worked as the review's own fix list asks; rule
-44's decision stays the lead's. **Takeover:** the worktree held no commit after the review and no uncommitted work of a
-previous fixer (only the lead's COMMON.md edit "the Mac mini is back", left uncommitted as before); I started from
-7738a878. My instructions say the Mac mini is unavailable and push nothing: every run is local, one Electron of mine at a
-time under the shared SLOTS=3 lock (BOTLAB_OUT=inkwave-upstream/.botlab), WATCHDOG=900000. Nothing is pushed.
+Worktree /Users/danielosling/Desktop/1/st-b5-caldera, branch b5-stage-caldera. **Merged new-stages 632398c3** (the
+shipped PUBLIC BETA) first: a fast-forward (it already held this branch), no conflicts; the uncommitted COMMON.md edit in
+the worktree was byte-identical to new-stages' and was dropped for it. Then check-maps for every caldera variant (ok) and
+the stage's own page test — which **failed after the merge** (two causes, both fixed first, below). Every run local, one
+Electron of mine at a time under the shared SLOTS=3 lock (BOTLAB_OUT=inkwave-upstream/.botlab), WATCHDOG=900000. Nothing
+pushed (so no Mac mini jobs). The reviewer's probe files of review 5 (`cal-rev5/`) were gone from /tmp (cleaned
+2026-10-22): its probe-notch5b is rebuilt as a committed test, `tools/botlab/tests/lava-notch.js`.
 
-Worktree /Users/danielosling/Desktop/1/st-b5-caldera, branch b5-stage-caldera. Review 4 ran at 7738a878 (code 5b42e5bf).
-**Final code 17578ed4** (only the report's scratch commit after it). Runs, probes and logs: the session scratchpad
-`cf5/` (`status.txt` lists every run with its code state; `logs/`; the probes `probe-*.js`).
+## 0. Found at the start, fixed first
 
-## 0. Review 4's issues: each one, what was done, the proof
+1. **The PUBLIC BETA's issue log throws on Highmark Foundry in the desktop build** (src/core/issueLog.js, new in the beta).
+   Every row carries `lava: m.lava.state` — on this stage a *method* (`StageLava.state()`); the desktop build sends rows over
+   IPC (`inkwaveNative.issue` → `ipcRenderer.send`), which cannot clone a function, so **every row threw**: inside
+   `Game._frame` for a bot stuck 5 s or a slow frame, and inside every `console.warn` / `console.error` (the wrapper throws
+   before the real call). lava.js died on it at boot (HARNESS "An object could not be cloned"). Fixed (39efb4c7, tagged):
+   the row logs the lava's phase ('low' | 'rise' | 'high' | 'fall'), and a row IPC cannot clone is sent as its JSON — the
+   log never throws into its caller. **For the lead / integrator: the shipped beta has this bug on Highmark in the desktop
+   app; this commit is the hotfix.** (int4's "Caldera … 1 / 1 / 1 warning/error lines" may be it.)
+2. **lava.js F8 parked three idle bots inside the gauge deck** (x −12…−5.4, z −0.6…6.6, 1.2–2.4). b5-int3's collideBody (in
+   the merge) no longer pushes a body out through a top more than a step over its feet: they went down through the island
+   into the lava and F8 failed. The test parks them on the deck's top (x −8). lava.js 59/59.
 
-### 1 (major). The lava-bots gate failed on an escape death off Race 7 — FIXED; the gate met twice at the final code
+## 1. The list, in its order, each with its proof
 
-**What happened** (the review's trail read against the geometry, `probe-geo`): the escape's next node (−16.5, 1.25, 2.5)
-is **a node of race7 itself** (its HIGH pose, y 1.25). In the rise the stone's top was 0.6 m lower, so the escape read its
-own stone's node as a step up and ran straight at it (guards off) along the stone's edge beside the island's coping, then
-at the coping beyond. Three faults killed it:
-- **a)** rider nodes were read at their pose's height, not where the rider is now (lava.js `botAct`);
-- **b)** presses the hop guards refused still burned the jump cool-down (0.6–1.0 s each), so the escaper's own asks waited
-  (no J in the trail for 0.6 s at a time) (bots.js `_tail`);
-- **c)** pressed against the face at a slant, actor.js keeps the run speed along a face it is pushed into (5.7 m/s along +z
-  while the move pointed +x); the hop was judged by the ballistic arc along that slide (`_hopSafe`), off the stone's end,
-  and refused.
+### 1. Rule 44 — decided again: option 1, with margin — DONE
 
-**Fixed** (df33ceab; the step became a shared helper in cf429792):
-- lava.js: an escaper reads a rider node at the rider's **current top** (`ry`); pressed against the step's face it hops
-  **straight across the face**, to the top 1 m in (`_escHop`); its ask names that spot (`b.hopAt`).
-- bots.js `[b5-caldera]`: `hopAt` — a module's ask is judged by the flight steered at its spot (`_hopLands`) and flown
-  there; `_jRef` — an ask goes ahead whatever cool-down a **refused** press left (refusals are retried each frame, still
-  checked); an escaper's **route** hop near the lava is judged by its flight at the node too (cf429792: it was judged along
-  its velocity and flown at the node — this round's own lava.js run caught it: F8b, two escapers off stones hopped at an
-  Organ top across the lake and drowned).
-- **The 6 m/s step off the 1.3 m coping** that the review asked about is no guard miss: no jump / squid / fire in the trail;
-  the fight walked it off the coping's west edge onto race7, which had surfaced 0.05 s before — solid and rising, floor to
-  every guard (the momentum look-ahead lands on its top) — and it landed on it. It died 1.5 s later, in the escape (a–c).
-- **Zipline** (the review's other fight-death source): bots.js `_zipDry` — a bot zips only where the tether's line (every
-  2 m), its end and, for a wall, the let-go's landing fan (1.5–6 m out, ±45°) stay off what the stage calls wet within 4 s
-  (the stage's `wet` only: zips on other stages are as they were).
+- **The margin.** The three running crossings over 15 m (19.26 m from (±13.5, 1.1, ∓6.5), 17.27 m from (±14.5, 1.4,
+  ∓5.5), both onto the deck stair's corner, and 17.29 m from the pocket beside the deck stair onto race 7~) were **one nav
+  hole, not a shortcut**: the gauge deck's corner stands 0.85 m from the lava's edge at each deck stair, no 1 m grid
+  cell's centre fell on the copings there, so every nav route from the East Pool's coping to the deck stair's foot went
+  over the deck (23.7 m, and 24.5 m from the pocket to race 7~). A kid walks it in **4.1 m** and **7.4 m** (probe-walk:
+  the real physics through the corner, both halves). Pulling back or kerbing the corner would not have changed that
+  measure, so the fix is the hole: `LavaWorld.navEdges` serves the layout's new `lava.walks` (nav walk links between two
+  static floors the grid misses, both ways, twins turned) — one round each deck's corner (d0759240). Nav now 5.4 / 7.7 m;
+  those crossings save under 1 m; bots can use the passage.
+- **Rule 44 at the final geometry** (the Race kerbs below included): plain running jumps **752 at LOW, 1,161 at HIGH, the
+  largest 12.5 m** (LOW: the Lakefront's coping and the deck's socket notch onto the causeway; HIGH: the same and the
+  causeway onto Organ A, 12.1) — none over 15 m (the margin met), none over 20 (the gate). Swim / dash: 1,732 at LOW (817
+  save > 20 m, the most 56.9) and 2,019 at HIGH (202 > 20, 4 > 40, the most 40.8; was 248 / 37 / 52.6 before the walk
+  link). **lava-audit's two rule-44 gates rewritten** (5dc1d0bf): running ≤ 20 m is the gate (the largest and the 15 m
+  margin printed); swim / dash is an information row, no gate.
+- **DESIGN §3.5** (5f77c0bf, scratch): the decision, the numbers, the East Pool corner explained, the options kept for the
+  record. **out/fix5/rule44-crossings.json** (4f57d742, scratch): every crossing at the final geometry, the fix4 format.
+- **The Bazookarp handoff — the carrier field never relies on a jump over the lava** (583ca969, a512192c): karpField adds
+  hop / gap edges (1.2–3.0 m over "open air") and the lava read as open air: **422 such edges crossed it**. Now
+  `LAYOUT.bazookarp.hopVeto = karpVeto.js`: (a) every hop / gap pair crossing the lava where both ends stand (over the lake
+  and the Spillways at every level, or at HIGH between two dry ends) — 192 pairs, Alpha's frame (the field adds each turn;
+  3 edges the field builds on Bravo's half only are listed turned); 44 that end on drowning floor are kept (the HIGH state
+  masks that end; at LOW they are real moves); (b) the 75 pairs checker #16 proved no carrying kid makes (as built and at
+  LOW: 124 of 150 were gaps from Organ L's HIGH-pose top down to its own LOW-pose top, 16 hops Organ B LOW → HIGH: pose
+  pairs). **lava-karp.js K8** (new) checks the field has no lava-crossing edge left and prints the entries to paste when
+  the nav moves: **10/10**. Field: hops 36 → 18, gaps 686 → 198; L 57.3 → 58.1 m.
+  **Bazookarp checker on caldera after it (OUT scratch, ~9 min):** #16 **OK** as built and at LOW (216 / 216 made; it was
+  150 not made); at HIGH 48 not made — every one an edge onto drowning floor that the HIGH state masks (the checker tries
+  them anyway: a checker question, below). Still failing, not on this list: **#7** (7 / 6 entrances into each Gate's 15 m
+  ring; #7d finds by cause layout / field / swim 6 / 85 / 462 as built), **#12** (no lightmap for caldera.bazookarp).
+  **Note for the lead:** "a Bazookarp carrier cannot make them" holds for dash jumps (no subs while carrying) but not for
+  swim jumps — SPEC §2.4 lets the carrier swim its own ink at 9.44 m/s, and the checker (swim=fail) counts its swim-jumps
+  over the lava among #7d's finds.
 
-**Proof:**
-- `probe-esc`: escapers on every stone node within 2.6 m of race1 / 5 / 6 / 7's ends, the stone 0.45–0.8 m under the step,
-  run in at ±40° at 5.5 m/s with a refused press's cool-down, charger / roller / shooter — 324 cases: **HEAD 59 died;
-  fixed 0 died, 0 stuck** (two runs).
-- lava.js **F8c** (new): the same at t 39.6 / 40.4, 72 cases: **HEAD 18 died + 28 not up; fixed 0 / 0**. **F8d** (new):
-  the Zipline from the island, the same aims at LOW and in the rise warning — 8 of 154 refused only in the warning, 129 still
-  allowed. **F8b** gained case C (asked while escaping): 12 / 12.
-- **The gate** (lava-bots.js, 20 trials × 6 bots per scenario = 360 bot-trials a run; the lead's: 0 escape deaths and ≤ 1
-  fight death per 360, twice in a row):
+### 2. Rule 21 — the notches closed — DONE
 
-| run | code | escape | fight | gate |
-|---|---|---|---|---|
-| A, B | 28f957b1 | 0, 0 | 0, 1 (stones, 78 s: a spinner in paint mode swam off a ledge's lip 1.8 s after it dried, 35 m from its stone) | pass, pass |
-| C, D | 958d24a3 | 0, 0 | 0, 0 | pass, pass |
-| E, F | 14cb2709 | 0, 0 | 1 (edges: a shooter at the north head's lake-corner notch — see "found" below), 0 | pass, pass |
-| **G, H** | **17578ed4 (final)** | **0, 0** | **0, 0** | **pass, pass** |
+- **The Race kerbs** (172484d4, layout.js `raceKerb`): copings in each stone's own frame, their face **0.2 m** from the stone
+  (a seam it rises and sinks past), into the bank behind; both halves (mirrored). Race 1 west: the south head's wedge out to
+  the stone (top 1.5, over its 1.1–1.4 copings) and on along the stone, short of the shelf's lake edge, to 0.2 m from race
+  2's end (1.2) — a kerb that stopped at the wedge left a 1.9 m notch at race 2's end instead (races 2 / 4 stand 0.9 m
+  further west); race 1 south-east: the head's corner past its tip coping (1.2); race 5 west: the north head's wedge (1.5)
+  and on to race 4 (1.2); race 6: north of its west end under the rim's curve (1.1). Tops 0.1 off every coping they
+  overlap (check-maps' z-fight rule), ≥ HIGH + 0.3 (rule 6). The step links are untouched.
+- **Proof:** lava-audit rule 21 **0 pinches** (was 18); rules 14, 22, 25, 38, 44, 45, 46 pass. **lava-notch.js** (new;
+  the reviewer's probe rebuilt): at HIGH every outline sample with a static top within 2.5 m — 134 samples, walking (0.5),
+  running (1.0) and swimming off toward the top, and walking back on: **670 trials, 0 deaths**; controls (2 s on each of 14
+  stones; stone → stone across every seam, both Races, both halves) all alive. **Teeth:** `nokerb=1` (the kerbs not solid)
+  → **40 deaths, all in the gaps** (race 1: 7 + 7, race 5: 10 + 10, race 6: 3 + 3). lava-bots.js once: **7/7, 0 escape and
+  0 fight deaths in 360 bot-trials.** Matches below. check-maps: caldera / .zones / .tower / .practice 1,747 pieces,
+  .bazookarp 1,809, .boss 1,642 — ok.
 
-### 2 (major). Rule 44 — the audit made whole; DESIGN §3.5 rewritten with the true numbers; the decision is the lead's
+### 3. The boss — DONE (and two more traps found on the way)
 
-- lava-audit.js (37df2755): **every gap-march sample past a 0.35 m seam is tried physically** (a run, then a swim out of own
-  ink, then the real Dash Pellet on the rise / apex / fall) and counts in the gates; a flight over lava that lands **> 1 m
-  off its line is counted** (flagged `off`, its gain from where it landed). `PAGE_ARGS full=1` prints every crossing.
-- Run at df33ceab (the stage has not changed since): **plain running jumps 822 at LOW** (754 over gaps < 4.4 m, 46
-  off-line; 572 save ≤ 5 m, 230 5–10 m, **20 10–20 m, none > 20 — the most 12.5 m**; 94 places) and **1,244 at HIGH**
-  (1,172 short, 52 off; 931 / 291 / **22** / 0 — **the most 19.3 m**: the East Pool's deck-stair corner, (13.5, 1.1, −6.5)
-  across 3.5 m of lava); swim / dash **1,716 at LOW (801 save > 20 m, 243 > 40, the most 56.9)** and **2,021 at HIGH (254 >
-  20, 39 > 40, the most 52.6)**. This matches the reviewer's probe (710 / 1,152 short + 28 / 48 off-line).
-- DESIGN §3.5 (bcfd5198, scratch): "the narrowest level gap is 4.5 m" struck (shores come within 0.4 m); the table, the
-  running places saving > 10 m, the skill areas saving > 20 m, why the round-3 decision cannot pass, and the options with the
-  true numbers — **option 1 passes every running crossing, narrowly (19.3 m against the 20 m bar; the next 17.3, then ≤
-  12.5)**; the one place over 15 m (HIGH only) is a local fix if the lead wants margin.
-- **For Bazookarp checker #16:** `out/fix4/rule44-crossings.json` — every crossing at LOW and HIGH (take-off, heading, gap,
-  kind, off-line, landing, floor, gain).
-- Both rule-44 checks still fail: **not built — the lead decides** (no geometry changed this round).
+- `layout.boss.noGo: [[−20.5, −25.5, 3.5], [20.5, 25.5, 3.5]]` (bossNav.js, tagged): the west Lakefront wedge tips are
+  never a goal (`randomPoint`) or a path's anchor (`nearestPlan`); the cells stay its ground (817.5 m²).
+- The five-in-a-row then failed on other spots, each traced (probe-bossrun: a 0.5 s trail of the longest spell):
+  **both causeways' feet** (95 s and 88 s): a leg string-pulled 0.3 m short of the plan's clearance cut the corner where
+  the causeway's foot meets the lake (1.55 m from it); its body stopped fitting; **every 1 cm step was refused because the
+  pose it stood in did not fit either**, though a pose 0.6 m on did (probe: 6 of 8 headings never left in 25 s); and the
+  **tongue along the terrace face at the Moorings' east end** (88 s: cells it can't turn round in). Fixed on `roamAfter`
+  stages only (Highmark): legs keep the plan's full clearance (slack 0); goals and anchors only where it can turn round
+  (≥ 6 of 8 headings — the "clearance test on the cell" review 5 named; noGo cells too); off its plan or in such a cell it
+  walks to the path's first cell first; out of a pose that doesn't fit, a step need only keep the turn's rule (a387c49c).
+  Every stage without those keys runs the same code paths as before.
+- **boss-check: 10 in a row 6/6** (two sets of 5): walked 85–192 m, 14–20 cells of 4 m, the longest spell 21–42 s,
+  back-outs 0–1, halves e.g. 82 / 38, 60 / 60, 113 / 7. (On the way: 3 of 15 boss-check runs failed, 69–95 s, each traced and fixed above.)
+  A Halyard boss-check (one run, a sanity run of the shared files) read 29 m walked: Halyard has neither key, so none of
+  this round's code runs there; not investigated further.
 
-### 3 (minor). Bazookarp's drop spots on drowned ledges in the fall warning — FIXED
+### 4. lava.js F10 — DONE
 
-- bazookarp.js `_dynOk` `[b5-caldera]` (c0a76eda): on a liquid stage (from its first `lava:warn`) the stage's `danger`
-  counts at all times — the lava's is a floor it covers within 10 s. The field still switches at `lava:warn` (SPEC §5.5).
-- lava-karp.js **K3b** (new): from the fall warning until the ledges dry, 60 ledge-level origins at 6 times — **0 drop
-  spots on covered ground**; a real drop 1 s into the warning rests at (−25.5, 1.3, −2.5). **With the fix held off (`_liq`
-  forced false): 30 of 60 covered at 70.5 / 71 / 74 / 79 s — K3b fails (8/9).** lava-karp **9/9** (14cb2709).
-- A one-line `bazookarp.js` change: for the int4 integrator (tagged).
+- `_lookAct`: the foot wait's own time-out (5637d9c8): from the moment the lookout is climbable (its HIGH-pose nodes open),
+  a claimant whose goal is still the climb's foot has found no way up in its 0.8 s re-plans; after **6 s** the claim goes
+  and it is passed over 15 s (log `foot-timeout`, `stats.lookFootOuts`). F10 keeps each claimant's trail every 0.5 s (mode,
+  route to foot / top, its length and step, footing, up, top open, foot wait) and prints it for a team never up.
+- **lava.js 59/59 three runs in a row** at that code (claimants up at 50.2 / 50.2, — / 51.3, 50.7 / 51.4 s; foot-outs 0)
+  and a fourth at the final code. **probe-footwait:** a claimant at its foot whose every plan up fails (`_pathTo` stubbed)
+  lets the claim go at 56.1 s ('foot-timeout', 6.1 s after the top opened); with its plans working it is up at 51.8 s.
 
-### 4 (minor). The four bot matches — FIXED: 2 Turf War + 2 Zone Control at the final code, every check passes
+### 5. The lavafall — DONE (the band's cause was not a row seam)
 
-What held bots, found with trails (`probe-look`: all bots bows or chargers, the first surge from the pads, rows every
-0.25 s; `lava-match.js` now records what a bot was doing in every ≥ 4 s stuck episode, `why`):
-- **The claimants** — (i) a hop that fell back after the waypoint advance had passed the hop's node left a route whose next
-  edge was a *walk* 1.05 m over its feet (6 s at Organ A~'s foot; another under the Horn Step's lip); (ii) at a column it
-  asked to hop only after its walk stalled 0.3 s — never while a bow drew in a duel — and the edge guard stopped it 3.3 m off
-  Organ B's node (the seam reads as lava): 2 s per column; (iii) on enemy ink at a column's foot whose shots missed its feet,
-  one 1.5 s of inking, then refused hops (10.75 s in a Zone Control match); (iv) the team's only long-range kit claimed
-  first, was splatted, and the claim stayed with a blaster for good (3 of 6 matches with one long-range kit had no
-  long-range lookout time).
-- **Fixed** (cf429792, 958d24a3, 17578ed4): the claimant's column hop is the escape's step (`_stepUp`: straight at the node,
-  asked at once and every frame, judged by its flight even with the guards off — bots.js `hopCheck` — across the face when
-  pressed) within 2.4 m, or 3.5 m where its line is floor up to the seam; a route whose next waypoint stands > 0.9 m over its
-  feet on a walk edge is planned again; on enemy ink it inks 1.5 s in every 2.5 s; a claimant that makes no 0.6 m in 5 s on
-  its way up lets the claim go (passed over 15 s, `lookStalls`); a mid-range claimant not yet up hands the claim to a free
-  long-range kit of its team. Probes: every claimant that lived got up (44.6–50.6 s), hops 0.25–0.75 s; with both feet
-  painted in enemy ink at 40 s, claimants up in 4 of 4 runs (painted once) and 1 of 2 (re-painted every 2 s).
-- **The refill stalls** (the review's 11.25 s on the Lakefront corner; 13.5 s on a lookout's top here): a bot at its refill
-  patch, too dry to paint (< 3 %) and with no own ink to step onto, stood for the kid's slow refill (9 / s). bots.js
-  (7fb282e0): it looks elsewhere for 6 s, that patch excluded; lava.js: a claimant refilling on the lookout's top holds it
-  on purpose (`perchUntil`, as when not refilling).
-- lava-match.js (14cb2709): the lookout check applies when the match has a long-range kit; with none (twins / shooters /
-  brollies / blades: lookouts held 47 / 67 s by mid-range claimants) it says so and passes.
+- **The band** was the *other half's* lavafall, seen from out past the lip through the void under the arena and through
+  this half's curtain (transparent, no depth write, one merged mesh). Proof (diagnostic stills): with every other mesh
+  hidden the band stayed; with depthWrite on it vanished. lavaFx.js (5fd94773): each curtain is its own mesh, writes depth,
+  and the one nearer the camera draws first, so one never shows through the other — both the eng view and its mirror
+  are clean. (A first try that re-mapped the curtain's UVs to metres did not touch the band and was reverted.)
+- **Rule 42 viewpoints** (8c8e8b33): the Spillway Bridge's middle and bay-side end and the Horn Step, both halves. **Rule
+  42 now FAILS from the bridge: 62 of 1,152 rays** — looking out through the breach just under the horizon (pitch −0.05 /
+  −0.14, headings ~255–330°) they meet nothing: the stage has no far scenery (`buildBackdrop` returns nothing). The Horn Step
+  sees none. By the lead's list the far scenery is the art phase's; the check now catches the gap from where a player
+  stands. lava-audit at the final code: **38/39** (only rule 42).
 
-| match (lava-match.js, all bots) | code | lava | sea | stuck % (longest) | at the stones ≥ 2 s | stone steps | Slump crossings | lookout s A / B (long-range) | checks |
-|---|---|---|---|---|---|---|---|---|---|
-| Turf War 1 | 17578ed4 | 0 | 0 | 0.03 | 0 | 1 | 8 | 0 / 15.6 (0 / 15.2) | **7/7** |
-| Zone Control 1 | 17578ed4 | 0 | 0 | 0.18 | 0 | 0 | 0 | 26.0 / 41.2 (26.0 / 41.2) | **7/7** |
-| Turf War 2 | 17578ed4 | 0 | 0 | 0.02 | 0 | 0 | 6 | 26.3 / 0 (26.3 / 0) | **7/7** |
-| Zone Control 2 | 17578ed4 | 0 | 0 | 0.35 | 0 | 1 | 2 | 2.7 / 77.9 (2.7 / 0) | **7/7** |
-| Tower Command | 17578ed4 | 0 | 0 | 0.52 (4 s, the Lower Surge Steps) | 0 | 0 | 0 | 5.5 / 16.6 (5.5 / 16.6) | **7/7** |
+### 6. Tests and docs — DONE
 
-The sets before it, for the record: 28f957b1 3 of 4 all-pass (Zone Control: the claimant 10.75 s on enemy ink, iii);
-958d24a3 3 of 4 (Zone Control: 13.5 s refilling on the lookout, and no long-range kit at all); 14cb2709 1 of 4 (two Turf
-Wars whose only long-range kit died, iv; **a lava death in Zone Control at the north head's lake-corner notch** — below);
-Bazookarp 5:00 at 14cb2709 7/7. 0 sea falls in all 19.
+- net-lava.cjs: the live guest's non-lava cells bounded again, ratio ≥ 0.999 (192544c9). **Not run** — see §6.
+- lava-match.js: the lookout line says "NOT APPLICABLE: no long-range kit in this match, passed for want of one" when so
+  (7ece450b). In this round's four matches it applied every time (each had a long-range kit).
+- STAGE-MODS.md: the botAct row's `b.hopCheck`, and the lava's `navEdges` walks (7ece450b).
 
-### 5 (minor). The tests — FIXED
+## 2. Decisions where the list left a gap
 
-- net-lava (760b96df): the live guest's grid after the Practice painting is judged on the lava cells (exact), as the
-  results-screen check is; its other cells are reported (`guestOtherCellsDiffer`); the late joiner's imported grid stays
-  exact and whole. **13/13** (28f957b1: lava cells 0 differ for both; whole grids 0 / 0).
-- G5 (lava.js): **p90 ≤ 1.5 ms and max ≤ 5 ms**, each step its better of two passes, both from LOW. Doing so found that
-  the first timed step had been a whole HIGH → LOW redraw (the pass began at HIGH: 9 ms in one run). Final: median 0.2–0.3,
-  p90 0.3–1.1, max 0.3–1.1 ms.
-
-### 6 (minor). The boss camping on one Lakefront wedge — IMPROVED (roamAfter stages only); boss-check 3 in a row
-
-- bossBrain.js (d37b4c2c, 6dd86944): the camp spot is 8 m round (5 m was left every few seconds by its own charges); every
-  further 12 s there counts again; from the second count its goals favour the far side and the other half (+0.5 / m to
-  30 m, +8 across z = 0, its fight distance × 0.3) and it walks there before its next move (≤ 8 s); never a goal where it
-  can't turn round (6 of 8 headings); wedged — no 1 m in 6 s of trying to walk — it backs out for 1.5 s.
-- boss-check.js prints the seconds on each half, the longest spell within 6 m and the back-outs. At the final boss code:
-  **6/6, 6/6, 6/6** — 64 / 91 / 103 m; halves 120 / 0, 48 / 72, 36 / 84; longest spells 84 / 36 / 28 s. Before the wedge
-  rules one run in three failed (46 m: into the tip of the west Lakefront wedge, 70 s there).
-- **Not solved:** it can still spend most of a round on Alpha's west Lakefront (84 s, 6 back-outs in one run) — BossNav's
-  long body in the wedges; that run passed the roam bar (64 m).
-
-### 7 (minor). The lavafall's slits — FIXED; the void named
-
-- lavaFx.js (734425aa): the pour direction at a vertex two lip segments share is their mean, eased along each segment: one
-  continuous curtain. `out/fix4/fix4-eng-lavafall-{low,high,side-low,side-high}.jpg` (looked at: no slits; the round-3
-  `out/engine/eng-lavafall-*` are the before). A band of finer streaks where the curtain's rows meet, mid-height, is in both
-  sets: the shader's, for the art phase.
-- The open blue void the falls pour into and behind them is listed under Not built (the far scenery).
-
-### Found this round, not fixed: pinches beside the Pumice stones (ENGINE rule 21)
-
-- ENGINE rule 21 (every gap beside a rider is a seam ≤ 0.3 m or open lava ≥ 2.5 m) was never audited. lava-audit.js now does
-  (03e5a411: each stone's outline at HIGH every 0.25 m, marched straight out) and **it fails: 18 samples at three places per
-  half** — race5's west side at the north head's lake corner (0.95–1.25 m of lava between the stone and the 1.4 m coping),
-  race1's end by the south head / the Lakefront (0.7–1.3 m), race6 by the north head (2.4 m). The 14cb2709 Zone Control
-  death (a paint-mode bot carried across the coping at 4.8 m/s, stopped by its air guard over the notch, fell in) and
-  lava-bots run E's fight death (its twin) were both in race5's notch. A player can drop into it too.
-- The fix is stage geometry (close each to a 0.25 m seam — the coping out to the stone, or the stone in — or open it past
-  2.5 m), with the nav links, rule 44 / 45 / 46 and the matches re-run: **for the lead; not built this round.** lava-audit
-  is **38/41** (rule 21, rule 44 × 2).
-
-## 1. What the lava is, rule by rule (unchanged this round)
-
-**The level**: one horizontal surface over the region (the lake, both Spillways, both Slump bays), LOW −0.6, HIGH +0.8,
-a pure function of the shared stage clock (lavaCore `lavaSchedule` / `lavaAt`), each move 10 s on a smoothstep (peak
-0.21 m/s) after a 10 s warning; the region fitted at load (one half, turned) as a 0.25 m mask with two proximity channels.
-**Schedules**: Turf War 3:00 rises 35 / 110, falls 70 / 140; 1:30 rise 30, fall 55; Zone Control, Tower Command,
-Bazookarp 35 / 125 / 215 up, 80 / 170 / 260 down; every match ends at LOW (Turf War ≥ 25 s), nothing moves in the first
-30 s or the last 12 s; overtime holds; Practice 20 / 35 / 35, the menu backdrop 8 / 15 / 15; Boss Battle held LOW.
-**Notice**: ledges deadly 13.8 s after the rise warning, dry 16.2 s after the fall warning. **Touching lava kills** (cause
-`lava`, the attacker credited within 4 s); covered floors' colliders off; no ink under the surface; the burn on the
-furthest stage time reached; the Pumice Races (solid exactly while the shelf is deadly), the Organ Pipes (tops linear in L,
-one hop apart); devices swept (through b5-int3's `crushIn`, the kits' devices included); shots, bombs and thrown subs
-fizzle; super jumps redirected; every channel announces rise and fall as opposites (Surge Gauge, sounds, the chip,
-callouts, the personal line from the feet, the minimap, the rind, embers up / steam down). The lavafall is one curtain.
-
-## 2. Decisions where the request left a gap
-
-1. **No new lead note**: each issue worked as review 4's fix list asks; rule 44's decision and the rule-21 geometry left to
-   the lead.
-2. **Escapes keep their unchecked hop** with the guards off (a straight run at a step, validated in F7 / F8c and the gate);
-   the claimant's column hop is checked (`hopCheck`) — no lava at its heels, so a wasted hop is the worse risk.
-3. **The Zipline check reads only the stage's `wet`** (the lava), not the sea round other stages: bots' zips elsewhere are
-   unchanged.
-4. **Bazookarp**: the field still switches at `lava:warn` (SPEC §5.5); the drop / rest spot reads the stage's `danger`
-   instead of switching later.
-5. **net-lava's live guest** is judged on the lava cells as the results-screen check is (the lead's round-3 rule); the late
-   joiner's whole grid stays exact.
-6. **The lookout check** applies only to a match that has a long-range kit (lava.js's LOOKOUT_KINDS).
-7. **The boss's roam rules** are opt-ins of `layout.boss.roamAfter` (Highmark only); the blocked-walk detour of round 3
-   stays the only shared change.
-8. **The refill fallback** (look elsewhere when too dry to paint and no own ink to step onto) is in the shared brain: it
-   only acts in that case, on every stage.
+1. **Rule 44's margin by the nav, not by geometry**: the > 15 m readings were a nav hole (a 4.1 m walk read as 23.7 m);
+   closing the hole is the honest fix and helps bots. The deck stair's corner still overhangs the pool by 0.37 m (a running
+   jump onto it now saves < 1 m).
+2. **The carrier's veto list**: the 44 edges onto drowning floor are kept (masked at HIGH, real at LOW); a static list can't
+   be per-state. The 75 #16 pairs added because the field must not hold moves no kid makes (the SPEC's own workflow).
+3. **Kerb tops** 1.1–1.5, each 0.1 off what it overlaps (check-maps), all over HIGH + 0.3; 0.2 m seams (0.25 sat on the
+   audit's 0.3 m float edge).
+4. **The boss**: the review asked for one wedge; the 5-in-a-row asked for three more fixes. All behind Highmark's own
+   layout keys.
+5. **The lavafall**: the depth / draw-order fix instead of a "seam blend" — there was no seam.
 
 ## 3. Online and bots
 
-**Online**: no new record. The curtain is built per screen from the layout; the Bazookarp change is the host's drop / rest
-choice, sent as before (`d` / `m` records); the bots' changes run where the bots run (offline, or the host); karpStates,
-the lava's clock and the level are as round 3. net-lava 13/13.
-
-**Bots** (they know what the HUD shows): round 3's footing, flights and guards, plus this round — a rider's node read at the
-rider's current top; the step up (`_stepUp`) for escapes and claimants, its hop across the face when pressed against it,
-its ask naming its spot (`hopAt`) and judged by the flight steered there; refused presses cost no cool-down; an escaper's
-route hop judged by its flight; Zipline zips kept off the lava; the claimant's replan after a fallen hop, its ink cycle,
-stall release and hand-back to a long-range kit; the refill fallback. Bots never jump over the lava (no nav links).
+**Online:** no new record. The walk link and the kerbs are layout (every screen builds them); the veto list is the host's
+field data; the issue-log fix is per screen. net-lava not run (load). **Bots:** the deck-corner link (a passage they never
+had); the kerbs give a dry floor beside races 1, 5, 6 (bots still cross only by the step links); the claimant's foot
+time-out; the boss's rules above. lava-bots 0 / 360; 0 lava deaths in all four matches.
 
 ## 4. Tests, pictures, balance
 
-Final code 17578ed4 unless a line says otherwise; local, one Electron of mine at a time:
-- **lava.js 59/59** (F8b case C, F8c, F8d new; G5 p90 / max). **lava-audit.js 38/41** (03e5a411 = 14cb2709 + the audit) —
-  every rule passes but rule 21 (new, the pinches) and rule 44's two gates; rule 45 PASS (1,120 outline texels, 0 bad,
-  `fitTwin`).
-- **lava-bots.js** G 0 / 360, H 0 / 360 — the gate twice (and A–F before it, table §0.1).
-- **Bot matches**: 2 Turf War + 2 Zone Control + Tower Command, every check 7/7, 0 lava, 0 sea (§0.4).
-- **lava-karp.js 9/9** (14cb2709). **net-lava.cjs 13/13** (28f957b1). **boss-check.js** 6/6 × 3 (958d24a3, the final boss
-  code). **check-maps** (WIPSTAGES=1): caldera / .zones / .tower / .practice 1,735 pieces, .bazookarp 1,759, .boss 1,630 — ok.
-- **The shared bots.js on other stages** (one Turf War each at 14cb2709, + A/B on Tidewater against 7738a878): Treehills stuck
-  0.1 % (the reviewer: 1.2 / 0.1 / 0.2 head, 0.7 / 0.2 base); Tidewater head 0 / 0 / 0 % vs base 0.3 / 0.2 % (one run at
-  958d24a3 had 1.2 %, two 8–9 s episodes of a blade bot in paint mode: not in the next three); 0 sea falls, 0 frame errors,
-  0 console lines everywhere.
-- Probes (scratch): probe-esc (324 kicked escapes: HEAD 59 deaths, fixed 0), probe-zip, probe-look (bows / chargers / enemy
-  ink at the feet), probe-boss-tip, probe-notch (180 runs at the notch: 0 deaths — the trap needs the match's exact
-  carry; the audit names the place), lava-karp no-fix (K3b 30 / 60).
+Local, final code unless said:
 
-**Pictures**: `out/fix4/fix4-eng-lavafall-{low,high,side-low,side-high}.jpg` (new); the round-3 `out/engine/eng-*` set
-stands for everything else (no other visual source changed). Balance sets: none (the lead's consolidated pass); Slump
-crossings in the final matches 8, 0, 6, 2, 0 (for the balance pass).
+| test | result |
+|---|---|
+| lava.js | 59/59 × 4 (3 in a row at the F10 code, 1 at the final) |
+| lava-audit.js | 38/39 — rules 14, 21, 22, 25, 38, 44, 45, 46 pass; 42 fails (bridge views, far scenery) |
+| lava-notch.js (new) | 2/2: 670 trials 0 deaths; teeth (no kerbs) 40 deaths in the gaps |
+| lava-bots.js | 7/7: escape 0, fight 0 in 360 |
+| lava-karp.js | 10/10 (K8 new) |
+| boss-check.js | 6/6 ten in a row |
+| probe-footwait / probe-walk / probe-cross | pass / 4.1 and 7.4 m walks / the three crossings traced |
+| Bazookarp checker (caldera) | as built and LOW: FAIL #7, #12 (#16 OK); HIGH: FAIL #7, #12, #16 (48 onto drowning floor) |
+| check-maps | all six caldera variants ok |
+| net-lava.cjs | not run (load average 12–54 all session; the rule is < 4) |
+
+| match (lava-match.js) | lava deaths | sea | stuck % (longest) | Slump crossings | stone steps | lookout s A / B (long-range) | lookout check | checks |
+|---|---|---|---|---|---|---|---|---|
+| Turf War 1 | 0 | 0 | **2.01** (P1 11.75 s, Bravo's Lower Surge Steps' foot (2.7, 1.2, 26.8), paint mode, stick at rest; Drip 7.25 s on a causeway) | 9 | 0 | 17.3 / 9.1 (17.3 / 0) | applies (1 long-range kit) | **6/7** |
+| Turf War 2 | 0 | 0 | 0.19 | 4 | 1 | 18.5 / 15.7 (18.5 / 15.7) | applies (3) | 7/7 |
+| Zone Control 1 | 0 | 0 | 0.56 (4 s) | 4 | 2 | 70.6 / 25.7 (70.6 / 0) | applies (2) | 7/7 |
+| Zone Control 2 | 0 | 0 | 0.36 (2.25 s) | 4 | 3 | 46.4 / 42.4 (46.4 / 0) | applies (1) | 7/7 |
+
+**Pictures** (out/fix5/, 94029f5e): fix5-eng-top-{low,high}, -shelf-{low,warning,rising,high,falling-steam},
+-stones-surfacing-{1,2,3}, -race-high, -rise-4-stones-surfacing, -rise-6-drowned, -stain-line-cliff-low,
+-hud-stones-sinking (the kerbs: dark copings along races 1 and 5 by the heads, read as copings), -lavafall-{low,high,
+side-low,side-high} (no band; the side views still pour into empty sky — the far scenery). Balance: none (the lead's pass).
 
 ## 5. Commits and shared files
 
-Round 4: df33ceab, 37df2755, c0a76eda, 734425aa, cf429792, 760b96df, 21732ea8, d37b4c2c, 6dd86944, 958d24a3, 7fb282e0,
-14cb2709, 03e5a411, 17578ed4; scratch: bcfd5198 (DESIGN §3.5 + the crossing list), 6a402c62 (pictures), 28f957b1 (DESIGN
-§4.5), and this report's.
-
-**Shared files** (all tagged `[b5-caldera]`):
-- `src/game/bots.js` — `_tail`: `hopAt` / `hopCheck` / `_jRef`, the escaper's route hop by `_hopLands`; `_zipDry` (the
-  Zipline case of `_specialCtl`); the refill fallback (`_refillBad`, `_pickRefill`).
-- `src/game/bazookarp.js` — `_dynOk` (`_liq`) and its `lava:warn` listener: two lines, for int4.
-- `src/boss/bossBrain.js` — `_roam` (8 m spot, recount, `_reloc`), `_pickGoal` (far / other half, turnable goals), `_walk`
-  (back-out); all behind `layout.boss.roamAfter`. `tools/botlab/jobs/stretch/boss-check.js` — the halves line.
-- Module: `src/game/lava.js` (`_stepUp`, `_lineFloor`, `ry`, the claimant changes), `src/fx/lavaFx.js` (`_cascades`).
-- Docs: `docs/STAGE-MODS.md` (a module's bot fields; Bazookarp and `danger`); DESIGN.md §3.5 / §4.5 (scratch).
-- Tests: lava.js, lava-audit.js (rules 21, 44), lava-karp.js (K3b), lava-match.js (`why`, the lookout check), net-lava.cjs,
-  lava-eng-scenes.js (`only=`).
-
-**For the integrator (int4):** round 3's notes stand (`hud.karpDock` undefined, the chip under `.iw-kst`; the Carp Field
-should start in `stateOf('low')` on Highmark — a Bazookarp line; karpField's `sweptBox` and bobber-bots' boss guard).
-New: bazookarp.js's `_liq` (two tagged lines); bots.js's `hopAt` / `hopCheck` are generic stage-module fields (STAGE-MODS).
+39efb4c7, 172484d4, d0759240, 5dc1d0bf, 4f57d742 (scratch), 583ca969, 5f77c0bf (scratch), 8c8e8b33, a387c49c, a512192c,
+7ce816ac (scratch), 7ece450b, 5637d9c8, 5fd94773, 94029f5e (scratch), 192544c9, and this report's.
+**Shared files** (tagged `[b5-caldera]`): `src/core/issueLog.js` (`lavaOf`, the IPC guard — **a beta hotfix**);
+`src/boss/bossNav.js` (`noGo`, `goalIds`, `isGoal`, legs' slack on roamAfter stages); `src/boss/bossBrain.js` (`pi` off
+the plan, the step out of a bad pose); `docs/STAGE-MODS.md`. Module: `src/game/lava.js` (`navEdges`, the foot time-out),
+`src/fx/lavaFx.js` (the curtains). Stage: `src/world/stages/caldera/layout.js` (the Race kerbs, `boss.noGo`, `hopVeto`),
+`lava.js` (`walks`), `karpVeto.js` (new). Tests: lava.js (F8 parking, F10 trails), lava-audit.js (rules 42, 44),
+lava-karp.js (K8), lava-match.js, net-lava.cjs, lava-notch.js (new).
 
 ## 6. Unfinished, flaky or uncertain
 
-- **Rule 44**: not built — the lead decides between DESIGN §3.5's options (option 1 passes every running crossing at 19.3 m).
-- **Rule 21 (new audit, fails)**: three pinches per half beside race5, race1 and race6; one bot death in 19 matches and one
-  fight death in 8 gate runs came from race5's. Stage geometry, for the lead.
-- **The boss** can still spend most of a round on Alpha's west Lakefront (84 s in one run, passing at 64 m).
-- **Fight deaths in lava-bots** remain possible (1 in 360 in two of eight runs): a squid off a just-dried ledge's lip, the
-  rule-21 notch. The escape class is closed (0 in 2,880 bot-trials this round).
-- **The lookout's long-range time** depends on the loadout and on the claimant living: the probes and the last six matches
-  pass; a match with one long-range kit that dies twice can still end without it.
-- Not built (unchanged): the stones' chains, the pig beds' glow, the Bellows Vent plume, the red under-light, **the far
-  scenery (the void the lavafall pours into)**; the lightmap bake with the lava. The Organ Pipes still look blockout-plain.
-- The harness profiles run at quality 'low'; the picture scenes rebuild the particles as at 'high'.
-
-## Module API (for the art phase)
-
-**Registration.** `registerStageMod({ key: 'lava', order: 20, worldAs: 'lavaWorld', matchAs: 'lava', liquid: true, world:
-LavaWorld, match: StageLava })`, active when `LAYOUT.lava` exists (`low`, `high`, `region`, `falls`, `timing`,
-`schedule`, `mirror`, `riders`, `steps`, `gauges` (may carry `onlyIn` / `notIn`), `cascades`, `vents`, `flotsam`,
-`look`, `text`).
-
-**Pure core** (lavaCore.js): `LAVA`, `lavaSchedule`, `lavaAt`, `lavaY`, `lavaMax`, `crossTime`, `stoneRel`, `riderTop`,
-`expandLava`, `partPose`, `inRider`, `pointInPoly`.
-
-**World** (`G.lavaWorld`): `inRegion`, `fallsIn`, `box`, `mask` (`fitAdded`, `fitTwin`, `fitTwinChanged`), `map`,
-`uniforms`, `drown`, `floorY`, `riders`, `navMeta { kind, shutY, rider, pose, top, escD, exit, safe, safeD, reach }`,
-`proxAt(x, z, y)`, `proxMs`, `look`.
-
-**Match** (`match.lava`): state `clock`, `y`, `st`, `tMax`, `burnY`, `state()`, `stats { deaths, byTeam, warned, burned,
-devices, fizzles, lookout, lookTeam, lookLong, lookClaims, lookHold, lookLog, lookStalls, lookReplans, stoneSteps, … }`;
-queries `surfaceAt`, `liquidY`, `under`, `covers`, `wet`, `burns`, `noPlace`, `danger`, `inkClip`, `restMask`,
-`karpStates`, `maxOver`, `yAt`, `_foot(a)`; tests `debugT(t)` and `?lava=low|high|rise|fall`.
-
-**Registry hooks served:** update, seek, dispose, kill, fallCause, superJumpLanding, noPush, navEdge, navNode,
-goalWeight, beforePath, botHold, botAct, wet, under, fizzle, liquidY, noPlace, restMask, karpStates, danger, sweeps,
-splatTime, onSplat, drawMap, hud, state. **Bot fields it sets**: `stageUrgent`, `guardOff`, `_needJump` with `hopAt`,
-`hopCheck` (fix round 4).
-
-**Events:** `lava:warn`, `lava:move`, `lava:rest`, `lava:hold`, `lava:set`, `lava:rider`, `device:down` (how `lava` /
-`crush`), `shake`; cause `lava`. **Sounds:** lava_rumble, lava_erupt, lava_hiss, lava_drain, lava_sizzle, lava_pop,
-lava_lock, lava_tick, lava_bell, lava_siren_up, lava_siren_down, lava_whistle.
-
-**Stage layout keys for Boss Battle:** `boss.maxRise`, `boss.roamAfter` (fix round 4: the 8 m spot, the recount, the far /
-other-half goals, the walk before the next move, turnable goals, the back-out) — BossNav / BossBrain, any stage.
-
-## For the art phase
-
-- **Palette** (`LOOK` in lavaFx.js): crust #3b1f1a / #4a2219; seams #a3121a → #e0301e → (#ff7a1e, dropped for hot inks)
-  → #fff0c8; lavafalls #ff8a1e / #ffc84a; rind (0.82, 0.80, 0.76) linear; basalt #646870 / #73777e; pumice #bdb8ae /
-  #8f8a80; needle #c8202a; beacons #ff1206 / #f4f6ff; fizzles #ff7424 sparks / #5e524c ash.
-- **Keep the region's surfaces at sRGB luminance ≥ 0.35** (rule 38; lava-audit.js checks it).
-- **The region is fitted at load** against the layout's blocks (one half, turned): re-run lava-audit (rules 21, 44, 45)
-  after the art. **Anything that changes the lake's shores or the copings by the stones changes rules 21 and 44.**
-- **Boss Battle has no Surge Gauge**: a boss-mode landmark must stand outside the boss's 2.9 m wall clearance on the island
-  and causeways; the terraces and stairs are not its ground (`maxRise`).
-- **Lavafalls**: one continuous curtain now (`out/fix4/fix4-eng-lavafall-*`); a band of finer streaks where its rows meet;
-  the void behind and below it needs the far scenery.
-- **Not built**: the chains, the pig beds' glow, the Bellows Vent plume, the red under-light; the far scenery; the Organs'
-  look. **Lightmap**: none baked for any caldera variant yet.
+- **net-lava.cjs not run**: the load average stayed 12–54 (other builders); its one change is a bound (syntax-checked).
+- **Rule 42 fails** from the Spillway Bridge (the far scenery through the breach): the art phase's, now measured.
+- **Bazookarp checker**: #7 (Gate-ring entrances, #7d finds incl. the carrier's swim-jumps over the lava) and #12 (no
+  lightmap) fail in every state; #16 at HIGH lists the 48 edges onto drowning floor the HIGH state masks — the checker
+  tries masked edges (its owner's call, or a per-state veto the field doesn't have).
+- **Turf War 1's stuck check failed** (2.01 %: the harness's own player P1 stood 11.75 s at Bravo's Lower Surge Steps'
+  foot in paint mode, stick at rest, its next node on the steps 1.7 m away) — not lava (0 lava deaths), not traced; the
+  other three matches pass it (0.19–0.56 %). The gate ("0 lava deaths") holds.
+- The foot time-out never fired in the four lava.js runs (the probe shows it works).
+- Halyard boss-check read 29 m walked in one run; the changed code paths don't run on Halyard (no baseline taken).
+- The deck stair's corner still overhangs the East Pool by 0.37 m; the Organ Pipes' look and the far scenery stay the art
+  phase's.
