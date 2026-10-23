@@ -1611,6 +1611,8 @@ export class Showcase {
   _lobLoad(L) {
     import('./lobbySet.js').then(async (mod) => {
       if (this.lob !== L) return;
+      await this._lobMenuIdle(L);   // [b5-beta1]
+      if (this.lob !== L) return;
       const q = G.settings?.quality || 'high';
       const set = new mod.LobbySet(this.r, { quality: q, texlib: G.game?.texlib || null });
       L.set = set; L.quality = q;
@@ -1619,7 +1621,7 @@ export class Showcase {
       if (this.lob !== L) { set.dispose(); return; }
       // [b5-beta1] a preload (main.js, at the menu) that a match overtook: the rest of the build — a squidkid, the decks, a
       // compile of the whole set: 110–190 ms of script — waits for the menu instead of landing in the match's first frames
-      while (L.preload && !L.wanted && (G.mode === 'match' || G.match?.loading) && this.lob === L) await new Promise((r) => setTimeout(r, 400));
+      await this._lobMenuIdle(L);
       if (this.lob !== L) { set.dispose(); return; }
       this._lobDecks(L);
       this._lobColors();
@@ -1639,6 +1641,12 @@ export class Showcase {
     }).catch((e) => { console.error('[showcase] lobby set', e); L.failed = true; });
   }
 
+  // [b5-beta1] a lobby preload waits while a match is loading (the loading fade is up) or on (G.mode 'match'), unless the
+  // lobby is wanted meanwhile (shown): its set's build, environment bake and compile ran in the first match's frames
+  async _lobMenuIdle(L) {
+    const busy = () => G.mode === 'match' || +(G.game?.fadeEl?.style.opacity || 0) > 0.5;
+    while (L.preload && !L.wanted && this.lob === L && busy()) await new Promise((r) => setTimeout(r, 400));
+  }
   _lobEnv(L) {
     const S = L.set;
     L.scene.environment = (S && S.environment) || G.env?.envMap || null;
