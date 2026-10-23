@@ -217,6 +217,15 @@
     const pts = [...lvl.spawnPads.map((p) => V(p.x, p.y + 1.5, p.z))];
     const ring = nav.nodes.filter((nd) => nav.valid[nd.id]).map((nd) => [nd, Math.hypot(nd.x, nd.z)]).sort((a, b) => b[1] - a[1]).slice(0, 400).sort((a, b) => b[0].y - a[0].y);
     for (const [nd] of ring) { if (pts.length >= 26) break; if (pts.every((p) => Math.hypot(p.x - nd.x, p.z - nd.z) > 12)) pts.push(V(nd.x, nd.y + 1.5, nd.z)); }
+    // (fix round 5, review 5 issue 5: from where a player stands over each lip — the Spillway Bridge's deck, its middle and its
+    // bay-side end, and the Horn Step, both halves: the lavafall's backdrop gap is checked from there, not only from the
+    // pads and the highest spots)
+    const nRing = pts.length, GEO = await import('./src/world/stages/caldera/geo.js'), lipViews = [];
+    { const hs = GEO.HORN_STEP_SE, hc = [hs.reduce((a, q) => a + q[0], 0) / hs.length, hs.reduce((a, q) => a + q[1], 0) / hs.length];
+      for (const [x, z, name] of [[...GEO.A((GEO.BR_S[0] + GEO.BR_S[1]) / 2, 0), 'bridge'], [...GEO.A(GEO.BR_S[1] - 0.6, 0), 'bridge end'], [...hc, 'horn step']]) for (const tw of [1, -1]) {
+        const gx = x * tw, gz = z * tw, gy = lvl.groundHeight(gx, gz, 4);
+        if (gy > -Infinity) { pts.push(V(gx, gy + 1.5, gz)); lipViews.push(name + (tw < 0 ? '~' : '')); }
+      } }
     const voids = [], per = [];
     for (const p of pts) {
       let miss = 0;
@@ -227,8 +236,8 @@
       per.push(miss);
     }
     const total = per.reduce((s, v) => s + v, 0);
-    R('rule 42: no view out of the arena shows void — 96 rays below the horizon from each pad and the 24 highest spots on its outer ring all meet the level, the lava or far scenery (env.sea is off: nothing under the backdrop)', total === 0,
-      { viewpoints: pts.length, raysMissing: total, of: pts.length * 96, perView: per, eg: voids, sceneryMeshes: targets.length, backdrop: (lvl.layout?.env?.backdrop ? 'layout.env.backdrop' : 'none') });
+    R('rule 42: no view out of the arena shows void — 96 rays below the horizon from each pad, the 24 highest spots on its outer ring, and over each lip from the Spillway Bridge and the Horn Step (fix round 5), all meet the level, the lava or far scenery (env.sea is off: nothing under the backdrop)', total === 0,
+      { viewpoints: pts.length, raysMissing: total, of: pts.length * 96, perView: per, lipViews: Object.fromEntries(lipViews.map((n, k) => [n, per[nRing + k]])), eg: voids, sceneryMeshes: targets.length, backdrop: (lvl.layout?.env?.backdrop ? 'layout.env.backdrop' : 'none') });
   } catch (e) { R('rule 42: views out: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
   // ---------------------------------------------------------------------------------------------- rule 44: gaps, jumps
