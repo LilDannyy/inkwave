@@ -127,8 +127,9 @@
       let t40 = null, held = 0, sq = 0, n = 0, heldDry = 0;
       const cost = bot.weapon.flickInk ?? bot.weapon.swipeInk ?? 0;   // (a roller's / brush's flick)
       for (let f = 0; f < 12 * 60 && t40 === null; f++) {
+        const ink0f = bot.ink;   // (what it had when it chose: a flick's press spends its ink in the same frame)
         g.debug.step(1000 / 60); n++;
-        if (bot.intent.fire) { held++; if (bot.ink < cost) heldDry++; }
+        if (bot.intent.fire) { held++; if (ink0f < cost) heldDry++; }
         if (bot.form === 'squid') sq++;
         if (bot.ink >= 40) t40 = +(f / 60).toFixed(1);
       }

@@ -3407,7 +3407,7 @@ export class BotBrain {
     this.repath = 1.2;
   }
 
-  // Our own ink within a couple of metres, on our level, nothing in the way: the nearest such spot well inside it (two
+  // Our own ink within 3.5 m, on our level, nothing in the way: the nearest such spot well inside it (two
   // samples deep along the way there), or null. Re-checked every 0.2 s. (Refill: a spot that isn't quite under us.)
   _inkStep(dt) {
     const a = this.a;
@@ -3419,7 +3419,7 @@ export class BotBrain {
       const h = G.physics.raycast(_v3.set(x, a.pos.y + 0.6, z), _down, 1.3, _stepHit, true);
       return h.hit && h.normal.y > 0.7 && Math.abs(h.point.y - a.pos.y) < 0.5 && G.paint.sample(h.face, h.u, h.v) === own ? h.point.y : null;
     };
-    for (const r of [0.55, 0.95, 1.45, 2.05]) {
+    for (const r of [0.55, 0.95, 1.45, 2.05, 2.75, 3.5]) {   // [b5-beta1] 2.75, 3.5: where a roller's flick or a Mitts punch lands its puddle
       for (let k = 0; k < 8; k++) {
         const ang = (k + 0.5 * (r > 1)) * (Math.PI / 4), sx = Math.sin(ang), sz = Math.cos(ang);
         const x = a.pos.x + sx * r, z = a.pos.z + sz * r;
