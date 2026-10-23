@@ -67,3 +67,31 @@ fix + ONE review, on exactly this list:
 6. **Tests and docs:** net-lava bounds the live guest's non-lava cells again (ratio ≥ 0.999); lava-match's match
    table says when the lookout check passed for want of a long-range kit; STAGE-MODS.md gets the `b.hopCheck` row.
 The Organ Pipes' plain look and the lavafall's far scenery are the art phase's (also after the reset).
+
+## After review 6 (2026-10-23): the checks were too narrow; the carrier premise was wrong
+
+Review 6 found both gates "passing" only because the audits look in too few places. This round, binding:
+1. **Fix the checks first, then the stage.** lava-audit rule 44's march accepts any standable floor below the take-off
+   down to the lava (not 1.3 m), includes take-offs whose edge drops onto a dry strip first, and tries 1.5 m and 0.8 m
+   run-ups; rule 21 measures, for every standable top within 2.5 m of a stone, the true shortest distance across lava,
+   corners included; lava-notch.js walks diagonals as the reviewer's probe-notch6 does. Both must reproduce review 6's
+   finds before any geometry moves (the reviewer's probes in scratchpad/cal-rev6/probes/ are the reference).
+2. **Rule 44 at Organ L's HIGH top** (running jumps saving up to 38.6 m, 24 over 20 m): a lookout must not be a
+   launch pad across the lake. Close it by geometry on the lava side of that top (a parapet a kid cannot run-jump over
+   on the lava-facing edges; it is a lookout, so keep the sightlines), or trim the far landings; the gate stands: no
+   running jump saves over 20 m, the largest under 15 m. The deck-corner walk link stays.
+3. **Rule 21 at the stone corners** (races 4, 6, 7, both halves): close each to a ≤ 0.25 m seam or open to ≥ 2.5 m,
+   as the review lists them; the corrected audit and the diagonal notch test are the proof (0 deaths).
+4. **Bazookarp carriers (the lead decides again):** the carrier CAN swim its own ink (SPEC S21, 9.44 m/s), so my
+   sentence "a carrier makes neither" was false. Decision: carrier swim and dash jumps over lava are accepted as skill
+   movement in general, the same as for everyone; what a carrier may bypass is judged PER STAGE by the Bazookarp
+   checker's shortcut probes (#7d) when Highmark's Bazookarp layout is built: that layout must place the Pond, weirs
+   and Gate so no carrier jump saves over 20 m on the carrier field or skips a weir, with rails where it must. Correct
+   DESIGN §3.5 and lava-audit's information row now, and hand the carrier crossing list (probe-carry44) to
+   `karp-stages/` for the layout builder.
+5. **lava.js F10 / F8b:** the F10 claim is released or handed on when the claimant spends over 3 s in fight or refill
+   after the top opens; trace and fix F8b's case A; 3 runs clean.
+6. **The boss:** gate met (8 in a row); widen the far-half goal bias so one-half rounds become rarer; no new gate.
+7. **net-lava.cjs** has never been run with its new bound: run it at a load average under 4, or push the scratch
+   branch `botlab-b5-caldera` and let the Mac mini's runner do it (allowed this round; results come back on that
+   branch). Rule 42 from the bridge and the lavafall side patch stay on the art-phase list.
