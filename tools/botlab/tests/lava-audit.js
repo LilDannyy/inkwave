@@ -93,9 +93,9 @@
   // at the stones' corners — races 4, 6 and 7, where kids died walking off at an angle — were never measured. Now, on top of
   // it, every stone's outline every 0.1 m, corners included, fanned from its normal to ±67.5° (every 7.5°; a corner takes
   // both faces' fans), marched out 2.5 m over a 0.05 m map of the static tops (any solid from just over the lava's kill
-  // height to a step over the stone's top) and the riders: a top reached after a stretch where a foot (footRadius 0.24 m)
-  // touches nothing — not the stone, not a rider, not a top — is a pinch (another stone reached first is walkable, as in
-  // the march above: the Race's own seams and steps): the gap there is wider than a
+  // height to a step over the stone's top) and the riders: a top reached after a stretch of over 0.3 m where a foot
+  // (footRadius 0.24 m) touches nothing — not the stone, not a rider, not a top — is a pinch (another stone reached first
+  // is walkable, as in the march above: the Race's own seams and steps): the gap there is wider than a
   // seam the foot bridges and narrower than open lava. (A walk that grazes a top's face within a foot's reach, e.g. off a
   // stone's end past a kerb 0.2 m beside it, is no gap: the foot is on the kerb.) Each pinch is listed with the walk's
   // length over the lava, its open stretch, and the true shortest distance from where it met the top to the stone)
@@ -124,7 +124,10 @@
       }
     }
     // the corner-inclusive fans (fix round 6)
-    const RES = 0.05, FOOT = PLAYER.footRadius ?? 0.24, lo = Lv.y + K + 0.02, cells = new Map();
+    // (OPEN: an open stretch a kid crosses unharmed — walking at ~3 m/s it is unsupported 0.1 s and drops 0.13 m of the 0.30 m
+    // between the stone's top and the kill height; running or as a squid less. The diagonal walks in lava-notch.js are the
+    // physical proof)
+    const RES = 0.05, FOOT = PLAYER.footRadius ?? 0.24, OPEN = 0.3, lo = Lv.y + K + 0.02, cells = new Map();
     const solidR = Lv.riders.filter((q) => q.solid);
     let fans = 0, walks = 0;
     for (const RR of Lv.riders.filter((q) => q.r.sink && q.solid)) {
@@ -178,7 +181,7 @@
             if (!sup[k]) { run += RES; open = Math.max(open, run); } else run = 0;
           }
           walks++;
-          if (!hit || open <= 1e-6) continue;
+          if (!hit || open <= OPEN + 1e-6) continue;
           const hx = e.x + ux * hit.s, hz = e.z + uz * hit.s, b = blk[hit.k] >= 0 ? lvl.blocks[blk[hit.k]] : null;
           const w = wOf(hx, hz), ck = r.id + ':' + Math.round(hx * 2) / 2 + ',' + Math.round(hz * 2) / 2;
           const row = [r.id, r2(e.x), r2(e.z), Math.round((a * 180) / Math.PI), r2(hit.s), r2(open), r2(w), b ? b.tag || '#' + b.id : '?', [r2(hx), r2(hz)]];
@@ -189,7 +192,7 @@
     }
     const fanP = [...cells.values()].sort((p, q) => q[6] - p[6]);
     const byStone = {}; for (const p of fanP) byStone[p[0]] = (byStone[p[0]] || 0) + 1;
-    R('rule 21: no pinch beside a Pumice stone at HIGH — every static top beside one is a seam (≤ 0.3 m) or ≥ 2.5 m away across open lava: straight out from each face (every 0.25 m), and (fix round 6) fanned out to ±67.5° from every 0.1 m of the outline, corners included, no walk over the lava to a top within 2.5 m with a stretch where the foot (0.24 m) touches nothing (another stone first: walkable)',
+    R('rule 21: no pinch beside a Pumice stone at HIGH — every static top beside one is a seam (≤ 0.3 m) or ≥ 2.5 m away across open lava: straight out from each face (every 0.25 m), and (fix round 6) fanned out to ±67.5° from every 0.1 m of the outline, corners included, no walk over the lava to a top within 2.5 m with a stretch of over 0.3 m where the foot (0.24 m) touches nothing (another stone first: walkable)',
       !pinch.length && !fanP.length && fans > 100,
       { straight: pinch.length, fanCells: fanP.length, fans, walks, byStone, widestByStone: Object.fromEntries(Object.entries(per).map(([k, v]) => [k, r2(v)])), egStraight: pinch.slice(0, 10),
         egFan: fanP.slice(0, 120), cols: 'stone, from x, z, heading°, walk m over lava to the top, its open stretch m, the true shortest distance from where it met the top to the stone m, tag, met at' });
