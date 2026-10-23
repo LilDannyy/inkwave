@@ -709,14 +709,14 @@ export class BotBrain {
         if (ok) { this.path = null; this.goalTimer = 0; }
       }
     }
-    // [b5-beta1] stranded: standing where the nav has no way out at our level — no node to start from but a ledge over
-    // 0.45 m above (Gulper Aquarium's Great Tank sand bed, inside its glass: bots pressed into the rim 4–9.25 s, JOB-5; a
-    // route from the rim node walks on, no hop) — for 1.5 s → super jump out, to the nearest teammate (or the spawn), as a
-    // player would. (Checked every 0.5 s.)
+    // [b5-beta1] stranded: standing where the nav has no way out — no node to start a route from within 3 m at our level
+    // or below (Gulper Aquarium's Great Tank sand bed, inside its glass: its nodes have no edge out, so a route began at a
+    // rim node 0.6–1 m up and walked on, no hop — bots pressed into the rim 4–9.25 s, JOB-5; mid-bed, no route at all) —
+    // for 1.5 s → super jump out, to the nearest teammate (or the spawn), as a player would. (Checked every 0.5 s.)
     if ((this._strandChk = (this._strandChk || 0) - dt) <= 0) {
       this._strandChk = 0.5;
       const nav = G.nav;
-      this._stranded = !!nav && a.grounded && !a.climbing && !a.pipe && !a.carry && !G.match?.lava && nav.nearest(a.pos, 0.45, true) < 0 && nav.nearest(a.pos, 1.2, true) >= 0;   // (a stage with lava: its escapes have it)
+      this._stranded = !!nav && a.grounded && !a.climbing && !a.pipe && !a.carry && !G.match?.lava && nav.nearest(a.pos, 0.45, true) < 0;   // (a stage with lava: its escapes have it)
     }
     if (this._stranded && !a.superJumpState) {
       this.strandAcc = (this.strandAcc || 0) + dt;
