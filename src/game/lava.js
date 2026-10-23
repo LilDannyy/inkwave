@@ -1177,6 +1177,19 @@ export class StageLava {
       return;
     }
     L.on = false;
+    // (fix round 5, review 5 issue 4: the foot wait's own time-out. The stall release below skips a claimant whose goal is the
+    // climb's foot, and in one lava.js run of two both claimants stood at their feet from the rise to the fall warning, never
+    // up. From the moment its lookout is climbable — the top's HIGH-pose nodes open — a claimant whose goal is still the foot
+    // has found no way up in each 0.8 s re-plan: after FOOT_WAIT s of that the claim goes, and it is passed over 15 s)
+    if (L.goal === L.foot && L.foot >= 0 && L.ids.some((id) => this.shut(id, t) === 0)) {
+      if (L.footT == null) L.footT = t;
+      if (t - L.footT > FOOT_WAIT) {
+        b._lookBan = t + 15; this.stats.lookFootOuts = (this.stats.lookFootOuts || 0) + 1;
+        if (L.log && !L.log.end) { L.log.end = 'foot-timeout'; L.log.at = +t.toFixed(1); L.log.held = +L.held.toFixed(1); }
+        this._lookRelease(b); for (const T of this._lp || []) if (T && T.claim === b) T.claim = null;
+        return;
+      }
+    } else L.footT = null;
     // (fix round 4: a claimant that makes no 0.6 m in 5 s on its way up — not waiting at the climb's foot — lets the claim go
     // and is passed over for 15 s: a bow at Organ A~'s foot on enemy ink its shots never covered, its hop refused, stood
     // there 10.75 s in a Zone Control match; another claimant takes it)
@@ -1605,6 +1618,7 @@ export class StageLava {
 }
 // the weapons that take the Organ lookouts at HIGH (long range: height is worth the climb)
 const LOOKOUT_KINDS = new Set(['charger', 'splatling', 'spinner', 'bow']);
+const FOOT_WAIT = 6;   // s a lookout claimant may wait at its climb's foot once the top is climbable (fix round 5)
 // (fix round 3) the trigger while a bot inks the floor at its feet (an escaper at a step, a claimant at a column): a charge
 // kit (charger, bow, spinner) lets go of a charge worth a shot, so the shot leaves while it is aimed down — held, it went
 // off only once the aim had moved on, and the deck stayed the other team's

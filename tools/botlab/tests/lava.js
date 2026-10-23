@@ -598,10 +598,19 @@
     Lv._lp = null; Lv.stats.lookTeam = [0, 0]; Lv.stats.lookLong = [0, 0]; Lv.stats.lookClaims = 0; Lv.stats.lookHold = 0;
     const kits = crewF.map((b) => [b.team, b.weapon?.kind]);
     let claims = null, upAt = [null, null];
+    // (fix round 5, review 5 issue 4: each claimant's trail every 0.5 s — t, x, y, z, its mode, where its claim's route goes
+    // (foot / top / none), the route's length and step, its feet's kind (0 dry, 1 drowning, 2 rider), up?, the top open now —
+    // printed for a team whose claimant never got up)
+    const trails = {};
     for (let i = 0; i < 30 * 27; i++) {
       dbg.step(1000 / 30);
       if (!claims && Lv._lp && Lv._lp.some((T) => T && T.claim)) claims = Lv._lp.map((T) => T && T.claim ? [T.claim.a.name, T.claim.a.team, T.claim.a.weapon?.kind, r3(Lv.clock.t)] : null);
       for (const T of Lv._lp || []) if (T && T.claim && upAt[T.claim.a.team] === null && Lv._onLookout(T.claim.a, T.ri)) upAt[T.claim.a.team] = r3(Lv.clock.t);
+      if (i % 15 === 0) for (const T of Lv._lp || []) {
+        const b = T?.claim, L = b?._look; if (!b || !L) continue;
+        const k = b.a.team + ':' + b.a.name, a = b.a;
+        (trails[k] ||= []).push([r3(Lv.clock.t), r3(a.pos.x), r3(a.pos.y), r3(a.pos.z), b.mode, L.goal < 0 ? 'none' : L.goal === L.foot ? 'foot' : L.ids.includes(L.goal) ? 'top' : 'other', L.path ? L.path.length : 0, b.pi, Lv._foot(a).kind, Lv._onLookout(a, T.ri) ? 'UP' : '', L.ids.some((id) => Lv.shut(id, Lv.clock.t) === 0) ? 'open' : 'shut', L.footT != null ? r3(Lv.clock.t - L.footT) : null]);
+      }
     }
     const S2 = Lv.stats, released = crewF.every((b) => !b.bot._look);
     // (a team whose kits are all short-range — rollers, brushes, buckets, brollies — has no claimant by design)
@@ -609,7 +618,8 @@
     // (a 27 s fight from the pads: a claimant can die on the way; the per-match numbers are lava-match's business)
     R('F10 the lookout claim: a claim for each team with a long- or mid-range kit; a claimant reaches its own lookout at HIGH and holds it (≥ 2 s); every claim let go at the fall warning',
       claimed.length >= 1 && claimed.every((tm) => (S2.lookLog || []).some((l) => l.team === tm && l.t >= 33)) && claimed.some((tm) => upAt[tm] !== null && S2.lookTeam[tm] >= 2) && released && Lv.clock.t > 60.5,
-      { claims, claimed, upAt, seconds: S2.lookTeam.map(r3), long: S2.lookLong.map(r3), held: r3(S2.lookHold), nClaims: S2.lookClaims, released, t: r3(Lv.clock.t), kits, log: (S2.lookLog || []).filter((l) => l.t >= 33) });
+      { claims, claimed, upAt, seconds: S2.lookTeam.map(r3), long: S2.lookLong.map(r3), held: r3(S2.lookHold), nClaims: S2.lookClaims, footOuts: S2.lookFootOuts || 0, stalls: S2.lookStalls || 0, released, t: r3(Lv.clock.t), kits, log: (S2.lookLog || []).filter((l) => l.t >= 33),
+        trails: Object.fromEntries(Object.entries(trails).filter(([k]) => upAt[+k.split(':')[0]] === null).map(([k, v]) => [k, v.slice(-40)])) });
     freezeBots();
   }
 
