@@ -1075,6 +1075,10 @@ export class BotBrain {
     // ---------------- sprout pods (pods.js StagePods.bot): ink a pod between us and a foe to grow cover and fight from
     // behind it; our team's hedge: swim up an inked column of it and fight from its top
     if (!thrAim && G.match?.pods && !carry) thrAim = G.match.pods.bot(this, dt, it, move, enemyVisible) || null;   // [b5-karp] carry
+    // [b5-caldera] fix round 6: a stage module's per-frame asks (guardOff, hopAt, hopCheck) are only this frame's botAct's —
+    // a brain stopped between one's set and its read left guardOff on, and the next frame's asked hop went unchecked
+    // (lava.js F8b case A, the first case after F8's escapes: a route hop off race 1 at Organ L across the lava, 0.033 s)
+    this.guardOff = false; this.hopAt = null; this.hopCheck = false;
     if (G.match?.stage && (!thrAim || this.stageUrgent)) thrAim = G.match.stage.botAct(this, dt, it, move, enemyVisible) || thrAim || null;   // [b5-stagehooks] (escape the lava …) [b5-caldera] stageUrgent: a module's escape outranks a threat's footwork
     // [b5-deploy] nothing else to shoot: an enemy device in sight (its footwork goes first: the tower's, the climb's and
     // the danger guard's below have the last word) [b5-int2: after the stage module's botAct, which outranks it]

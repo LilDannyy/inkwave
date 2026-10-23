@@ -525,21 +525,25 @@
     // (fix round 4: and (C) asked now while the bot is escaping — an escaper's route hop was judged along its velocity, not by
     // the flight at its node, and flown at the column: two drowned in one run when F8 left its crew's escapes on. A and B
     // start with no escape on, C with one held on through the 2 s)
-    for (let kk = 0; kk < 12; kk++) {
+    // (fix round 6, review 6: case A failed once — a hop at 0.033 s, the first case after F8: F8's escaping crew left the lava
+    // module's per-frame guardOff on when its brain was frozen, and the first frame's asked hop skipped the check. bots.js
+    // now clears the module's per-frame asks before botAct; (D) asks with a stale guardOff left on, on purpose)
+    for (let kk = 0; kk < 16; kk++) {
       setT(58);
       const r = W.riders.filter((x) => x.sink && !x.id.endsWith('~'))[kk % 4], ri = W.riders.indexOf(r), sn = nav.nodes.find((q) => M.rider[q.id] === ri && M.pose[q.id] === 1);
       put(fb, V(sn.x, rid(r.id).top + 0.02, sn.z)); fb.invuln = 1e6; Object.assign(FB, { _lavaEsc: false, _stoneStep: false, _stoneHold: null, _escNx: null, _escHop: null, _lavaT: 0, _jRef: false, goal: -1 }); FB.update = idle.get(fb); step(0.1, 30);
       let og = null, od = Infinity; for (const q of organTops) { const d = Math.hypot(q.x - sn.x, q.z - sn.z); if (d < od) { od = d; og = q; } }
       FB.path = [sn.id, og.id]; FB.pi = 1; FB.goal = og.id; FB._needJump = true; FB.jumpCd = 0; FB._clHop = true; FB._njT = kk < 4 || kk >= 8 ? 0 : __G.time - 5;
-      if (kk >= 8) { FB._lavaEsc = true; FB._lavaT = 9; }
+      if (kk >= 12) { FB.guardOff = true; FB.hopAt = null; FB.hopCheck = false; }
+      if (kk >= 8 && kk < 12) { FB._lavaEsc = true; FB._lavaT = 9; }
       // (the ask is acted on at the first grounded frame — jumpCd 0 — or never: a hop in the first 0.3 s is that one; a later
       // hop is the bot's own, checked, e.g. its stone step's walk to the head)
       const t0 = Lv.clock.t; let hop = null, died = null; const o8 = on('splatted', (e) => { if (e.victim === fb && !died) died = [e.cause, r3(Lv.clock.t)]; });
-      for (let i = 0; i < 60 && !died; i++) { FB.goalTimer = 9; FB.repath = 9; if (kk >= 8) { FB._lavaEsc = true; FB._lavaT = 9; } dbg.step(1000 / 30); if (fb.vel.y > 5 && hop === null) hop = r3(Lv.clock.t - t0); }
+      for (let i = 0; i < 60 && !died; i++) { FB.goalTimer = 9; FB.repath = 9; if (kk >= 8 && kk < 12) { FB._lavaEsc = true; FB._lavaT = 9; } dbg.step(1000 / 30); if (fb.vel.y > 5 && hop === null) hop = r3(Lv.clock.t - t0); }
       o8(); freezeBots(); FB._lavaEsc = false; FB._lavaT = 0;
-      k8.push([kk < 4 ? 'A' : kk < 8 ? 'B' : 'C', r.id, og.id, +od.toFixed(1), hop, died]);
+      k8.push([kk < 4 ? 'A' : kk < 8 ? 'B' : kk < 12 ? 'C' : 'D', r.id, og.id, +od.toFixed(1), hop, died]);
     }
-    R('F8b no route hop from a stone at a column across the lava: asked now with the climb\'s hop flag left set (A), asked 5 s before (B), asked now while escaping (C) — 4 stones each: not made (no hop in its first 0.3 s), no death in 2 s', k8.every((x) => !(x[4] !== null && x[4] < 0.3) && !x[5]), { cases: k8 });
+    R('F8b no route hop from a stone at a column across the lava: asked now with the climb\'s hop flag left set (A), asked 5 s before (B), asked now while escaping (C), asked now with a stale guardOff from a frozen brain (D) — 4 stones each: not made (no hop in its first 0.3 s), no death in 2 s', k8.every((x) => !(x[4] !== null && x[4] < 0.3) && !x[5]), { cases: k8 });
     // (fix round 4, review 4 issue 1: in a rise a charger fighting on Race 7 was sent off it — its stone 0.6 m under the
     // island's coping — ran at the coping at a slant, never hopped, slid along the face at 5.7 m/s and off the stone's end;
     // its route's next node was a node of its own stone, at the stone's HIGH height, read as a step up; refused presses had
