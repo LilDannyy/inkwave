@@ -220,7 +220,10 @@ async function base({ clients, R, wait, say, args, open }) {
   await B.js(`(() => { const K = __G.match.karp, me = __G.match.local, ne = K.netEvent.bind(K); window.__died = 0; K.netEvent = (e, s) => { if (Array.isArray(e) && e[0] === 'p' && e[2] === me.nid && !window.__died) { window.__died = 1; me.splat(null, 'weapon'); } return ne(e, s); }; return 1; })()`);
   const pre8 = await J(A, `(() => { const K = __G.match.karp; return { touched: K.touched, lc: K.lastCarrier, win: K.otWin.left }; })()`);
   await A.js(`(() => { window.__undoCalls = []; window.__pickCalls = []; const look = () => { const H = __inkwave.hud; return [...[...(H.zcalls ? H.zcalls.children : [])].map((e) => e.querySelector('.iw-zcall__txt')?.textContent || ''), H.karp.state().pend || '']; };
-    import('./src/core/ctx.js').then((m) => { m.on('karp:pickup', () => requestAnimationFrame(() => requestAnimationFrame(() => window.__pickCalls.push(look())))); m.on('karp:undo', () => requestAnimationFrame(() => requestAnimationFrame(() => window.__undoCalls.push(look())))); }); return 1; })()`);
+    import('./src/core/ctx.js').then((m) => { m.on('karp:pickup', () => window.__pickCalls.push(look())); m.on('karp:undo', () => { window.__undoCalls.push(look()); requestAnimationFrame(() => requestAnimationFrame(() => window.__undoCalls.push(look()))); }); }); return 1; })()`);
+  // ([b5-beta1] read at the events themselves — the HUD's own handlers run first, they subscribed at the match's start —
+  // and the undo's again 2 frames on: on a quiet machine the 'u' came back within the 2 frames the pick-up's read used to
+  // wait, so that read saw the undo's FREE — GRAB IT! already and 8c failed, 21/22, with the HUD doing the right thing)
   await A.js(`(() => { const K = __G.match.karp; K.shell.add(1, 2000, __G.match.actors.find((o) => o.nid === ${bNid})); K.phaseT = 0.6; return 1; })()`);
   await B.until(`__G.match.karp.phase === 'free'`, 3000, 20);
   await put(B, kp8[0] + 0.3, kp8[1], kp8[2]);
