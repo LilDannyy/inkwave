@@ -11,7 +11,8 @@
 //        and standing for its plan, its stand spot or its ambush it says it holds on purpose (perchUntil).
 // refill a bot at its refill spot on bare ground with 6 / 10 % (every weapon) has 40 % back (a charger
 //        held its draw at what the tank allows for good: no shot, no puddle, and a held trigger stops the kid's refill) —
-//        within 10 s (most 1.1–2.4 s, a roller / brush 4–8.6 s; the charger: never).
+//        within 10 s (most 1.1–2.4 s, a roller / brush 1.3–6.5 s; the charger: never), and a roller / brush never holds
+//        its trigger without a flick's ink (its drum then rolls in place and holds off the kid's refill: never refilled).
 // tank   a bot on the Great Tank's sand bed (inside the glass, y −0.6: the nav has no way out of it) heading for a goal
 //        outside: out within 6 s (a super jump), from 6 spots by the rim and mid-bed — it pressed into the rim 4–9.25 s
 //        (JOB-5), for good here.
@@ -123,14 +124,23 @@
       const here = N.nearest(bot.pos, 1.2, true);
       b._pickRefill = function () { this.path = [here]; this.pi = 1; this.goal = here; this.repath = 1; };
       bot.ink = ink0; b.mode = 'refill'; b.refillUntil = 0.9; b.path = [here]; b.pi = 1; b.goal = here; b.repath = 1;
-      let t40 = null, held = 0, sq = 0, n = 0;
-      for (let f = 0; f < 12 * 60 && t40 === null; f++) { g.debug.step(1000 / 60); n++; if (bot.intent.fire) held++; if (bot.form === 'squid') sq++; if (bot.ink >= 40) t40 = +(f / 60).toFixed(1); }
-      rows.push(t40 === null ? { w, ink0, t40, ink8: Math.round(bot.ink), fireHeld: r2(held / n), squid: r2(sq / n) } : { w, ink0, t40 });
+      let t40 = null, held = 0, sq = 0, n = 0, heldDry = 0;
+      const cost = bot.weapon.flickInk ?? bot.weapon.swipeInk ?? 0;   // (a roller's / brush's flick)
+      for (let f = 0; f < 12 * 60 && t40 === null; f++) {
+        g.debug.step(1000 / 60); n++;
+        if (bot.intent.fire) { held++; if (bot.ink < cost) heldDry++; }
+        if (bot.form === 'squid') sq++;
+        if (bot.ink >= 40) t40 = +(f / 60).toFixed(1);
+      }
+      const dry = (w === 'roller' || w === 'brush') ? r2(heldDry / 60) : undefined;
+      rows.push(t40 === null ? { w, ink0, t40, ink8: Math.round(bot.ink), fireHeld: r2(held / n), squid: r2(sq / n), heldDry: dry } : { w, ink0, t40, heldDry: dry });
       delete b._pickRefill;
     }
     // (the bar: 10 s — most kits take 1.1–2.4 s; a roller or a brush, which paints nothing held still, stands kid-refilling
     // 4–5 s (8.6 s once in five), as do a few draws now and then; the bug it is for was 'never')
-    const bad = rows.filter((r) => r.t40 === null || r.t40 > 10);
+    // (and a roller / brush never holds its trigger without a flick's ink: held, the drum rolls in place, no ink goes down
+    // and the kid's refill is held off every frame — on the Mac mini a roller at 6 % never refilled)
+    const bad = rows.filter((r) => r.t40 === null || r.t40 > 10 || (r.heldDry ?? 0) > 0.1);
     R(`refill: every weapon (${WEAPON_ORDER.length}) at its refill spot on bare ground (6 % and 10 %) has 40 % back within 10 s`, bad.length === 0, { bad, rows });
   }
   if (want('tank') && !G.match?.karp) {

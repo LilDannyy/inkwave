@@ -1092,6 +1092,10 @@ export class BotBrain {
             this._drawT = (this._drawT || 0) + dt;
             const cap = Math.min(1, a.ink / (w.inkFull || PLAYER.inkMax));
             it.fire = !(this._drawT > 0.6 || (typeof wr.charge === 'number' && wr.charge >= cap - 0.02));
+          } else if (w.kind === 'roller' || w.kind === 'brush') {
+            // [b5-beta1] a roller / brush taps — a flick each, with a flick's ink: held, its drum rolls in place, puts no
+            // ink down and holds off the kid's refill every frame (a roller at 6 % on bare ground never refilled)
+            this._drawT = 0; it.fire = a.ink >= (w.flickInk ?? w.swipeInk ?? 0) && !this._tapHeld; this._tapHeld = it.fire;
           } else { this._drawT = 0; it.fire = !CHARGES[w.kind] || this.aimPitch < -0.7; }
         } else if (!this._refillBad || this.t - this._refillBad.t > 6) {
           // [b5-caldera] fix round 4: too dry to paint and no own ink to step onto here (the patch it was sent to is a level
