@@ -22,6 +22,8 @@
 //            is ≥ HIGH + 0.3; open edges only at the lips (into a falls polygon)
 //   rule 46  the nav built with its grid shifted 0.25 m and 0.5 m (x, z): every step link still yields its edges, the
 //            Organ climb exists at both poses and the Race chain head → stones → head at HIGH
+//   rule 47  (fix round 7, review 7) no roof top beside the lava slides a kid into it: every flat roof block with lava within
+//            3 m that a kid can hop onto, from 16 sides, idle or steering back: 0 lava deaths at LOW and HIGH
 //   PAGE_ARGS rules=21,44: only those rules (to iterate); every rule without it
 (async () => {
   const g = window.__inkwave, out = [];
@@ -549,6 +551,79 @@
   if (/(^|[;&])full=1/.test(String(window.__pageArgs || ''))) R('rule 44 (information): every crossing (LOW, HIGH)', true, { low: { run: jumps.low.runCross, skill: jumps.low.skill, carry: jumps.low.carry }, high: { run: jumps.high.runCross, skill: jumps.high.skill, carry: jumps.high.carry } });   // (PAGE_ARGS full=1)
 
   } catch (e) { R('rule 44: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
+
+  // ---------------------------------------------------------------------------------------------- rule 47: roof slides
+  // (fix round 7, review 7 issue 1 — the reviewer's probe-roofslide7b as a rule: cover on Highmark is a `roof` block, and so
+  // is every lava rider part, and the roof slide took the nearest way off whatever lay past it: race 3's boulder dropped 42
+  // of 50 landings into the lava at HIGH, Organ L's stub 30 of 64. actor._roofExit / _roofExitDist now refuse a way off whose
+  // landing the lava takes (_roofLandWet) and hold the kid when every way is refused; on a stage with a hazard the slide
+  // owns the move along the way it checked.) Every flat roof block (static, or a rider's part) with lava within 3 m of its
+  // footprint whose top a kid can hop onto from floor beside it (0.4–1.7 m up): run at it from 16 sides, 3 lateral offsets,
+  // 2 run-ups, hop on, then let go of the stick (idle) or push back the way it came (save) for 2.5 s. 0 lava deaths at LOW
+  // and HIGH; `held` = still on the roof at the end (no way off but into the lava: it walks off by itself)
+  if (want('47')) try {
+    const kid = g.match.actors.find((a) => a.bot), it = kid.intent, dt = 1 / 60;
+    const res = {};
+    for (const level of ['low', 'high']) {
+      setT(level === 'low' ? 10 : 50);
+      const lavaAt = (x, z, y) => { const gh = lvl.groundHeight(x, z, y); return (gh === -Infinity || gh <= Lv.y + K - 0.01) && W.inRegion(x, z); };
+      const ext = (b, dx, dz) => Math.abs(b.half.x * (b.axes[0].x * dx + b.axes[0].z * dz)) + Math.abs(b.half.z * (b.axes[2].x * dx + b.axes[2].z * dz));
+      const cands = [];
+      for (const b of lvl.blocks) {
+        if (!b || !b.roof || !b.solid || b.axes[1].y < 0.99) continue;
+        const top = b.center.y + b.half.y;
+        if (top < Lv.y || b.half.x > 6 || b.half.z > 6) continue;   // (a big building is no hop-on)
+        let near = false;
+        for (let k = 0; k < 16 && !near; k++) { const a = (k * Math.PI) / 8, dx = Math.cos(a), dz = Math.sin(a), e = ext(b, dx, dz);
+          for (let s = e + 0.1; s <= e + 3.0 && !near; s += 0.3) if (lavaAt(b.center.x + dx * s, b.center.z + dz * s, top - 0.05)) near = true; }
+        if (near) cands.push(b);
+      }
+      let trials = 0, landed = 0, died = 0, held = 0; const per = [], byMode = { idle: [0, 0], save: [0, 0] };
+      for (const b of cands) {
+        const top = b.center.y + b.half.y; let bl = 0, bd = 0, bh = 0; const eg = [];
+        for (let k = 0; k < 16; k++) {
+          const a = (k * Math.PI) / 8, dx = Math.cos(a), dz = Math.sin(a), e = ext(b, dx, dz), w = ext(b, -dz, dx);
+          for (const latF of [-0.6, 0, 0.6]) for (const ru of [0.6, 1.1]) {
+            const lat = latF * w, sx = b.center.x - dx * (e + 0.5 + ru) - dz * lat, sz = b.center.z - dz * (e + 0.5 + ru) + dx * lat;
+            const fy = lvl.groundHeight(sx, sz, top - 0.05);
+            if (!(fy > -50) || top - fy < 0.4 || top - fy > 1.7 || fy <= Lv.y + K + 0.05 || Lv.covers(sx, sz, fy)) continue;
+            const fy2 = lvl.groundHeight(sx + dx * ru, sz + dz * ru, top - 0.05); if (Math.abs(fy2 - fy) > 0.3) continue;   // (a level run-up)
+            for (const mode of ['idle', 'save']) {
+              kid.carry = null; kid.spawnAt(V(sx, fy + 0.05, sz), 0); kid.invuln = 0; kid.hp = 100; kid.vel.set(0, 0, 0); kid.form = 'kid';
+              it.move.set(0, 0, 0); it.jump = it.squid = it.fire = it.sub = it.special = false;
+              for (let i = 0; i < 4; i++) kid.update(dt);
+              if (!kid.grounded || !kid.alive) continue;
+              trials++;
+              let jumped = false, on = false, f0 = -1, offRoof = false; const trail = eg.length < 2 ? [] : null;
+              const x0 = kid.pos.x, z0 = kid.pos.z;
+              for (let f = 0; f < 260; f++) {
+                if (on) { const gb = kid.grounded && kid.ground.hit ? lvl.blocks[kid.ground.block] : null; if (gb && !gb.roof) offRoof = true; if (mode === 'idle' || offRoof) it.move.set(0, 0, 0); else { const hx = sx - kid.pos.x, hz = sz - kid.pos.z, hl = Math.hypot(hx, hz) || 1; it.move.set(hx / hl, 0, hz / hl); } if (trail && f % 3 === 0) trail.push([f - f0, r2(kid.pos.x), r2(kid.pos.y), r2(kid.pos.z), r2(Math.hypot(kid.vel.x, kid.vel.z)), kid.grounded ? (gb ? (gb.roof ? 'R' : 'F') : 'g') : 'a']); }
+                else if (jumped) { const hx = b.center.x - kid.pos.x, hz = b.center.z - kid.pos.z, hl = Math.hypot(hx, hz) || 1; it.move.set(hx / hl, 0, hz / hl); }
+                else it.move.set(dx, 0, dz);
+                const along = (kid.pos.x - x0) * dx + (kid.pos.z - z0) * dz;
+                it.jump = !jumped && along >= ru - 0.05; if (it.jump) jumped = true;
+                kid.update(dt);
+                if (!on && kid.grounded && kid.ground.hit && kid.ground.block === b.id) { on = true; f0 = f; }
+                if (!kid.alive) break;
+                if (on && f - f0 > 150) break;
+                if (!on && jumped && kid.grounded && f > 50) break;
+              }
+              if (!on) continue;
+              landed++; bl++; byMode[mode][0]++;
+              const gb = kid.grounded && kid.ground.hit ? lvl.blocks[kid.ground.block] : null;
+              if (kid.alive && gb && gb.roof) { held++; bh++; }
+              if (!kid.alive) { died++; bd++; byMode[mode][1]++; if (eg.length < 3) eg.push({ from: [r2(sx), r2(fy), r2(sz)], heading: Math.round(a * 180 / Math.PI), mode, death: [r2(kid.pos.x), r2(kid.pos.y), r2(kid.pos.z)], trail }); }
+            }
+          }
+        }
+        per.push({ tag: b.tag || '#' + b.id, dyn: !!b.dynamic, at: [r2(b.center.x), r2(top), r2(b.center.z)], size: [r2(b.half.x * 2), r2(b.half.y * 2), r2(b.half.z * 2)], landed: bl, died: bd, held: bh, eg });
+      }
+      res[level] = { roofBlocksNearLava: cands.length, reachable: per.filter((p) => p.landed > 0).length, trials, landed, died, held, byMode, killers: per.filter((p) => p.died > 0), holders: per.filter((p) => p.held > 0).map((p) => [p.tag, p.at, p.landed, p.held]) };
+    }
+    kid.carry = null;
+    R('rule 47: no roof top beside the lava slides a kid into it — every flat roof block with lava within 3 m that a kid can hop onto (0.4–1.7 m up): 16 sides × 3 offsets × 2 run-ups, hop on, idle or steer back 2.5 s: 0 lava deaths at LOW and HIGH (fix round 7: actor._roofLandWet; review 7\'s probe-roofslide7b)',
+      res.low.landed > 1000 && res.high.landed > 1000 && !res.low.died && !res.high.died, res);
+  } catch (e) { R('rule 47: roof slides: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
   // ---------------------------------------------------------------------------------------------- rule 46: grid shift
   if (want('46')) try {

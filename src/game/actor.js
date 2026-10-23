@@ -697,20 +697,27 @@ export class Actor {
       // [b5-int3] that way, unless it doesn't get off within 8 m and another does — or, on a flat top, another gets off over
       // 0.3 m sooner (a row of off-limits tops a footprint apart: crossmarket's balconettes 0.75 m apart slid a kid off the
       // end of one onto the next and back, the way off their open front 0.3 m away)
+      this._rxHz = false;   // [b5-caldera] (set when a way off is refused for its landing: _roofLandWet)
       const e0 = this._roofExitDist(this.roofDir.x, this.roofDir.z);
-      if (e0 === Infinity) this._roofExit(b, null, this.roofDir);
+      if (e0 === Infinity) { if (this._roofExit(b, null, this.roofDir) === Infinity && this._rxHz) this._roofHold(); }   // [b5-caldera] (every way off lands in the lava)
       else if (n.y >= 0.995 && this._roofExit(b, null, _rxA) < e0 - 0.3) this.roofDir.copy(_rxA);
+      this.roofHz = !!G.match?.stage?.h.wet.length;   // [b5-caldera] (a stage with a hazard: the slide owns the move, below)
     }
     const d = this.roofDir;
     this.roofT = (this.roofT || 0) + dt;
     const moved = (this.pos.x - this.roofP.x) * d.x + (this.pos.z - this.roofP.z) * d.z;
     this.roofP.copy(this.pos);
     this.roofStall = this.roofT > 0.1 && moved < 0.3 * dt ? this.roofStall + dt : 0;
-    if (this.roofStall > 0.25) { if (this._roofExit(b, d, d) === Infinity) d.set(-d.z, 0, d.x); this.roofStall = 0; }   // [b5-int3] (the next way off)
+    if (this.roofStall > 0.25) { this._rxHz = false; if (this._roofExit(b, d, d) === Infinity) { if (!this._rxHz) d.set(-d.z, 0, d.x); else if (d.x || d.z) this._roofHold(); } this.roofStall = 0; }   // [b5-int3] (the next way off) [b5-caldera] (none but into the lava: held)
     const want = Math.min(9, 3 + 14 * this.roofT);
     const along = this.vel.x * d.x + this.vel.z * d.z;
-    if (along < want) { this.vel.x += d.x * (want - along); this.vel.z += d.z * (want - along); }
+    // [b5-caldera] on a stage with a hazard (the lava) the slide owns the move: along the way off it checked, at its speed or
+    // a run's, nothing across it (a landing's drift or a steer across the slide threw kids off a cover's lava side onto a
+    // narrow coping and past it, review 7); held (no way off but into the lava), the kid walks as on any floor
+    if (this.roofHz) { if (d.x || d.z) { const v = Math.max(want, Math.min(along, 6.5)); this.vel.x = d.x * v; this.vel.z = d.z * v; } }
+    else if (along < want) { this.vel.x += d.x * (want - along); this.vel.z += d.z * (want - along); }
   }
+  _roofHold() { this.roofDir.set(0, 0, 0); this.vel.x = 0; this.vel.z = 0; }   // [b5-caldera] every way off lands in the lava: held where it is
 
   // [b5-int3] how far along (dx, dz) a kid sliding from here gets off the roof it's on: the first 0.3 m step where no part
   // of its footprint is over an off-limits top (a drop — over 0.6 m down, or none — or a top that isn't off-limits for it)
@@ -744,7 +751,7 @@ export class Actor {
       // end caught it — back and forth for 3 s, dash-reach.js 1/24)
       let qx = px, qz = pz, clear = true;
       for (let j = 0; j < 2 && clear; j++) { if (wall(qx, qz)) break; qx += dx * 0.3; qz += dz * 0.3; if (over(qx, qz)) clear = false; }
-      if (clear) return s;
+      if (clear) { if (!this._roofLandWet(px, pz, dx, dz, s)) return s; this._rxHz = true; return Infinity; }   // [b5-caldera] (a way off into the lava is none)
     }
     return Infinity;
   }
@@ -762,6 +769,28 @@ export class Actor {
     if (best === Infinity) return Infinity;
     out.set(bx, 0, bz);
     return best;
+  }
+  // [b5-caldera] would a kid sliding off this way come down where a stage hazard takes it (the lava: G.match.stage.wet)?
+  // From the way's exit (px, pz), s m along the slide, it falls at the slide's speed there (√(w² + 28 s): the push w now,
+  // 14 m/s² more) and at a run's (6.5): every 0.15 m the floor under its footprint (a seam the feet span is no gap); in the
+  // air the slow arc's height, from where that comes down the floor itself, until 0.6 m past where the fast arc lands. No
+  // hazard on the stage: false (review 7: cover beside the lava slid kids into it). lava-audit rule 47
+  _roofLandWet(px, pz, dx, dz, s) {
+    const S = G.match?.stage;
+    if (!S || !S.h.wet.length) return false;
+    const L = G.level, F = PLAYER.footRadius, y0 = this.pos.y, w = Math.min(9, 3 + 14 * (this.roofT || 0));
+    const vLo = Math.min(9, Math.sqrt(w * w + 28 * s)), vHi = Math.max(vLo, 6.5);
+    const gh = (x, z) => L.groundHeight(x, z, y0 + 0.05);
+    const floor = (x, z) => Math.max(gh(x, z), gh(x + F, z), gh(x - F, z), gh(x, z + F), gh(x, z - F));
+    let lo = false, hiU = -1;
+    for (let u = 0.15; u <= 8; u += 0.15) {
+      const x = px + dx * u, z = pz + dz * u, f = floor(x, z), yl = y0 - 15 * (u / vLo) ** 2, yh = y0 - 11 * (u / vHi) ** 2;
+      if (!lo && f >= yl) lo = true;
+      if (S.wet(x, z, lo ? f : yl, 0)) return true;
+      if (hiU < 0 && f >= yh) hiU = u;
+      if (hiU >= 0 && u >= hiU + 0.6) return false;
+    }
+    return false;
   }
 
   // Body (walls/ceilings) then feet (ground stick / landing). `stick` = we were grounded and did not jump.
