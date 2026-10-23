@@ -1,0 +1,37 @@
+JOB-10 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 02:59:19
+branch botlab-b5-beta1, ran at 395e9a4c, exit code 0, wall time 52min
+(a written-up JOB-10.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### beta1 JOB-10 head 395e9a4c
+## base: 1378ceb2 + d3e4f164 issueLog.js
+[final-1] RESULT 6/7
+[base-1] RESULT 7/7
+[final-2] RESULT 7/7
+[base-2] RESULT 7/7
+[final-3] RESULT 7/7
+[base-3] RESULT 7/7
+[final-4] RESULT 5/7
+[base-4] RESULT 7/7
+[final-5] RESULT 6/7
+[base-5] RESULT 7/7
+[final-6] RESULT 7/7
+[base-6] RESULT 7/7
+### done
+
+## last 15 lines of job.log
+[base-3] RESULT 7/7
+[base-3] "esc":0,"fight":0,"list":[]}
+[final-4] RESULT 5/7
+[final-4] "esc":1,"fight":0,"list":[["edges",12,"Pip","mitts","fight","escape",38.8,[-16.55,0,16.12]]]}
+[base-4] RESULT 7/7
+[base-4] "esc":0,"fight":0,"list":[]}
+[final-5] RESULT 6/7
+[final-5] "esc":0,"fight":4,"list":[["ledges",1,"Zest","charger","fight","fight",35.33,[-19.99,-0.47,22.08]],["ledges",4,"Zest","charger","fight","fight",42.6,[-15.16,0.74,-6.62]],["ledges",4,"Loop","brolly","fight","fight",42.63,[-15.52,0.74,-6.16]],["stones",13,"Juno","mitts","paint","fight",63.77
+[base-5] RESULT 7/7
+[base-5] "esc":0,"fight":0,"list":[]}
+[final-6] RESULT 7/7
+[final-6] "esc":0,"fight":1,"list":[["stones",4,"Riptide","brush","fight","fight",58.75,[-16.35,0.89,5.35]]]}
+[base-6] RESULT 7/7
+[base-6] "esc":0,"fight":1,"list":[["edges",8,"Wasabi","mitts","fight","fight",43.68,[-18.73,0.46,4.97]]]}
+### done
