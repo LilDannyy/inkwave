@@ -1353,7 +1353,11 @@ export function botAct(b, dt, it, move, busy) {
   // (laying a chain it stays put, whatever else has its aim — a device to shoot, a threat — short of a fight: its links
   // were picked from here. Run dry by its last link, bots.js sends it to refill: it refills where it stands — a dive in its
   // ink, or the puddle bots.js paints to swim in when it's on none)
-  if (P && !fighting) { move.multiplyScalar(0.05); b.noProg = 0; }
+  // [b5-beta1] …but run dry with no ink of its own under it, it goes to refill: bots.js paints its puddle "where it arrives",
+  // and pinned here it never arrived — it sat a squid on bare ground refilling at 4.5 ink/s until the plan's 14 s ran out
+  // (11.5 s stuck episodes, three in one Bluestone Turf War of bobbers)
+  if (P && b.mode === 'refill' && b.groundSeen !== 1) { b._bobPlan = null; BOBBER_BOT.dryPlans = (BOBBER_BOT.dryPlans || 0) + 1; }
+  else if (P && !fighting) { move.multiplyScalar(0.05); b.noProg = 0; }
   if (busy) { if (G.time < (b._bobSnapT || 0)) { BOBBER_BOT.snapBusy = (BOBBER_BOT.snapBusy || 0) + 1; const k = b.sp?.esc ? 'esc' : b.thr ? 'thr' : b._climbAim ? 'climb' : b.blockT > 0 ? 'canopy' : 'other'; (BOBBER_BOT.busyWhy || (BOBBER_BOT.busyWhy = {}))[k] = (BOBBER_BOT.busyWhy[k] || 0) + 1; } return null; }
   // [b5-int3] a snap of its own on its way: aimed at where it floats once it opens, shot the moment its foe is in it
   if (!S && a.sub?.kind === 'bobber' && b._bobSnapIt) { const SN = snapOf(b); if (SN && (SN.state === 'live' || preAimOk(b, SN))) { const r = snapAim(b, SN, it, move); if (r) return r; } }

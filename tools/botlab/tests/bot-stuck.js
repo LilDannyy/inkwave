@@ -6,6 +6,8 @@
 //        the deck it is reaching for (it began on the deck, with a walk edge on from there and no hop asked for: the bot
 //        pressed into the step's face, 11.75 s in one Bazookarp match); and a bot at the step's face whose goal over the
 //        deck is re-picked every 0.35 s stands on the deck within 1.2 s, from every spot along both steps.
+// bobber a Chain Bobber bot run dry while laying a chain on bare ground lets the plan go and goes to refill, instead of
+//        sitting a squid on bare ground refilling at 4.5 ink/s until its plan times out (11.5 s episodes on Bluestone).
 (async () => {
   const g = window.__inkwave, G = window.__G, m = g.match, L = G.level, N = G.nav, out = [], R = (name, ok, info) => out.push({ name, ok: !!ok, info });
   const THREE = await import('three'), V3 = THREE.Vector3, r2 = (v) => Math.round(v * 100) / 100;
@@ -52,6 +54,35 @@
     }
     const slow = runs.filter((r) => r.up === null || r.up > 1.2);
     R('step: at the step\'s face, its goal over the deck re-picked every 0.35 s, a bot stands on the deck within 1.2 s (12 spots, both steps; mid-hop routes from the deck took up to 1.9 s)', slow.length === 0, { slow, worst: Math.max(...runs.map((r) => r.up ?? 99)), runs: runs.map((r) => r.up) });
+  }
+  if (want('bobber')) {
+    // a Chain Bobber bot laying a chain runs dry on bare ground (its links were picked from where it stands, so the plan
+    // holds it there): it must get its ink back — to its refill, a puddle painted and a dive — not sit a squid on bare
+    // ground refilling at 4.5 ink/s until the plan times out (11.5 s episodes in a Bluestone Turf War of bobbers)
+    const rows = [];
+    const spots = [[0, 12.5], [-6, 13], [6, 13], [0, -12.5]].filter(([x, z]) => Math.abs(L.groundHeight(x, z, 3) - 0) < 0.05);
+    for (const [x, z] of spots.slice(0, 3)) {
+      G.paint.clear();
+      fresh(x, 0.05, z);
+      bot.setSub('bobber'); bot.setWeapon('shooter'); b.reset(); b.setDifficulty('normal');
+      for (let f = 0; f < 6; f++) g.debug.step(1000 / 60);
+      bot.ink = 5; b.mode = 'refill'; b.refillUntil = 0.9; b.path = null; b.repath = 0;
+      b._bobPlan = { pts: [new V3(x + 3.4, 0, z), new V3(x, 0, z + 3.4), new V3(x - 3.4, 0, z)], i: 0, t0: G.time, m: G.match };
+      const hist = []; let worst = 0, run = 0, ink3 = null, planAt1 = null;
+      for (let f = 0; f < 10 * 60; f++) {
+        g.debug.step(1000 / 60);
+        if (f === 60) planAt1 = !!b._bobPlan;
+        if (f === 3 * 60) ink3 = Math.round(bot.ink);
+        if (f % 15 === 0) {
+          hist.push({ x: bot.pos.x, z: bot.pos.z }); if (hist.length > 13) hist.shift();
+          const span = Math.max(...hist.map((q) => Math.hypot(q.x - bot.pos.x, q.z - bot.pos.z)));
+          if (hist.length >= 11 && span < 1 && bot.alive && !b.holdingOnPurpose()) { run += 0.25; worst = Math.max(worst, run); } else run = 0;
+        }
+      }
+      rows.push({ at: [x, z], planAt1, ink3, ink10: Math.round(bot.ink), worst, mode: b.mode });
+    }
+    const bad = rows.filter((r) => r.planAt1 || r.worst > 3);
+    R('bobber: a bot run dry mid-chain on bare ground lets its chain plan go to refill (within 1 s) and is never held there over 3 s (10 s watched)', rows.length >= 2 && bad.length === 0, { bad, rows });
   }
   g.debug.unfreeze();
   return out;

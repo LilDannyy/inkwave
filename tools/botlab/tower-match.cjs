@@ -21,7 +21,7 @@
 // (1 s per letter, printed for the first 150 s).
 const { app } = require('electron');
 require(process.env.S + '/offscreen-boot.cjs');
-const MAP = process.env.MAP || 'halyard', DUR = +(process.env.DUR || 300), HUMAN = process.env.HUMAN || '', DIAG = process.env.DIAG === '1';
+const MAP = process.env.MAP || 'halyard', DUR = +(process.env.DUR || 300), HUMAN = process.env.HUMAN || '', DIAG = process.env.DIAG === '1' || process.env.DIAG === '2', DIAGDT = process.env.DIAG === '2' ? 1 : 5;
 const OUT = process.env.OUT || '';
 setTimeout(() => { console.log('WATCHDOG'); app.exit(1); }, +(process.env.WATCHDOG || 590000));
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -114,7 +114,9 @@ app.on('browser-window-created', (_, win) => {
         const b = a.bot, p = b.path, pi = b.pi | 0, e = p && pi > 0 && pi < p.length ? N.edge(p[pi - 1], p[pi]) : null;
         return { t: +simT.toFixed(1), mode: b.mode, role: b.tRole || '-', pos: [d2(a.pos.x), d2(a.pos.y), d2(a.pos.z)], len: p ? p.length : 0, pi, next: p ? [ndP(p[pi]), ndP(p[pi + 1])] : null,
           edgeIn: !p || pi <= 0 || pi >= p.length ? '-' : e ? e.type : 'none', goal: ndP(b.goal), noProg: d2(b.noProg || 0), near: ndP(N.nearest(a.pos, 1.2, true)),
-          tHold: d2(Math.max(0, (b.tHoldUntil || 0) - b.t)), noClimb: b.t < (b.noClimbUntil || 0), climbing: !!a.climbing, grounded: !!a.grounded, form: a.form, ink: Math.round(a.ink) };
+          tHold: d2(Math.max(0, (b.tHoldUntil || 0) - b.t)), noClimb: b.t < (b.noClimbUntil || 0), climbing: !!a.climbing, grounded: !!a.grounded, form: a.form, ink: Math.round(a.ink),
+          ...(${process.env.DIAG === '2'} ? { mv: [d2(a.intent.move.x), d2(a.intent.move.z)], spd: d2(Math.hypot(a.vel.x, a.vel.z)), fire: !!a.intent.fire, jump: !!a.intent.jump, esc: !!b.sp?.esc, tgt: b.target ? b.target.name : null,
+            see: d2(b.seeTimer || 0), tDist: d2(Math.hypot(a.pos.x - T.pos.x, a.pos.z - T.pos.z)), tY: d2(T.pos.y), onT: !!onTop(a), riders: T.riderList.length, perch: d2(Math.max(0, (b.perchUntil || 0) - b.t)) } : {}) };
       } : null;
       const dis = {}, lastOff = {};   // dismount reasons; the reasons of the last rider off a held tower
       const emptyHeldNow = (a) => T.owner === a.team && T.riders[a.team] === 0;
@@ -274,7 +276,7 @@ app.on('browser-window-created', (_, win) => {
           if (stuck) {
             stuckS += 0.25;
             if (!open.has(a)) { const ep = { t: +simT.toFixed(1), name: a.name, w: a.weaponId, mode: b.mode, role, pos: [+a.pos.x.toFixed(1), +a.pos.y.toFixed(2), +a.pos.z.toFixed(1)], tower: +Math.hypot(a.pos.x - T.pos.x, a.pos.z - T.pos.z).toFixed(1), path: !!b.path, dur: 0 }; if (plan) ep.diag = [plan(a)]; open.set(a, ep); eps.push(ep); }
-            { const ep = open.get(a); ep.dur += 0.25; if (plan && ep.dur % 5 === 0) ep.diag.push(plan(a)); }
+            { const ep = open.get(a); ep.dur += 0.25; if (plan && ep.dur % ${DIAGDT} === 0) ep.diag.push(plan(a)); }
           } else open.delete(a);
           // against the tower's side: by it (≤ 2.6 m from its centre), on the floor below its top, not riding
           const dx = a.pos.x - T.pos.x, dz = a.pos.z - T.pos.z, c = Math.cos(T.yaw), s = Math.sin(T.yaw);
