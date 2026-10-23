@@ -715,7 +715,7 @@ export function karpRefillSpot(b, P) {
       if (h < lo || h > hi || Math.abs(n.y - a.pos.y) > 1.2 || n.zone >= 0) continue;
       if (RB && Math.hypot(n.x - RB.x, n.z - RB.z) < 3) continue;   // [b5-beta1]
       const d = hd(n, a.pos);
-      if (RB && d < ad && h >= lo + 0.3 && h <= hi - 0.3) { ad = d; alt = n; }   // (well inside the band: a squid slides on its puddle)
+      if (RB && d < ad && h >= lo + 0.5 && h <= hi - 0.3) { ad = d; alt = n; }   // (well inside the band: a squid slides on its puddle; [b5-beta1, review 1] 0.5 m off its inner edge: at 0.3 a breaker sent there slid in to 2.83–2.88 m, under B(b2)'s 2.9)
       if (d >= bd) continue;
       G.paint.regionStats(n.x, n.y, n.z, 1.0, b.inkTeam, st);
       if (st.n && st.own > 0.6) { bd = d; best = n; }
@@ -1055,8 +1055,9 @@ export function karpMove(b, P, dt, move, it) {
     const band = shellBand(b, P);
     if (band) {
       const [lo, hi] = band, vr = a.vel.x * nx + a.vel.z * nz, hq = h + vr * 0.25, outward = move.x * nx + move.z * nz;
-      if (hq < lo - 0.05) move.set(nx * 0.7, 0, nz * 0.7);
-      else if (hq < lo + 0.25 && outward < 0) { move.x -= outward * nx; move.z -= outward * nz; }
+      // ([b5-beta1, review 1] the inner edge held with a margin: from lo − 0.05 a sliding squid's momentum carried it 0.2 m in)
+      if (hq < lo + 0.1) move.set(nx * 0.7, 0, nz * 0.7);
+      else if (hq < lo + 0.4 && outward < 0) { move.x -= outward * nx; move.z -= outward * nz; }
       if (hq > hi + 0.15) move.set(-nx * 0.7, 0, -nz * 0.7);
       else if (hq > hi - 0.25 && outward > 0) { move.x -= outward * nx; move.z -= outward * nz; }
     }
