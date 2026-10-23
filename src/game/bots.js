@@ -1022,7 +1022,7 @@ export class BotBrain {
         // special
         const ks = kp ? karpSpecial(this, kp, true, dist, enemyVisible) : null;   // [b5-karp-bots] (null: the usual rules)
         if (a.specialReady() && (ks ?? (((enemyVisible || kAge < SIGHT.fresh) && this._wantSpecial('fight', dist, enemyVisible)) || (zp && this._zoneSpecial(zp, true)) || (tp && this._towerSpecial(tp, true, onT))))
-          && !(tp && !this._towerSpecialOk(onT))) it.special = true;
+          && !(tp && !this._towerSpecialOk(onT)) && !this._stranded) it.special = true;   // [b5-beta1] (stranded: see below)
       } else {
         // retreat: swim away through own ink, keep eyes on the threat
         it.squid = true;
@@ -1114,7 +1114,9 @@ export class BotBrain {
         const tb = this._towerBombAim(tp, dt, onT);
         if (tb) { wantYaw = tb.yaw; wantPitch = tb.pitch; this._towerBombGo(tb); }
       }
-      if (a.specialReady() && (zp ? this._zoneSpecial(zp) : tp ? this._towerSpecial(tp, false, onT) : (kp ? karpSpecial(this, kp, false, 0, false) : null) ?? this._wantSpecial('paint', 0, false))) it.special = true;   // [b5-karp-bots] karpSpecial
+      // ([b5-beta1, review 1] never while stranded: a special running holds off the super jump out — a bucket bot on the
+      // tank's bed set off its Kraken and sat there 7 s, bot-stuck 'tank' late again)
+      if (a.specialReady() && !this._stranded && (zp ? this._zoneSpecial(zp) : tp ? this._towerSpecial(tp, false, onT) : (kp ? karpSpecial(this, kp, false, 0, false) : null) ?? this._wantSpecial('paint', 0, false))) it.special = true;   // [b5-karp-bots] karpSpecial
     } else if (this.mode === 'refill') {
       // [b5-beta1, review 1] a finished route is an arrival wherever it ends: a step onto a puddle (_inkStep) carries the
       // bot up to 3.5 m off the route's last node, and with that node over 1.5 m away it neither walked nor painted — a
@@ -1139,7 +1141,8 @@ export class BotBrain {
           // did): a shot loosed level lands its puddle out of the step's reach (_inkStep, 3.5 m), spends the last ink and
           // restarts the kid's refill delay — a roller at 10 % flicked level, ran dry, kid-refilled to a flick's 9 and
           // flicked level again (bot-stuck refill: never at 40 % in 12 s); the dualies and the spinner took 8–9 s
-          const wr = a.weaponRunner, down = this.aimPitch < -0.7;
+          // (down: within ~7° of the -1.0 asked for — at -0.7 a roller's flick still landed past the step's 3.5 m now and then)
+          const wr = a.weaponRunner, down = this.aimPitch < -0.88;
           if (CHARGES[w.kind] && wr.charging) {
             this._drawT = (this._drawT || 0) + dt;
             const cap = Math.min(1, a.ink / (w.inkFull || PLAYER.inkMax));
