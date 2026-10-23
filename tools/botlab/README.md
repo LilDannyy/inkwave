@@ -84,9 +84,10 @@ Stages:
   EYE-LEVEL VIEW listed first: overhead pieces, or something nobody can walk up to). Before / after a change:
   `VIEWS=<before>/views.json BEFORE=<before>` re-shoots the same cameras and pairs each before shot over its after shot,
   with each view's change (the share of the frame whose pixels moved by more than 20/255) and a CHANGED list in
-  `clusters.txt` (`CHANGE=1.5` %: every view is shot at the same moment — the match, environment and Tubeway looks'
+  `clusters.txt` (`CHANGE=1.0` %: every view is shot at the same moment — the match, environment and Tubeway looks'
   clocks set, the page's `performance.now` standing still, one team palette, the bots off from the start, effects
-  cleared — so two runs of one tree differ by 0.6 % of a frame at most, 1.3 % in Gulper Aquarium's kelp drums);
+  cleared — so two runs of one tree differ by 0.6 % of a frame at most, except where bubbles carry a phase from the
+  boot: Gulper Aquarium's bubble column, kelp drums and Tubeway glass, up to 3 %; read those sheets);
   `SHEETS_ONLY=1` re-draws the sheets from `OUT`'s shots.
   `TWIN=1` shoots Bravo's twins (−x, −z; names suffixed `-B`), `ONLY=<regex>` a subset of views, `UNTAGGED=1` sweeps
   untagged blocks too. About 5 min for Gulper Aquarium's 516 views; give the Bash call a 600000 ms timeout.

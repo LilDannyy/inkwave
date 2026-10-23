@@ -14,8 +14,9 @@
 //   clusters.txt   every cluster (tag.k, blocks, box, views), the NO EYE-LEVEL VIEW ones first
 // BEFORE=<an earlier run's OUT>: each sheet puts that run's shot (row "before") over this run's ("after"), and
 //   clusters.txt gives every cluster's largest per-view change (the share of the frame, in %, whose pixels moved by more
-//   than 20/255 at 320 × 180) and lists the CHANGED ones (over CHANGE, default 1.5 %: two runs of one tree differ by
-//   0.6 % at most, 1.3 % in views of Gulper Aquarium's kelp drums, whose bubbles carry their drift from the boot).
+//   than 20/255 at 320 × 180) and lists the CHANGED ones (over CHANGE, default 1 %). Two runs of one tree differ by 0.6 %
+//   at most, except where bubbles carry a phase from the boot (Gulper Aquarium's bubble column, kelp drums and Tubeway
+//   glass: up to 3 %): read those clusters' sheets.
 //   SHEETS_ONLY=1 re-draws the sheets and the list from OUT's shots (with BEFORE: a new pairing).
 // TWIN=1: Bravo's twins (every view turned (x, z) → (−x, −z); names, shots and sheets suffixed -B). ONLY=<regex>: only
 //   the views whose names match. MODE=turf (default) / zones / tower. W / H the shot size (1280 × 720).
@@ -29,7 +30,7 @@ const path = require('path');
 require(process.env.S + '/offscreen-boot.cjs');
 const MAP = process.env.MAP || 'aquarium', TIME = process.env.TIME || 'day', MODE = process.env.MODE || 'turf';
 const OUT = process.env.OUT || `${process.env.BOTLAB_ROOT || '.'}/.botlab/sweep-${MAP}-${TIME}`;
-const TWIN = process.env.TWIN === '1', BEFORE = process.env.BEFORE || '', CHANGE = +(process.env.CHANGE || 1.5), SHEETS_ONLY = process.env.SHEETS_ONLY === '1';
+const TWIN = process.env.TWIN === '1', BEFORE = process.env.BEFORE || '', CHANGE = +(process.env.CHANGE || 1.0), SHEETS_ONLY = process.env.SHEETS_ONLY === '1';
 const ONLY = process.env.ONLY ? new RegExp(process.env.ONLY) : null;
 const W = +(process.env.W || 1280), H = +(process.env.H || 720);
 const SKIP = (process.env.SKIP ?? 'ground,promenade,feeding-deck,tank-bed,rail').split(',').filter(Boolean);
