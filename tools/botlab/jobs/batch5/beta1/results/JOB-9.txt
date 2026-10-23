@@ -1,0 +1,5 @@
+JOB-9 (beta1) @ 8ea1aae4 — Mac mini b5-runner, 2026-10-24 01:50–02:05, exit 0, each alone at 1-min load 3.6–3.8. Short summary.
+- net-eras 14/14 ×3: JOB-7's Iron Bridge cell did not recur.
+- eras-jump frames: 4/4, 4/4, then 3/4 — the jump's worst frame 20.8 ms, 26.6 ms, then 305.8 ms at J + 2.47 s, split [era update 0,
+  render 0.1, rest 0.8]: as in JOB-7 (301.1 ms at J + 1.98 s, [0, 0, 1.7]), a ~300 ms frame whose measured parts are ~1 ms — the time is
+  spent outside the era update, the render and the rest the probe times (2 of the last 4 runs here).
