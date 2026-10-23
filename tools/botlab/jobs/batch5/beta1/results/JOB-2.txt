@@ -1,0 +1,5 @@
+JOB-2 (beta1) @ c3d44d73 — Mac mini b5-runner, 2026-10-23 19:57–20:11, exit 0. Short summary; details in JOB-2.raw.txt.
+- the four bakes came back (all under 1 MB, all 16 files pushed): out/lm/caldera.png (517 KB), caldera.boss.png (465 KB),
+  bluestone.tower.png (683 KB), bluestone.boss.png (675 KB), each with its .json; and the 8 'before' JPEGs of Highmark Foundry
+  (spawnA, mid, aerialA, sideL × day, dusk; 103–158 KB) in out/before/.
+- with the bakes in place, everything passed: lightmaps 4/4, stage-audit caldera turf 3/3 / zones 3/3 / tower 4/4, issue-log 6/6.
