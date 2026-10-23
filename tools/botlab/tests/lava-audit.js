@@ -30,6 +30,7 @@
   const C = await import('./src/game/lavaCore.js');
   const { PLAYER } = await import('./src/config.js');
   const W = __G.lavaWorld, Lv = g.match?.lava;
+  const partPose = C.partPose;
   R('the lava module runs on the stage', !!W && !!Lv);
   if (!W || !Lv) return out;
   // (PAGE_ARGS rules=21,44: only those rules; every rule without it)
@@ -198,6 +199,17 @@
   if (want('25')) try {
     setT(50);
     const rows = [];
+    // (fix round 6, the lead after review 6: the lookout's crown of pipes along its lava-facing rim is a screen, not cover —
+    // the lead asked for a barrier a kid can't run-jump over that keeps the sightlines. Cover is measured without the pipes;
+    // the crown is measured for what it must be: ≥ 60 % open along its line at 0.5, 1.0 and 1.5 m over the deck, no open
+    // stretch a kid's body fits through at 0.5 and 1.0 m (≤ 0.62 m; a kid is 0.76 m across — over the 1.0 m stub, which
+    // fills the south edge's middle, is no way through for a 1.45 m body), every pipe ≤ 0.3 m across and ≥ 2.0 m tall (a
+    // kid reaches 1.8 m))
+    const pipeIds = new Set();
+    for (const Q of Lv.riders) (Q.r.parts || []).forEach((p, k) => { if (p.pipe && Q.blocks?.[k]) pipeIds.add(Q.blocks[k].id); });
+    const solidNP = (x, y, z) => { hp.set(x, y, z); for (const id of lvl.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, qb)) { const b = lvl.blocks[id]; if (b.solid && !pipeIds.has(b.id) && lvl.pointInBlock(b, hp, 0.001)) return b; } return null; };
+    const pipeAt = (x, y, z) => { hp.set(x, y, z); for (const id of lvl.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, qb)) { const b = lvl.blocks[id]; if (b.solid && pipeIds.has(b.id) && lvl.pointInBlock(b, hp, 0.001)) return b; } return null; };
+    const solidAny = (x, y, z) => { hp.set(x, y, z); for (const id of lvl.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, qb)) { const b = lvl.blocks[id]; if (b.solid && lvl.pointInBlock(b, hp, 0.001)) return b; } return null; };
     for (const r of W.riders.filter((q) => !q.sink && q.look?.role === 'lookout')) {
       const RR = Lv.riders.find((q) => q.r === r), top = RR.top;
       // the six edges of its hexagon (corners on its ±x), sampled 0.25 m inside: the cover over each sample (any solid
@@ -210,7 +222,7 @@
           const f = i / 8, ax = Math.cos(a0) * (1 - f) + Math.cos(a1) * f, az = -(Math.sin(a0) * (1 - f) + Math.sin(a1) * f);
           const px = r.x + ax * r.r - nx * 0.25, pz = r.z + az * r.r - nz * 0.25;
           let h = 0;
-          for (let y = 0.05; y <= 2.0; y += 0.05) for (const o of [0, 0.35]) if (solidAt(px + nx * o, top + y, pz + nz * o, true)) h = Math.max(h, y);
+          for (let y = 0.05; y <= 2.0; y += 0.05) for (const o of [0, 0.35]) if (solidNP(px + nx * o, top + y, pz + nz * o)) h = Math.max(h, y);
           if (h > 0.04) covered++;
           maxH = Math.max(maxH, h);
         }
@@ -221,10 +233,33 @@
       const dry = [0, 1].map((t) => { let d = Infinity; for (const nd of nav.nodes) { if (!nav.valid[nd.id] || M.kind[nd.id] !== 0 || (t === 0 ? nd.z > 0 : nd.z < 0)) continue; d = Math.min(d, Math.hypot(nd.x - r.x, nd.z - r.z)); } return r2(d); });
       let foot = null;
       for (const s of W.steps) { const e = s.a.pt ? s.a : s.b.pt ? s.b : null, o = e === s.a ? s.b : s.a; if (!e || o.rider == null || o.rider < 0) continue; const q = W.riders[o.rider]; if (q && !q.sink && Math.hypot(q.x - r.x, q.z - r.z) < 12) { foot = lvl.groundHeight(e.pt[0], e.pt[1], 5); break; } }
-      rows.push({ id: r.id, top: r2(top), coverShare: r2(coverShare), coverH, open, dry, foot, over: foot === null ? null : r2(top - foot), edges });
+      // the crown: its pipes (this rider's), the line through their centres sampled every 0.02 m at three heights
+      const pipes = r.parts.map((p, k) => (p.pipe ? partPose(r, p, top, {}) : null)).filter(Boolean);
+      let crown = null;
+      if (pipes.length) {
+        const ang = (q) => Math.atan2(q.cz - r.z, q.cx - r.x), ord = [...pipes].sort((a, b) => ((ang(a) - ang(pipes[0]) + 4 * Math.PI) % (2 * Math.PI)) - ((ang(b) - ang(pipes[0]) + 4 * Math.PI) % (2 * Math.PI)));
+        // (walk the pipes in order round the column from the crown's open end: the largest angular step is the open side)
+        let gapAt = 0, big = -1; for (let i = 0; i < ord.length; i++) { const a0 = ang(ord[i]), a1 = ang(ord[(i + 1) % ord.length]); const da = ((a1 - a0) + 4 * Math.PI) % (2 * Math.PI); if (da > big) { big = da; gapAt = i; } }
+        const seq = [...ord.slice(gapAt + 1), ...ord.slice(0, gapAt + 1)];
+        let len = 0, openLen = 0, maxRun = 0, run = 0, n = 0;   // (openness: along the pipes' line, the stub's stretch left out)
+        for (const hy of [0.5, 1.0, 1.5]) { run = 0;
+          for (let i = 0; i + 1 < seq.length; i++) { const a = seq[i], b = seq[i + 1], L = Math.hypot(b.cx - a.cx, b.cz - a.cz);
+            for (let t = 0; t < L; t += 0.02) { const x = a.cx + ((b.cx - a.cx) * t) / L, z = a.cz + ((b.cz - a.cz) * t) / L; n++;
+              const ix0 = r.x - x, iz0 = r.z - z, il0 = Math.hypot(ix0, iz0) || 1, stub = !pipeAt(x, top + 0.5, z) && (solidAny(x, top + 0.5, z) || solidAny(x + (ix0 / il0) * 0.3, top + 0.5, z + (iz0 / il0) * 0.3));
+              if (!stub) len += 0.02;
+              if (pipeAt(x, top + hy, z)) { run = 0; continue; }
+              // (the stub: cover, counted above; it stands 0.17 m in from the south edge, so the line through the pipes'
+              // centres runs just outside it — a body crossing the line there meets it 0.3 m in)
+              const ix = r.x - x, iz = r.z - z, il = Math.hypot(ix, iz) || 1;
+              if (solidAny(x, top + hy, z) || solidAny(x + (ix / il) * 0.3, top + hy, z + (iz / il) * 0.3)) { run = 0; continue; }
+              if (!stub) openLen += 0.02; run += 0.02; if (hy < 1.2) maxRun = Math.max(maxRun, run); } } }
+        crown = { pipes: pipes.length, open: r2(openLen / len), maxOpenRun: r2(maxRun), widest: r2(Math.max(...pipes.map((q) => 2 * Math.max(q.hx, q.hz)))), lowest: r2(Math.min(...pipes.map((q) => q.hy * 2))) };
+      }
+      rows.push({ id: r.id, top: r2(top), coverShare: r2(coverShare), coverH, open, dry, foot, over: foot === null ? null : r2(top - foot), crown, edges });
     }
-    R('rule 25: each lookout — cover ≤ 1.0 m tall along ≤ half its edge, ≥ 2 open sides, ≤ 22 m from both teams\' dry floor at HIGH, its HIGH top ≤ 4.6 m over its climb\'s foot',
-      rows.length === 2 && rows.every((x) => x.coverH <= 1.0 + 1e-6 && x.coverShare <= 0.5 && x.open >= 2 && x.dry.every((d) => d <= 22) && x.over !== null && x.over <= 4.6), rows);
+    R('rule 25: each lookout — cover ≤ 1.0 m tall along ≤ half its edge, ≥ 2 open sides, ≤ 22 m from both teams\' dry floor at HIGH, its HIGH top ≤ 4.6 m over its climb\'s foot; its crown of pipes (fix round 6) a screen, not cover: ≥ 60 % open, no gap a kid fits (≤ 0.62 m), pipes ≤ 0.3 m across and ≥ 2.0 m tall',
+      rows.length === 2 && rows.every((x) => x.coverH <= 1.0 + 1e-6 && x.coverShare <= 0.5 && x.open >= 2 && x.dry.every((d) => d <= 22) && x.over !== null && x.over <= 4.6
+        && (!x.crown || (x.crown.open >= 0.6 && x.crown.maxOpenRun <= 0.62 && x.crown.widest <= 0.3 + 1e-6 && x.crown.lowest >= 2.0 - 1e-6))), rows);
   } catch (e) { R('rule 25: the lookout: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
   // ---------------------------------------------------------------------------------------------- rule 38: surface value
@@ -519,9 +554,12 @@
     const climbs = (nv) => {
       const MM = nv.lavaMeta, kindOf = (id) => MM.kind[id];
       const ofR = (id, pose) => nv.nodes.filter((nd) => MM.rider[nd.id] === W.riders.findIndex((r) => r.id === id) && MM.pose[nd.id] === pose).map((nd) => nd.id);
+      // (fix round 6: the climb to ANY of the column's top nodes at that pose — with the lookout's crown a grid shift can leave
+      // one node in a pocket between two pipes, and the first node listed was the only one tried)
       const run = (from, to, pose, noFloor) => {
         nv.ext = { edge: (e, t) => ((MM.kind[t] === 2 && MM.pose[t] !== pose) || (noFloor && MM.kind[t] === 1) ? Infinity : 0), node: () => true };
-        const p = from >= 0 && to.length ? nv.path(from, to[0], 0) : null;
+        let p = null;
+        for (const t of to) { if (from < 0) break; p = nv.path(from, t, 0); if (p) break; }
         nv.ext = null;
         return p ? p.map(kindOf).join('') : null;
       };

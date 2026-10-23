@@ -24,6 +24,30 @@ export const LAVA_Y = LAVA_VIEW === 'high' ? 0.8 : -0.6;
 
 // the boulder on stone 3, in the stone's frame (x across the line, toward the island; z along it)
 export const RACE_BOULDER = { x: 0.85, z: 0, w: 1.0, d: 1.0, y0: 0, y1: 1.0, ink: false };
+// the lookout's crown (fix round 6, the lead's decision after review 6: "a lookout must not be a launch pad across the
+// lake"). From Organ L's HIGH top, 3.45 m over the Race and the causeway, a plain running jump flew 6 m: onto race 1
+// (saving up to 38.6 m against the climb down and round by the north head) and onto the causeway (up to 22.9 m). A
+// parapet low enough to see over is cleared by that jump (its peak is 1.35 m, and the column's own drop does the rest),
+// and one a kid can't clear hides the lake from the lookout. So the lava-facing rim carries a crown of basalt pipes —
+// the Organ Pipes' own motif, hexagonal, 2.0–2.2 m tall (over the 1.8 m a kid reaches), 0.26 m across, with clear gaps
+// of ≤ 0.6 m (a kid is 0.76 m across, a squid too): nobody passes or climbs it, and you see and shoot between them
+// (~63 % open). The crown runs from the middle of the north-west edge round the west corner, the south-west, south
+// (the stub fills its middle) and south-east edges and the east corner to the middle of the north-east edge (a crown
+// ending 0.86 m up that edge let a jump slip past its end onto the causeway: 19.4 m); the north flat (the climb from
+// B) and the north halves of the edges beside it stay open. Pipes are rider parts: un-inked (no squid climbs them),
+// roofs; 12 per lookout (lavaCore LAVA.maxParts 40 → 64: 60 parts, what Treehills runs)
+export const CROWN = (() => {
+  const R0 = 2.5, IN = 0.16, PW = 0.26, D = Math.PI / 180, Li = R0 - (IN * 2) / Math.sqrt(3);
+  const Ci = (a) => [Li * Math.cos(a * D), Li * Math.sin(a * D)];
+  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], lerp = (a, b, f) => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+  // (each pipe square to the rim it stands on: its collider turned along that edge — a corner pipe along the bisector)
+  const pts = [], add = (q, a, b) => { const yaw = Math.atan2(-(b[1] - a[1]), b[0] - a[0]); const o = pts.find((p) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 0.05); if (o) o[2] = (o[2] + yaw) / 2 + (Math.abs(o[2] - yaw) > Math.PI ? Math.PI : 0); else pts.push([q[0], q[1], yaw]); };
+  const half = (a, b) => { const m = mid(a, b); add(m, a, b); add(lerp(m, b, 0.5), a, b); };      // a half edge: its middle, one between
+  const full = (a, b, inner = 2) => { add(a, a, b); for (let k = 1; k <= inner; k++) add(lerp(a, b, k / (inner + 1)), a, b); add(b, a, b); };
+  half(Ci(120), Ci(180)); full(Ci(180), Ci(240)); full(Ci(240), Ci(300), 0); full(Ci(300), Ci(0)); half(Ci(60), Ci(0));
+  const H = [2.0, 2.2, 2.1];   // (organ-pipe heights in turn: all over a kid's 1.8 m reach, under rule 22's 2.2 m sky)
+  return pts.map((q, i) => ({ x: Math.round(q[0] * 1000) / 1000, z: Math.round(q[1] * 1000) / 1000, w: PW, d: PW, yaw: Math.round((q[2] * 180) / Math.PI * 10) / 10, y0: 0, y1: H[i % 3], ink: false, pipe: true }));
+})();
 export const LAVA = {
   low: -0.6,
   high: 0.8,                                     // the high mark: the stain line (rind) at 0.8 on every face in the region
@@ -57,7 +81,7 @@ export const LAVA = {
       look: { type: 'caldera_pumice', variant: 5 + i } })),
     // the Organ Pipes (Alpha's cluster, SSW): hexagonal basalt columns, corners on ±x, in a line along z
     { id: 'organL', kind: 'float', shape: 'hex', pos: [-10, -12.80], r: 2.5, top: [2.3, 4.65], depth: 4.2, ink: 'all',
-      inLake: true, parts: [{ x: 0, z: -1.4, w: 1.2, d: 1.2, y0: 0, y1: 1.0, ink: false }],   // the stub on its lake side: 1.0 m, cover (rule 25: ≤ 1.0)
+      inLake: true, parts: [{ x: 0, z: -1.4, w: 1.2, d: 1.2, y0: 0, y1: 1.0, ink: false }, ...CROWN],   // the stub on its lake side: 1.0 m, cover (rule 25: ≤ 1.0); the crown (fix round 6)
       look: { type: 'caldera_organ', role: 'lookout' } },
     { id: 'organB', kind: 'float', shape: 'hex', pos: [-10, -9.14], r: 1.5, top: [1.8, 3.5], depth: 3.7, ink: 'deck',
       look: { type: 'caldera_organ' } },
@@ -72,7 +96,10 @@ export const LAVA = {
   ],
   // (fix round 5) nav walk links between static floors the 1 m grid misses (engine: LavaWorld.navEdges): round the gauge
   // deck's NW corner (Bravo's: SE) from the coping in the pocket beside the deck stair to the island's coping by the pool
-  walks: [[[-11.5, 1.4, 7.5], [-12.5, 1.2, 6.5]]],
+  // (fix round 6) and on the Ladle Road at the scree ramp's foot (Bravo's twin has it): a nudged node in a pocket the grid
+  // joined only to the Rim Ridge above (jumps), so lava-audit rule 44 read a 3.2 m running jump from it onto the other
+  // works' Casting Floor at LOW as saving 15.9 m (its twin, on a node the grid joins: 4.3 m). A kid walks it (1.1 m, flat)
+  walks: [[[-11.5, 1.4, 7.5], [-12.5, 1.2, 6.5]], [[-26.5, 2.4, 8.95], [-25.5, 2.4, 9.5]]],
   gauges: [
     { kind: 'bar', pos: [0, 8.0, -2.5], yaw: Math.PI, h: 7.0, single: true, notIn: 'boss' },    // the Surge Gauge's south board (to Alpha)
     { kind: 'bar', pos: [0, 8.0, 2.5], yaw: 0, h: 7.0, single: true, notIn: 'boss' },           //   and its north board (to Bravo) (no gauge in Boss Battle)

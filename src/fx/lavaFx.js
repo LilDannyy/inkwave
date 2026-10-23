@@ -286,7 +286,12 @@ totalEmissiveRadiance += vec3(1.0, 0.13, 0.02) * gCr * uCrack * 1.5;`);
       const g = new THREE.Group(); g.name = 'lava:rider:' + r.id;
       const parts = [colourGeo(new THREE.CylinderGeometry(r.r, r.r, r.depth, 6, 1, false, Math.PI / 2).translate(0, -r.depth / 2, 0), LOOK.basalt),
         colourGeo(new THREE.CylinderGeometry(r.r - 0.04, r.r - 0.04, 0.06, 6, 1, false, Math.PI / 2).translate(0, -0.02, 0), LOOK.basaltTop)];
-      for (const q of r.parts) if (!q.body) parts.push(colourGeo(new THREE.BoxGeometry(q.hx * 2, q.y1 - q.y0, q.hz * 2).rotateY(q.yaw).translate(q.ox, (q.y0 + q.y1) / 2, q.oz), LOOK.basalt));
+      // (fix round 6: the lookout's crown — a part marked `pipe` is drawn as a hexagonal basalt pipe over its square collider,
+      // flats 0.26 m across like the box, a lighter cap on top)
+      for (const q of r.parts) if (!q.body && q.pipe) { const rr = q.hx / Math.cos(Math.PI / 6), h = q.y1 - q.y0;
+        parts.push(colourGeo(new THREE.CylinderGeometry(rr, rr, h, 6, 1, false, Math.PI / 6).rotateY(q.yaw).translate(q.ox, (q.y0 + q.y1) / 2, q.oz), LOOK.basalt),
+          colourGeo(new THREE.CylinderGeometry(rr * 0.92, rr * 0.92, 0.04, 6, 1, false, Math.PI / 6).rotateY(q.yaw).translate(q.ox, q.y1 + 0.01, q.oz), LOOK.basaltTop)); }
+      for (const q of r.parts) if (!q.body && !q.pipe) parts.push(colourGeo(new THREE.BoxGeometry(q.hx * 2, q.y1 - q.y0, q.hz * 2).rotateY(q.yaw).translate(q.ox, (q.y0 + q.y1) / 2, q.oz), LOOK.basalt));
       // (only the lookouts cast shadows: the short columns' shadows cost a draw call per cascade for little)
       const m = new THREE.Mesh(mergeGeos(parts), basalt); m.castShadow = r.look?.role === 'lookout'; m.receiveShadow = true; g.add(m);
       g.rotation.y = r.yaw;
