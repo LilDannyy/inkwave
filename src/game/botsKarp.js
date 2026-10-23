@@ -715,7 +715,7 @@ export function karpRefillSpot(b, P) {
       if (h < lo || h > hi || Math.abs(n.y - a.pos.y) > 1.2 || n.zone >= 0) continue;
       if (RB && Math.hypot(n.x - RB.x, n.z - RB.z) < 3) continue;   // [b5-beta1]
       const d = hd(n, a.pos);
-      if (RB && d < ad) { ad = d; alt = n; }
+      if (RB && d < ad && h >= lo + 0.3 && h <= hi - 0.3) { ad = d; alt = n; }   // (well inside the band: a squid slides on its puddle)
       if (d >= bd) continue;
       G.paint.regionStats(n.x, n.y, n.z, 1.0, b.inkTeam, st);
       if (st.n && st.own > 0.6) { bd = d; best = n; }
