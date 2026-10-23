@@ -70,6 +70,9 @@ export const LAVA = {
     ['race5', [-23.64, -0.19]],
     [P(21.75, RACE2_A), 'race6'], ['race6', 'race7'], ['race7', P(15.9, RACE2_A)],
   ],
+  // (fix round 5) nav walk links between static floors the 1 m grid misses (engine: LavaWorld.navEdges): round the gauge
+  // deck's NW corner (Bravo's: SE) from the coping in the pocket beside the deck stair to the island's coping by the pool
+  walks: [[[-11.5, 1.4, 7.5], [-12.5, 1.2, 6.5]]],
   gauges: [
     { kind: 'bar', pos: [0, 8.0, -2.5], yaw: Math.PI, h: 7.0, single: true, notIn: 'boss' },    // the Surge Gauge's south board (to Alpha)
     { kind: 'bar', pos: [0, 8.0, 2.5], yaw: 0, h: 7.0, single: true, notIn: 'boss' },           //   and its north board (to Bravo) (no gauge in Boss Battle)

@@ -371,6 +371,20 @@ export class LavaWorld {
   }
 
   // ------------------------------------------------------------------------- the nav graph: two poses merged (§4.3)
+  // (fix round 5) the layout's `walks`: nav walk links between two static floors that the 1 m grid misses, [[x, y, z],
+  // [x, y, z]] in Alpha's half, both ways (the twin turned 180° with `mirror`), served as stageMods' navEdges (level.extraEdges:
+  // each end resolves to the node within 0.8 m of it). Highmark: round the gauge deck's corner at each deck stair, where the
+  // deck stands 0.85 m from the lava's edge — a kid walks round it, but no grid cell's centre fell on the copings there, so
+  // every route from the East Pool's coping to the deck stair's foot went over the deck (24 m for a 5 m walk), and
+  // lava-audit rule 44 read a 3.5 m running jump across the pool's corner as saving 19.3 m
+  navEdges() {
+    const out = [], mir = !!this.def.mirror;
+    for (const [a, b] of this.def.walks || []) for (const tw of mir ? [0, 1] : [0]) {
+      const A = tw ? [-a[0], a[1], -a[2]] : a, B = tw ? [-b[0], b[1], -b[2]] : b, d = Math.hypot(B[0] - A[0], B[2] - A[2]);
+      out.push({ a: A, b: B, cost: d, type: 'walk', walkLink: true }, { a: B, b: A, cost: d, type: 'walk', walkLink: true });
+    }
+    return out;
+  }
   buildNav(level, physics) {
     const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
     const R = this.riders, H = this.high;
