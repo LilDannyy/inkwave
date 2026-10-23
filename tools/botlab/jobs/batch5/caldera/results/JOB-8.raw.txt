@@ -1,0 +1,101 @@
+JOB-8 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 07:57:09
+branch botlab-b5-caldera, ran at 25329fb1, exit code 0, wall time 13min
+(a written-up JOB-8.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== lava-bots x2, lava.js
+== lava.js x2, one Zone Control match
+== one Zone Control match, one Turf War match
+== SUMMARY
+### lavabots-1
+RESULT 7/7
+### lavabots-2
+RESULT 7/7
+### lavajs-1
+RESULT 59/59
+### lavajs-2
+RESULT 59/59
+### lavajs-3
+RESULT 59/59
+### zones-1
+RESULT 7/7
+### zones-2
+RESULT 7/7
+### turf-1
+RESULT 7/7
+
+## last 15 lines of job.log
+RESULT 7/7
+### lavabots-2
+RESULT 7/7
+### lavajs-1
+RESULT 59/59
+### lavajs-2
+RESULT 59/59
+### lavajs-3
+RESULT 59/59
+### zones-1
+RESULT 7/7
+### zones-2
+RESULT 7/7
+### turf-1
+RESULT 7/7
+
+## lavabots-1.txt
+### lavabots-1
+RESULT 7/7
+console errors: none
+PASS the gate: 0 escape deaths, ≤ 1 fight death per 360 bot-trials (360 here)  {"botTrials":360,"esc":0,"fight":0,"list":[]}
+
+## lavabots-2.txt
+### lavabots-2
+RESULT 7/7
+console errors: none
+PASS the gate: 0 escape deaths, ≤ 1 fight death per 360 bot-trials (360 here)  {"botTrials":360,"esc":0,"fight":0,"list":[]}
+
+## lavajs-1.txt
+### lavajs-1
+RESULT 59/59
+console errors: none
+PASS F10 the lookout claim: a claim for each team with a long- or mid-range kit; a claimant reaches its own lookout at HIGH and holds it (≥ 2 s); every claim let go at the fall warning  {"claims":[["P1",0,"bow",34.05],["Suki",1,"bow",34.05]],"claimed":[0,1],"upAt":[54.417,49.95],"seconds":[6.617,10.85],"long":[6.617,10.85],"held":16.417,"nClaims":2,"footOuts":0,"stalls":0,"busyOuts":0,"released"
+
+## lavajs-2.txt
+### lavajs-2
+RESULT 59/59
+console errors: none
+PASS F10 the lookout claim: a claim for each team with a long- or mid-range kit; a claimant reaches its own lookout at HIGH and holds it (≥ 2 s); every claim let go at the fall warning  {"claims":[["Coral",0,"charger",34.083],["Wasabi",1,"spinner",34.083]],"claimed":[0,1],"upAt":[57.483,51.85],"seconds":[3.283,9.55],"long":[3.283,9],"held":11.483,"nClaims":2,"footOuts":0,"stalls":0,"busyOuts":0,
+
+## lavajs-3.txt
+### lavajs-3
+RESULT 59/59
+console errors: none
+PASS F10 the lookout claim: a claim for each team with a long- or mid-range kit; a claimant reaches its own lookout at HIGH and holds it (≥ 2 s); every claim let go at the fall warning  {"claims":[["Drip",0,"charger",34.45],["Zest",1,"twins",34.45]],"claimed":[0,1],"upAt":[51.517,47.75],"seconds":[9.5,13],"long":[9.5,0],"held":21.283,"nClaims":2,"footOuts":0,"stalls":0,"busyOuts":0,"released":tr
+
+## matches.txt
+### zones-1
+PASS zones 300: lava splats per team (and where), sea splats  {"lavaByTeam":[0,0],"deaths":[],"water":0,"byCause":{"shot":34,"mitts":10,"blast":26,"blaster":7,"bow":8,"crab":5,"burst":2,"tracer":1},"perBotPer3min":0}
+PASS no bot drowned by a rise it was warned of (any lava death in an announced surge with nobody credited)  {"n":0,"list":[]}
+PASS no falls into the sea  []
+PASS stuck: % of bot time; no episode ≥ 10 s; none at the Pumice Races  {"stuckPct":0.23,"longest":[],"atStones":[],"atOrgans":[{"t":94.7,"name":"P1","pos":[10.1,2.3,11.4],"mode":"refill","dur":0.5,"stone":false,"organ":true,"crest":false,"lava":"low"},{"t":105.7,"name":"P1","pos":[11.1,2.3,11.7],"mode":"fight","dur":0.25,"stone":false,"organ":true,"crest":false,"lava":"low"},{"t":109.5,"name":"
+PASS the Slumps crossed (the shelf or a Race) and the Organ lookouts used (informational: the balance pass)  {"crossings":2,"lookout":{"organL":77,"organB":0.5,"organA":0.3},"burned":9309,"devices":0,"redirects":0,"stoneSteps":2}
+PASS an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)  {"lookTeam":[77,0],"lookLong":[77,0],"longKits":[[0,"bow"],[0,"spinner"],[1,"spinner"]],"applies":true,"claims":17,"held":75.6,"organL":77,"log":[{"t":25.1,"team":0,"who":"Kelp","kit":"spinner","up":44.7,"held":25.4,"end":"released","at":70.1},{"t":25.1,"team":1,"who":"Loop","kit":"spinner","up":n
+PASS the match  {"mode":"zones","simT":300,"wallS":186.3,"state":"finish","cov":[30.9,18.9],"winner":null,"phaseAtEnd":"low","yAtEnd":-0.6}
+RESULT 7/7
+### zones-2
+PASS zones 300: lava splats per team (and where), sea splats  {"lavaByTeam":[0,0],"deaths":[],"water":0,"byCause":{"shot":43,"blade":20,"blaster":3,"drop":4,"blast":4,"brolly":6,"tracer":1,"zooka":7,"crab":2,"bomb":1},"perBotPer3min":0}
+PASS no bot drowned by a rise it was warned of (any lava death in an announced surge with nobody credited)  {"n":0,"list":[]}
+PASS no falls into the sea  []
+PASS stuck: % of bot time; no episode ≥ 10 s; none at the Pumice Races  {"stuckPct":0.18,"longest":[],"atStones":[],"atOrgans":[{"t":25.5,"name":"Nori","pos":[9.4,1.8,7.8],"mode":"paint","dur":0.25,"stone":false,"organ":true,"crest":false,"lava":"low"},{"t":70.5,"name":"Marlo","pos":[-9.6,4.65,-10.5],"mode":"paint","dur":0.25,"stone":false,"organ":true,"crest":false,"lava":"high"},{"t":154.8,"na
+PASS the Slumps crossed (the shelf or a Race) and the Organ lookouts used (informational: the balance pass)  {"crossings":0,"lookout":{"organA":8.2,"organL":86.9,"organB":4.9},"burned":7400,"devices":0,"redirects":0,"stoneSteps":1}
+PASS an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)  {"lookTeam":[42,44.8],"lookLong":[0,44],"longKits":[[1,"spinner"]],"applies":true,"claims":10,"held":79.4,"organL":86.9,"log":[{"t":25.2,"team":0,"who":"Marlo","kit":"shooter","up":44.4,"held":25.7,"end":"released","at":70.1},{"t":25.2,"team":1,"who":"Nori","kit":"spinner","up":53.9,"held":16.2,"e
+PASS the match  {"mode":"zones","simT":300,"wallS":101.3,"state":"finish","cov":[21.2,27.5],"winner":null,"phaseAtEnd":"low","yAtEnd":-0.6}
+RESULT 7/7
+### turf-1
+PASS turf 180: lava splats per team (and where), sea splats  {"lavaByTeam":[0,0],"deaths":[],"water":0,"byCause":{"roller":1,"mitts":6,"shot":19,"zooka":1,"blade":4,"drop":5,"booyah":1,"jetpack":5,"slosh":2,"bow":1},"perBotPer3min":0}
+PASS no bot drowned by a rise it was warned of (any lava death in an announced surge with nobody credited)  {"n":0,"list":[]}
+PASS no falls into the sea  []
+PASS stuck: % of bot time; no episode ≥ 10 s; none at the Pumice Races  {"stuckPct":0.57,"longest":[{"t":113.5,"name":"Loop","pos":[-1.1,1.2,25.5],"mode":"paint","dur":3.25,"stone":false,"organ":false,"crest":false,"lava":"rise"}],"atStones":[{"t":62,"name":"P1","pos":[-22.1,1.25,-0.7],"mode":"paint","dur":1,"stone":true,"organ":false,"crest":false,"lava":"high"}],"atOrgans":[{"t":111.2,"name":"
+PASS the Slumps crossed (the shelf or a Race) and the Organ lookouts used (informational: the balance pass)  {"crossings":5,"lookout":{"organL":26.2,"organA":0.7,"organB":1.9},"burned":13010,"devices":0,"redirects":0,"stoneSteps":1}
+PASS an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)  {"lookTeam":[19.3,7],"lookLong":[18.7,6.3],"longKits":[[0,"spinner"],[1,"bow"]],"applies":true,"claims":4,"held":21.7,"organL":26.2,"log":[{"t":25.1,"team":0,"who":"Juno","kit":"spinner","up":45.2,"held":15.1,"end":"released","at":60.3},{"t":25.1,"team":1,"who":"Marlo","kit":"bow","up":56.3,"held"
+PASS the match  {"mode":"turf","simT":180,"wallS":71.3,"state":"finish","cov":[43.4,27.5],"winner":null,"phaseAtEnd":"low","yAtEnd":-0.6}
+RESULT 7/7
