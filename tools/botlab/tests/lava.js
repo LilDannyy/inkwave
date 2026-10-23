@@ -501,7 +501,10 @@
     crew.slice(0, 4).forEach((b, i) => { const r = b.team === mates[0].team ? sto[i] : stoB[i], ri = W.riders.indexOf(r), n = nav.nodes.find((q) => M.rider[q.id] === ri && M.pose[q.id] === 1); put(b, V(n.x, rid(r.id).top + 0.02, n.z)); b.bot.path = null; b.bot.repath = 0; b.bot.goalTimer = 0; b.invuln = 1e6; });
     // (the other three parked on the island, brains off and standing still: put() clears the intent; the bot update
     // that would have set it again is off)
-    for (const b of crew.slice(4)) { b.bot.update = () => {}; b.invuln = 1e6; put(b, V(-10, 1.22, -3.2 + crew.indexOf(b))); b.intent.fire = false; b.invuln = 1e6; }
+    // (fix round 5: on the gauge deck's top, x −8 — the spots were (−10, 1.22, 0.8 / 1.8 / 2.8), INSIDE the deck (x −12…−5.4,
+    // z −0.6…6.6, 1.2–2.4): the old body push-out lifted them onto it; b5-int3's collideBody never puts a body out through a
+    // top more than a step over its feet, so they were pushed down through the island into the lava, and F8 failed)
+    for (const b of crew.slice(4)) { b.bot.update = () => {}; b.invuln = 1e6; put(b, V(-8, 2.42, -3.2 + crew.indexOf(b))); b.intent.fire = false; b.invuln = 1e6; }
     deaths = [];
     // (a trail for every crew member: the three parked on the island are listed too if anything befalls them)
     const trail = crew.map(() => []);

@@ -9,16 +9,22 @@ const clean = (v) => {
   for (const a of [...(G.match?.actors || []), ...(G.net?.lobby?.players || [])]) if (a?.name) s = s.split(String(a.name)).join('[player]');
   return s.slice(0, 1200);
 };
+// [b5-caldera] the lava's match module (src/game/lava.js) has a state() method: log its phase ('low' | 'rise' | 'high' |
+// 'fall'), never the function — the desktop build sends each row over IPC, which cannot clone one, so every row threw
+// on Highmark Foundry (inside Game._frame for a stuck bot or a slow frame, and inside every console.warn / error)
+const lavaOf = (lv) => (lv == null ? null : typeof lv.state === 'function' ? (lv.st?.phase ?? null) : (lv.state ?? null));
 function details() {
   const m = G.match, stage = G.game?.mapDef?.id || G.level?.mapId || null;
   return { build: window.inkwaveNative?.buildCommit?.() || document.querySelector('meta[name="inkwave-build"]')?.content || 'unknown', mode: m?.mode || G.mode || 'unknown', stage,
-    era: m?.stage?.era ?? G.stageWorld?.era ?? null, lava: m?.lava?.state ?? G.lava?.state ?? null, online: !!G.netm };
+    era: m?.stage?.era ?? G.stageWorld?.era ?? null, lava: lavaOf(m?.lava) ?? lavaOf(G.lava), online: !!G.netm };
 }
 function append(kind, message, extra = {}) {
   const row = { at: new Date().toISOString(), kind, message: clean(message), ...details(), ...extra };
   entries[head] = row; head = (head + 1) % CAP; size = Math.min(CAP, size + 1);
   if (pending.length === CAP) pending.shift(); pending.push(row);
-  if (window.inkwaveNative?.issue) window.inkwaveNative.issue(row);
+  if (window.inkwaveNative?.issue) {   // [b5-caldera] a row IPC cannot clone is sent as its JSON; the log never throws into its caller
+    try { window.inkwaveNative.issue(row); } catch (e) { try { window.inkwaveNative.issue(JSON.parse(JSON.stringify(row))); } catch (e2) { /* dropped */ } }
+  }
   else if (location.protocol !== 'app:') schedulePost();
   return row;
 }
