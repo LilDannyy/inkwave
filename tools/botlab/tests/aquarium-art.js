@@ -14,6 +14,10 @@
 // Fix round 6 (section 10, review 6's list): the Feeding Step's sides and top, the Kelp Ramps' parapets, the whale-tail benches,
 // the trolley stacks and the ice-cream carts drawn under the ink; the lectern, the deep Kelp stops and the plant rooms dressed;
 // this round's props within 8.5 cm and off walkable tops; the Penguin Steps' nosing out to r 31.4.
+// Fix round 7 (section 11, review 7's list): the Ticket Hall booth's glazing proud of its block on both TICKETS faces; every
+// kiosk's back carries its trade's board and the frieze's speed lines, the ice-cream kiosks' sides their shutters, the ferry
+// kiosks' free sides a door; the luggage scale's stencil and riveted panel under the ink; this round's props within 8.5 cm,
+// under the cornices and the scale's top (pixel reads, both halves; they fail at de3bd111).
 //   MAP=aquarium MODE=turf PAGE=tools/botlab/tests/aquarium-art.js tools/botlab/run.sh tools/botlab/page.cjs
 (async () => {
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info });
@@ -548,6 +552,139 @@
       const nr = Math.max(...[[1, 1], [1, -1], [-1, 1], [-1, -1]].map(([i, k]) => { const x = nd.center[0] + Math.cos(a) * hu * i + Math.sin(a) * hv * k, z = nd.center[2] - Math.sin(a) * hu * i + Math.cos(a) * hv * k; return x * ax[0] + z * ax[1]; }));
       R('the Penguin Steps\' granite nosing covers the promenade\'s cells at their head (they ran out past it in a row of teak teeth)', nr >= 31.39 && reach > 30.5 && reach <= nr + 0.005, { nosingTo: +nr.toFixed(3), cellsTo: +reach.toFixed(3) });
     }
+    m.actors.forEach((a, i) => { a.bot = brains[i]; });
+    G.paint.clear?.();
+  }
+  // 11. fix round 7 (LEAD-REVIEW 7, the list LEAD-NOTES "After review 7" binds): the Ticket Hall booth's glazing stands proud
+  // of its block on both TICKETS faces; every kiosk's other faces are dressed (the trade's boards: the ice-cream flavours
+  // board and side shutters, the souvenir posters, the ferry route board and service door; the frieze's faience speed lines
+  // round every face); the luggage scale's faces carry their stencil and riveted panel under the ink; this round's props
+  // stand within 8.5 cm of their blocks, under the kiosks' cornices and the scale's top, never on a walkable top
+  {
+    const gl = G.renderer.getContext(), V = (a) => new G.camera.position.constructor(a[0], a[1], a[2]);
+    const DEG = Math.PI / 180;
+    const lum = (c) => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
+    const px = (p) => { const v = V(p).project(G.camera), w = gl.drawingBufferWidth, h = gl.drawingBufferHeight, a = new Uint8Array(4 * 9); gl.readPixels(Math.round((v.x + 1) / 2 * w) - 1, Math.round((v.y + 1) / 2 * h) - 1, 3, 3, gl.RGBA, gl.UNSIGNED_BYTE, a); const c = [0, 0, 0]; for (let i = 0; i < 9; i++) for (let k = 0; k < 3; k++) c[k] += a[i * 4 + k] / 9; return c.map(Math.round); };
+    const shot = (from, look, n = 24) => { G.paint.clear?.(); g.rig.cinematic(V(from), V(from), V(look), V(look), 99, () => {}); for (let i = 0; i < n; i++) g.debug.step(1000 / 60); };
+    const tw = (p, s) => [s * p[0], p[1], s * p[2]];
+    const med = (a) => { const b = [...a].sort((x, y) => x - y); return b[b.length >> 1]; };
+    const brains = m.actors.map((a) => a.bot); for (const a of m.actors) a.bot = null;
+    const fov0 = g.settings.fov; g.settings.fov = 70;   // (the slot profile's saved fov can be narrow: the reads need the frame)
+    g.debug.freeze?.();
+    const { dressingFor: DF } = await import('./src/world/dressing.js');
+    // (a) the ticket booth: both z faces read the teal glass at y 2.8 (they read the block's cream render), both halves
+    const booth = [];
+    for (const s of [1, -1]) {
+      shot(tw([9.1, 2.9, -37.6], s), tw([9.1, 2.6, -41.0], s));
+      const n = [8.45, 8.75].map((x) => px(tw([x, 2.8, -39.955], s)));   // (west of the canopy column standing in front of its east half)
+      const nb = px(tw([8.6, 2.1, -39.955], s));                           // (the booth's render base under it, on the same face)
+      shot(tw([10.5, 2.9, -44.5], s), tw([9.1, 2.6, -41.0], s));
+      const f = [8.65, 9.55].map((x) => px(tw([x, 2.8, -42.045], s))), fb = px(tw([9.1, 2.1, -42.045], s));
+      booth.push({ s, north: n, northBase: nb, south: f, southBase: fb });
+    }
+    R('the Ticket Hall booth\'s glazing stands proud of its block: both TICKETS faces read teal glass at 2.8 m (darker than the render base under it, blue), not the block\'s cream render, both halves',
+      booth.every((c) => c.north.every((k) => lum(k) < 0.6 * lum(c.northBase) && k[2] > k[0] + 20) && c.south.every((k) => lum(k) < 0.6 * lum(c.southBase) && k[2] > k[0] + 20)), booth);
+    // the kiosks (their placements, both halves; the round's own faces dress the same frames): a point on face s (0 the front, 1 local +x, 2 the back, 3 −x),
+    // fx along it, fy over the kiosk's foot, fz out of the block's face; a camera 2.4 m out at eye level, square to it (the
+    // backs: 2.6 m out and 0.7 m to one side, past the telescope post behind the promenade's souvenir kiosk)
+    const KF = DF('aquarium').filter((p) => p.type === 'aquarium_kiosk' && p.kind !== 'timetable');
+    const kw = (p, s, fx, fy, fz) => {
+      const F = s % 2 ? p.w / 2 : p.d / 2, ph = (s * Math.PI) / 2, t = p.rotY || 0;
+      const lx = fx * Math.cos(ph) + (fz + F) * Math.sin(ph), lz = -fx * Math.sin(ph) + (fz + F) * Math.cos(ph);
+      return [p.pos[0] + lx * Math.cos(t) + lz * Math.sin(t), p.pos[1] + fy, p.pos[2] - lx * Math.sin(t) + lz * Math.cos(t)];
+    };
+    const kshot = (p, s) => shot(kw(p, s, s === 2 ? -0.7 : 0, 1.7, s === 2 ? 2.6 : 2.4), kw(p, s, 0, 1.45, 0));
+    const ks = [];
+    for (const p of KF) {
+      const top = p.h - 0.345, row = { kind: p.kind, at: p.pos.map((v) => +v.toFixed(1)) };
+      // the back: the trade's board (dark: sea-green, sea-blue or navy) against the render pilaster at its corner; the
+      // frieze's middle faience speed line
+      kshot(p, 2);
+      const pil = px(kw(p, 2, -(p.w / 2 - 0.04), 1.2, 0.051));
+      const field = p.kind === 'icecream' ? [[-0.15, 1.13], [0.2, 1.13], [0.5, 1.13], [0.75, 1.13], [0.05, 1.42], [0.35, 1.42], [0.65, 1.42], [-0.85, 1.9], [0.85, 1.25]]
+        : p.kind === 'souvenir' ? [[0.45, 1.12], [0.6, 1.12], [-0.45, 1.12], [-0.6, 1.12], [0.5, 1.45], [0.6, 1.5], [-0.6, 1.7], [0.6, 1.7]]
+          : [[0.7, 1.2], [-0.7, 1.2], [0.7, 1.5], [-0.7, 1.5], [0.25, 1.5], [-0.25, 1.5], [0, 1.27]];
+      const fv = field.map(([x, y]) => px(kw(p, 2, x, y, 0.06)));
+      row.board = { med: Math.round(med(fv.map(lum))), pil: Math.round(lum(pil)), gb: Math.round(med(fv.map((c) => Math.max(c[1], c[2]) - c[0]))) };
+      row.line = px(kw(p, 2, 0.3, top - 0.1175, 0.06)); row.gap = px(kw(p, 2, 0.3, top - 0.152, 0.04));
+      // the sides: the ice-cream kiosk's striped shutters (cream and faience stripes along a row), the ferry kiosk's navy
+      // service door on its free side (local −x)
+      if (p.kind === 'icecream') for (const s of [1, 3]) {
+        kshot(p, s);
+        const r = Array.from({ length: 29 }, (_, i) => px(kw(p, s, -0.7 + i * 0.05, 1.35, 0.045)));
+        // (the stripes alternate in hue: g − r swings across the row, in sun or in shade)
+        const gr = r.map((c) => c[1] - c[0]), hi = Math.max(...gr), lo = Math.min(...gr), mid = (hi + lo) / 2;
+        row['shutter' + s] = { span: hi - lo, faience: gr.filter((v) => v > mid + 3).length, cream: gr.filter((v) => v < mid - 3).length };
+      }
+      if (p.kind === 'ferry') {
+        kshot(p, 3);
+        const dv = [[0.2, 0.6], [-0.2, 0.6], [0.2, 0.85], [-0.2, 0.85], [-0.2, 1.6], [0, 0.5]].map(([x, y]) => px(kw(p, 3, x, y, 0.065)));
+        const dp = px(kw(p, 3, -(p.d / 2 - 0.04), 1.2, 0.051));
+        row.door = { med: Math.round(med(dv.map(lum))), pil: Math.round(lum(dp)), bluish: dv.filter((c) => c[2] >= c[0]).length };
+      }
+      ks.push(row);
+    }
+    R('every kiosk\'s back carries its trade\'s board (ice cream: the sea-green flavours board; souvenirs: the sea-blue GIFTS poster; ferry: the navy route board), darker than the render pilaster at its corner, both halves',
+      ks.length === 8 && ks.every((c) => c.board.med < 0.62 * c.board.pil && c.board.gb > 0), ks.map((c) => ({ kind: c.kind, at: c.at, board: c.board })));
+    R('the kiosks\' frieze carries the faience speed lines round the back (they read the block\'s cream under the cornice), both halves',
+      ks.every((c) => c.line[1] - c.line[0] > c.gap[1] - c.gap[0] + 6), ks.map((c) => ({ kind: c.kind, at: c.at, line: c.line, gap: c.gap })));
+    R('the ice-cream kiosks\' sides are striped service shutters (cream and faience stripes), the ferry kiosks\' free sides a navy service door, both halves',
+      ks.filter((c) => c.kind === 'icecream').length === 2 && ks.filter((c) => c.kind === 'ferry').length === 2
+        && ks.every((c) => c.kind !== 'icecream' || [1, 3].every((s) => c['shutter' + s].span >= 12 && c['shutter' + s].faience >= 6 && c['shutter' + s].cream >= 6))
+        && ks.every((c) => c.kind !== 'ferry' || (c.door.med < 0.62 * c.door.pil && c.door.bluish >= 5)),
+      ks.filter((c) => c.kind !== 'souvenir').map((c) => ({ kind: c.kind, at: c.at, shutter1: c.shutter1, shutter3: c.shutter3, door: c.door })));
+    // (b) the luggage scale (x 2.6 … 3.8, z −40.85 … −39.85, 1.2 → 2.4): its long faces stencilled (dark letters along the
+    // LUGGAGE line), its back a raised frame round a recessed panel; ink splatted on it shows over it, both halves
+    const sc = [];
+    for (const s of [1, -1]) {
+      const r = { s };
+      // (the north face from the north-east: a canopy column stands square in front of it; the letters' east half)
+      for (const [k, z, from] of [['north', -39.85, [5.18, 2.9, -38.37]], ['south', -40.85, [3.2, 2.9, -43.15]]]) {
+        shot(tw(from, s), tw([3.2, 1.95, z], s));
+        const L = Array.from({ length: 26 }, (_, i) => lum(px(tw([3.1 + i * 0.0185, 2.063, z + Math.sign(z + 40.35) * 0.003], s))));
+        r[k] = { min: Math.round(Math.min(...L)), max: Math.round(Math.max(...L)) };
+      }
+      shot(tw([0.4, 2.9, -40.35], s), tw([2.6, 1.9, -40.35], s));
+      r.back = { frame: Math.round(lum(px(tw([2.597, 2.0, -39.925], s)))), panel: Math.round(lum(px(tw([2.597, 2.0, -40.2], s)))) };   // (the frame 7.5 cm in from the edge: off its bevel and its rivets)
+      sc.push(r);
+    }
+    R('the luggage scale\'s long faces carry LUGGAGE · WEIGH HERE · MAX 25 KG stencilled (dark letters on the brass) and its back a raised frame round a recessed panel, both halves',
+      sc.every((c) => ['north', 'south'].every((k) => c[k].max - c[k].min > 15 && c[k].min < 0.5 * c[k].max) && c.back.frame > 1.1 * c.back.panel), sc);
+    shot([5.18, 2.9, -38.37], [3.2, 1.95, -39.85]);
+    const sb = px([3.4, 1.7, -39.85]); G.paint.splat(V([3.4, 1.7, -39.83]), 0.4, 0, { instant: true }); for (let i = 0; i < 6; i++) g.debug.step(1000 / 60);
+    const si = px([3.4, 1.7, -39.85]), moved = Math.abs(si[0] - sb[0]) + Math.abs(si[1] - sb[1]) + Math.abs(si[2] - sb[2]);
+    R('ink splatted on the luggage scale\'s face shows over its panel (the art is under the ink)', moved > 90, { bare: sb, inked: si, moved });
+    // (c) this round's props: the kiosks' faces within 8.5 cm of their blocks and under the cornice (its underside h − 0.345
+    // over the foot), the scale's trim within 8.5 cm and under its top; none on a walkable top (a headless build, both halves)
+    {
+      const { PropKit: PK } = await import('./src/world/props.js');
+      const { LAYOUT: LY } = await import('./src/world/stages/aquarium/layout.js');
+      const kit7 = new PK(null, { headless: true });
+      let nIt = 0; for (const it of DF('aquarium')) if (it.type === 'aquarium_kioskfaces' || it.type === 'aquarium_scaletrim') { kit7.add(it.type, it); nIt++; }
+      const mir = (d) => (d.kind === 'box' ? { ...d, min: [-d.max[0], d.min[1], -d.max[2]], max: [-d.min[0], d.max[1], -d.min[2]] } : { ...d, center: [-d.center[0], d.center[1], -d.center[2]] });
+      const blocks = LY.half.filter((d) => ['kiosk', 'ferry-kiosk', 'souvenir-kiosk', 'luggage-scale'].includes(d.tag)).flatMap((d) => [d, mir(d)]);
+      const cap = (d) => (d.tag === 'luggage-scale' ? d.max[1] : d.center[1] + d.size[1] / 2 - 0.345);
+      const fp = (d, x, z) => {
+        if (d.kind === 'box') { const dx = Math.max(d.min[0] - x, 0, x - d.max[0]), dz = Math.max(d.min[2] - z, 0, z - d.max[2]); return Math.hypot(dx, dz); }
+        const a = d.rotY * DEG, c = Math.cos(a), s = Math.sin(a), dx = x - d.center[0], dz = z - d.center[2], u = dx * c - dz * s, v = dx * s + dz * c;
+        return Math.hypot(Math.max(Math.abs(u) - d.size[0] / 2, 0), Math.max(Math.abs(v) - d.size[2] / 2, 0));
+      };
+      const st = { n: 0, far: 0, atFar: null, over: 0, atOver: null };
+      const v3 = new G.camera.position.constructor();
+      for (const parts of kit7._buckets.values()) for (const p of parts) {
+        const P = p.g.attributes.position;
+        for (let i = 0; i < P.count; i++) {
+          v3.fromBufferAttribute(P, i).applyMatrix4(p.m); st.n++;
+          let best = 9, near = null;
+          for (const d of blocks) { const o = fp(d, v3.x, v3.z); if (o < best) { best = o; near = d; } }
+          if (best > st.far) { st.far = best; st.atFar = [+v3.x.toFixed(2), +v3.y.toFixed(2), +v3.z.toFixed(2)]; }
+          if (near && v3.y > cap(near) + 0.002) { st.over++; st.atOver = [near.tag, +v3.x.toFixed(2), +v3.y.toFixed(2), +v3.z.toFixed(2)]; }
+        }
+      }
+      R('this round\'s props (the kiosks\' skirting, pilasters, frieze, speed lines and boards; the scale\'s kick plates and maker\'s plate) stand within 8.5 cm of their blocks, under the kiosks\' cornices and the scale\'s top, both halves',
+        nIt === 10 && st.n > 3000 && st.far <= 0.085 && st.over === 0, { placements: nIt, verts: st.n, farthest: +st.far.toFixed(3), at: st.atFar, overTop: st.over, atOver: st.atOver });
+    }
+    g.settings.fov = fov0;
     m.actors.forEach((a, i) => { a.bot = brains[i]; });
     G.paint.clear?.();
   }
