@@ -1,0 +1,9 @@
+JOB-16 (beta1) @ 28c4c5b9 — Mac mini b5-runner, 2026-10-24 08:38–09:49, exit 0. Short summary; details in JOB-16.raw.txt.
+- the stuck set (19 matches: Bazookarp aquarium / bluestone / halyard / lockgate ×2, Zone Control aquarium / bluestone ×2, Tower Command
+  bluestone ×2, Turf War bluestone ×5): every match ≤ 0.9 % stuck and NO episode over 5 s.
+- all-bobber Bluestone Turf War ×3: THIS BRANCH 0.2 / 0.3 / 0.2 % stuck, 0 episodes over 5 s; the shipped b0cc406c 8.1 / 4.6 / 7.7 %,
+  10 / 4 / 9 episodes over 5 s.
+- the lava-bots gate ×4, this branch vs 194eeb75: 7/7 in all eight runs.
+- online and audio, each alone: net-practice 29/29, net-karp 22/22 with 2 and 3 clients, net-stagemods, net-eras 14/14, net-lava, net-pipes,
+  net-lobbykit, net-zones, net-tower, net-surf, net-drainbow, net-sub-bobber, net-mock, lava-karp, eras-jump frames 4/4, sfx-cues 59/59 —
+  every one full.
