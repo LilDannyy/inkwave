@@ -1,0 +1,162 @@
+JOB-6 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 07:21:09
+branch botlab-b5-caldera, ran at 3ef569c4, exit code 0, wall time 22min
+(a written-up JOB-6.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== lava.js x3 (parallel)
+== boss-check x5 (3 + 2)
+== net-lava alone
+== lava-bots, two Zone Control matches
+== lava-bots again, one Turf War match
+== SUMMARY
+### boss-1
+RESULT 6/6
+### boss-2
+RESULT 6/6
+### boss-3
+RESULT 6/6
+### boss-4
+RESULT 6/6
+### boss-5
+RESULT 6/6
+### lavabots-1
+RESULT 7/7
+### lavabots-2
+RESULT 7/7
+### lavajs-1
+RESULT 59/59
+### lavajs-2
+RESULT 59/59
+### lavajs-3
+RESULT 59/59
+### zones-1
+RESULT 7/7
+### zones-2
+RESULT 7/7
+### turf-1
+RESULT 7/7
+### net-lava
+RESULT 13/13
+
+## last 15 lines of job.log
+RESULT 7/7
+### lavajs-1
+RESULT 59/59
+### lavajs-2
+RESULT 59/59
+### lavajs-3
+RESULT 59/59
+### zones-1
+RESULT 7/7
+### zones-2
+RESULT 7/7
+### turf-1
+RESULT 7/7
+### net-lava
+RESULT 13/13
+
+## boss.txt
+### boss-1
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":115,"cells4m":13,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[55,65],"longestSpell_s":27,"at":[-3.3,10.4],"camps":3,"backOuts":0}
+RESULT 6/6
+### boss-2
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":104,"cells4m":16,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[51,69],"longestSpell_s":26,"at":[-2.4,14],"camps":2,"backOuts":0}
+RESULT 6/6
+### boss-3
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":133,"cells4m":16,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":6}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[110,10],"longestSpell_s":29,"at":[0.3,-25.2],"camps":1,"backOuts":1}
+RESULT 6/6
+### boss-4
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":87,"cells4m":15,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":2}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[86,34],"longestSpell_s":32,"at":[-4,4.1],"camps":2,"backOuts":0}
+RESULT 6/6
+### boss-5
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":106,"cells4m":15,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":2}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[49,71],"longestSpell_s":29,"at":[2.9,9.7],"camps":1,"backOuts":0}
+RESULT 6/6
+
+## lavabots-1.txt
+### lavabots-1
+RESULT 7/7
+console errors: none
+PASS edges (dry 1.2 m edges over the Casting Floor, the Spillway, the heads: a rise, then a fall): 20 trials × 6 bots — no crew bot dies in the lava during an escape (every death counted; fight deaths: the gate below)  {"lavaDeaths":1,"escapeDeaths":0,"fightDeaths":1,"botTrials":120,"alive":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6],"other":[],"escapes":3457,"deaths":[{"trial":19,"who":"Bubbles"
+
+## lavabots-2.txt
+### lavabots-2
+RESULT 7/7
+console errors: none
+
+## lavajs-1.txt
+### lavajs-1
+RESULT 59/59
+console errors: none
+PASS F10 the lookout claim: a claim for each team with a long- or mid-range kit; a claimant reaches its own lookout at HIGH and holds it (≥ 2 s); every claim let go at the fall warning  {"claims":[["Fizz",0,"blaster",34.05],["Blotch",1,"charger",34.05]],"claimed":[0,1],"upAt":[49.85,52.65],"seconds":[11.183,8.367],"long":[11.183,8.367],"held":18.25,"nClaims":3,"footOuts":0,"stalls":0,"busyOuts":
+
+## lavajs-2.txt
+### lavajs-2
+RESULT 59/59
+console errors: none
+PASS F10 the lookout claim: a claim for each team with a long- or mid-range kit; a claimant reaches its own lookout at HIGH and holds it (≥ 2 s); every claim let go at the fall warning  {"claims":[["Blotch",0,"charger",34.15],["Sprinkle",1,"charger",34.15]],"claimed":[0,1],"upAt":[55.983,52.817],"seconds":[4.8,8.2],"long":[4.8,8.2],"held":12.133,"nClaims":2,"footOuts":0,"stalls":0,"busyOuts":0,"
+
+## lavajs-3.txt
+### lavajs-3
+RESULT 59/59
+console errors: none
+PASS F10 the lookout claim: a claim for each team with a long- or mid-range kit; a claimant reaches its own lookout at HIGH and holds it (≥ 2 s); every claim let go at the fall warning  {"claims":[["Coral",0,"twins",34.083],["Loop",1,"bow",34.083]],"claimed":[0,1],"upAt":[48.417,null],"seconds":[10.25,0],"long":[0,0],"held":9.9,"nClaims":2,"footOuts":0,"stalls":1,"busyOuts":0,"released":true,"t"
+
+## matches.txt
+### zones-1
+PASS zones 300: lava splats per team (and where), sea splats  {"lavaByTeam":[0,0],"deaths":[],"water":0,"byCause":{"drop":5,"blade":5,"shot":42,"blast":3,"bow":7,"seeker":3,"zipcaster":1,"burst":1,"jetpack":4,"brush":1},"perBotPer3min":0}
+PASS no bot drowned by a rise it was warned of (any lava death in an announced surge with nobody credited)  {"n":0,"list":[]}
+PASS no falls into the sea  []
+PASS stuck: % of bot time; no episode ≥ 10 s; none at the Pumice Races  {"stuckPct":0.2,"longest":[{"t":150,"name":"Loop","pos":[10.8,7.26,11.2],"mode":"fight","dur":3,"stone":false,"organ":true,"crest":false,"lava":"high"}],"atStones":[],"atOrgans":[{"t":150,"name":"Loop","pos":[10.8,7.26,11.2],"mode":"fight","dur":3,"stone":false,"organ":true,"crest":false,"lava":"high"},{"t":218.3,"name":"Loo
+PASS the Slumps crossed (the shelf or a Race) and the Organ lookouts used (informational: the balance pass)  {"crossings":5,"lookout":{"organA":2.7,"organB":4.6,"organL":94.4},"burned":11099,"devices":0,"redirects":0,"stoneSteps":1}
+PASS an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)  {"lookTeam":[59.8,34.5],"lookLong":[59.8,0],"longKits":[[0,"bow"]],"applies":true,"claims":10,"held":90,"organL":94.4,"log":[{"t":25.2,"team":0,"who":"P1","kit":"bow","up":47.5,"held":7.7,"end":"busy","at":58.2},{"t":25.2,"team":1,"who":"Loop","kit":"blaster","up":null,"held":0,"end":"splatted","a
+PASS the match  {"mode":"zones","simT":300,"wallS":218.8,"state":"finish","cov":[25.6,19.6],"winner":null,"phaseAtEnd":"low","yAtEnd":-0.6}
+RESULT 7/7
+### zones-2
+PASS zones 300: lava splats per team (and where), sea splats  {"lavaByTeam":[0,0],"deaths":[],"water":0,"byCause":{"blade":4,"charger":15,"slosh":9,"blaster":3,"brolly":6,"blast":17,"shot":23,"waddle":1,"kraken":1,"drop":5,"roller":3,"boomerang":1},"perBotPer3min":0}
+PASS no bot drowned by a rise it was warned of (any lava death in an announced surge with nobody credited)  {"n":0,"list":[]}
+PASS no falls into the sea  []
+PASS stuck: % of bot time; no episode ≥ 10 s; none at the Pumice Races  {"stuckPct":0.25,"longest":[],"atStones":[],"atOrgans":[{"t":52.5,"name":"Sprinkle","pos":[12.3,1.4,11.1],"mode":"paint","dur":0.25,"stone":false,"organ":true,"crest":false,"lava":"high"},{"t":75.5,"name":"Drip","pos":[-7.7,1.3,-11.6],"mode":"paint","dur":0.25,"stone":false,"organ":true,"crest":false,"lava":"high"},{"t":160.
+PASS the Slumps crossed (the shelf or a Race) and the Organ lookouts used (informational: the balance pass)  {"crossings":0,"lookout":{"organL":103.9,"organA":3,"organB":4.7},"burned":5988,"devices":0,"redirects":0,"stoneSteps":0}
+PASS an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)  {"lookTeam":[69.7,34.2],"lookLong":[52,0],"longKits":[[0,"charger"]],"applies":true,"claims":12,"held":112.1,"organL":103.9,"log":[{"t":25.1,"team":0,"who":"Drip","kit":"charger","up":45.2,"held":24.8,"end":"released","at":70.1},{"t":25.1,"team":1,"who":"Nori","kit":"blaster","up":null,"held":0,"e
+PASS the match  {"mode":"zones","simT":300,"wallS":206.9,"state":"finish","cov":[21.5,25.9],"winner":null,"phaseAtEnd":"low","yAtEnd":-0.6}
+RESULT 7/7
+### turf-1
+PASS turf 180: lava splats per team (and where), sea splats  {"lavaByTeam":[0,0],"deaths":[],"water":0,"byCause":{"shot":14,"mitts":5,"zooka":8,"seeker":1,"boomerang":3,"brolly":5,"slosh":5},"perBotPer3min":0}
+PASS no bot drowned by a rise it was warned of (any lava death in an announced surge with nobody credited)  {"n":0,"list":[]}
+PASS no falls into the sea  []
+PASS stuck: % of bot time; no episode ≥ 10 s; none at the Pumice Races  {"stuckPct":0.1,"longest":[],"atStones":[],"atOrgans":[{"t":130.7,"name":"Sprinkle","pos":[-9.4,4.65,-11.2],"mode":"paint","dur":0.25,"stone":false,"organ":true,"crest":false,"lava":"high"}],"atCrestStair":[]}
+PASS the Slumps crossed (the shelf or a Race) and the Organ lookouts used (informational: the balance pass)  {"crossings":6,"lookout":{"organL":28.1,"organB":1.4,"organA":1.3},"burned":6049,"devices":0,"redirects":0,"stoneSteps":0}
+PASS an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim) — NOT APPLICABLE: no long-range kit in this match, passed for want of one  {"lookTeam":[11,17.1],"lookLong":[0,0],"longKits":[],"applies":false,"claims":7,"held":26.1,"organL":28.1,"log":[{"t":25.1,"team":1,"who":"Squiddo","kit":"twins","up":45.1,"held":15.1,"end":"released","at":60.2},{"t":28.2,
+PASS the match  {"mode":"turf","simT":180,"wallS":70.9,"state":"finish","cov":[34.8,33],"winner":null,"phaseAtEnd":"low","yAtEnd":-0.6}
+RESULT 7/7
+
+## netlava.txt
+### net-lava
+(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.
+PASS a room on Highmark Foundry (Turf War 1:30, 4 bots)  {"map":"caldera","duration":90,"mode":"turf"}
+PASS both screens run the lava on the same schedule (turf:90)  {"a":{"t":0.241,"y":-0.6,"phase":"low","stones":"00000000000000","host":true,"key":"turf:90"},"b":{"t":0.241,"y":-0.6,"phase":"low","stones":"00000000000000","host":false,"key":"turf:90"}}
+PASS the guest plants a Lurk Mine and a Hop Beacon on the shelf before the rise; the host sees them (ghosts)  {"dev":{"t":0.87,"mine":[300001],"beacon":[300002]},"ghosts0":[300001,300002]}
+PASS the level agrees on both screens every 0.5 s through a rise and a fall (± 0.1 m)  {"n":140,"worst":{"d":0.0038000000000000256,"at":[32.532,-0.3762,32.508,-0.38]}}
+PASS the guest left standing on the shelf splats by lava (its own screen judges it); the host's feed shows cause lava, at the rise's deadly moment (30 + 3.8 s ± 0.6)  {"lavaB":[3,"lava",33.89],"deaths":[[3,"lava",33.89],[2,"bow",37.02],[5,"seeker",44.72],[1,"bow",49.01],[2,"bow",51.19],[1,"bow",63.19]]}
+PASS …its devices the lava covered are gone on both screens (the owner's sweep and its end records)  {"devAfter":{"host":[],"guest":[]}}
+PASS at the results screen the lava cells agree between the two screens at least as well as the same run's other cells do (splats across the waterline through a rise and a fall: the painter's stage time, field 15)  {"lava":{"n":76102,"differ":28,"ratio":0.99963,"inked":[3130,3134]},"other":{"n":368739,"differ":412,"ratio":0.99888,"inked":[47136,47194]},"painted":165,"diffWhere":{"n":28,"minY":-0.3
+PASS time-up at LOW (the final ebb); the same result on both screens  {"res":[1,1],"fin":{"y":-0.6,"phase":"low"}}
+PASS Practice runs its own loop (practice: rise at 20) between the stage's own levels  {"t":0.217,"y":-0.6,"phase":"low","stones":"00000000000000","host":true,"key":"practice"}
+PASS a late joiner at HIGH: its level and its stones agree with the host's (± 0.1 m) once its clock settles  {"host":{"t":42.19,"y":0.8,"phase":"high","stones":"11111111111111","host":true,"key":"practice"},"joiner":{"t":42.139,"y":0.8,"phase":"high","stones":"11111111111111","host":false,"key":"practice"},"skew":[0]}
+PASS …and its paint (the imported grid) equals the host's, lava cells and all; the live guest's lava cells equal the host's too (the host painted the Slump cliff across the waterline at LOW — burned by the rise — and at HIGH), and its other cells agree to a ratio ≥ 0.999  {"lavaCells":{"joiner":{"n":76102,"differ":0,"inked":[0,0]},"guest":{"n":76102,"differ":0,"inked":[0,0]}},"grid":{"join
+PASS a timed match: the host leaves mid-rise (35 s) — the new host's fall starts at 55 ± 0.4 s on its screen, and the stones turn deadly (the ledges dry) at 61.2 ± 0.4 s on both remaining screens  {"before":{"t":35.266,"y":0.1559,"phase":"rise","stones":"11111111111111","host":false,"key":"turf:90"},"fall":{"B":55.02,"C":55.01},"stonesDeadly":{"B":61.22,"C":61.23},"after":{"B":{"t":63.24,"y":-
+PASS …and both remaining screens show the same result at time-up  {"res3":[1,1]}
+RESULT 13/13
+c0 console: none
+c1 console: none
+c2 console: none
