@@ -3283,10 +3283,11 @@ export class BotBrain {
     // for (a route planned at the top of a hop from Gulper Aquarium's Feeding Step began on the deck above it — a walk edge
     // on from there, no hop asked for — and the bot pressed into the step's 1.2 m face, 11.75 s in one match)
     else if (s >= 0 && !this.a.grounded && !this.a.climbing && !this.a.superJumpState) {
-      // (not over the sea, nor a floor a stage's hazard takes within 10 s — the lava: a hop up out of a rising lake, a lava
-      // escape's hop, start from where they are going, as before)
+      // (not over the sea, nor a floor a stage's hazard takes within 10 s, nor anywhere on a stage with lava: its escapes'
+      // and fights' hops up off the floors it takes were tuned to the old start — with the 10 s test alone lava-bots.js
+      // still met an escape death in 1 of 7 runs, against none in 11 before; there they start as before)
       const a = this.a, fy = G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.1), SM = G.match?.stage;
-      if (fy > -Infinity && nav.nodes[s].y - fy > 0.5 && !(SM && SM.wet(a.pos.x, a.pos.z, fy, 10))) { const s2 = nav.nearest(_vStart.set(a.pos.x, fy, a.pos.z), 0.45, true); if (s2 >= 0) s = s2; }
+      if (fy > -Infinity && nav.nodes[s].y - fy > 0.5 && !G.match?.lava && !(SM && SM.wet(a.pos.x, a.pos.z, fy, 10))) { const s2 = nav.nearest(_vStart.set(a.pos.x, fy, a.pos.z), 0.45, true); if (s2 >= 0) s = s2; }
     }
     const g = this.sp.goalOk(nav.nearest(pos, maxUp));   // (enemy specials: a goal inside an area we know hurts → just outside it)
     this.repath = 0.8 + Math.random() * 0.4;
