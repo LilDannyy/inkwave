@@ -938,6 +938,14 @@ The layout also carries the Ladle Gantry (`onlyIn: 'bazookarp'`, §2.3), so the 
   And, in the shared brain, a walk blocked straight at its waypoint (a charge left it off-centre on a 10 m causeway, where
   only a pose along the causeway fits) takes the heading a pose fits that best closes on the waypoint until the straight
   step fits again (it stood 80 s turning to and fro).
+- **Fix round 5 (after review 5: one run in six still spent 88 s at Alpha's west Lakefront).** `boss.noGo: [[−20.5, −25.5,
+  3.5], [20.5, 25.5, 3.5]]`: the tips of the west Lakefront wedges are never a goal or a path's anchor (BossNav keeps them
+  as its ground: 817.5 m², a boss standing there plans from the nearest cell outside). The five-in-a-row then found the same
+  camp at both causeways' feet, by a different cause — a leg string-pulled 0.3 m short of the plan's clearance cut the corner
+  where the causeway's foot meets the lake (1.55 m from it), the body stopped fitting there, and every 1 cm step was refused
+  because the pose it stood in did not fit either: on `roamAfter` stages the legs keep the full clearance, a boss off its
+  plan walks to the path's first cell before its first leg, and out of a pose that doesn't fit a step need only keep the
+  turn's rule (claws clear of walls, belly over floor).
 - The engine adds the rider parts before `BossNav` builds (ENGINE H21), so the Organ columns are walls to it.
 - Verify with a copy of `tools/botlab/jobs/stretch/boss-check.js`: home ground, roams > 50 m, never idle ≥ 12 s, moves
   played.
