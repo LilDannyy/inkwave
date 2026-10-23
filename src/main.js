@@ -218,7 +218,9 @@ class Game {
     G.mode = 'menu';
     this.menus?.show(params.has('skipTitle') ? 'main' : 'title');
     // the online hub / lobby set loads in the background once the menus are idle (no arena flash on the first visit)
-    if (!params.has('autostart')) setTimeout(() => { if (G.mode === 'menu') this.showcase.preloadLobby?.(); }, 2500);
+    // ([b5-beta1] not once a match has started loading: G.mode stays 'menu' while it loads, and the lobby set's build ran in
+    // a promise's continuation on top of the match's first frames — a 110–190 ms stall 30 ms in, the first match after boot)
+    if (!params.has('autostart')) setTimeout(() => { if (G.mode === 'menu' && !this._startTok) this.showcase.preloadLobby?.(); }, 2500);
     this._applyAudioVolumes();
     requestAnimationFrame((t) => this._loop(t));
     if (params.has('autostart')) {

@@ -1617,6 +1617,10 @@ export class Showcase {
       L.scene.add(set.root);
       await set.ready;
       if (this.lob !== L) { set.dispose(); return; }
+      // [b5-beta1] a preload (main.js, at the menu) that a match overtook: the rest of the build — a squidkid, the decks, a
+      // compile of the whole set: 110–190 ms of script — waits for the menu instead of landing in the match's first frames
+      while (L.preload && !L.wanted && (G.mode === 'match' || G.match?.loading) && this.lob === L) await new Promise((r) => setTimeout(r, 400));
+      if (this.lob !== L) { set.dispose(); return; }
       this._lobDecks(L);
       this._lobColors();
       const warm = new this.CharacterClass({ color: L.colors[0].clone(), weapon: 'shooter', style: this._profileStyle(), name: 'warm', isLocal: false });
@@ -1685,7 +1689,7 @@ export class Showcase {
 
   /** Online hub (menus.js 'online'): your kid on the set's hub spot, framed right of the create / join cards. */
   showHub(style, color, weapon) {
-    const L = this._lobEnsure();
+    const L = this._lobEnsure(); L.wanted = true;   // [b5-beta1] (shown: a preload's wait for the menu ends)
     if (!color || !color.isColor) color = new THREE.Color(color || this.color);
     const look = style ? { ...style } : this._profileStyle();
     weapon = weapon || G.game?.profile?.weapon || 'shooter';
@@ -1721,7 +1725,7 @@ export class Showcase {
   /** opts.reduced: prefers-reduced-motion (no camera drift or glides). opts.quick is accepted for compatibility: coming
    *  back to a room whose line-up is parked here (locker, a match) always finds everyone already standing. */
   showLobby(players, colors, opts = {}) {
-    const L = this._lobEnsure();
+    const L = this._lobEnsure(); L.wanted = true;   // [b5-beta1]
     L.reduced = !!opts.reduced;
     if (this.mode !== 'lobby') {
       this._enterSetMode('lobby');
