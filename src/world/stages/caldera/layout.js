@@ -17,7 +17,7 @@ import { buildBackdrop } from './backdrop.js';
 import * as G from './geo.js';
 import { fill, edgeKinds, walls, cutColumns, rotBox, splitColumns } from './ground.js';
 import { LAVA, LAVA_VIEW, BLOCKOUT_LAVA, riderStandIns } from './lava.js';
-import { KARP_VETO } from './karpVeto.js';   // (fix round 5: the Carp Field's hop / gap edges over the lava)
+import { KARP_VETO, KARP_VETO_16 } from './karpVeto.js';   // (fix round 5: the Carp Field's hop / gap edges over the lava, and those checker #16 found no kid makes)
 
 const { P, rotPoly, inPoly } = G;
 const HIGH_BUILD = BLOCKOUT_LAVA && LAVA_VIEW === 'high';
@@ -472,8 +472,9 @@ const BAZOOKARP = {
     east: [[-3, 25.5], [-8.6, 24.2], [-8.6, 28.5], [-3, 33.5], [4.8, 35.2], [5.5, 38.6], [18, 50]],      // East Steps → Bay Stair
   },
   // (the lava fix round 5, the lead's decision after review 5) the carrier field never relies on a jump over the lava: every
-  // hop / gap edge the field would add across it (karpVeto.js; lava-karp.js K8 keeps the list whole)
-  hopVeto: KARP_VETO,
+  // hop / gap edge the field would add across it (karpVeto.js; lava-karp.js K8 keeps the list whole); and the edges Bazookarp
+  // checker #16 found no carrying kid makes (as built and at LOW: the Organs' LOW-pose tops to their own HIGH-pose tops)
+  hopVeto: [...KARP_VETO, ...KARP_VETO_16],
 };
 
 // ============================================================================================================ the layout
@@ -496,7 +497,9 @@ const LAYOUT_CALDERA = {
   // Surge Steps toward the squad and stuck between the parapets. The Pour Floor and the Moorings, 0.6 up, stay its ground)
   // roamAfter (bossBrain._roam): with the squad on the terraces over its Lakefront wedges it settled at its preferred
   // distance and played its moves from one spot for the rest of the round
-  boss: { floorY: 1.2, headroom: 4.6, maxRise: 0.65, roamAfter: 12 },
+  // (fix round 5, review 5: noGo — the tips of the west Lakefront wedges, never a goal or a path's anchor: it walked or charged
+  // in, could neither turn nor step out, and spent 70–88 s of a round there; the cells stay its ground: 817.5 m²)
+  boss: { floorY: 1.2, headroom: 4.6, maxRise: 0.65, roamAfter: 12, noGo: [[-20.5, -25.5, 3.5], [20.5, 25.5, 3.5]] },
   single: SINGLE,
   half: HALF,
   decor: { lamps: [], palms: [], flags: [] },

@@ -145,7 +145,12 @@ export class BossBrain {
     this.speed += clamp(vmax - this.speed, -4 * dt, 3 * dt);
     if (this.speed > 0.01) {
       const nx = b.pos.x + Math.sin(b.yaw) * this.speed * dt, nz = b.pos.z + Math.cos(b.yaw) * this.speed * dt;
-      if (nav.poseOk(nx, nz, b.yaw)) { b.pos.x = nx; b.pos.z = nz; this.stuckT = 0; }
+      // [b5-caldera] fix round 5 (roamAfter stages): out of a pose that doesn't fit, a step only has to keep the turn's rule (claws
+      // clear of walls, belly over floor). A charge's end or a turn on the spot left it at a causeway's foot with its ends over
+      // the lake: every 1 cm step was refused because the pose there didn't fit either, though one 0.6 m on did, and it played
+      // its moves on that spot for 95 s (boss-check, fix round 5's five-in-a-row; probe: 6 of 8 headings never left in 25 s)
+      const badPose = b.nav.level?.layout?.boss?.roamAfter > 0 && !nav.poseOk(b.pos.x, b.pos.z, b.yaw);
+      if (nav.poseOk(nx, nz, b.yaw) || (badPose && nav.turnOk(nx, nz, b.yaw))) { b.pos.x = nx; b.pos.z = nz; this.stuckT = 0; }
       else {
         this.speed = 0; this.stuckT += dt;
         // [b5-caldera] no pose fits a step straight at its waypoint (a charge left it off-centre on a 10 m causeway: its
@@ -242,7 +247,9 @@ export class BossBrain {
     if (!best) return;
     this.goal = best;
     this.path = nav.path(b.pos.x, b.pos.z, best[0], best[1]);
-    this.pi = 1;
+    // [b5-caldera] fix round 5 (roamAfter stages): off its plan (a charge's end) or in a cell it can't turn round in, it walks to
+    // the path's first cell — the nearest goal cell — before its first leg; heading straight for the second cut the corner
+    this.pi = RA > 0 && !nav.isGoal(b.pos.x, b.pos.z) ? 0 : 1;
   }
 
   // ---------------------------------------------------------------------------------------------- choosing a move
