@@ -2,7 +2,8 @@
 import { G } from './ctx.js';
 
 const CAP = 500, entries = new Array(CAP), pending = [];
-let head = 0, size = 0, installed = false, sendAt = 0, stuck = new WeakMap();
+let head = 0, size = 0, installed = false, sendAt = 0;
+const stuck = new WeakMap();   // [b5-beta1] per bot brain: the stuck watch (bots below)
 const original = {};
 const clean = (v) => {
   let s = String(v == null ? '' : v).replace(/\b[A-Z0-9]{5,8}\b/g, '[code]');
@@ -32,18 +33,35 @@ function flush() {
   if (pending.length) schedulePost();
 }
 export const issueLog = { append, snapshot, flush, frame(ms) { if (G.mode === 'match' && G.match && !G.match.loading && ms > 250) append('slow-frame', `frame ${Math.round(ms)} ms`); },
+  // [b5-beta1] a bot stuck the way the botlab harnesses judge it (match.cjs, tower-match.cjs, karp-match.cjs): sampled every
+  // 0.25 s of match time, wanting to move (alive, not super-jumping, charging a shot or the Carp Shot, pinned by a special,
+  // riding the tower or holding a spot on purpose: BotBrain.holdingOnPurpose) and under 1 m from every place it was in
+  // the last 3 s; one entry when an episode passes 5 s, with what the bot was doing. (It used to compare positions frame
+  // to frame — 0.08 m a frame is 4.8 m/s at 60 Hz, 9.6 m/s at 120 — so a bot strafing, walking while firing or waiting on
+  // purpose read as stuck once its noProg ticked.)
   bots(dt) {
-    const actors = G.match?.actors; if (!actors) return;
+    const m = G.match, actors = m?.actors; if (!actors || m.attract || m.paused || m.state !== 'playing') return;
     for (let i = 0; i < actors.length; i++) {
-      const a = actors[i], b = a.bot; if (!b || (a.isLocal === false && a.remote) || !a.alive) continue;
-      let s = stuck.get(b); if (!s) s = { t: 0, x: a.pos.x, y: a.pos.y, z: a.pos.z };
-      const moved = Math.hypot(a.pos.x - s.x, a.pos.z - s.z, (a.pos.y - s.y) * 0.5) > 0.08;
-      if (moved) s.t = 0;
-      else if ((b.noProg || b.stuck || 0) > 0 || s.t > 0) s.t += dt;
-      s.x = a.pos.x; s.y = a.pos.y; s.z = a.pos.z;
-      if (s.t > 5 && !b._issueStuckLogged) { b._issueStuckLogged = true; append('stuck-bot', 'bot stuck episode exceeded 5 seconds', { duration: +s.t.toFixed(1) }); }
-      if (!s.t) b._issueStuckLogged = false;
-      stuck.set(b, s);
+      const a = actors[i], b = a.bot; if (!b || (a.isLocal === false && a.remote)) continue;
+      let s = stuck.get(b); if (!s) stuck.set(b, (s = { acc: 0, t: 0, h: [], ep: null }));
+      s.acc += dt; if (s.acc < 0.25) continue;
+      s.acc = Math.min(s.acc - 0.25, 0.25); s.t += 0.25;
+      const h = s.h; h.push({ t: s.t, x: a.pos.x, z: a.pos.z });
+      while (h.length && s.t - h[0].t > 3) h.shift();
+      const wants = a.alive && !a.superJumpState && !a.weaponRunner?.charging && !a.carry?.gun?.charging && !a.specialActive?.pin
+        && !m.tower?.riderList?.includes(a) && !b.holdingOnPurpose?.();
+      let span = 0; for (const p of h) span = Math.max(span, Math.hypot(p.x - a.pos.x, p.z - a.pos.z));
+      if (!(wants && h.length >= 11 && span < 1)) { s.ep = null; continue; }
+      const ep = s.ep || (s.ep = { dur: 0, logged: false });
+      ep.dur += 0.25;
+      if (ep.dur > 5 && !ep.logged) {
+        ep.logged = true;
+        const r1 = (v) => Math.round(v * 10) / 10, nd = (id) => { const n = id >= 0 && G.nav?.nodes?.[id]; return n ? [r1(n.x), r1(n.y), r1(n.z)] : null; };
+        const p = b.path, pi = b.pi | 0, e = p && pi > 0 && pi < p.length ? G.nav?.edge?.(p[pi - 1], p[pi]) : null;
+        append('stuck-bot', 'bot stuck episode exceeded 5 seconds', { duration: ep.dur, pos: [r1(a.pos.x), r1(a.pos.y), r1(a.pos.z)], botMode: b.mode || null,
+          role: b.zRole || b.tRole || b.kRole || null, path: p ? `${pi}/${p.length}` : null, next: p ? nd(p[pi]) : null, edgeIn: e ? e.type || 'walk' : null, goal: nd(b.goal),
+          noProg: r1(b.noProg || 0), carry: !!a.carry, pipe: !!a.pipe, climbing: !!a.climbing });
+      }
     }
   } };
 if (typeof window !== 'undefined') window.__issueLog = issueLog;

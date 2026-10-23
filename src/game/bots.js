@@ -594,6 +594,13 @@ export class BotBrain {
     this.setDifficulty(difficulty);
     this.reset();
   }
+  // [b5-beta1] standing still on purpose (the botlab harnesses' stuck rule leaves these out, and so does the beta's issue
+  // log, src/core/issueLog.js): a Zone Control guard or a Tower Command waiter at the end of its route, a Bazookarp keeper
+  // / breaker / grabber holding its spot (botsKarp kHoldUntil, on the game clock), a perch (pods, lava lookouts, eras)
+  holdingOnPurpose() {
+    const done = !this.path || this.pi >= this.path.length;
+    return (this.zHoldUntil > this.t && done) || (this.tHoldUntil > this.t && done) || (this.kHoldUntil || 0) > G.time || (this.perchUntil || 0) > this.t;
+  }
   setDifficulty(d) { this.diff = DIFFICULTY[d] || DIFFICULTY.normal; }
   // [drainbow] the ink as this bot can tell it. Inside an enemy Drainbow (src/game/sp-drainbow.js blind(): a player in
   // there sees everything grey, both teams' ink one shade) it can't tell its own ink from theirs, so none of it reads as
