@@ -1,0 +1,8 @@
+JOB-7 (beta1) @ 68aa9f51 — Mac mini b5-runner, 2026-10-24 01:00–01:19, exit 0, each test alone at load < 4. Short summary.
+- full: net-lava 13/13, net-pipes 17/17, net-stagemods 10/10, net-lobbykit 16/16, net-practice 29/29, net-karp 22/22 with 2 and 3
+  clients, lava-karp 9/9, sfx-cues 59/59 (alone, last).
+- net-eras 13/14 (load 2.3): 'the guest's splats on the Iron Bridge … leave its cells equal on both screens' — 1 cell of 368 differs, the
+  same 1 in each of the 6 tries (differPerTry [1,1,1,1,1,1]).
+- eras-jump frames 3/4 (load 3.6): ONE frame of 301.1 ms at J + 1.98 s in the jump — its split [era update 0, render 0, rest 1.7] says the
+  time went outside the frame's measured parts (a stall); next worst 36.6 ms. The no-jump baseline also had a 161.2 ms frame (the first
+  inking frame, 160 ms as in every run). Bluestone JOB-6's three runs of this check had their worst at 32–35 ms.
