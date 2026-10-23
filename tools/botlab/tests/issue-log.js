@@ -53,6 +53,29 @@
     run([wall], 1.25, 120, (a, t) => { a.pos.x = 0.3 * Math.sin(t * 9); });
     const got = stuckRows(n0);
     R('a bot pressed into a wall: no entry before 5 s, one after, with where it was and what it was doing', early === 0 && got.length === 1 && got[0].duration > 5 && Array.isArray(got[0].pos) && got[0].botMode === 'paint' && got[0].path === '1/3', { early, got }); }
+  // [b5-beta1, review 1] the entry is written as an episode passes 5 s; its whole length follows in a 'stuck-bot-end' row
+  // when it is over (the user's log had a 60.75 s Bluestone freeze as one 5.25 s row): a bot frozen 60 s then walking off,
+  // and one still stuck when the match ends
+  const endRows = (from) => L.snapshot().slice(from).filter((x) => x.kind === 'stuck-bot-end');
+  run([], 0.1, 60);   // (the cases above leave their wall-pressing bots' episodes open: they end here, 'left the match')
+  { const n0 = L.snapshot().length;
+    const frozen = kid({ bot: { mode: 'paint', path: [0, 1, 2], pi: 1 } });
+    run([frozen], 63, 60);
+    const mid = { rows: stuckRows(n0).length, ends: endRows(n0).length };
+    run([frozen], 4, 60, (a, t, dt) => { a.pos.x += 3 * dt; });
+    const got = stuckRows(n0), ends = endRows(n0), e = ends[0];
+    R('a bot frozen 60 s then walking off: one entry at 5 s, then one end row with its whole length (≈ 60 s) and why',
+      mid.rows === 1 && mid.ends === 0 && got.length === 1 && ends.length === 1 && e.duration > 59 && e.duration < 62 && e.why === 'moved' && e.startedAt === got[0].at && Array.isArray(e.endPos) && e.mode === 'turf',
+      { mid, got: got.map((x) => x.duration), ends: ends.map((x) => ({ d: x.duration, why: x.why, msg: x.message })) }); }
+  { const n0 = L.snapshot().length;
+    const last = kid();
+    run([last], 9, 60);
+    G.match.state = 'finish'; run([last], 1, 60); G.match.state = 'playing';
+    const left = kid(); run([left], 9, 60);
+    const m0 = G.match; G.match = { mode: 'turf', state: 'playing', loading: false, actors: [] }; L.bots(1 / 60); G.match = m0;
+    const ends = endRows(n0);
+    R('a bot still stuck when the match ends, or when it is left: its end row says so, with the length so far',
+      ends.length === 2 && ends[0].why === 'match over' && ends[0].duration > 6 && ends[1].why === 'match left' && ends[1].duration > 6, ends.map((x) => ({ d: x.duration, why: x.why }))); }
   // [b5-beta1] the stage state as plain values, and nothing the desktop's IPC can't clone (a Highmark Foundry match's
   // m.lava.state is a method: every entry threw 'An object could not be cloned' inside the frame and was lost)
   { const n0 = L.snapshot().length;

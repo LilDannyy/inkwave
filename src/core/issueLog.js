@@ -4,6 +4,7 @@ import { G } from './ctx.js';
 const CAP = 500, entries = new Array(CAP), pending = [];
 let head = 0, size = 0, installed = false, sendAt = 0;
 const stuck = new WeakMap();   // [b5-beta1] per bot brain: the stuck watch (bots below)
+const openEps = new Set();     // [b5-beta1] logged episodes not yet over: each gets a 'stuck-bot-end' row with its whole length
 const original = {};
 const clean = (v) => {
   let s = String(v == null ? '' : v).replace(/\b[A-Z0-9]{5,8}\b/g, '[code]');
@@ -45,8 +46,13 @@ export const issueLog = { append, snapshot, flush, frame(ms) { if (G.mode === 'm
   // the last 3 s; one entry when an episode passes 5 s, with what the bot was doing. (It used to compare positions frame
   // to frame — 0.08 m a frame is 4.8 m/s at 60 Hz, 9.6 m/s at 120 — so a bot strafing, walking while firing or waiting on
   // purpose read as stuck once its noProg ticked.)
+  // [b5-beta1, review 1] The entry is written once, as the episode passes 5 s; a 'stuck-bot-end' row follows when it is
+  // over (the bot moved off, stopped wanting to move, died, left, or the match ended or was left) with its whole length:
+  // the user's log showed a 60.75 s Bluestone freeze as one 5.25 s row.
   bots(dt) {
-    const m = G.match, actors = m?.actors; if (!actors || m.attract || m.paused || m.state !== 'playing') return;
+    const m = G.match, actors = m?.actors;
+    if (openEps.size) for (const o of openEps) if (o.m !== m || !actors || (m.state !== 'playing' && !m.paused) || !actors.includes(o.a)) endEp(o, o.m !== m || !actors ? 'match left' : m.state !== 'playing' ? 'match over' : 'left the match');
+    if (!actors || m.attract || m.paused || m.state !== 'playing') return;
     for (let i = 0; i < actors.length; i++) {
       const a = actors[i], b = a.bot; if (!b || (a.isLocal === false && a.remote)) continue;
       let s = stuck.get(b); if (!s) stuck.set(b, (s = { acc: 0, t: 0, h: [], ep: null }));
@@ -57,19 +63,30 @@ export const issueLog = { append, snapshot, flush, frame(ms) { if (G.mode === 'm
       const wants = a.alive && !a.superJumpState && !a.weaponRunner?.charging && !a.carry?.gun?.charging && !a.specialActive?.pin
         && !m.tower?.riderList?.includes(a) && !b.holdingOnPurpose?.();
       let span = 0; for (const p of h) span = Math.max(span, Math.hypot(p.x - a.pos.x, p.z - a.pos.z));
-      if (!(wants && h.length >= 11 && span < 1)) { s.ep = null; continue; }
-      const ep = s.ep || (s.ep = { dur: 0, logged: false });
+      if (!(wants && h.length >= 11 && span < 1)) { if (s.ep?.open) endEp(s.ep.open, !a.alive ? 'died' : wants ? 'moved' : 'stopped (holding, jumping, charging or riding)'); s.ep = null; continue; }
+      const ep = s.ep || (s.ep = { dur: 0, logged: false, open: null });
       ep.dur += 0.25;
+      if (ep.open) ep.open.dur = ep.dur;
       if (ep.dur > 5 && !ep.logged) {
         ep.logged = true;
         const r1 = (v) => Math.round(v * 10) / 10, nd = (id) => { const n = id >= 0 && G.nav?.nodes?.[id]; return n ? [r1(n.x), r1(n.y), r1(n.z)] : null; };
         const p = b.path, pi = b.pi | 0, e = p && pi > 0 && pi < p.length ? G.nav?.edge?.(p[pi - 1], p[pi]) : null;
-        append('stuck-bot', 'bot stuck episode exceeded 5 seconds', { duration: ep.dur, pos: [r1(a.pos.x), r1(a.pos.y), r1(a.pos.z)], botMode: b.mode || null,
+        const row = append('stuck-bot', 'bot stuck episode exceeded 5 seconds', { duration: ep.dur, pos: [r1(a.pos.x), r1(a.pos.y), r1(a.pos.z)], botMode: b.mode || null,
           role: b.zRole || b.tRole || b.kRole || null, path: p ? `${pi}/${p.length}` : null, next: p ? nd(p[pi]) : null, edgeIn: e ? e.type || 'walk' : null, goal: nd(b.goal),
           noProg: r1(b.noProg || 0), carry: !!a.carry, pipe: !!a.pipe, climbing: !!a.climbing });
+        openEps.add(ep.open = { a, s, m, dur: ep.dur, row });
       }
     }
   } };
+// [b5-beta1, review 1] a logged stuck episode is over: one row with its whole length (and where the bot was then)
+function endEp(o, why) {
+  if (!openEps.delete(o)) return;
+  if (o.s.ep?.open === o) o.s.ep.open = null;
+  const r1 = (v) => Math.round(v * 10) / 10, a = o.a, w = o.row;
+  // (the episode's own match: mode, stage and world from its first row, whatever is on screen now)
+  append('stuck-bot-end', `bot stuck episode ended after ${r1(o.dur)} seconds (${why})`, { mode: w.mode, stage: w.stage, world: w.world, era: w.era, lava: w.lava, online: w.online,
+    duration: o.dur, why, pos: w.pos, endPos: a?.pos ? [r1(a.pos.x), r1(a.pos.y), r1(a.pos.z)] : null, botMode: w.botMode, role: w.role, startedAt: w.at });
+}
 if (typeof window !== 'undefined') window.__issueLog = issueLog;
 if (!installed && typeof window !== 'undefined') {
   installed = true;
