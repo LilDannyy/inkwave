@@ -291,8 +291,11 @@ PROM.push(radRamp(-152, 15.6, 0, 21.4, PR.y, 6.0, stair({ tag: 'grand-stair' }))
 PROM.push(radRamp(-120, 34.6, 1.2, 31.0, PR.y, 5.0, stair({ tag: 'penguin-steps' })));
 // the Penguin Steps' granite nosing (8 cm, across the coping's cut): the promenade's teak cells ran out over the steps' top
 // tread in a zigzag (the Arch Line's S. Promenade exit shot; LEAD-REVIEW art round 1) — under it they are hidden
-// (10 cm, bearing −124.9 … −115.65: under the 2.6 coping block at its west end, short of the 2.5 one at its east end)
-PROM.push(radBox(-120.275, 30.7, 31.2, 4.99, FL, 2.5, stone({ tag: 'penguin-nosing', paint: false })));
+// (10 cm, bearing −124.9 … −115.65: under the 2.6 coping block at its west end, short of the 2.5 one at its east end;
+// fix round 6, LEAD-REVIEW 6: out to r 31.4 — the promenade's cells reach r 31.35 in the steps' mouth, so their corners
+// stood up to 15 cm past the r 31.2 face over the top tread, a row of teak teeth; the lip over the steps at r 31.4 is
+// 0.23 m, under stepUp)
+PROM.push(radBox(-120.275, 30.7, 31.4, 4.99, FL, 2.5, stone({ tag: 'penguin-nosing', paint: false })));
 // the grand stair's granite nosing (fix round 5, the lead's call after review 5): the promenade's teak cells ran out over the
 // stair's top tread in a sawtooth against the sky (court-promwall, stairtopB, stairfoot-up), the defect round 1 fixed on the
 // Penguin Steps the same way — across the stair's mouth from r 20.95 (the cells' corners reach 20.96 there) to 21.5,
