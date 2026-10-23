@@ -31,7 +31,7 @@ const { TEST_MAPS, defineTestMap } = require(process.env.S + '/testmaps.cjs');
 const MAP = process.env.MAP || 'halyard', MODE = process.env.MODE || 'zones', SECS = +(process.env.SECS || 180);
 const OUT = process.env.OUT || '';
 const WEAPONS = process.env.WEAPONS || '', SUBS = process.env.SUBS || '', SPECIALS_ENV = process.env.SPECIALS || '', TRACK = process.env.TRACK || '', TRACK_TEAM = process.env.TRACK_TEAM ?? '', TUNE = process.env.TUNE || '';
-const SPECIAL_AI = process.env.SPECIAL_AI || '', SPCHARGE = +(process.env.SPCHARGE || 1), DIAG = process.env.DIAG === '1';
+const SPECIAL_AI = process.env.SPECIAL_AI || '', SPCHARGE = +(process.env.SPCHARGE || 1), DIAG = process.env.DIAG === '1' || process.env.DIAG === '2', DIAGDT = process.env.DIAG === '2' ? 1 : 5;
 setTimeout(() => { console.log('WATCHDOG'); app.exit(1); setTimeout(() => process.exit(1), 3000); }, +(process.env.WATCHDOG || 900000));   // (hard exit if a hung page blocks quitting)
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 let claimed = false;
@@ -128,7 +128,10 @@ app.on('browser-window-created', (_, win) => {
         const cl = b._clE ? { wall: b._clE.wallP.map(r2), topY: r2(b._clE.topY), t: r2(b.climbT || 0), noHeadway: r2(b.t - (b._clT ?? b.t)) } : null;
         return { t: +simT.toFixed(1), mode: b.mode, pos: [r2(a.pos.x), r2(a.pos.y), r2(a.pos.z)], len: p ? p.length : 0, pi, next: p ? [ndP(p[pi]), ndP(p[pi + 1])] : null,
           edgeIn: !p || pi <= 0 || pi >= p.length ? '-' : e ? e.type : 'none', goal: ndP(b.goal), noProg: r2(b.noProg || 0), near: ndP(N.nearest(a.pos, 1.2, true)),
-          noClimb: b.t < (b.noClimbUntil || 0), climbing: !!a.climbing, climb: cl, ink: Math.round(a.ink) };
+          noClimb: b.t < (b.noClimbUntil || 0), climbing: !!a.climbing, climb: cl, ink: Math.round(a.ink),
+          // [b5-beta1] DIAG=2: every 1 s, what it was doing (the move asked for, speed, trigger, jump, escape, water by it)
+          ...(${process.env.DIAG === '2'} ? { mv: [r2(a.intent.move.x), r2(a.intent.move.z)], spd: r2(Math.hypot(a.vel.x, a.vel.z)), vy: r2(a.vel.y), grounded: !!a.grounded, fire: !!a.intent.fire, jump: !!a.intent.jump, jumpCd: r2(b.jumpCd || 0),
+            esc: !!b.sp?.esc, tgt: b.target ? b.target.name : null, wetBy: !!b._nearWater?.(a, 1.2), form: a.form } : {}) };
       } : null;
       // TRACK=<weapon id>: a closer look at every player on that weapon (damage in / out and from how far, what they were
       // doing when splatted, how far the nearest enemy was; the mitts add fist / splash / landing damage and leaps)
@@ -302,7 +305,7 @@ app.on('browser-window-created', (_, win) => {
             stuckS += 0.25;
             if (!open.has(a)) { const b = a.bot; const ep = { t: +simT.toFixed(1), name: a.name, w: a.weaponId, mode: b.mode, role: b.zRole || '-', pos: [+a.pos.x.toFixed(1), +a.pos.y.toFixed(2), +a.pos.z.toFixed(1)], path: !!b.path, hold: b.zHoldUntil > b.t, pod: b.podS ? b.podS.task || (b.podS.exit ? 'exit' : '-') : '-', dur: 0 }; if (plan) ep.diag = [plan(a)]; open.set(a, ep); eps.push(ep); }
             const ep = open.get(a); ep.dur += 0.25;
-            if (plan && ep.dur % 5 === 0) ep.diag.push(plan(a));
+            if (plan && ep.dur % ${DIAGDT} === 0) ep.diag.push(plan(a));
           } else open.delete(a);
         }
         if (chunk % 40 === 0) await new Promise((r) => setTimeout(r, 0));

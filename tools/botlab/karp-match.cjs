@@ -15,7 +15,8 @@
 //        x-<map>-<diff>-<i>.json) · KARP_AI=0 (WP1's minimal bots) · KARP_TUNE='{"jumpR":30}' (KARP_AI fields) ·
 //        KARP_CFG='{"shell":{"reformHp":600}}' (BAZOOKARP numbers, deep) — what-ifs for the balance pass, never saved
 //        [b5-beta1] DIAG=1: every stuck episode also records the bot's plan at its start and every 5 s after (as match.cjs's
-//        DIAG: mode, role, route, next nodes, the edge into the next one, goal, noProg, nearest node, holds, carrying) and
+//        DIAG: mode, role, route, next nodes, the edge into the next one, goal, noProg, nearest node, holds, carrying; DIAG=2:
+//        every 1 s, with the move asked for, speed, trigger, escape, target, situation, shell, distance, role spot) and
 //        every episode of 2 s or more is printed with it; ISSUELOG prints the in-game issue log's stuck-bot entries of the
 //        match (src/core/issueLog.js: the beta's own detector) beside the harness's episodes
 // Ends with `RESULT karp <id> win=A|B reason=… ko=… c=…/… pops=… carries=… blasts=… ot=…/<why>` and RESULT_JSON {…}.
@@ -25,7 +26,7 @@ const fs = require('fs');
 require(process.env.S + '/offscreen-boot.cjs');
 const { TEST_MAPS, defineTestMap } = require(process.env.S + '/testmaps.cjs');
 let MAP = process.env.MAP || 'karpbox', DIFF = process.env.DIFF || 'normal';
-const DUR = +(process.env.DUR || 300), HUMAN = process.env.HUMAN || '', DIAG = process.env.DIAG === '1';
+const DUR = +(process.env.DUR || 300), HUMAN = process.env.HUMAN || '', DIAG = process.env.DIAG === '1' || process.env.DIAG === '2', DIAGDT = process.env.DIAG === '2' ? 1 : 5;
 let OUT = process.env.OUT || '';
 setTimeout(() => { console.log('WATCHDOG'); app.exit(1); }, +(process.env.WATCHDOG || 590000));
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -62,7 +63,7 @@ app.on('browser-window-created', (_, win) => {
       const g = window.__inkwave, m = g.match, Kp = m.karp;
       const { on } = await import('./src/core/ctx.js');
       const { BAZOOKARP } = await import('./src/config.js');
-      const { KARP_BOT, KARP_AI, resetKarpStats } = await import('./src/game/botsKarp.js');
+      const { KARP_BOT, KARP_AI, resetKarpStats, karpPlan } = await import('./src/game/botsKarp.js');
       const { SPECIAL_STATS, resetSpecialStats } = await import('./src/game/botSpecials.js');
       if (!Kp) return { err: 'no Bazookarp engine (mode ' + m.mode + ')' };
       resetKarpStats(); resetSpecialStats();   // [b5-karp-bots] (objects too: route shares, roles)
@@ -108,7 +109,11 @@ app.on('browser-window-created', (_, win) => {
         const b = a.bot, p = b.path, pi = b.pi | 0, e = p && pi > 0 && pi < p.length ? N.edge(p[pi - 1], p[pi]) : null;
         return { t: +simT.toFixed(1), mode: b.mode, role: b.kRole || '-', pos: [r2(a.pos.x), r2(a.pos.y), r2(a.pos.z)], len: p ? p.length : 0, pi, next: p ? [ndP(p[pi]), ndP(p[pi + 1])] : null,
           edgeIn: !p || pi <= 0 || pi >= p.length ? '-' : e ? e.type : 'none', goal: ndP(b.goal), noProg: r2(b.noProg || 0), near: ndP(N.nearest(a.pos, 1.2, true)),
-          kHold: r2(Math.max(0, (b.kHoldUntil || 0) - window.__G.time)), zHold: r2(Math.max(0, (b.zHoldUntil || 0) - b.t)), carry: !!a.carry, pipe: !!a.pipe, grounded: !!a.grounded, climbing: !!a.climbing, form: a.form };
+          kHold: r2(Math.max(0, (b.kHoldUntil || 0) - window.__G.time)), zHold: r2(Math.max(0, (b.zHoldUntil || 0) - b.t)), carry: !!a.carry, pipe: !!a.pipe, grounded: !!a.grounded, climbing: !!a.climbing, form: a.form,
+          // (DIAG=2: what it was doing — the move it asked for, its speed, the trigger, a danger escape, a target, the team's
+          //  situation, the shell, how far from the Bazookarp, its role's spot)
+          ...(${process.env.DIAG === '2'} ? { mv: [r2(a.intent.move.x), r2(a.intent.move.z)], spd: r2(Math.hypot(a.vel.x, a.vel.z)), fire: !!a.intent.fire, esc: !!b.sp?.esc, see: r2(b.seeTimer || 0), tgt: b.target ? b.target.name : null,
+            sit: karpPlan()?.sit?.[a.team] ?? null, shell: Kp.shell.state, dK: r2(Math.hypot(Kp.pos.x - a.pos.x, Kp.pos.z - a.pos.z)), spot: b.kSpot ? [r2(b.kSpot.x), r2(b.kSpot.y), r2(b.kSpot.z)] : null } : {}) };
       } : null;
       let cStuck = 0; const cEps = []; let cHist = [];
       const frameErr = { n: 0, msg: '' };
@@ -143,7 +148,7 @@ app.on('browser-window-created', (_, win) => {
           if (stuck) {
             stuckS += 0.25;
             if (!open.has(a)) { const ep = { t: +simT.toFixed(1), name: a.name, w: a.weaponId, mode: a.bot.mode, role: a.bot.kRole || '-', carry: !!a.carry, pos: [+a.pos.x.toFixed(1), +a.pos.y.toFixed(2), +a.pos.z.toFixed(1)], dur: 0 }; if (plan) ep.diag = [plan(a)]; open.set(a, ep); eps.push(ep); }
-            { const ep = open.get(a); ep.dur += 0.25; if (plan && ep.dur % 5 === 0) ep.diag.push(plan(a)); }
+            { const ep = open.get(a); ep.dur += 0.25; if (plan && ep.dur % ${DIAGDT} === 0) ep.diag.push(plan(a)); }
           } else open.delete(a);
         }
         // the carrier: stuck > 3 s (< 1 m in 3 s while carrying)
