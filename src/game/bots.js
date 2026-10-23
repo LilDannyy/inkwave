@@ -780,7 +780,8 @@ export class BotBrain {
     // ---------------- navigation goal
     this.goalTimer -= dt; this.repath -= dt;
     if (this.mode === 'fight' && this.target) {
-      if (zp && this._zoneHoldGround(zp)) { this.path = null; this.repath = 0.3; }   // watchers / guards: don't chase off the zone
+      if (this.stageRoute) { /* [b5-caldera] fix round 6: a stage module's route (the lava's escape, botAct) is kept — no zone hold, no chase */ }
+      else if (zp && this._zoneHoldGround(zp)) { this.path = null; this.repath = 0.3; }   // watchers / guards: don't chase off the zone
       else if (tp && this._towerFightNav(tp)) { /* riders make for the tower; perches / escorts hold their ground */ }
       else if (kp && karpFightNav(this, kp)) { /* [b5-karp] the carrier keeps walking its route */ }
       else if (this.repath <= 0) this._pathTo(this.tv.pos, 0.6);   // (out of sight: where we think it is)

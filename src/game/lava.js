@@ -1163,7 +1163,20 @@ export class StageLava {
     // never up, their route still at the top, so neither the foot's time-out nor the stall release fired. Over LOOK_BUSY s in
     // a fight, a retreat or a refill below the top after its HIGH-pose nodes open, the claim goes and it is passed over 8 s:
     // the plan hands it to the team's next kit)
-    if (!up && (b.mode === 'fight' || b.mode === 'refill' || b.mode === 'retreat') && L.ids.some((id) => this.shut(id, t) === 0)) {
+    // (and only while it makes no headway: the first cut counted a claimant walking its route in a fight — the route is
+    // walked in a fight, see above — and let the claim go halfway up the climb, 2 of 3 lava.js runs: a new best distance to
+    // the top by 0.4 m, or a waypoint of its claim's route passed, within the last LOOK_PROG s is headway)
+    const open = !up && L.ids.some((id) => this.shut(id, t) === 0);
+    if (open) {
+      const R = this.riders[L.ri];
+      let dh = Infinity; for (const id of L.ids) { const n = nav.nodes[id]; dh = Math.min(dh, Math.hypot(n.x - a.pos.x, n.z - a.pos.z)); }
+      const d = dh + Math.max(0, (R ? R.top : a.pos.y) - a.pos.y);
+      const onRoute = !!L.path && b.path === L.path;
+      if (onRoute && L.progPath !== L.path) { L.progPath = L.path; L.progPi = b.pi; }   // (a new route: its own count)
+      if (L.progT == null || d < L.bestD - 0.4 || (onRoute && b.pi > L.progPi)) { L.progT = t; L.bestD = Math.min(d, L.bestD ?? Infinity); }
+      if (onRoute) L.progPi = Math.max(L.progPi, b.pi);
+    }
+    if (open && (b.mode === 'fight' || b.mode === 'refill' || b.mode === 'retreat') && t - L.progT > LOOK_PROG) {
       L.busyT = (L.busyT || 0) + dt;
       if (L.busyT > LOOK_BUSY) {
         b._lookBan = t + 8; this.stats.lookBusyOuts = (this.stats.lookBusyOuts || 0) + 1;
@@ -1416,6 +1429,10 @@ export class StageLava {
       // (bots.js runs this hook ahead of a threat's or a canopy's footwork while it says so: on floor the lava takes, on a
       // stone, or escaping — a bot dodging a Torpedo on a drowning ledge never got its escape)
       b.stageUrgent = k !== 0 || !!b._lavaEsc;
+      // (fix round 6: and while it escapes the route is the module's — a Zone Control guard holding its ground in a fight
+      // dropped the escape's route every frame, which the module planned again only each 0.05–0.25 s: a charger on Bravo's
+      // drowning shelf backed away from its exit for 1 s of strafes and the rise had it, lava-match zones)
+      b.stageRoute = !!b._lavaEsc;
     }
     // the Organ lookouts: each team's claimant (_lookPlan) goes up its own lookout and holds it until the fall warning
     if (!b._lavaEsc && b._look) { const r = this._lookAct(b, dt, it, move, vis); if (r) return r; }   // (fix round 3: its aim while it inks its feet)
@@ -1637,6 +1654,7 @@ export class StageLava {
 const LOOKOUT_KINDS = new Set(['charger', 'splatling', 'spinner', 'bow']);
 const FOOT_WAIT = 6;   // s a lookout claimant may wait at its climb's foot once the top is climbable (fix round 5)
 const LOOK_BUSY = 3;   // s a lookout claimant may spend fighting / retreating / refilling below the top once it is climbable (fix round 6)
+const LOOK_PROG = 1;   // s without headway toward the top before a busy claimant's time counts (fix round 6)
 // (fix round 3) the trigger while a bot inks the floor at its feet (an escaper at a step, a claimant at a column): a charge
 // kit (charger, bow, spinner) lets go of a charge worth a shot, so the shot leaves while it is aimed down — held, it went
 // off only once the aim had moved on, and the deck stayed the other team's
