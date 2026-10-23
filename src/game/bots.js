@@ -24,6 +24,7 @@ export { SIGHT, SIGHT_STATS, teamKnown, SPECIAL_AI, SPECIAL_STATS };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
 const _wv = new THREE.Vector3();   // [b5-caldera] (_wetHi's probe)
+const _escMv = new THREE.Vector3();   // [b5-caldera] (a stage module's escape footwork, kept through the kits' botAct)
 const _walkHit = new Hit();
 const _stats = { own: 0, enemy: 0, empty: 0, n: 0 };
 const _down = new THREE.Vector3(0, -1, 0), _stepHit = new Hit();
@@ -1083,7 +1084,7 @@ export class BotBrain {
     if (G.match?.stage && (!thrAim || this.stageUrgent)) thrAim = G.match.stage.botAct(this, dt, it, move, enemyVisible) || thrAim || null;   // [b5-stagehooks] (escape the lava …) [b5-caldera] stageUrgent: a module's escape outranks a threat's footwork
     // [b5-deploy] nothing else to shoot: an enemy device in sight (its footwork goes first: the tower's, the climb's and
     // the danger guard's below have the last word) [b5-int2: after the stage module's botAct, which outranks it]
-    if (!thrAim && this.sp.on() && !carry) thrAim = devShootAim(this.sp, dt, it, move, tp, onT, zp);   // [b5-karp] carry
+    if (!thrAim && !this.stageRoute && this.sp.on() && !carry) thrAim = devShootAim(this.sp, dt, it, move, tp, onT, zp);   // [b5-karp] carry [b5-caldera] fix round 6: not while a stage module's escape owns the route (a charger on a sinking stone, hunting a lost foe, charged shot after shot at an enemy device 8 s, its trigger back on and its feet still, until the stone sank: lava-bots stones)
     if (thrAim) { wantYaw = thrAim.yaw; wantPitch = thrAim.pitch; }
     // ---------------- Tower Command: riders hold the platform's middle, or climb on (ink its wall, swim up); others off it
     const tAim = tp ? this._towerMove(tp, dt, move, it, thrAim, onT) : null;
@@ -1093,12 +1094,20 @@ export class BotBrain {
     if (this._climbAim) { wantYaw = this._climbAim.yaw; wantPitch = this._climbAim.pitch; }
     // ---------------- enemy specials (botSpecials.js), after everything else: out of a danger area it's in, never a
     // step into one, no shots into the untouchable; popping our team's bubble on one of theirs (an aim to hold)
+    // [b5-caldera] fix round 6: while a stage module owns the route (stageRoute: the lava's escape) its footwork is kept
+    // through what follows — an enemy special's danger guard and the kits' botAct: a Chain Bobber bot laying its chain held
+    // still (move × 0.05) and dove to top up its tank on a drowning shelf as the rise came (lava-bots ledges), and a charger
+    // on a sinking stone was turned to and fro each frame, its trigger back on (lava-bots stones); dying in the lava is
+    // never the better choice
+    const escK = this.stageRoute && a.alive ? { squid: it.squid, fire: it.fire } : null;
+    if (escK) _escMv.copy(move);
     const spAim = this.sp.act(dt, it, move);
     if (spAim) { wantYaw = spAim.yaw; wantPitch = spAim.pitch; if (!thrAim) thrAim = spAim; }
     // [b5-subs] kit subs' own bot behaviour (SPEC §0.5 botAct, every bot: the Chain Bobber's teammates set its chains off;
     // [b5-sub-dash] the Dash Pellet's dodges, break-offs, gap closes), last, so nothing later in the frame clears what they
     // set; busy — something above already owns the aim; an aim a kit returns is held like a device's (a later kit's wins)
-    { const busy = !!thrAim; for (const k in SUB_KITS) { const r = SUB_KITS[k].botAct?.(this, dt, it, move, busy); if (r) { wantYaw = r.yaw; wantPitch = r.pitch; thrAim = r; } } }
+    { const busy = !!thrAim || !!escK; for (const k in SUB_KITS) { const r = SUB_KITS[k].botAct?.(this, dt, it, move, busy); if (r) { wantYaw = r.yaw; wantPitch = r.pitch; thrAim = r; } } }
+    if (escK) { move.copy(_escMv); it.squid = escK.squid; if (!escK.fire) it.fire = false; }   // [b5-caldera] (above)
     if (this._bombAim) SUB_KITS.bobber?.holdThrow?.(this, it);   // [b5-int3] a sub throw that would set off an own idle Chain Bobber web: held
     if (kp) karpMove(this, kp, dt, move, it);   // [b5-karp-bots] round the Bazookarp: never into the shell, breakers strafe, the grabber's hold and run
     if (carry) { it.sub = false; it.special = false; this._bombAim = false; }   // [b5-karp] the last word: a carrier never throws or starts a special ([b5-int3] after the kits' botAct, and no press _tail would make from _bombAim)
