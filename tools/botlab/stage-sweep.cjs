@@ -34,7 +34,8 @@ const T0 = Date.now(), ts = () => ((Date.now() - T0) / 1000).toFixed(0) + 's';
 setTimeout(() => { console.log('WATCHDOG'); app.exit(1); }, +(process.env.WATCHDOG || 3000000));
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const SUF = TWIN ? '-B' : '';
-const clusterOf = (v) => (v.tag != null ? `${v.tag}.${v.k}` : (v.cluster || 'views'));
+// (a hand-made VIEWS list — [{ name, from, look, fov? }] — groups by `cluster`, else by its name less a trailing -n / .n)
+const clusterOf = (v) => (v.tag != null ? `${v.tag}.${v.k}` : (v.cluster || v.name.replace(/[-.]\d+$/, '')));
 // a contact sheet, drawn in the page (a 2D canvas): cells in row-major order ({ label, b64, color } or null), a title
 // line; JPEG under 290 KB (the quality steps down until it fits)
 const SHEET = `async (spec) => {
@@ -63,7 +64,8 @@ app.on('browser-window-created', (_, win) => {
   const logs = [];
   win.webContents.on('console-message', (e) => { const m = String(e.message); if (/error|warn/i.test(String(e.level)) && !/Security Warning|Autofill/.test(m)) logs.push(`[${e.level}] ${m.slice(0, 300)}`); });
   let frame = null, paints = 0; win.webContents.on('paint', (_e, _d, img) => { frame = img; paints++; });
-  win.webContents.once('did-finish-load', async () => {
+  win.webContents.once('did-finish-load', () => run().catch((e) => { console.log('HARNESS ERROR', e && e.stack ? e.stack.split('\n').slice(0, 3).join(' | ') : e); app.exit(2); }));
+  const run = async () => {
     win.setContentSize(W, H);
     const js = (c) => win.webContents.executeJavaScript(c, true);
     for (let i = 0; i < 160; i++) { if (await js('!!window.__inkwave?.api')) break; await wait(250); }
@@ -147,7 +149,7 @@ app.on('browser-window-created', (_, win) => {
     fs.writeFileSync(path.join(OUT, 'views.json'), JSON.stringify(views));
     const none = views.filter((v) => v.none);
     console.log(`VIEWS ${views.length - none.length} views of ${new Set(views.map(clusterOf)).size} clusters, ${none.length} cluster(s) with NO EYE-LEVEL VIEW`);
-    let shoot = views.filter((v) => !v.none && (!ONLY || ONLY.test(v.name)));
+    let shoot = views.filter((v) => !v.none && (!ONLY || ONLY.test(v.name))).map((v) => ({ ...v, ck: clusterOf(v) }));
     if (TWIN) shoot = shoot.map((v) => ({ ...v, name: v.name + SUF, from: [-v.from[0], v.from[1], -v.from[2]], look: [-v.look[0], v.look[1], -v.look[2]] }));
     await js(`(async () => {
       const g = window.__inkwave;
@@ -181,7 +183,7 @@ app.on('browser-window-created', (_, win) => {
     console.log('SHOTS', n, ts());
     // the sheets: one per cluster (in the views' order), and the cluster list
     const byC = new Map();
-    for (const v of shoot) { const c = clusterOf(v); if (!byC.has(c)) byC.set(c, []); byC.get(c).push(v); }
+    for (const v of shoot) { const c = v.ck; if (!byC.has(c)) byC.set(c, []); byC.get(c).push(v); }
     const meta = new Map();
     for (const v of views) { const c = clusterOf(v); if (!meta.has(c)) meta.set(c, v); }
     const rows = [], changed = [];
@@ -202,7 +204,9 @@ app.on('browser-window-created', (_, win) => {
       } else for (const v of vs) cells.push({ label: lab(v), b64: tile(img(OUT, v)) });
       const box = m.mn ? `  box (${m.mn.join(', ')}) … (${m.mx.join(', ')})` : '';
       const title = `${MAP} · ${TIME}${TWIN ? ' · Bravo twin' : ''} · ${c}${SUF}${m.n ? ` · ${m.n} block(s)` : ''}${box}${BEFORE ? `  ·  max Δ ${worst == null ? '–' : worst.toFixed(1)}/255` : ''}`;
-      const b64 = await js(`(${SHEET})(${JSON.stringify({ cols: 4, tw: 400, th: 225, title, cells })})`);
+      // (the page draws it; a GPU stall on a loaded machine must not hang the run)
+      const b64 = await Promise.race([js(`(${SHEET})(${JSON.stringify({ cols: 4, tw: 400, th: 225, title, cells })})`), wait(60000).then(() => null)]);
+      if (!b64) { console.log(`SHEET TIMEOUT ${c}${SUF}`); continue; }
       const sheet = `${String(si++).padStart(3, '0')}-${c}${SUF}.jpg`.replace(/[^\w.()+-]/g, '_');
       fs.writeFileSync(path.join(OUT, 'sheets', sheet), Buffer.from(b64, 'base64'));
       rows.push({ c, m, nv: vs.length, worst, sheet });
@@ -220,5 +224,5 @@ app.on('browser-window-created', (_, win) => {
     const uniq = [...new Set(logs)];
     console.log(`CONSOLE ${uniq.length} unique warning/error line(s)`); for (const l of uniq.slice(0, 30)) console.log('  ' + l);
     app.quit();
-  });
+  };
 });
