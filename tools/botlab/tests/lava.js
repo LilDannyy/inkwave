@@ -501,7 +501,9 @@
     crew.slice(0, 4).forEach((b, i) => { const r = b.team === mates[0].team ? sto[i] : stoB[i], ri = W.riders.indexOf(r), n = nav.nodes.find((q) => M.rider[q.id] === ri && M.pose[q.id] === 1); put(b, V(n.x, rid(r.id).top + 0.02, n.z)); b.bot.path = null; b.bot.repath = 0; b.bot.goalTimer = 0; b.invuln = 1e6; });
     // (the other three parked on the island, brains off and standing still: put() clears the intent; the bot update
     // that would have set it again is off)
-    for (const b of crew.slice(4)) { b.bot.update = () => {}; b.invuln = 1e6; put(b, V(-10, 1.22, -3.2 + crew.indexOf(b))); b.intent.fire = false; b.invuln = 1e6; }
+    // ([b5-beta1] on the floor that is there: at (−10, 0.8 … 2.8) that is the Surge Gauge's deck, 2.4 — put at 1.22, inside it,
+    // they were pushed out under the island into the lava at once: F8's one failure since int4, 'the three parked ones')
+    for (const b of crew.slice(4)) { b.bot.update = () => {}; b.invuln = 1e6; const z = -3.2 + crew.indexOf(b); put(b, V(-10, lvl.groundHeight(-10, z, 10) + 0.02, z)); b.intent.fire = false; b.invuln = 1e6; }
     deaths = [];
     // (a trail for every crew member: the three parked on the island are listed too if anything befalls them)
     const trail = crew.map(() => []);
