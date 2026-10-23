@@ -731,7 +731,7 @@ export class BotBrain {
           this.path = null; this.goalTimer = 0; this.strandAcc = 0; this._stranded = false;
         }
       }
-    } else this.strandAcc = 0;
+    } else this.strandAcc = Math.max(0, (this.strandAcc || 0) - dt * 0.5);   // (a hop onto the tank's kerb and back: no fresh start)
     if (a.superJumpState || (G.match?.stage && G.match.stage.botHold(this))) { it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; this.mvMag = 0; return; }   // [b5-stagehooks] botHold (riding a pipe)
     if (!G.match || !G.match.playing()) { it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; this.mvMag = 0; return; }
     this.think -= dt; this.jumpCd -= dt; this.bombCd -= dt; this.strafeT -= dt; this.paintPause -= dt; this.dodgeCd -= dt;
