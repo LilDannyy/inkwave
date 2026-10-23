@@ -599,7 +599,7 @@
     // team's claim and never moved, fix round 2's run 7)
     const crewF = g.match.actors.filter((a) => a.bot);
     for (const b of crewF) { put(b, __G.level.spawnPads[b.team].clone().setY(__G.level.spawnPads[b.team].y + 0.05)); b.bot.update = idle.get(b) || b.bot.update; b.bot.path = null; b.bot.goalTimer = 0; b.bot._look = null; }
-    Lv._lp = null; Lv.stats.lookTeam = [0, 0]; Lv.stats.lookLong = [0, 0]; Lv.stats.lookClaims = 0; Lv.stats.lookHold = 0;
+    Lv._lp = null; Lv.stats.lookTeam = [0, 0]; Lv.stats.lookLong = [0, 0]; Lv.stats.lookClaims = 0; Lv.stats.lookHold = 0; Lv.stats.lookBusyOuts = 0;
     const kits = crewF.map((b) => [b.team, b.weapon?.kind]);
     let claims = null, upAt = [null, null];
     // (fix round 5, review 5 issue 4: each claimant's trail every 0.5 s — t, x, y, z, its mode, where its claim's route goes
@@ -622,7 +622,7 @@
     // (a 27 s fight from the pads: a claimant can die on the way; the per-match numbers are lava-match's business)
     R('F10 the lookout claim: a claim for each team with a long- or mid-range kit; a claimant reaches its own lookout at HIGH and holds it (≥ 2 s); every claim let go at the fall warning',
       claimed.length >= 1 && claimed.every((tm) => (S2.lookLog || []).some((l) => l.team === tm && l.t >= 33)) && claimed.some((tm) => upAt[tm] !== null && S2.lookTeam[tm] >= 2) && released && Lv.clock.t > 60.5,
-      { claims, claimed, upAt, seconds: S2.lookTeam.map(r3), long: S2.lookLong.map(r3), held: r3(S2.lookHold), nClaims: S2.lookClaims, footOuts: S2.lookFootOuts || 0, stalls: S2.lookStalls || 0, released, t: r3(Lv.clock.t), kits, log: (S2.lookLog || []).filter((l) => l.t >= 33),
+      { claims, claimed, upAt, seconds: S2.lookTeam.map(r3), long: S2.lookLong.map(r3), held: r3(S2.lookHold), nClaims: S2.lookClaims, footOuts: S2.lookFootOuts || 0, stalls: S2.lookStalls || 0, busyOuts: S2.lookBusyOuts || 0, released, t: r3(Lv.clock.t), kits, log: (S2.lookLog || []).filter((l) => l.t >= 33),
         trails: Object.fromEntries(Object.entries(trails).filter(([k]) => upAt[+k.split(':')[0]] === null).map(([k, v]) => [k, v.slice(-40)])) });
     freezeBots();
   }

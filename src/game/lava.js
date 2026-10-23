@@ -1158,6 +1158,20 @@ export class StageLava {
     // (on a stone or a drowning ledge the escape and the brain have it: no claim route from there)
     if (!up && this._foot(a).kind) { L.path = null; return; }
     void M;
+    // (fix round 6, review 6 issue 4: a claimant busy with its life once the top is climbable lets the claim go. Both of one
+    // lava.js run's claimants reached the island's foot, then fought, retreated and refilled there until the fall warning —
+    // never up, their route still at the top, so neither the foot's time-out nor the stall release fired. Over LOOK_BUSY s in
+    // a fight, a retreat or a refill below the top after its HIGH-pose nodes open, the claim goes and it is passed over 8 s:
+    // the plan hands it to the team's next kit)
+    if (!up && (b.mode === 'fight' || b.mode === 'refill' || b.mode === 'retreat') && L.ids.some((id) => this.shut(id, t) === 0)) {
+      L.busyT = (L.busyT || 0) + dt;
+      if (L.busyT > LOOK_BUSY) {
+        b._lookBan = t + 8; this.stats.lookBusyOuts = (this.stats.lookBusyOuts || 0) + 1;
+        if (L.log && !L.log.end) { L.log.end = 'busy'; L.log.at = +t.toFixed(1); L.log.held = +L.held.toFixed(1); }
+        this._lookRelease(b); for (const T of this._lp || []) if (T && T.claim === b) T.claim = null;
+        return;
+      }
+    }
     if (b.mode === 'retreat' || (b.mode === 'refill' && !up)) { L.path = null; L.on = false; return; }   // (its life, its tank first)
     b.goalTimer = Math.max(b.goalTimer || 0, 0.6); b.repath = Math.max(b.repath || 0, 0.6);
     // dry on the top: it stays — the brain's refill paints a puddle where it stands and swims in it (the deck takes ink)
@@ -1622,6 +1636,7 @@ export class StageLava {
 // the weapons that take the Organ lookouts at HIGH (long range: height is worth the climb)
 const LOOKOUT_KINDS = new Set(['charger', 'splatling', 'spinner', 'bow']);
 const FOOT_WAIT = 6;   // s a lookout claimant may wait at its climb's foot once the top is climbable (fix round 5)
+const LOOK_BUSY = 3;   // s a lookout claimant may spend fighting / retreating / refilling below the top once it is climbable (fix round 6)
 // (fix round 3) the trigger while a bot inks the floor at its feet (an escaper at a step, a claimant at a column): a charge
 // kit (charger, bow, spinner) lets go of a charge worth a shot, so the shot leaves while it is aimed down — held, it went
 // off only once the aim had moved on, and the deck stayed the other team's
