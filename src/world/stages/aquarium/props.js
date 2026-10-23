@@ -93,6 +93,10 @@ export const PLACEMENTS = [
   { type: 'aquarium_pumphall', pos: [0, 0, 0] },
   { type: 'aquarium_fintower', pos: [0, 0, 0] },
   { type: 'aquarium_stops', pos: [0, 0, 0] },
+  // (fix round 8, LEAD-REVIEW 8: the OUT stop's long faces, the booth's render base, the Reef Window's jambs and short run)
+  { type: 'aquarium_stopfaces', pos: [0, 0, 0] },
+  { type: 'aquarium_boothbase', pos: [0, 0, 0] },
+  { type: 'aquarium_reefjambs', pos: [0, 0, 0] },
   { type: 'aquarium_cove', pos: [0, 0, 0] },
   { type: 'aquarium_pier', pos: [0, 0, 0], name: 'MV GULPER', mirror: false },
   { type: 'aquarium_pier', pos: [0, 0, 0], rotY: PI, name: 'MV BARRELEYE', mirror: false },

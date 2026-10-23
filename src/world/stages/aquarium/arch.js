@@ -719,7 +719,7 @@ export function registerArch(D, H, KIT, G) {
       {
         const cx = 9.1, cz = -41.0;
         pbox(B, 'paint', K.render, 1.86, 1.0, 2.06, cx, 1.7, cz);
-        pbox(B, 'gloss', K.faience, 1.88, 0.05, 2.08, cx, 2.0, cz);
+        // (its one faience band at 2.0 is the base's three speed lines since fix round 8: aquarium_boothbase)
         // (fix round 7, LEAD-REVIEW 7: the glass was 1.96 deep, z −41.98 … −40.02, 2 cm INSIDE the off-limits block's own
         // cream faces at z −42 / −40, so both TICKETS faces showed blank render between thin brass strips; now 4 cm proud
         // of every face, its mullions at its corners and middle on the z faces, 3.5 cm proud of the glass)
@@ -999,7 +999,168 @@ export function registerArch(D, H, KIT, G) {
         B.box('paint', K.render, 2.6, 0.38, 4.8, 0, 5.17, 0, { r: 0.1 });
         for (const y of [5.05, 5.2]) pbox(B, NS('gloss'), K.faience, 2.62, 0.03, 4.82, 0, y, 0);
         B.add('metal', torG(0.98, 0.1, 8, 28), K.brass, 0.7, 5.4, 0, { rx: HP });
-        for (const s of [-1, 1]) { B.push(s * 1.22, 0, 0, s * HP); roundel(B, 0, 3.0, 0.58, ['TUBEWAY', 'EXPRESS'], { field: K.navy }); speed(B, -2.2, 2.2, 0.62, { n: 3 }); B.pop(); }
+        // (fix round 8, LEAD-REVIEW 8: its speed lines were drawn here at 0.62 over the foundations' frame — inside Penguin
+        // Point's 1.2 m rock terrace, so both long faces showed the roundel alone on plain render. They stand on the stop's
+        // own floor now, with the rest of its long faces' dressing: aquarium_stopfaces)
+        for (const s of [-1, 1]) { B.push(s * 1.22, 0, 0, s * HP); roundel(B, 0, 3.0, 0.58, ['TUBEWAY', 'EXPRESS'], { field: K.navy }); B.pop(); }
+      });
+    },
+  };
+
+  // ============================================================================================================ fix round 8
+  // (LEAD-REVIEW 8, the last three faces) The Express OUT stop's long faces, the Ticket Hall booth's render base, the Reef
+  // Window's short west run and the Service Gate's jambs, in the language the kiosks set in fix round 7: a black-granite
+  // skirting with a brass line, render corner pilasters, faience speed lines, a plate. Visual only: every part within
+  // 8.5 cm of its block (off-limits blocks, never inked), none on a walkable top, no collider; their own prop types, so
+  // aquarium-art.js section 12 checks this round's parts alone.
+  const flute = (B, w, h, x, y, z) => pbox(B, NS('paint'), K.renderSh, w, h, 0.004, x, y, z);
+  // a framed navy plate (face frame, centred at x, foot y; z out of the face): a board, a brass frame, two lines
+  function plate(B, x, y, w, h, l1, l2, o = {}) {
+    const zb = o.z ?? 0.0, h1 = o.h1 ?? 0.1, h2 = o.h2 ?? 0.055, t = o.t ?? 0.012;
+    pbox(B, 'paint', o.board ?? K.navy, w, h, t, x, y + h / 2, zb + t / 2);
+    for (const yy of [y, y + h]) pbox(B, NS('metal'), K.brass, w + 0.024, 0.022, t + 0.008, x, yy, zb + (t + 0.008) / 2);
+    for (const xx of [x - w / 2, x + w / 2]) pbox(B, NS('metal'), K.brass, 0.022, h + 0.02, t + 0.008, xx, y + h / 2, zb + (t + 0.008) / 2);
+    letters(B, l1, { h: h1, x, y: y + h - h1 - (h - h1 - h2) * 0.36, z: zb + t + 0.001, c: o.c1 ?? K.brassLt, flat: true, mat: 'paint', wt: 0.19, track: 0.13 });
+    if (l2) letters(B, l2, { h: h2, x, y: y + (h - h1 - h2) * 0.3, z: zb + t + 0.001, c: o.c2 ?? K.cream, flat: true, mat: 'paint', wt: 0.2, track: 0.1 });
+  }
+
+  // the Express OUT stop on Penguin Point (bladeBox(−6, −1.4, −16.2, −13.8) to 5.0, standing on the 1.2 m rock terrace; in
+  // the blade frame local ±x are its long faces, 4.6 m, local +z its mouth face (s −6), −z its back against the keeper's
+  // hut): on both long faces the IN stop's three faience speed lines 0.62 m over the stop's own floor (1.82 / 1.96 / 2.10)
+  // running across the corner pilasters, a black-granite skirting with a brass line (1.2 → 1.36, round the back too; not
+  // across the mouth face, its nozzle's), a 0.18 m square render pilaster at each corner (2 cm proud of both faces, fluted)
+  // up to the cap, a brass-ringed porthole either side of the TUBEWAY roundel and a framed ARRIVALS · FROM FERRY PLAZA
+  // plate over it
+  D.aquarium_stopfaces = {
+    desc: "the Express OUT stop's long faces and back (world frame, Alpha; fix round 8)",
+    build(B) {
+      bl(B, -3.7, -15.0, 0, () => {
+        const HW = 1.2, HL = 2.3, F = 1.2, y0 = F + 0.16, top = 4.975;
+        for (const s of [-1, 1]) {
+          pbox(B, 'paint', K.granite, 0.05, 0.16, 2 * HL + 0.1, s * (HW + 0.025), F + 0.08, 0);
+          pbox(B, NS('metal'), K.brass, 0.056, 0.016, 2 * HL + 0.112, s * (HW + 0.028), y0 + 0.006, 0);
+        }
+        pbox(B, 'paint', K.granite, 2 * HW + 0.1, 0.16, 0.05, 0, F + 0.08, -(HL + 0.025));
+        pbox(B, NS('metal'), K.brass, 2 * HW + 0.112, 0.016, 0.056, 0, y0 + 0.006, -(HL + 0.028));
+        for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+          const cx = sx * (HW - 0.07), cz = sz * (HL - 0.07), hh = top - y0, ym = (top + y0) / 2;
+          pbox(B, 'paint', K.render, 0.18, hh, 0.18, cx, ym, cz);
+          pbox(B, NS('paint'), K.render, 0.21, 0.06, 0.21, cx, top - 0.03, cz);                        // (its cap)
+          flute(B, 0.03, hh - 0.4, cx, ym - 0.05, sz * (HL + 0.022));
+          B.push(sx * (HW + 0.022), 0, cz, HP); flute(B, 0.03, hh - 0.4, 0, ym - 0.05, 0); B.pop();
+        }
+        for (const s of [-1, 1]) {
+          B.push(s * HW, 0, 0, s * HP);
+          speed(B, -(HL + 0.03), HL + 0.03, F + 0.62, { n: 3, d: 0.045 });
+          for (const x of [-1.38, 1.38]) porthole(B, x, 3.0, 0.27);
+          plate(B, 0, 3.74, 1.56, 0.42, 'ARRIVALS', 'FROM FERRY PLAZA', { h1: 0.15, h2: 0.07 });
+          B.pop();
+        }
+      });
+    },
+  };
+
+  // the Ticket Hall booth's render base (the block x 8.2 … 10, z −42 … −40 from the hall's 1.2 floor; the base 3 cm proud
+  // to 2.2, the glazing over it): a black-granite skirting with a brass line (1.2 → 1.356), a 0.16 m square render pilaster
+  // at each corner (5 cm proud of the block, fluted) up to the glazing, three faience speed lines round all four faces and
+  // across the pilasters (they replace its one band), a brass counter ledge under the glass with a speaking grille on both
+  // TICKETS faces and the price plate under it; on the x faces a recessed panel line, and on the plaza face (+x, the hall's
+  // edge) a TICKET OFFICE plate in it
+  D.aquarium_boothbase = {
+    desc: "the Ticket Hall booth's render base (world frame, Alpha; fix round 8)",
+    build(B) {
+      const cx = 9.1, cz = -41.0, HX = 0.9, HZ = 1.0, F = 1.2, y0 = 1.356, top = 2.19;
+      pbox(B, 'paint', K.granite, 2 * HX + 0.09, 0.14, 2 * HZ + 0.09, cx, F + 0.07, cz);
+      pbox(B, NS('metal'), K.brass, 2 * HX + 0.1, 0.016, 2 * HZ + 0.1, cx, F + 0.148, cz);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        const px = cx + sx * (HX - 0.03), pz = cz + sz * (HZ - 0.03), ym = (top + y0) / 2;
+        pbox(B, 'paint', K.render, 0.16, top - y0, 0.16, px, ym, pz);
+        flute(B, 0.025, top - y0 - 0.2, px, ym, pz + sz * 0.082);
+        B.push(px + sx * 0.082, 0, pz, HP); flute(B, 0.025, top - y0 - 0.2, 0, ym, 0); B.pop();
+      }
+      for (const y of [1.9, 1.97, 2.04]) pbox(B, NS('gloss'), K.faience, 2 * HX + 0.11, 0.035, 2 * HZ + 0.11, cx, y, cz);
+      // the TICKETS faces (z −42 and −40; the base's face 3 cm out): the ledge, the grille on the glass, the price plate
+      for (const sz of [-1, 1]) {
+        face(B, cx, 0, cz + sz * (HZ + 0.03), 0, sz, () => {
+          pbox(B, 'metal', K.brass, 1.5, 0.035, 0.04, 0, 2.16, 0.02);
+          pbox(B, NS('metal'), K.brassDk, 1.5, 0.012, 0.034, 0, 2.137, 0.017);
+          B.add('metal', torG(0.075, 0.012, 6, 18), K.brass, 0.42, 2.5, 0.024, {});
+          B.add('gloss', cylGeo(0.07, 0.07, 0.006, 18), K.brassDk, 0.42, 2.5, 0.017, { rx: HP });
+          for (const dy of [-0.03, 0, 0.03]) pbox(B, NS('paint'), K.ink, 0.09, 0.008, 0.004, 0.42, 2.5 + dy, 0.022);
+          plate(B, 0, 1.47, 1.24, 0.36, 'ADULTS 2 SHELLS', 'CHILDREN 1 SHELL', { h1: 0.072, h2: 0.072, c2: K.brassLt });
+        });
+      }
+      // the x faces (−x into the hall under the FEEDINGS board, +x the plaza face on the hall's edge): a recessed panel
+      // line between the pilasters; on the plaza face the TICKET OFFICE plate in it
+      for (const sx of [-1, 1]) {
+        face(B, cx + sx * (HX + 0.03), 0, cz, sx, 0, () => {
+          const pw = 2 * HZ - 0.42, ph = 0.4, py = 1.44;
+          for (const yy of [py, py + ph]) pbox(B, NS('paint'), K.renderSh, pw, 0.012, 0.004, 0, yy, 0.002);
+          for (const xx of [-pw / 2, pw / 2]) pbox(B, NS('paint'), K.renderSh, 0.012, ph, 0.004, xx, py + ph / 2, 0.002);
+          for (const yy of [py + 0.012, py + ph + 0.012]) pbox(B, NS('paint'), '#f6f1e6', pw - 0.02, 0.006, 0.003, 0, yy, 0.0015);
+          if (sx > 0) plate(B, 0, py + 0.06, 1.0, 0.28, 'TICKET OFFICE', 'FERRIES · TUBEWAY · EXHIBITS', { h1: 0.075, h2: 0.04, z: 0.004 });
+        });
+      }
+    },
+  };
+
+  // the Reef Window's ends and its short west run's outer face (layout.js: the window's blocks are radBox chords — the short
+  // run one chord α −70 … −67, the long run's first α −58 … −54.04 — and the outer wall here a slab on each, its face at
+  // r 32.55, 6–7 cm off the chord): the Gate Terrace's face of the short run takes the pylon wing face's language beside it
+  // (a black-granite skirting 0 → 0.16 with a brass line, the three faience speed lines at its 0.62 / 0.76 / 0.90, render
+  // pilasters at its corners, a REEF HALL plate), and every open end of the window (α −70 beside the pylon, the Service
+  // Gate's α −67 and α −58) a render jamb over the granite base's end with the speed lines across it (the reef showed
+  // through them in section). In each chord's frame: local +z out of the outer face, local x along it toward lower α
+  D.aquarium_reefjambs = {
+    desc: "the Reef Window's jambs and its short west run's outer face (world frame, Alpha; fix round 8)",
+    build(B) {
+      const chord = (a0, a1, n, i) => {
+        const da = (a1 - a0) / n, h = Math.abs(da) / 2, ac = a0 + da * (i + 0.5), out = 32.5 * Math.cos(h * DEG), r0 = Math.min(30.5, out - 0.05);
+        return { ac, rm: (r0 + out) / 2, zIn: r0 - (r0 + out) / 2, zOut: out - (r0 + out) / 2, hl: 32.5 * Math.sin(h * DEG) };
+      };
+      const inChord = (c, fn) => { const [x, z] = pol(c.ac, c.rm); face(B, x, 0, z, Math.cos(c.ac * DEG), Math.sin(c.ac * DEG), fn); };
+      const W0 = chord(-70, -67, 1, 0), L0 = chord(-58, -2.6, 14, 0);
+      // the outer wall slab's face (r 32.55 at the chord's middle), in each frame
+      const wallZ = (c) => 32.55 - c.rm;
+      // a jamb at the chord's end e (+1: its low-α end, local +x; −1: its high-α end): 1.2–3.0 cm off the end, the glass's
+      // radius to the wall's face; the granite base's end under it, render over it, the three speed lines on it
+      const jamb = (c, e) => {
+        const x = e * (c.hl + 0.021), zi = 30.43 - c.rm, zo = wallZ(c), zc = (zi + zo) / 2, d = zo - zi;
+        pbox(B, 'paint', K.granite, 0.018, 0.64, d, x, 0.3, zc);
+        pbox(B, 'paint', K.render, 0.018, 5.0 - 0.62, d, x, (5.0 + 0.62) / 2, zc);
+        pbox(B, NS('metal'), K.brass, 0.022, 0.016, d, x + e * 0.002, 0.628, zc);
+        for (const y of [0.62, 0.76, 0.9]) pbox(B, NS('gloss'), K.faience, 0.01, 0.06, d - 0.02, x + e * 0.014, y, zc);
+        // (a fluted rib up its middle over the lines, as on the pylon's wing face beside it: 3.5 cm off the jamb)
+        B.box('paint', K.render, 0.035, 4.0, 0.3, x + e * 0.0265, 2.97, zc, { r: 0.012 });
+        pbox(B, NS('paint'), K.renderSh, 0.004, 3.4, 0.04, x + e * 0.0445, 2.97, zc);
+      };
+      // a render pilaster on the chord's outer corner at end e: 7 cm out of the chord's face (flush with the wall's to 0.9 cm
+      // over it), 3.2 cm past its end (its side just over the jamb's face); a granite foot
+      const pil = (c, e) => {
+        const w = 0.24, x = e * (c.hl + 0.032 - w / 2), z = c.zOut + 0.07 - w / 2;
+        pbox(B, 'paint', K.granite, w, 0.176, w, x, 0.088, z);
+        pbox(B, 'paint', K.render, w, 5.0 - 0.176, w, x, (5.0 + 0.176) / 2, z);
+        pbox(B, NS('gloss'), K.faience, w + 0.004, 0.05, w + 0.004, x, 0.5, z);
+        flute(B, 0.04, 4.2, x, 2.75, c.zOut + 0.072);
+      };
+      // the outer face's skirting, brass line and speed lines along x0 … x1, 0.8–1.2 cm over the wall's face (which stands
+      // 6.1–6.9 cm off the chord's)
+      const band = (c, x0, x1) => {
+        const z = wallZ(c), L = x1 - x0, xm = (x0 + x1) / 2;
+        pbox(B, 'paint', K.granite, L, 0.16, 0.01, xm, 0.08, z + 0.005);
+        pbox(B, NS('metal'), K.brass, L, 0.016, 0.012, xm, 0.168, z + 0.006);
+        for (const y of [0.62, 0.76, 0.9]) pbox(B, NS('gloss'), K.faience, L, 0.06, 0.008, xm, y, z + 0.004);
+      };
+      inChord(W0, () => {
+        band(W0, -(W0.hl + 0.012), W0.hl + 0.012);
+        pil(W0, 1); pil(W0, -1);
+        jamb(W0, 1); jamb(W0, -1);
+        B.push(0, 0, wallZ(W0) + 0.001, 0); plate(B, 0, 1.3, 1.08, 0.34, 'REEF HALL', '← SERVICE GATE', { h1: 0.1, h2: 0.06, t: 0.008 }); B.pop();
+      });
+      // the long run's α −58 end: its jamb, the corner pilaster, the metre of its outer face the pump wall leaves open
+      inChord(L0, () => {
+        jamb(L0, 1); pil(L0, 1);
+        band(L0, L0.hl - 1.3, L0.hl + 0.012);
       });
     },
   };
