@@ -12,14 +12,20 @@ const clean = (v) => {
 };
 function details() {
   const m = G.match, stage = G.game?.mapDef?.id || G.level?.mapId || null;
+  // [b5-beta1] the stage state as plain values: the era in force (G.match.eras) and the lava's phase (low / rise / high /
+  // fall). It read m.lava.state — the lava runtime's state() method — and the desktop app's IPC can't clone a function:
+  // every entry in a Highmark Foundry match threw 'An object could not be cloned' inside the frame and was lost.
+  // world: the world being played or built ('halyard.bazookarp': a mode variant's build shows the previous match's mode)
+  const era = m?.eras?.era, lava = m?.lava?.st?.phase;
   return { build: window.inkwaveNative?.buildCommit?.() || document.querySelector('meta[name="inkwave-build"]')?.content || 'unknown', mode: m?.mode || G.mode || 'unknown', stage,
-    era: m?.stage?.era ?? G.stageWorld?.era ?? null, lava: m?.lava?.state ?? G.lava?.state ?? null, online: !!G.netm };
+    world: G.game?.worldKey || null, era: Number.isFinite(era) ? era : null, lava: typeof lava === 'string' ? lava : null, online: !!G.netm };
 }
 function append(kind, message, extra = {}) {
   const row = { at: new Date().toISOString(), kind, message: clean(message), ...details(), ...extra };
   entries[head] = row; head = (head + 1) % CAP; size = Math.min(CAP, size + 1);
   if (pending.length === CAP) pending.shift(); pending.push(row);
-  if (window.inkwaveNative?.issue) window.inkwaveNative.issue(row);
+  // (plain data only over the desktop's IPC, and never a throw back into the frame that logged it)
+  if (window.inkwaveNative?.issue) { try { window.inkwaveNative.issue(JSON.parse(JSON.stringify(row))); } catch (e) { /* (the ring keeps it) */ } }
   else if (location.protocol !== 'app:') schedulePost();
   return row;
 }

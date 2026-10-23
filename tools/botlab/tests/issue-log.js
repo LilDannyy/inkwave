@@ -53,6 +53,15 @@
     run([wall], 1.25, 120, (a, t) => { a.pos.x = 0.3 * Math.sin(t * 9); });
     const got = stuckRows(n0);
     R('a bot pressed into a wall: no entry before 5 s, one after, with where it was and what it was doing', early === 0 && got.length === 1 && got[0].duration > 5 && Array.isArray(got[0].pos) && got[0].botMode === 'paint' && got[0].path === '1/3', { early, got }); }
+  // [b5-beta1] the stage state as plain values, and nothing the desktop's IPC can't clone (a Highmark Foundry match's
+  // m.lava.state is a method: every entry threw 'An object could not be cloned' inside the frame and was lost)
+  { const n0 = L.snapshot().length;
+    G.match.lava = { state() { return { t: 1 }; }, st: { phase: 'high' } }; G.match.eras = { era: 2 };
+    let threw = null; try { L.frame(300); } catch (e) { threw = String(e && e.message || e); }
+    const row = L.snapshot().slice(n0).find((x) => x.kind === 'slow-frame');
+    let ipc = null; try { if (window.inkwaveNative?.issue) window.inkwaveNative.issue(row); ipc = 'ok'; } catch (e) { ipc = String(e && e.message || e); }
+    delete G.match.lava; delete G.match.eras;
+    R('an entry in a lava / eras match: no throw, its era and lava phase as plain values, and the desktop IPC takes it', !threw && row && row.lava === 'high' && row.era === 2 && ipc === 'ok' && 'world' in row, { threw, ipc, lava: row && typeof row.lava, era: row && row.era, world: row && row.world, native: !!window.inkwaveNative?.issue }); }
   G.mode = oldMode; G.match = oldMatch;
   return out;
 })()
