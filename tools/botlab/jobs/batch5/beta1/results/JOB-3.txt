@@ -1,0 +1,9 @@
+JOB-3 (beta1) @ 4cf43325 — Mac mini b5-runner, 2026-10-23 20:12–20:34, exit 0, one Electron at a time. Short summary; details in JOB-3.raw.txt.
+- full: net-eras 14/14, net-lava 13/13, net-pipes 17/17, net-stagemods 10/10, net-lobbykit 16/16, net-practice 29/29, net-karp-host (3
+  clients) 7/7, lava-karp 9/9, eras-jump frames 4/4, bot-specials 19/19 (int4's 18/19 not repeated), sfx-cues 59/59 (alone, last).
+- net-karp 21/22 with 2 clients AND with 3: the same check both times, 8c — the host's pick-up call-out: "FREE — GRAB IT!" is still up
+  on the host's screen while the Bazookarp is free again (atPick also lists "CARRIER DOWN!").
+- lava 58/59 again (int4's failure reproduced): F8 — 3 of the 4 bots on the stones at the fall warning died in the lava at 58.05 s
+  (Bubbles, Wasabi, Juno at x −10, z 0.8 / 1.8 / 2.8: the three parked ones).
+- karp-match: halyard ran (B knockout at 48.9 s, A's best 0 m); karpbox had 2 stuck episodes over 5 s (5.25 s each, both issue-log
+  rows; one at (0.1, 0.1, −35.6), 'paint', role anchor).
