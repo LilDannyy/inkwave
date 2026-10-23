@@ -1,0 +1,6 @@
+JOB-11 (beta1) @ a6bf6059 — Mac mini b5-runner, 2026-10-24 03:00–03:17, exit 0. Short summary; details in JOB-11.raw.txt.
+- stuck set (17 matches, turf on bluestone ×3 included): every match ≤ 0.6 % stuck, and NO episode over 5 s anywhere (JOB-8's bluestone
+  turf episode did not recur: 0.3 / 0 / 0 %).
+- bot-stuck 6/6, 5/6, 6/6 (run 2 fails 'tank' from a spot by the rim at x 6.64); karpspot 1/1.
+- karp-bots 42/42 then 41/42 (B(b2): a melee breaker refilling, maxR 4.07 — inside the 5 m band; the check failed on another condition).
+- full: holds 325/325, pipes 92/92, sub-bobber 84/84, issue-log 8/8.
