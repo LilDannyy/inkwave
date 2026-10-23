@@ -474,6 +474,16 @@ export class PaintSystem {
     this.clear();
   }
 
+  // [b5-beta1] the atlas's first use, at load (main.js _warmStage) instead of in a match's first frames: its programs
+  // compiled (the splat quads, the drying pass, both floods) and its mip chain built once (generateMipmaps on the
+  // 4096² target allocates the chain the first time: 160–260 ms on the Mac mini, in the first drying pass of a match)
+  warm() {
+    const r = this.renderer, vis = this.mesh.visible;
+    this.mesh.visible = true; r.compile(this.scene, this.cam); this.mesh.visible = vis;   // (the splat quads' mesh shows only with quads queued)
+    for (const mt of [this._floodWipe, this._floodInk]) { this._floodMesh.material = mt; r.compile(this._floodScene, this.cam); }
+    this._dryU.uDry.value = 0; this.dryMesh.visible = true; this._drawQuads();   // (a drying pass of nothing: the mip build)
+  }
+
   clear() {
     const r = this.renderer;
     const prev = r.getRenderTarget();

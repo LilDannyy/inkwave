@@ -800,6 +800,8 @@ class Game {
     await this._warmCharacters(m);
     if (tok !== this._startTok) { if (this.match === m) { m.dispose(); this.match = G.match = null; this._startAttract(); } return; }
     this.minimap.setViewerTeam(0);
+    await this._warmStage();   // [b5-beta1] (the first frames' first-time work, behind the faded screen)
+    if (tok !== this._startTok) { if (this.match === m) { m.dispose(); this.match = G.match = null; this._startAttract(); } return; }
     G.mode = 'match';
     this.hud?.setVisible(false);
     this.hudPrompt = null; this._hintT = 0; this._hints = {};
@@ -961,6 +963,8 @@ class Game {
     nm.bind(m);
     this.lastMatchOpts = null;
     this.minimap.setViewerTeam(m.local ? m.local.team : 0);
+    await this._warmStage();   // [b5-beta1] (the first frames' first-time work, behind the faded screen)
+    if (gone()) { if (this.match === m) { m.dispose(); this.match = G.match = null; this._startAttract(); } return null; }
     G.mode = 'match';
     this.hud?.setVisible(false);
     this.hud?.setPractice?.(cfg.practice ? { online: true, code: G.net?.code } : false);
@@ -993,6 +997,35 @@ class Game {
     await this._fade(0, 450);
     card?.remove();
   }
+  // [b5-beta1] Everything a match's first frames would do for the first time, done now, while the screen is still faded
+  // out (startMatch / _netStage, just before the match is shown; the beta's issue log had 300–520 ms frames at the start of
+  // Turf War on six stages, 2 s on Bluestone, 4.9 s on Gulper Aquarium): the stage modules' deferred work (Bluestone's era
+  // bases and programs ran from an idle callback in the intro), the paint atlas's programs and mip chain, the minimap's
+  // first full draw, every program the scene draws, hidden objects included (compiled in parallel), and one frame drawn
+  // with nothing culled — every
+  // mesh's geometry and textures uploaded, the shadow map, the post stack with the screen FX pass forced on (it is only
+  // switched on once something shows: its program was compiled as the intro ended). tools/botlab/first-frames.cjs.
+  async _warmStage() {
+    const r = G.renderer, sc = G.scene, cam = G.camera, t0 = performance.now();
+    const step = (what, fn) => { try { fn(); } catch (e) { console.warn('[inkwave] warm ' + what, e); } };
+    step('minimap', () => this.minimap?.update(0, true));
+    step('stage', () => G.stageWorld?.warm());
+    step('paint', () => G.paint?.warm?.());
+    // (hidden ones too — a kit's world objects, the Sponge Mitts' fists, wait hidden for their first use: shown for the
+    // compile's synchronous walk only; never a light, whose count is part of every program's key)
+    const hidden = []; sc.traverse((o) => { if (!o.visible && !o.isLight) { o.visible = true; hidden.push(o); } });
+    let compiled = null;
+    try { compiled = r.compileAsync(sc, cam); } catch (e) { step('compile', () => r.compile(sc, cam)); }
+    for (const o of hidden) o.visible = false;
+    try { await compiled; } catch (e) { /* (a context without the parallel-compile extension: compiled on first use) */ }
+    const culled = [], fx = this.screenfx?.pass, fxOn = fx ? fx.enabled : false;
+    sc.traverse((o) => { if (o.frustumCulled && (o.isMesh || o.isPoints || o.isLine || o.isSprite)) { o.frustumCulled = false; culled.push(o); } });
+    try { if (fx) fx.enabled = true; r.shadowMap.needsUpdate = true; this.R.render(); }
+    catch (e) { console.warn('[inkwave] warm render', e); }
+    finally { if (fx) fx.enabled = fxOn; for (const o of culled) o.frustumCulled = true; }
+    this.warmMs = Math.round(performance.now() - t0);
+  }
+
   // Compile every shader variant a squidkid can use this match (all detail tiers, their cross-fades, squid form,
   // weapons) and build every kid's tier meshes while the screen is still faded out, so none of it lands mid-match.
   // Programs are shared, so after the first kid of each weapon the rest are a few ms each.
