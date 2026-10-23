@@ -1,0 +1,8 @@
+JOB-5 (caldera) @ 85c101e3 — Mac mini b5-runner, 2026-10-24 05:52–06:12, exit 0. Short summary; details in JOB-5.raw.txt.
+- full: boss-check 6/6 ×5, net-lava 13/13 (alone), lava-karp 10/10, lava-notch 3/3, both Zone Control matches 7/7 (no lava or sea deaths,
+  stuck 0.36 % in #1, no episode ≥ 10 s; an Organ lookout used at HIGH by a long-range kit).
+- lava.js 58/59, 57/59, 58/59: G8 (the glow faded by distance to open lava: lake faces HIGH, the dry middle and the machine house's foot
+  never) fails in all 3; F10 (the lookout claim) also in run 2. F8b passed in all 3.
+- lava-bots 6/7: the gate — 0 escape, 2 fight deaths in 360 bot-trials (Nori, brolly, on the edges, …), the bar is ≤ 1.
+- lava-audit (full=1) 42/43: rule 42, 'no view out of the arena shows void' (96 rays below the horizon from each pad, the 24 highest outer-
+  ring spots, over each lip).

@@ -1,0 +1,9 @@
+JOB-2 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 05:49:30
+branch botlab-b5-caldera, ran at c6060c0b, exit code 0, wall time 0min
+(a written-up JOB-2.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+RESULT skipped: JOB-2 is obsolete (blockout era)
+
+## last 15 lines of job.log
+RESULT skipped: JOB-2 is obsolete (blockout era)
