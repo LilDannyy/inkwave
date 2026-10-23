@@ -1,0 +1,191 @@
+JOB-2 raw results — automatic, by the Mac mini's b5-runner, 2026-10-23 20:11:12
+branch botlab-b5-beta1, ran at c3d44d73, exit code 0, wall time 13min
+(a written-up JOB-2.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### beta1 JOB-2 head c3d44d73
+[lightmaps] RESULT 4/4
+[stage-audit caldera turf] RESULT 3/3
+[stage-audit caldera zones] RESULT 3/3
+[stage-audit caldera tower] RESULT 4/4
+[issue-log] RESULT 6/6
+### done
+
+## last 15 lines of job.log
+[stage-audit caldera turf] PASS lightmap applied (baked for this build, not stale)  {"id":"caldera","mode":"turf","rows":1601}
+[stage-audit caldera turf] RESULT 3/3
+[stage-audit caldera zones] PASS lightmap applied (baked for this build, not stale)  {"id":"caldera","mode":"zones","rows":1601}
+[stage-audit caldera zones] RESULT 3/3
+[stage-audit caldera tower] PASS lightmap applied (baked for this build, not stale)  {"id":"caldera","mode":"tower","rows":1601}
+[stage-audit caldera tower] RESULT 4/4
+[issue-log] PASS captures error, warning, window.onerror, slow frame and stuck episode exactly once  ["console-error","console-warn","window-error","slow-frame","stuck-bot"]
+[issue-log] PASS entries include timestamp, build, mode, stage, era/lava and online fields  {"at":"2026-10-23T09:11:11.492Z","kind":"stuck-bot","message":"bot stuck episode exceeded 5 seconds","build":"c3d44d73f2f026cf4358c178a875915d27f0f327","mode":"turf","stage":"halyard","era":null,"lava":null,"
+[issue-log] PASS a bot walking at 3 m/s with noProg ticking is not stuck (60 Hz)  []
+[issue-log] PASS a bot walking at 3 m/s with noProg ticking is not stuck (120 Hz)  []
+[issue-log] PASS holding a spot on purpose (zone guard, keeper, perch), dead, or riding the tower: not stuck  []
+[issue-log] PASS a bot pressed into a wall: no entry before 5 s, one after, with where it was and what it was doing  {"early":0,"got":[{"at":"2026-10-23T09:11:11.493Z","kind":"stuck-bot","message":"bot stuck episode exceeded 5 seconds","build":"c3d44d73f2f026cf4358c178a875915d27f0f327","mode":"turf"
+[issue-log] RESULT 6/6
+[issue-log] console errors: issue-log-test-error
+### done
+
+## bake.txt
+INKWAVE issue log: /Users/danielosling/inkwave-botlab/.botlab/ud-slot1/issues.log
+(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.
+[bake] caldera: building world…
+  [bake] 4%
+  [bake] 8%
+  [bake] 11%
+  [bake] 15%
+  [bake] 20%
+  [bake] 25%
+  [bake] 29%
+  [bake] 35%
+  [bake] 37%
+  [bake] 42%
+  [bake] 45%
+  [bake] 50%
+  [bake] 54%
+  [bake] 56%
+  [bake] 60%
+  [bake] 64%
+  [bake] 69%
+  [bake] 74%
+  [bake] 79%
+  [bake] 83%
+  [bake] 85%
+  [bake] 90%
+  [bake] 95%
+  [bake] 99%
+[bake] caldera: done in 75.0 s (hash 436482e3, 1601/2048 rows used)
+[bake] caldera.boss: building world…
+  [bake] 2%
+  [bake] 3%
+  [bake] 6%
+  [bake] 8%
+  [bake] 10%
+  [bake] 11%
+  [bake] 13%
+  [bake] 15%
+  [bake] 17%
+  [bake] 21%
+  [bake] 23%
+  [bake] 26%
+  [bake] 28%
+  [bake] 30%
+  [bake] 33%
+  [bake] 36%
+  [bake] 38%
+  [bake] 39%
+  [bake] 41%
+  [bake] 43%
+  [bake] 44%
+  [bake] 47%
+  [bake] 49%
+  [bake] 51%
+  [bake] 53%
+  [bake] 54%
+  [bake] 55%
+  [bake] 57%
+  [bake] 58%
+  [bake] 61%
+  [bake] 63%
+  [bake] 66%
+  [bake] 68%
+  [bake] 71%
+  [bake] 74%
+  [bake] 76%
+  [bake] 78%
+  [bake] 81%
+  [bake] 83%
+  [bake] 85%
+  [bake] 86%
+  [bake] 88%
+  [bake] 89%
+  [bake] 92%
+  [bake] 94%
+  [bake] 96%
+  [bake] 99%
+  [bake] 100%
+[bake] caldera.boss: done in 147.8 s (hash 9e47d819, 1559/2048 rows used)
+[bake] bluestone.tower: building world…
+  [bake] state 1 of 3
+  [bake] 0%
+  [bake] 3%
+  [bake] 6%
+  [bake] 10%
+  [bake] 17%
+  [bake] 23%
+  [bake] 27%
+  [bake] 31%
+  [bake] 36%
+  [bake] 41%
+  [bake] 46%
+  [bake] 51%
+  [bake] 53%
+  [bake] 57%
+  [bake] 63%
+  [bake] 69%
+  [bake] 75%
+  [bake] 79%
+  [bake] 84%
+  [bake] 87%
+  [bake] 94%
+  [bake] 96%
+  [bake] state 2 of 3
+  [bake] 0%
+  [bake] 3%
+  [bake] 6%
+  [bake] 10%
+  [bake] 17%
+  [bake] 24%
+  [bake] 27%
+  [bake] 32%
+  [bake] 36%
+  [bake] 41%
+  [bake] 46%
+  [bake] 51%
+  [bake] 53%
+  [bake] 57%
+  [bake] 63%
+  [bake] 69%
+  [bake] 75%
+  [bake] 79%
+  [bake] 84%
+  [bake] 88%
+  [bake] 94%
+  [bake] 96%
+  [bake] state 3 of 3
+  [bake] 0%
+  [bake] 2%
+  [bake] 4%
+  [bake] 7%
+  [bake] 13%
+  [bake] 18%
+  [bake] 24%
+  [bake] 28%
+  [bake] 34%
+  [bake] 36%
+  [bake] 44%
+  [bake] 47%
+  [bake] 52%
+  [bake] 55%
+  [bake] 59%
+  [bake] 65%
+  [bake] 70%
+  [bake] 75%
+  [bake] 79%
+  [bake] 84%
+  [bake] 88%
+  [bake] 94%
+  [bake] 96%
+[bake] bluestone.tower: done in 211.8 s (hash 506dab2b, 1141/2048 rows used)
+
+## lightmaps.txt
+INKWAVE issue log: /Users/danielosling/inkwave-botlab/.botlab/ud-slot1/issues.log
+(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.
+PASS every world a player can reach (each stage, each mode it offers) has its baked lightmap applied  {"unlit":[],"worlds":40,"bazookarpVariants":["halyard.bazookarp unlit","lockgate.bazookarp unlit","bluestone.bazookarp unlit","aquarium.bazookarp unlit","caldera.bazookarp unlit"]}
+PASS unbaked mode variants (halyard.bazookarp, lockgate.bazookarp, bluestone.bazookarp, aquarium.bazookarp, caldera.bazookarp) build unlit with no warning in the issue log  {"warns":[]}
+PASS …and one debug line for halyard.bazookarp in the whole session though it was built 3 times  ["[inkwave] no lightmap for the mode variant halyard.bazookarp (unlit until it is baked)"]
+PASS a stage's own missing lightmap still warns; a missing mode variant does not  ["[inkwave] no lightmap for nosuchstage Unexpected token 'N', \"Not found\" is not valid JSON"]
+RESULT 4/4
+console errors: none
