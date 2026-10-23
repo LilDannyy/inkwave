@@ -13,8 +13,10 @@
 //   shots/<view>.jpg, sheets/<nnn>-<tag>.<k>.jpg (one per cluster, its views labelled with their eye positions)
 //   clusters.txt   every cluster (tag.k, blocks, box, views), the NO EYE-LEVEL VIEW ones first
 // BEFORE=<an earlier run's OUT>: each sheet puts that run's shot (row "before") over this run's ("after"), and
-//   clusters.txt gives every cluster's largest per-view change (mean absolute difference, /255, at 160 × 90) and lists
-//   the CHANGED ones (over CHANGE, default 2.0).
+//   clusters.txt gives every cluster's largest per-view change (the share of the frame, in %, whose pixels moved by more
+//   than 20/255 at 320 × 180) and lists the CHANGED ones (over CHANGE, default 0.3 %). The scene's own animation (the sea,
+//   bubbles, fish, clouds) moves too: read the sheets. SHEETS_ONLY=1 re-draws the sheets and the list from OUT's shots
+//   (with BEFORE: a new pairing) without shooting.
 // TWIN=1: Bravo's twins (every view turned (x, z) → (−x, −z); names, shots and sheets suffixed -B). ONLY=<regex>: only
 //   the views whose names match. MODE=turf (default) / zones / tower. W / H the shot size (1280 × 720).
 // The page runs the game's DEFAULT_SETTINGS (quality high; each view at fov 70), bots off, actors, HUD and paint
@@ -25,7 +27,7 @@ const path = require('path');
 require(process.env.S + '/offscreen-boot.cjs');
 const MAP = process.env.MAP || 'aquarium', TIME = process.env.TIME || 'day', MODE = process.env.MODE || 'turf';
 const OUT = process.env.OUT || `${process.env.BOTLAB_ROOT || '.'}/.botlab/sweep-${MAP}-${TIME}`;
-const TWIN = process.env.TWIN === '1', BEFORE = process.env.BEFORE || '', CHANGE = +(process.env.CHANGE || 2.0);
+const TWIN = process.env.TWIN === '1', BEFORE = process.env.BEFORE || '', CHANGE = +(process.env.CHANGE || 0.3), SHEETS_ONLY = process.env.SHEETS_ONLY === '1';
 const ONLY = process.env.ONLY ? new RegExp(process.env.ONLY) : null;
 const W = +(process.env.W || 1280), H = +(process.env.H || 720);
 const SKIP = (process.env.SKIP ?? 'ground,promenade,feeding-deck,tank-bed,rail').split(',').filter(Boolean);
@@ -54,8 +56,10 @@ const SHEET = `async (spec) => {
   }
   for (let q = 0.86; ; q -= 0.06) { const u = c.toDataURL('image/jpeg', q); if (u.length * 0.75 < 290000 || q < 0.4) return u.slice(u.indexOf(',') + 1); }
 }`;
-const small = (img) => img.resize({ width: 160, height: 90, quality: 'good' }).getBitmap();
-const mad = (a, b) => { if (!a || !b || a.length !== b.length) return null; let s = 0; for (let i = 0; i < a.length; i += 4) s += Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]); return s / ((a.length / 4) * 3); };
+// a view's change: the share of its frame (in %, at 320 × 180) whose pixels moved by more than 20/255 (the channels'
+// mean) — a stencil on a small box shows, the JPEG's own noise does not
+const small = (img) => img.resize({ width: 320, height: 180, quality: 'good' }).getBitmap();
+const mad = (a, b) => { if (!a || !b || a.length !== b.length) return null; let n = 0; for (let i = 0; i < a.length; i += 4) if (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) > 60) n++; return (100 * n) / (a.length / 4); };
 const tile = (img) => (img && !img.isEmpty() ? img.resize({ width: 400, height: 225, quality: 'good' }).toJPEG(88).toString('base64') : null);
 
 let claimed = false;
@@ -80,7 +84,7 @@ app.on('browser-window-created', (_, win) => {
     const info = await js(`(() => { const g = window.__inkwave, L = __G.level; return { map: '${MAP}', time: '${TIME}', mode: '${MODE}', quality: g.settings.quality, fov: g.settings.fov, lightSize: L.lightSize, layoutHash: L.layoutHash, blocks: L.blocks.length, nav: __G.nav.nodes.length }; })()`);
     console.log('SETTINGS', ts(), JSON.stringify(info));
     let views;
-    if (!process.env.VIEWS) {
+    if (!process.env.VIEWS && !SHEETS_ONLY) {
       views = await js(`(() => {
         const L = __G.level, nav = __G.nav, ph = __G.physics, V3 = L.blocks[0].center.constructor;
         const SKIP = new Set(${JSON.stringify(SKIP)}), ZMAX = ${ZMAX}, UNTAGGED = ${UNTAGGED};
@@ -145,7 +149,7 @@ app.on('browser-window-created', (_, win) => {
         }
         return views;
       })()`);
-    } else views = JSON.parse(fs.readFileSync(process.env.VIEWS, 'utf8'));
+    } else views = JSON.parse(fs.readFileSync(process.env.VIEWS || path.join(OUT, 'views.json'), 'utf8'));
     fs.writeFileSync(path.join(OUT, 'views.json'), JSON.stringify(views));
     const none = views.filter((v) => v.none);
     console.log(`VIEWS ${views.length - none.length} views of ${new Set(views.map(clusterOf)).size} clusters, ${none.length} cluster(s) with NO EYE-LEVEL VIEW`);
@@ -162,7 +166,7 @@ app.on('browser-window-created', (_, win) => {
     })()`);
     const stepPaint = async () => { const p0 = paints; await js(`window.__inkwave.debug.step(1000 / 60); 0`); for (let i = 0; i < 200 && paints <= p0; i++) await wait(25); };
     let n = 0;
-    for (const spec of shoot) {
+    for (const spec of SHEETS_ONLY ? [] : shoot) {
       const ok = await js(`(async () => {
         const g = window.__inkwave, THREE = await import('three');
         const V = (a) => new THREE.Vector3(a[0], a[1], a[2]);
@@ -199,11 +203,11 @@ app.on('browser-window-created', (_, win) => {
           const dif = ch.map((_, i) => (after[i] && before[i] ? mad(small(after[i]), small(before[i])) : null));
           for (const d of dif) if (d != null) worst = Math.max(worst ?? 0, d);
           for (let i = 0; i < 4; i++) cells.push(ch[i] ? { label: `BEFORE ${ch[i].name}`, b64: tile(before[i]), color: '#9fb4c8' } : null);
-          for (let i = 0; i < 4; i++) cells.push(ch[i] ? { label: `AFTER ${lab(ch[i])}${dif[i] != null ? `  Δ${dif[i].toFixed(1)}` : ''}`, b64: tile(after[i]), color: dif[i] > CHANGE ? '#ffb36b' : '#f0e6c8' } : null);
+          for (let i = 0; i < 4; i++) cells.push(ch[i] ? { label: `AFTER ${lab(ch[i])}${dif[i] != null ? `  Δ ${dif[i].toFixed(1)} %` : ''}`, b64: tile(after[i]), color: dif[i] > CHANGE ? '#ffb36b' : '#f0e6c8' } : null);
         }
       } else for (const v of vs) cells.push({ label: lab(v), b64: tile(img(OUT, v)) });
       const box = m.mn ? `  box (${m.mn.join(', ')}) … (${m.mx.join(', ')})` : '';
-      const title = `${MAP} · ${TIME}${TWIN ? ' · Bravo twin' : ''} · ${c}${SUF}${m.n ? ` · ${m.n} block(s)` : ''}${box}${BEFORE ? `  ·  max Δ ${worst == null ? '–' : worst.toFixed(1)}/255` : ''}`;
+      const title = `${MAP} · ${TIME}${TWIN ? ' · Bravo twin' : ''} · ${c}${SUF}${m.n ? ` · ${m.n} block(s)` : ''}${box}${BEFORE ? `  ·  changed up to ${worst == null ? '–' : worst.toFixed(1)} % of a view` : ''}`;
       // (the page draws it; a GPU stall on a loaded machine must not hang the run)
       const b64 = await Promise.race([js(`(${SHEET})(${JSON.stringify({ cols: 4, tw: 400, th: 225, title, cells })})`), wait(60000).then(() => null)]);
       if (!b64) { console.log(`SHEET TIMEOUT ${c}${SUF}`); continue; }
@@ -215,8 +219,8 @@ app.on('browser-window-created', (_, win) => {
     const L = [`# stage-sweep ${JSON.stringify(info)}${TWIN ? ' TWIN' : ''}${BEFORE ? ` BEFORE=${BEFORE}` : ''}`,
       `# ${shoot.length} views of ${byC.size} clusters shot; ${none.length} cluster(s) with no eye-level view`, '',
       `NO EYE-LEVEL VIEW (${none.length}):`, ...none.map((v) => `  ${clusterOf(v)}  ${v.n} block(s)  box (${v.mn.join(', ')}) … (${v.mx.join(', ')})${v.hidden ? '  hidden' : ''}`), ''];
-    if (BEFORE) L.push(`CHANGED (max Δ > ${CHANGE}/255): ${changed.length}`, ...changed.map((c) => `  ${c}${SUF}  Δ${rows.find((r) => r.c === c).worst.toFixed(1)}`), '');
-    L.push('CLUSTERS:', ...rows.map((r) => `  ${r.c}${SUF}  ${r.m.n ?? '?'} block(s)  ${r.nv} view(s)${r.worst != null ? `  Δ${r.worst.toFixed(1)}` : ''}  ${r.sheet}${r.m.mn ? `  box (${r.m.mn.join(', ')}) … (${r.m.mx.join(', ')})` : ''}`));
+    if (BEFORE) L.push(`CHANGED (a view more than ${CHANGE} % changed): ${changed.length}`, ...changed.map((c) => `  ${c}${SUF}  Δ ${rows.find((r) => r.c === c).worst.toFixed(1)} %`), '');
+    L.push('CLUSTERS:', ...rows.map((r) => `  ${r.c}${SUF}  ${r.m.n ?? '?'} block(s)  ${r.nv} view(s)${r.worst != null ? `  Δ ${r.worst.toFixed(1)} %` : ''}  ${r.sheet}${r.m.mn ? `  box (${r.m.mn.join(', ')}) … (${r.m.mx.join(', ')})` : ''}`));
     fs.writeFileSync(path.join(OUT, `clusters${SUF}.txt`), L.join('\n') + '\n');
     console.log(`SHEETS ${rows.length} in ${path.join(OUT, 'sheets')}; ${path.join(OUT, `clusters${SUF}.txt`)}`);
     for (const v of none) console.log(`NO EYE-LEVEL VIEW ${clusterOf(v)}`);

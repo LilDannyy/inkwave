@@ -83,9 +83,10 @@ Stages:
   cluster, each view labelled with its eye position, under 290 KB) and `clusters.txt` (every cluster, the ones with NO
   EYE-LEVEL VIEW listed first: overhead pieces, or something nobody can walk up to). Before / after a change:
   `VIEWS=<before>/views.json BEFORE=<before>` re-shoots the same cameras and pairs each before shot over its after shot,
-  with each view's change (mean absolute difference /255) and a CHANGED list in `clusters.txt` (`CHANGE=2.0`).
-  `TWIN=1` shoots Bravo's twins (−x, −z; names suffixed `-B`), `ONLY=<regex>` a subset of views, `UNTAGGED=1` sweeps
-  untagged blocks too. About 5 min for Gulper Aquarium's 516 views; give the Bash call a 600000 ms timeout.
+  with each view's change (the share of the frame whose pixels moved by more than 20/255) and a CHANGED list in
+  `clusters.txt` (`CHANGE=0.3` %; the sea, bubbles, fish and clouds animate, so read the sheets); `SHEETS_ONLY=1`
+  re-draws the sheets from `OUT`'s shots. `TWIN=1` shoots Bravo's twins (−x, −z; names suffixed `-B`), `ONLY=<regex>`
+  a subset of views, `UNTAGGED=1` sweeps untagged blocks too. About 5 min for Gulper Aquarium's 516 views; give the Bash call a 600000 ms timeout.
 
 Online (private rooms) — real clients on this machine, never the deployed relay:
 - `tools/botlab/relay.cjs`: the relay's protocol (server/src/index.js) on Node `http`, WebSocket by hand
