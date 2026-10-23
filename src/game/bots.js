@@ -45,6 +45,7 @@ export const CHARGES = { charger: true, spinner: true, splatling: true };
 export const CLIMB = { stall: 1.75, off: 12, max: 8, ink: 0.2, dry: 40, unreach: 150, reach: { brush: { max: 2.0 }, roller: { min: 1.8 } } };
 export const CLIMB_STATS = { tries: 0, done: 0, stalled: 0, dry: 0, long: 0 };
 export const STRAND_STATS = { jumps: 0, log: [] };   // [b5-beta1] stranded bots' super jumps out (tests / probes; log: the last 20)
+const INK_STEP_R = [0.55, 0.95, 1.45, 2.05], INK_STEP_R_FAR = [0.55, 0.95, 1.45, 2.05, 2.75, 3.5];   // [b5-beta1] (_inkStep)
 
 // ============================================================================================ Zone Control team plan
 // Shared by every bot in a zones match (one per ZoneControl): each zone's paint cells mapped to the nav nodes you'd
@@ -3407,7 +3408,7 @@ export class BotBrain {
     this.repath = 1.2;
   }
 
-  // Our own ink within 3.5 m, on our level, nothing in the way: the nearest such spot well inside it (two
+  // Our own ink within 3.5 m (2 m on a stage with lava), on our level, nothing in the way: the nearest such spot well inside it (two
   // samples deep along the way there), or null. Re-checked every 0.2 s. (Refill: a spot that isn't quite under us.)
   _inkStep(dt) {
     const a = this.a;
@@ -3419,7 +3420,9 @@ export class BotBrain {
       const h = G.physics.raycast(_v3.set(x, a.pos.y + 0.6, z), _down, 1.3, _stepHit, true);
       return h.hit && h.normal.y > 0.7 && Math.abs(h.point.y - a.pos.y) < 0.5 && G.paint.sample(h.face, h.u, h.v) === own ? h.point.y : null;
     };
-    for (const r of [0.55, 0.95, 1.45, 2.05, 2.75, 3.5]) {   // [b5-beta1] 2.75, 3.5: where a roller's flick or a Mitts punch lands its puddle
+    // [b5-beta1] 2.75, 3.5: where a roller's flick or a Mitts punch lands its puddle — not on a stage with lava (a longer
+    // step onto ink is a step toward the floor it takes: lava-bots met deaths in 3 of 6 runs with it, 0 of 6 without)
+    for (const r of G.match?.lava ? INK_STEP_R : INK_STEP_R_FAR) {
       for (let k = 0; k < 8; k++) {
         const ang = (k + 0.5 * (r > 1)) * (Math.PI / 4), sx = Math.sin(ang), sz = Math.cos(ang);
         const x = a.pos.x + sx * r, z = a.pos.z + sz * r;
