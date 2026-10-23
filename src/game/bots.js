@@ -1252,7 +1252,19 @@ export class BotBrain {
     if (this._hopPath && this._hopTo && !a.grounded && !gOff && !this._climbAim) { const n = this._hopTo, dx = n.x - a.pos.x, dz = n.z - a.pos.z, d = Math.hypot(dx, dz); if (d > 0.3) it.move.set(dx / d, 0, dz / d); }
     if (!a.grounded && !gNear && !a.climbing && !gOff && !this._hopPath && !a.superJumpState && (this._arcWet(a, a.vel.x, a.vel.z) || this._flightWet(a, it.move))) {   // (fix round 3: a climb's own hop too, while not on the wall — a squid climb up the Ladle Road's face let go and flew off the Horn Step into the arm)   // [b5-caldera] fix round 3: _flightWet (air control keeps pulling it the brain's way: a twins hop drifted 1.3 m off the edge at 3 m/s while the ballistic arc still read the floor it left)
       const bx = (this._lastFoot?.x ?? a.pos.x) - a.pos.x, bz = (this._lastFoot?.z ?? a.pos.z) - a.pos.z, bl = Math.hypot(bx, bz);
-      if (bl > 0.05) it.move.set(bx / bl, 0, bz / bl); else if (Math.hypot(a.vel.x, a.vel.z) > 0.05) it.move.set(-a.vel.x, 0, -a.vel.z).normalize();
+      // [b5-caldera] fix round 6: the way back is flown in the model first, then no steer, then the 8 headings — the first
+      // that comes down dry is kept 0.1 s (a Mitts bot letting go of a wall, its last foot a Race stone, steered "back" at
+      // the stone and came down short in the bay beside race 7's pier: lava-bots edges); none dry: the way back as before
+      const F = this._airFix;
+      if (F && this.t - F.t < 0.1) it.move.set(F.x, 0, F.z);
+      else {
+        let pick = null;
+        if (bl > 0.05 && this._airDry(a, bx / bl, bz / bl)) pick = [bx / bl, bz / bl];
+        else if (this._airDry(a, 0, 0)) pick = [0, 0];
+        else for (let k = 0; k < 8 && !pick; k++) { const cx = Math.cos((k * Math.PI) / 4), cz = Math.sin((k * Math.PI) / 4); if (this._airDry(a, cx, cz)) pick = [cx, cz]; }
+        if (pick) { this._airFix = { t: this.t, x: pick[0], z: pick[1] }; it.move.set(pick[0], 0, pick[1]); }
+        else if (bl > 0.05) it.move.set(bx / bl, 0, bz / bl); else if (Math.hypot(a.vel.x, a.vel.z) > 0.05) it.move.set(-a.vel.x, 0, -a.vel.z).normalize();
+      }
     }
     if (a.grounded) (this._lastFoot ||= new THREE.Vector3()).copy(a.pos);
     // displacement watchdog: asking to move for 1.5 s but covering < 0.4 m means something the waypoint logic can't
@@ -1552,6 +1564,11 @@ export class BotBrain {
     if (!(f.gy > -Infinity) || Math.abs(f.gy - n.y) > 0.35 || Math.hypot(f.x - n.x, f.z - n.z) > 2.6 || !this._standable(f.x, f.gy, f.z)) return false;
     const SM = G.match?.stage;
     return !(SM && SM.wet(f.x, f.z, f.gy, 0.5));
+  }
+  // [b5-caldera] fix round 6: does the flight as it flies now, steered along (ux, uz) (0, 0: no steer), come down dry?
+  _airDry(a, ux, uz) {
+    const u = [ux, uz], f = this._flight(a, a.vel.x, a.vel.y, a.vel.z, ux || uz ? () => u : null, 1.5), SM = G.match?.stage;
+    return f.gy > -Infinity && !(SM && SM.wet(f.x, f.z, f.gy, 0.5));
   }
   // [b5-caldera] fix round 3: in the air, the flight as the brain steers it now (the move held): does it come down on the
   // sea or the lava, or on nothing within 1.5 s? (no move: the ballistic _arcWet answers)
