@@ -14,20 +14,20 @@
 //   clusters.txt   every cluster (tag.k, blocks, box, views), the NO EYE-LEVEL VIEW ones first
 // BEFORE=<an earlier run's OUT>: each sheet puts that run's shot (row "before") over this run's ("after"), and
 //   clusters.txt gives every cluster's largest per-view change (the share of the frame, in %, whose pixels moved by more
-//   than 20/255 at 320 × 180) and lists the CHANGED ones (over CHANGE, default 0.3 %). The scene's own animation (the sea,
-//   bubbles, fish, clouds) moves too: read the sheets. SHEETS_ONLY=1 re-draws the sheets and the list from OUT's shots
-//   (with BEFORE: a new pairing) without shooting.
+//   than 20/255 at 320 × 180) and lists the CHANGED ones (over CHANGE, default 1 %; two runs of the same tree differ by
+//   0.35 % at most). SHEETS_ONLY=1 re-draws the sheets and the list from OUT's shots (with BEFORE: a new pairing).
 // TWIN=1: Bravo's twins (every view turned (x, z) → (−x, −z); names, shots and sheets suffixed -B). ONLY=<regex>: only
 //   the views whose names match. MODE=turf (default) / zones / tower. W / H the shot size (1280 × 720).
 // The page runs the game's DEFAULT_SETTINGS (quality high; each view at fov 70), bots off, actors, HUD and paint
-// cleared; each picture is the frame painted after its own stepped frame. WATCHDOG=ms (default 3,000,000).
+// cleared; each picture is the frame painted after its own stepped frames, every view at the same moment (the match
+// clock at 2:50, the environment's clock at ENVT, default 100 s). WATCHDOG=ms (default 3,000,000).
 const { app, nativeImage } = require('electron');
 const fs = require('fs');
 const path = require('path');
 require(process.env.S + '/offscreen-boot.cjs');
 const MAP = process.env.MAP || 'aquarium', TIME = process.env.TIME || 'day', MODE = process.env.MODE || 'turf';
 const OUT = process.env.OUT || `${process.env.BOTLAB_ROOT || '.'}/.botlab/sweep-${MAP}-${TIME}`;
-const TWIN = process.env.TWIN === '1', BEFORE = process.env.BEFORE || '', CHANGE = +(process.env.CHANGE || 0.3), SHEETS_ONLY = process.env.SHEETS_ONLY === '1';
+const TWIN = process.env.TWIN === '1', BEFORE = process.env.BEFORE || '', CHANGE = +(process.env.CHANGE || 1.0), SHEETS_ONLY = process.env.SHEETS_ONLY === '1';
 const ONLY = process.env.ONLY ? new RegExp(process.env.ONLY) : null;
 const W = +(process.env.W || 1280), H = +(process.env.H || 720);
 const SKIP = (process.env.SKIP ?? 'ground,promenade,feeding-deck,tank-bed,rail').split(',').filter(Boolean);
@@ -78,8 +78,11 @@ app.on('browser-window-created', (_, win) => {
     await js(`(async () => { const { DEFAULT_SETTINGS } = await import('./src/config.js'); const g = window.__inkwave; Object.assign(g.settings, DEFAULT_SETTINGS); g.R.applySettings(g.settings); return 1; })()`);
     await js(`window.__inkwave.api.startMatch({ mapId: '${MAP}', duration: 180, time: '${TIME}', mode: '${MODE}' })`);
     { const got = await js(`(window.__inkwave.mapDef && window.__inkwave.mapDef.id) || null`); if (got !== MAP) { console.log(`MAP MISMATCH: asked for ${MAP}, the game built ${got}`); app.exit(3); return; } }
-    for (let i = 0; i < 400; i++) { if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
-    await js(`(() => { const g = window.__inkwave; for (const a of g.match.actors) a.bot = null; return 1; })()`);
+    // (the bots' brains off from the start, not once it is playing: a sprinkler or a mine laid in the first second inked
+    // views a frame after their paint was cleared)
+    const noBots = `(() => { const g = window.__inkwave; for (const a of g.match?.actors || []) a.bot = null; return 1; })()`;
+    for (let i = 0; i < 400; i++) { await js(noBots); if (await js(`window.__inkwave.match?.state === 'playing'`)) break; await wait(250); }
+    await js(noBots);
     await wait(1500);
     const info = await js(`(() => { const g = window.__inkwave, L = __G.level; return { map: '${MAP}', time: '${TIME}', mode: '${MODE}', quality: g.settings.quality, fov: g.settings.fov, lightSize: L.lightSize, layoutHash: L.layoutHash, blocks: L.blocks.length, nav: __G.nav.nodes.length }; })()`);
     console.log('SETTINGS', ts(), JSON.stringify(info));
@@ -171,7 +174,11 @@ app.on('browser-window-created', (_, win) => {
         const g = window.__inkwave, THREE = await import('three');
         const V = (a) => new THREE.Vector3(a[0], a[1], a[2]);
         const P = ${JSON.stringify({ from: spec.from, look: spec.look, fov: spec.fov })};
-        if (g.match && g.match.time < 100) g.match.time = 170;
+        // (the same moment for every view of every run: the match clock and the environment's clock — sky, sea, fish,
+        // bubbles, every backdrop animation — set before the frames each view steps, so before / after differ only where
+        // the stage did)
+        if (g.match) g.match.time = 170;
+        if (__G.env) __G.env.time = ${+(process.env.ENVT || 100)};
         __G.paint.clear();
         g.settings.fov = P.fov || 70;
         g.rig.cinematic(V(P.from), V(P.from), V(P.look), V(P.look), 99, () => {});
