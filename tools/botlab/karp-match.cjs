@@ -14,6 +14,10 @@
 //        [b5-karp-bots] PLAN='karpbox:normal:3,halyard:hard:2' (several matches in this one instance; OUT=dir/x.json →
 //        x-<map>-<diff>-<i>.json) · KARP_AI=0 (WP1's minimal bots) · KARP_TUNE='{"jumpR":30}' (KARP_AI fields) ·
 //        KARP_CFG='{"shell":{"reformHp":600}}' (BAZOOKARP numbers, deep) — what-ifs for the balance pass, never saved
+//        [b5-beta1] DIAG=1: every stuck episode also records the bot's plan at its start and every 5 s after (as match.cjs's
+//        DIAG: mode, role, route, next nodes, the edge into the next one, goal, noProg, nearest node, holds, carrying) and
+//        every episode of 2 s or more is printed with it; ISSUELOG prints the in-game issue log's stuck-bot entries of the
+//        match (src/core/issueLog.js: the beta's own detector) beside the harness's episodes
 // Ends with `RESULT karp <id> win=A|B reason=… ko=… c=…/… pops=… carries=… blasts=… ot=…/<why>` and RESULT_JSON {…}.
 // (The missing-lightmap warning of a stage's .bazookarp variant is expected until WP4b bakes it: listed, not counted.)
 const { app } = require('electron');
@@ -21,7 +25,7 @@ const fs = require('fs');
 require(process.env.S + '/offscreen-boot.cjs');
 const { TEST_MAPS, defineTestMap } = require(process.env.S + '/testmaps.cjs');
 let MAP = process.env.MAP || 'karpbox', DIFF = process.env.DIFF || 'normal';
-const DUR = +(process.env.DUR || 300), HUMAN = process.env.HUMAN || '';
+const DUR = +(process.env.DUR || 300), HUMAN = process.env.HUMAN || '', DIAG = process.env.DIAG === '1';
 let OUT = process.env.OUT || '';
 setTimeout(() => { console.log('WATCHDOG'); app.exit(1); }, +(process.env.WATCHDOG || 590000));
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -97,6 +101,15 @@ app.on('browser-window-created', (_, win) => {
       const closeCarry = (how) => { if (!cur) return; cur.dur = +(clock() - cur.t0).toFixed(1); cur.m = +(Kp.bestM[cur.team] - cur.best0).toFixed(1); cur.how = cur.how || how; X.carries.push(cur); cur = null; };
       offs.push(on('karp:drop', (e) => { if (e.how !== 'moved') closeCarry(e.how); }), on('karp:reset', (e) => closeCarry(e.why === 'zone' ? 'splat' : e.why)), on('karp:plant', () => closeCarry('plant')), on('karp:end', (e) => { if (cur) closeCarry(e.reason === 'knockout' ? 'knockout' : 'end'); }));
       const hist = new Map(); let samples = 0, stuckS = 0, simT = 0, holdS = 0; const roleS = {}; const eps = [], open = new Map();
+      // [b5-beta1] DIAG=1: the bot's plan now (match.cjs's, plus the Bazookarp fields); the in-game issue log's entries from here on
+      const N = window.__G.nav, issue0 = (window.__issueLog?.snapshot() || []).length;
+      const r2 = (v) => Math.round(v * 100) / 100, ndP = (id) => { const n = id >= 0 && N.nodes[id]; return n ? [n.x, r2(n.y), n.z] : null; };
+      const plan = ${DIAG} ? (a) => {
+        const b = a.bot, p = b.path, pi = b.pi | 0, e = p && pi > 0 && pi < p.length ? N.edge(p[pi - 1], p[pi]) : null;
+        return { t: +simT.toFixed(1), mode: b.mode, role: b.kRole || '-', pos: [r2(a.pos.x), r2(a.pos.y), r2(a.pos.z)], len: p ? p.length : 0, pi, next: p ? [ndP(p[pi]), ndP(p[pi + 1])] : null,
+          edgeIn: !p || pi <= 0 || pi >= p.length ? '-' : e ? e.type : 'none', goal: ndP(b.goal), noProg: r2(b.noProg || 0), near: ndP(N.nearest(a.pos, 1.2, true)),
+          kHold: r2(Math.max(0, (b.kHoldUntil || 0) - window.__G.time)), zHold: r2(Math.max(0, (b.zHoldUntil || 0) - b.t)), carry: !!a.carry, pipe: !!a.pipe, grounded: !!a.grounded, climbing: !!a.climbing, form: a.form };
+      } : null;
       let cStuck = 0; const cEps = []; let cHist = [];
       const frameErr = { n: 0, msg: '' };
       const DT = 1 / 60, CH = 15;
@@ -129,8 +142,8 @@ app.on('browser-window-created', (_, win) => {
           const stuck = wants && h.length >= 11 && span < 1.0;
           if (stuck) {
             stuckS += 0.25;
-            if (!open.has(a)) { const ep = { t: +simT.toFixed(1), name: a.name, w: a.weaponId, mode: a.bot.mode, role: a.bot.kRole || '-', carry: !!a.carry, pos: [+a.pos.x.toFixed(1), +a.pos.y.toFixed(2), +a.pos.z.toFixed(1)], dur: 0 }; open.set(a, ep); eps.push(ep); }
-            open.get(a).dur += 0.25;
+            if (!open.has(a)) { const ep = { t: +simT.toFixed(1), name: a.name, w: a.weaponId, mode: a.bot.mode, role: a.bot.kRole || '-', carry: !!a.carry, pos: [+a.pos.x.toFixed(1), +a.pos.y.toFixed(2), +a.pos.z.toFixed(1)], dur: 0 }; if (plan) ep.diag = [plan(a)]; open.set(a, ep); eps.push(ep); }
+            { const ep = open.get(a); ep.dur += 0.25; if (plan && ep.dur % 5 === 0) ep.diag.push(plan(a)); }
           } else open.delete(a);
         }
         // the carrier: stuck > 3 s (< 1 m in 3 s while carrying)
@@ -161,7 +174,9 @@ app.on('browser-window-created', (_, win) => {
         ot: X.ot ? { why: X.ot.why, losing: X.ot.losing, len: +((X.end ? X.end.t : clock()) - X.ot.t).toFixed(1), end: Kp.reason, windows: S.windows } : null,
         fastT: { retreat: +(S.fastT.retreat || 0).toFixed(1), zone: +(S.fastT.zone || 0).toFixed(1) },
         clamped: S.clamped, clampLog: S.clampLog || [], retreatFallback: KARP_BOT.stats.retreatFallback, fbSoft: KARP_BOT.stats.fbSoft || 0, carrierShots: KARP_BOT.stats.carrierShots, breakT: +KARP_BOT.stats.breakT.toFixed(0),
-        stuckPct: +(100 * stuckS / botS).toFixed(1), holdPct: +(100 * holdS / botS).toFixed(1), eps: eps.sort((a, b) => b.dur - a.dur).slice(0, 6), carrierStuck: { s: cStuck, eps: cEps.filter((e) => e.dur > 3).slice(0, 6) },
+        stuckPct: +(100 * stuckS / botS).toFixed(1), holdPct: +(100 * holdS / botS).toFixed(1), diagEps: ${DIAG} ? eps.filter((e) => e.dur >= 2).sort((a, b) => b.dur - a.dur) : undefined,
+        over5: eps.filter((e) => e.dur > 5).length, issueStuck: (window.__issueLog?.snapshot() || []).slice(issue0).filter((e) => e.kind === 'stuck-bot'),
+        eps: eps.sort((a, b) => b.dur - a.dur).slice(0, 6).map(({ diag, ...e }) => e), carrierStuck: { s: cStuck, eps: cEps.filter((e) => e.dur > 3).slice(0, 6) },
         shots: KG.stats, splats: X.splats, fuseSplats: X.fuseSplats, specials: X.specials, jumps: X.jumps, jumpsToCarrier: X.jumpsToCarrier,
         bubbleOnCarrier: X.bubbleOnCarrier.length, koBubble, frameErr, grants: S.grants, refused: S.refused,
         fieldMs: Kp.field.stats.buildMs, fieldSplit: Kp.field.stats.ms, hops: Kp.field.stats.hops, gaps: Kp.field.stats.gaps,
@@ -192,7 +207,9 @@ app.on('browser-window-created', (_, win) => {
     if (r.fbAt && r.fbAt.length) console.log('   carrierRetreatFallback at [x, y, z, level, team, P, mark, slack] ' + JSON.stringify(r.fbAt));
     if (r.burstV && r.burstV.length) console.log('   burst victims ' + JSON.stringify(r.burstV));
     { const C = r.carries || [], q = C.filter((c) => c.how === 'splat' && c.dur < 2.5).length, z = C.filter((c) => !(c.m > 0)).length; console.log(`   carries: ${q} of ${C.length} ended in a splat within 2.5 s; ${z} made no new ground`); }
-    for (const e of r.eps) console.log('   stuck ' + JSON.stringify(e));
+    for (const e of DIAG ? [] : r.eps) console.log('   stuck ' + JSON.stringify(e));
+    if (DIAG) { console.log(`   DIAG: ${r.diagEps.length} stuck episode(s) of 2 s or more`); for (const e of r.diagEps) { const { diag, ...rest } = e; console.log('   stuck ' + JSON.stringify(rest)); for (const d of diag) console.log('      plan ' + JSON.stringify(d)); } }
+    console.log(`   STUCK episodes over 5 s: ${r.over5} | ISSUELOG stuck-bot entries this match: ${r.issueStuck.length}${r.issueStuck.length ? ' ' + JSON.stringify(r.issueStuck.map(({ at, kind, message, build, era, lava, online, ...x }) => x)).slice(0, 1500) : ''}`);
     for (const e of r.carrierStuck.eps) console.log('   carrier-stuck ' + JSON.stringify(e));
     if (r.frameErr.n) console.log(`   FRAME ERRORS ${r.frameErr.n}: ${r.frameErr.msg}`);
     if (lightmap.length) console.log(`   (expected: ${lightmap.length} missing-lightmap warning(s) — the .bazookarp variant is baked by WP4b)`);
@@ -200,7 +217,7 @@ app.on('browser-window-created', (_, win) => {
     const ot = r.ot ? `${r.ot.end}/${r.ot.why}` : 'no';
     console.log(`RESULT karp ${MAP} win=${W(r.winner)} reason=${r.reason} ko=${r.koT ?? '-'} c=${r.counts.join('/')} pops=${r.pops.join('/')} carries=${r.carries.length} blasts=${r.blasts.own + r.blasts.enemy} ot=${ot}`);
     const J = { ...r, console: uniq.length, lightmapWarnings: lightmap.length, wallS: +wallS, diff: DIFF, human: HUMAN || null };
-    console.log('RESULT_JSON ' + JSON.stringify({ map: MAP, winner: r.winner, reason: r.reason, koT: r.koT, counts: r.counts, pops: r.pops, firstPop: r.firstPop, carries: r.carries.length, plants: r.plants.length, blasts: r.blasts, resets: r.resets, ot: r.ot, stuckPct: r.stuckPct, clamped: r.clamped, crushes: r.crushes, console: uniq.length, frameErrors: r.frameErr.n }));
+    console.log('RESULT_JSON ' + JSON.stringify({ map: MAP, winner: r.winner, reason: r.reason, koT: r.koT, counts: r.counts, pops: r.pops, firstPop: r.firstPop, carries: r.carries.length, plants: r.plants.length, blasts: r.blasts, resets: r.resets, ot: r.ot, stuckPct: r.stuckPct, over5: r.over5, issueStuck: r.issueStuck.length, clamped: r.clamped, crushes: r.crushes, console: uniq.length, frameErrors: r.frameErr.n }));
     if (OUT) fs.writeFileSync(OUT, JSON.stringify(J, null, 1));
     }
     app.quit();

@@ -21,6 +21,8 @@
 //   route length, pi, the next two route nodes, the edge into the next one (nav.edge: 'none' when there's no such
 //   edge — e.g. after the stuck recovery skipped a waypoint), the goal node, noProg, the nearest nav node, and the wall
 //   climb it's at (if any). RESULT_JSON.diagEps lists every episode of 2 s or more with them (longest first).
+//   [b5-beta1] Every run prints the episodes over 5 s and the in-game issue log's stuck-bot entries of the match (ISSUELOG:
+//   src/core/issueLog.js, the beta's own detector) beside them.
 // Reports: stuck %, splats (by cause), per-weapon splats / deaths / turf, specials, super jumps, console errors, sim
 // cost, and in Zone Control the objective stats. Last line: RESULT_JSON {…} (also written to OUT if set).
 const { app } = require('electron');
@@ -118,7 +120,7 @@ app.on('browser-window-created', (_, win) => {
       const __ZC = (await import('./src/config.js')).ZONES, zLead = { cur: -1, changes: 0, contested: 0, dispute: 0, pending: 0 };
       const eps = []; let holdS = 0; const roleS = {}; const frameErr = { n: 0, msg: '' }; const where = {}; let whereN = 0; const whereT = [{}, {}]; const farMode = {}; let ready = 0;
       offs.push(on('special:ready', () => ready++));
-      const open = new Map();
+      const open = new Map(), issue0 = (window.__issueLog?.snapshot() || []).length;   // [b5-beta1] (the in-game issue log's entries from here on)
       // DIAG=1: the bot's nav plan now (see the header)
       const r2 = (v) => Math.round(v * 100) / 100, ndP = (id) => { const n = id >= 0 && N.nodes[id]; return n ? [n.x, r2(n.y), n.z] : null; };
       const plan = ${DIAG} ? (a) => {
@@ -344,6 +346,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
           blindChargePct: +(100 * SG.bChg / Math.max(1, SG.fire)).toFixed(1), blindShotPct: +(100 * (SG.blind - SG.bBel - SG.bChg) / Math.max(1, SG.fire)).toFixed(1), stats: BM.SIGHT_STATS ? { ...BM.SIGHT_STATS } : null },
         botMsPerS: +(botMs / Math.max(1, simT)).toFixed(2), seeMsPerS: +(seeMs / Math.max(1, simT)).toFixed(2),
         frameErr, eps: eps.sort((a, b) => b.dur - a.dur).slice(0, 6), diagEps: ${DIAG} ? eps.filter((e) => e.dur >= 2) : undefined,
+        over5: eps.filter((e) => e.dur > 5).length, issueStuck: (window.__issueLog?.snapshot() || []).slice(issue0).filter((e) => e.kind === 'stuck-bot'),   // [b5-beta1]
         climbs: BM.CLIMB_STATS ? { ...BM.CLIMB_STATS } : null, holdPct: +(100 * holdS / Math.max(1, samples * 0.25)).toFixed(1),
         roles: Object.fromEntries(Object.entries(roleS).map(([k, v]) => [k, +(100 * v / Math.max(1, samples * 0.25)).toFixed(0)])),
         // sprout pods (src/game/pods.js): hedges grown per team, bot-seconds perched on tops / in cover, exits, detours, holds
@@ -408,6 +411,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     if (r.climbs) console.log('   wall climbs (at the wall): ' + JSON.stringify(r.climbs));
     for (const e of DIAG ? [] : r.eps) console.log('   stuck ' + JSON.stringify(e));
     if (DIAG) { console.log(`   DIAG: ${r.diagEps.length} stuck episode(s) of 2 s or more`); for (const e of r.diagEps) { const { diag, ...rest } = e; console.log('   stuck ' + JSON.stringify(rest)); for (const d of diag) console.log('      plan ' + JSON.stringify(d)); } }
+    console.log(`   STUCK episodes over 5 s: ${r.over5} | ISSUELOG stuck-bot entries this match: ${r.issueStuck.length}${r.issueStuck.length ? ' ' + JSON.stringify(r.issueStuck.map(({ at, kind, message, build, era, lava, online, ...x }) => x)).slice(0, 1500) : ''}`);   // [b5-beta1] the beta's own detector beside the harness
     if (r.track) { const t = r.track; console.log(`   TRACK ${t.weapon}×${t.n} (team ${t.team}): ${t.kills} splats / ${t.deaths} deaths | damage out ${JSON.stringify(t.dmgOut)} in ${t.dmgIn} (armour saved ${t.armour}) | median dist: hits out ${t.distOut} m, hits in ${t.distIn} m, kills ${t.killDist} m, deaths ${t.deathDist} m`);
       console.log(`         died while ${JSON.stringify(t.deathState)} | by ${JSON.stringify(t.deathBy)} | ${t.deathClean} deaths without touching the killer | nearest enemy <4.5/<8/<14/far m: ${t.reach.join('/')}% | fighting ${t.fightS}s of ${t.aliveS}s alive | fired ${t.fired}${t.leaps ? ` | leaps ${t.leaps} ${JSON.stringify(t.leapKind)}, hit on landing ${t.leapHits}, landing kills ${t.leapKills}, clings ${t.clings}` : ''}`); }
     if (r.frameErr.n) console.log(`   FRAME ERRORS ${r.frameErr.n}: ${r.frameErr.msg}`);

@@ -21,7 +21,7 @@
 // (1 s per letter, printed for the first 150 s).
 const { app } = require('electron');
 require(process.env.S + '/offscreen-boot.cjs');
-const MAP = process.env.MAP || 'halyard', DUR = +(process.env.DUR || 300), HUMAN = process.env.HUMAN || '';
+const MAP = process.env.MAP || 'halyard', DUR = +(process.env.DUR || 300), HUMAN = process.env.HUMAN || '', DIAG = process.env.DIAG === '1';
 const OUT = process.env.OUT || '';
 setTimeout(() => { console.log('WATCHDOG'); app.exit(1); }, +(process.env.WATCHDOG || 590000));
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -107,6 +107,15 @@ app.on('browser-window-created', (_, win) => {
       const eps = [], sideEps = []; let sideS = 0, sideStuckS = 0, holdS = 0, rideS = 0;
       const roleS = {}; const frameErr = { n: 0, msg: '' }; const mounts = [0, 0]; const riding = new Set();
       const open = new Map(), openSide = new Map();
+      // [b5-beta1] DIAG=1: the bot's plan now (as match.cjs); the in-game issue log's entries from here on
+      const N = __G.nav, issue0 = (window.__issueLog?.snapshot() || []).length;
+      const d2 = (v) => Math.round(v * 100) / 100, ndP = (id) => { const n = id >= 0 && N.nodes[id]; return n ? [n.x, d2(n.y), n.z] : null; };
+      const plan = ${DIAG} ? (a) => {
+        const b = a.bot, p = b.path, pi = b.pi | 0, e = p && pi > 0 && pi < p.length ? N.edge(p[pi - 1], p[pi]) : null;
+        return { t: +simT.toFixed(1), mode: b.mode, role: b.tRole || '-', pos: [d2(a.pos.x), d2(a.pos.y), d2(a.pos.z)], len: p ? p.length : 0, pi, next: p ? [ndP(p[pi]), ndP(p[pi + 1])] : null,
+          edgeIn: !p || pi <= 0 || pi >= p.length ? '-' : e ? e.type : 'none', goal: ndP(b.goal), noProg: d2(b.noProg || 0), near: ndP(N.nearest(a.pos, 1.2, true)),
+          tHold: d2(Math.max(0, (b.tHoldUntil || 0) - b.t)), noClimb: b.t < (b.noClimbUntil || 0), climbing: !!a.climbing, grounded: !!a.grounded, form: a.form, ink: Math.round(a.ink) };
+      } : null;
       const dis = {}, lastOff = {};   // dismount reasons; the reasons of the last rider off a held tower
       const emptyHeldNow = (a) => T.owner === a.team && T.riders[a.team] === 0;
       const DT = 1 / 60, CH = 15;           // 0.25 s per chunk
@@ -264,8 +273,8 @@ app.on('browser-window-created', (_, win) => {
           const stuck = wants && h.length >= 11 && span < 1.0;
           if (stuck) {
             stuckS += 0.25;
-            if (!open.has(a)) { const ep = { t: +simT.toFixed(1), name: a.name, w: a.weaponId, mode: b.mode, role, pos: [+a.pos.x.toFixed(1), +a.pos.y.toFixed(2), +a.pos.z.toFixed(1)], tower: +Math.hypot(a.pos.x - T.pos.x, a.pos.z - T.pos.z).toFixed(1), path: !!b.path, dur: 0 }; open.set(a, ep); eps.push(ep); }
-            open.get(a).dur += 0.25;
+            if (!open.has(a)) { const ep = { t: +simT.toFixed(1), name: a.name, w: a.weaponId, mode: b.mode, role, pos: [+a.pos.x.toFixed(1), +a.pos.y.toFixed(2), +a.pos.z.toFixed(1)], tower: +Math.hypot(a.pos.x - T.pos.x, a.pos.z - T.pos.z).toFixed(1), path: !!b.path, dur: 0 }; if (plan) ep.diag = [plan(a)]; open.set(a, ep); eps.push(ep); }
+            { const ep = open.get(a); ep.dur += 0.25; if (plan && ep.dur % 5 === 0) ep.diag.push(plan(a)); }
           } else open.delete(a);
           // against the tower's side: by it (≤ 2.6 m from its centre), on the floor below its top, not riding
           const dx = a.pos.x - T.pos.x, dz = a.pos.z - T.pos.z, c = Math.cos(T.yaw), s = Math.sin(T.yaw);
@@ -295,7 +304,9 @@ app.on('browser-window-created', (_, win) => {
         splats: m.events.length, water: m.events.filter((e) => e.cause === 'water').length, specials: ev.specials, ready: ev.ready, jumps: ev.jumps,
         cov: __G.paint.coverage().map((c) => +(c * 100).toFixed(1)),
         eras: m.eras && m.eras.botReport ? m.eras.botReport() : undefined,   // [b5-eras] Bluestone's jumps (src/game/eras.js botReport)
-        frameErr, eps: eps.sort((a, b) => b.dur - a.dur).slice(0, 6), sideEps: sideEps.sort((a, b) => b.dur - a.dur).slice(0, 6),
+        frameErr, diagEps: ${DIAG} ? eps.filter((e) => e.dur >= 2).sort((a, b) => b.dur - a.dur) : undefined, over5: eps.filter((e) => e.dur > 5).length,   // [b5-beta1]
+        issueStuck: (window.__issueLog?.snapshot() || []).slice(issue0).filter((e) => e.kind === 'stuck-bot'),
+        eps: eps.sort((a, b) => b.dur - a.dur).slice(0, 6).map(({ diag, ...e }) => e), sideEps: sideEps.sort((a, b) => b.dur - a.dur).slice(0, 6),
         sidePct: +(100 * sideS / botS).toFixed(1), sideStuckS: +sideStuckS.toFixed(1), sideStuckN: sideEps.length,
         holdPct: +(100 * holdS / botS).toFixed(1), ridePct: +(100 * rideS / botS).toFixed(1),
         roles: Object.fromEntries(Object.entries(roleS).map(([k, v]) => [k, +(100 * v / botS).toFixed(0)])),
@@ -367,7 +378,9 @@ app.on('browser-window-created', (_, win) => {
     console.log(`   escort: riders held-time by count 0–4 ${JSON.stringify(r.y.ridH)} | full steam total ${JSON.stringify(r.y.steamTot)}s, full-steam-while-hot episodes ${JSON.stringify(r.y.steamHotEp)} | escort by the next checkpoint ${JSON.stringify(r.y.cpNear)}% | deck ink ${JSON.stringify(r.y.deckInk)}% | riders hidden (threat / safe) ${JSON.stringify(r.y.hide)}% of ${JSON.stringify(r.y.rideS)} rider-s | deaths while riding ${r.y.rideDeaths} ${JSON.stringify(r.y.rideDeathsT)} = ${r.y.rideDeathsPerMin}/rider-min | rolling home ${JSON.stringify(r.y.homingS)}s, riders hopped off for it ${JSON.stringify(r.y.homeOffEp)}× (${JSON.stringify(r.y.homeOffS)}s)${r.y.human ? ' | human ' + JSON.stringify(r.y.human) : ''}`);
     for (const L of r.y.lvl) console.log(`   escort slots ${L.name}: ${JSON.stringify(L.slotPlace)} | painting escorts: goal along med ${L.dg.goalAlong} (p20 ${L.dg.goalP20}) vs them ${L.dg.posAlong}, arrived ${L.dg.arrived}%, fighting ${L.dg.fight}% of ${L.dg.n} ${JSON.stringify(L.dg.slot)}`);
     for (const l of r.y.line) console.log(`   roles ${'AB'[l.team]} ${(l.name + (l.human ? '*' : '') + '/' + l.w).padEnd(20)} ${l.s.slice(0, 150)}`);
-    for (const e of r.eps) console.log('   stuck ' + JSON.stringify(e));
+    for (const e of DIAG ? [] : r.eps) console.log('   stuck ' + JSON.stringify(e));
+    if (DIAG) { console.log(`   DIAG: ${r.diagEps.length} stuck episode(s) of 2 s or more`); for (const e of r.diagEps) { const { diag, ...rest } = e; console.log('   stuck ' + JSON.stringify(rest)); for (const d of diag) console.log('      plan ' + JSON.stringify(d)); } }
+    console.log(`   STUCK episodes over 5 s: ${r.over5} | ISSUELOG stuck-bot entries this match: ${r.issueStuck.length}${r.issueStuck.length ? ' ' + JSON.stringify(r.issueStuck.map(({ at, kind, message, build, era, lava, online, ...x }) => x)).slice(0, 1500) : ''}`);   // [b5-beta1]
     for (const e of r.sideEps) console.log('   side-stuck ' + JSON.stringify(e));
     if (r.frameErr.n) console.log(`   FRAME ERRORS ${r.frameErr.n}: ${r.frameErr.msg}`);
     // [b5-deploy] devices: shot at / down, crushed by the tower, riding it; the bots' picks
