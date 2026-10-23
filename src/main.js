@@ -48,6 +48,7 @@ import { InkWipeFx } from './fx/inkWipeFx.js';
 import { cues } from './audio/cues.js';   // sfx-cues: sub / special audio cues (the loops, warnings, friend / foe mix)
 import { BOSS_MODE } from './boss/bossMode.js';
 import { issueLog } from './core/issueLog.js'; // [b5-int4] beta issue capture
+const LIGHTMAP_QUIET = new Set();   // [b5-beta1] mode-variant world keys whose missing lightmap was noted (once each)
 
 const params = new URLSearchParams(location.search);
 // dev-only: ?devstage lets an online-only stage (config onlineOnly — Cargo Terminal) boot as the backdrop and be walked
@@ -351,7 +352,11 @@ class Game {
       tex.anisotropy = 4;
       return tex;
     } catch (e) {
-      console.warn('[inkwave] no lightmap for', layoutId, e.message);
+      // [b5-beta1] a mode variant's own bake ('<id>.bazookarp' while its layout is still moving) may be missing: the world
+      // goes unlit there quietly (a debug line once per key, not a warning in the issue log). A stage's own build stays loud.
+      if (layoutId.includes('.')) { if (!LIGHTMAP_QUIET.has(layoutId)) { LIGHTMAP_QUIET.add(layoutId); console.debug('[inkwave] no lightmap for the mode variant', layoutId, '(unlit until it is baked)'); } }
+      else console.warn('[inkwave] no lightmap for', layoutId, e.message);
+      level.lightSize = 0;
       for (const f of level.faces) f.light = null;
       return null;
     }
