@@ -476,12 +476,25 @@ export class PaintSystem {
 
   // [b5-beta1] the atlas's first use, at load (main.js _warmStage) instead of in a match's first frames: its programs
   // compiled (the splat quads, the drying pass, both floods) and its mip chain built once (generateMipmaps on the
-  // 4096² target allocates the chain the first time: 160–260 ms on the Mac mini, in the first drying pass of a match)
+  // 4096² target allocates the chain the first time: 160–260 ms on the Mac mini, in the first drying pass of a match).
+  // The programs are compiled with the atlas bound (review 1): three.js keys a program on the target it draws into, and
+  // with none bound it built the screen's variant (sRGB output), which the atlas never uses — the real one then compiled
+  // at the first splat of play (a 173 ms paint flush on Gulper Aquarium). Returns when they are linked.
   warm() {
-    const r = this.renderer, vis = this.mesh.visible;
-    this.mesh.visible = true; r.compile(this.scene, this.cam); this.mesh.visible = vis;   // (the splat quads' mesh shows only with quads queued)
-    for (const mt of [this._floodWipe, this._floodInk]) { this._floodMesh.material = mt; r.compile(this._floodScene, this.cam); }
+    const r = this.renderer, prev = r.getRenderTarget(), jobs = [];
+    const compile = (scene) => (r.compileAsync ? r.compileAsync(scene, this.cam) : r.compile(scene, this.cam));
+    try {
+      r.setRenderTarget(this.rt);
+      jobs.push(compile(this.scene));   // (compile walks hidden objects too: the splat quads' mesh and the drying pass)
+      // (on a geometry with a position attribute, as every flood's has: three.js keys a program on hasPositionAttribute —
+      // the empty one built the wrong variant and the first flood of a match compiled its own)
+      const g0 = this._floodMesh.geometry, gw = this._floodWarmGeo || (this._floodWarmGeo = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(9), 3)));
+      this._floodMesh.geometry = gw;
+      try { for (const mt of [this._floodWipe, this._floodInk]) { this._floodMesh.material = mt; jobs.push(compile(this._floodScene)); } }
+      finally { this._floodMesh.geometry = g0; }
+    } finally { r.setRenderTarget(prev); this._floodMesh.material = this._floodInk; }
     this._dryU.uDry.value = 0; this.dryMesh.visible = true; this._drawQuads();   // (a drying pass of nothing: the mip build)
+    return Promise.all(jobs);
   }
 
   clear() {

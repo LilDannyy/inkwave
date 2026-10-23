@@ -1,4 +1,5 @@
 import { G } from '../../core/ctx.js';
+import { SPECIALS } from '../../config.js';   // [b5-beta1] (subKindsOf: a Bomb Barrage's bombs)
 // Registries for main-weapon and sub-weapon kinds that live in their own modules (src/game/kits/<kind>.js). Each kit
 // module registers itself when imported (kits/index.js imports them all); the core systems look a kind up here after
 // their built-in ones. Hooks are all optional unless marked.
@@ -115,6 +116,15 @@ import { G } from '../../core/ctx.js';
 //   MAIN_KITS only: netState?(runner) → int   the pose / state bits other screens need (packed each tick)
 //                   netApply?(runner, bits, dt)   a remote runner: rebuild runner.kit from those bits
 // KIT_GHOSTS[kind] = { ghost } — ghost-only entries for things that aren't a main or sub kit (e.g. a special's objects)
+// [b5-beta1] Any kit, main or sub:
+//   warm?(actors) → Object3D[] | void  a match is about to be shown (main.js _warmStage, the screen faded out): build now
+//                                      what the kit would otherwise build on its first use, so no shader program is
+//                                      compiled mid-match — either into the scene, hidden / empty (a pool, the Sponge
+//                                      Mitts' fists), or returned as stand-ins: objects with the same materials and
+//                                      geometry (attributes) and of the same kind (Mesh / InstancedMesh / Line2 …),
+//                                      compiled beside the scene and dropped, their materials never disposed (the program
+//                                      stays cached). actors: the match's actors (a kit is warmed once, if any carries it;
+//                                      a local player's aim guide only when the local actor does)
 export const MAIN_KITS = {};
 export const SUB_KITS = {};
 export const KIT_GHOSTS = {};
@@ -135,4 +145,21 @@ export function ghostMute(obj, fn) {
   const nm = obj && obj.ghost ? G.netm : null;
   if (nm) nm.mute++;
   try { return fn(); } finally { if (nm) nm.mute--; }
+}
+// [b5-beta1] warm every kit the match's actors carry (main weapon and sub), once each (main.js _warmStage)
+// every sub kind an actor can throw: its own, and its special's (a Bomb Barrage's bomb; the Mystery's whole draw)
+export function subKindsOf(a) {
+  const out = [], sp = SPECIALS[a?.specialId];
+  if (a?.sub?.kind) out.push(a.sub.kind);
+  if (sp?.bomb) out.push(sp.bomb);
+  if (Array.isArray(sp?.mystery)) out.push(...sp.mystery);
+  return out;
+}
+export function warmKits(actors) {
+  const mains = new Set(), subs = new Set(), out = [];
+  for (const a of actors || []) { if (a?.weapon?.kind) mains.add(a.weapon.kind); for (const k of subKindsOf(a)) subs.add(k); }
+  const take = (o) => { if (Array.isArray(o)) out.push(...o); };
+  for (const k of mains) take(MAIN_KITS[k]?.warm?.(actors));
+  for (const k of subs) take(SUB_KITS[k]?.warm?.(actors));
+  return out;
 }

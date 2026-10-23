@@ -20,7 +20,7 @@ import { layoutThumbSVG } from './world/mapThumb.js';
 import { dressingFor } from './world/dressing.js';
 import { inMode, layoutFor, variantKey } from './world/variants.js';
 import './game/kits/index.js';   // kit weapons + subs register themselves (game/kits/registry.js)
-import { SUB_KITS } from './game/kits/registry.js';   // [b5-sub-glide] (a kit sub's own hint: prompt)
+import { SUB_KITS, warmKits } from './game/kits/registry.js';   // [b5-sub-glide] (a kit sub's own hint: prompt) [b5-beta1] warmKits
 import { Physics, Hit } from './game/physics.js';
 import { NavGraph } from './game/nav.js';
 import { Projectiles } from './game/weapons.js';
@@ -1000,29 +1000,56 @@ class Game {
   // [b5-beta1] Everything a match's first frames would do for the first time, done now, while the screen is still faded
   // out (startMatch / _netStage, just before the match is shown; the beta's issue log had 300–520 ms frames at the start of
   // Turf War on six stages, 2 s on Bluestone, 4.9 s on Gulper Aquarium): the stage modules' deferred work (Bluestone's era
-  // bases and programs ran from an idle callback in the intro), the paint atlas's programs and mip chain, the minimap's
-  // first full draw, every program the scene draws, hidden objects included (compiled in parallel), and one frame drawn
-  // with nothing culled — every mesh's geometry and textures uploaded, the shadow map, the post stack with the screen FX
-  // pass forced on (it is only switched on once something shows: its program was compiled as the intro ended).
-  // tools/botlab/first-frames.cjs measures it.
+  // bases and programs ran from an idle callback in the intro), the world objects the match's kits build on first use (the
+  // Sponge Mitts' fists and sponge: kits/registry.js warmKits), the minimap's first full draw, every program the scene
+  // draws (hidden objects included: compile walks them all) and the paint atlas's, compiled in parallel, and one frame
+  // drawn with nothing culled — every mesh's geometry and textures uploaded, the shadow map, the post stack with the
+  // screen FX pass forced on (it is only switched on once something shows: its program was compiled as the intro ended).
+  // Programs are compiled FOR THE TARGET THEY DRAW INTO (review 1): three.js keys a program on the bound render target's
+  // output (no target: the screen's sRGB + tone mapping; a target: linear, untouched) — the scene draws into the
+  // composer's HDR target, the paint into its atlas; with nothing bound every compile here built a variant the game never
+  // used and the real one still compiled in play (character.js warmAll binds the composer's target the same way).
+  // tools/botlab/first-frames.cjs measures it (programs compiled in the first frames: none).
   async _warmStage() {
     const r = G.renderer, sc = G.scene, cam = G.camera, t0 = performance.now();
-    const step = (what, fn) => { try { fn(); } catch (e) { console.warn('[inkwave] warm ' + what, e); } };
+    const step = (what, fn) => { try { return fn(); } catch (e) { console.warn('[inkwave] warm ' + what, e); return null; } };
     step('minimap', () => this.minimap?.update(0, true));
     step('stage', () => G.stageWorld?.warm());
-    step('paint', () => G.paint?.warm?.());
-    // (hidden ones too — a kit's world objects, the Sponge Mitts' fists, wait hidden for their first use: shown for the
-    // compile's synchronous walk only; never a light, whose count is part of every program's key)
-    const hidden = []; sc.traverse((o) => { if (!o.visible && !o.isLight) { o.visible = true; hidden.push(o); } });
-    let compiled = null;
-    try { compiled = r.compileAsync(sc, cam); } catch (e) { step('compile', () => r.compile(sc, cam)); }
-    for (const o of hidden) o.visible = false;
-    try { await compiled; } catch (e) { /* (a context without the parallel-compile extension: compiled on first use) */ }
+    // the mode's own looks (the tower and its path, the zones' markings, Bazookarp's shell, weirs and Gates) were built at
+    // the intro's 'match:state' (m.start, after this) and compiled in its first frame (69 ms on Bluestone's Tower Command):
+    // built now — each skips its build at the intro for the match it already has
+    const m0 = this.match;
+    if (m0 && !m0.attract) {
+      if (m0.tower) step('tower fx', () => this.towerFx?.build(m0));
+      if (m0.zones) step('zone marks', () => this.zoneMarks?.build(m0));
+      if (m0.karp) step('karp fx', () => this.karpFx?.build(m0));
+    }
+    // what the match's kits, shots, subs and screen effects build on first use: made now (into the scene, hidden, or as
+    // stand-ins compiled beside it and kept: their programs stay cached) — and their own passes' compiles (thenables)
+    const actors = this.match?.actors || [], extra = [];
+    const take = (what, fn) => { const out = step(what, fn); if (Array.isArray(out)) extra.push(...out); };
+    take('kits', () => warmKits(actors));
+    take('shots', () => G.projectiles?.warm?.(actors));
+    take('subs', () => G.subs?.warm?.(actors));
+    take('specials', () => G.specials?.warm?.(actors));
+    take('screen fx', () => this.screenfx?.warm?.());
+    const rt0 = r.getRenderTarget(), jobs = extra.filter((o) => o && typeof o.then === 'function');
+    const stand = new THREE.Group(); for (const o of extra) if (o && o.isObject3D) stand.add(o);
+    try {
+      r.setRenderTarget(this.R.composer?.readBuffer || null);
+      jobs.push(r.compileAsync(sc, cam));
+      if (stand.children.length) jobs.push(r.compileAsync(stand, cam, sc));   // (lit by the stage: the scene's lights)
+    } catch (e) { console.warn('[inkwave] warm compile', e); }
+    finally { r.setRenderTarget(rt0); }
+    jobs.push(step('paint', () => G.paint?.warm?.()));
+    for (const j of jobs) { try { await j; } catch (e) { /* (a context without the parallel-compile extension: compiled on first use) */ } }
+    stand.clear();   // (the stand-ins go; their materials are never disposed, so the programs stay in three.js's cache)
     const culled = [], fx = this.screenfx?.pass, fxOn = fx ? fx.enabled : false;
+    const posts = (this.R.postPasses || []).map((p) => [p, p.enabled]);   // (and the passes after it: the Drainbow's grey wave)
     sc.traverse((o) => { if (o.frustumCulled && (o.isMesh || o.isPoints || o.isLine || o.isSprite)) { o.frustumCulled = false; culled.push(o); } });
-    try { if (fx) fx.enabled = true; r.shadowMap.needsUpdate = true; this.R.render(); }
+    try { if (fx) fx.enabled = true; for (const [p] of posts) p.enabled = true; r.shadowMap.needsUpdate = true; this.R.render(); }
     catch (e) { console.warn('[inkwave] warm render', e); }
-    finally { if (fx) fx.enabled = fxOn; for (const o of culled) o.frustumCulled = true; }
+    finally { if (fx) fx.enabled = fxOn; for (const [p, on] of posts) p.enabled = on; for (const o of culled) o.frustumCulled = true; }
     this.warmMs = Math.round(performance.now() - t0);
   }
 
@@ -1031,7 +1058,10 @@ class Game {
   // Programs are shared, so after the first kid of each weapon the rest are a few ms each.
   async _warmCharacters(m) {
     const jobs = m.actors.map((a) => a.character?.warmAll ? Promise.resolve(a.character.warmAll()).catch((e) => console.warn('[inkwave] warm', e)) : null).filter(Boolean);
-    if (m.boss) jobs.push(Promise.resolve(m.boss.model.ready).then(() => Promise.all(m.boss.warm().map((o) => G.renderer.compileAsync(o, G.camera, G.scene)))).catch((e) => console.warn('[inkwave] boss warm', e)));
+    // ([b5-beta1] the boss's programs for the composer's target, as the kids' are: with no target bound they were the
+    // screen's variant, never used — review 1, issue 1)
+    const inTarget = (o) => { const r = G.renderer, rt0 = r.getRenderTarget(); try { r.setRenderTarget(this.R.composer?.readBuffer || null); return r.compileAsync(o, G.camera, G.scene); } finally { r.setRenderTarget(rt0); } };
+    if (m.boss) jobs.push(Promise.resolve(m.boss.model.ready).then(() => Promise.all(m.boss.warm().map(inTarget))).catch((e) => console.warn('[inkwave] boss warm', e)));
     if (jobs.length) await Promise.race([Promise.all(jobs), new Promise((r) => setTimeout(r, 8000))]);   // never hang a load
   }
   netMatchGo() {

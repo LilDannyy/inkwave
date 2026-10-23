@@ -955,6 +955,14 @@ MAIN_KITS.mitts = {
     if (prevShown && G.time - prevShown > 0.05) { hidePreview(); prevShown = 0; }
     updateFists(dt);
   },
+  // [b5-beta1] a match is about to be shown: the fists' mesh (built on the first punch) and the local player's leap
+  // preview (on the first charge) now, into the scene, so the stage warm compiles their programs (registry.js warmKits;
+  // main.js _warmStage). (The gloves' sponge is made on their first animation: character.js warmAll runs it.)
+  warm(actors) {
+    const mesh = ensureFistMesh();
+    if (mesh) mesh.count = 0;
+    if (actors.some((a) => a?.isLocal && a.weapon?.kind === 'mitts')) ensurePreview();
+  },
   clear() {
     for (const f of fists) { f.owner = null; fistPool.push(f); }
     fists.length = 0;
