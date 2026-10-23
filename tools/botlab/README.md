@@ -78,8 +78,9 @@ Stages:
 - `MAP=<id> TIME=day|dusk OUT=<dir> tools/botlab/run.sh tools/botlab/stage-sweep.cjs`: the eye-level sweep every stage art
   review runs. Every tagged block of Alpha's half (centre z ≤ `ZMAX`, default 0.3; `SKIP=` the tags left out, default the
   floors and rails) is clustered with its own tag's blocks under 1 m away; each cluster gets 3–8 views from 1.7 m over a
-  walkable nav node 1–8 m off, one per bearing sector, line of sight checked (DEFAULT_SETTINGS, fov 70, bots off, actors,
-  HUD and paint cleared). `OUT` gets `views.json`, `shots/`, `sheets/<nnn>-<tag>.<k>.jpg` (one contact sheet per
+  walkable nav node 1–8 m off, one per bearing sector, line of sight checked and not against a face (of nine rays across
+  the frame's middle, fewer than three meet another piece's wall within 1.2 m and fewer than four one nearer than 0.8 × the
+  target: review 8's cameras at a face) (DEFAULT_SETTINGS, fov 70, bots off, actors, HUD and paint cleared). `OUT` gets `views.json`, `shots/`, `sheets/<nnn>-<tag>.<k>.jpg` (one contact sheet per
   cluster, each view labelled with its eye position, under 290 KB) and `clusters.txt` (every cluster, the ones with NO
   EYE-LEVEL VIEW listed first: overhead pieces, or something nobody can walk up to). Before / after a change:
   `VIEWS=<before>/views.json BEFORE=<before>` re-shoots the same cameras and pairs each before shot over its after shot,
@@ -88,7 +89,7 @@ Stages:
   clocks set, the page's `performance.now` standing still, one team palette, the bots off from the start, effects
   cleared — so two runs of one tree differ by 0.6 % of a frame at most, except where bubbles carry a phase from the
   boot: Gulper Aquarium's bubble column, kelp drums and Tubeway glass, up to 3 %; read those sheets);
-  `SHEETS_ONLY=1` re-draws the sheets from `OUT`'s shots.
+  `SHEETS_ONLY=1` re-draws the sheets from `OUT`'s shots (their titles take the shots' own time of day, `OUT/run.json`).
   `TWIN=1` shoots Bravo's twins (−x, −z; names suffixed `-B`), `ONLY=<regex>` a subset of views, `UNTAGGED=1` sweeps
   untagged blocks too. About 5 min for Gulper Aquarium's 516 views; give the Bash call a 600000 ms timeout.
 

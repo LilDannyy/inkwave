@@ -6,7 +6,10 @@
 // the floors and rails: ground,promenade,feeding-deck,tank-bed,rail; UNTAGGED=1 sweeps untagged blocks too, as
 // '(untagged)') is grouped with the same tag's blocks less than 1 m from it into a cluster. Round each cluster 3–8 eye
 // positions are picked, one per bearing sector (one per ~6 m of its outline): 1.7 m over a walkable nav node 1–8 m from
-// the cluster (nearest 3.2 m wins), 2.5 m under its foot to 3.2 m over its top, with a clear line of sight to it.
+// the cluster (nearest 3.2 m wins), 2.5 m under its foot to 3.2 m over its top, with a clear line of sight to it, and not
+// against a face (review 8: sea-coping.0.1, drum-glass.1.5 and pipe-glass.4.2 looked at another piece's wall): of nine rays
+// across the frame's middle (±20° of yaw, ±12° of pitch) fewer than three meet a wall of another block within 1.2 m, and
+// fewer than four one nearer than 0.8 × the target's distance (a wall: a face steeper than 45°; floors don't count).
 // Clusters with no such position (overhead pieces, things nobody walks past) are listed as NO EYE-LEVEL VIEW.
 // OUT gets:
 //   views.json     the cameras (VIEWS=<a views.json> shoots those instead of generating: before / after, same cameras)
@@ -17,7 +20,8 @@
 //   than 20/255 at 320 × 180) and lists the CHANGED ones (over CHANGE, default 1 %). Two runs of one tree differ by 0.6 %
 //   at most, except where bubbles carry a phase from the boot (Gulper Aquarium's bubble column, kelp drums and Tubeway
 //   glass: up to 3 %): read those clusters' sheets.
-//   SHEETS_ONLY=1 re-draws the sheets and the list from OUT's shots (with BEFORE: a new pairing).
+//   SHEETS_ONLY=1 re-draws the sheets and the list from OUT's shots (with BEFORE: a new pairing); their titles take the
+//   time of day the shots were taken in (OUT/run.json), not TIME's default (review 8: re-drawn dusk sheets said "day").
 // TWIN=1: Bravo's twins (every view turned (x, z) → (−x, −z); names, shots and sheets suffixed -B). ONLY=<regex>: only
 //   the views whose names match. MODE=turf (default) / zones / tower. W / H the shot size (1280 × 720).
 // The page runs the game's DEFAULT_SETTINGS (quality high; each view at fov 70), bots off, actors, HUD and paint
@@ -92,6 +96,10 @@ app.on('browser-window-created', (_, win) => {
     await wait(1500);
     const info = await js(`(() => { const g = window.__inkwave, L = __G.level; return { map: '${MAP}', time: '${TIME}', mode: '${MODE}', quality: g.settings.quality, fov: g.settings.fov, lightSize: L.lightSize, layoutHash: L.layoutHash, blocks: L.blocks.length, nav: __G.nav.nodes.length }; })()`);
     console.log('SETTINGS', ts(), JSON.stringify(info));
+    // (the shots' own time of day for the sheets' titles: a SHEETS_ONLY re-draw reads it from the run that shot them)
+    let TOD = TIME;
+    if (SHEETS_ONLY) { try { const r = JSON.parse(fs.readFileSync(path.join(OUT, 'run.json'), 'utf8')); if (r.time) TOD = r.time; } catch { /* (an older run: TIME) */ } }
+    else fs.writeFileSync(path.join(OUT, 'run.json'), JSON.stringify({ ...info, twin: TWIN, at: new Date().toISOString() }));
     let views;
     if (!process.env.VIEWS && !SHEETS_ONLY) {
       views = await js(`(() => {
@@ -116,13 +124,15 @@ app.on('browser-window-created', (_, win) => {
           for (const list of m.values()) {
             const mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
             for (const b of list) for (const [i, a] of ['x', 'y', 'z'].entries()) { mn[i] = Math.min(mn[i], b.aabbMin[a]); mx[i] = Math.max(mx[i], b.aabbMax[a]); }
-            clusters.push({ tag, k: k++, n: list.length, mn, mx, hidden: list.every((b) => b.hidden) });
+            clusters.push({ tag, k: k++, n: list.length, mn, mx, hidden: list.every((b) => b.hidden), ids: new Set(list.map((b) => b.id)) });
           }
         }
         const valid = nav.valid || null;
         const nodes = nav.nodes.filter((n) => !valid || valid[n.id]);
         const E = new V3(), T = new V3(), Q = new V3();
         const r2 = (v) => +v.toFixed(2), views = [];
+        // (a ray from the eye: the first solid block it meets within len)
+        const Dd = new V3(), ray = (P, dx, dy, dz, len) => { Dd.set(dx, dy, dz).normalize(); return ph.raycast(P, Dd, len, undefined, true); };
         for (const c of clusters) {
           const cx = (c.mn[0] + c.mx[0]) / 2, cz = (c.mn[2] + c.mx[2]) / 2, ex = c.mx[0] - c.mn[0], ez = c.mx[2] - c.mn[2];
           const nv = Math.max(3, Math.min(8, Math.round((2 * (ex + ez)) / 6)));
@@ -137,6 +147,18 @@ app.on('browser-window-created', (_, win) => {
             T.set(tx, ty, tz); Q.copy(E).sub(T); const ql = Q.length(); if (ql < 0.5) continue;
             Q.multiplyScalar(0.35 / ql).add(T);
             if (!ph.los(E, Q)) continue;
+            // (not against a face, review 8: another piece's wall across a third of the frame's middle within 1.2 m — sea-coping.0.1
+            // stood 0.5 m beside the Express stop, drum-glass.1.5 1.0 m behind the pump housing — or across four ninths of it
+            // nearer than the target — pipe-glass.4.2 looked over the grand stair's nosing into the Lookout's balustrade)
+            { const yaw = Math.atan2(T.z - E.z, T.x - E.x), pit = Math.atan2(T.y - E.y, Math.hypot(T.x - E.x, T.z - E.z)), far = 0.8 * ql;
+              let n12 = 0, nT = 0;
+              for (const dw of [-0.35, 0, 0.35]) for (const dp of [-0.21, 0, 0.21]) {
+                const a = yaw + dw, p = pit + dp, h = ray(E, Math.cos(p) * Math.cos(a), Math.sin(p), Math.cos(p) * Math.sin(a), Math.max(1.2, far));
+                if (!h.hit || c.ids.has(h.block) || Math.abs(h.normal.y) >= 0.7) continue;
+                if (h.dist <= 1.2) n12++;
+                if (h.dist < far) nT++;
+              }
+              if (n12 >= 3 || nT >= 4) continue; }
             cand.push({ n, d, brg: Math.atan2(n.z - cz, n.x - cx), t: [tx, ty, tz] });
           }
           const picked = [];
@@ -224,7 +246,7 @@ app.on('browser-window-created', (_, win) => {
         }
       } else for (const v of vs) cells.push({ label: lab(v), b64: tile(img(OUT, v)) });
       const box = m.mn ? `  box (${m.mn.join(', ')}) … (${m.mx.join(', ')})` : '';
-      const title = `${MAP} · ${TIME}${TWIN ? ' · Bravo twin' : ''} · ${c}${SUF}${m.n ? ` · ${m.n} block(s)` : ''}${box}${BEFORE ? `  ·  changed up to ${worst == null ? '–' : worst.toFixed(1)} % of a view` : ''}`;
+      const title = `${MAP} · ${TOD}${TWIN ? ' · Bravo twin' : ''} · ${c}${SUF}${m.n ? ` · ${m.n} block(s)` : ''}${box}${BEFORE ? `  ·  changed up to ${worst == null ? '–' : worst.toFixed(1)} % of a view` : ''}`;
       // (the page draws it; a GPU stall on a loaded machine must not hang the run)
       const b64 = await Promise.race([js(`(${SHEET})(${JSON.stringify({ cols: 4, tw: 400, th: 225, title, cells })})`), wait(60000).then(() => null)]);
       if (!b64) { console.log(`SHEET TIMEOUT ${c}${SUF}`); continue; }
