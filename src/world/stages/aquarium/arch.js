@@ -720,11 +720,14 @@ export function registerArch(D, H, KIT, G) {
         const cx = 9.1, cz = -41.0;
         pbox(B, 'paint', K.render, 1.86, 1.0, 2.06, cx, 1.7, cz);
         pbox(B, 'gloss', K.faience, 1.88, 0.05, 2.08, cx, 2.0, cz);
-        pbox(B, NS('gloss'), '#40565f', 1.84, 1.2, 1.96, cx, 2.8, cz);
-        for (const z of [-41.98, -40.02]) for (const x of [8.25, 9.1, 9.95]) pbox(B, NS('metal'), K.brass, 0.05, 1.2, 0.05, x, 2.8, z);
+        // (fix round 7, LEAD-REVIEW 7: the glass was 1.96 deep, z −41.98 … −40.02, 2 cm INSIDE the off-limits block's own
+        // cream faces at z −42 / −40, so both TICKETS faces showed blank render between thin brass strips; now 4 cm proud
+        // of every face, its mullions at its corners and middle on the z faces, 3.5 cm proud of the glass)
+        pbox(B, NS('gloss'), '#40565f', 1.88, 1.2, 2.08, cx, 2.8, cz);
+        for (const z of [-42.05, -39.95]) for (const x of [8.16, 9.1, 10.04]) pbox(B, NS('metal'), K.brass, 0.05, 1.2, 0.05, x, 2.8, z);
         B.box('paint', K.render, 2.1, 0.32, 2.3, cx, 3.58, cz, { r: 0.08 });
         for (const z of [-42.17, -39.83]) face(B, cx, 0, z, 0, z < cz ? -1 : 1, () => letters(B, 'TICKETS', { h: 0.17, y: 3.5, c: K.lit, lit: true, glow: 1.2, flat: true }));
-        face(B, 8.18, 0, -41.0, -1, 0, () => sign(B, "TODAY'S FEEDINGS", 0, 2.25, { h: 0.1, board: K.navy, c: K.cream, border: K.brass, w: 1.6, hh: 0.62, sub: '11:00 · 15:00', subH: 0.12, subC: K.brassLt }));
+        face(B, 8.155, 0, -41.0, -1, 0, () => sign(B, "TODAY'S FEEDINGS", 0, 2.25, { h: 0.1, board: K.navy, c: K.cream, border: K.brass, w: 1.6, hh: 0.62, sub: '11:00 · 15:00', subH: 0.12, subC: K.brassLt }));
         // the station clock on the booth's roof, double faced (to the plaza and the gate)
         {
           const y = 4.25, r = 0.36;
