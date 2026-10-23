@@ -1,0 +1,5 @@
+JOB-12 (beta1) @ 7c5cf6bd (final code with 56b84448) — Mac mini b5-runner, 2026-10-24 03:18–04:10, exit 0. Lava-bots gate, final vs base, 6 + 6, alternating.
+- FINAL passes 6/6: escape / fight deaths per run 0/0, 0/0, 0/0, 0/0, 0/1, 0/0 — 1 fight death in 2160 bot-trials.
+- BASE passes 5/6: 0/0, 0/0, 1/2, 0/0, 0/1, 0/0 (run 3 fails) — 1 escape + 3 fight deaths.
+- so 56b84448 turns JOB-10's 3/6 (1 escape + 7 fight deaths) into 6/6; the final is now at least as good as the base (JOB-10 + 12: base 11/12,
+  final 9/12, but 6/6 since the change).
