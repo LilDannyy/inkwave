@@ -1395,7 +1395,9 @@ export function botAct(b, dt, it, move, busy) {
       it.fire = false;
       if (b.groundSeen === 1) { if (P || atStand) { move.multiplyScalar(0.05); b.noProg = 0; b.perchUntil = b.t + 0.3; } it.squid = true; BOBBER_BOT.tops = (BOBBER_BOT.tops || 0) + 1; return null; }
       // (mid-burst it stays put — its links were picked from here — and its tank fills as it stands, 9 a second)
-      if (P) { move.multiplyScalar(0.05); b.noProg = 0; b.perchUntil = b.t + 0.3; }
+      // ([b5-beta1, review 1] not marked as a hold: on bare ground it stands kid-refilling up to ~5 s here, and the stuck
+      // metrics should see that — the plan's stand with ink, the stand spot and the ambush are on purpose, this is a wait)
+      if (P) { move.multiplyScalar(0.05); b.noProg = 0; }
       else if (a.ink < 40 && b.mode === 'paint') { b.mode = 'refill'; b.refillUntil = 0.9; b.path = null; BOBBER_BOT.refills = (BOBBER_BOT.refills || 0) + 1; return null; }
     }
     if (P && !low) { move.multiplyScalar(0.05); b.noProg = 0; b.perchUntil = b.t + 0.3; }   // (its links were picked from here: it stands while it lays them)

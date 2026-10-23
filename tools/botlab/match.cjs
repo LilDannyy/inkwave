@@ -116,7 +116,7 @@ app.on('browser-window-created', (_, win) => {
       // zone outlines for the "inside the active zone" metric
       const inPoly = (poly, x, z) => { let ins = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, zi] = poly[i], [xj, zj] = poly[j]; if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) ins = !ins; } return ins; };
       const inZone = (zn, p) => { const d = zn.def, parts = d.polys || [d.poly]; return p.y > (d.y0 ?? -2) - 0.6 && p.y < (d.y1 ?? 6) + 1.6 && parts.some((q) => inPoly(q, p.x, p.z)); };
-      const hist = new Map(); let samples = 0, stuckS = 0, simT = 0, anyIn = 0, insideN = [0, 0], nearN = [0, 0], held = [0, 0], neutral = 0, zs = 0;
+      const hist = new Map(); let samples = 0, stuckS = 0, stuckHoldS = 0, simT = 0, anyIn = 0, insideN = [0, 0], nearN = [0, 0], held = [0, 0], neutral = 0, zs = 0;
       const __ZC = (await import('./src/config.js')).ZONES, zLead = { cur: -1, changes: 0, contested: 0, dispute: 0, pending: 0 };
       const eps = []; let holdS = 0; const roleS = {}; const frameErr = { n: 0, msg: '' }; const where = {}; let whereN = 0; const whereT = [{}, {}]; const farMode = {}; let ready = 0;
       offs.push(on('special:ready', () => ready++));
@@ -301,6 +301,9 @@ app.on('browser-window-created', (_, win) => {
           samples++;
           const span = h.length > 1 ? Math.max(...h.map((p) => Math.hypot(p.x - a.pos.x, p.z - a.pos.z))) : 99;
           const stuck = wants && h.length >= 11 && span < 1.0;
+          // [b5-beta1, review 1] the same, with the holds on purpose counted too (perchUntil, a zone guard's): what the
+          // marks take out of the stuck figure, reported beside it
+          if (a.alive && !a.superJumpState && !(a.weaponRunner && a.weaponRunner.charging) && !(a.specialActive && a.specialActive.pin) && h.length >= 11 && span < 1.0) stuckHoldS += 0.25;
           if (stuck) {
             stuckS += 0.25;
             if (!open.has(a)) { const b = a.bot; const ep = { t: +simT.toFixed(1), name: a.name, w: a.weaponId, mode: b.mode, role: b.zRole || '-', pos: [+a.pos.x.toFixed(1), +a.pos.y.toFixed(2), +a.pos.z.toFixed(1)], path: !!b.path, hold: b.zHoldUntil > b.t, pod: b.podS ? b.podS.task || (b.podS.exit ? 'exit' : '-') : '-', dur: 0 }; if (plan) ep.diag = [plan(a)]; open.set(a, ep); eps.push(ep); }
@@ -317,7 +320,7 @@ app.on('browser-window-created', (_, win) => {
       const flips = ev.control.filter((c) => c.owner >= 0).length;
       const cov = __G.paint.coverage().map((c) => +(c * 100).toFixed(1));
       const res = {
-        simT: +simT.toFixed(1), simMs: Math.round(simMs), state: m.state, stuckPct: +(100 * stuckS / Math.max(1, samples * 0.25)).toFixed(1),
+        simT: +simT.toFixed(1), simMs: Math.round(simMs), state: m.state, stuckPct: +(100 * stuckS / Math.max(1, samples * 0.25)).toFixed(1), stuckHoldPct: +(100 * stuckHoldS / Math.max(1, samples * 0.25)).toFixed(1),
         splats: m.events.length, water: m.events.filter((e) => e.cause === 'water').length, specials: ev.specials, jumps: ev.jumps, cov,
         teamKD: ev.team || [{ k: 0, d: 0, sp: 0, by: {} }, { k: 0, d: 0, sp: 0, by: {} }],
         spUses: ev.uses || [{}, {}],   // (specials used, per team, by special)
@@ -399,7 +402,7 @@ per: (() => { const A = m.actors, n = A.length || 1; const turf = A.reduce((s, a
     if (r.eras) { const E = r.eras; console.log(`   ERAS shoves ${E.eraShoves} rescues ${E.rescues} flips ${E.flips} | at a flip: on a vanishing top ${E.onVanish}, inside an appearing piece ${E.inAppear} | in an appearing box before its flip ${E.loiterS} bot-s | splats by a jump ${E.envSplats} (other env splats in a jump's window ${E.envOther ?? 0}) | replans at done ${E.replans} | pre-positioned ${E.prepos} (held ${E.preposHeld}) | era ${E.era}, started in era ${E.start ?? '?'}${E.held ? ` (held there: ?era=${E.held})` : E.fixed ? ` (the mode holds era ${E.fixed})` : `, ${E.jumpsPlanned ?? '?'} jumps planned${E.cycle ? `, cycling every ${E.cycle} s` : ''}`}`);   // [b5-eras]
       for (const v of E.visits) console.log(`   ERAS ${v.jump} done @${v.doneAt}s: ${v.visited}/${v.bots} bots on new ground within 30 s (${v.within20} within 20 s), median ${v.median ?? '-'} s | ${JSON.stringify(v.times)}`);
       if ((E.inAppearWho || []).length || (E.onVanishWho || []).length) console.log(`   ERAS at a flip: inside an appearing piece ${JSON.stringify(E.inAppearWho || [])} | on a vanishing top ${JSON.stringify(E.onVanishWho || [])}`); }
-    console.log(`   stuck ${r.stuckPct}% | splats ${r.splats} (water ${r.water}) | specials ${r.specials} | super jumps ${r.jumps} | turf ${r.cov.join('/')} | sim ${r.simT}s in ${(r.simMs / 1000).toFixed(0)}s (wall ${wallS}s) | ${JSON.stringify(perf)}`);
+    console.log(`   stuck ${r.stuckPct}% (${r.stuckHoldPct}% counting holds on purpose) | splats ${r.splats} (water ${r.water}) | specials ${r.specials} | super jumps ${r.jumps} | turf ${r.cov.join('/')} | sim ${r.simT}s in ${(r.simMs / 1000).toFixed(0)}s (wall ${wallS}s) | ${JSON.stringify(perf)}`);
     if (MODE === 'zones') { console.log('   penalties ' + JSON.stringify(r.penalties)); console.log('   control log ' + r.log); console.log('   best shares per activation ' + r.windows); console.log('   reachable cells ' + r.reach); }
     console.log('   loadouts ' + equip + (tuned ? ' | TUNE ' + tuned : ''));
     console.log('   by weapon (players, splats dealt, deaths, avg turf) ' + Object.entries(r.byWeapon).map(([w, o]) => `${w}×${o.n} ${o.splats}/${o.deaths} ${o.turf}p`).join(' · '));
