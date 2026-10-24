@@ -25,7 +25,10 @@
 //   finTower    the entrance pavilion's fin with vertical neon AQUARIUM, its sea facade (doors, portholes, letters), and
 //               (fix round 3) the spawn deck's plaza fascia: skirting, pilasters, frieze, portholes, roundels
 //   stops       the Express's brass stops (IN and OUT), dressed round their mouths
+//   shafts      (fix round 9) the Arch Line's riser shafts: a caged service ladder, guide brackets round the riser, the
+//               ARCH LINE · RISER plates, caged bulkhead lamps (their tiled walls and grille floors: floorart.js)
 import { LOOKOUT } from './geo.js';
+import { PIPES, allLegs, centreline } from './tubeway.js';
 
 export function registerArch(D, H, KIT, G) {
   const { K, NS, pbox, cyl, cylGeo, latheG, sphG, torG, strut, rod, letters, lettersV, sign, porthole, speed, globe, handrail, roundel, rivets, HP, PI, TAU } = KIT;
@@ -991,7 +994,8 @@ export function registerArch(D, H, KIT, G) {
         for (const y of [3.24, 3.38]) pbox(B, NS('gloss'), K.faience, 4.42, 0.03, 3.62, 0, y, 0);
         // the riser's brass collar and the TUBEWAY roundels on the stop's court (+z) and plaza (−z) faces
         B.add('metal', torG(0.98, 0.1, 8, 28), K.brass, 1.25, 3.6, 0, { rx: HP });
-        for (const s of [-1, 1]) { B.push(0, 0, s * 1.77, s > 0 ? 0 : PI); roundel(B, 0, 1.9, 0.62, ['TUBEWAY', '▶ EXPRESS'].map((t) => t.replace('▶ ', '')), { field: K.navy }); speed(B, -2.1, 2.1, 0.62, { n: 3 }); B.pop(); }
+        // (fix round 9, LEAD-REVIEW 9: its speed lines run on across the new corner pilasters: aquarium_stopinfaces)
+        for (const s of [-1, 1]) { B.push(0, 0, s * 1.77, s > 0 ? 0 : PI); roundel(B, 0, 1.9, 0.62, ['TUBEWAY', '▶ EXPRESS'].map((t) => t.replace('▶ ', '')), { field: K.navy }); B.pop(); }
         B.push(2.17, 0, 0, HP); pbox(B, 'metal', K.brassDk, 3.4, 2.8, 0.03, 0, 1.6, 0.0); B.pop();
       });
       // OUT: bladeBox(−6, −1.4, −16.2, −13.8) to 5.0, its mouth on the s −6 face (the drop comes in from its top)
@@ -1133,6 +1137,17 @@ export function registerArch(D, H, KIT, G) {
         // (a fluted rib up its middle over the lines, as on the pylon's wing face beside it: 3.5 cm off the jamb)
         B.box('paint', K.render, 0.035, 4.0, 0.3, x + e * 0.0265, 2.97, zc, { r: 0.012 });
         pbox(B, NS('paint'), K.renderSh, 0.004, 3.4, 0.04, x + e * 0.0445, 2.97, zc);
+        // (fix round 9, LEAD-REVIEW 9: on the cream jamb the rib read as nothing — 2 × 4.4 m of plain render over the lines)
+        // a 1.5 cm shadow groove either side of the rib, a brass strip up its face, and a brass-ringed porthole (r 0.3, dark
+        // glass) at 1.6 m into the reef behind, on the window side of the rib; its ring flattened to stay within 7 cm of the
+        // block's end
+        for (const sz of [-1, 1]) pbox(B, NS('paint'), K.renderSh, 0.003, 4.0, 0.015, x + e * 0.0105, 2.97, zc + sz * 0.1575);
+        pbox(B, NS('metal'), K.brass, 0.005, 3.9, 0.026, x + e * 0.0465, 2.97, zc);
+        B.push(x + e * 0.009, 0, zc - 0.62, e * HP);
+        B.add('metal', torG(0.3, 0.048, 6, 24), K.brass, 0, 1.6, 0.018, { sz: 0.45 });
+        B.add(NS('gloss'), cylGeo(0.29, 0.29, 0.006, 24), '#3e5560', 0, 1.6, 0.006, { rx: HP });
+        for (let k = 0; k < 8; k++) { const a = (k / 8) * TAU + PI / 8; B.add(NS('metal'), sphG(0.014, 6, 4, HP), K.brassDk, Math.cos(a) * 0.3, 1.6 + Math.sin(a) * 0.3, 0.036, { rx: HP }); }
+        B.pop();
       };
       // a render pilaster on the chord's outer corner at end e: 7 cm out of the chord's face (flush with the wall's to 0.9 cm
       // over it), 3.2 cm past its end (its side just over the jamb's face); a granite foot
@@ -1162,6 +1177,119 @@ export function registerArch(D, H, KIT, G) {
         jamb(L0, 1); pil(L0, 1);
         band(L0, L0.hl - 1.3, L0.hl + 0.012);
       });
+    },
+  };
+
+  // ============================================================================================================ fix round 9
+  // (LEAD-REVIEW 9) The Express IN stop on the ferry plaza brought up to the OUT stop's standard (bladeBox(21, 24.5, 12.5,
+  // 16.8) from the plaza's floor (F = 0) to its cap at 3.2; in the blade frame bl(22.75, 14.65) local ±z are its long faces,
+  // 4.3 m, local −x its mouth face (w 12.5), +x its back): on both long faces the three faience speed lines at 0.62 / 0.76 /
+  // 0.90 running across the corner pilasters (they were drawn by aquarium_stops, to ±2.1), a black-granite skirting with a
+  // brass line (0 → 0.16, round the back too; not across the mouth face, its nozzle's), a 0.18 m square render pilaster at
+  // each corner (2 cm proud of both faces, fluted) up to the cap, a brass-ringed porthole either side of the TUBEWAY roundel.
+  // Within 8.5 cm of the block, none over its top, no collider
+  D.aquarium_stopinfaces = {
+    desc: "the Express IN stop's long faces and back (world frame, Alpha; fix round 9)",
+    build(B) {
+      bl(B, 22.75, 14.65, 0, () => {
+        const HX = 2.15, HZ = 1.75, F = 0, y0 = F + 0.16, top = 3.175;
+        for (const s of [-1, 1]) {
+          pbox(B, 'paint', K.granite, 2 * HX + 0.1, 0.16, 0.05, 0, F + 0.08, s * (HZ + 0.025));
+          pbox(B, NS('metal'), K.brass, 2 * HX + 0.112, 0.016, 0.056, 0, y0 + 0.006, s * (HZ + 0.028));
+        }
+        pbox(B, 'paint', K.granite, 0.05, 0.16, 2 * HZ + 0.1, HX + 0.025, F + 0.08, 0);
+        pbox(B, NS('metal'), K.brass, 0.056, 0.016, 2 * HZ + 0.112, HX + 0.028, y0 + 0.006, 0);
+        for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+          const cx = sx * (HX - 0.07), cz = sz * (HZ - 0.07), hh = top - y0, ym = (top + y0) / 2;
+          pbox(B, 'paint', K.render, 0.18, hh, 0.18, cx, ym, cz);
+          pbox(B, NS('paint'), K.render, 0.21, 0.06, 0.21, cx, top - 0.03, cz);
+          flute(B, 0.03, hh - 0.4, cx, ym - 0.05, sz * (HZ + 0.022));
+          B.push(sx * (HX + 0.022), 0, cz, HP); flute(B, 0.03, hh - 0.4, 0, ym - 0.05, 0); B.pop();
+        }
+        for (const s of [-1, 1]) {
+          B.push(0, 0, s * HZ, s > 0 ? 0 : PI);
+          speed(B, -(HX + 0.03), HX + 0.03, F + 0.62, { n: 3, d: 0.045 });
+          for (const x of [-1.42, 1.42]) porthole(B, x, 1.9, 0.27);
+          B.pop();
+        }
+      });
+    },
+  };
+
+  // (LEAD-REVIEW 9, major) The Arch Line's two glazed riser shafts in the gatehouse's pylons (layout.js PY.void: x ±6.15 …
+  // ±8.5 behind the hall's glass, z −28.25 … −26.0, floor 0 to the lid at 8.4) were empty white boxes behind 2.25 × 8.4 m of
+  // glass on the main lane. Their walls, floor and lid are floorart.js's (white glazed tile, the skirting, the speed lines,
+  // a brass grille floor with a drain); here the parts in them. The riser (tubeway.js 'arch'): east up from the Reef Hall
+  // mouth at x 7.32, z −27.13, its bend diving into the back wall under 2.3 m; west down to 3.2 and out through the back
+  // wall to the promenade, its bend there from 2.3 to 5.0 m. Every part stands ≥ 0.15 m clear of the riser's glass (r 0.88:
+  // ≥ 1.03 m from its centreline, aquarium-art.js section 13 measures it), none in the hall, no collider; Alpha's frame,
+  // placed twice (rotY π for Bravo, whose plates read N. …). Per shaft:
+  //   - a brass service ladder in the back wall's wing-side corner (rails 6 cm off it at z −27.90 / −28.20, rungs every
+  //     0.3 m, stand-offs every 1.5 m) from the floor to the lid, its cage of hoops every metre from 2.2 m with three bars;
+  //   - brass guide brackets on the back wall round the riser at a 2 m pitch where it rises plumb or nearly (east 3.6 / 5.6,
+  //     west 5.35 / 6.5 — its 4.5 lies in the bend, too near the back wall): a curved shoe 0.17–0.30 m clear of the glass,
+  //     two arms to the wall on bolted plates;
+  //   - the navy and brass ARCH LINE · RISER plate on the back wall facing the glass, over → S. REEF HALL (east, 2.3 m: its
+  //     bend fills the wall under it) or → S. PROMENADE (west, 1.4 m);
+  //   - a caged bulkhead lamp on each side wall at 2.4 and 7.6 m, toward the back corner, lit at dusk (the glow material)
+  D.aquarium_shafts = {
+    desc: "the Arch Line's riser shafts' ladders, guide brackets, plates and lamps (world frame, Alpha; o.half 'S' | 'N'; fix round 9)",
+    build(B, o) {
+      const NS_ = o.half === 'N' ? 'N.' : 'S.';
+      // the riser's centreline, densified to 2 cm (centreline() samples its fillets; a straight is its two ends)
+      const c0 = centreline(allLegs(PIPES).find((l) => l.id === 'arch'), 0.05), CL = [c0[0]];
+      for (let i = 1; i < c0.length; i++) {
+        const a = c0[i - 1], b = c0[i], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]) / 0.02));
+        for (let k = 1; k <= n; k++) CL.push([a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n, a[2] + ((b[2] - a[2]) * k) / n]);
+      }
+      const clr = (x, y, z) => { let d = 9; for (const q of CL) { const e = Math.hypot(x - q[0], y - q[1], z - q[2]); if (e < d) d = e; } return d; };
+      for (const sx of [1, -1]) {
+        const X = (v) => sx * v;
+        // ---- the ladder
+        const xr = 8.44, z1 = -27.9, z2 = -28.2, zc = (z1 + z2) / 2;
+        for (const z of [z1, z2]) rod(B, 'metal', K.brassLt, [X(xr), 0, z], [X(xr), 8.38, z], 0.016, { seg: 8 });
+        for (let y = 0.3; y < 8.3; y += 0.3) rod(B, 'metal', K.brass, [X(xr), y, z1], [X(xr), y, z2], 0.011, { seg: 6 });
+        for (let y = 0.6; y < 8.3; y += 1.5) for (const z of [z1, z2]) rod(B, 'metal', K.brassDk, [X(xr), y, z], [X(8.5), y, z], 0.009, { seg: 6 });
+        const hoop = (t, y) => [X(xr - 0.26 * Math.cos(t)), y, zc + 0.15 * Math.sin(t)];
+        for (let y = 2.2; y < 8.35; y += 1.0) for (let k = 0; k < 10; k++) rod(B, 'metal', K.brassLt, hoop(-HP + (k / 10) * PI, y), hoop(-HP + ((k + 1) / 10) * PI, y), 0.012, { seg: 5 });
+        for (const t of [-PI / 4, 0, PI / 4]) rod(B, 'metal', K.brassLt, hoop(t, 2.2), hoop(t, 8.2), 0.01, { seg: 5 });
+        // ---- the guide brackets: the riser's centre at each height, a shoe round its back at the least radius (from 1.06 m,
+        // 1 cm steps) whose every point keeps 1.06 m off the centreline (a bend leans the tube toward the wall or away)
+        for (const y of sx > 0 ? [3.6, 5.6] : [5.35, 6.5]) {
+          let A = null, bd = 9;
+          for (const q of CL) if (Math.sign(q[0]) === sx && Math.abs(q[0]) > 6.1 && Math.abs(q[1] - y) < bd) { bd = Math.abs(q[1] - y); A = q; }
+          const span = 40 * DEG, arc = (r, n = 8) => { const out = []; for (let k = 0; k <= n; k++) { const t = -span + (2 * span * k) / n; out.push([A[0] + sx * r * Math.cos(t), y, A[2] + r * Math.sin(t)]); } return out; };
+          let r = 1.06;
+          while (r < 1.3 && arc(r, 16).some((p) => clr(p[0], y + 0.03, p[2]) < 1.06 || clr(p[0], y - 0.03, p[2]) < 1.06)) r += 0.01;
+          if (8.5 - Math.abs(A[0]) - (r + 0.025) < 0.02) continue;                  // (no room behind it: none)
+          const mid = arc(r + 0.0125);
+          for (let k = 0; k < 8; k++) strut(B, 'metal', K.brassLt, mid[k], mid[k + 1], 0.025, { w: 0.025, h: 0.07 });
+          for (const t of [-28 * DEG, 28 * DEG]) {
+            const P = [A[0] + sx * (r + 0.02) * Math.cos(t), y, A[2] + (r + 0.02) * Math.sin(t)];
+            strut(B, 'metal', K.brassDk, P, [X(8.49), y, P[2]], 0.02, { w: 0.02, h: 0.05 });
+            pbox(B, 'metal', K.brassDk, 0.012, 0.16, 0.1, X(8.494), y, P[2]);
+            for (const dy of [-0.055, 0.055]) B.add(NS('metal'), sphG(0.011, 6, 4, HP), K.brass, X(8.488), y + dy, P[2], { rz: sx * HP });
+          }
+        }
+        // ---- the plate on the back wall, facing the glass
+        face(B, X(8.5), 0, -27.13, -sx, 0, () => {
+          plate(B, 0, sx > 0 ? 2.3 : 1.4, 1.24, 0.44, 'ARCH LINE · RISER', '→ ' + NS_ + (sx > 0 ? ' REEF HALL' : ' PROMENADE'), { h1: 0.085, h2: 0.066 });
+        });
+        // ---- the lamps: on each side wall toward the back corner, at 2.4 and 7.6 m
+        for (const [zw, n] of [[-26.0, -1], [-28.25, 1]]) for (const y of [2.4, 7.6]) {
+          face(B, X(7.95), 0, zw, 0, n, () => {
+            const R = 0.085, zt = 0.112;
+            B.add('metal', cylGeo(0.11, 0.11, 0.02, 20), K.brassDk, 0, y, 0.01, { rx: HP });
+            B.add(NS('glow'), sphG(R, 16, 8, HP), K.lit, 0, y, 0.02, { rx: HP, glow: 1.6 });
+            B.add('metal', torG(R + 0.006, 0.01, 5, 20), K.brass, 0, y, 0.024, {});
+            for (const [dx, dy] of [[1, 0], [0, 1]]) {
+              rod(B, 'metal', K.brass, [-dx * R, y - dy * R, 0.024], [-dx * R, y - dy * R, zt], 0.007, { seg: 4 });
+              rod(B, 'metal', K.brass, [dx * R, y + dy * R, 0.024], [dx * R, y + dy * R, zt], 0.007, { seg: 4 });
+              rod(B, 'metal', K.brass, [-dx * R, y - dy * R, zt], [dx * R, y + dy * R, zt], 0.007, { seg: 4 });
+            }
+          });
+        }
+      }
     },
   };
 }

@@ -97,6 +97,11 @@ export const PLACEMENTS = [
   { type: 'aquarium_stopfaces', pos: [0, 0, 0] },
   { type: 'aquarium_boothbase', pos: [0, 0, 0] },
   { type: 'aquarium_reefjambs', pos: [0, 0, 0] },
+  // (fix round 9, LEAD-REVIEW 9: the Express IN stop's long faces; the riser shafts' parts — Alpha's frame, turned for Bravo
+  // by its own placement so its plates read N. …)
+  { type: 'aquarium_stopinfaces', pos: [0, 0, 0] },
+  { type: 'aquarium_shafts', pos: [0, 0, 0], half: 'S', mirror: false },
+  { type: 'aquarium_shafts', pos: [0, 0, 0], rotY: PI, half: 'N', mirror: false },
   { type: 'aquarium_cove', pos: [0, 0, 0] },
   { type: 'aquarium_pier', pos: [0, 0, 0], name: 'MV GULPER', mirror: false },
   { type: 'aquarium_pier', pos: [0, 0, 0], rotY: PI, name: 'MV BARRELEYE', mirror: false },
