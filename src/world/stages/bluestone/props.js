@@ -12,7 +12,7 @@
 // engine switches the tagged looks at the front (their own merged meshes per era mask: docs/STAGE-MODS.md "Props").
 import { eraFilter } from './era.js';
 import { LAYOUT } from './layout.js';
-import { LAMPS } from './levelart.js';
+import { LAMPS, WIRES, wirePath } from './levelart.js';
 import { makeKit } from './kit.js';
 import { registerArch } from './arch.js';
 import { registerDress } from './dress.js';
@@ -263,6 +263,11 @@ for (const [x, y, z, ry] of [[-36.5, 3.2, -45, PI / 2], [-36.5, 3.2, -37, PI / 2
   for (const e of ERAS3) placements.push({ type: 'bluestone_walllamp', pos: [x, 0, z], rotY: ry, y, era: e, eras: String(e) });
 }
 for (const e of [1, 2]) placements.push({ type: 'bluestone_wires', pos: [0, 0, 0], era: e, eras: String(e) });
+// Tartar's wires from the drum (the warning's pulses run along them: layout.js eras.pulses): black wire in the 1880s and
+// TODAY, a filament of light in the 3000s; their brackets and roof poles shared
+const PATHS = WIRES.map((w) => wirePath(w));
+placements.push({ type: 'bluestone_pulsewires', pos: [0, 0, 0], anchors: WIRES });
+for (const e of ERAS3) placements.push({ type: 'bluestone_pulsewires', pos: [0, 0, 0], paths: PATHS, era: e, eras: String(e) });
 // ---- the railings: one per rail collider of the half list, its kind by its tag (an era rail keeps its piece's eras and group)
 const DEG = Math.PI / 180;
 function railOf(d) {

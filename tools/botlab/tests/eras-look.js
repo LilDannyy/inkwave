@@ -13,12 +13,20 @@
 //   superstructure on the spawn → dome line, DESIGN §8.3).
 // Part 4 (12c): the murals' era masks — Hoki Lane's street art (7) absent in era 1, present from era 2; the ghost sign (9)
 //   the other way; the 3000s' light seams (11) only in era 3 (pixel probes on their walls).
+// Part 5 (the art phase, PAGE_ARGS='only=5'): (a) three looks of the same streets — the shared facades at four places
+//   (the arcade's Swimston front, the hotel and the oriel, the GPO, the Customs House) render differently in each era
+//   (the level art per era: levelart.js) while their geometry is the same; (b) the warning's sepia flicker — a piece about
+//   to vanish (the Degrayling crates before jump 1) shifts toward the warm film tint during the warning and the street
+//   beside it does not; (c) the front's clean edge — mid-jump, a vanishing piece the front crosses is cut along one line
+//   (each scanline of it switches once or twice between "still there" and "gone"; the old 20 cm dissolve switched many
+//   times), and the cut follows the front; (d) the decor lamps' light per era (ENGINE rule 42) and their iron bodies
+//   hidden (each era's own lamp props stand there).
 (async () => {
   const g = window.__inkwave, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
   const THREE = await import('three');
   const D = await import('./src/world/eras-data.js');
-  const only = (/only=([\d,]+)/.exec(String(window.__pageArgs || ''))?.[1] || '1,2,3,4').split(',').map(Number);
+  const only = (/only=([\d,]+)/.exec(String(window.__pageArgs || ''))?.[1] || '1,2,3,4,5').split(',').map(Number);
   const dbg = g.debug;
   dbg.freeze();
   for (const a of g.match.actors) { if (a.bot) a.bot.update = () => {}; if (a.intent) { a.intent.move?.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.jump = false; } a.character.root.visible = false; a.character.setVisible?.(false); }
@@ -63,8 +71,8 @@
     const want = { vert: ['attribute vec2 aEra', 'vEraK = mix('], frag: ['float eraBitHere()', 'dot(texture2D(uLight, vLightUv).rgb, eraOneHot)', 'mc.a *= eraHasF(uMurEra[mi], eraBitHere());', 'uEraTint[ei]', 'ecore * 2.0'] };
     const miss = [...want.vert.filter((x) => !sh.vertexShader.includes(x)), ...want.frag.filter((x) => !sh.fragmentShader.includes(x))];
     const key = mat.customProgramCacheKey(), gkey = g.grateMat.customProgramCacheKey();
-    R('step 5: the level shader carries the era chunks (aEra and the collapse, the fragment\'s era, the AO channel of that era, the mural masks, the tint / re-skins, the front), its program key ends in -eras, the uniforms are the world\'s own objects',
-      !miss.length && key.endsWith('-eras') && gkey.endsWith('-eras') && sh.uniforms.uEra === W.uniforms.uEra && mat.defines?.ERAS === 1,
+    R('step 5: the level shader carries the era chunks (aEra and the collapse, the fragment\'s era, the AO channel of that era, the mural masks, the tint / re-skins, the front), its program key ends in -eras (then the stage\'s own level art, -bsart, on the level mesh: the art phase), the uniforms are the world\'s own objects',
+      !miss.length && /-eras(-bsart)?$/.test(key) && gkey.endsWith('-eras') && sh.uniforms.uEra === W.uniforms.uEra && mat.defines?.ERAS === 1,
       { miss, key, gkey, murals: W.uniforms.uMurEra.value, remap: W.uniforms.uEraRemap.value.map((v) => v.toArray()) });
     // the depth material and the GTAO gate
     const m0 = W.meshes[0], geo = m0.geometry;
@@ -243,6 +251,80 @@
         && mur[7] === 6 && mur[9] === 1 && mur[11] === 4 && [4, 6, 7, 8, 9, 11].every((i) => tex[i] && tex[i].rect && tex[i].rect[1] > 0),
       { meanDiffPerEra: { hoki, ghost, seams }, uMurEra: mur, atlas: [4, 6, 7, 8, 9, 11].map((i) => (tex[i] ? tex[i].rect.map((x) => +x.toFixed(3)) : null)) });
     E.debugJump(1, { instant: true });
+  }
+
+  if (only.includes(5)) {
+    // (a) three looks of the same streets
+    const views = [
+      ['the Royal Arcade\'s Swimston front', [-20.5, 2.0, -40], [-26, 2.4, -33], [0.3, 0.2, 0.95, 0.85]],
+      ['the Young & Jackfish from the circus', [-6.5, 1.8, -9.5], [-11.75, 5.2, -18.5], [0.15, 0.05, 0.85, 0.6]],
+      ['the GPO from Swimston', [-20.5, 1.8, -48], [-16, 3.0, -44], [0.3, 0.15, 0.9, 0.85]],
+      ['the Customs House from the cab rank', [-22.0, 1.8, -17], [-29.5, 3.5, -12], [0.15, 0.1, 0.85, 0.85]],
+    ];
+    const looks = [];
+    for (const [name, from, look, box] of views) {
+      const shots = [];
+      for (const e of [1, 2, 3]) { E.debugJump(e, { instant: true }); step(0.05); cam(from, look, 62); step(0.05); shots.push(grab()); }
+      const d12 = diff(shots[0], shots[1], box), d23 = diff(shots[1], shots[2], box), d13 = diff(shots[0], shots[2], box);
+      looks.push({ name, d12: d12.mean, d23: d23.mean, d13: d13.mean });
+    }
+    R('art phase (a): three looks of the same streets — at each of four places the facades render differently in every era (mean pixel change between eras ≥ 6/255 over the facade)',
+      looks.every((l) => l.d12 >= 6 && l.d23 >= 6 && l.d13 >= 6), looks);
+    // (b) the warning's sepia flicker on what is about to vanish
+    E.debugJump(1, { instant: true }); step(0.1);
+    const cr = L.blocks.find((b) => b.tag === 'crates-stack' && b.center.z < 0);
+    cam([-20.5, 2.4, -24.0], [cr.center.x, 1.2, cr.center.z], 56); step(0.05);   // (from Swimston at Degrayling Lane's mouth: the crates' lit west face, the street below)
+    const rest = grab();
+    const Jw = E.debugJump(2, { inS: 3 }); step(1.0);   // (J − 2 s: the flicker at its strongest, warnK ≈ 0.9)
+    const phase = E.phase, Wz = W.uniforms.uEraW.value;
+    // the same frame with the flicker on and off (nothing else moves between the two renders): only what is about to vanish
+    // may change, and toward the old-film tone (eras.colors.vanish with its chroma ×4: red over blue ≈ 1.58 in sRGB)
+    let best = null;
+    for (let k = 0; k < 6; k++) { step(1 / 60); const on = grab(), z0 = Wz.z; Wz.z = 0; const off = grab(); Wz.z = z0; const d = diff(off, on, [0.38, 0.3, 0.62, 0.55]); if (!best || d.mean > best.d.mean) best = { on, off, d }; }
+    const street = diff(best.off, best.on, [0.0, 0.9, 0.25, 1.0]);
+    const hue = (F, box) => { const x0 = Math.floor(box[0] * F.w), x1 = Math.floor(box[2] * F.w), y0 = Math.floor(box[1] * F.h), y1 = Math.floor(box[3] * F.h); let r = 0, b = 0; for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { const i = (y * F.w + x) * 4; r += F.px[i]; b += F.px[i + 2]; } return r / Math.max(1, b); };
+    const h0 = hue(best.off, [0.38, 0.3, 0.62, 0.55]), h1 = hue(best.on, [0.38, 0.3, 0.62, 0.55]), FILM = 1.58;
+    R('art phase (b): the warning\'s sepia flicker — the Degrayling crates (about to vanish at jump 1) visibly shift toward the old-film tone during the warning (a pixel check, the same frame with the flicker off and on: mean change ≥ 1.5/255, red over blue moving toward the film tint\'s), the shared street beside them untouched (≤ 0.3)',
+      phase === 'warn' && best.d.mean >= 1.5 && Math.abs(h1 - FILM) < Math.abs(h0 - FILM) && street.mean <= 0.3, { phase, crates: best.d, street, redOverBlue: [+h0.toFixed(3), +h1.toFixed(3)], film: FILM, warnK: +Wz.z.toFixed(2) });
+    E.debugJump(1, { instant: true }); step(0.1);
+    // (c) the front's clean edge on a vanishing piece it crosses (the crates again): with the front held through its middle
+    // and the jump's effects hidden, a grid of points on the crates' top face, projected to the frame — each is drawn (the
+    // frame differs from the same frame with the piece's mesh taken out) exactly when it lies beyond the front (its radius
+    // over the front's); the old 20 cm dissolve drew a random half of each side
+    E.debugJump(1, { instant: true }); step(0.1);
+    const J = E.debugJump(2, { inS: 0 }); step(0.3);
+    const rg = W.groups[cr.eraG].rg, U = W.uniforms.uEra.value, m1 = W.meshes.filter((m) => m.userData.eraMask === 1);
+    const topY = cr.center.y + cr.half.y;
+    cam([cr.center.x + 6.0, 7.5, cr.center.z - 2.0], [cr.center.x, topY, cr.center.z], 55);
+    step(0.02);
+    const fxVis = W.fx?.group?.visible; if (W.fx?.group) W.fx.group.visible = false;
+    U.set(1, 2, rg, W.dissolve);
+    const M1 = grab(), M0 = without(m1, () => grab());
+    if (W.fx?.group) W.fx.group.visible = fxVis;
+    const camO = __G.camera, pv = new THREE.Vector3();
+    let n = 0, bad = 0, far = 0, near = 0, edge = 0;
+    for (let x = cr.aabbMin.x + 0.12; x < cr.aabbMax.x - 0.1; x += 0.2) for (let z = cr.aabbMin.z + 0.12; z < cr.aabbMax.z - 0.1; z += 0.2) {
+      const r = Math.hypot(x, z);
+      if (Math.abs(r - rg) < 0.25) { edge++; continue; }
+      pv.set(x, topY, z).project(camO);
+      const px = Math.round((pv.x + 1) / 2 * M1.w), py = Math.round((pv.y + 1) / 2 * M1.h);
+      if (px < 0 || py < 0 || px >= M1.w || py >= M1.h) continue;
+      const i = (py * M1.w + px) * 4, d = Math.abs(M1.px[i] - M0.px[i]) + Math.abs(M1.px[i + 1] - M0.px[i + 1]) + Math.abs(M1.px[i + 2] - M0.px[i + 2]);
+      const drawn = d >= 18, beyond = r > rg;
+      n++; if (beyond) far++; else near++;
+      if (drawn !== beyond) bad++;
+    }
+    R('art phase (c): the front\'s clean edge — mid-jump, the crates the front crosses are drawn exactly on its far side and cut away on its near side (points on their top: drawn ⇔ beyond the front, ≤ 3 % off), no 20 cm block dissolve',
+      n > 100 && far > 30 && near > 30 && bad / n <= 0.03, { points: n, beyond: far, inside: near, off: bad, offShare: +(bad / Math.max(1, n)).toFixed(3), onTheLine: edge, rg: +rg.toFixed(2) });
+    step(W.doneOff + 1.2);
+    // (d) the lamps per era (ENGINE rule 42): the decor's lamp glass takes eras.look[e].lamps; its iron bodies hidden
+    const d = g.decor, body = []; d?.group?.traverse?.((o) => { if (o.name === 'lamps:body') body.push(o.visible); });
+    const lamp = [];
+    for (const e of [1, 2, 3]) { E.debugJump(e, { instant: true }); step(0.05); lamp.push('#' + d.bulbMat.emissive.getHexString()); }
+    const want = [1, 2, 3].map((e) => (W.E.look?.[e]?.lamps || '').toLowerCase());
+    R('art phase (d): the lamps\' light per era (eras.look[e].lamps on the decor glass, ENGINE rule 42), the decor\'s iron bodies hidden (the eras\' own lamps stand on the spots)',
+      lamp.join() === want.join() && body.length > 0 && body.every((v) => !v) && (L.layout.decor?.lamps?.length || 0) === 6, { lamp, want, bodies: body, spots: L.layout.decor?.lamps?.length });
+    E.debugJump(1, { instant: true }); step(0.1);
   }
   return out;
 })()

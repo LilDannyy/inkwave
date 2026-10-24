@@ -24,7 +24,7 @@ import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
 import { ERA, eraFilter } from './era.js';
 import { MURAL } from './murals.js';
-import { levelArt, makeArtOf, LAMPS } from './levelart.js';
+import { levelArt, makeArtOf, LAMPS, WIRES, wirePath } from './levelart.js';
 import { BOT, TIER_Y, coverRects, bars, junctionPatches, tierBoxes, symOutline, rectPoly } from './ground.js';
 
 // ------------------------------------------------------------------------------------------------ frames
@@ -522,13 +522,9 @@ const ERAS = {
   tartar: { type: 'bluestone_tartar', pos: [0, 5.4, 0], rotY: 0 },
   clocks: [{ type: 'bluestone_clockhands', pos: [0, 5.95, -7.88], rotY: 180, faces: 5 }],
   phones: [[17.73, 1.2, -3.13], [-17.1, 1.2, -12.8], [-15, 2.1, -51.8]],   // (round C: the third on the forecourt terrace's ticket booth)
-  pulses: [                                                                  // (round C: the overhead wires on the Z, Alpha's half)
-    [[0, 9, 0], [-20, 6.5, -10], [-20, 6.5, -50], [-21.5, 7, -62]],          //   up Swimston to the engine house
-    [[0, 9, 0], [-30, 6.5, -18], [-34, 6.5, -45]],                          //   Prow Place and Hoki Lane
-    [[0, 9, 0], [-8, 6, -24], [-8, 6, -45]],                                //   the quay
-    [[0, 9, 0], [12.5, 6, -20], [12.5, 6, -42]],                            //   the punt crossing
-    [[0, 9, 0], [-30, 6.5, 2], [-35, 6.5, -10]],                            //   the knee's river walk
-  ],
+  // (the art phase: the warning's pulses run along Tartar's real wires, hung from the drum to the parapets and roof poles:
+  //  levelart.js WIRES — up Swimston, Prow Place and Hoki Lane, the quay, the punt crossing, the knee's river walk)
+  pulses: WIRES.map((w) => wirePath(w)),
   tint: { 1: [1.05, 0.99, 0.90, 0.20], 2: [1, 1, 1, 0], 3: [0.97, 1.0, 1.03, 0.08] },
   remap: [
     { base: SURF.granite, eras: [SURF.granite, PATTERN.asphalt, PATTERN.pavers] },

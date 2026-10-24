@@ -193,13 +193,13 @@ export function registerDress(D, H, KIT) {
       for (let i = 0; i < n; i++) {
         const fx = (B.r() - 0.5) * (w - 0.24), fz = (B.r() - 0.5) * (d - 0.24), s = 0.16 + B.r() * 0.12;
         if (e === 1) {
-          B.add('rubber', sphG(s, 6, 4), i % 3 ? K.leafDk : K.leaf, fx, s * 0.6, fz, { sy: 0.8 });
+          B.add('rubber', sphG(s, 9, 6), i % 3 ? K.leafDk : K.leaf, fx, s * 0.6, fz, { sy: 0.8 });
           if (i % 2) B.add('gloss', sphG(0.05, 5, 4), K.red, fx + 0.06, s * 1.25, fz, {});
         } else if (e === 2) {
           for (let k = 0; k < 3; k++) { const a = B.r() * TAU, L = 0.25 + B.r() * 0.2; strut(B, 'rubber', i % 2 ? K.leafLt : K.leaf, [fx, 0, fz], [fx + Math.cos(a) * 0.12, L, fz + Math.sin(a) * 0.12], 0.025); }
           if (i % 4 === 0) { rod(B, 'rubber', K.leaf, [fx, 0, fz], [fx, 0.55, fz], 0.01); for (let k = 0; k < 5; k++) B.add('gloss', sphG(0.03, 5, 4), '#8a8fc8', fx + Math.cos(k * 1.26) * 0.05, 0.57 + (k % 2) * 0.02, fz + Math.sin(k * 1.26) * 0.05, {}); }
         } else {
-          B.add('rubber', sphG(s * 0.9, 6, 4), K.leafLt, fx, s * 0.5, fz, { sy: 0.7 });
+          B.add('rubber', sphG(s * 0.9, 9, 6), K.leafLt, fx, s * 0.5, fz, { sy: 0.7 });
           B.add('gloss', sphG(0.045, 5, 4), K.white, fx + 0.05, s * 0.95, fz + 0.03, {});
           if (i === 0) { B.add('glow', sphG(0.07, 8, 6), K.wgLit, 0, 0.45, 0, { glow: 1.6 }); rod(B, 'gloss', K.pearl, [0, 0, 0], [0, 0.4, 0], 0.012); }
         }
@@ -402,6 +402,32 @@ export function registerDress(D, H, KIT) {
           B.add('metal', torG(0.22, 0.02, 4, 12, Math.PI), K.alu, x, 0.72, 0.04, {});
         }
         B.pop();
+      }
+    },
+  };
+
+  // ============================================================================================================ Tartar's wires
+  // o.paths (levelart.js wirePath per wire) and o.anchors: the wires themselves (o.era: 1 / 2 black, 3 a thin light
+  // filament) or, with no era, the brackets and poles they hang on (shared)
+  D.bluestone_pulsewires = {
+    desc: "Tartar's wires from the drum to the streets (o.paths, o.anchors; o.era the wire's look, none = the fittings)",
+    build(B, o) {
+      const e = o.era || 0;
+      if (e) {
+        for (const p of o.paths || []) for (let i = 1; i < p.length; i++) rod(B, e === 3 ? 'glow' : 'metal', e === 3 ? K.wg : K.black, p[i - 1], p[i], e === 3 ? 0.014 : 0.018, { seg: 4, glow: e === 3 ? 1.3 : undefined });
+        return;
+      }
+      for (const w of o.anchors || []) for (const a of w) {
+        const [x, y, z, kind, y0] = a;
+        if (kind === 'pole') {
+          B.cyl('wood', K.timber, 0.08, y - y0 + 0.4, x, (y + y0 + 0.4) / 2, z, { seg: 8 });
+          pbox(B, 'wood', K.timber, 0.9, 0.08, 0.1, x, y + 0.05, z);
+          for (const dx of [-0.35, 0, 0.35]) B.add('gloss', sphG(0.045, 6, 4), K.cream, x + dx, y + 0.12, z, {});
+        } else {
+          // an iron bracket and a white insulator
+          B.add('metal', sphG(0.07, 6, 4), K.iron, x, y + 0.02, z, {});
+          B.add('gloss', cylGeo(0.05, 0.06, 0.12, 8), K.cream, x, y + 0.1, z, {});
+        }
       }
     },
   };

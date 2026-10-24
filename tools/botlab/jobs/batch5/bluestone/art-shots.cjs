@@ -32,7 +32,7 @@ const PLACES = {
 };
 const VIEWS = {
   swimston: { from: [-20.5, 2.6, -47], look: [-17.5, 2.6, -24], fov: 72 },
-  knee: { from: [-21.5, 2.4, -32], look: [-17, 2.8, -12], fov: 74 },
+  knee: { from: [-17.9, 2.2, -33.5], look: [-24.5, 3.4, -14], fov: 74 },
 };
 const pre = `const g = window.__inkwave, E = g.match.eras, W = __G.eraWorld, P = __G.paint, THREE = window.__THREE;
   const step = (s) => { const n = Math.max(1, Math.round(s * 60)); for (let i = 0; i < n; i++) g.debug.step(1000 / 60); };

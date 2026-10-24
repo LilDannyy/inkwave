@@ -87,16 +87,24 @@ const LV_FBASE = /* glsl */`
       break;
     }
 #endif
+  }`;
+// (art phase) the second half: the era's tint, the warning's flicker, the done pulse and the front's cut act on the bare
+// surface AFTER a stage's own level art (LAYOUT.levelArt), which reads eraOneHot from the first half and paints `base`
+const LV_FBASE_B = /* glsl */`
+  {
+    float eb = eraBitHere();
+    int ei = eb > 3.5 ? 2 : (eb > 1.5 ? 1 : 0);
     // the era's tint on the bare surface (the 1880s: warm and a little desaturated), never on the ink
     vec4 etn = uEraTint[ei];
     float elum = dot(base, vec3(0.299, 0.587, 0.114));
     base = mix(base, vec3(elum), etn.w) * etn.rgb;
     if (vEra.x < 6.5) {
       float hf = eraHasF(vEra.x, uEraW.x), ht = eraHasF(vEra.x, uEraW.y);
-      // the warning: what is about to vanish flickers in a sepia film grain (up to 15 %)
+      // the warning: what is about to vanish flickers in a sepia film grain (up to 45 %, art phase: it read too faintly)
       if (uEraW.z > 0.0 && hf > 0.5 && ht < 0.5) {
         float fl = step(0.45, fract(sin(floor(uEraT * 9.0) * 12.9898 + dot(floor(vWPos * 3.0), vec3(1.7, 3.1, 2.3))) * 43758.5453));
-        base = mix(base, vec3(elum) * eraFilm(), uEraW.z * (0.08 + 0.07 * fl));
+        // (art phase: strong enough to read — the old-film sepia up to 45 % and a projector's flicker in the brightness)
+        base = mix(base, vec3(elum) * eraFilm(), uEraW.z * (0.25 + 0.2 * fl)) * (1.0 + uEraW.z * 0.14 * (fl - 0.5));
       }
       // done: what is new pulses white-gold for 4 s
       if (uEraW.w > 0.0 && ht > 0.5 && hf < 0.5) base = mix(base, uEraColA, uEraW.w * (0.3 + 0.2 * sin(uEraT * 7.0)));
@@ -115,10 +123,12 @@ if (uEra.z >= 0.0) {
   outgoingLight = mix(outgoingLight, outgoingLight * 0.85 + uEraColA * 0.2, clamp(eband * 0.6, 0.0, 1.0));
   outgoingLight += uEraColA * (ecore * 2.0 + eband * 0.45 * esh + etick * 1.2);
 }`;
-export function eraLevelExt(U, grate = false) {
+// (split: the era bit and the re-skins first; a stage's level art may go between; the tint / flicker / pulse / cut after —
+//  pass the art's chunk as `art` and it is spliced in between, else the two halves run back to back as before)
+export function eraLevelExt(U, grate = false, art = '') {
   return {
     key: 'eras', uniforms: U, defines: { ERAS: 1 },
-    vertPars: LV_VPARS, vertMain: LV_VMAIN, fragPars: LV_FPARS, fragMural: LV_FMURAL, fragBase: LV_FBASE, fragFinal: grate ? '' : LV_FFINAL,
+    vertPars: LV_VPARS, vertMain: LV_VMAIN, fragPars: LV_FPARS, fragMural: LV_FMURAL, fragBase: LV_FBASE + (art || '') + LV_FBASE_B, fragFinal: grate ? '' : LV_FFINAL,
     aoSample: 'dot(texture2D(uLight, vLightUv).rgb, eraOneHot)',
   };
 }
@@ -165,7 +175,7 @@ if (vEraM < 6.5) {
   else if (vEraK < 0.5) discard;
   float hf = eraHasF(vEraM, uEraW.x), ht = eraHasF(vEraM, uEraW.y);
   float elum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-  if (uEraW.z > 0.0 && hf > 0.5 && ht < 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, vec3(elum) * eraFilm(), uEraW.z * (0.08 + 0.07 * step(0.5, fract(uEraT * 9.0 + vEraWP.x))));
+  if (uEraW.z > 0.0 && hf > 0.5 && ht < 0.5) { float efl = step(0.5, fract(uEraT * 9.0 + vEraWP.x)); diffuseColor.rgb = mix(diffuseColor.rgb, vec3(elum) * eraFilm(), uEraW.z * (0.25 + 0.2 * efl)) * (1.0 + uEraW.z * 0.14 * (efl - 0.5)); }
   if (uEraW.w > 0.0 && ht > 0.5 && hf < 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, uEraColA, uEraW.w * (0.3 + 0.2 * sin(uEraT * 7.0)));
 }`;
 // a clone of a prop material whose parts carry `attr` = (era mask, r_g): absent → collapsed; dissolving at the flip

@@ -243,12 +243,16 @@ export class EraWorld {
   }
 
   levelMaterial({ grate }) {
-    const ext = eraLevelExt(this.uniforms, grate), fn = this.layout?.levelArt;
-    if (typeof fn !== 'function') return ext;
-    // (after the era chunks: the art reads the fragment's era, eraOneHot; night: the environment's factor, read live)
+    const fn = this.layout?.levelArt;
+    if (typeof fn !== 'function') return eraLevelExt(this.uniforms, grate);
+    // the stage's level art goes between the era chunks' halves: it reads the fragment's era (eraOneHot) and paints the bare
+    // surface; the era's tint, the warning's sepia flicker, the done pulse and the front's cut then act on what it painted
+    // (night: the environment's factor, read live). Its own pars / emissive / attribute ride as an extension of their own
     const night = { get value() { return G.env?.U?.uNight?.value || 0; }, set value(v) { /* the environment's */ } };
     const art = fn({ grate, night, lamps: [1, 2, 3].map((e) => this.E.look?.[e]?.lamps || '#ffe0b8') });
-    return art ? [ext, art] : ext;
+    if (!art) return eraLevelExt(this.uniforms, grate);
+    const ext = eraLevelExt(this.uniforms, grate, art.fragBase || '');
+    return [ext, { ...art, fragBase: '' }];
   }
   levelFilter() { return (b) => !b.grate && !b.presence; }   // the main mesh: shared blocks only
 
