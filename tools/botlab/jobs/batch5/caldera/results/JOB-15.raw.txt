@@ -1,0 +1,153 @@
+JOB-15 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 20:37:22
+branch botlab-b5-caldera, ran at 0194dd37, exit code 0, wall time 3min
+(a written-up JOB-15.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== lava.js x3
+== SUMMARY
+### lavajs-6
+RESULT 59/59
+## F8b PASS {}
+##   ["A","race1",4475,9.1,null,null]
+##   ["A","race2",4477,11,null,null]
+##   ["A","race3",4485,11,null,null]
+##   ["A","race4",4493,12,null,null]
+##   ["B","race1",4475,9.1,null,null]
+##   ["B","race2",4477,11,null,null]
+##   ["B","race3",4485,11,null,null]
+##   ["B","race4",4493,12,null,null]
+##   ["C","race1",4475,9.1,null,null]
+##   ["C","race2",4477,11,null,null]
+##   ["C","race3",4485,11,null,null]
+##   ["C","race4",4493,12,0.633,null]
+##   ["D","race1",4475,9.1,null,null]
+##   ["D","race2",4477,11,null,null]
+##   ["D","race3",4485,11,null,null]
+##   ["D","race4",4493,12,null,null]
+## F8c PASS {"n":76,"died":0,"notUp":0,"slowest":1.267}
+### lavajs-7
+RESULT 59/59
+## F8b PASS {}
+##   ["A","race1",4475,9.1,null,null]
+##   ["A","race2",4477,11,null,null]
+##   ["A","race3",4485,11,null,null]
+##   ["A","race4",4493,12,null,null]
+##   ["B","race1",4475,9.1,null,null]
+##   ["B","race2",4477,11,null,null]
+##   ["B","race3",4485,11,null,null]
+##   ["B","race4",4493,12,null,null]
+##   ["C","race1",4475,9.1,null,null]
+##   ["C","race2",4477,11,null,null]
+##   ["C","race3",4485,11,null,null]
+##   ["C","race4",4493,12,null,null]
+##   ["D","race1",4475,9.1,null,null]
+##   ["D","race2",4477,11,null,null]
+##   ["D","race3",4485,11,null,null]
+##   ["D","race4",4493,12,null,null]
+## F8c PASS {"n":76,"died":0,"notUp":0,"slowest":1.3}
+### lavajs-8
+RESULT 59/59
+## F8b PASS {}
+##   ["A","race1",4475,9.1,null,null]
+##   ["A","race2",4477,11,null,null]
+##   ["A","race3",4485,11,null,null]
+##   ["A","race4",4493,12,null,null]
+##   ["B","race1",4475,9.1,null,null]
+##   ["B","race2",4477,11,null,null]
+##   ["B","race3",4485,11,null,null]
+##   ["B","race4",4493,12,null,null]
+##   ["C","race1",4475,9.1,null,null]
+##   ["C","race2",4477,11,null,null]
+##   ["C","race3",4485,11,null,null]
+##   ["C","race4",4493,12,null,null]
+##   ["D","race1",4475,9.1,null,null]
+##   ["D","race2",4477,11,null,null]
+##   ["D","race3",4485,11,null,null]
+##   ["D","race4",4493,12,null,null]
+## F8c PASS {"n":76,"died":0,"notUp":0,"slowest":1.267}
+
+## last 15 lines of job.log
+##   ["A","race3",4485,11,null,null]
+##   ["A","race4",4493,12,null,null]
+##   ["B","race1",4475,9.1,null,null]
+##   ["B","race2",4477,11,null,null]
+##   ["B","race3",4485,11,null,null]
+##   ["B","race4",4493,12,null,null]
+##   ["C","race1",4475,9.1,null,null]
+##   ["C","race2",4477,11,null,null]
+##   ["C","race3",4485,11,null,null]
+##   ["C","race4",4493,12,null,null]
+##   ["D","race1",4475,9.1,null,null]
+##   ["D","race2",4477,11,null,null]
+##   ["D","race3",4485,11,null,null]
+##   ["D","race4",4493,12,null,null]
+## F8c PASS {"n":76,"died":0,"notUp":0,"slowest":1.267}
+
+## lavajs-6.txt
+### lavajs-6
+RESULT 59/59
+console errors: none
+## F8b PASS {}
+##   ["A","race1",4475,9.1,null,null]
+##   ["A","race2",4477,11,null,null]
+##   ["A","race3",4485,11,null,null]
+##   ["A","race4",4493,12,null,null]
+##   ["B","race1",4475,9.1,null,null]
+##   ["B","race2",4477,11,null,null]
+##   ["B","race3",4485,11,null,null]
+##   ["B","race4",4493,12,null,null]
+##   ["C","race1",4475,9.1,null,null]
+##   ["C","race2",4477,11,null,null]
+##   ["C","race3",4485,11,null,null]
+##   ["C","race4",4493,12,0.633,null]
+##   ["D","race1",4475,9.1,null,null]
+##   ["D","race2",4477,11,null,null]
+##   ["D","race3",4485,11,null,null]
+##   ["D","race4",4493,12,null,null]
+## F8c PASS {"n":76,"died":0,"notUp":0,"slowest":1.267}
+
+## lavajs-7.txt
+### lavajs-7
+RESULT 59/59
+console errors: none
+## F8b PASS {}
+##   ["A","race1",4475,9.1,null,null]
+##   ["A","race2",4477,11,null,null]
+##   ["A","race3",4485,11,null,null]
+##   ["A","race4",4493,12,null,null]
+##   ["B","race1",4475,9.1,null,null]
+##   ["B","race2",4477,11,null,null]
+##   ["B","race3",4485,11,null,null]
+##   ["B","race4",4493,12,null,null]
+##   ["C","race1",4475,9.1,null,null]
+##   ["C","race2",4477,11,null,null]
+##   ["C","race3",4485,11,null,null]
+##   ["C","race4",4493,12,null,null]
+##   ["D","race1",4475,9.1,null,null]
+##   ["D","race2",4477,11,null,null]
+##   ["D","race3",4485,11,null,null]
+##   ["D","race4",4493,12,null,null]
+## F8c PASS {"n":76,"died":0,"notUp":0,"slowest":1.3}
+
+## lavajs-8.txt
+### lavajs-8
+RESULT 59/59
+console errors: none
+## F8b PASS {}
+##   ["A","race1",4475,9.1,null,null]
+##   ["A","race2",4477,11,null,null]
+##   ["A","race3",4485,11,null,null]
+##   ["A","race4",4493,12,null,null]
+##   ["B","race1",4475,9.1,null,null]
+##   ["B","race2",4477,11,null,null]
+##   ["B","race3",4485,11,null,null]
+##   ["B","race4",4493,12,null,null]
+##   ["C","race1",4475,9.1,null,null]
+##   ["C","race2",4477,11,null,null]
+##   ["C","race3",4485,11,null,null]
+##   ["C","race4",4493,12,null,null]
+##   ["D","race1",4475,9.1,null,null]
+##   ["D","race2",4477,11,null,null]
+##   ["D","race3",4485,11,null,null]
+##   ["D","race4",4493,12,null,null]
+## F8c PASS {"n":76,"died":0,"notUp":0,"slowest":1.267}
