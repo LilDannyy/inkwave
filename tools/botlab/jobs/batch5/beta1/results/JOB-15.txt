@@ -1,0 +1,10 @@
+JOB-15 (beta1) @ 2dcb1350 — Mac mini b5-runner, 2026-10-24 07:58–08:37, exit 0. Short summary; details in JOB-15.raw.txt.
+- cold first frames (each stage alone, the GPU shader disk cache off), 16 stages: THIS BRANCH 42/45, the shipped b0cc406c 1/45.
+  This branch's 3 misses: kelpline and craters compile 1 shader program in the 20 s of play after the first frames (first use of a kit), and
+  spirhalite's first-frames check ran with flood false (no program, but the forced flood didn't happen). Every stage's frames ≤ 27.9 ms intro,
+  ≤ 13.7 ms play, gaps ~17 ms. The shipped code compiles programs in the first frames and in play on nearly every stage.
+- karp-bots: this branch 41/42, 42/42, 41/42 (H and I(b) once each); the shipped code 42/42 ×3.
+- bot-stuck 7/7, 7/7, 6/7 (run 3 'tank'); pocket 1/1, karpspot 1/1.
+- not full besides: lava 58/59 (F10), bot-climb 6/7 (forced climbs). Every other page test the review touched is full (issue-log 10/10,
+  issue-host 15/15, stage-mods, pipes, holds, the four new subs, deployables, surf, drainbow, sp-rules, zipcheer, bazookarp-rules 119/119,
+  hud-karp, tower-rules / -ink, bot-specials, beta-content …).

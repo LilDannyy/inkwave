@@ -240,6 +240,32 @@ export class SpecialSystem {
   }
 
   _add(...objs) { for (const o of objs) { this.scene.add(o); this.owned.add(o); } }
+  // [b5-beta1] a match is about to be shown (main.js _warmStage): stand-ins for what the lineup's specials build on first
+  // use — the shared looks (aura, swirl, beam, bubble, glow, plain and see-through colour, an icon badge, ink on a ball,
+  // the shield), each kind's own (IMPL[kind].warm: the Wave Breaker, the Drainbow) — and the held special weapons
+  // (Ink Zooka, Bubble Blower, Ink Jet, Mega Stamp: built at the first swap, returned so their programs are compiled
+  // now; setWeapon hangs them on the hand later). Kept: their materials are never disposed (the programs stay cached).
+  warm(actors) {
+    const kinds = new Set(), out = [];
+    const kindOf = (a) => { const d = SPECIALS[a?.specialId]; return d ? d.kind || a.specialId : null; };   // (as start() names it)
+    for (const a of actors) { const k = kindOf(a); if (k) kinds.add(k); }
+    if (!kinds.size) return out;
+    if (!this._warmBase) {
+      const w = new THREE.Color(1, 1, 1), M = (g, m) => new THREE.Mesh(g, m);
+      this._warmBase = [M(this.funnelGeo, auraMat(w)), M(this.funnelGeo, swirlMat(w)), M(this.beamGeo, beamMat(w)), M(this.sphereGeo, bubbleMat(w)),
+        M(this.sphereGeo, new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.2, roughness: 0.35 })),
+        M(this.sphereGeo, new THREE.MeshBasicMaterial({ color: 0xffffff })), M(this.ringGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, depthWrite: false })),
+        M(this.sphereGeo, getInkMaterial(w)), new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.Texture(), transparent: true, depthWrite: false }))];
+    }
+    out.push(...this._warmBase);
+    for (const k of kinds) { const f = IMPL[k]?.warm; if (f) { try { const o = f.call(this, actors); if (Array.isArray(o)) out.push(...o); } catch (e) { console.warn('[inkwave] special warm', k, e); } } }
+    const HELD = { zooka: 'sp_zooka', blower: 'sp_blower', jetpack: 'sp_jetgun', stamp: 'sp_stamp' };
+    for (const a of actors) {
+      const k = HELD[kindOf(a)], ch = a?.character;
+      if (k && ch?._getWeapon && !ch.weapons?.[k]) { try { const wp = ch._getWeapon(k); out.push(wp.pivot); if (wp.left) out.push(wp.left.pivot); if (wp.pivotL) out.push(wp.pivotL); } catch (e) { console.warn('[inkwave] special weapon warm', k, e); } }
+    }
+    return out;
+  }
   _remove(...objs) { for (const o of objs) { if (!o) continue; this.scene.remove(o); this.owned.delete(o); } }
 
   glowMat(team) {

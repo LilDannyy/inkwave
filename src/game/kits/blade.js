@@ -633,6 +633,7 @@ function botTactics(brain, ctx) {
 // ------------------------------------------------------------------------------------------ the kit
 MAIN_KITS.blade = {
   ghost,
+  warm() { BladeFX.ensure(); },   // [b5-beta1] the slash arcs' and waves' pools, into the scene now (registry.js warmKits)
   update(R, dt, inp, w) {
     const a = R.a, K = st(R);
     if (G.time - K.lastT > 0.3) { cancelCharge(R, K); K.held = false; K.swing = null; K.lunge = 0; K.queued = 0; }   // resumed after a special took the trigger

@@ -1,0 +1,324 @@
+JOB-7 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 01:19:34
+branch botlab-b5-beta1, ran at 68aa9f51, exit code 0, wall time 19min
+(a written-up JOB-7.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### beta1 JOB-7 head 68aa9f51
+## net-eras  load { 2.30 3.33 6.55 }
+## net-eras  exit 0  283 s
+[net-eras] RESULT 13/14
+## net-lava  load { 3.28 3.42 5.61 }
+## net-lava  exit 0  296 s
+[net-lava] RESULT 13/13
+## net-pipes  load { 3.71 3.78 5.14 }
+## net-pipes  exit 0  85 s
+[net-pipes] RESULT 17/17
+## net-stagemods  load { 3.92 3.90 5.04 }
+## net-stagemods  exit 0  31 s
+[net-stagemods] RESULT 10/10
+## net-lobbykit  load { 3.67 3.83 4.97 }
+## net-lobbykit  exit 0  42 s
+[net-lobbykit] RESULT 16/16
+## net-practice  load { 3.43 3.74 4.89 }
+## net-practice  exit 0  89 s
+[net-practice] RESULT 29/29
+## net-karp-2  load { 3.73 3.73 4.76 }
+## net-karp-2  exit 0  65 s
+[net-karp-2] RESULT 22/22
+## net-karp-3  load { 3.70 3.79 4.71 }
+## net-karp-3  exit 0  71 s
+[net-karp-3] RESULT 22/22
+## lava-karp  load { 3.69 3.71 4.60 }
+## lava-karp  exit 0  20 s
+[lava-karp] RESULT 9/9
+## eras-jump-frames  load { 3.63 3.69 4.57 }
+## eras-jump-frames  exit 0  25 s
+[eras-jump-frames] RESULT 3/4
+## karp-match-karpbox  load { 3.43 3.64 4.53 }
+## karp-match-karpbox  exit 0  39 s
+[karp-match-karpbox] RESULT karp karpbox win=A reason=stopped ko=- c=29/40 pops=15/12 carries=27 blasts=0 ot=stopped/held
+[karp-match-karpbox] RESULT_JSON {"map":"karpbox","winner":0,"reason":"stopped","koT":null,"counts":[29,40],"pops":[15,12],"firstPop":12.8,"carries":27,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":{"why":"held","losing":1,"len":3.5,"end":"stopped","windows":{"opened":0,"paused":0,"closed":0}},"stuckPct":0.2,"over5":0,"issueStuck":0,"clamped":0,"crushes":3,"console":0,"frameErrors":0}
+## karp-match-halyard  load { 3.47 3.62 4.48 }
+## karp-match-halyard  exit 0  32 s
+[karp-match-halyard] RESULT karp halyard win=B reason=knockout ko=208.3 c=96/0 pops=6/10 carries=16 blasts=0 ot=no
+[karp-match-halyard] RESULT_JSON {"map":"halyard","winner":1,"reason":"knockout","koT":208.3,"counts":[96,0],"pops":[6,10],"firstPop":13.12,"carries":16,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.1,"over5":0,"issueStuck":0,"clamped":0,"crushes":1,"console":0,"frameErrors":0}
+## sfx-cues  load { 3.62 3.69 4.46 }
+## sfx-cues  exit 0  22 s
+[sfx-cues] RESULT 59/59
+### done
+
+## last 15 lines of job.log
+## eras-jump-frames  exit 0  25 s
+[eras-jump-frames] FAIL step 8: no frame over 50 ms during a jump (each simulated and rendered frame from J − 0.5 to done + 1.5, performance.now())  {"baselineNoJump":{"max":161.2,"p95":3.5},"baselineInking":[[160.5,145],[4.9,216],[4.7,151],[4.2,150]],"frames":358,"worst":[[301.1,1.98,"jump",0,0,1
+[eras-jump-frames] RESULT 3/4
+## karp-match-karpbox  load { 3.43 3.64 4.53 }
+## karp-match-karpbox  exit 0  39 s
+[karp-match-karpbox] RESULT karp karpbox win=A reason=stopped ko=- c=29/40 pops=15/12 carries=27 blasts=0 ot=stopped/held
+[karp-match-karpbox] RESULT_JSON {"map":"karpbox","winner":0,"reason":"stopped","koT":null,"counts":[29,40],"pops":[15,12],"firstPop":12.8,"carries":27,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":{"why":"held","losing":1,"len":3.5,"end":"stopped","windows":{"opened":0,"paused":0,"closed
+## karp-match-halyard  load { 3.47 3.62 4.48 }
+## karp-match-halyard  exit 0  32 s
+[karp-match-halyard] RESULT karp halyard win=B reason=knockout ko=208.3 c=96/0 pops=6/10 carries=16 blasts=0 ot=no
+[karp-match-halyard] RESULT_JSON {"map":"halyard","winner":1,"reason":"knockout","koT":208.3,"counts":[96,0],"pops":[6,10],"firstPop":13.12,"carries":16,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.1,"over5":0,"issueStuck":0,"clamped":0,"crushes":1,"console":0,"frameErr
+## sfx-cues  load { 3.62 3.69 4.46 }
+## sfx-cues  exit 0  22 s
+[sfx-cues] RESULT 59/59
+### done
+
+## eras-jump-frames.txt
+FAIL step 8: no frame over 50 ms during a jump (each simulated and rendered frame from J − 0.5 to done + 1.5, performance.now())  {"baselineNoJump":{"max":161.2,"p95":3.5},"baselineInking":[[160.5,145],[4.9,216],[4.7,151],[4.2,150]],"frames":358,"worst":[[301.1,1.98,"jump",0,0,1.7],[36.6,1.5,"jump",0,0,-26.9],[15.3,1.82,"jump",0,0,0],[9.9,1.88,"jump",0,0,6.4]],"baseMs":[92,0,0],"compileMs":20,"m
+PASS step 8 (review fix 1): a viewer on Bravo (the minimap's side flip drops its cached era bases) and a match at another time of day (the theme drops them): the bases are rebuilt before the jump, and none is built between J and done + 1  [{"label":"bravo","flip":true,"cached":"123","programsCompiled":0,"rebuiltBefore":["1:side 69 ms","3:side 60 ms"],"missingAtJ":false,"jump":"2>3","buildsJtoDone1
+PASS step 8 (final review, issue 5): … and the era update itself (the module's whole per-frame work) stays under 10 ms in every frame of those two jumps — a frame spike there is the render's or the machine's, split per frame [total, J + s, era update, render, the rest]  [{"label":"bravo","jump":"2>3","eraUpdateMaxMs":2.1,"worst":[[10.3,0.02,2.1,3.8,4.4,0,0,0],[9.9,3.97,1.2,1.5,7.2,0,0,2],[6.6,
+PASS step 8 (review fix 1, timing): … and no frame of those two jumps passes 50 ms  {"worst":[["bravo",[[10.3,0.02,2.1,3.8,4.4,0,0,0],[9.9,3.97,1.2,1.5,7.2,0,0,2],[6.6,0.03,0.9,2.3,3.4,0,0,0]]],["theme",[[13.2,4.33,0,12.5,0.7,0,0,0],[11.6,3.97,1.1,1.1,9.4,0,0,2],[6.7,0.02,0.4,3.6,2.7,0,0,0]]]],"baselineNoJumpMax":161.2}
+RESULT 3/4
+console errors: none
+
+## karp-match-halyard.txt
+RESULT karp halyard win=B reason=knockout ko=208.3 c=96/0 pops=6/10 carries=16 blasts=0 ot=no
+RESULT_JSON {"map":"halyard","winner":1,"reason":"knockout","koT":208.3,"counts":[96,0],"pops":[6,10],"firstPop":13.12,"carries":16,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.1,"over5":0,"issueStuck":0,"clamped":0,"crushes":1,"console":0,"frameErrors":0}
+
+## karp-match-karpbox.txt
+RESULT karp karpbox win=A reason=stopped ko=- c=29/40 pops=15/12 carries=27 blasts=0 ot=stopped/held
+RESULT_JSON {"map":"karpbox","winner":0,"reason":"stopped","koT":null,"counts":[29,40],"pops":[15,12],"firstPop":12.8,"carries":27,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":{"why":"held","losing":1,"len":3.5,"end":"stopped","windows":{"opened":0,"paused":0,"closed":0}},"stuckPct":0.2,"over5":0,"issueStuck":0,"clamped":0,"crushes":3,"console":0,"frameErrors":0}
+
+## lava-karp.txt
+PASS a Bazookarp match on Highmark Foundry: the mode and the lava both run  {"mode":"bazookarp","karp":true,"lava":true,"placeholder":false}
+PASS K1 the Carp Field is built with the lava's states at load: G.match.stage.karpStates() → LOW, HIGH (from restMask); the field's states [as built, low, high]  {"karpStates":["low","high"],"fieldStates":[0,"low","high"],"okN":[4345,4241,3979]}
+PASS K2 rest flags: no rest spot on a rider (a Pumice stone, an Organ: the riders' whole travel is swept) in any state, none on lava-reachable floor at HIGH  {"restOk":{"high":3533,"low":3859,"built":3859},"sweptBoxes":36,"bad":[],"nBad":0}
+PASS K3 the drop spot at HIGH from lava-reachable ground (30 ledge spots, both halves): dry floor on the same half, every time  {"spots":30,"maxM":26.91,"bad":[]}
+PASS K4 the field switches at lava:warn — to HIGH at the rise warning (25 s), to LOW at the fall warning (70 s) — and is never rebuilt (the same arrays)  {"switches":[[25,2],[70.02,1]],"atRise":2,"atFall":1,"warnings":[25,70]}
+PASS K3b from the fall warning (the field LOW) until the ledges dry, no drop spot on ground the lava covers now: 60 ledge-level origins at 6 times (the lava HIGH 10 s more, then falling); a real drop 1 s into the warning lands dry  {"rows":[{"t":70.5,"lavaY":0.8,"state":"low","tried":60,"covered":0,"none":0,"eg":[]},{"t":71,"lavaY":0.8,"state":"low","tried":60,"covered":0,"none":0,"eg":[]},{"t":74
+PASS K5 a Bazookarp resting on a ledge at LOW stays there until the rise's warning, then is moved to dry ground at once (13.8 s before the ledge turns deadly)  {"ledge":[12.5,0,-22.5],"stayedAtLow":true,"moved":[25,"moved",18.5,1.1,-12.5],"restNow":1659,"kindNow":0,"phase":"reforming","leadS":13.8}
+PASS K6 a carrier on the drowning Slump shelf gets the warning like anyone (GET OFF THE LOW GROUND all through the warning), and standing still on its own half across the switch never gets the fuse's ×3  {"carrying":true,"warnSamples":22,"lines":["GET OFF THE LOW GROUND"],"rates":[1]}
+PASS K7 a bot carrier on the shelf at the rise warning escapes it: alive and off the low ground when the ledges turn deadly  {"alive":true,"at":[-24.48,1.58,4.13],"foot":0,"deaths":[],"escapes":54,"carrying":true}
+RESULT 9/9
+console errors: none
+
+## net-eras.txt
+PASS turf: a 1:30 Turf War on bluestone runs the eras on both screens (jumps at 30 and 60 s)  {"sched":[{"from":1,"to":2,"at":30},{"from":2,"to":3,"at":60}]}
+PASS turf: every group flips on both screens within 0.4 s (wall clock) of each other, through both jumps  {"groups":52,"maxSkew_s":0.017,"perJump":[{"groups":8,"max_s":0.017,"median_s":0.016},{"groups":44,"max_s":0.017,"median_s":0.016}],"clockSkew_s":[-0.001,-0.001,-0.001,-0.018,-0.018,-0.018,-0.018,-0.018],"worst":[["bridge-2:b@1",-17],["halo-4:a@2",-17],["halo-5:a@2",-17],["halo-6:a@2",-17]],"a
+PASS turf: the follower's stage clock is the host's at the same wall time — within 0.15 s (median) and 0.25 s (90th percentile) over 26 s after jump 1 (the trip to the relay added back, final review issue 4)  {"clockSkew":{"n":1560,"median":0.013,"p90":0.018,"max":0.02,"signedMedian":-0.004,"series":[[35,-0.02],[36,0],[37,0],[38,0],[39,0],[40,0],[41,0],[42,0],[43,0],[44,0],[45,0],[46,0],[47,0],[
+PASS turf: after each done both screens agree on solid for every era block and on the nav's era (edgeMask)  {"after":[[{"t":35.47,"era":2,"solid":"90072ca1","edgeMask":2,"navEra":2},{"t":35.47,"era":2,"solid":"90072ca1","edgeMask":2,"navEra":2}],[{"t":65.61,"era":3,"solid":"81d84ad","edgeMask":4,"navEra":3},{"t":65.63,"era":3,"solid":"81d84ad","edgeMask":4,"navEra":3}]],"donesB":[[2,33.966],[3,63.
+PASS turf (precondition): the guest's sprinkler stuck on the Degrayling crates' wall and its Drip Curtain on their roof both stand on both screens before the flip (the host has their ghosts)  {"devB":{"state":"spray","onCrates":true,"gid":300001,"pos":[-14.51,1.16,-24.2]},"ghostBefore":1,"curB":{"state":"curtain","pos":[-12.18,2.8,-27],"hp":157.3,"t":29.6},"curGhostBefore":1}
+PASS turf: that sprinkler and that curtain are gone on both screens after the crates' flip (the owner pops them, the end record [2, gid, 2] ends the ghosts)  {"sprinkler":["dead",0],"curtain":["dead",0]}
+FAIL turf: the guest's splats on the Iron Bridge from 0.4 s before its flip to 0.6 s after (the guard window; field 15 carries the painter's stage time) leave its cells equal on both screens  {"shots":17,"span":[-0.4,0.57],"cells":368,"inked":92,"differ":1,"differPerTry":[1,1,1,1,1,1]}
+PASS turf: both results screens show the host's counts (the 3000s' turf, the same winner)  {"res":[{"cov":[0.1247,0.1391],"w":1},{"cov":[0.1247,0.1391],"w":1}]}
+PASS host: after the host leaves (after jump 1), the new host runs jump 2 on time — its match clock at 60 ± 0.4 s when its era:jump fires — and the 3000s arrive  {"jump2":{"n":"era:jump","wall":1792764215045,"t":60.016,"mc":60.016},"after":{"host":true,"follower":false,"era":3,"state":"playing"}}
+PASS host: … and the match finishes on the new host's screen
+PASS practice: online Practice runs the eras from the host's stage clock (its ticks carry it: no movers or pods here) — the clocks agree within 0.4 s, both in the 1880s  {"s0":[{"t":3.17,"era":1,"navEra":1,"turf":87974,"phase":"idle"},{"t":3.14,"era":1,"navEra":1,"turf":87974,"phase":"idle"}]}
+PASS practice: the host moved to the 3000s; the guest follows within 2 s (its clock snaps to the host's: seek('clock')), turf totals equal  {"follow_s":0.2,"s1":[{"t":125.17,"era":3,"navEra":3,"turf":106486,"phase":"idle"},{"t":125.11,"era":3,"navEra":3,"turf":106486,"phase":"idle"}]}
+PASS practice: a late joiner in the 3000s — its era is 3 within 2 s of its first host tick, its importGrid takes the host's turf (the same inked live cells), its turfTotal equals the host's  {"era3After_s":0.43,"joinToTick_s":1.7,"joiner":{"t":136.02,"era":3,"navEra":3,"turf":106486,"phase":"idle"},"host":{"t":136.05,"era":3,"navEra":3,"turf":106486,"phase":"idle"},"inked":[{"inked":1064,"counts
+PASS practice: the rewind at 180 s takes all three screens back to the 1880s (nav era 1, the same turf total)  {"s3":[{"t":186.1,"era":1,"navEra":1,"turf":87974,"phase":"idle"},{"t":186.07,"era":1,"navEra":1,"turf":87974,"phase":"idle"},{"t":186.07,"era":1,"navEra":1,"turf":87974,"phase":"idle"}]}
+RESULT 13/14
+
+## net-karp-2.txt
+PASS a room takes the listed Bazookarp mode  {"mode":"bazookarp"}
+PASS the host runs the rules (NetWire); the guest's engine is a follower fed by the host's snapshots  {"ia":{"host":true,"wire":"NetWire","snap":19},"ib":{"follower":true,"hostT":18.2},"bTeam":1}
+PASS the guest sees the Bazookarp and the Roe Shell at the Pond (engine and look)  {"ib":{"phase":"shielded","shell":"intact"},"look":{"shell":true,"carp":true,"at":[0,1.3,0]}}
+PASS 1. B's shots on the shell move the HOST's meter (summed on B's tick: kh); B's meter follows the host's  {"host":-636,"guest":-636,"extraMs":0}
+PASS 1b. while B fires at the shell for 5 s, B itself sends ≤ 30 messages in any 1 s (expected ~20: its ticks; kh adds none)  {"peak1s":22,"total":102,"perSec":20.5,"kinds":["b|","pi"],"weapon":"shooter"}
+PASS 2. the host's burst frees it on B's screen; the host's kid picks it up and is B's carrier too  {"burst":"free","holder":0,"aNid":0}
+PASS 2b. the count falls on the host as its kid carries; B's count is the host's (within a snapshot)  {"host":[85,100],"guest":[85,100]}
+PASS 2c. B's HUD: the carrier marker (the carp + its fuse seconds) and the status line  {"on":true,"marker":{"x":640,"y":335.4,"secs":58,"fast":false,"onScreen":true,"dist":1,"team":0,"under":true,"raw":335.4,"box":{"l":606,"r":674,"t":302.4,"b":335.4}},"status":"THEY CARRY · 58 s"}
+PASS 3. B grabs it (kc → p on both screens); right after, the host's count for Bravo is still the Pond's (no sample from before the pick-up was scored), no clamp rejection  {"before":[85,100],"host":[85,100],"clamped":0,"clampLog":[],"claims":1}
+PASS 4. B carries forward: the HOST's count for Bravo falls with B's own field reading (± 1 once still; never ahead of it on the way), with 0 clamp rejections  {"host":70,"guest":70,"clamped":0,"clampLog":[],"walk":[[97,96],[92,91],[87,85],[82,80],[77,75],[71,70]],"bPos":[0.3,0,-14.38]}
+PASS 4b. the host's view of B's half and rate is B's own kr (on Alpha's half: half 0, rate 1)  {"half":0,"rate":1,"why":null}
+PASS 5. B's Carp Shots land in the same spot on the host's screen (± 0.3 m): one on A's kid, one on the floor ([1] carries the landing, not the raycast's direction)  {"pairs":[{"gid":200001,"shooter":[0.3,0.7,-21.4],"ghost":[0.3,0.7,-21.4],"d":0},{"gid":200002,"shooter":[8.28,0.05,-13.61],"ghost":[8.28,0.05,-13.61],"d":0}],"land":[0.3,0,-21.68]}
+PASS 5b. the Splash hurts A's kid on A's own screen (the victim judges [2]: B's Carp Shot, its hp at that moment)  {"hp0":100,"hpLow":50.333999999999925,"hp1":{"hp":50.333999999999925,"alive":true,"hurt":[{"dmg":40,"hp":50.67,"att":2}]}}
+PASS 5c. B gets its hit marker for A (A's [3] → a hit event with B as the attacker)  [{"att":2,"vic":0,"dmg":0,"w":"weapon","rv":false},{"att":2,"vic":0,"dmg":40,"w":"karp","rv":true}]
+PASS 5d. A's screen hears B's launches: each ghost launch emits karp:shot there and plays the whomp (karp_fire)  {"ev":[{"nid":2,"ghost":true},{"nid":2,"ghost":true}],"fire":2}
+PASS 6. B retreats 10 m on its own half: DON'T RETREAT! on B's screen, and the host burns B's fuse ×3 (B's kr: retreat, own half)  {"host":{"half":1,"rate":3,"why":"retreat"},"guest":{"bottom":["DON'T RETREAT!","Fuse burning 3× — turn around"],"rate":3}}
+PASS 7. a race: the host grants the nearer Bravo bot; B's claim is refused and B gets the host's kd (it reaches the engine: its lock ends)  {"holder":[3,3],"bot7":3,"claims":5,"refused":[0,1],"dbg7":{"phase":"carried","phaseT":0,"holder":3,"kpos":[0.7,0,16.5],"bot":{"pos":[0.7,0,16.5],"alive":true,"sp":false,"sj":false,"can":null},"grants":3,"refused":1}}
+PASS 8c. … and the host's pick-up call-out (THEY'VE GOT THE BAZOOKARP!, up or waiting at the grant) goes with the u: none on either screen while it is free again  {"host":{"live":["FREE — GRAB IT!","WE TOOK THE LEAD!"],"pend":null,"atPick":[["WE TOOK THE LEAD!","CARRIER DOWN!","THEY'VE GOT THE BAZOOKARP!"]],"atUndo":[["WE TOOK THE LEAD!","CARRIER DOWN!","FREE — GRAB IT!"],["WE TOOK THE LEAD!
+PASS 8. B, dead on its own screen when its grant arrives, declines it (kx); the host undoes it (u): nobody holds it on either screen, free at the same spot  {"kx":1,"hostDeclined":1,"holder":[null,null],"phase":["free","free"],"pos":[[0.5,0,16.5],[0.5,0,16.5]]}
+PASS 8b. … touched and the last carrier are as before the grant, and the S39 overtime goes on (no 'stopped')  {"overtime":true,"winner":null,"reason":null,"pre":{"touched":true,"lc":{"team":0,"how":"splat","left":5},"win":9.500100000000016},"post":{"touched":true,"lc":{"team":0,"how":"splat","left":5},"win":7.900100000000031,"open":true}}
+PASS 9. the window ran out: Alpha wins 'no-pickup', and both screens show the same result (mode, winner, reason, counts)  {"host":{"winner":0,"reason":"no-pickup","counts":[60,100],"mode":"bazookarp"},"guest":{"winner":0,"reason":"no-pickup","counts":[60,100],"mode":"bazookarp"}}
+PASS no page errors on either screen  []
+RESULT 22/22
+
+## net-karp-3.txt
+PASS a room takes the listed Bazookarp mode  {"mode":"bazookarp"}
+PASS the host runs the rules (NetWire); the guest's engine is a follower fed by the host's snapshots  {"ia":{"host":true,"wire":"NetWire","snap":17},"ib":{"follower":true,"hostT":24.02},"bTeam":1}
+PASS the guest sees the Bazookarp and the Roe Shell at the Pond (engine and look)  {"ib":{"phase":"shielded","shell":"intact"},"look":{"shell":true,"carp":true,"at":[0,1.3,0]}}
+PASS 1. B's shots on the shell move the HOST's meter (summed on B's tick: kh); B's meter follows the host's  {"host":-636,"guest":-636,"extraMs":0}
+PASS 1b. while B fires at the shell for 5 s, B itself sends ≤ 30 messages in any 1 s (expected ~20: its ticks; kh adds none)  {"peak1s":22,"total":102,"perSec":20.7,"kinds":["b|","pi"],"weapon":"shooter"}
+PASS 2. the host's burst frees it on B's screen; the host's kid picks it up and is B's carrier too  {"burst":"free","holder":0,"aNid":0}
+PASS 2b. the count falls on the host as its kid carries; B's count is the host's (within a snapshot)  {"host":[84,100],"guest":[84,100]}
+PASS 2c. B's HUD: the carrier marker (the carp + its fuse seconds) and the status line  {"on":true,"marker":{"x":640,"y":335.4,"secs":58,"fast":false,"onScreen":true,"dist":1,"team":0,"under":true,"raw":335.4,"box":{"l":606,"r":674,"t":302.4,"b":335.4}},"status":"THEY CARRY · 58 s"}
+PASS 3. B grabs it (kc → p on both screens); right after, the host's count for Bravo is still the Pond's (no sample from before the pick-up was scored), no clamp rejection  {"before":[84,100],"host":[84,100],"clamped":0,"clampLog":[],"claims":1}
+PASS 4. B carries forward: the HOST's count for Bravo falls with B's own field reading (± 1 once still; never ahead of it on the way), with 0 clamp rejections  {"host":69,"guest":69,"clamped":0,"clampLog":[],"walk":[[97,96],[92,90],[86,85],[81,80],[76,75],[71,70]],"bPos":[0.3,0,-14.54]}
+PASS 4b. the host's view of B's half and rate is B's own kr (on Alpha's half: half 0, rate 1)  {"half":0,"rate":1,"why":null}
+PASS 5. B's Carp Shots land in the same spot on the host's screen (± 0.3 m): one on A's kid, one on the floor ([1] carries the landing, not the raycast's direction)  {"pairs":[{"gid":200001,"shooter":[0.3,0.7,-21.56],"ghost":[0.3,0.7,-21.56],"d":0},{"gid":200002,"shooter":[8.28,0.05,-13.77],"ghost":[8.28,0.05,-13.77],"d":0}],"land":[0.3,0,-21.84]}
+PASS 5b. the Splash hurts A's kid on A's own screen (the victim judges [2]: B's Carp Shot, its hp at that moment)  {"hp0":100,"hpLow":50.33600000000008,"hp1":{"hp":50.33600000000008,"alive":true,"hurt":[{"dmg":40,"hp":50.67,"att":2}]}}
+PASS 5c. B gets its hit marker for A (A's [3] → a hit event with B as the attacker)  [{"att":2,"vic":0,"dmg":0,"w":"weapon","rv":false},{"att":2,"vic":0,"dmg":40,"w":"karp","rv":true}]
+PASS 5d. A's screen hears B's launches: each ghost launch emits karp:shot there and plays the whomp (karp_fire)  {"ev":[{"nid":2,"ghost":true},{"nid":2,"ghost":true}],"fire":2}
+PASS 6. B retreats 10 m on its own half: DON'T RETREAT! on B's screen, and the host burns B's fuse ×3 (B's kr: retreat, own half)  {"host":{"half":1,"rate":3,"why":"retreat"},"guest":{"bottom":["DON'T RETREAT!","Fuse burning 3× — turn around"],"rate":3}}
+PASS 7. a race: the host grants the nearer Bravo bot; B's claim is refused and B gets the host's kd (it reaches the engine: its lock ends)  {"holder":[3,3],"bot7":3,"claims":5,"refused":[0,1],"dbg7":{"phase":"carried","phaseT":0,"holder":3,"kpos":[0.7,0,16.5],"bot":{"pos":[0.7,0,16.5],"alive":true,"sp":false,"sj":false,"can":null},"grants":3,"refused":1}}
+PASS 8c. … and the host's pick-up call-out (THEY'VE GOT THE BAZOOKARP!, up or waiting at the grant) goes with the u: none on either screen while it is free again  {"host":{"live":["FREE — GRAB IT!","WE TOOK THE LEAD!"],"pend":null,"atPick":[["WE TOOK THE LEAD!","CARRIER DOWN!","THEY'VE GOT THE BAZOOKARP!"]],"atUndo":[["WE TOOK THE LEAD!","CARRIER DOWN!","FREE — GRAB IT!"],["WE TOOK THE LEAD!
+PASS 8. B, dead on its own screen when its grant arrives, declines it (kx); the host undoes it (u): nobody holds it on either screen, free at the same spot  {"kx":1,"hostDeclined":1,"holder":[null,null],"phase":["free","free"],"pos":[[0.5,0,16.5],[0.5,0,16.5]]}
+PASS 8b. … touched and the last carrier are as before the grant, and the S39 overtime goes on (no 'stopped')  {"overtime":true,"winner":null,"reason":null,"pre":{"touched":true,"lc":{"team":0,"how":"splat","left":5},"win":9.466700000000015},"post":{"touched":true,"lc":{"team":0,"how":"splat","left":5},"win":7.866700000000032,"open":true}}
+PASS 9. the window ran out: Alpha wins 'no-pickup', and both screens show the same result (mode, winner, reason, counts)  {"host":{"winner":0,"reason":"no-pickup","counts":[60,100],"mode":"bazookarp"},"guest":{"winner":0,"reason":"no-pickup","counts":[60,100],"mode":"bazookarp"}}
+PASS no page errors on either screen  []
+RESULT 22/22
+
+## net-lava.txt
+PASS a room on Highmark Foundry (Turf War 1:30, 4 bots)  {"map":"caldera","duration":90,"mode":"turf"}
+PASS both screens run the lava on the same schedule (turf:90)  {"a":{"t":0.032,"y":-0.6,"phase":"low","stones":"00000000000000","host":true,"key":"turf:90"},"b":{"t":0.048,"y":-0.6,"phase":"low","stones":"00000000000000","host":false,"key":"turf:90"}}
+PASS the guest plants a Lurk Mine and a Hop Beacon on the shelf before the rise; the host sees them (ghosts)  {"dev":{"t":0.64,"mine":[300001],"beacon":[300002]},"ghosts0":[300001,300002]}
+PASS the level agrees on both screens every 0.5 s through a rise and a fall (± 0.1 m)  {"n":140,"worst":{"d":0.008800000000000002,"at":[34.324,-0.0412,34.366,-0.0324]}}
+PASS the guest left standing on the shelf splats by lava (its own screen judges it); the host's feed shows cause lava, at the rise's deadly moment (30 + 3.8 s ± 0.6)  {"lavaB":[3,"lava",33.84],"deaths":[[2,"drop",23.68],[4,"mitts",23.72],[5,"blast",27.96],[3,"lava",33.84],[5,"boomerang",53.42],[1,"roller",56.27],[4,"mitts",59.51],[5,"mitts",68.22]]}
+PASS …its devices the lava covered are gone on both screens (the owner's sweep and its end records)  {"devAfter":{"host":[],"guest":[]}}
+PASS at the results screen the lava cells agree between the two screens at least as well as the same run's other cells do (splats across the waterline through a rise and a fall: the painter's stage time, field 15)  {"lava":{"n":72046,"differ":18,"ratio":0.99975,"inked":[2456,2456]},"other":{"n":366707,"differ":425,"ratio":0.99884,"inked":[56935,56929]},"painted":165,"diffWhere":{"n":18,"minY":-0.3
+PASS time-up at LOW (the final ebb); the same result on both screens  {"res":[1,1],"fin":{"y":-0.6,"phase":"low"}}
+PASS Practice runs its own loop (practice: rise at 20) between the stage's own levels  {"t":0.167,"y":-0.6,"phase":"low","stones":"00000000000000","host":true,"key":"practice"}
+PASS a late joiner at HIGH: its level and its stones agree with the host's (± 0.1 m) once its clock settles  {"host":{"t":42.415,"y":0.8,"phase":"high","stones":"11111111111111","host":true,"key":"practice"},"joiner":{"t":42.396,"y":0.8,"phase":"high","stones":"11111111111111","host":false,"key":"practice"},"skew":[0]}
+PASS …and its paint (the imported grid) equals the host's, lava cells and all; the live guest's lava cells equal the host's too (the host painted the Slump cliff across the waterline at LOW — burned by the rise — and at HIGH)  {"lavaCells":{"joiner":{"n":72046,"differ":0,"inked":[0,0]},"guest":{"n":72046,"differ":0,"inked":[0,0]}},"grid":{"joiner":{"n":438753,"differ":0,"inked":[174,174]},"g
+PASS a timed match: the host leaves mid-rise (35 s) — the new host's fall starts at 55 ± 0.4 s on its screen, and the stones turn deadly (the ledges dry) at 61.2 ± 0.4 s on both remaining screens  {"before":{"t":35.1,"y":0.1209,"phase":"rise","stones":"11111111111111","host":false,"key":"turf:90"},"fall":{"B":55.02,"C":55},"stonesDeadly":{"B":61.22,"C":61.23},"after":{"B":{"t":63.299,"y":-0.49
+PASS …and both remaining screens show the same result at time-up  {"res3":[0,0]}
+RESULT 13/13
+
+## net-lobbykit.txt
+PASS guest: SUB and SPECIAL chips beside WEAPON — the Spritzer's own Splat Bomb and Twister Zooka, tagged WEAPON'S OWN  [{"kind":"sub","sig":"bomb|true|shooter","own":true,"name":"Splat Bomb","seen":true,"mark":true},{"kind":"special","sig":"zooka|true|shooter","own":true,"name":"Twister Zooka","seen":true,"mark":true}]
+PASS the bar by arrows: WEAPON → SUB ↓ SPECIAL → LOOK ← SPECIAL (where you left the stack) ↑ SUB ← WEAPON → SUB  ["sub","special","look","special","sub","weapon","sub"]
+PASS guest readies up (R)
+PASS guest: Enter on SUB opens the kit picker on the weapon's own; ↓ → → Echo Orb, Enter picks it — saved to the profile, the chip shows it, focus back on the chip  {"st1":"kp-sub-own","f1":"kp-sub-scan","g1":{"focus":"sub","prof":"scan","me":"scan"},"k1":{"id":"scan","own":false,"name":"Echo Orb","seen":true,"mark":false}}
+PASS host: the room has the guest's Echo Orb, and so does its nameplate; the guest is still ready  {"weapon":"shooter","sub":"scan","special":null,"ready":true,"plate":"scan|zooka"}
+PASS guest: ↓ SPECIAL, Enter: the picker on the weapon's own, ← Mystery Bomb Barrage (the last), Enter — the chip shows Mystery Bomb Barrage  {"fs":"special","st2":"kp-special-own","f2":"kp-special-barrage_mystery","k2":{"id":"barrage_mystery","own":false,"name":"Mystery Bomb Barrage","seen":true,"mark":false}}
+PASS host: the guest's Mystery Bomb Barrage in the room and on its nameplate; still ready  {"weapon":"shooter","sub":"scan","special":"barrage_mystery","ready":true,"plate":"scan|barrage_mystery"}
+PASS Weapon's Own: the picker starts on Echo Orb, ↑ ← ← the first tile, Enter — null in the profile and the room, the chip back on Splat Bomb marked as the weapon's own  {"st3":"kp-sub-scan","f3":"kp-sub-own","g3":{"prof":null,"me":null},"k3":{"id":"bomb","own":true,"name":"Splat Bomb","seen":true,"mark":true},"h3":{"weapon":"shooter","sub":null,"special":"barrage_mystery","ready":true,"pl
+PASS guest: the Swell Roller from the drawer — the Weapon's Own SUB chip moves to its Cling Charge (swap animation), the SPECIAL pick stays Mystery Bomb Barrage  {"drawer":true,"s5":{"id":"sticky","own":true,"name":"Cling Charge","seen":true,"mark":true},"p5":{"id":"barrage_mystery","own":false,"name":"Mystery Bomb Barrage","seen":true,"mark":false},"anim":[true,false]}
+PASS host: roller, sub null (its own: Cling Charge on the nameplate), Mystery Bomb Barrage; still ready  {"weapon":"roller","sub":null,"special":"barrage_mystery","ready":true,"plate":"sticky|barrage_mystery"}
+PASS host: its SPECIAL chip → Tidal Slam; the guest's room and nameplate show it  {"fa0":"kp-special-own","fa":"kp-special-slam","ka":{"id":"slam","own":false,"name":"Tidal Slam","seen":true,"mark":false},"hs":{"special":"slam","plate":"bomb|slam"}}
+PASS the chips are there in every room mode (zones · tower · boss · practice · turf), host and guest  {"zones":[true,true],"tower":[true,true],"boss":[true,true],"practice":[true,true],"turf":[true,true]}
+PASS guest: SUB, ← from the weapon's own wraps to the last sub (Dash Pellet), Enter — its chip shows it; the host's room and nameplate have it; still ready  {"SL":"dash","sb7":"kp-sub-own","fb7":"kp-sub-dash","kb7":{"id":"dash","own":false,"name":"Dash Pellet","seen":true,"mark":false},"hb7":{"weapon":"roller","sub":"dash","special":"barrage_mystery","ready":true,"plate":"dash|barrage_mystery"
+PASS host: SUB, ← ← the sub before it (bobber) — the guest's room and nameplate show it  {"SL2":"bobber","sa7":"kp-sub-own","fa7":"kp-sub-bobber","ha7":{"sub":"bobber","plate":"bobber|slam"}}
+PASS turf match (the guest stayed ready, so the host could start): the guest holds the roller, the Dash Pellet ([b5-int3]: picked in 7b) and Mystery Bomb Barrage — on the host's screen and its own  {"ready":true,"onA":["roller","dash","barrage_mystery"],"onB":["roller","dash","barrage_mystery"]}
+PASS …and the host's bobber and Tidal Slam reached the guest's screen  {"hostOnB":["shooter","bobber","slam"]}
+RESULT 16/16
+
+## net-pipes.txt
+PASS the room: online Practice on Gulper Aquarium (WIPSTAGES lists the stage under construction)  {"map":"aquarium","mode":"practice"}
+PASS 1. B walks into the Express on its own screen (captured), and rides it there exactly on the path (≤ 0.005 m)  {"capB":true,"frames":74,"maxD":0,"phases":["-","suck","ride","pop","-"]}
+PASS 1. on A's screen B's rider is drawn within 0.05 m of the centreline + lane every frame of the ride (from the [0] record; netlag 80 ± 40 on B), with no snap along it (no frame advancing more than 3× the speed × its frame time + 0.3 m, none stepping back)  {"frames":146,"maxD":0,"phases":["-","suck","ride","pop","-"],"pops":0,"worstKink":0.07,"worstAt":[0.406,0.014,46.72,false,0,0,true]}
+PASS 2. A's exit ring is lit from B's suck end to B's pop: on B's timeline the lit spans agree within 0.1 s (two frames of either page under load) (A 2.455 s, B 2.467 s; wall clock A 2.432 s, B 2.467 s)  {"a":[0.2646777884263152,2.719290878419269],"b":[0.2690999999642365,2.7358999999761586],"wall":[2.432,2.467],"popEnd":[7,7]}
+PASS 3. A's bot shooting B mid-ride: the shooter's screen drops it (behind the glass: no 'hit' event), B's hp unchanged  {"shot":{"riding":true,"phase":"ride","guard":true,"hitEvents":0,"team":[0,1]},"hpB":100}
+PASS 3. after B's touchdown the same shot hurts (judged on A, applied on B)  {"hp":70}
+PASS 4. two-way traffic: B east → west and a bot west → east on the Gulper Run at once; each pops at the right end on both screens  {"B":[1,1],"bot":[0,0],"want":[1,0],"maxD":[0,0]}
+PASS 4. the turf round both landings is the same on A and B  {"a":[[0,0.3333333333333333,0.6666666666666666],[0,0.34615384615384615,0.6538461538461539]],"b":[[0,0.3333333333333333,0.6666666666666666],[0,0.34615384615384615,0.6538461538461539]]}
+PASS 5. the tide on two screens: A and B report the same flow() at the same moments (their stage clocks within 0.4 s; any mismatch only at a change instant)  {"agree":12,"of":12,"skew":0.08999999999999986,"sample":[[{"dir":"ab","phase":"warn","t":16.88},{"dir":"ab","phase":"warn","t":16.84}],[{"dir":"ab","phase":"shut","t":18.6},{"dir":"ab","phase":"shut","t":18.52}],[{"dir":"ba","phase":"shut","t
+PASS 6. a late joiner's first look at the tide is the host's (direction and phase); once its clock settles it is within 0.6 s of the host's  {"first":{"c":{"dir":"ab","phase":"run","t":44.07},"a":{"dir":"ab","phase":"run","t":44.37}},"settled":{"c":{"dir":"ab","phase":"run","t":44.07},"a":{"dir":"ab","phase":"run","t":44.37}}}
+PASS 6. a joiner that never saw the ride's [0] (C) draws the rider within 0.3 m of the centreline from the tick flag (projection), and its applyHit drops a shot at it  {"frames":75,"maxD":0,"hit":{"proj":true,"flag":true,"hp":100,"hp0":100},"phases":["-","ride","pop","-"]}
+PASS 7. the handoff: B is the host and no longer a follower, every squidkid A ran (2) is B's own (not a proxy, with a brain), and neither B nor C logged an error  {"isHost":true,"follower":false,"practice":true,"bots":[[1,true,false,true],[3,true,false,true]],"errB":[],"errC":[]}
+PASS 7. after the host leaves mid-ride, the new host (B) adopts the bot and it pops at the far end within ±0.3 s of when it would have (on the old host's clock)  {"popB":1.6714093149886613,"expectPop":1.6633333333333333,"enterLag":0.07240931498866132,"raw":1.599,"end":1,"phases":["-","suck","ride","pop","-"],"wall":5.325}
+PASS 7. the remaining guest (C) draws the rider within 0.1 m of the centreline across the handoff, and without a jump (it catches up smoothly to where the old host had it: no snap)  {"after":37,"maxDAfter":0,"maxD":0,"phases":["-","suck","ride","pop","-"],"pops":0,"popsAfter":0,"worstKink":0.075,"worstAt":[0.597,0.029,8.77,false,0.42,0,true]}
+PASS 7. the new host (B) draws its adopted rider without a jump either  {"pops":0,"worstKink":0.209,"worstAt":[0.756,0.03,8.97,false,-1.49,0,true]}
+PASS 7. the tide carries on under the new host: its direction turns on B after the handoff, and B and C report the same flow() through that change (clocks within 0.4 s once settled)  {"agree":8,"of":8,"skewSettled":0.010000000000005116,"skewAll":[0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01],"dirsB":["ab","ba"],"dirsC":["ab","ba"],"before":{"dir":"ab","phase":"warn","t":52.8},"last":[{"dir":"ba","phase
+PASS no page (A, B or C) logged an error or a warning  {"logs":[[],[],[]]}
+RESULT 17/17
+
+## net-practice.txt
+PASS guest sees the host's settings (practice · tidewater · golden · 2 bots · easy)  {"mode":"practice","map":"tidewater","time":"golden","botCount":2,"bots":true,"difficulty":"easy","host":false}
+PASS random stage / time reach the guest
+PASS an older client's "dusk" is sunset
+PASS humans-only stage: bot count forced to 0  {"bc":0,"bots":false}
+PASS …and the host's 2 come back on the next stage
+PASS both in Practice on the same stage  {"a":["saltpan","golden"],"b":["saltpan","golden"]}
+PASS no clock (practice: the HUD shows no time; the match never runs out)
+PASS roster: 2 players + the 2 bots, the same on both screens  [[0,"Hosty",0,"shooter",false,"HEKL"],[1,"Moxie",0,"blaster",true,"HEKL"],[2,"Guesty",1,"shooter",false,"9Z3E"],[3,"Fizz",1,"charger",true,"HEKL"]]
+PASS the relay room stays open during Practice (joiners welcome)  {"locked":false}
+PASS host sees the guest move, guest sees the host move  {"p0":[[2.99,66.68,true],[-1.01,-65.32,true]],"p1":[[10.73917090772552,60.83918552026655,true],[-7.715560626770325,-52.324533337951344,true]]}
+PASS host sees the guest's new loadout (roller · waddle · strike)  ["roller","waddle","strike",null]
+PASS …and the guest has it in its own hands  ["roller","waddle","strike"]
+PASS host can clear the ink; a guest can't
+PASS both end with zero ink  {"before":[6871,6853],"after":[[0,[0,0]],[0,[0,0]]]}
+PASS the wave animation ran on both (look + steam)  {"fxA":{"waves":1,"puffs":582,"t":2.5333000000000014},"fxB":{"waves":1,"puffs":420,"t":2.4999999999999996}}
+PASS painting through a wave: both screens end with the same turf (about as few differing cells as painting without one)  {"wave":{"diff":37,"inked":[2889,2900],"counts":[[1359,772],[1365,770]],"waves":[2,2]},"baseline":{"diff":39,"inked":[7156,7161],"counts":[[2629,2207],[2631,2211]],"waves":[1,1]}}
+PASS swap stage: both rebuilt to craters at sunset, still in the session (no MAP MISMATCH)  {"a":["craters","sunset",1],"b":["craters","sunset",1]}
+PASS …same roster and the guest's loadout kept  {"roster":[[0,"Hosty",0,"shooter",false,"HEKL"],[1,"Moxie",0,"blaster",true,"HEKL"],[2,"Guesty",1,"roller",false,"9Z3E"],[3,"Fizz",1,"charger",true,"HEKL"]],"loB":"roller"}
+PASS …and they see each other moving there  {"q1":[[-3.32064397022135,57.650380440441715,true],[2.793878978362579,-52.51992909221405,true]],"q2":[[-12.64644450770695,50.18158743527275,true],[-6.754087403973229,-51.25027883939525,true]]}
+PASS the late joiner drops into the session on the same stage  {"c":["craters",5],"a":5}
+PASS …on the side with fewer players  {"humansByTeam":[0,1,0]}
+PASS …and gets the host's turf (the snapshot; ≤ 1 % of inked cells differ)  {"inkIn":6944,"ok":true,"diff3":16,"inked":[18443,18446]}
+PASS a guest leaves (LEAVE ROOM): back on the online hub, gone from everyone's session
+PASS …and can drop back in  {"n":5}
+PASS host migration: the guest is the host now, with the host's controls  {"b":true,"info":true}
+PASS …the old host is gone, its bots carry on under the new host  [[1,"Moxie",0,"blaster",true,"9Z3E"],[2,"Guesty",1,"roller",false,"9Z3E"],[3,"Fizz",1,"charger",true,"9Z3E"],[5,"Latey",0,"shooter",false,"88TG"]]
+PASS …and can clear the ink
+PASS swap to a humans-only stage: the bots are dropped on every screen  {"b":[[2,"Guesty",1,"roller",false,"9Z3E"],[5,"Latey",0,"shooter",false,"88TG"]],"c":2}
+PASS End Practice: both back in the lobby (the room stays)  {"live":null,"n":2,"screen":"lobby"}
+RESULT 29/29
+
+## net-stagemods.txt
+PASS both screens run the module (G.stageWorld, match.stage, the dummy)  {"a":true,"b":true}
+PASS the stage clock agrees on both screens (Practice: the host's stage clock rides its ticks), ± 0.4 s  {"a":4.108,"b":4.08,"readApart_s":0.001,"skew":-0.029}
+PASS a pure function of the clock agrees: the moving collider's top (± 0.15 m) and the edge window  {"a":[1.701,true],"b":[1.712,true]}
+PASS the host's module records reach the guest (S.rec → netEvent)  {"n":3}
+PASS a splat in the module's region replays with its painter's stage time (field 15 → opts.et)  {"et":4.25,"painter":4.246486845396138}
+PASS a module's actor flag (F.stage) reaches the other screen's carryRemote, on and off  {"on":true,"after":[]}
+PASS a late joiner restores the module's state from the snapshot (n) and its clock (± 0.6 s once settled), with seek('late')  {"host":[3,13.433],"joiner":[3,13.403,["late"]],"skew":[-0.031]}
+PASS …and follows the host's records after that  {"n":4}
+PASS the new host is told (hostChanged(true)) and is no longer a follower  {"b":{"n":4,"t":13.992,"top":1.886,"open":false,"seeks":[],"carried":[],"lastEt":null,"hostChanges":[true],"follower":false,"host":true,"nids":[[1,true],[2,false]],"wall":1792764751762}}
+PASS the new host's records reach the remaining guest; their clocks still agree (± 0.4 s)  {"ok":true,"n":5,"want":5}
+RESULT 10/10
+
+## sfx-cues.txt
+PASS Splat Bomb: its own sounds at each phase, one loop per channel following it, gone with it, warning ≥ 0.6 s ahead  {"phases":{"throw":true,"land":true,"boom":true},"loops":["sub_flight","fuse_bomb"],"warnLead":0.93,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["bomb_throw","shoot_shooter","splat_small","splatling_wi
+PASS Cling Charge: its own sounds at each phase, one loop per channel following it, gone with it, warning ≥ 0.6 s ahead  {"phases":{"throw":true,"land":true,"boom":true},"loops":["sub_flight","fuse_sticky"],"warnLead":2.42,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["throw_sticky","sticky_stick","sticky_explode","hurt
+PASS Pop Pellet: its own sounds at each phase, one loop per channel following it, gone with it  {"phases":{"throw":true,"boom":true},"loops":["sub_flight"],"warnLead":null,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["throw_burst","pellet_pop"]}
+PASS Skitter Bomb: its own sounds at each phase, one loop per channel following it, gone with it, warning ≥ 0.6 s ahead  {"phases":{"throw":true,"land":true,"warn":true,"boom":true},"loops":["sub_flight","seeker_run"],"warnLead":1.55,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["throw_seeker","seeker_land","seeker_prim
+PASS Skitter Bomb: its windup warning (seeker_prime) plays as it stops to burst, 0.45 s before the blast (the enemy's positional)  {"lead":0.45,"delay":0.45}
+PASS Echo Orb: its own sounds at each phase, one loop per channel following it, gone with it  {"phases":{"throw":true,"boom":true},"loops":["sub_flight"],"warnLead":null,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["throw_scan","scan_burst","mark_you"]}
+PASS Drip Curtain: its own sounds at each phase, one loop per channel following it, gone with it  {"phases":{"throw":true,"land":true,"end":true},"loops":["sub_flight","curtain_drip"],"warnLead":null,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["throw_curtain","curtain_up","curtain_down"]}
+PASS Twirl Sprinkler: its own sounds at each phase, one loop per channel following it, gone with it  {"phases":{"throw":true,"land":true,"end":true},"loops":["sub_flight","sprinkler_spin"],"warnLead":null,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["throw_sprinkler","sprinkler_stick","splat_small","device_hit","device_p
+PASS Lurk Mine: its own sounds at each phase, one loop per channel following it, gone with it, warning ≥ 0.4 s ahead  {"phases":{"throw":true,"warn":true,"boom":true},"loops":[],"warnLead":0.45,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["place_mine","step_dry","mine_trip","mine_explode","hurt","ink_hit_body","mark_yo
+PASS Lurk Mine: its windup warning (mine_trip) plays as it stops to burst, 0.45 s before the blast (the enemy's positional)  {"lead":0.45,"delay":0.45}
+PASS Hop Beacon: its own sounds at each phase, one loop per channel following it, gone with it  {"phases":{"throw":true,"end":true},"loops":["beacon_hum"],"warnLead":null,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["place_beacon","step_dry","device_hit","device_pop","beacon_break"]}
+PASS Murk Bomb: its own sounds at each phase, one loop per channel following it, gone with it  {"phases":{"throw":true,"boom":true},"loops":["sub_flight","mist_hiss"],"warnLead":null,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["throw_mist","mist_burst"]}
+PASS Shaker Bomb: its own sounds at each phase, one loop per channel following it, gone with it, warning ≥ 0.6 s ahead  {"phases":{"throw":true,"land":true,"boom":true},"loops":["shaker_rattle"],"warnLead":0.97,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["throw_shaker","splat_small","shaker_land","shaker_blast","shake
+PASS Waddle Bomb: its own sounds at each phase, one loop per channel following it, gone with it, warning ≥ 0.6 s ahead  {"phases":{"throw":true,"beep":true,"warn":true,"boom":true},"loops":["sub_flight","waddle_walk","hunt_alarm"],"warnLead":2.03,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["throw_waddle","waddle_land"
+PASS Waddle Bomb: its windup warning (waddle_prime) plays as it stops to burst, 0.45 s before the blast (the enemy's positional)  {"lead":0.45,"delay":0.45}
+PASS Tide Torpedo: its own sounds at each phase, one loop per channel following it, gone with it, warning ≥ 0.6 s ahead  {"phases":{"throw":true,"boom":true},"loops":["torpedo_whirr","lock_tone"],"warnLead":1.5,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["torpedo_throw","torpedo_transform","torpedo_lock","torpedo_laun
+PASS Tracer Bolt: its own sounds at each phase, one loop per channel following it, gone with it  {"phases":{"hit":true},"loops":["tracer_hum"],"warnLead":null,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["tracer_zap","hurt","ink_hit_body","tracer_hit","mark_you"]}
+PASS Whirl Boomerang: its own sounds at each phase, one loop per channel following it, gone with it, warning ≥ 0.55 s ahead  {"phases":{"beep":true,"boom":true},"loops":["boomerang_whirr"],"warnLead":0.6,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["boomerang_throw","hurt","ink_hit_body","boomerang_tick","boomerang_shr
+PASS Glide Bomb: its own sounds at each phase, one loop per channel following it, gone with it, warning ≥ 0.6 s ahead  {"phases":{"throw":true,"boom":true},"loops":["glide_slide"],"warnLead":2.38,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["glide_release","glide_boom"]}
+PASS Chain Bobber: its own sounds at each phase, one loop per channel following it, gone with it  {"phases":{"throw":true,"land":true,"boom":true},"loops":["sub_flight"],"warnLead":null,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["bobber_throw","bobber_inflate","bobber_boom"]}
+PASS Scrap Sentry: its own sounds at each phase, one loop per channel following it, gone with it  {"phases":{"throw":true,"land":true,"end":true},"loops":["sentry_idle"],"warnLead":null,"bad":{"multi":0,"follow":0,"missing":0,"afterDeath":0,"engineAfter":0},"sample":[],"lingering":0,"throwAt":true,"sounds":["sentry_place","sentry_unfold","sentry_lock","sentry_shot","hurt","ink_hit_body","device_hi
+PASS Dash Pellet: an enemy's dash pops (dash_pop) and rushes (dash_whoosh; in the air dash_air) once each, heard where it took off  {"ground":{"air":false,"pop":1,"whoosh":1,"popAt":0,"whooshAt":0},"air":{"air":true,"pop":1,"whoosh":1,"popAt":0,"whooshAt":0}}
+PASS every thrown sub's flight changes pitch with its time in the air (a lob: up to +4 st with the climb, the falling whistle to -9 st at the landing; the Tracer falls over its range; the Boomerang out and home), each in its own voice; the placed ones (mine, beacon, sentry) none  {"bad":[],"res":{"bomb":{"n":63,"sound":"sub_flight","voice":"bomb","first":0,"top":4,"last":-8.85},"sticky":{"n":42,"s
+PASS Chain Bobber disarmed by a foe's shot: its deflate (bobber_disarm) where it is, no blast, nothing left playing; its owner hears a low "doo" (2D); one whose life runs out pops quietly (bobber_expire), no blast  {"disarm":true,"at":true,"state":"dead","doo":true,"dooAt":null,"expire":true}
+PASS Waddle Bomb shot down: waddle_pop (no blast), its walk loop and hunt alarm gone with it  {"popped":true}
+PASS every sub has its own throw and its own blast (no shared names)  {"dupThrows":[],"dupBooms":[]}
+PASS Tidal Slam: slam_leap at the jump, the slam_warn loop from the leap to the landing (≥ 0.6 s ahead), special_slam on impact, the loop gone after  {"lead":0.9,"loop":{"from":90.71250000002,"to":91.59583333335328,"n":54,"follow":54,"multi":0},"after":false,"leap":true}
+PASS Ink Tempest: storm_throw, the ball's whoosh in the air, the rain loop following the drifting cloud, storm_fade at its end and no loop after  {"ball":{"from":92.96250000001987,"to":93.61250000001984,"n":40,"follow":0,"multi":0},"rain":{"from":93.6291666666865,"to":95.12916666668642,"n":91,"follow":0,"multi":0},"follow":0,"moved":1.65,"gone":true,"fade":true}
+PASS Bomb Barrage: barrage_start, a barrage_drum loop on the thrower while it lasts, every bomb its own fuse loop (two at once here), all gone after  {"drum":{"from":96.21250000001969,"to":97.59583333335294,"n":84,"follow":0,"multi":0},"fuses":[{"from":97.2791666666863,"to":97.59583333335294,"n":20,"follow":0,"multi":0},{"from":97.2791666666863,"to":97.59583333335294,"n":20,"follow":0,"multi":0}],
+PASS Bubble Guard: shield_up, a shield_hum loop on each shielded kid (shared too), gone when the shield pops  {"a":{"from":98.16250000001958,"to":98.74583333335288,"n":36,"follow":0,"multi":0},"b":{"from":98.16250000001958,"to":98.74583333335288,"n":36,"follow":0,"multi":0}}
+PASS Deep Sonar: sonar_ping, then sonar_blip every ~2 s while you're revealed (and none after)  {"blips":2}
+PASS Vortex Strike: strike_arm, the strike_mark alarm at the landing spot from launch (≥ 0.6 s ahead; the enemy's harsh and boosted on you), strike_impact, the vortex loop, vortex_end  {"lead":2.2,"mark":{"from":106.86250000001908,"to":109.04583333335229,"n":132,"follow":0,"multi":0},"vortex":{"from":109.06250000001896,"to":110.24583333335222,"n":72,"follow":0,"multi":0},"markVol":1.6,"gone":tru
+PASS Twister Zooka: zooka_arm, zooka_fire, a twister loop following each twister — pitch up coming at you, down going away (Doppler), gone with it  {"loop":{"from":111.66250000001881,"to":112.9291666666854,"n":77,"follow":0,"multi":0},"dopplerIn":1.22,"dopplerOut":0.84}
+PASS Howl Box: wail_up, wail_hold while it's carried, wail_charge + a beam_lock warning when you're in its line (≥ 0.6 s before the blast), the wail_blast loop, all gone after  {"hold":{"from":114.06250000001867,"to":114.61250000001864,"n":34,"follow":0,"multi":0},"lock":{"from":114.62916666668531,"to":115.8958333333519,"n":77,"follow":0,"multi":0},"blast":{"from":115.91250000001857,"to":119.112
+PASS Kraken: kraken_on, the kraken_move loop following it (faster with its speed), the kraken_dive warning in the jump attack (≥ 0.6 s: its air time), kraken_slam, kraken_off  {"body":{"from":120.81250000001829,"to":122.9958333333515,"n":132,"follow":0,"multi":0},"dive":{"from":121.57916666668491,"to":122.22916666668488,"n":40,"follow":0,"multi":0},"lead":0.67,"moving":true,"slam":true}
+PASS Bubble Blower: blower_start, blower_inflate while it's blown, bubble_release, a bubble_drift loop following it (straining as its team shoots it), bubble_blast, gone after  {"inflate":{"from":123.74583333335146,"to":124.47916666668475,"n":45,"follow":0,"multi":0},"drift":{"from":124.49583333335141,"to":125.74583333335134,"n":76,"follow":0,"multi":0},"maxCharge":0.55}
+PASS Ink Jet: jet_ignite, a jet_loop following the flyer, jet_boost on a boost, jet_end, gone after  {"loop":{"from":126.41250000001797,"to":127.99583333335121,"n":96,"follow":0,"multi":0}}
+PASS Mega Stamp: stamp_start, a stamp_carry loop while it's carried, stamp_throw, a stamp_fly warning loop following the thrown stamp, stamp_crash, gone after  {"carry":{"from":128.56250000001833,"to":128.79583333335185,"n":15,"follow":0,"multi":0},"fly":{"from":128.81250000001853,"to":129.1791666666855,"n":23,"follow":0,"multi":0}}
+PASS Cheer Orb: the booyah_charge loop climbing with the charge, booyah_throw, an orb_fly loop on the orb, orb_land + the orb_fuse warning (≥ 0.6 s ahead), booyah_blast, gone after  {"charge":{"from":131.21250000002044,"to":132.21250000002124,"n":61,"follow":0,"multi":0},"pitch":[1,2],"fly":{"from":132.22916666668792,"to":133.0625000000219,"n":51,"follow":0,"multi":0},"fuse":{"from":133.07916666
+PASS Zipline: zip_cloak, a zip_aura loop on its wearer, zip_fire / zip_latch, a zip_whizz loop only while zipping, zip_impact, gone after  {"aura":{"from":135.66250000002398,"to":137.6458333333589,"n":120,"follow":0,"multi":0},"whizz":{"from":136.01250000002426,"to":136.2291666666911,"n":14,"follow":0,"multi":0},"zippedFrames":14}
+PASS Crab Rig: crab_boot, crab_move then crab_roll then crab_move (one at a time), crab_cannon, a shell_whistle warning following the shell (climbing then falling), shell_boom, crab_reload, crab_break, gone after  {"walk":{"from":138.212500000026,"to":141.39583333336188,"n":162,"follow":0,"multi":0},"roll":{"from":138.8958333333599,"to":139.3791666666936,"n":30,"follow":0,"multi":0},"multi":0,"whi
+PASS every special has its own start sound (the four that don't start through cues start with shield_up / sonar_ping / kraken_on / the booyah_charge loop)  {"missing":[]}
+PASS every enemy special aimed at you plays its own launch alert (Slam, Strike, Cheer Orb, Tempest, Barrage, Zooka, Howl Box, Kraken, Crab Rig shell, Mega Stamp), and the "you're in it" alarm where you stand in its area  {"bad":[],"warned":{"slam":{"alerts":["alert_slam"],"stings":["sting_slam:foe"],"alarms":["slam"]},"storm":{"alerts":["alert_storm"],"stings":["sting_storm:foe"],"alarms":["storm"
+PASS every special an enemy pops plays its own sting  {"noSting":[]}
+PASS the mix: yours and your team's ~3 dB under the enemy's (landings, loops, warnings, ends −3 ± 0.5 dB; your own throws and starts, heard from you, further down); launch alerts the enemy's only; stings the enemy's, your team's −6 dB, none for yours  {"r3":[["throw",-10.2,-3.01],["start",-7.76,-2.99],["land",-2.99,-2.99],["move",-3.04,-3.04],["warn",-3.03,-3.03],["end",-2.96,-2.96]]}
+PASS friend vs foe: the enemy's fuse is the loud, harsh one (params.foe 1); your own is quieter and softer (foe 0) — a teammate's none at all (sub-tweaks); your own throw comes from you (no position), the enemy's from them  {"own":{"vol":0.9050128458201119,"foe":0,"throwPos":false,"throwVol":0.3827133251854269},"ally":{"vol":null,"foe":null,"throwPos":false,"throwVol":null},"foe":{"vol":1.6,"foe
+PASS your own Ink Jet's loop plays from you (no position); an enemy's is positional (Ink Jet scene)  {"twoD":true}
+PASS a teammate's thrown Splat Bomb: no throw, flight, landing beep or fuse sound for you; its blast at 0.6 × the enemy's (the enemy's bomb: every one of them)  {"allyHeard":[],"foeHas":["bomb_throw","bomb_beep","sub_flight","fuse_bomb"],"ratio":0.6}
+PASS …a teammate's Skitter Bomb likewise: no throw, flight, landing, run or windup sound; its blast at 0.6 × the enemy's  {"allyHeard":[],"foeHas":["throw_seeker","seeker_land","seeker_prime","sub_flight","seeker_run"],"ratio":0.6}
+PASS …a teammate's sprinkler still spins (its device loop, as a teammate's), with no throw, flight or landing sound  {"names":["splat_small"],"loops":["sprinkler_spin"]}
+PASS the mix: MIX.boom.allySub is 0.6 × MIX.boom.foe; a teammate's throw / landing / beep / fuse / warning / flight 0; its device loops, ends and uses as a teammate's  {"boom":[0.45,0.75]}
+PASS a crowd (4 foes throwing 12 subs, 2 mates bombing, a Jet, a Crab, a Kraken): at most 8 moving + 5 warning cue loops at once, the engine's live loops within 24 (its cap is 32) and its voices within 48  {"maxLive":13,"maxWarn":5,"maxMove":8,"maxEngine":14,"maxVoices":48,"capped":81}
+PASS no cue's mix asks for more than 2× on top of its calibrated level (loops ≤ 1.6×)  {"loud":[]}
+PASS marks: your Echo Orb marks a foe — you and your teammate (who didn't throw it) each hear the chime once (2D); the marked foe hears the evil version, its teammate nothing; a refresh is silent; the mark running out plays "over" for the marked foe only  {"thrower":{"mark_team":1,"mark_chirp":0,"mark_you":0,"mark_over":0,"twoD":true,"vol":0.85,"refresh":0,"over":0},"teammate":{"mark_team":1,"ma
+PASS …one go marking several plays the chime once with a chirp per extra target: Deep Sonar on 4 (1 + 3), an Echo Orb catching three (1 + 2)  {"sonar":{"mark_team":1,"mark_chirp":3,"mark_you":0,"mark_over":0},"orb3":{"mark_team":1,"mark_chirp":2,"mark_you":0,"mark_over":0,"marked":3}}
+PASS …splatted while marked: no "over"; and the mark sounds sit under the enemy's special alerts and warnings (the cue bus)  {"splatted":{"mark_team":0,"mark_chirp":0,"mark_you":0,"mark_over":0},"lvl":{"team":0.85,"you":0.95,"over":0.85,"alert":1.2,"warn":1.29}}
+PASS a pause hushes the cue loops (the cue loop bus), keeps them (no orphan, no duplicate) and they come back on resume  {"before":"76:spray","hushed":true,"same":true,"after":1,"dbg":{"paused":true,"loopsPaused":true,"gain":0,"st1":{"audio":0.26,"real":0.61,"state":"running"},"voices":33,"loops":1}}
+PASS after quitting to the menu mid-special: no cue loop of the old match survives (only the backdrop match's own, if any)  {"hadBefore":["jet_loop","sprinkler_spin","storm_rain"],"orphans":[],"live":[],"engineCue":0}
+PASS the round ends (time's up): every cue loop stops though the devices are still standing  {"had":2,"state":"finish","devices":2,"live":0}
+RESULT 59/59
+console errors: none

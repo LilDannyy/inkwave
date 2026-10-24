@@ -426,8 +426,13 @@ export class EraWorld {
   ready() {
     this.apply(this.audit || 1, { why: 'start' });
     const idle = typeof requestIdleCallback === 'function' ? (fn) => requestIdleCallback(fn, { timeout: 2500 }) : (fn) => setTimeout(fn, 200);
-    idle(() => { if (G.eraWorld === this && !this.jumping) { this._prebuildBases(); this._precompile(); } });
+    this._warmed = false;
+    idle(() => { if (G.eraWorld === this && !this._warmed) this.warm(); });
   }
+  // [b5-beta1] the other eras' minimap bases and every era program, now: at a match's load (StageWorld.warm, the screen
+  // faded out) or in idle time after a menu backdrop's build, whichever comes first — never in the intro (the idle job
+  // above ran ~0.8 s into a Bluestone match's intro when the match built the world: a 0.1–2 s hitch on screen)
+  warm() { if (this.jumping) return; this._prebuildBases(); if (!this._warmed) { this._warmed = true; this._precompile(); } }
 
   // every era material's program (and its shadow depth program) compiled now, at load, not when a piece first shows
   // mid-jump: each era mesh shown once, collapsed, for a compile pass

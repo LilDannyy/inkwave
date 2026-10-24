@@ -70,6 +70,7 @@ function guarded(label, fn) {
  *   SW.buildNav(level, physics)        a module's own graph (merged builds), or new NavGraph — with navEdges() first
  *   SW.attachMinimap(mm)
  *   SW.ready()                         the world is complete (and SW.attachEnv(env) whenever an Environment exists)
+ *   SW.warm()                          [b5-beta1] a match on it is about to be shown: do the deferred first-time work now
  *   SW.dispose()                       at the next world build (stage swap, mode variant, menu backdrop change)
  * W hooks of the same names are called on each module in `order`; W.prop / W.colliders chain.
  */
@@ -148,6 +149,10 @@ export class StageWorld {
   }
   attachEnv(env) { if (env && this._env !== env) { this._env = env; this._each('attachEnv', env); } }
   ready() { if (G.env) this.attachEnv(G.env); this._each('ready'); }
+  // [b5-beta1] a match is about to be shown (main.js _warmStage, the screen still faded out): each module does now the
+  // first-time work it would otherwise leave to idle time or to its first use — compiles, minimap bases, camera plans —
+  // so none of it lands in the intro (Bluestone's era bases and precompile ran from an idle callback 0.8 s into it)
+  warm() { this._each('warm'); }
   dispose() {
     this._each('dispose');
     // (the environment's slot a module may have filled: eras' look per era. The next stage's theme is re-applied anyway)

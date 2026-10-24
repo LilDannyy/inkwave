@@ -1353,7 +1353,11 @@ export function botAct(b, dt, it, move, busy) {
   // (laying a chain it stays put, whatever else has its aim — a device to shoot, a threat — short of a fight: its links
   // were picked from here. Run dry by its last link, bots.js sends it to refill: it refills where it stands — a dive in its
   // ink, or the puddle bots.js paints to swim in when it's on none)
-  if (P && !fighting) { move.multiplyScalar(0.05); b.noProg = 0; }
+  // [b5-beta1] …but run dry with no ink of its own under it, it goes to refill: bots.js paints its puddle "where it arrives",
+  // and pinned here it never arrived — it sat a squid on bare ground refilling at 4.5 ink/s until the plan's 14 s ran out
+  // (11.5 s stuck episodes, three in one Bluestone Turf War of bobbers)
+  if (P && b.mode === 'refill' && b.groundSeen !== 1) { b._bobPlan = null; BOBBER_BOT.dryPlans = (BOBBER_BOT.dryPlans || 0) + 1; }
+  else if (P && !fighting) { move.multiplyScalar(0.05); b.noProg = 0; b.perchUntil = b.t + 0.3; }   // [b5-beta1] perchUntil: standing on purpose (the stuck metrics read it)
   if (busy) { if (G.time < (b._bobSnapT || 0)) { BOBBER_BOT.snapBusy = (BOBBER_BOT.snapBusy || 0) + 1; const k = b.sp?.esc ? 'esc' : b.thr ? 'thr' : b._climbAim ? 'climb' : b.blockT > 0 ? 'canopy' : 'other'; (BOBBER_BOT.busyWhy || (BOBBER_BOT.busyWhy = {}))[k] = (BOBBER_BOT.busyWhy[k] || 0) + 1; } return null; }
   // [b5-int3] a snap of its own on its way: aimed at where it floats once it opens, shot the moment its foe is in it
   if (!S && a.sub?.kind === 'bobber' && b._bobSnapIt) { const SN = snapOf(b); if (SN && (SN.state === 'live' || preAimOk(b, SN))) { const r = snapAim(b, SN, it, move); if (r) return r; } }
@@ -1380,7 +1384,7 @@ export function botAct(b, dt, it, move, busy) {
     if (T.bestD == null || d < T.bestD - 1) { T.bestD = d; T.bestT = G.time; }
     if (d > 4 && G.time - T.t0 > 7) { b._bobTrip = null; BOBBER_BOT.tripsLost = (BOBBER_BOT.tripsLost || 0) + 1; blog(b, 'tripLost', { d: Math.round(d * 10) / 10 }); }
     else if (d > 1.2 && (!b.path || b.pi >= b.path.length || G.time - T.pt > 2.5 || G.time - T.bestT > 3)) { T.pt = G.time; if (G.time - T.bestT > 3) T.bestT = G.time; if (!b._pathTo(T.S, 0.9)) { b._bobTrip = null; BOBBER_BOT.tripsNoPath = (BOBBER_BOT.tripsNoPath || 0) + 1; blog(b, 'tripNoPath', { d: Math.round(d * 10) / 10 }); } }
-    else if (d <= 1.2) { move.multiplyScalar(0.2); b.noProg = 0; }
+    else if (d <= 1.2) { move.multiplyScalar(0.2); b.noProg = 0; b.perchUntil = b.t + 0.3; }   // [b5-beta1] (at its stand spot: on purpose)
   }
   const atStand = !!T && Math.hypot(a.pos.x - T.S.x, a.pos.z - T.S.z) <= 1.6;
   if (!S && a.sub?.kind === 'bobber' && !fighting && b.mode !== 'refill' && (P || atStand || (b.zRole === 'guard' && b.mode === 'paint' && webToBuild(a)))) {
@@ -1389,12 +1393,14 @@ export function botAct(b, dt, it, move, busy) {
     // and refills, as bots.js does under 12 %, the plan kept)
     if (low) {
       it.fire = false;
-      if (b.groundSeen === 1) { if (P || atStand) { move.multiplyScalar(0.05); b.noProg = 0; } it.squid = true; BOBBER_BOT.tops = (BOBBER_BOT.tops || 0) + 1; return null; }
+      if (b.groundSeen === 1) { if (P || atStand) { move.multiplyScalar(0.05); b.noProg = 0; b.perchUntil = b.t + 0.3; } it.squid = true; BOBBER_BOT.tops = (BOBBER_BOT.tops || 0) + 1; return null; }
       // (mid-burst it stays put — its links were picked from here — and its tank fills as it stands, 9 a second)
+      // ([b5-beta1, review 1] not marked as a hold: on bare ground it stands kid-refilling up to ~5 s here, and the stuck
+      // metrics should see that — the plan's stand with ink, the stand spot and the ambush are on purpose, this is a wait)
       if (P) { move.multiplyScalar(0.05); b.noProg = 0; }
       else if (a.ink < 40 && b.mode === 'paint') { b.mode = 'refill'; b.refillUntil = 0.9; b.path = null; BOBBER_BOT.refills = (BOBBER_BOT.refills || 0) + 1; return null; }
     }
-    if (P && !low) { move.multiplyScalar(0.05); b.noProg = 0; }   // (its links were picked from here: it stands while it lays them)
+    if (P && !low) { move.multiplyScalar(0.05); b.noProg = 0; b.perchUntil = b.t + 0.3; }   // (its links were picked from here: it stands while it lays them)
   }
   // [b5-int3] an ambush by its chain (Turf; a Zone Control guard by its zone's web), AMBUSH.time s after its last link:
   // at a stand spot 5–7 m from the chain on our side of it with a clear line to it, a still squid in our ink — seen from
@@ -1416,7 +1422,7 @@ export function botAct(b, dt, it, move, busy) {
         if (G.time - H.go > 6) { b._bobHold = null; BOBBER_BOT.ambushLost = (BOBBER_BOT.ambushLost || 0) + 1; }
         else if (G.time - H.t > 1.5 || !b.path || b.pi >= b.path.length) { H.t = G.time; if (!b._pathTo(H.S, 0.6)) b._bobHold = null; }
       } else {
-        move.set(0, 0, 0); b.noProg = 0; it.jump = false;
+        move.set(0, 0, 0); b.noProg = 0; it.jump = false; b.perchUntil = b.t + 0.3;   // [b5-beta1] (the ambush: still on purpose)
         if (!H.at) { H.at = G.time; BOBBER_BOT.ambushes = (BOBBER_BOT.ambushes || 0) + 1; }
         BOBBER_BOT.ambushS = (BOBBER_BOT.ambushS || 0) + dt;
         if (b.groundSeen === 1) { it.squid = true; it.fire = false; b._bobHid = true; }

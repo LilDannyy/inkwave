@@ -1,0 +1,36 @@
+JOB-9 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 02:05:58
+branch botlab-b5-beta1, ran at 8ea1aae4, exit code 0, wall time 15min
+(a written-up JOB-9.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### beta1 JOB-9 head 8ea1aae4
+## net-eras-1  load { 2.34 10.11 10.85 }
+[net-eras-1] RESULT 14/14
+## net-eras-2  load { 3.53 6.24 8.86 }
+[net-eras-2] RESULT 14/14
+## net-eras-3  load { 3.70 4.42 7.22 }
+[net-eras-3] RESULT 14/14
+## eras-jump-frames-1  load { 3.84 4.04 6.26 }
+[eras-jump-frames-1] RESULT 4/4
+## eras-jump-frames-2  load { 3.58 3.96 6.17 }
+[eras-jump-frames-2] RESULT 4/4
+## eras-jump-frames-3  load { 3.61 3.94 6.11 }
+[eras-jump-frames-3] RESULT 3/4
+### done
+
+## last 15 lines of job.log
+### beta1 JOB-9 head 8ea1aae4
+## net-eras-1  load { 2.34 10.11 10.85 }
+[net-eras-1] RESULT 14/14
+## net-eras-2  load { 3.53 6.24 8.86 }
+[net-eras-2] RESULT 14/14
+## net-eras-3  load { 3.70 4.42 7.22 }
+[net-eras-3] RESULT 14/14
+## eras-jump-frames-1  load { 3.84 4.04 6.26 }
+[eras-jump-frames-1] RESULT 4/4
+## eras-jump-frames-2  load { 3.58 3.96 6.17 }
+[eras-jump-frames-2] RESULT 4/4
+## eras-jump-frames-3  load { 3.61 3.94 6.11 }
+[eras-jump-frames-3] FAIL step 8: no frame over 50 ms during a jump (each simulated and rendered frame from J − 0.5 to done + 1.5, performance.now())  {"baselineNoJump":{"max":5.6,"p95":3.7},"baselineInking":[[218.2,104],[4.4,217],[4.1,78],[4.1,120]],"frames":358,"worst":[[305.8,2.47,"jump",0,0.1,
+[eras-jump-frames-3] RESULT 3/4
+### done

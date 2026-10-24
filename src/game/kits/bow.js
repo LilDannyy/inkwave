@@ -601,6 +601,7 @@ LONG.bow = true;
 
 // ---------------------------------------------------------------------------------------------- registration
 MAIN_KITS.bow = {
+  warm() { ensureRender(); },   // [b5-beta1] the arrows' instanced meshes, into the scene now (registry.js warmKits)
   update,
   ghost,
   reset(runner) { runner.kit = null; },

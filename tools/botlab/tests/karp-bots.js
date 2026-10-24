@@ -180,9 +180,10 @@
       for (const a of A) wake(a, 'normal');
       ring(A, 3.6); Kp.shell.add = () => {};
       step(1.5, () => { pinMeter(0.75); keepAlive(A); for (const a of m.actors) a.invuln = 2; });
-      let maxR = 0, refill = 0, minR = Infinity;
-      step(5, (i) => { pinMeter(0.75); keepAlive(A); for (const a of m.actors) a.invuln = 2; if (i % 60 === 0) for (const a of A) a.ink = Math.min(a.ink, PLAYER.inkMax * 0.08); for (const a of A) { const d = hd(a.pos, Kp.shell.center()); maxR = Math.max(maxR, d); minR = Math.min(minR, d); if (a.bot.mode === 'refill') refill++; } });
-      return { ok: maxR <= 5 && minR >= 2.9 && refill > 60, info: { maxR, minR, refillFrames: refill } };
+      let maxR = 0, refill = 0, minR = Infinity, minAt = null;
+      // ([b5-beta1, review 1] minAt: who was closest, when, doing what — the Mac mini's 2.83–2.88 m misses carried no clue)
+      step(5, (i) => { pinMeter(0.75); keepAlive(A); for (const a of m.actors) a.invuln = 2; if (i % 60 === 0) for (const a of A) a.ink = Math.min(a.ink, PLAYER.inkMax * 0.08); for (const a of A) { const d = hd(a.pos, Kp.shell.center()); maxR = Math.max(maxR, d); if (d < minR) { minR = d; minAt = { f: i, w: a.weaponId, mode: a.bot.mode, form: a.form, ink: Math.round(a.ink), refillBad: !!a.bot._refillBad }; } if (a.bot.mode === 'refill') refill++; } });
+      return { ok: maxR <= 5 && minR >= 2.9 && refill > 60, info: { maxR, minR, minAt, refillFrames: refill } };
     }, flip(KARP_AI, { refillBand: false }));
     // (d) the other side at 60 % (out on the ring, no danger yet): a foe of theirs stands by the shell (3.4 m out on our side
     // — safe from its own team's burst); our melee breakers right by it fight it, but never follow it in past 4.8 m

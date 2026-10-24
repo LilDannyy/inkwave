@@ -297,9 +297,23 @@ export class LavaWorld {
   }
   // the burn's atlas pass: one quad per lava face over its atlas rect, carrying world positions; the shader writes bare
   // texels inside the region below uY (NoBlending)
+  // [b5-beta1] a match is about to be shown (StageWorld.warm, main.js _warmStage): the burn pass's mesh, built at the first
+  // burn mid-match, built and compiled now, into the paint atlas it draws into
+  warm() {
+    const P = this.paint, r = G.renderer;
+    if (!P || !r || !this._ensureBurn()) return;
+    const rt0 = r.getRenderTarget();
+    try { r.setRenderTarget(P.rt); r.compile(this._burnScene, P.cam); } finally { r.setRenderTarget(rt0); }
+  }
   burnAtlas(y) {
     const P = this.paint;
-    if (!P) return;
+    if (!P || !this._ensureBurn()) return;
+    this._burnMesh.material.uniforms.uY.value = y;
+    P.drawInto(this._burnScene);
+  }
+  _ensureBurn() {
+    const P = this.paint;
+    if (!P) return false;
     if (!this._burnMesh) {
       const pos = [], w = [], index = [], S = P.size;
       for (const f of P.paintFaces) {
@@ -325,8 +339,7 @@ export class LavaWorld {
       const mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false;
       this._burnMesh = mesh; this._burnScene = new THREE.Scene(); this._burnScene.add(mesh);
     }
-    this._burnMesh.material.uniforms.uY.value = y;
-    P.drawInto(this._burnScene);
+    return true;
   }
 
   // ------------------------------------------------------------------------- looks

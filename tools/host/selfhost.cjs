@@ -1,9 +1,10 @@
 // INKWAVE — host the web game and its online relay yourself, on one port, so friends can play from a browser link
 // (e.g. through a Cloudflare quick tunnel: `cloudflared tunnel --url http://localhost:8090`) or from the desktop app.
 //
-//   node tools/host/selfhost.cjs [--root <dir>] [--port 8090] [--host 0.0.0.0]
+//   node tools/host/selfhost.cjs [--root <dir>] [--port 8090] [--host 0.0.0.0] [--trust-proxy cloudflare|xff|none]
 //
-// --root is the game folder to serve (default: this checkout). For a public link serve a clean copy, not a working
+// --trust-proxy: which proxy header names a player for the issue log's rate limit (default cloudflare: CF-Connecting-IP
+// with CF-Ray, as cloudflared passes them; see issueBucket). --root is the game folder to serve (default: this checkout). For a public link serve a clean copy, not a working
 // checkout: `tools/host/export.sh <dir>` writes just the game files (index.html, src, assets, vendor, styles, songs).
 //
 // What it does:
@@ -11,7 +12,9 @@
 //   - adds <meta name="inkwave-relay" content="same-origin"> to index.html, so the game's rooms use the relay on this
 //     same host (src/net/transport.js relayInfo) instead of the deployed one — which only admits the official site;
 //   - runs the relay (tools/botlab/relay.cjs: the deployed relay's protocol, room rules and limits) on /room/<CODE>,
-//     admitting pages from this host, a *.trycloudflare.com tunnel, localhost, the LAN and the desktop app.
+//     admitting pages from this host, a *.trycloudflare.com tunnel, localhost, the LAN and the desktop app;
+//   - keeps the players' issue log (POST /issue, the beta's src/core/issueLog.js) as JSONL in <root>/../issues.log —
+//     beside the served folder, never in it (so an export.sh re-export keeps it and no GET can read it).
 // Desktop app players: ONLINE › SERVER › Friend's server, then paste this server's link (the tunnel link, or
 // http://<this Mac's LAN address>:8090). Everyone must run the same game version (the relay turns older / newer
 // clients away: "Please refresh the page — the game was updated").
@@ -37,6 +40,45 @@ const TYPES = {
 };
 const META = '<meta name="inkwave-relay" content="same-origin">';
 const ISSUE_LIMIT = 20 * 1024 * 1024, issueRates = new Map();
+// [b5-beta1] The hosted issue log lives NEXT TO the site root, never inside it (a file in the root is served to anyone:
+// GET /issues.log), and any GET of it answers 404 anyway (an older server's file left in the root). POST /issue is
+// rate-limited per player: behind cloudflared every request arrives from 127.0.0.1, so the player is named by a header
+// the proxy in front sets — and only one the operator's proxy is known to set, since a client can send any header:
+//   trustProxy 'cloudflare' (the default; --trust-proxy cloudflare): a loopback peer's CF-Connecting-IP, and only on a
+//     request that also carries CF-Ray. Cloudflare's edge sets both on every request it passes on (a client's own
+//     CF-Connecting-IP is overwritten there) and cloudflared hands them through; a request without CF-Ray did not come
+//     through Cloudflare. (Review 1: a loopback peer's headers were trusted whatever the proxy — behind ngrok, nginx or an
+//     ssh -R tunnel a client could rotate a forged CF-Connecting-IP and get a fresh bucket every time.)
+//   'xff' (--trust-proxy xff: an nginx-style proxy on this machine): a loopback peer's LAST X-Forwarded-For address —
+//     the one that proxy appended (the first is whatever the client sent).
+//   'none': never a header.
+// A named player gets 20 a minute; anything else is keyed on the peer's own address, 200 a minute (behind a proxy that
+// names no one, that bucket is everyone's). The buckets are kept least-recently-used first and capped at RATE_CAP
+// entries (the oldest go): a flood of names costs O(1) per POST, never a scan of the whole map.
+const ISSUE_PER_PLAYER = 20, ISSUE_PER_PEER = 200, RATE_CAP = 5000, TRUST = ['cloudflare', 'xff', 'none'];
+const issuePath = (ROOT) => path.join(ROOT, '..', 'issues.log');
+const LOOPBACK = /^(127\.\d+\.\d+\.\d+|::1|::ffff:127\.\d+\.\d+\.\d+)$/;
+function issueBucket(req, trustProxy = 'cloudflare') {
+  const peer = String(req.socket.remoteAddress || 'unknown'), h = req.headers || {};
+  if (LOOPBACK.test(peer)) {
+    let ip = '';
+    if (trustProxy === 'cloudflare' && h['cf-ray']) ip = String(h['cf-connecting-ip'] || '').trim();
+    else if (trustProxy === 'xff') ip = String(h['x-forwarded-for'] || '').split(',').pop().trim();
+    if (ip && ip.length <= 64) return { key: 'h:' + ip, limit: ISSUE_PER_PLAYER };
+  }
+  return { key: 'p:' + peer, limit: ISSUE_PER_PEER };
+}
+// one POST against its bucket: true when it may go on. (delete + set moves the bucket to the map's end: the map's first
+// entries are always the least recently used, so the cap drops those)
+function issueAllowed(rates, key, limit, now) {
+  const q = (rates.get(key) || []).filter((t) => now - t < 60000);
+  rates.delete(key);
+  const ok = q.length < limit;
+  if (ok) q.push(now);
+  rates.set(key, q);
+  while (rates.size > RATE_CAP) rates.delete(rates.keys().next().value);
+  return ok;
+}
 
 // the relay admits pages from this host (whatever name it was reached by), a quick tunnel, localhost, the LAN and the
 // desktop app (electron/main.cjs serves the game on its privileged app:// scheme — standard + secure — so its pages'
@@ -52,21 +94,20 @@ function originOk(origin, req) {
   return hosts.includes(o.host.toLowerCase());
 }
 
-function serve(ROOT, req, res, url) {
+function serve(ROOT, req, res, url, opts = {}) {
   if (url.pathname === '/issue') {
     if (req.method !== 'POST') { res.writeHead(405, { Allow: 'POST' }); res.end(); return; }
     if (!originOk(req.headers.origin, req)) { res.writeHead(403); res.end(); return; }
     if (!/^application\/json(?:\s*;|$)/i.test(String(req.headers['content-type'] || ''))) { res.writeHead(415); res.end(); return; }
-    const ip = String(req.socket.remoteAddress || 'unknown'), now = Date.now();
-    let q = issueRates.get(ip) || []; q = q.filter((t) => now - t < 60000);
-    if (q.length >= 20) { res.writeHead(429); res.end(); return; } q.push(now); issueRates.set(ip, q);
+    const { key, limit } = issueBucket(req, opts.trustProxy);   // [b5-beta1] per player behind the tunnel
+    if (!issueAllowed(issueRates, key, limit, Date.now())) { res.writeHead(429); res.end(); return; }
     let body = ''; req.on('data', (chunk) => { body += chunk; if (Buffer.byteLength(body) > 8192) { res.writeHead(413); res.end(); req.destroy(); } });
     req.on('end', () => {
       try {
         const parsed = JSON.parse(body), list = Array.isArray(parsed.entries) ? parsed.entries : [parsed];
         if (list.length > 500 || list.some((x) => !x || typeof x !== 'object')) throw new Error('invalid entries');
-        const file = path.join(ROOT, 'issues.log');
-        if (fs.existsSync(file) && fs.statSync(file).size > ISSUE_LIMIT) { try { fs.renameSync(file, file + '.1'); } catch {} }
+        const file = opts.issueFile || issuePath(ROOT);   // [b5-beta1] beside the root, never in it (its rotation too)
+        if (fs.existsSync(file) && fs.statSync(file).size > (opts.issueLimit || ISSUE_LIMIT)) { try { fs.renameSync(file, file + '.1'); } catch {} }
         fs.appendFileSync(file, list.map((x) => JSON.stringify(x).slice(0, 8192)).join('\n') + '\n');
         res.writeHead(204); res.end();
       } catch { if (!res.headersSent) { res.writeHead(400); res.end(); } }
@@ -77,6 +118,7 @@ function serve(ROOT, req, res, url) {
   let rel;
   try { rel = decodeURIComponent(url.pathname); } catch { res.writeHead(400); res.end('bad path'); return; }
   if (rel.endsWith('/')) rel += 'index.html';
+  if (/(^|\/)issues\.log(\.\d+)?$/i.test(rel)) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('not found'); return; }   // [b5-beta1] never served
   // nothing hidden (.git, .env, .botlab …) and nothing outside the root
   if (rel.split('/').some((p) => p.startsWith('.'))) { res.writeHead(404); res.end('not found'); return; }
   const file = path.resolve(ROOT, '.' + rel);
@@ -123,8 +165,9 @@ function serve(ROOT, req, res, url) {
   });
 }
 
-function startSelfhost({ root = path.join(__dirname, '..', '..'), port = 8090, host = '0.0.0.0', onOrigin = null, log = console.log } = {}) {
+function startSelfhost({ root = path.join(__dirname, '..', '..'), port = 8090, host = '0.0.0.0', onOrigin = null, log = console.log, issueLimit = 0, trustProxy = 'cloudflare' } = {}) {
   const ROOT = path.resolve(root);
+  if (!TRUST.includes(trustProxy)) throw new Error(`trustProxy must be one of ${TRUST.join(', ')} (got ${JSON.stringify(trustProxy)})`);   // [b5-beta1]
   const server = http.createServer();
   const refused = new Set();
   const relay = attachRelay(server, {
@@ -135,7 +178,7 @@ function startSelfhost({ root = path.join(__dirname, '..', '..'), port = 8090, h
       if (!ok && !refused.has(origin) && refused.size < 50) { refused.add(origin); log(`${new Date().toISOString()} refused a room connection from origin ${JSON.stringify(origin || '(none)')}`); }
       return ok;
     },
-    onRequest: (req, res, url) => serve(ROOT, req, res, url),
+    onRequest: (req, res, url) => serve(ROOT, req, res, url, { issueLimit, trustProxy }),   // ([b5-beta1] issueLimit: the tests' small rotation size)
   });
   // a line a minute while anyone's playing (rooms and players), so a log shows the server's alive
   const tick = setInterval(() => {
@@ -148,19 +191,20 @@ function startSelfhost({ root = path.join(__dirname, '..', '..'), port = 8090, h
     server.listen(port, host, () => {
       const p = server.address().port, shown = host === '0.0.0.0' || host === '::' ? 'localhost' : host;
       resolve({
-        server, relay, root: ROOT, port: p, url: `http://${shown}:${p}`,
+        server, relay, root: ROOT, port: p, url: `http://${shown}:${p}`, issueFile: issuePath(ROOT), trustProxy,
         close: () => new Promise((r) => { clearInterval(tick); for (const rm of relay.rooms.values()) for (const s of rm.socks) { try { s.s.destroy(); } catch { /* gone */ } } server.close(() => r()); }),
       });
     });
   });
 }
 
-module.exports = { startSelfhost, originOk };
+module.exports = { startSelfhost, originOk, issueBucket, issueAllowed, RATE_CAP };   // ([b5-beta1] tests/issue-host.cjs)
 
 if (require.main === module) {
   const arg = (name, def) => { const i = process.argv.indexOf('--' + name); return i > 0 ? process.argv[i + 1] : def; };
-  startSelfhost({ root: arg('root', path.join(__dirname, '..', '..')), port: +arg('port', 8090), host: arg('host', '0.0.0.0') }).then((s) => {
+  startSelfhost({ root: arg('root', path.join(__dirname, '..', '..')), port: +arg('port', 8090), host: arg('host', '0.0.0.0'), trustProxy: arg('trust-proxy', 'cloudflare') }).then((s) => {
     console.log(`INKWAVE self-host: serving ${s.root}`);
     console.log(`  game + relay on ${s.url}  (rooms: /room/<CODE>)`);
+    console.log(`  players' issue log: ${s.issueFile}  (beside the root, never served; players named by ${s.trustProxy === 'cloudflare' ? 'CF-Connecting-IP with CF-Ray (cloudflared)' : s.trustProxy === 'xff' ? 'the last X-Forwarded-For address' : 'their own address only'}: --trust-proxy cloudflare|xff|none)`);
   }, (e) => { console.error('selfhost:', e.message); process.exit(1); });
 }

@@ -1,0 +1,8 @@
+JOB-1 (beta1) @ 66168b0e — Mac mini b5-runner, 2026-10-23 19:38–19:56, exit 0. Short summary (usage rationed); every row is in JOB-1.raw.txt.
+- first frames, all 16 stages: no frame over 100 ms anywhere. Worst intro frames: spirhalite 87.2 ms (at 0), aquarium 55.4, terraces 52.7,
+  caldera / crossmarket 46.1. Worst play frame: caldera 93.9 ms (all others ≤ 18.2). Caldera loads slowest (3212 ms; next bluestone 1863).
+- caldera: FRAME ERRORS 2 "Error: An object could not be cloned." in turf and zones (an uncaught error), and "no lightmap for caldera" in
+  all three of its matches.
+- stuck bots: 3 episodes over 5 s in 19 matches (each 5.25 s, each one issue-log row): tower on bluestone (-22.2, 0, -8.7) 'paint', no
+  path; bazookarp on lockgate (-22.5, 0, -23.3) 'refill' on a walk edge; turf on bluestone (11.4, 1.2, 32.9) 'paint' 1 m from its goal.
+  Zone Control on aquarium / bluestone: stuck 0.2–0.5 %, no long episode.

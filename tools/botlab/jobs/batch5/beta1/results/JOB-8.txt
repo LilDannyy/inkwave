@@ -1,0 +1,9 @@
+JOB-8 (beta1) @ 457afc6e — Mac mini b5-runner, 2026-10-24 01:20–01:49, exit 0. Short summary; details in JOB-8.raw.txt.
+- tank watch, 4 live aquarium Bazookarp matches: 0 entries onto the sand bed in all four.
+- bot-stuck 5/6 ×2: run 1 fails 'refill' (the roller from 6 % ink reaches 39 % by 8 s, not 40 % within 10 s — just short); run 2 fails
+  'tank' (6 spots by the rim and mid-bed: from (2.84, −0.6, 6.21) not out within 6 s); karpspot 1/1.
+- stuck set (20 matches): turf bluestone #2 4.4 % (an episode of 5.25 s at (5.8, 0, 46.4), 'paint'); zones bluestone #1 one 5.25 s episode at
+  (−0.5, 1.3, 5), 'paint'; every other match ≤ 0.9 %.
+- karp-bots 41/42 then 40/42: H (a bot under a Big Burst leaves its disc, from 18 m), B(b2) (melee breakers refill inside their band) and C
+  (1 karp-touch in 20 bursts, Juno, roller, role grab) — one or two per run, not the same each time.
+- full: holds 325/325, pipes 92/92, sub-bobber 84/84, lava-bots 7/7 ×2, issue-log 8/8.

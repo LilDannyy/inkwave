@@ -1,0 +1,31 @@
+JOB-14 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 04:24:58
+branch botlab-b5-beta1, ran at c0dc9523, exit code 0, wall time 4min
+(a written-up JOB-14.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### beta1 JOB-14 head c0dc9523
+[bot-stuck-1] RESULT 6/6
+[bot-stuck-2] RESULT 5/6
+[bot-stuck-3] RESULT 6/6
+[karp-bots-1] RESULT 41/42
+[karp-bots-2] RESULT 41/42
+## fails
+### done
+
+## last 15 lines of job.log
+### beta1 JOB-14 head c0dc9523
+[bot-stuck-1] RESULT 6/6
+[bot-stuck-2] RESULT 5/6
+[bot-stuck-3] RESULT 6/6
+[karp-bots-1] RESULT 41/42
+[karp-bots-2] RESULT 41/42
+## fails
+[bot-stuck-2] FAIL tank: a bot on the Great Tank's sand bed (inside the glass, no way out on foot) heading out is out within 6 s (6 spots: by the rim and mid-bed)  {"bad":[{"at":[6.64,-0.6,1.79],"outAt":8.67,"jumped":true,"end":[17.81,3.38,-62.6]}],"rows":[{"at":[6.64,-0.6,1.79],"outAt":8.67,"jumped
+[karp-bots-1] FAIL B(b2) melee breakers closing in at 75 % of ours refill inside their band (≤ 5 m from the centre): never walking off to the ring or the spawn for ink  {"maxR":4.29,"minR":2.87,"refillFrames":1196}
+[karp-bots-2] FAIL H a bot standing where a Big Burst lands leaves its disc before it blows (normal) — from 18 m, the range it passes at (§11 names none; from the carrier's usual 12–15 m it does not: the report rows below): 15 of 20 (≥ 16), 20 shots landed within 2.4 m of it  [{"ok":true,"lan
+### done
+
+## fails.txt
+[bot-stuck-2] FAIL tank: a bot on the Great Tank's sand bed (inside the glass, no way out on foot) heading out is out within 6 s (6 spots: by the rim and mid-bed)  {"bad":[{"at":[6.64,-0.6,1.79],"outAt":8.67,"jumped":true,"end":[17.81,3.38,-62.6]}],"rows":[{"at":[6.64,-0.6,1.79],"outAt":8.67,"jumped":true,"end":[17.81,3.38,-62.6]},{"at":[2.84,-0.6,6.21],"outAt":4.17,"jumped":true,"end":[17.77,3.38
+[karp-bots-1] FAIL B(b2) melee breakers closing in at 75 % of ours refill inside their band (≤ 5 m from the centre): never walking off to the ring or the spawn for ink  {"maxR":4.29,"minR":2.87,"refillFrames":1196}
+[karp-bots-2] FAIL H a bot standing where a Big Burst lands leaves its disc before it blows (normal) — from 18 m, the range it passes at (§11 names none; from the carrier's usual 12–15 m it does not: the report rows below): 15 of 20 (≥ 16), 20 shots landed within 2.4 m of it  [{"ok":true,"landOff":0.33,"blowD":4.93,"knowT":0.35,"landT":0.82},{"ok":false,"landOff":1.69,"blowD":1.3,"knowT":0.

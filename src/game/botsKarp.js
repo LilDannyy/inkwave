@@ -699,7 +699,11 @@ export function karpRefillSpot(b, P) {
   if (!band) return null;
   const a = b.a, c = P.restPos(), st = b._kst || (b._kst = { own: 0, enemy: 0, empty: 0, n: 0 });
   const [lo, hi] = band, base = Math.atan2(a.pos.x - c.x, a.pos.z - c.z);
-  let best = null, bd = Infinity;
+  // [b5-beta1] never back to a spot bots.js found no use for in the last 6 s (_refillBad: its puddle landed off a ledge's
+  // lip, so it ran dry there — sent back to it, a breaker hovered at 3 % painting off the lip: 4.75–25.5 s on halyard);
+  // the band's nearest other spot instead, bare or not (bots.js paints its puddle there), else null (the usual search)
+  const RB = b._refillBad && b.t - b._refillBad.t < 6 ? b._refillBad : null;
+  let best = null, bd = Infinity, alt = null, ad = Infinity;
   for (let k = 0; k < 16; k++) {
     const ang = base + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.39;
     for (const u of [0.25, 0.75]) {
@@ -709,13 +713,16 @@ export function karpRefillSpot(b, P) {
       if (id < 0) continue;
       const n = G.nav.nodes[id], h = hd(n, c);
       if (h < lo || h > hi || Math.abs(n.y - a.pos.y) > 1.2 || n.zone >= 0) continue;
+      if (RB && Math.hypot(n.x - RB.x, n.z - RB.z) < 3) continue;   // [b5-beta1]
       const d = hd(n, a.pos);
+      if (RB && d < ad && h >= lo + 0.5 && h <= hi - 0.3) { ad = d; alt = n; }   // (well inside the band: a squid slides on its puddle; [b5-beta1, review 1] 0.5 m off its inner edge: at 0.3 a breaker sent there slid in to 2.83–2.88 m, under B(b2)'s 2.9)
       if (d >= bd) continue;
       G.paint.regionStats(n.x, n.y, n.z, 1.0, b.inkTeam, st);
       if (st.n && st.own > 0.6) { bd = d; best = n; }
     }
   }
   if (best) return _rf.set(best.x, best.y, best.z);
+  if (RB) return alt ? _rf.set(alt.x, alt.y, alt.z) : null;   // [b5-beta1]
   const n = shellSpot(b, P, b.kRole);
   return n ? _rf.set(n.x, n.y, n.z) : null;
 }
@@ -1048,8 +1055,9 @@ export function karpMove(b, P, dt, move, it) {
     const band = shellBand(b, P);
     if (band) {
       const [lo, hi] = band, vr = a.vel.x * nx + a.vel.z * nz, hq = h + vr * 0.25, outward = move.x * nx + move.z * nz;
-      if (hq < lo - 0.05) move.set(nx * 0.7, 0, nz * 0.7);
-      else if (hq < lo + 0.25 && outward < 0) { move.x -= outward * nx; move.z -= outward * nz; }
+      // ([b5-beta1, review 1] the inner edge held with a margin: from lo − 0.05 a sliding squid's momentum carried it 0.2 m in)
+      if (hq < lo + 0.1) move.set(nx * 0.7, 0, nz * 0.7);
+      else if (hq < lo + 0.4 && outward < 0) { move.x -= outward * nx; move.z -= outward * nz; }
       if (hq > hi + 0.15) move.set(-nx * 0.7, 0, -nz * 0.7);
       else if (hq > hi - 0.25 && outward > 0) { move.x -= outward * nx; move.z -= outward * nz; }
     }

@@ -1140,6 +1140,10 @@ export class Character {
         w.bind(this.skeleton, IDENT); w.castShadow = m.userData.iwShadow; w.receiveShadow = true; w.frustumCulled = false; grp.add(w);
       }
       this.kid.add(grp);
+      // [b5-beta1] a kit weapon model builds parts of itself on its first animation (the Sponge Mitts' sponge, the
+      // Cutlass' edge and aura, the Brolly's canopy): animate the held one once now, so they are in the tree compiled
+      // below (the sponge's program was compiled in play: review 1, issue 1)
+      try { const hw = this.weapons[this.weaponKind]; if (hw) this._animWeapon(0, {}, hw); } catch (e) { console.warn('[character] weapon warm', e); }
       // far weapon decimation (CPU, cached per weapon geometry) — built now rather than at the first far switch
       for (const k in this.weapons) for (let w = this.weapons[k]; w; w = w.left) { farGeometry(w.def.body, 700); farGeometry(w.def.ink, 300); }
       // everything a match can show, shown for the synchronous part only (compile + one shadow pass)

@@ -72,6 +72,7 @@ mode variant, a Practice stage swap). In order:
 | 12 | `W.attachMinimap(mm)` | `mm.setBase(...)` per state |
 | 13 | `W.attachEnv(env)` (now, and at boot once the Environment exists) | extra surfaces, theme overlay, backdrop sets |
 | 14 | `W.ready()` | the world rests in its starting state (eras: `apply(1, { instant })`) |
+| 15 | `W.warm()` ([b5-beta1]) | a match on this world is about to be shown (`main.js _warmStage`, the screen still faded out): do now the first-time work left to idle time or first use — eras builds its other minimap bases and compiles every era program, pipes finishes its ride-camera plans, lava builds its burn pass and compiles it into the paint atlas. Compile for the target the program draws into (bind it: review 1 — with none bound three.js builds the screen's variant, never used); objects built on first use are built now or stood in for (`kits/registry.js` `warm`). A module may also do it from idle time after `ready` (a menu backdrop's world), whichever comes first; never in a match's intro |
 
 `W` lives until the next world build. It survives matches on the same stage. At boot the first world is built before
 `G.game` and `G.env` exist: use the kit handed to `prop` / `colliders` / `afterMeshes` (`o.props.buildPart`), not
@@ -375,7 +376,7 @@ generic extension that does nothing until a module sets it.
 
 | file | where | what |
 |---|---|---|
-| `src/main.js` | imports (+ `stageModList.js`); boot (`attachEnv`); `_buildWorldNow` (the 14 steps); `on('splatted')`; prompts; frame | the world chain, causes, `R.prompt`, `frame.stage` |
+| `src/main.js` | imports (+ `stageModList.js`); boot (`attachEnv`); `_buildWorldNow` (the 14 steps); `_warmStage` (`warm`, [b5-beta1]); `on('splatted')`; prompts; frame | the world chain, causes, `R.prompt`, `frame.stage` |
 | `src/game/match.js` | both setup paths (before the modes); `update` (early / late); `dispose` (first); soft push | `StageRun`, ticks, `noPush` |
 | `src/net/netmatch.js` | `F.stage` (bit 22); `packActor`; `recSplat` (field 15); `recStage`; `_sendTick` (clock); `applyRemote` (`carryRemote`); `_play` `'s'` (`opts.et`) and `'sm'`; `_hostClock` (late restore); `onLeave` (`hostChanged`); `_adopt` | online |
 | `src/net/session.js` | `_practiceJoin` | the late joiner's snapshot (`stage`) |

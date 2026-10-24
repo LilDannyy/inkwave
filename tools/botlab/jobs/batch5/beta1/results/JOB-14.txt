@@ -1,0 +1,4 @@
+JOB-14 (beta1) @ c0dc9523 (2b7eaa67: the decay reverted) — Mac mini b5-runner, 2026-10-24 04:20–04:24, exit 0. Short summary.
+- bot-stuck 6/6, 5/6, 6/6: run 2 fails 'tank' — from (6.64, −0.6, 1.79) out at 8.67 s (the bar 6 s); 'refill' passed all 3.
+- karp-bots 41/42 ×2: run 1 B(b2) (a melee breaker refilling, maxR 4.29 / minR 2.87 — inside the 5 m band, failed on another condition);
+  run 2 H (the Big Burst disc from 18 m). Each failing line is in fails.txt (JOB-14.raw.txt).

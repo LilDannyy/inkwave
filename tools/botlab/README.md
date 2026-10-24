@@ -57,6 +57,34 @@ W=960 H=600 MAP=testbox PAGE=path/to/test-page.js tools/botlab/run.sh tools/botl
   `MAP=bluestone PAGE=tools/botlab/tests/beta-content.js tools/botlab/run.sh tools/botlab/page.cjs` and
   `MAP=bluestone PAGE=tools/botlab/tests/wip-stages.js tools/botlab/run.sh tools/botlab/page.cjs` (with and without
   `WIPSTAGES=1`).
+- **The beta's issue log, reproduced** ([b5-beta1]; src/core/issueLog.js, the desktop's `issues.log` /
+  `node tools/botlab/issues-summary.cjs <log>`):
+  - every match harness (match.cjs, tower-match.cjs, karp-match.cjs) prints `STUCK episodes over 5 s` beside `ISSUELOG`,
+    the in-game log's stuck-bot entries of the same match (its watch now judges as the harnesses do: < 1 m over 3 s of
+    match time while wanting to move, holds on purpose left out — `BotBrain.holdingOnPurpose`); `DIAG=1` on
+    tower-match.cjs and karp-match.cjs adds each episode's plans, as on match.cjs; `DIAG=2` (match.cjs, karp-match.cjs)
+    takes them every 1 s with what the bot was doing (the move it asked for, speed, trigger, jump, target);
+  - `MAP=aquarium MODE=turf PAGE=tools/botlab/tests/bot-stuck.js …page.cjs`: the stuck bots it found, each a scene
+    (`step`: a route planned mid-hop starts from the floor under the bot — Gulper Aquarium's Feeding Steps; `bobber`:
+    the Chain Bobber's dry plan and its holds; `refill`: every weapon refills from 6 / 10 % at a bare refill spot; `tank`:
+    a bot stranded on the Great Tank's sand bed super jumps out); with `MAP=halyard MODE=bazookarp PAGE_ARGS='only=karpspot'`
+    a Bazookarp breaker's refill spot is never the one it just ran dry at;
+  - `tools/botlab/run.sh tools/botlab/first-frames.cjs` (`STAGES=a,b`, `MODE`, `BAR=100`, `PLAY=3`, `EXTRA=20`,
+    `LINEUP=0`; `DEVSTAGE=1` adds Cargo Terminal): each stage's first match from a fresh page, in real time, every frame
+    from the moment it is on screen through the intro and 3 s of play, and the waits between them; each frame over BAR
+    with its parts (sim, render, paint flush, HUD, minimap …) and the shader programs (and who uses them) / textures /
+    geometries new in it. Three checks a stage: the frames and waits under BAR; no shader program compiled in those
+    frames, with a Sponge Mitts punch and a paint flood forced at the first frame of play; none in EXTRA s more of
+    stepped play with every special charged (the lineup turns with the stage: the 16 carry every weapon, sub and
+    special). `tools/botlab/first-frames-cold.sh` (same settings) runs each stage in its own Electron with the GPU shader
+    disk cache off; `TRACE=1` prints each main-thread task over 50 ms from a Chrome trace with what it spent its time in
+    (review 1: the lobby set's preload, a promise continuation no observer could name);
+  - `MAP=bluestone PAGE_ARGS='only=pocket' PAGE=tools/botlab/tests/bot-stuck.js …page.cjs`: JOB-8's 60.75 s freeze, a
+    curb corner a bot is wedged in, out within 6 s (a pinned bot super jumps); `MAP=lockgate PAGE_ARGS='only=lockpost'`:
+    JOB-17's Lockgate episode, a nav lane node 0.09 m off a post, bows and chargers too; every match.cjs run prints its stranded /
+    pinned jumps (`STRANDED / PINNED`) and the stuck share with every hold on purpose counted beside the usual one;
+  - `MAP=halyard PAGE=tools/botlab/tests/lightmaps.js …page.cjs`: every world a player can reach has its bake applied;
+    an unbaked Bazookarp variant builds unlit with no warning; `node tools/botlab/tests/issue-host.cjs`: the hosted log.
 - **A stage module's audit switch:** `PAGEQ='era=2'` (any query) boots every harness page with it as well (a module
   reads its own switch from `location.search`: `?era=`, `?lava=` …). `ERA=1|2|3` is the same as `PAGEQ='era=n'`
   (Bluestone's era audit); any other `ERA` (`all`, a typo) or one that disagrees with `PAGEQ`'s era stops the harness at

@@ -1,0 +1,340 @@
+JOB-1 raw results — automatic, by the Mac mini's b5-runner, 2026-10-23 19:56:35
+branch botlab-b5-beta1, ran at 66168b0e, exit code 0, wall time 17min
+(a written-up JOB-1.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### beta1 JOB-1 head 66168b0e
+== tidewater [turf, world tidewater]: load 1067 ms | 428 frames (247 intro, 181 play) | worst intro 30.5 ms @0 | worst play 11.5 ms @4400 | over 100 ms: 0
+== kelpline [turf, world kelpline]: load 1374 ms | 426 frames (246 intro, 180 play) | worst intro 38.1 ms @4343 | worst play 15.5 ms @4410 | over 100 ms: 0
+== halyard [turf, world halyard]: load 1780 ms | 428 frames (248 intro, 180 play) | worst intro 25.4 ms @4306 | worst play 9.5 ms @4406 | over 100 ms: 0
+== saltpan [turf, world saltpan]: load 1214 ms | 428 frames (247 intro, 181 play) | worst intro 22 ms @4375 | worst play 18.2 ms @4441 | over 100 ms: 0
+== crossmarket [turf, world crossmarket]: load 1156 ms | 427 frames (248 intro, 179 play) | worst intro 46.1 ms @4278 | worst play 11.9 ms @4345 | over 100 ms: 0
+== lockgate [turf, world lockgate]: load 1246 ms | 427 frames (247 intro, 180 play) | worst intro 37.5 ms @4273 | worst play 15.5 ms @4339 | over 100 ms: 0
+== terraces [turf, world terraces]: load 1422 ms | 425 frames (247 intro, 178 play) | worst intro 52.7 ms @4271 | worst play 10.2 ms @4338 | over 100 ms: 0
+== nantai [turf, world nantai]: load 1544 ms | 427 frames (247 intro, 180 play) | worst intro 40.3 ms @4324 | worst play 10 ms @4390 | over 100 ms: 0
+== craters [turf, world craters]: load 1294 ms | 428 frames (248 intro, 180 play) | worst intro 41.3 ms @4314 | worst play 15 ms @4381 | over 100 ms: 0
+== calamari [turf, world calamari]: load 1169 ms | 429 frames (248 intro, 181 play) | worst intro 21.6 ms @4301 | worst play 10.7 ms @4368 | over 100 ms: 0
+== spirhalite [turf, world spirhalite]: load 1173 ms | 429 frames (248 intro, 181 play) | worst intro 87.2 ms @0 | worst play 14.1 ms @4384 | over 100 ms: 0
+== treehills [turf, world treehills]: load 1504 ms | 426 frames (246 intro, 180 play) | worst intro 24 ms @4272 | worst play 11 ms @4339 | over 100 ms: 0
+== bluestone [turf, world bluestone]: load 1863 ms | 427 frames (247 intro, 180 play) | worst intro 24.9 ms @0 | worst play 9.8 ms @4358 | over 100 ms: 0
+== aquarium [turf, world aquarium]: load 1687 ms | 426 frames (247 intro, 179 play) | worst intro 55.4 ms @4265 | worst play 10.6 ms @4334 | over 100 ms: 0
+== caldera [turf, world caldera]: load 3212 ms | 420 frames (246 intro, 174 play) | worst intro 46.1 ms @4260 | worst play 93.9 ms @4327 | over 100 ms: 0
+== cargo [turf, world cargo]: load 1134 ms | 431 frames (251 intro, 180 play) | worst intro 32.6 ms @4155 | worst play 11.1 ms @4388 | over 100 ms: 0
+RESULT 16/16
+[karp-aquarium-1] RESULT karp aquarium win=A reason=knockout ko=39.3 c=0/100 pops=2/0 carries=2 blasts=0 ot=no
+[karp-aquarium-1] RESULT_JSON {"map":"aquarium","winner":0,"reason":"knockout","koT":39.3,"counts":[0,100],"pops":[2,0],"firstPop":16.81,"carries":2,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.9,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+[karp-bluestone-1] RESULT karp bluestone win=A reason=knockout ko=71 c=0/100 pops=8/2 carries=10 blasts=0 ot=no
+[karp-bluestone-1] RESULT_JSON {"map":"bluestone","winner":0,"reason":"knockout","koT":71,"counts":[0,100],"pops":[8,2],"firstPop":12.67,"carries":10,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+[karp-aquarium-2] RESULT karp aquarium win=A reason=knockout ko=80.8 c=0/100 pops=4/2 carries=6 blasts=0 ot=no
+[karp-aquarium-2] RESULT_JSON {"map":"aquarium","winner":0,"reason":"knockout","koT":80.8,"counts":[0,100],"pops":[4,2],"firstPop":13.38,"carries":6,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.1,"over5":0,"issueStuck":0,"clamped":0,"crushes":1,"console":0,"frameErrors":0}
+[karp-lockgate-2] RESULT karp lockgate win=B reason=time ko=- c=44/13 pops=16/12 carries=28 blasts=0 ot=no
+[karp-lockgate-2] RESULT_JSON {"map":"lockgate","winner":1,"reason":"time","koT":null,"counts":[44,13],"pops":[16,12],"firstPop":13.5,"carries":28,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.3,"over5":0,"issueStuck":0,"clamped":0,"crushes":4,"console":0,"frameErrors":0}
+[karp-lockgate-1] RESULT karp lockgate win=B reason=time ko=- c=62/8 pops=7/13 carries=20 blasts=0 ot=no
+[karp-lockgate-1] RESULT_JSON {"map":"lockgate","winner":1,"reason":"time","koT":null,"counts":[62,8],"pops":[7,13],"firstPop":18.6,"carries":20,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.9,"over5":1,"issueStuck":1,"clamped":0,"crushes":1,"console":0,"frameErrors":0}
+[karp-bluestone-2] RESULT karp bluestone win=B reason=stopped ko=- c=38/4 pops=11/10 carries=21 blasts=0 ot=stopped/held
+[karp-bluestone-2] RESULT_JSON {"map":"bluestone","winner":1,"reason":"stopped","koT":null,"counts":[38,4],"pops":[11,10],"firstPop":11.78,"carries":21,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":{"why":"held","losing":0,"len":3.4,"end":"stopped","windows":{"opened":0,"paused":0,"closed":0}},"stuckPct":0.
+[karp-halyard-1] RESULT karp halyard win=B reason=time ko=- c=35/34 pops=22/9 carries=31 blasts=0 ot=no
+[karp-halyard-1] RESULT_JSON {"map":"halyard","winner":1,"reason":"time","koT":null,"counts":[35,34],"pops":[22,9],"firstPop":19.93,"carries":31,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.4,"over5":0,"issueStuck":0,"clamped":0,"crushes":1,"console":0,"frameErrors":0}
+[zones-aquarium-1] RESULT_JSON {"simT":300,"simMs":124355,"state":"finish","stuckPct":0.5,"splats":68,"water":0,"specials":12,"jumps":28,"cov":[23.8,24.9],"teamKD":[{"k":41,"d":27,"sp":0,"by":{}},{"k":27,"d":41,"sp":2,"by":{"stamp":2}}],"spUses":[{"sonar":2,"barrage":1,"strike":3,"stamp":1},{"kraken":4,"crab":1}],"spE
+[karp-halyard-2] RESULT karp halyard win=B reason=stopped ko=- c=59/35 pops=14/11 carries=25 blasts=0 ot=stopped/dropped
+[karp-halyard-2] RESULT_JSON {"map":"halyard","winner":1,"reason":"stopped","koT":null,"counts":[59,35],"pops":[14,11],"firstPop":12.23,"carries":25,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":{"why":"dropped","losing":0,"len":5.1,"end":"stopped","windows":{"opened":1,"paused":0,"closed":0}},"stuckPct":
+[zones-bluestone-1] RESULT_JSON {"simT":300,"simMs":134015,"state":"finish","stuckPct":0.3,"splats":83,"water":0,"specials":15,"jumps":38,"cov":[16.2,32.4],"teamKD":[{"k":38,"d":45,"sp":0,"by":{}},{"k":45,"d":38,"sp":2,"by":{"kraken":2}}],"spUses":[{"kraken":3,"sonar":3,"barrage":3,"zipcaster":1},{"booyah":2,"kraken":2
+[zones-bluestone-2] RESULT_JSON {"simT":300,"simMs":139425,"state":"finish","stuckPct":0.2,"splats":72,"water":0,"specials":21,"jumps":29,"cov":[27.6,31],"teamKD":[{"k":32,"d":40,"sp":3,"by":{"barrage":2,"zipcaster":1}},{"k":40,"d":32,"sp":1,"by":{"kraken":1}}],"spUses":[{"jetpack":1,"barrage":3,"kraken":3},{"barrage":
+[zones-aquarium-2] RESULT_JSON {"simT":297.8,"simMs":144175,"state":"finish","stuckPct":0.4,"splats":67,"water":0,"specials":14,"jumps":34,"cov":[27,24.1],"teamKD":[{"k":35,"d":32,"sp":1,"by":{"barrage":1}},{"k":32,"d":35,"sp":0,"by":{}}],"spUses":[{"bubbler":2,"strike":1,"booyah":1},{"barrage":4,"strike":1,"sonar":3,
+[turf-bluestone-1] RESULT_JSON {"simT":180,"simMs":63699,"state":"finish","stuckPct":0.7,"splats":39,"water":0,"specials":4,"jumps":16,"cov":[30,32.5],"teamKD":[{"k":19,"d":20,"sp":0,"by":{}},{"k":20,"d":19,"sp":0,"by":{}}],"spUses":[{"barrage":2},{"bubbler":1,"kraken":1}],"spEnds":[{"barrage":{"splat":1,"time":1}},{"
+[tower-bluestone-2] RESULT_JSON {"map":"bluestone","winner":0,"reason":"retake","counts":[40,98],"best":[46.7,2.3],"held":[161.8,123],"controlChanges":14,"cpClear":[1,0],"stuckPct":0.3,"console":0,"frameErrors":0,"mounts":[31,27],"ridersAvg":[0.94,1.12],"x":{"climbs":[28,25],"sjRider":13,"kills":102,"killsNear":[52,47]
+[tower-bluestone-1] RESULT_JSON {"map":"bluestone","winner":1,"reason":"retake","counts":[73,37],"best":[25.2,49.4],"held":[145,148.5],"controlChanges":15,"cpClear":[0,1],"stuckPct":0.5,"console":0,"frameErrors":0,"mounts":[39,26],"ridersAvg":[1.17,1.12],"x":{"climbs":[32,32],"sjRider":21,"kills":109,"killsNear":[50,55
+[turf-bluestone-2] RESULT_JSON {"simT":180,"simMs":70776,"state":"finish","stuckPct":0.8,"splats":50,"water":0,"specials":6,"jumps":22,"cov":[39,34.7],"teamKD":[{"k":26,"d":24,"sp":1,"by":{"zooka":1}},{"k":24,"d":26,"sp":0,"by":{}}],"spUses":[{"booyah":2,"barrage":2},{"drainbow":1,"zooka":1}],"spEnds":[{"booyah":{"thr
+[turf-caldera]    FRAME ERRORS 2: Error: An object could not be cloned.
+[turf-caldera] RESULT_JSON {"simT":180,"simMs":75849,"state":"finish","stuckPct":0.1,"splats":41,"water":0,"specials":8,"jumps":20,"cov":[29.3,40],"teamKD":[{"k":15,"d":26,"sp":2,"by":{"zooka":2}},{"k":26,"d":15,"sp":0,"by":{}}],"spUses":[{"strike":1},{"zooka":4,"bubbler":3}],"spEnds":[{"strike":{"launch":1}},{"zo
+[zones-caldera]    FRAME ERRORS 2: Error: An object could not be cloned.
+[zones-caldera] RESULT_JSON {"simT":186.8,"simMs":80931,"state":"finish","stuckPct":0.3,"splats":52,"water":0,"specials":11,"jumps":24,"cov":[31.8,11.7],"teamKD":[{"k":45,"d":7,"sp":0,"by":{}},{"k":7,"d":45,"sp":8,"by":{"jetpack":6,"barrage":1,"zooka":1}}],"spUses":[{"jetpack":3,"barrage":2,"zooka":1},{"blower":1,"
+[tower-caldera] RESULT_JSON {"map":"caldera","winner":0,"reason":"neutralised","counts":[43,85],"best":[58.3,24.1],"held":[158.3,133.5],"controlChanges":16,"cpClear":[1,0],"stuckPct":1.5,"console":1,"frameErrors":0,"mounts":[35,27],"ridersAvg":[1.11,1.07],"x":{"climbs":[32,23],"sjRider":14,"kills":116,"killsNear":[
+### done
+
+## last 15 lines of job.log
+[turf-caldera]    stuck 0.1% | splats 41 (water 0) | specials 8 | super jumps 20 | turf 29.3/40 | sim 180s in 76s (wall 76s) | {"cpuSimMs":1.82}
+[turf-caldera]    STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+[turf-caldera]    FRAME ERRORS 2: Error: An object could not be cloned.
+[turf-caldera] CONSOLE 2 unique warning/error line(s)
+[turf-caldera] RESULT_JSON {"simT":180,"simMs":75849,"state":"finish","stuckPct":0.1,"splats":41,"water":0,"specials":8,"jumps":20,"cov":[29.3,40],"teamKD":[{"k":15,"d":26,"sp":2,"by":{"zooka":2}},{"k":26,"d":15,"sp":0,"by":{}}],"spUses":[{"strike":1},{"zooka":4,"bubbler":3}],"spEnds":[{"strike":{"l
+[zones-caldera]    stuck 0.3% | splats 52 (water 0) | specials 11 | super jumps 24 | turf 31.8/11.7 | sim 186.8s in 81s (wall 81s) | {"cpuSimMs":1.18}
+[zones-caldera]    STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+[zones-caldera]    FRAME ERRORS 2: Error: An object could not be cloned.
+[zones-caldera] CONSOLE 1 unique warning/error line(s)
+[zones-caldera] RESULT_JSON {"simT":186.8,"simMs":80931,"state":"finish","stuckPct":0.3,"splats":52,"water":0,"specials":11,"jumps":24,"cov":[31.8,11.7],"teamKD":[{"k":45,"d":7,"sp":0,"by":{}},{"k":7,"d":45,"sp":8,"by":{"jetpack":6,"barrage":1,"zooka":1}}],"spUses":[{"jetpack":3,"barrage":2,"zooka":
+[tower-caldera]    stuck 1.5% | by the tower's side 2.5% of bot-time, stuck there 0s (0 episodes) | splats 116 (water 0) | specials 14 (ready 15) | super jumps 51 | turf 20.2/18.3 | sim 309s in 49s (wall 49s) | {"cpuSimMs":0.79}
+[tower-caldera]    STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+[tower-caldera] CONSOLE 1 unique warning/error line(s)
+[tower-caldera] RESULT_JSON {"map":"caldera","winner":0,"reason":"neutralised","counts":[43,85],"best":[58.3,24.1],"held":[158.3,133.5],"controlChanges":16,"cpClear":[1,0],"stuckPct":1.5,"console":1,"frameErrors":0,"mounts":[35,27],"ridersAvg":[1.11,1.07],"x":{"climbs":[32,23],"sjRider":14,"kills":1
+### done
+
+## first-frames.txt
+== tidewater [turf, world tidewater]: load 1067 ms | 428 frames (247 intro, 181 play) | worst intro 30.5 ms @0 | worst play 11.5 ms @4400 | over 100 ms: 0
+   first frames: 30.5 ms (programs +0, textures +0) {"render":2.9,"minimap":5.2,"hudUpdate":20,"hud":25.8} · 4.1 ms (programs +0, textures +0) {} · 4.8 ms (programs +0, textures +0) {}
+PASS tidewater first frames under 100 ms  {"worstIntro":30.5,"worstPlay":11.5,"over":0,"loadMs":1067}
+== kelpline [turf, world kelpline]: load 1374 ms | 426 frames (246 intro, 180 play) | worst intro 38.1 ms @4343 | worst play 15.5 ms @4410 | over 100 ms: 0
+   first frames: 19.3 ms (programs +0, textures +0) {"render":2,"minimap":9.2,"hudUpdate":6.8,"hud":16.1} · 6 ms (programs +0, textures +0) {"sim":2.3,"render":2.5} · 4.8 ms (programs +0, textures +0) {}
+PASS kelpline first frames under 100 ms  {"worstIntro":38.1,"worstPlay":15.5,"over":0,"loadMs":1374}
+== halyard [turf, world halyard]: load 1780 ms | 428 frames (248 intro, 180 play) | worst intro 25.4 ms @4306 | worst play 9.5 ms @4406 | over 100 ms: 0
+   first frames: 11.5 ms (programs +0, textures +0) {"minimap":3.6,"hudUpdate":5.6,"hud":9.5} · 3.9 ms (programs +0, textures +0) {} · 6.1 ms (programs +0, textures +0) {"render":2.1,"hudUpdate":2.5,"hud":2.8}
+PASS halyard first frames under 100 ms  {"worstIntro":25.4,"worstPlay":9.5,"over":0,"loadMs":1780}
+== saltpan [turf, world saltpan]: load 1214 ms | 428 frames (247 intro, 181 play) | worst intro 22 ms @4375 | worst play 18.2 ms @4441 | over 100 ms: 0
+   first frames: 19.3 ms (programs +0, textures +0) {"minimap":4.9,"hudUpdate":11,"hud":16.1} · 5.3 ms (programs +0, textures +0) {"render":2.4} · 6.7 ms (programs +0, textures +0) {"render":3.4}
+PASS saltpan first frames under 100 ms  {"worstIntro":22,"worstPlay":18.2,"over":0,"loadMs":1214}
+== crossmarket [turf, world crossmarket]: load 1156 ms | 427 frames (248 intro, 179 play) | worst intro 46.1 ms @4278 | worst play 11.9 ms @4345 | over 100 ms: 0
+   first frames: 11.3 ms (programs +0, textures +0) {"minimap":4.2,"hudUpdate":4,"hud":8.4} · 7.5 ms (programs +0, textures +0) {"sim":3.5,"render":2.4} · 3.9 ms (programs +0, textures +0) {}
+PASS crossmarket first frames under 100 ms  {"worstIntro":46.1,"worstPlay":11.9,"over":0,"loadMs":1156}
+== lockgate [turf, world lockgate]: load 1246 ms | 427 frames (247 intro, 180 play) | worst intro 37.5 ms @4273 | worst play 15.5 ms @4339 | over 100 ms: 0
+   first frames: 13 ms (programs +0, textures +0) {"minimap":3.9,"hudUpdate":5.8,"hud":9.8} · 3.8 ms (programs +0, textures +0) {} · 4.3 ms (programs +0, textures +0) {}
+PASS lockgate first frames under 100 ms  {"worstIntro":37.5,"worstPlay":15.5,"over":0,"loadMs":1246}
+== terraces [turf, world terraces]: load 1422 ms | 425 frames (247 intro, 178 play) | worst intro 52.7 ms @4271 | worst play 10.2 ms @4338 | over 100 ms: 0
+   frame @4271 ms [intro] 52.7 ms | programs +3 textures +0 geometries +2 | {"sim":24.6,"projectiles":2.8,"render":23.6}
+   first frames: 20.3 ms (programs +0, textures +1) {"render":7.7,"minimap":5.6,"hudUpdate":5.1,"hud":11} · 4 ms (programs +0, textures +0) {} · 3.8 ms (programs +0, textures +0) {}
+PASS terraces first frames under 100 ms  {"worstIntro":52.7,"worstPlay":10.2,"over":0,"loadMs":1422}
+== nantai [turf, world nantai]: load 1544 ms | 427 frames (247 intro, 180 play) | worst intro 40.3 ms @4324 | worst play 10 ms @4390 | over 100 ms: 0
+   first frames: 11 ms (programs +0, textures +1) {"render":2.5,"minimap":3.7,"hudUpdate":3.3,"hud":7.2} · 3 ms (programs +0, textures +0) {} · 4.5 ms (programs +0, textures +0) {}
+PASS nantai first frames under 100 ms  {"worstIntro":40.3,"worstPlay":10,"over":0,"loadMs":1544}
+== craters [turf, world craters]: load 1294 ms | 428 frames (248 intro, 180 play) | worst intro 41.3 ms @4314 | worst play 15 ms @4381 | over 100 ms: 0
+   first frames: 12 ms (programs +0, textures +0) {"minimap":4.4,"hudUpdate":4.2,"hud":8.8} · 2.4 ms (programs +0, textures +0) {} · 4.5 ms (programs +0, textures +0) {}
+PASS craters first frames under 100 ms  {"worstIntro":41.3,"worstPlay":15,"over":0,"loadMs":1294}
+== calamari [turf, world calamari]: load 1169 ms | 429 frames (248 intro, 181 play) | worst intro 21.6 ms @4301 | worst play 10.7 ms @4368 | over 100 ms: 0
+   first frames: 10.9 ms (programs +0, textures +0) {"minimap":4.3,"hudUpdate":4.4,"hud":8.8} · 2.2 ms (programs +0, textures +0) {} · 5.1 ms (programs +0, textures +0) {}
+PASS calamari first frames under 100 ms  {"worstIntro":21.6,"worstPlay":10.7,"over":0,"loadMs":1169}
+== spirhalite [turf, world spirhalite]: load 1173 ms | 429 frames (248 intro, 181 play) | worst intro 87.2 ms @0 | worst play 14.1 ms @4384 | over 100 ms: 0
+   frame @0 ms [intro] 87.2 ms | programs +1 textures +1 geometries +18 | {"render":77.1,"minimap":5,"hudUpdate":3.5,"hud":8.7}
+   first frames: 87.2 ms (programs +1, textures +1) {"render":77.1,"minimap":5,"hudUpdate":3.5,"hud":8.7} · 4.5 ms (programs +0, textures +0) {"render":2.2} · 4.5 ms (programs +0, textures +0) {}
+PASS spirhalite first frames under 100 ms  {"worstIntro":87.2,"worstPlay":14.1,"over":0,"loadMs":1173}
+== treehills [turf, world treehills]: load 1504 ms | 426 frames (246 intro, 180 play) | worst intro 24 ms @4272 | worst play 11 ms @4339 | over 100 ms: 0
+   first frames: 15.2 ms (programs +0, textures +0) {"render":3.4,"minimap":4.8,"hudUpdate":5,"hud":10} · 3.9 ms (programs +0, textures +0) {} · 4.9 ms (programs +0, textures +0) {}
+PASS treehills first frames under 100 ms  {"worstIntro":24,"worstPlay":11,"over":0,"loadMs":1504}
+== bluestone [turf, world bluestone]: load 1863 ms | 427 frames (247 intro, 180 play) | worst intro 24.9 ms @0 | worst play 9.8 ms @4358 | over 100 ms: 0
+   first frames: 24.9 ms (programs +5, textures +0) {"render":8.8,"minimap":6.6,"hudUpdate":6.3,"hud":13.2} · 3.4 ms (programs +0, textures +0) {} · 4.1 ms (programs +0, textures +0) {}
+PASS bluestone first frames under 100 ms  {"worstIntro":24.9,"worstPlay":9.8,"over":0,"loadMs":1863}
+== aquarium [turf, world aquarium]: load 1687 ms | 426 frames (247 intro, 179 play) | worst intro 55.4 ms @4265 | worst play 10.6 ms @4334 | over 100 ms: 0
+   frame @4265 ms [intro] 55.4 ms | programs +3 textures +0 geometries +2 | {"sim":13.3,"projectiles":2.9,"render":20.8,"hudUpdate":17.4,"hud":17.5}
+   first frames: 13.8 ms (programs +0, textures +0) {"minimap":5.4,"hudUpdate":5.4,"hud":11.2} · 4.8 ms (programs +0, textures +0) {"render":2} · 4 ms (programs +0, textures +0) {}
+PASS aquarium first frames under 100 ms  {"worstIntro":55.4,"worstPlay":10.6,"over":0,"loadMs":1687}
+== caldera [turf, world caldera]: load 3212 ms | 420 frames (246 intro, 174 play) | worst intro 46.1 ms @4260 | worst play 93.9 ms @4327 | over 100 ms: 0
+   frame @4327 ms [playing] 93.9 ms | programs +1 textures +0 geometries +1 | {"sim":2.1,"paintFlush":82.2,"render":2.7,"minimap":4.6,"hud":5.1}
+   first frames: 33.7 ms (programs +0, textures +0) {"minimap":26.6,"hudUpdate":4,"hud":31} · 5.4 ms (programs +0, textures +0) {"sim":2,"render":2.1} · 3.3 ms (programs +0, textures +0) {}
+PASS caldera first frames under 100 ms  {"worstIntro":46.1,"worstPlay":93.9,"over":0,"loadMs":3212}
+== cargo [turf, world cargo]: load 1134 ms | 431 frames (251 intro, 180 play) | worst intro 32.6 ms @4155 | worst play 11.1 ms @4388 | over 100 ms: 0
+   first frames: 12.8 ms (programs +0, textures +0) {"minimap":6.5,"hudUpdate":4.5,"hud":11} · 2.2 ms (programs +0, textures +0) {} · 1.5 ms (programs +0, textures +0) {}
+PASS cargo first frames under 100 ms  {"worstIntro":32.6,"worstPlay":11.1,"over":0,"loadMs":1134}
+RESULT 16/16
+
+## karp-aquarium-1.txt
+== aquarium [bazookarp L 61.1/60.9 m]: winner A (knockout) | counts 0 vs 100 | best A 61.1 m B 0 m | ko 39.3 | OT no | sim 39.3 s
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.9% (holding on purpose 5.9%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp aquarium win=A reason=knockout ko=39.3 c=0/100 pops=2/0 carries=2 blasts=0 ot=no
+RESULT_JSON {"map":"aquarium","winner":0,"reason":"knockout","koT":39.3,"counts":[0,100],"pops":[2,0],"firstPop":16.81,"carries":2,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.9,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+
+## karp-aquarium-2.txt
+== aquarium [bazookarp L 61.1/60.9 m]: winner A (knockout) | counts 0 vs 100 | best A 61.1 m B 0 m | ko 80.8 | OT no | sim 80.8 s
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.1% (holding on purpose 4.7%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp aquarium win=A reason=knockout ko=80.8 c=0/100 pops=4/2 carries=6 blasts=0 ot=no
+RESULT_JSON {"map":"aquarium","winner":0,"reason":"knockout","koT":80.8,"counts":[0,100],"pops":[4,2],"firstPop":13.38,"carries":6,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.1,"over5":0,"issueStuck":0,"clamped":0,"crushes":1,"console":0,"frameErrors":0}
+
+## karp-bluestone-1.txt
+== bluestone [bazookarp L 62.6/62.5 m]: winner A (knockout) | counts 0 vs 100 | best A 62.6 m B 0 m | ko 71 | OT no | sim 71 s
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0% (holding on purpose 6.3%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp bluestone win=A reason=knockout ko=71 c=0/100 pops=8/2 carries=10 blasts=0 ot=no
+RESULT_JSON {"map":"bluestone","winner":0,"reason":"knockout","koT":71,"counts":[0,100],"pops":[8,2],"firstPop":12.67,"carries":10,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+
+## karp-bluestone-2.txt
+== bluestone [bazookarp L 62.6/62.5 m]: winner B (stopped) | counts 38 vs 4 | best A 38.9 m B 60.4 m | ko - | OT held 3.4 s → stopped | sim 303.3 s
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0.5 s (> 3 s episodes 0) | bots stuck 0.2% (holding on purpose 10.3%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp bluestone win=B reason=stopped ko=- c=38/4 pops=11/10 carries=21 blasts=0 ot=stopped/held
+RESULT_JSON {"map":"bluestone","winner":1,"reason":"stopped","koT":null,"counts":[38,4],"pops":[11,10],"firstPop":11.78,"carries":21,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":{"why":"held","losing":0,"len":3.4,"end":"stopped","windows":{"opened":0,"paused":0,"closed":0}},"stuckPct":0.2,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+
+## karp-halyard-1.txt
+== halyard [bazookarp L 54.8/54.7 m]: winner B (time) | counts 35 vs 34 | best A 35.9 m B 36.2 m | ko - | OT no | sim 300 s
+   fast fuse (s): retreat 13.9 zone 0 | clamp rejections 0 | carrierRetreatFallback 6 (a dip the engine forgives, no ×3: 3) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.4% (holding on purpose 11.7%)
+   DIAG: 2 stuck episode(s) of 2 s or more
+   stuck {"t":32,"name":"Riptide","w":"blade","mode":"refill","role":"grab","carry":false,"pos":[2.5,0,25.3],"dur":2.25}
+      plan {"t":32,"mode":"refill","role":"grab","pos":[2.54,0,25.29],"len":5,"pi":4,"next":[[2.5,0,28.5],null],"edgeIn":"walk","goal":[2.5,0,28.5],"noProg":0.3,"near":[2.5,0,25.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"kid"}
+   stuck {"t":18.8,"name":"P1","w":"blaster","mode":"refill","role":"break","carry":false,"pos":[3.8,1.3,4.2],"dur":2}
+      plan {"t":18.8,"mode":"refill","role":"break","pos":[3.76,1.3,4.22],"len":37,"pi":7,"next":[[-3.5,1.3,3.5],[-4.5,1.3,3.5]],"edgeIn":"walk","goal":[0.5,0.78,-6.5],"noProg":0.08,"near":[3.5,1.3,3.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"kid"}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp halyard win=B reason=time ko=- c=35/34 pops=22/9 carries=31 blasts=0 ot=no
+RESULT_JSON {"map":"halyard","winner":1,"reason":"time","koT":null,"counts":[35,34],"pops":[22,9],"firstPop":19.93,"carries":31,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.4,"over5":0,"issueStuck":0,"clamped":0,"crushes":1,"console":0,"frameErrors":0}
+
+## karp-halyard-2.txt
+== halyard [bazookarp L 54.8/54.7 m]: winner B (stopped) | counts 59 vs 35 | best A 22.7 m B 36.1 m | ko - | OT dropped 5.1 s → stopped | sim 305.3 s
+   fast fuse (s): retreat 19.4 zone 0 | clamp rejections 0 | carrierRetreatFallback 6 (a dip the engine forgives, no ×3: 9) | carrier stuck 1.25 s (> 3 s episodes 0) | bots stuck 0.3% (holding on purpose 11.2%)
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp halyard win=B reason=stopped ko=- c=59/35 pops=14/11 carries=25 blasts=0 ot=stopped/dropped
+RESULT_JSON {"map":"halyard","winner":1,"reason":"stopped","koT":null,"counts":[59,35],"pops":[14,11],"firstPop":12.23,"carries":25,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":{"why":"dropped","losing":0,"len":5.1,"end":"stopped","windows":{"opened":1,"paused":0,"closed":0}},"stuckPct":0.3,"over5":0,"issueStuck":0,"clamped":0,"crushes":2,"console":0,"frameErrors":0}
+
+## karp-lockgate-1.txt
+== lockgate [bazookarp L 58/57.9 m]: winner B (time) | counts 62 vs 8 | best A 22.6 m B 53.7 m | ko - | OT no | sim 300 s
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.9% (holding on purpose 10.1%)
+   DIAG: 3 stuck episode(s) of 2 s or more
+   stuck {"t":144.3,"name":"Sprinkle","w":"brolly","mode":"refill","role":"grab","carry":false,"pos":[-23.3,0.88,-23.1],"dur":11.25}
+      plan {"t":144.3,"mode":"refill","role":"grab","pos":[-23.28,0.88,-23.12],"len":21,"pi":1,"next":[[-22.5,0,-23.5],[-21.5,0,-24.5]],"edgeIn":"drop","goal":[-8.5,0,-34.5],"noProg":0,"near":[-23.5,0.8,-23.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"squid"}
+      plan {"t":149,"mode":"refill","role":"break","pos":[-22.52,0,-23.31],"len":50,"pi":6,"next":[[-16.5,0,-23.5],[-15.5,0,-24.5]],"edgeIn":"walk","goal":[4.5,2.4,-63.5],"noProg":0,"near":[-22.5,0,-23.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"squid"}
+      plan {"t":154,"mode":"refill","role":"flank","pos":[-21.91,0,-23.21],"len":7,"pi":5,"next":[[-17.5,0.2,-24.75],[-16.5,0,-24.75]],"edgeIn":"walk","goal":[-16.5,0,-24.75],"noProg":0,"near":[-21.5,0,-23.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"squid"}
+   stuck {"t":163.8,"name":"Sprinkle","w":"brolly","mode":"refill","role":"keeper","carry":false,"pos":[-16.7,1.3,-13.9],"dur":2.5}
+      plan {"t":163.8,"mode":"refill","role":"keeper","pos":[-16.72,1.3,-13.87],"len":3,"pi":2,"next":[[-16.5,1.3,-12.5],null],"edgeIn":"walk","goal":[-16.5,1.3,-12.5],"noProg":0,"near":[-16.5,1.3,-13.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"kid"}
+   stuck {"t":8.3,"name":"Sprinkle","w":"brolly","mode":"paint","role":"break","carry":false,"pos":[2.9,0,-36],"dur":2}
+      plan {"t":8.3,"mode":"paint","role":"break","pos":[2.91,0,-35.99],"len":39,"pi":4,"next":[[4.5,0,-31.5],[4.5,0,-30.5]],"edgeIn":"walk","goal":[5.5,3,-4.5],"noProg":0,"near":[2.5,0,-35.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"kid"}
+   STUCK episodes over 5 s: 1 | ISSUELOG stuck-bot entries this match: 1 [{"mode":"bazookarp","stage":"lockgate","duration":5.25,"pos":[-22.5,0,-23.3],"botMode":"refill","role":"break","path":"6/50","next":[-16.5,0,-23.5],"edgeIn":"walk","goal":[4.5,2.4,-63.5],"noProg":0,"carry":false,"pipe":false,"climbing":false}]
+CONSOLE 0 unique warning/error line(s)
+RESULT karp lockgate win=B reason=time ko=- c=62/8 pops=7/13 carries=20 blasts=0 ot=no
+RESULT_JSON {"map":"lockgate","winner":1,"reason":"time","koT":null,"counts":[62,8],"pops":[7,13],"firstPop":18.6,"carries":20,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.9,"over5":1,"issueStuck":1,"clamped":0,"crushes":1,"console":0,"frameErrors":0}
+
+## karp-lockgate-2.txt
+== lockgate [bazookarp L 58/57.9 m]: winner B (time) | counts 44 vs 13 | best A 32.9 m B 50.7 m | ko - | OT no | sim 300 s
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.3% (holding on purpose 9.4%)
+   DIAG: 1 stuck episode(s) of 2 s or more
+   stuck {"t":206.5,"name":"Coral","w":"shooter","mode":"paint","role":"break","carry":false,"pos":[-3.6,0.15,4.6],"dur":2.25}
+      plan {"t":206.5,"mode":"paint","role":"break","pos":[-3.61,0.15,4.56],"len":2,"pi":1,"next":[[-4.5,0.15,4.5],null],"edgeIn":"walk","goal":[-4.5,0.15,4.5],"noProg":0.55,"near":[-3.5,0.15,4.5],"kHold":0,"zHold":0,"carry":false,"pipe":false,"grounded":true,"climbing":false,"form":"kid"}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp lockgate win=B reason=time ko=- c=44/13 pops=16/12 carries=28 blasts=0 ot=no
+RESULT_JSON {"map":"lockgate","winner":1,"reason":"time","koT":null,"counts":[44,13],"pops":[16,12],"firstPop":13.5,"carries":28,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.3,"over5":0,"issueStuck":0,"clamped":0,"crushes":4,"console":0,"frameErrors":0}
+
+## tower-bluestone-1.txt
+== bluestone [tower len 74/74]: winner Bravo (retake) | counts 73 vs 37 (score 73/37) | best push A 25.2m B 49.4m | OT 4s | sim 304.3s
+   stuck 0.5% | by the tower's side 4.3% of bot-time, stuck there 0s (0 episodes) | splats 109 (water 0) | specials 15 (ready 19) | super jumps 50 | turf 18.5/20.9 | sim 304.3s in 104s (wall 104s) | {"cpuSimMs":0.95}
+   ERAS shoves 0 rescues 0 flips 52 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 3, started in era 1, 2 jumps planned
+   DIAG: 1 stuck episode(s) of 2 s or more
+   stuck {"t":142.8,"name":"Blotch","w":"spinner","mode":"paint","role":"ride","pos":[-22.2,0,-8.7],"tower":2.8,"path":false,"dur":5.75}
+      plan {"t":142.8,"mode":"paint","role":"ride","pos":[-22.23,0,-8.73],"len":0,"pi":14,"next":null,"edgeIn":"-","goal":[-19.5,0,-25.5],"noProg":0,"near":[-22.5,0,-8.5],"tHold":0,"noClimb":false,"climbing":false,"grounded":true,"form":"kid","ink":100}
+      plan {"t":147.5,"mode":"paint","role":"ride","pos":[-22.23,0,-8.73],"len":0,"pi":14,"next":null,"edgeIn":"-","goal":[-19.5,0,-25.5],"noProg":0,"near":[-22.5,0,-8.5],"tHold":0,"noClimb":false,"climbing":false,"grounded":true,"form":"kid","ink":100}
+   STUCK episodes over 5 s: 1 | ISSUELOG stuck-bot entries this match: 1 [{"mode":"tower","stage":"bluestone","duration":5.25,"pos":[-22.2,0,-8.7],"botMode":"paint","role":"ride","path":null,"next":null,"edgeIn":null,"goal":[-19.5,0,-25.5],"noProg":0,"carry":false,"pipe":false,"climbing":false}]
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"map":"bluestone","winner":1,"reason":"retake","counts":[73,37],"best":[25.2,49.4],"held":[145,148.5],"controlChanges":15,"cpClear":[0,1],"stuckPct":0.5,"console":0,"frameErrors":0,"mounts":[39,26],"ridersAvg":[1.17,1.12],"x":{"climbs":[32,32],"sjRider":21,"kills":109,"killsNear":[50,55],"attempts":157,"boarded":50,"aborted":104,"climbMounts":41,"sjMounts":1,"toBoard":{"med":1.75,"p80
+
+## tower-bluestone-2.txt
+== bluestone [tower len 74/74]: winner Alpha (retake) | counts 40 vs 98 (score 40/98) | best push A 46.7m B 2.3m | OT 1.7s | sim 301.8s
+   stuck 0.3% | by the tower's side 3.1% of bot-time, stuck there 0.5s (1 episodes) | splats 102 (water 0) | specials 15 (ready 16) | super jumps 46 | turf 20.5/14.9 | sim 301.8s in 103s (wall 103s) | {"cpuSimMs":2.03}
+   ERAS shoves 0 rescues 0 flips 52 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 3, started in era 1, 2 jumps planned
+   DIAG: 1 stuck episode(s) of 2 s or more
+   stuck {"t":204.3,"name":"Wasabi","w":"brush","mode":"paint","role":"ride","pos":[22,0,18.9],"tower":2.6,"path":false,"dur":2.25}
+      plan {"t":204.3,"mode":"paint","role":"ride","pos":[21.98,0,18.89],"len":0,"pi":5,"next":null,"edgeIn":"-","goal":[21.5,0,18.5],"noProg":0,"near":[21.5,0,18.5],"tHold":0,"noClimb":false,"climbing":false,"grounded":true,"form":"kid","ink":68}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"map":"bluestone","winner":0,"reason":"retake","counts":[40,98],"best":[46.7,2.3],"held":[161.8,123],"controlChanges":14,"cpClear":[1,0],"stuckPct":0.3,"console":0,"frameErrors":0,"mounts":[31,27],"ridersAvg":[0.94,1.12],"x":{"climbs":[28,25],"sjRider":13,"kills":102,"killsNear":[52,47],"attempts":154,"boarded":47,"aborted":107,"climbMounts":43,"sjMounts":2,"toBoard":{"med":3.25,"p80"
+
+## tower-caldera.txt
+== caldera [tower len 100/100]: winner Alpha (neutralised) | counts 43 vs 85 (score 43/85) | best push A 58.3m B 24.1m | OT 8.9s | sim 309s
+   stuck 1.5% | by the tower's side 2.5% of bot-time, stuck there 0s (0 episodes) | splats 116 (water 0) | specials 14 (ready 15) | super jumps 51 | turf 20.2/18.3 | sim 309s in 49s (wall 49s) | {"cpuSimMs":0.79}
+   stuck {"t":54,"name":"Bubbles","w":"charger","mode":"paint","role":"perch","pos":[-9.5,4.65,-11.8],"tower":26.4,"path":true,"dur":4}
+   stuck {"t":38.8,"name":"Bubbles","w":"charger","mode":"paint","role":"ride","pos":[-8.7,1.2,-3.2],"tower":10.6,"path":true,"dur":2.75}
+   stuck {"t":244.5,"name":"Bubbles","w":"charger","mode":"paint","role":"perch","pos":[-9.6,4.65,-12.8],"tower":12.2,"path":true,"dur":2.75}
+   stuck {"t":48.8,"name":"Bubbles","w":"charger","mode":"paint","role":"perch","pos":[-9.5,4.65,-11.8],"tower":31.7,"path":true,"dur":2.25}
+   stuck {"t":65.3,"name":"Bubbles","w":"charger","mode":"refill","role":"perch","pos":[-9.3,4.65,-12.4],"tower":11.6,"path":true,"dur":2.25}
+   stuck {"t":248,"name":"Bubbles","w":"charger","mode":"paint","role":"perch","pos":[-9.6,4.65,-12.8],"tower":15,"path":true,"dur":2.25}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"map":"caldera","winner":0,"reason":"neutralised","counts":[43,85],"best":[58.3,24.1],"held":[158.3,133.5],"controlChanges":16,"cpClear":[1,0],"stuckPct":1.5,"console":1,"frameErrors":0,"mounts":[35,27],"ridersAvg":[1.11,1.07],"x":{"climbs":[32,23],"sjRider":14,"kills":116,"killsNear":[42,70],"attempts":181,"boarded":49,"aborted":129,"climbMounts":41,"sjMounts":2,"toBoard":{"med":2.5,
+
+## turf-bluestone-1.txt
+== bluestone [turf 180s]: turf 30% vs 32.5%
+   ERAS shoves 0 rescues 0 flips 52 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 3, started in era 1, 2 jumps planned
+   stuck 0.7% | splats 39 (water 0) | specials 4 | super jumps 16 | turf 30/32.5 | sim 180s in 64s (wall 64s) | {"cpuSimMs":2.53}
+   DIAG: 2 stuck episode(s) of 2 s or more
+   stuck {"t":12.8,"name":"Kelp","w":"brush","mode":"paint","role":"-","pos":[12.9,1.2,34.8],"path":true,"hold":true,"pod":"-","dur":3.5}
+      plan {"t":12.8,"mode":"paint","pos":[12.89,1.2,34.81],"len":17,"pi":1,"next":[[14.5,0.6,33.5],[15.5,0.2,32.5]],"edgeIn":"walk","goal":[21.5,0,22.5],"noProg":0,"near":[12.5,1.2,34.5],"noClimb":false,"climbing":false,"climb":null,"ink":23}
+   stuck {"t":89.5,"name":"Kelp","w":"brush","mode":"refill","role":"-","pos":[26.5,0,24.7],"path":true,"hold":false,"pod":"-","dur":3.25}
+      plan {"t":89.5,"mode":"refill","pos":[26.45,0,24.69],"len":10,"pi":6,"next":[[20.5,0,27.5],[20.5,0,28.5]],"edgeIn":"walk","goal":[20.5,0,30.5],"noProg":0,"near":[26.5,0,24.5],"noClimb":false,"climbing":false,"climb":null,"ink":19}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"simT":180,"simMs":63699,"state":"finish","stuckPct":0.7,"splats":39,"water":0,"specials":4,"jumps":16,"cov":[30,32.5],"teamKD":[{"k":19,"d":20,"sp":0,"by":{}},{"k":20,"d":19,"sp":0,"by":{}}],"spUses":[{"barrage":2},{"bubbler":1,"kraken":1}],"spEnds":[{"barrage":{"splat":1,"time":1}},{"bubbler":{"time":1},"kraken":{"time":1}}],"zipcheer":{"zipUses":0,"zips":0,"zipHits":0,"zipSaved":0,
+
+## turf-bluestone-2.txt
+== bluestone [turf 180s]: turf 39% vs 34.7%
+   ERAS shoves 0 rescues 0 flips 52 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 3, started in era 1, 2 jumps planned
+   stuck 0.8% | splats 50 (water 0) | specials 6 | super jumps 22 | turf 39/34.7 | sim 180s in 71s (wall 71s) | {"cpuSimMs":2.5}
+   DIAG: 1 stuck episode(s) of 2 s or more
+   stuck {"t":138,"name":"Juno","w":"twins","mode":"paint","role":"-","pos":[11.4,1.2,32.9],"path":true,"hold":true,"pod":"-","dur":9.25}
+      plan {"t":138,"mode":"paint","pos":[11.43,1.2,32.87],"len":2,"pi":1,"next":[[10.5,1.2,33.5],null],"edgeIn":"walk","goal":[10.5,1.2,33.5],"noProg":0,"near":[11.5,1.2,32.5],"noClimb":false,"climbing":false,"climb":null,"ink":100}
+      plan {"t":142.8,"mode":"paint","pos":[11.43,1.2,32.87],"len":2,"pi":1,"next":[[10.5,1.2,33.5],null],"edgeIn":"walk","goal":[10.5,1.2,33.5],"noProg":0,"near":[11.5,1.2,32.5],"noClimb":false,"climbing":false,"climb":null,"ink":100}
+   STUCK episodes over 5 s: 1 | ISSUELOG stuck-bot entries this match: 1 [{"mode":"turf","stage":"bluestone","duration":5.25,"pos":[11.4,1.2,32.9],"botMode":"paint","role":null,"path":"1/2","next":[10.5,1.2,33.5],"edgeIn":"walk","goal":[10.5,1.2,33.5],"noProg":0,"carry":false,"pipe":false,"climbing":false}]
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"simT":180,"simMs":70776,"state":"finish","stuckPct":0.8,"splats":50,"water":0,"specials":6,"jumps":22,"cov":[39,34.7],"teamKD":[{"k":26,"d":24,"sp":1,"by":{"zooka":1}},{"k":24,"d":26,"sp":0,"by":{}}],"spUses":[{"booyah":2,"barrage":2},{"drainbow":1,"zooka":1}],"spEnds":[{"booyah":{"throw":2},"barrage_waddle":{"splat":1,"time":1}},{"drainbow":{"splat":1},"zooka":{"splat":1}}],"zipchee
+
+## turf-caldera.txt
+== caldera [turf 180s]: turf 29.3% vs 40%
+   stuck 0.1% | splats 41 (water 0) | specials 8 | super jumps 20 | turf 29.3/40 | sim 180s in 76s (wall 76s) | {"cpuSimMs":1.82}
+   stuck {"t":116,"name":"Loop","w":"bow","mode":"retreat","role":"-","pos":[-9.2,1.2,-4.3],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":17.3,"name":"Bubbles","w":"twins","mode":"paint","role":"-","pos":[9.3,0,-10.4],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":43,"name":"Loop","w":"bow","mode":"fight","role":"-","pos":[-9.5,2.55,-5.6],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":160,"name":"Loop","w":"bow","mode":"fight","role":"-","pos":[-12,1.8,-30.6],"path":true,"hold":false,"pod":"-","dur":0.25}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+   FRAME ERRORS 2: Error: An object could not be cloned.
+CONSOLE 2 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+  [error] Uncaught Error: An object could not be cloned.
+RESULT_JSON {"simT":180,"simMs":75849,"state":"finish","stuckPct":0.1,"splats":41,"water":0,"specials":8,"jumps":20,"cov":[29.3,40],"teamKD":[{"k":15,"d":26,"sp":2,"by":{"zooka":2}},{"k":26,"d":15,"sp":0,"by":{}}],"spUses":[{"strike":1},{"zooka":4,"bubbler":3}],"spEnds":[{"strike":{"launch":1}},{"zooka":{"time":3,"splat":1},"bubbler":{"time":3}}],"zipcheer":{"zipUses":0,"zips":0,"zipHits":0,"zipSa
+
+## zones-aquarium-1.txt
+== aquarium [zones]: winner Alpha (time) | final 17 vs 41 (penalty +31.4/+42.9) | OT no
+   stuck 0.5% | splats 68 (water 0) | specials 12 | super jumps 28 | turf 23.8/24.9 | sim 300s in 124s (wall 124s) | {"cpuSimMs":2.72}
+   DIAG: 1 stuck episode(s) of 2 s or more
+   stuck {"t":189.5,"name":"Wasabi","w":"charger","mode":"fight","role":"watch","pos":[-16.4,1.35,-12.5],"path":false,"hold":false,"pod":"-","dur":2.5}
+      plan {"t":189.5,"mode":"fight","pos":[-16.37,1.35,-12.52],"len":0,"pi":5,"next":null,"edgeIn":"-","goal":[-14.5,0,-14.5],"noProg":0,"near":[-15.5,1.44,-11.5],"noClimb":false,"climbing":false,"climb":null,"ink":100}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"simT":300,"simMs":124355,"state":"finish","stuckPct":0.5,"splats":68,"water":0,"specials":12,"jumps":28,"cov":[23.8,24.9],"teamKD":[{"k":41,"d":27,"sp":0,"by":{}},{"k":27,"d":41,"sp":2,"by":{"stamp":2}}],"spUses":[{"sonar":2,"barrage":1,"strike":3,"stamp":1},{"kraken":4,"crab":1}],"spEnds":[{"sonar":{"time":2},"strike":{"launch":3},"barrage":{"time":1},"stamp":{"time":1}},{"kraken":{
+
+## zones-aquarium-2.txt
+== aquarium [zones]: winner Alpha (knockout) | final 0 vs 91 (penalty +0/+6.2) | OT no
+   stuck 0.4% | splats 67 (water 0) | specials 14 | super jumps 34 | turf 27/24.1 | sim 297.8s in 144s (wall 144s) | {"cpuSimMs":1.34}
+   DIAG: 1 stuck episode(s) of 2 s or more
+   stuck {"t":30.5,"name":"P1","w":"twins","mode":"paint","role":"paint","pos":[4.2,0,7.5],"path":false,"hold":false,"pod":"-","dur":2}
+      plan {"t":30.5,"mode":"paint","pos":[4.17,0,7.51],"len":0,"pi":2,"next":null,"edgeIn":"-","goal":[0.5,2.4,6.5],"noProg":0,"near":[4.5,0,8.5],"noClimb":false,"climbing":false,"climb":null,"ink":26}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"simT":297.8,"simMs":144175,"state":"finish","stuckPct":0.4,"splats":67,"water":0,"specials":14,"jumps":34,"cov":[27,24.1],"teamKD":[{"k":35,"d":32,"sp":1,"by":{"barrage":1}},{"k":32,"d":35,"sp":0,"by":{}}],"spUses":[{"bubbler":2,"strike":1,"booyah":1},{"barrage":4,"strike":1,"sonar":3,"stamp":2}],"spEnds":[{"bubbler":{"time":2},"strike":{"launch":1},"booyah":{"throw":1}},{"barrage_se
+
+## zones-bluestone-1.txt
+== bluestone [zones]: winner Bravo (time) | final 87 vs 5 (penalty +8.2/+0) | OT no
+   ERAS shoves 0 rescues 0 flips 52 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0.27 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 3, started in era 1, 2 jumps planned
+   stuck 0.3% | splats 83 (water 0) | specials 15 | super jumps 38 | turf 16.2/32.4 | sim 300s in 134s (wall 135s) | {"cpuSimMs":8.35}
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"simT":300,"simMs":134015,"state":"finish","stuckPct":0.3,"splats":83,"water":0,"specials":15,"jumps":38,"cov":[16.2,32.4],"teamKD":[{"k":38,"d":45,"sp":0,"by":{}},{"k":45,"d":38,"sp":2,"by":{"kraken":2}}],"spUses":[{"kraken":3,"sonar":3,"barrage":3,"zipcaster":1},{"booyah":2,"kraken":2,"jetpack":1}],"spEnds":[{"kraken":{"time":3},"sonar":{"time":3},"barrage_seeker":{"time":2,"splat":
+
+## zones-bluestone-2.txt
+== bluestone [zones]: winner Alpha (time) | final 39 vs 52 (penalty +28.6/+16) | OT no
+   ERAS shoves 0 rescues 0 flips 52 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 3, started in era 1, 2 jumps planned
+   stuck 0.2% | splats 72 (water 0) | specials 21 | super jumps 29 | turf 27.6/31 | sim 300s in 139s (wall 140s) | {"cpuSimMs":1.95}
+   DIAG: 0 stuck episode(s) of 2 s or more
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"simT":300,"simMs":139425,"state":"finish","stuckPct":0.2,"splats":72,"water":0,"specials":21,"jumps":29,"cov":[27.6,31],"teamKD":[{"k":32,"d":40,"sp":3,"by":{"barrage":2,"zipcaster":1}},{"k":40,"d":32,"sp":1,"by":{"kraken":1}}],"spUses":[{"jetpack":1,"barrage":3,"kraken":3},{"barrage":7,"zipcaster":4,"strike":3}],"spEnds":[{"jetpack":{"time":1},"barrage_seeker":{"time":1,"splat":1},"
+
+## zones-caldera.txt
+== caldera [zones]: winner Alpha (knockout) | final 0 vs 100 (penalty +0/+0) | OT no
+   stuck 0.3% | splats 52 (water 0) | specials 11 | super jumps 24 | turf 31.8/11.7 | sim 186.8s in 81s (wall 81s) | {"cpuSimMs":1.18}
+   stuck {"t":150.5,"name":"P1","w":"shooter","mode":"refill","role":"push","pos":[-0.4,1.2,-6.3],"path":true,"hold":false,"pod":"-","dur":1.25}
+   stuck {"t":82.5,"name":"Drip","w":"spinner","mode":"fight","role":"watch","pos":[-12.2,1.4,-11.5],"path":false,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":61.5,"name":"Drip","w":"spinner","mode":"paint","role":"paint","pos":[-9.1,6.88,-11.4],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":63.5,"name":"Drip","w":"spinner","mode":"fight","role":"paint","pos":[-8.4,8,-11.4],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":25,"name":"Drip","w":"spinner","mode":"paint","role":"watch","pos":[-7.5,2.4,-0.3],"path":true,"hold":true,"pod":"-","dur":0.25}
+   stuck {"t":74,"name":"Drip","w":"spinner","mode":"fight","role":"watch","pos":[-11,4.65,-14.3],"path":false,"hold":false,"pod":"-","dur":0.25}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+   FRAME ERRORS 2: Error: An object could not be cloned.
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":186.8,"simMs":80931,"state":"finish","stuckPct":0.3,"splats":52,"water":0,"specials":11,"jumps":24,"cov":[31.8,11.7],"teamKD":[{"k":45,"d":7,"sp":0,"by":{}},{"k":7,"d":45,"sp":8,"by":{"jetpack":6,"barrage":1,"zooka":1}}],"spUses":[{"jetpack":3,"barrage":2,"zooka":1},{"blower":1,"zipcaster":2,"booyah":1,"slam":1}],"spEnds":[{"jetpack":{"time":3},"barrage_seeker":{"time":2},"zook

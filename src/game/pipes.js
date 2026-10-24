@@ -204,8 +204,11 @@ export class PipeNet {
     for (const leg of this.X.legs) for (const k of [0, 1]) { if (leg.ends[k].inWhen !== 'never') jobs.push(() => planLeg(this, leg, k === 0 ? 1 : -1)); jobs.push(() => exitShot(this, leg.ends[k])); }
     const later = typeof requestIdleCallback === 'function' ? (f) => requestIdleCallback(f, { timeout: 400 }) : (f) => setTimeout(f, 20);
     const next = () => { if (gen !== this._warm || !jobs.length) return; jobs.shift()(); if (!jobs.length) this.camWarm = true; else later(next); };
+    this._camJobs = jobs;
     later(next);
   }
+  // [b5-beta1] a match is about to be shown: the plans still waiting for an idle slice, now (StageWorld.warm)
+  warm() { const jobs = this._camJobs; if (!jobs) return; while (jobs.length) jobs.shift()(); this.camWarm = true; }
   dispose() { this._warm = (this._warm || 0) + 1; this.looks?.dispose(); this.looks = null; }
 }
 

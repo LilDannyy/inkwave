@@ -286,19 +286,23 @@ function addLaunched(a, pos, dir, hp, h0, ghost) {
   if (ghost) sound(a, 'brolly_launch', 0.8);
   return c;
 }
-function buildLaunchedMesh(c) {
+function launchedLook(col) {
   const geo = canopyOpenGeo();
-  const col = G.teamColors?.[c.team] || c.owner.color;
   const ink = makeFabric(col, true), cream = makeFabric(new THREE.Color(1, 1, 1), false);
   ink.transparent = cream.transparent = true;
   const root = new THREE.Group(), inner = new THREE.Group();
   const mi = new THREE.Mesh(geo.ink, ink), mc = new THREE.Mesh(geo.cream, cream), mh = new THREE.Mesh(geo.hub, getPlasticMaterial());
   for (const m of [mi, mc, mh]) { m.castShadow = true; inner.add(m); }
   root.add(inner);
-  root.rotation.y = Math.atan2(c.dir.x, c.dir.z);
-  G.scene?.add(root);
-  c.mesh = root; c.inner = inner; c.mats = [ink, cream];
+  return { root, inner, mats: [ink, cream] };
 }
+function buildLaunchedMesh(c) {
+  const L = launchedLook(G.teamColors?.[c.team] || c.owner.color);
+  L.root.rotation.y = Math.atan2(c.dir.x, c.dir.z);
+  G.scene?.add(L.root);
+  c.mesh = L.root; c.inner = L.inner; c.mats = L.mats;
+}
+let warmSet = null;   // [b5-beta1] a launched canopy's stand-in (registry.js warmKits: its programs at the match's load)
 function disposeLaunched(c) {
   if (c.mesh) { c.mesh.parent?.remove(c.mesh); for (const m of c.mats) m.dispose(); }
   c.mesh = null;
@@ -670,6 +674,7 @@ const _gp = new THREE.Vector3(), _gd = new THREE.Vector3();
 const r2 = (x) => Math.round(x * 100) / 100, r3 = (x) => Math.round(x * 1000) / 1000;
 
 MAIN_KITS.brolly = {
+  warm() { return [(warmSet || (warmSet = launchedLook(new THREE.Color(1, 1, 1)))).root]; },   // [b5-beta1]
   netState,
   netApply,
   ghost,

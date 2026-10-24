@@ -23,6 +23,7 @@ import { karpPlan, karpSync, karpEngage, karpGoal, karpFightNav, karpCarrierAct,
 export { SIGHT, SIGHT_STATS, teamKnown, SPECIAL_AI, SPECIAL_STATS };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
+const _vStart = new THREE.Vector3();   // [b5-beta1] (_pathTo's own: its callers hand it _v)
 const _wv = new THREE.Vector3();   // [b5-caldera] (_wetHi's probe)
 const _walkHit = new Hit();
 const _stats = { own: 0, enemy: 0, empty: 0, n: 0 };
@@ -43,6 +44,23 @@ export const CHARGES = { charger: true, spinner: true, splatling: true };
 // a wall: a try beats standing there)
 export const CLIMB = { stall: 1.75, off: 12, max: 8, ink: 0.2, dry: 40, unreach: 150, reach: { brush: { max: 2.0 }, roller: { min: 1.8 } } };
 export const CLIMB_STATS = { tries: 0, done: 0, stalled: 0, dry: 0, long: 0 };
+export const STRAND_STATS = { jumps: 0, log: [], pinned: 0 };   // [b5-beta1] stranded bots' super jumps out (tests / probes; log: the last 20; pinned: checks that found a bot pinned)
+const INK_STEP_R = [0.55, 0.95, 1.45, 2.05], INK_STEP_R_FAR = [0.55, 0.95, 1.45, 2.05, 2.75, 3.5];   // [b5-beta1] (_inkStep)
+// [b5-beta1, review 1] the nav's dead ends: nodes from which no route, by any edge the graph has (walk, hop, drop, climb,
+// whatever era or gate masks them), reaches either spawn deck — Gulper Aquarium's Great Tank: its 108 nodes, the rim's
+// with the sand bed's, have no edge out. Per nav (a reverse search from the spawn decks' nodes), built on first ask.
+const _navOut = new WeakMap();
+function navCanLeave(nav) {
+  let c = _navOut.get(nav);
+  if (c && c.n === nav.nodes.length) return c.ok;
+  const N = nav.nodes.length, rev = Array.from({ length: N }, () => []), ok = new Uint8Array(N), q = [];
+  for (let i = 0; i < N; i++) for (const e of nav.nodes[i].nb || []) if (e.to >= 0 && e.to < N) rev[e.to].push(i);
+  for (const pad of G.level?.spawnPads || []) { const s = pad ? nav.nearest(pad, 1.5, true) : -1; if (s >= 0 && !ok[s]) { ok[s] = 1; q.push(s); } }
+  if (!q.length) ok.fill(1);   // (no spawn deck on the graph: nothing is judged a dead end)
+  while (q.length) { const v = q.pop(); for (const u of rev[v]) if (!ok[u]) { ok[u] = 1; q.push(u); } }
+  _navOut.set(nav, c = { n: N, ok });
+  return ok;
+}
 
 // ============================================================================================ Zone Control team plan
 // Shared by every bot in a zones match (one per ZoneControl): each zone's paint cells mapped to the nav nodes you'd
@@ -594,6 +612,13 @@ export class BotBrain {
     this.setDifficulty(difficulty);
     this.reset();
   }
+  // [b5-beta1] standing still on purpose (the botlab harnesses' stuck rule leaves these out, and so does the beta's issue
+  // log, src/core/issueLog.js): a Zone Control guard or a Tower Command waiter at the end of its route, a Bazookarp keeper
+  // / breaker / grabber holding its spot (botsKarp kHoldUntil, on the game clock), a perch (pods, lava lookouts, eras)
+  holdingOnPurpose() {
+    const done = !this.path || this.pi >= this.path.length;
+    return (this.zHoldUntil > this.t && done) || (this.tHoldUntil > this.t && done) || (this.kHoldUntil || 0) > G.time || (this.perchUntil || 0) > this.t;
+  }
   setDifficulty(d) { this.diff = DIFFICULTY[d] || DIFFICULTY.normal; }
   // [drainbow] the ink as this bot can tell it. Inside an enemy Drainbow (src/game/sp-drainbow.js blind(): a player in
   // there sees everything grey, both teams' ink one shade) it can't tell its own ink from theirs, so none of it reads as
@@ -664,6 +689,7 @@ export class BotBrain {
     this.thrEvT = 0; this.thrEvYaw = 0; this.thrEvNew = false; this.thrIn = 9; this.thrSide = 0; this.thrAcqT = 9; this.thrSignY = 0; this.thrSignP = 0;
     this.canRef = null; this.canSide = 0; this.canT = 0; this.flankSide = 0; this.blockT = 0; this.flankT = 0;
     this.navBack = null; this.navBackT = 0;   // off-graph recovery (_backOnNav)
+    this._stranded = false; this.strandAcc = 0; this._strandSeen = undefined; this._strandChk = 0; this._pinH = null; this._pinSeen = undefined;   // [b5-beta1] (the stranded watch)
   }
 
   update(dt) {
@@ -700,6 +726,62 @@ export class BotBrain {
         if (ok) { this.path = null; this.goalTimer = 0; }
       }
     }
+    // [b5-beta1] stranded: standing where the nav has no way out — no node to start a route from within 3 m at our level
+    // or below (Gulper Aquarium's Great Tank sand bed, inside its glass: its nodes have no edge out, so a route began at a
+    // rim node 0.6–1 m up and walked on, no hop — bots pressed into the rim 4–9.25 s, JOB-5; mid-bed, no route at all) —
+    // for 1.5 s → super jump out, to the nearest teammate (or the spawn), as a player would. (Checked every 0.5 s.)
+    if ((this._strandChk = (this._strandChk || 0) - dt) <= 0) {
+      this._strandChk = 0.5;
+      const nav = G.nav;
+      // (judged at the floor under it, hops and all: a stranded bot hops — the unstick's — and a check mid-hop reset it)
+      const fy = !nav || a.climbing || a.pipe || a.carry || G.match?.lava ? -Infinity : G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.1);
+      // ([b5-beta1, review 1] …or the node it would start from is a dead end of the graph: a bot hopping up onto the tank's
+      // rim found the rim's nodes there and was no longer stranded — a spot out late, 1 run in 3 on the Mac mini, JOB-15)
+      const sn = fy > -Infinity && a.pos.y - fy < 1.5 ? nav.nearest(_vStart.set(a.pos.x, fy, a.pos.z), 0.45, true) : 0;
+      const s = fy > -Infinity && a.pos.y - fy < 1.5 && (sn < 0 || !navCanLeave(nav)[sn]);   // (a stage with lava: its escapes have it)
+      // [b5-beta1, review 1] latched for 1 s: one check that finds the hopping bot over the rim (a node there, under it) no
+      // longer restarts the 1.5 s count — bot-stuck 'tank' had a spot out at 8.67 s, 1 run in 3
+      if (s) this._strandSeen = this.t;
+      // [b5-beta1, review 1] …or pinned: asking to move along a route yet within 1.2 m of where it stood 3 s ago, its hops
+      // and replans spent — wedged where the nav says it can walk. Bluestone's curb corner by (5.8, 0, 46.4): its route
+      // began past a 0.66 m curb, a crate on its other side, the canal behind it, so no stuck hop is allowed there (the
+      // hop guards keep 3 m off the water) — a blaster stood there 60.75 s (JOB-8); out in ~4.5 s now
+      // (asking to move: along a route, or with none — a route that won't plan from here; never while refilling with no
+      // route or in its ink, nor holding a spot on purpose, nor standing to draw a shot. The last 7 checks, all within 1.2 m:
+      // the unstick's shake carries a wedged bot ~1 m off and back, and the 0.6 m this was at first restarted on it)
+      const ph = this._pinH || (this._pinH = []);
+      const free = a.alive && !a.climbing && !a.pipe && !a.carry && !a.specialActive && !G.match?.lava && !this.holdingOnPurpose() && !G.match?.tower?.riderList?.includes(a);
+      const wr = a.weaponRunner, drawing = !!(wr && (wr.charging || wr.burstT > 0 || wr.streaming));   // (a draw / spin / stream in place: on purpose, as the harnesses judge it)
+      // (never in a fight: a duel's footwork keeps it about a spot, and a pinned fighter's foe moves on soon — matches had
+      // fighters jump out of 2–3 s pins by a wall; out of the fight, the watch takes it)
+      // ([b5-beta1, review 1] a draw counts only when it stands for it: a bow or charger walking its route as it draws and
+      // not getting anywhere is pinned too — on Lockgate by the post at (9.6, 0, 15.3) one drew, walked into the post, drew
+      // again, and stood there for good: the unstick's count restarts at every draw, and this watch skipped every draw.
+      // Never a refill's draw: its shots at the floor and its steps onto their puddles keep it about its spot on purpose)
+      const trying = free && this.mode !== 'fight' && (this.path ? this.mvMag > 0.2 && !(this.mode === 'refill' && (a.submerged || drawing)) : this.mode !== 'refill' && !drawing);
+      ph.push(a.pos.x, a.pos.z, trying ? 1 : 0); if (ph.length > 21) ph.splice(0, 3);
+      let pinned = free && ph.length >= 21, tries = 0;
+      for (let i = 0; pinned && i < ph.length; i += 3) { tries += ph[i + 2]; if (Math.hypot(ph[i] - a.pos.x, ph[i + 1] - a.pos.z) > 1.2) pinned = false; }
+      pinned = pinned && tries >= 7;   // (every check: a charger standing to paint lines draws between them — on purpose)
+      if (pinned) STRAND_STATS.pinned = (STRAND_STATS.pinned || 0) + 1;
+      // ([b5-beta1, review 1] latched for 2 s while within 2.5 m of where it was found: the unstick's shake carries the bot
+      // ~1–1.4 m off and back, and each trip restarted the 1.5 s count — a charger by Lockgate's post stood ~6.7 s)
+      if (pinned) { this._pinSeen = this.t; this._pinAt = [a.pos.x, a.pos.z]; }
+      const pinLatch = !pinned && free && this.mode !== 'fight' && this.mode !== 'refill' && this._pinSeen !== undefined && this.t - this._pinSeen < 2.0 && Math.hypot(a.pos.x - this._pinAt[0], a.pos.z - this._pinAt[1]) < 2.5;   // (not into a fight or a refill begun meanwhile)
+      this._stranded = s || pinned || pinLatch || (this._strandSeen !== undefined && this.t - this._strandSeen < 1.0 && !a.climbing && !a.pipe && !a.carry && !G.match?.lava);
+      if (this._stranded) this._strandWhy = s ? (sn < 0 ? 'stranded' : 'dead end') : pinned || pinLatch ? 'pinned' : 'stranded';
+    }
+    if (this._stranded && !a.superJumpState) {
+      this.strandAcc = (this.strandAcc || 0) + dt;
+      if (this.strandAcc > 1.5 && G.match?.playing() && a.canSuperJump()) {
+        let mate = null, md = Infinity;
+        for (const o of G.actors) { if (o === a || o.team !== a.team || !o.alive || o.superJumpState) continue; const d = o.pos.distanceTo(a.pos); if (d > 6 && d < md) { md = d; mate = o; } }
+        if (a.superJump(mate || G.level.spawnPads[a.team].clone())) {
+          STRAND_STATS.jumps++; STRAND_STATS.log.push([+G.time.toFixed(2), a.name, +a.pos.x.toFixed(2), +a.pos.y.toFixed(2), +a.pos.z.toFixed(2), this._strandWhy || 'stranded', this.mode, a.weaponId]); if (STRAND_STATS.log.length > 20) STRAND_STATS.log.shift();
+          this.path = null; this.goalTimer = 0; this.strandAcc = 0; this._stranded = false; this._strandSeen = undefined; this._pinSeen = undefined; if (this._pinH) this._pinH.length = 0;
+        }
+      }
+    } else this.strandAcc = 0;
     if (a.superJumpState || (G.match?.stage && G.match.stage.botHold(this))) { it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; this.mvMag = 0; return; }   // [b5-stagehooks] botHold (riding a pipe)
     if (!G.match || !G.match.playing()) { it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; this.mvMag = 0; return; }
     this.think -= dt; this.jumpCd -= dt; this.bombCd -= dt; this.strafeT -= dt; this.paintPause -= dt; this.dodgeCd -= dt;
@@ -949,7 +1031,7 @@ export class BotBrain {
         // special
         const ks = kp ? karpSpecial(this, kp, true, dist, enemyVisible) : null;   // [b5-karp-bots] (null: the usual rules)
         if (a.specialReady() && (ks ?? (((enemyVisible || kAge < SIGHT.fresh) && this._wantSpecial('fight', dist, enemyVisible)) || (zp && this._zoneSpecial(zp, true)) || (tp && this._towerSpecial(tp, true, onT))))
-          && !(tp && !this._towerSpecialOk(onT))) it.special = true;
+          && !(tp && !this._towerSpecialOk(onT)) && !this._stranded) it.special = true;   // [b5-beta1] (stranded: see below)
       } else {
         // retreat: swim away through own ink, keep eyes on the threat
         it.squid = true;
@@ -1041,10 +1123,16 @@ export class BotBrain {
         const tb = this._towerBombAim(tp, dt, onT);
         if (tb) { wantYaw = tb.yaw; wantPitch = tb.pitch; this._towerBombGo(tb); }
       }
-      if (a.specialReady() && (zp ? this._zoneSpecial(zp) : tp ? this._towerSpecial(tp, false, onT) : (kp ? karpSpecial(this, kp, false, 0, false) : null) ?? this._wantSpecial('paint', 0, false))) it.special = true;   // [b5-karp-bots] karpSpecial
+      // ([b5-beta1, review 1] never while stranded: a special running holds off the super jump out — a bucket bot on the
+      // tank's bed set off its Kraken and sat there 7 s, bot-stuck 'tank' late again)
+      if (a.specialReady() && !this._stranded && (zp ? this._zoneSpecial(zp) : tp ? this._towerSpecial(tp, false, onT) : (kp ? karpSpecial(this, kp, false, 0, false) : null) ?? this._wantSpecial('paint', 0, false))) it.special = true;   // [b5-karp-bots] karpSpecial
     } else if (this.mode === 'refill') {
-      it.squid = this.groundSeen === 1 || this._pathRemaining() > 2;
-      if (this.groundSeen !== 1 && this._pathRemaining() < 1.5) {
+      // [b5-beta1, review 1] a finished route is an arrival wherever it ends: a step onto a puddle (_inkStep) carries the
+      // bot up to 3.5 m off the route's last node, and with that node over 1.5 m away it neither walked nor painted — a
+      // kid refilling 4.8 s, or a squid on bare ground at half that rate 6.5 s (bot-stuck refill: the bow, the bucket)
+      const routeDone = !this.path || this.pi >= this.path.length;
+      it.squid = this.groundSeen === 1 || (!routeDone && this._pathRemaining() > 2);
+      if (this.groundSeen !== 1 && (routeDone || this._pathRemaining() < 1.5)) {
         // arrived, but not on our ink: our ink right by us (the patch it was sent to, the puddle it just painted —
         // a weapon's puddle lands a step ahead of the feet) → step onto it; none → paint a puddle to swim in. A charging
         // weapon starts its draw only once it's aimed at the floor (a draw begun level looses a long shot instead)
@@ -1054,8 +1142,25 @@ export class BotBrain {
           if (move.lengthSq() > 1e-4) { move.normalize(); wantYaw = Math.atan2(move.x, move.z); }
           it.squid = false;
         } else if (inkFrac > 0.03) {
-          it.squid = false; it.fire = !CHARGES[w.kind] || a.weaponRunner.charging || this.aimPitch < -0.7;
-          wantPitch = -1.0;
+          it.squid = false; wantPitch = -1.0;
+          // [b5-beta1] …and a draw is let go: held "while charging" it was held for good once the charge stood at what the
+          // tank allows (a charger at 6–10 % charged to its cap and never shot: no puddle, and a held trigger stops the
+          // kid's refill too — it never refilled). Released at that cap or after 0.6 s of drawing, whichever comes first
+          // [b5-beta1, review 1] Every shot here waits for the aim to be down at the floor (a charging weapon's draw always
+          // did): a shot loosed level lands its puddle out of the step's reach (_inkStep, 3.5 m), spends the last ink and
+          // restarts the kid's refill delay — a roller at 10 % flicked level, ran dry, kid-refilled to a flick's 9 and
+          // flicked level again (bot-stuck refill: never at 40 % in 12 s); the dualies and the spinner took 8–9 s
+          // (down: within ~7° of the -1.0 asked for — at -0.7 a roller's flick still landed past the step's 3.5 m now and then)
+          const wr = a.weaponRunner, down = this.aimPitch < -0.88;
+          if (CHARGES[w.kind] && wr.charging) {
+            this._drawT = (this._drawT || 0) + dt;
+            const cap = Math.min(1, a.ink / (w.inkFull || PLAYER.inkMax));
+            it.fire = !(this._drawT > 0.6 || (typeof wr.charge === 'number' && wr.charge >= cap - 0.02));
+          } else if (w.kind === 'roller' || w.kind === 'brush') {
+            // [b5-beta1] a roller / brush taps — a flick each, with a flick's ink: held, its drum rolls in place, puts no
+            // ink down and holds off the kid's refill every frame (a roller at 6 % on bare ground never refilled)
+            this._drawT = 0; it.fire = down && a.ink >= (w.flickInk ?? w.swipeInk ?? 0) && !this._tapHeld; this._tapHeld = it.fire;
+          } else { this._drawT = 0; it.fire = down; }
         } else if (!this._refillBad || this.t - this._refillBad.t > 6) {
           // [b5-caldera] fix round 4: too dry to paint and no own ink to step onto here (the patch it was sent to is a level
           // off, behind a wall or across a gap): it looks elsewhere for 6 s instead of standing ~10 s for the kid's slow
@@ -3263,6 +3368,16 @@ export class BotBrain {
     let s = nav.nearest(this.a.pos, 1.2, true);
     // standing at the foot of a step: don't start the route from the ledge above (we can't get up there from here)
     if (s >= 0 && this.a.grounded && nav.nodes[s].y - this.a.pos.y > 0.5) { const s2 = nav.nearest(this.a.pos, 0.45, true); if (s2 >= 0) s = s2; }
+    // [b5-beta1] …nor mid-hop: in the air the route starts from the floor under us, not from the ledge the hop is reaching
+    // for (a route planned at the top of a hop from Gulper Aquarium's Feeding Step began on the deck above it — a walk edge
+    // on from there, no hop asked for — and the bot pressed into the step's 1.2 m face, 11.75 s in one match)
+    else if (s >= 0 && !this.a.grounded && !this.a.climbing && !this.a.superJumpState) {
+      // (not over the sea, nor a floor a stage's hazard takes within 10 s, nor anywhere on a stage with lava: its escapes'
+      // and fights' hops up off the floors it takes were tuned to the old start — with the 10 s test alone lava-bots.js
+      // still met an escape death in 1 of 7 runs, against none in 11 before; there they start as before)
+      const a = this.a, fy = G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.1), SM = G.match?.stage;
+      if (fy > -Infinity && nav.nodes[s].y - fy > 0.5 && !G.match?.lava && !(SM && SM.wet(a.pos.x, a.pos.z, fy, 10))) { const s2 = nav.nearest(_vStart.set(a.pos.x, fy, a.pos.z), 0.45, true); if (s2 >= 0) s = s2; }
+    }
     const g = this.sp.goalOk(nav.nearest(pos, maxUp));   // (enemy specials: a goal inside an area we know hurts → just outside it)
     this.repath = 0.8 + Math.random() * 0.4;
     if (s < 0 || g < 0) { this.path = null; return false; }
@@ -3354,7 +3469,7 @@ export class BotBrain {
     this.repath = 1.2;
   }
 
-  // Our own ink within a couple of metres, on our level, nothing in the way: the nearest such spot well inside it (two
+  // Our own ink within 3.5 m (2 m on a stage with lava), on our level, nothing in the way: the nearest such spot well inside it (two
   // samples deep along the way there), or null. Re-checked every 0.2 s. (Refill: a spot that isn't quite under us.)
   _inkStep(dt) {
     const a = this.a;
@@ -3366,9 +3481,14 @@ export class BotBrain {
       const h = G.physics.raycast(_v3.set(x, a.pos.y + 0.6, z), _down, 1.3, _stepHit, true);
       return h.hit && h.normal.y > 0.7 && Math.abs(h.point.y - a.pos.y) < 0.5 && G.paint.sample(h.face, h.u, h.v) === own ? h.point.y : null;
     };
-    for (const r of [0.55, 0.95, 1.45, 2.05]) {
-      for (let k = 0; k < 8; k++) {
-        const ang = (k + 0.5 * (r > 1)) * (Math.PI / 4), sx = Math.sin(ang), sz = Math.cos(ang);
+    // [b5-beta1] 2.75, 3.5: where a roller's flick or a Mitts punch lands its puddle — not on a stage with lava (a longer
+    // step onto ink is a step toward the floor it takes: lava-bots met deaths in 3 of 6 runs with it, 0 of 6 without)
+    // [b5-beta1, review 1] the facing first, then the eight fixed ways: a roller's flick lands a narrow stripe straight
+    // ahead, and past 1 m the fixed ways (22.5° off the axes) missed one aimed along an axis — a roller at 10 % facing
+    // +z flicked, found nothing, ran dry, kid-refilled to a flick and flicked again (bot-stuck refill: never at 40 %)
+    for (const r of G.match?.lava ? INK_STEP_R : INK_STEP_R_FAR) {
+      for (let k = -1; k < 8; k++) {
+        const ang = k < 0 ? this.aimYaw : (k + 0.5 * (r > 1)) * (Math.PI / 4), sx = Math.sin(ang), sz = Math.cos(ang);
         const x = a.pos.x + sx * r, z = a.pos.z + sz * r;
         const y = inkAt(x, z);
         if (y === null || inkAt(x + sx * 0.25, z + sz * 0.25) === null) continue;
