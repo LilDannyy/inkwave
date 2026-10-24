@@ -256,7 +256,10 @@ add(noBoss(B(DECK.x0, DECK.x1, 1.2, 2.4, DECK.z0, DECK.z1, { color: '#7b7e84', p
 add(noBoss(R([-8.7, 1.2, 9.3], [-8.7, 2.4, DECK.z1], 4, steps({ tag: 'deck-stair' }))));             // up from the island's NW toward Bravo's causeway
 add(noBoss(B(-12.0, -9.0, 2.4, 4.6, 2.6, 6.6, white({ tag: 'gauge-machine-house', color: '#dcd6c8' }))));
 add(noBoss(B(-6.9, DECK.x1, 2.4, 3.4, DECK.z0, DECK.z0 + 1.2, cover(K.ironDk, { tag: 'valve-chest' }))));
-for (const [x, z, r, top] of [[-6.4, -8.6, 0.9, 2.1], [-12.9, -2.4, 0.9, 2.4], [-7.0, -3.6, 0.8, 1.8]]) add(noBoss(OCT(x, z, r, 1.2, top, rock({ tag: 'organ-stump', color: K.basaltDk }))));
+// (fix round 8, review 8: the stump by the second Race's landing stood 0.3 m off the island's lava edge, so the corner past it
+// — the coping between it and race 7 — was a dead end 18.7 m round on foot, and a running jump steered off it onto race 7
+// saved 14.5–15 m. 0.6 m nearer the deck and 0.1 m slimmer, a 1.2 m walk opens past it to the pier)
+for (const [x, z, r, top] of [[-6.4, -8.6, 0.9, 2.1], [-12.3, -2.7, 0.8, 2.4], [-7.0, -3.6, 0.8, 1.8]]) add(noBoss(OCT(x, z, r, 1.2, top, rock({ tag: 'organ-stump', color: K.basaltDk }))));
 add(noBoss([stack(2.9, -9.3, 1.2, 1.2, 1.1, 1.2, 'ingot-stack'), drum(7.6, -6.3, 1.0, 1.4, 1.2, 'stilling-drum', '#5d6268'), stack(11.6, 0.8, 1.4, 1.8, 1.4, 1.2, 'ladle-stand', K.ironDk)]));
 
 // ---------------------------------------------------------------------------------------- Alpha's base: the gallery
@@ -345,6 +348,11 @@ add(stairOn(G.ST_EAST, 2.7, 1.2, 2.4, 2.2, steps({ tag: 'east-steps' })));
   for (const [lo, hi] of gaps.slice().sort((p, q) => q[1] - p[1])) { runs.push([a0, hi + 0.5]); a0 = lo - 0.5; }
   runs.push([a0, -106]);
   for (const [r0, r1] of runs) if (r0 - r1 > 1) add(segsAlong(G.sarcF((a) => G.RT(a) + 0.25, r0, r1, [], 3), 0.5, 2.4, 3.3, { color: '#7a7d82', pattern: PATTERN.concrete, roof: true, tag: 'terrace-parapet' })); }
+// (fix round 8, rule 44 steered off every take-off — the lead after review 8) a parapet along the Ladle Road's lake corner by the
+// second Race (its west face and the first 1.6 m of its north face, on the coping; 1.0 m over the road: cover): a running
+// jump north off that corner, steered 45–60° left in the air, came down on race 7 saving 16.3 m of the walk round by the
+// horn. The road's lake view stays over the parapet
+add(noBoss(segsAlong([[-20.22, 8.92], [-20.4, 8.22], [-20.74, 7.34], [-21.03, 6.44], [-21.5, 6.14], [-22.12, 6.02]], 0.5, 2.4, 3.4, { color: '#5f5a55', pattern: PATTERN.concrete, roof: true, tag: 'ladle-parapet' })));   // (Boss Battle holds the lava LOW: as it was)
 // the terrace's masses, all clear of the tower's terrace climb (x −19.5 ± 1.75 off the Moorings), its run (z −34 ± 1.75)
 // and its yard climb (x −9 ± 1.75), and of every stair's landing:
 // - the west end: the Pattern Shop, a weatherboard shed built against the Rim Head's face between the Moorings' corner and

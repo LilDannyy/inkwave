@@ -412,8 +412,10 @@
   const PA = String(window.__pageArgs || ''), lvOnly = /(^|[;&])lv=(low|high)/.exec(PA)?.[2];
   const fineArg = /(^|[;&])fine=([0-9.]+),([0-9.]+)/.exec(PA), FG = fineArg ? Number(fineArg[2]) : 0.3, FD = fineArg ? Number(fineArg[3]) : 7.5;
   const SF = (/(^|[;&])sf=([0-9,]+)/.exec(PA)?.[2] || '8').split(',').map(Number);
+  // (fix round 8: the steered march off every take-off and the rider tops turns the stick at 4, 8 and 12 frames — sfx=)
+  const SFX = (/(^|[;&])sfx=([0-9,]+)/.exec(PA)?.[2] || '4,8,12').split(',').map(Number);
   for (const level of ['low', 'high']) {
-    if (lvOnly && level !== lvOnly) { jumps[level] = { edgesChecked: 0, deep: 0, strip: 0, gaps: [], runCross: [], skill: [], carry: [], steer: [], seam: [], leap: [], steerCands: 0, steerTried: 0, fine: {} }; continue; }
+    if (lvOnly && level !== lvOnly) { jumps[level] = { edgesChecked: 0, deep: 0, strip: 0, gaps: [], runCross: [], skill: [], carry: [], steer: [], seam: [], leap: [], steerCands: 0, steerTried: 0, anyCands: 0, anyTried: 0, fineTried: 0, fine: {} }; continue; }
     setT(level === 'low' ? 10 : 50);
     // edge nodes over lava, and in 16 directions the first floor across (a march in 0.1 m over the region's lava).
     // (fix round 6, review 6 issue 1 — the march looked in too few places: it took a far floor only within 1.3 m below the
@@ -531,14 +533,14 @@
     // one take-off, one run-up: every steer (and steer frame) → the crossing that saves the most, and the most-saving "seam
     // flight" (over lava only where the feet would span it: the notch's 0.15–0.2 m seams round the Organs — listed, no gate);
     // null when the run-up does not fit
-    const steerTry = (c, ru, gainOf, row) => {
+    const steerTry = (c, ru, gainOf, row, sfs = SF, steers = STEERS) => {
       let best = null, seam = null, fits = false;
-      for (const st of STEERS) for (const sf of st ? SF : [8]) {
+      for (const st of steers) for (const sf of st ? sfs : [8]) {
         const q = tryJump(c, false, null, ru, false, st, sf);
         if (!q) return null;
         fits = true; steerTried++;
         if (!q.crossed2 && !q.seam) continue;
-        const gain = gainOf(q), x = { ...row, how: 'run+steer' + Math.round((st * 180) / Math.PI) + (SF.length > 1 && st ? '@' + sf : ''), gap: q.lavaRun, lavaRun: q.lavaRun, centreRun: q.centreRun, drop: r2(c.y - q.y), landed: q.at, landedY: q.y, on: q.on, gain: gain === null ? null : r2(gain) };
+        const gain = gainOf(q), x = { ...row, how: 'run+steer' + Math.round((st * 180) / Math.PI) + (sfs.length > 1 && st ? '@' + sf : ''), gap: q.lavaRun, lavaRun: q.lavaRun, centreRun: q.centreRun, drop: r2(c.y - q.y), landed: q.at, landedY: q.y, on: q.on, gain: gain === null ? null : r2(gain) };
         if (q.crossed2) { if (!best || (gain ?? 999) > (best.gain ?? -1)) best = x; }
         else if (!seam || (gain ?? 999) > (seam.gain ?? -1)) seam = x;
       }
@@ -556,7 +558,7 @@
         const c = { id: nd.id, x: nd.x, y: nd.y, z: nd.z, dx, dz, edge, lava0: edge, own, rider: RR?.r?.id };
         steerCands++;
         for (const ru of RUNUPS) {
-          const t = steerTry(c, ru, (q) => detour(c, q), { from: [r2(c.x), r2(c.y), r2(c.z)], rider: c.rider, dir: Math.round((a * 180) / Math.PI), runup: ru });
+          const t = steerTry(c, ru, (q) => detour(c, q), { from: [r2(c.x), r2(c.y), r2(c.z)], rider: c.rider, dir: Math.round((a * 180) / Math.PI), runup: ru }, SFX);
           if (!t) continue;
           if (t.best) steerX.push(t.best);
           if (t.seam) seamX.push(t.seam);
@@ -601,6 +603,59 @@
         }
       }
     }
+    // (fix round 8, review 8 issue 5 — the steered march looked only off rider tops: probe-steer8 found 14.46 m off the
+    // island's coping onto race 7~ steered at 4 frames, a fine search 14.96 m at 30°.) From EVERY take-off as well: each
+    // valid static nav node standing dry within 3.5 m of lava, 16 headings (22.5°); the take-off where its floor ends along
+    // the heading within 3 m (a drop or the lava), else the node itself (a run along a walkway, then a jump off its side:
+    // no straight jump then); the first run-up of 2.6 / 1.5 / 0.8 m that fits; the stick turned 0 / ±45 / ±90° at 4, 8 and
+    // 12 frames (sfx=). Then, round the 4 that save the most at this level, a finer look (start ±0.3 m, heading ±9° in 3°,
+    // the stick ±15 … ±90° in 15° at 4 / 8 / 12 frames, the seed's run-up). In the gate with the rest
+    let anyCands = 0, anyTried = 0, fineTried = 0;
+    const anyX = [];
+    if (!steerOnly || /(^|[;&])r44=any/.test(PA)) {
+      const t0any = steerTried;
+      for (const nd of nav.nodes) {
+        if (!nav.valid[nd.id] || M.kind[nd.id] === 2 || Lv.covers(nd.x, nd.z, nd.y)) continue;
+        const gh0 = lvl.groundHeight(nd.x, nd.z, nd.y + 0.3); if (!(Math.abs(gh0 - nd.y) < 0.3)) continue;
+        let near = false;
+        for (let k = 0; k < 16 && !near; k++) { const a = (k * Math.PI) / 8; for (let s2 = 0.3; s2 <= 3.5 && !near; s2 += 0.3) if (lavaAt(nd.x + Math.cos(a) * s2, nd.z + Math.sin(a) * s2, nd.y)) near = true; }
+        if (!near) continue;
+        for (let k = 0; k < 16; k++) {
+          const a = (k * Math.PI) / 8, dx = Math.cos(a), dz = Math.sin(a);
+          let edge = null;
+          for (let s2 = 0.1; s2 <= 3.0; s2 += 0.1) { const x = nd.x + dx * s2, z = nd.z + dz * s2; if (lavaAt(x, z, nd.y) || ghAt(x, z, nd.y) < nd.y - 0.3) { edge = s2; break; } }
+          const c = { id: nd.id, x: nd.x, y: nd.y, z: nd.z, dx, dz, edge: edge ?? 0.35, lava0: edge ?? 0.35, own: new Set() };
+          anyCands++;
+          for (const ru of RUNUPS) {
+            const t = steerTry(c, ru, (q) => detour(c, q), { from: [r2(c.x), r2(c.y), r2(c.z)], any: true, edge: edge === null ? 'none' : r2(edge), dir: Math.round((a * 180) / Math.PI), runup: ru }, SFX, edge === null ? STEERS.slice(1) : STEERS);
+            if (!t) continue;
+            if (t.best) anyX.push(t.best);
+            if (t.seam) seamX.push(t.seam);
+            break;
+          }
+        }
+      }
+      anyTried = steerTried - t0any;
+      // the finer look round the 4 most-saving (any take-off or rider top)
+      const FST = [0]; for (let d = 15; d <= 90; d += 15) FST.push((d * Math.PI) / 180, (-d * Math.PI) / 180);
+      const seeds = [...anyX, ...steerX].filter((x) => x.gain !== null).sort((p, q) => q.gain - p.gain).slice(0, 4);
+      const t0f = steerTried;
+      for (const sd of seeds) {
+        const n0 = nav.nearest(V(sd.from[0], sd.from[1], sd.from[2]), 0.6, true); if (n0 < 0) continue;
+        const RRr = M.kind[n0] === 2 ? Lv.riders.find((q) => q.r === W.riders[M.rider[n0]]) : null, own = new Set((RRr?.blocks || []).map((b) => b && b.id));
+        for (const ox of [-0.3, 0, 0.3]) for (const oz of [-0.3, 0, 0.3]) for (let dh = -9; dh <= 9; dh += 3) {
+          const x0 = sd.from[0] + ox, z0 = sd.from[2] + oz, y0 = lvl.groundHeight(x0, z0, sd.from[1] + 0.3);
+          if (!(Math.abs(y0 - sd.from[1]) < 0.15)) continue;
+          const a = ((sd.dir + dh) * Math.PI) / 180, dx = Math.cos(a), dz = Math.sin(a);
+          let edge = null;
+          for (let s2 = 0.1; s2 <= 3.0; s2 += 0.1) { const x = x0 + dx * s2, z = z0 + dz * s2; if (lavaAt(x, z, y0) || ghAt(x, z, y0) < y0 - 0.3) { edge = s2; break; } }
+          const c = { id: n0, x: x0, y: y0, z: z0, dx, dz, edge: edge ?? 0.35, lava0: edge ?? 0.35, own, rider: RRr?.r?.id };
+          const t = steerTry(c, sd.runup, (q) => detour(c, q), { from: [r2(x0), r2(y0), r2(z0)], fine8: true, rider: RRr?.r?.id, edge: edge === null ? 'none' : r2(edge), dir: sd.dir + dh, runup: sd.runup }, SFX, edge === null ? FST.slice(1) : FST);
+          if (t && t.best) anyX.push(t.best);
+        }
+      }
+      fineTried = steerTried - t0f;
+    }
     // (fix round 7, the lead after review 7: the Sponge Mitts' leap over the lava is skill movement like a swim jump — not
     // off a roof top (actor.js / mitts.js: no charge there), and a bot's leap obeys its 2 s look-ahead. Listed, no gate.) From
     // every edge candidate of the march, a leap from its edge along its heading at half and full charge, aim level, by the
@@ -643,7 +698,7 @@
     for (const x of skillX) delete x.c;
     if (sub0 && kid.subId !== sub0) kid.setSub?.(sub0);
     P.clear();
-    jumps[level] = { edgesChecked: cands.length, deep: cands.filter((c) => c.deep).length, strip: cands.filter((c) => c.strip).length, gaps, runCross: runX, skill: skillX, carry: carryX, steer: steerX, seam: seamX, leap: leapX, steerCands, steerTried, fine };
+    jumps[level] = { edgesChecked: cands.length, deep: cands.filter((c) => c.deep).length, strip: cands.filter((c) => c.strip).length, gaps, runCross: runX, skill: skillX, carry: carryX, steer: [...steerX, ...anyX], steerRider: steerX.length, steerAny: anyX.length, anyCands, anyTried, fineTried, seam: seamX, leap: leapX, steerCands, steerTried, fine };
   }
   // the places: crossings folded onto Alpha's half (the 180° turn) and grouped by the 3 m cell of their start
   const places = (L) => {
@@ -667,9 +722,12 @@
   // could not be measured fails it)
   const allRun = [...jumps.low.runCross, ...jumps.high.runCross, ...jumps.low.steer, ...jumps.high.steer];   // (fix round 7: and the steered jumps off rider tops)
   const runMax = allRun.reduce((m, x) => Math.max(m, x.gain ?? 0), 0);
-  R('rule 44: a plain running jump across the lava at LOW or HIGH saves at most 20 m against the dry way round, the largest under 15 m (the lead\'s option 1 and margin; the march takes any standable floor across the lava down to the lava, take-offs that drop onto a dry strip first, and run-ups of 2.6 / 1.5 / 0.8 m; every sample past a 0.35 m seam tried; a flight landing > 1 m off its line counted, flagged off; gains from where it landed)',
-    allRun.every((x) => x.gain !== null && x.gain <= 20) && runMax < 15,
-    { largestM: r2(runMax), margin: 'under 15 m', marginMet: runMax < 15, steeredMax: { low: r2(jumps.low.steer.reduce((m, x) => Math.max(m, x.gain ?? 0), 0)), high: r2(jumps.high.steer.reduce((m, x) => Math.max(m, x.gain ?? 0), 0)) }, low: { ...sum(jumps.low.runCross), edges: jumps.low.edgesChecked, deepEdges: jumps.low.deep, stripEdges: jumps.low.strip, places: places(jumps.low.runCross).length }, high: { ...sum(jumps.high.runCross), edges: jumps.high.edgesChecked, deepEdges: jumps.high.deep, stripEdges: jumps.high.strip, places: places(jumps.high.runCross).length } });
+  const steerMax = [...jumps.low.steer, ...jumps.high.steer].reduce((m, x) => Math.max(m, x.gain ?? 0), 0);   // (fix round 8: rider tops, every take-off, the finer look)
+  R('rule 44: a plain running jump across the lava at LOW or HIGH saves at most 20 m against the dry way round, the largest under 15 m (the lead\'s option 1 and margin; the march takes any standable floor across the lava down to the lava, take-offs that drop onto a dry strip first, and run-ups of 2.6 / 1.5 / 0.8 m; every sample past a 0.35 m seam tried; a flight landing > 1 m off its line counted, flagged off; gains from where it landed; fix round 8: steered in the air at 4 / 8 / 12 frames off every take-off and rider top, the 4 most-saving searched finer, every steered one under 14 m)',
+    allRun.every((x) => x.gain !== null && x.gain <= 20) && runMax < 15 && steerMax < 14,
+    { largestM: r2(runMax), margin: 'under 15 m; every steered one under 14 m (fix round 8, the lead after review 8)', marginMet: runMax < 15, steerMax: r2(steerMax), steerMarginMet: steerMax < 14,
+      steerTop: [...jumps.low.steer, ...jumps.high.steer].filter((x) => x.gain !== null).sort((p, q) => q.gain - p.gain).slice(0, 6).map((x) => ({ from: x.from, dir: x.dir, runup: x.runup, how: x.how, any: x.any || x.fine8 || undefined, lavaRun: x.lavaRun, landed: x.landed, on: x.on, gain: x.gain })),
+      steerFlights: { low: [jumps.low.anyCands, jumps.low.anyTried, jumps.low.fineTried], high: [jumps.high.anyCands, jumps.high.anyTried, jumps.high.fineTried] }, steeredMax: { low: r2(jumps.low.steer.reduce((m, x) => Math.max(m, x.gain ?? 0), 0)), high: r2(jumps.high.steer.reduce((m, x) => Math.max(m, x.gain ?? 0), 0)) }, low: { ...sum(jumps.low.runCross), edges: jumps.low.edgesChecked, deepEdges: jumps.low.deep, stripEdges: jumps.low.strip, places: places(jumps.low.runCross).length }, high: { ...sum(jumps.high.runCross), edges: jumps.high.edgesChecked, deepEdges: jumps.high.deep, stripEdges: jumps.high.strip, places: places(jumps.high.runCross).length } });
   for (const lv of ['low', 'high']) { const pl = places(jumps[lv].runCross); for (let q = 0; q * 12 < pl.length; q++) R(`rule 44 running-jump places: ${lv} ${q}`, true, pl.slice(q * 12, (q + 1) * 12)); R(`rule 44 running jumps, the largest gains: ${lv}`, true, top(jumps[lv].runCross, 15)); }
   // (fix round 7: the steered running jumps off rider tops, in the gate above)
   R('rule 44 (information): running jumps off rider tops steered in the air (0 / ±45 / ±90° after 8 frames; a crossing has over 0.35 m with the whole footprint over lava) — in the gate above', true,
@@ -722,7 +780,8 @@
   //      can hop onto from floor 0.4–1.7 m below, 16 sides × 3 offsets × 2 run-ups, idle or steering back; LOW and HIGH
   //   b  every point of every roof top beside the lava (review 8's probe-roof8): put down still, or drifting at 6.5 m/s in 8
   //      headings (a landing's momentum: a drop from above, a leap, a swim jump), the stick idle; or drifting along the top's
-  //      4 axes and steering back; at LOW, HIGH, the first rise's 30 / 60 / 90 % and the first fall's 50 %
+  //      4 axes and steering back against the slide (on the top and in the air off it); at LOW, HIGH, the first rise's 30 /
+  //      60 / 90 % and the first fall's 50 %
   //   c  every way onto the tops that held a kid in b (review 8's probe-hold8 and probe-perch8): Sponge Mitts leaps (the
   //      kit's predictLeap aimed at the top from every dry nav node within 14 m), plain running jumps and swim jumps out of
   //      own ink (from every dry node within 9.5 m, steered at the top in the air), a walk / hop off higher floor, and for
@@ -859,14 +918,16 @@
             const hb = hitBlock(x, z, top0 + 1.0); if (!hb || hb.block !== b.id) continue;
             const modes = [['still', null, false]];
             for (let k = 0; k < 8; k++) modes.push(['drift', (k * Math.PI) / 4, false]);
-            for (let k = 0; k < 4; k++) modes.push(['back', (k * Math.PI) / 2 + Math.atan2(ax.z, ax.x), true]);
+            for (let k = 0; k < 4; k++) modes.push(['back', (k * Math.PI) / 2 + Math.atan2(ax.z, ax.x), true]);   // (drifting along its axes, then steering back against the slide)
             for (const [mode, h, back] of modes) {
               reset(V(x, hb.y + 0.3, z), V(h === null ? 0 : 6.5 * Math.cos(h), 0, h === null ? 0 : 6.5 * Math.sin(h)));
-              const m = watch(); let offF = 0, away = false;
+              const m = watch(); let offF = 0, away = false, sx = 0, sz = 0;
               for (let f = 0; f < 240; f++) {
-                // (steering back: against the drift while on the top it came down on and in the air off it; on other ground, idle)
+                // (steering back: against the slide — the way off it took — while on the top it came down on and in the air off it;
+                // on other ground, idle. A steer across the slide is the player's own way: not this rule's)
                 if (m.touched && kid.grounded && !(kid.ground.hit && kid.ground.block === m.block)) away = true;
-                if (back && !away) it.move.set(-Math.cos(h), 0, -Math.sin(h)); else it.move.set(0, 0, 0);
+                if (kid.roofDir && (kid.roofDir.x || kid.roofDir.z)) { sx = -kid.roofDir.x; sz = -kid.roofDir.z; }
+                if (back && m.touched && !away && (sx || sz)) it.move.set(sx, 0, sz); else it.move.set(0, 0, 0);
                 kid.update(dt); look(m, f);
                 if (m.touched && !m.onRoof && kid.grounded) offF++; else if (m.onRoof) offF = 0;
                 if (!kid.alive || offF > 12 || (m.touched && f - m.f0 >= 180)) break;
