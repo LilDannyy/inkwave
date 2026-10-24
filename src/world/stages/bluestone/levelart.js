@@ -271,7 +271,7 @@ const FBASE = /* glsl */`
         float pl = step(y, plinth) * step(-0.5, y);
         if (plinth > 0.01) {
           vec3 bsCol = bsC(0.34, 0.37, 0.41) * (0.9 + 0.12 * h21(floor(vec2(W.x / 0.6, y / 0.3))));
-          float jt = max(bsAA(abs(fract(W.x / 0.6 + 0.5 * floor(y / 0.3)) - 0.5) * 0.6 - 0.006, pw), bsAA(abs(fract(y / 0.3) - 0.5) * 0.3 - 0.142, pw));
+          float jt = max(bsAA(abs(fract(W.x / 0.6 + 0.5 * floor(y / 0.3)) - 0.5) * 0.6 - 0.006, pw), bsAA((0.5 - abs(fract(y / 0.3) - 0.5)) * 0.3 - 0.008, pw));
           base = mix(base, mix(bsCol, bsCol * 0.6, jt), pl);
           base = mix(base, bsC(0.48, 0.5, 0.52), bsAA(abs(y - plinth + 0.03) - 0.03, pw) * step(0.0, y));   // its weathered top
         }
@@ -291,7 +291,7 @@ const FBASE = /* glsl */`
             // the Royal Arcade under construction: timber hoardings with posters, GRAND OPENING 1889
             float plank = floor(W.x / 0.22);
             vec3 wood = bsC(0.42, 0.33, 0.24) * (0.82 + 0.3 * h21(vec2(plank, 3.0))) * (0.9 + 0.12 * fbm(vec2(W.x * 2.0, y * 0.3)));
-            float seam = bsAA(abs(fract(W.x / 0.22) - 0.5) * 0.22 - 0.1, pw);
+            float seam = bsAA((0.5 - abs(fract(W.x / 0.22) - 0.5)) * 0.22 - 0.01, pw);
             base = mix(wood * 0.65, wood, 1.0 - seam * 0.0) * (1.0 - 0.35 * (1.0 - bsAA(abs(fract(W.x / 0.22) - 0.5) * 0.22 - 0.103, pw)));
             // posters in two rows, overlapping, torn
             vec2 cell = floor(vec2(W.x / 1.15, (y - 0.5) / 1.25));
@@ -319,7 +319,7 @@ const FBASE = /* glsl */`
               vec2 hh = vec2(min(bay * 0.28, 0.75), (gf - plinth) * 0.36);
               vec4 w = bsWin(p, c, hh, E == 0 ? 3.0 : 2.0, 0.12, pw, true);
               // rusticated ground floor: deep horizontal joints every 0.38 m
-              float rj = bsAA(abs(fract((y - plinth) / 0.38) - 0.5) * 0.38 - 0.172, pw);
+              float rj = bsAA((0.5 - abs(fract((y - plinth) / 0.38) - 0.5)) * 0.38 - 0.018, pw);
               base *= 1.0 - 0.28 * rj * (1.0 - w.x) * step(plinth, y);
               base = mix(base, stone * 1.15, w.x);
               vec3 gl = E == 2 ? mix(bsC(0.86, 0.88, 0.9), WG, 0.25) : bsGlass(p, c.y - hh.y, c.y + hh.y, 1.0);
@@ -366,7 +366,7 @@ const FBASE = /* glsl */`
                 float glassA = bsRect(q, vec2(-hw + 0.06, riser), vec2(hw - 0.06, gf - 0.62), pw);
                 float mull = bsAA(abs(q.x - hw * 0.34) - 0.03, pw) * step(0.5, bsH(vec2(bi, 9.0)));
                 vec3 tile = mix(bsC(0.3, 0.38, 0.36), bsC(0.55, 0.5, 0.42), step(0.5, bsH(vec2(bi, float(prm) + 4.0))));
-                float tj = max(bsAA(abs(fract(q.x / 0.15) - 0.5) * 0.15 - 0.069, pw), bsAA(abs(fract(y / 0.075) - 0.5) * 0.075 - 0.034, pw));
+                float tj = max(bsAA((0.5 - abs(fract(q.x / 0.15) - 0.5)) * 0.15 - 0.006, pw), bsAA((0.5 - abs(fract(y / 0.075) - 0.5)) * 0.075 - 0.0035, pw));
                 vec3 g = bsGlass(q, riser, gf - 0.62, 1.05);
                 // what is behind the glass: shelves and goods (blocks of warm colour), seen dimly
                 float shelf = step(0.82, fract(y * 2.2)) * step(0.3, bsH(vec2(floor(q.x * 1.3), floor(y * 2.2) + bi)));
@@ -432,7 +432,7 @@ const FBASE = /* glsl */`
           float dA = bsArchD(vec2(ax3, y), vec2(0.0, gf + 0.95), vec2(0.55, 0.85)), arch = bsAA(dA, pw), rim = bsAA(dA - 0.08, pw) * (1.0 - arch);
           if (E == 0) {
             vec2 bq = vec2(W.x / 0.23 + 0.5 * floor(y / 0.075), y / 0.075);
-            float j = max(bsAA(abs(fract(bq.x) - 0.5) * 0.23 - 0.108, pw), bsAA(abs(fract(bq.y) - 0.5) * 0.075 - 0.032, pw));
+            float j = max(bsAA((0.5 - abs(fract(bq.x) - 0.5)) * 0.23 - 0.007, pw), bsAA((0.5 - abs(fract(bq.y) - 0.5)) * 0.075 - 0.0055, pw));
             base = mix(bsC(0.54, 0.31, 0.24) * (0.85 + 0.25 * h21(floor(bq))), bsC(0.68, 0.64, 0.58), j);
             base = mix(base, base * 0.7, arch * 0.6);
             float pole = bsAA(abs(mod(W.x, 2.4) - 1.2) - 0.05, pw), ledger = bsAA(abs(y - gf - 1.25) - 0.05, pw);
@@ -471,7 +471,7 @@ const FBASE = /* glsl */`
         if (fam == 4 || fam == 9) {
           // the 3000s: light seams up the corners and across at the storeys, a green farm wall in some bays
           if (E == 2) {
-            float seam = bsAA(abs(fract(y / 3.0) - 0.5) * 3.0 - 1.488, pw) + bsAA(min(W.x, fsz.x - W.x) - 0.025, pw);
+            float seam = bsAA((0.5 - abs(fract(y / 3.0) - 0.5)) * 3.0 - 0.012, pw) + bsAA(min(W.x, fsz.x - W.x) - 0.025, pw);
             base = mix(base, WG, clamp(seam, 0.0, 1.0) * 0.85); gBsGlow += clamp(seam, 0.0, 1.0) * WG * 0.8;
           }
         }
@@ -492,7 +492,7 @@ const FBASE = /* glsl */`
           // bluestone quoins at the corners
           float qn = bsAA(min(W.x, fsz.x - W.x) - (mod(floor(y / 0.42), 2.0) < 1.0 ? 0.55 : 0.32), pw) * step(plinth, y);
           base = mix(base, base * 0.82 + bsC(0.05, 0.05, 0.06), qn * 0.6);
-          base *= 1.0 - 0.3 * qn * bsAA(abs(fract(y / 0.42) - 0.5) * 0.42 - 0.2, pw);
+          base *= 1.0 - 0.3 * qn * bsAA((0.5 - abs(fract(y / 0.42) - 0.5)) * 0.42 - 0.01, pw);
         }
         if (fam == 5 || fam == 6) {
           // the Engine House / boiler house / tram shed fronts: huge arched openings at the ground floor (the winding wheels
@@ -507,7 +507,7 @@ const FBASE = /* glsl */`
             if (vari == 1) {
               // carriage doors
               float pl = floor((p.x + hh.x) / 0.18);
-              fill = E == 0 ? bsC(0.32, 0.22, 0.16) * (0.8 + 0.3 * h21(vec2(pl, 1.0))) * (1.0 - 0.3 * bsAA(abs(fract((p.x + hh.x) / 0.18) - 0.5) * 0.18 - 0.085, pw))
+              fill = E == 0 ? bsC(0.32, 0.22, 0.16) * (0.8 + 0.3 * h21(vec2(pl, 1.0))) * (1.0 - 0.3 * bsAA((0.5 - abs(fract((p.x + hh.x) / 0.18) - 0.5)) * 0.18 - 0.005, pw))
                    : (E == 1 ? bsGlass(p, c.y - hh.y, c.y + hh.y, 1.0) : mix(bsC(0.86, 0.88, 0.92), WG, 0.3));
               float brace = bsAA(abs(p.y - c.y + 0.3 - p.x * 0.8) - 0.05, pw) * step(abs(p.x), hh.x);
               if (E == 0) fill = mix(fill, fill * 0.7, brace);
@@ -542,7 +542,7 @@ const FBASE = /* glsl */`
             float pl = floor((ax2 + 1.35) / 0.2);
             vec3 door = bsC(0.33, 0.24, 0.17) * (0.8 + 0.3 * h21(vec2(pl, floor(W.x / bay))));
             float half2 = bsAA(abs(y - 1.2) - 0.03, pw);
-            base = mix(base, mix(door, door * 0.6, max(half2, 1.0 - bsAA(abs(fract((ax2 + 1.35) / 0.2) - 0.5) * 0.2 - 0.09, pw))), inside);
+            base = mix(base, mix(door, door * 0.6, max(half2, 1.0 - bsAA((0.5 - abs(fract((ax2 + 1.35) / 0.2) - 0.5)) * 0.2 - 0.01, pw))), inside);
           } else {
             base = mix(base, base * 0.8, inside * 0.35);
           }
@@ -624,7 +624,7 @@ const FBASE = /* glsl */`
         // crates: timber boards with the frame and stencilled marks (all eras: the docks keep their crates)
         float bd = wall ? fract(fy / 0.2) : fract(fu.x / 0.2);
         vec3 wood = bsC(0.62, 0.48, 0.32) * (0.85 + 0.25 * h21(vec2(floor((wall ? fy : fu.x) / 0.2), vBsArt.y * 3.0))) * (0.92 + 0.12 * fbm(vec2(fu.x * 3.0, fu.y * 10.0)));
-        base = wood * (1.0 - 0.4 * bsAA(abs(bd - 0.5) * 0.2 - 0.094, pw));
+        base = wood * (1.0 - 0.4 * bsAA((0.5 - abs(bd - 0.5)) * 0.2 - 0.006, pw));
         float fr = 1.0 - bsAA(-min(min(fu.x, fsz.x - fu.x), min(fu.y, fsz.y - fu.y)) + 0.09, pw);
         base = mix(base, bsC(0.44, 0.33, 0.22), fr);
         if (wall) {
@@ -636,7 +636,7 @@ const FBASE = /* glsl */`
         if (E == 2 && top) { float ls = bsAA(abs(min(min(fu.x, fsz.x - fu.x), min(fu.y, fsz.y - fu.y)) - 0.05) - 0.012, pw); base = mix(base, WG, ls); gBsGlow += ls * WG * 0.6; }
       } else if (prm == 1) {
         // bins: an ash barrel's galvanised hoops (1880s), a green wheelie bin (TODAY), a white recycling pod (3000s)
-        if (E == 0) { base = bsC(0.5, 0.52, 0.52) * (0.85 + 0.2 * vnoise(q * 5.0)); base *= 1.0 - 0.3 * bsAA(abs(fract(fy / 0.3) - 0.5) * 0.3 - 0.13, pw); }
+        if (E == 0) { base = bsC(0.5, 0.52, 0.52) * (0.85 + 0.2 * vnoise(q * 5.0)); base *= 1.0 - 0.3 * bsAA((0.5 - abs(fract(fy / 0.3) - 0.5)) * 0.3 - 0.02, pw); }
         else if (E == 1) { base = bsC(0.2, 0.3, 0.22) * (0.9 + 0.1 * vnoise(q * 8.0)); base = mix(base, bsC(0.12, 0.16, 0.13), bsAA(abs(fy - h + 0.12) - 0.05, pw)); if (wall) base = mix(base, bsC(0.85, 0.82, 0.72), bsText(fu, vec2(fsz.x * 0.5, h * 0.55), 0.1, fsz.x * 0.5, 7.0, pw)); }
         else { base = bsC(0.9, 0.9, 0.88); float ls = bsAA(abs(fy - h * 0.7) - 0.02, pw) * float(wall); base = mix(base, WG, ls); gBsGlow += ls * WG * 0.8; }
       } else if (prm == 2 && E > 0) {
@@ -645,7 +645,7 @@ const FBASE = /* glsl */`
           vec3 conc = bsC(0.55, 0.55, 0.53) * (0.9 + 0.12 * vnoise(q * 5.0));
           float slat = top ? 1.0 : step(h - 0.12, fy);
           vec3 wood = bsC(0.56, 0.42, 0.28) * (0.85 + 0.2 * h21(vec2(floor((top ? fu.y : fy) / 0.1), 2.0)));
-          base = mix(conc, wood * (1.0 - 0.4 * bsAA(abs(fract((top ? fu.y : fy) / 0.1) - 0.5) * 0.1 - 0.04, pw)), slat);
+          base = mix(conc, wood * (1.0 - 0.4 * bsAA((0.5 - abs(fract((top ? fu.y : fy) / 0.1) - 0.5)) * 0.1 - 0.01, pw)), slat);
           if (wall) base = mix(base, bsC(0.3, 0.3, 0.3), bsAA(fy - 0.08, pw));
         } else {
           base = bsC(0.92, 0.92, 0.9);
@@ -658,7 +658,7 @@ const FBASE = /* glsl */`
         base = mix(base, bs, 0.85);
         if (wall) {
           base = mix(base, bs * 1.25, bsAA(abs(fy - h + 0.07) - 0.07, pw));
-          base *= 1.0 - 0.25 * bsAA(abs(fract(fy / 0.3) - 0.5) * 0.3 - 0.142, pw);
+          base *= 1.0 - 0.25 * bsAA((0.5 - abs(fract(fy / 0.3) - 0.5)) * 0.3 - 0.008, pw);
           if (prm == 9 || prm == 16) {
             // the statue plinth (and the deck's foundation stone): a bronze plaque per era (a lord mayor, a tram conductor, a time traveller)
             float pq = bsRect(fu, vec2(fsz.x * 0.2, h * 0.35), vec2(fsz.x * 0.8, h * 0.72), pw);
@@ -697,7 +697,7 @@ const FBASE = /* glsl */`
         // benches: timber slats on iron ends (the slats along the long side)
         float along = fsz.x > fsz.y ? fu.y : fu.x;
         vec3 wood = bsC(0.56, 0.42, 0.28) * (0.85 + 0.2 * h21(vec2(floor(along / 0.11), 1.0)));
-        base = wood * (1.0 - 0.45 * bsAA(abs(fract(along / 0.11) - 0.5) * 0.11 - 0.045, pw));
+        base = wood * (1.0 - 0.45 * bsAA((0.5 - abs(fract(along / 0.11) - 0.5)) * 0.11 - 0.01, pw));
         if (wall) { float ends = bsAA(min(fu.x, fsz.x - fu.x) - 0.12, pw); base = mix(base, E == 2 ? bsC(0.9, 0.9, 0.88) : bsC(0.16, 0.2, 0.18), max(ends, bsAA(fy - 0.3, pw))); }
         if (E == 2) { base = mix(base, bsC(0.88, 0.88, 0.86), 0.55); float ls = float(wall) * bsAA(abs(fy - 0.35) - 0.015, pw); base = mix(base, WG, ls); gBsGlow += ls * WG * 0.8; }
       } else if (prm == 6 && top) {
@@ -728,7 +728,7 @@ const FBASE = /* glsl */`
         }
       } else if (prm == 7) {
         // the cart: a costermonger's barrow (1880s), an espresso cart (TODAY), a hover cart (3000s)
-        if (E == 0) { float pl = fract(fy / 0.16); base = bsC(0.5, 0.36, 0.24) * (1.0 - 0.35 * bsAA(abs(pl - 0.5) * 0.16 - 0.074, pw)); if (top) base = mix(bsC(0.62, 0.5, 0.26), bsC(0.55, 0.15, 0.12), step(0.5, h21(floor(P.xz * 7.0)))) * (0.8 + 0.3 * vnoise(P.xz * 14.0)); }
+        if (E == 0) { float pl = fract(fy / 0.16); base = bsC(0.5, 0.36, 0.24) * (1.0 - 0.35 * bsAA((0.5 - abs(pl - 0.5)) * 0.16 - 0.006, pw)); if (top) base = mix(bsC(0.62, 0.5, 0.26), bsC(0.55, 0.15, 0.12), step(0.5, h21(floor(P.xz * 7.0)))) * (0.8 + 0.3 * vnoise(P.xz * 14.0)); }
         else if (E == 1) { base = bsC(0.22, 0.32, 0.3); if (wall) { base = mix(base, bsC(0.85, 0.82, 0.74), bsRect(fu, vec2(0.1, h * 0.45), vec2(fsz.x - 0.1, h * 0.85), pw)); base = mix(base, bsC(0.22, 0.2, 0.18), bsText(fu, vec2(fsz.x * 0.5, h * 0.66), 0.13, fsz.x * 0.7, 21.0, pw)); } if (top) base = bsC(0.5, 0.42, 0.34); }
         else { base = bsC(0.92, 0.92, 0.9); float ls = bsAA(abs(fy - 0.2) - 0.03, pw) * float(wall); base = mix(base, WG, ls); gBsGlow += ls * WG * 1.2; if (top) base = bsC(0.85, 0.87, 0.9); }
       } else if (prm == 8) {
@@ -746,7 +746,7 @@ const FBASE = /* glsl */`
         // the café tables (TODAY, the 3000s): a timber counter with a chalkboard menu; the 3000s a pearl café pod
         if (E == 2) { base = bsC(0.92, 0.92, 0.9); float ls = bsAA(abs(fy - h + 0.1) - 0.02, pw) * float(wall); base = mix(base, WG, ls); gBsGlow += ls * WG; }
         else {
-          float bd = fract(fy / 0.12); base = bsC(0.52, 0.38, 0.26) * (1.0 - 0.3 * bsAA(abs(bd - 0.5) * 0.12 - 0.054, pw));
+          float bd = fract(fy / 0.12); base = bsC(0.52, 0.38, 0.26) * (1.0 - 0.3 * bsAA((0.5 - abs(bd - 0.5)) * 0.12 - 0.006, pw));
           if (wall) { float board = bsRect(fu, vec2(0.12, 0.25), vec2(fsz.x - 0.12, h - 0.15), pw); base = mix(base, bsC(0.1, 0.11, 0.1), board); base = mix(base, bsC(0.86, 0.84, 0.78), board * (bsText(fu, vec2(fsz.x * 0.5, h - 0.3), 0.09, fsz.x * 0.6, 25.0, pw) + 0.6 * bsText(fu, vec2(fsz.x * 0.5, h * 0.5), 0.05, fsz.x * 0.62, 29.0, pw))); }
           if (top) base = bsC(0.55, 0.52, 0.48) * (0.9 + 0.15 * vnoise(P.xz * 6.0));
         }
@@ -791,7 +791,7 @@ const FBASE = /* glsl */`
         // ticket booths: varnished timber with a ticket window (1880s), glass and steel with a lit sign (TODAY), pearl (3000s)
         vec3 c0 = E == 0 ? bsC(0.42, 0.28, 0.18) : (E == 1 ? bsC(0.3, 0.33, 0.34) : bsC(0.92, 0.92, 0.9));
         base = c0 * (0.9 + 0.12 * vnoise(f * vec2(2.0, 12.0)));
-        if (E == 0) base *= 1.0 - 0.25 * bsAA(abs(fract(f.x / 0.15) - 0.5) * 0.15 - 0.07, pw);
+        if (E == 0) base *= 1.0 - 0.25 * bsAA((0.5 - abs(fract(f.x / 0.15) - 0.5)) * 0.15 - 0.005, pw);
         if (wall && fsz.x > 1.0) {
           float win = bsRect(f, vec2(fsz.x * 0.2, h * 0.45), vec2(fsz.x * 0.8, h * 0.82), pw);
           float frm = bsRect(f, vec2(fsz.x * 0.2 - 0.06, h * 0.45 - 0.06), vec2(fsz.x * 0.8 + 0.06, h * 0.82 + 0.06), pw) * (1.0 - win);
@@ -833,7 +833,7 @@ const FBASE = /* glsl */`
         vec3 c0 = prm == 9 || prm == 13 ? bsC(0.42, 0.34, 0.26) : bsC(0.2, 0.3, 0.25);
         if (E == 1) c0 = prm == 6 ? bsC(0.18, 0.2, 0.22) : (prm == 8 ? bsC(0.22, 0.28, 0.36) : c0 * 1.15);
         if (E == 2) c0 = bsC(0.9, 0.9, 0.88);
-        float boards = bsAA(abs(fract((wall ? fy : f.x) / 0.16) - 0.5) * 0.16 - 0.074, pw);
+        float boards = bsAA((0.5 - abs(fract((wall ? fy : f.x) / 0.16) - 0.5)) * 0.16 - 0.006, pw);
         base = c0 * (0.92 + 0.1 * vnoise(f * 3.0)) * (1.0 - (E == 2 ? 0.0 : 0.3) * boards);
         if (wall && fsz.x > 0.9 && h > 1.6) {
           float nwin = max(1.0, floor(fsz.x / 1.1));
@@ -865,7 +865,7 @@ const FBASE = /* glsl */`
         // newsagent's kiosk / buckets of flowers in a timber stall (TODAY), a pearl kiosk / a stall of potted plants (3000s)
         if (E == 0) {
           vec2 bq = vec2((wall ? f.x : P.x) / 0.23 + 0.5 * floor(fy / 0.075), (wall ? fy : P.z) / 0.075);
-          float j = max(bsAA(abs(fract(bq.x) - 0.5) * 0.23 - 0.108, pw), bsAA(abs(fract(bq.y) - 0.5) * 0.075 - 0.032, pw));
+          float j = max(bsAA((0.5 - abs(fract(bq.x) - 0.5)) * 0.23 - 0.007, pw), bsAA((0.5 - abs(fract(bq.y) - 0.5)) * 0.075 - 0.0055, pw));
           base = mix(bsC(0.56, 0.3, 0.22) * (0.85 + 0.25 * h21(floor(bq))), bsC(0.7, 0.66, 0.6), j);
           if (prm == 19) base = mix(base, bsC(0.82, 0.78, 0.68) * (0.9 + 0.2 * vnoise(f * 9.0)), step(h * 0.55, fy));
         } else if (E == 1) {
@@ -893,7 +893,7 @@ const FBASE = /* glsl */`
       } else if (prm == 10) {
         // the goods wagon: V.R. timber planking, iron strapping (1880s); TODAY the heritage siding's last wagon, painted
         float pl = fract(fy / 0.2);
-        base = (E == 0 ? bsC(0.42, 0.28, 0.2) : bsC(0.46, 0.18, 0.14)) * (1.0 - 0.3 * bsAA(abs(pl - 0.5) * 0.2 - 0.092, pw)) * (0.9 + 0.15 * vnoise(f * vec2(1.0, 8.0)));
+        base = (E == 0 ? bsC(0.42, 0.28, 0.2) : bsC(0.46, 0.18, 0.14)) * (1.0 - 0.3 * bsAA((0.5 - abs(pl - 0.5)) * 0.2 - 0.008, pw)) * (0.9 + 0.15 * vnoise(f * vec2(1.0, 8.0)));
         if (wall) {
           float strap = max(bsAA(abs(fract(f.x / 1.1) - 0.5) * 1.1 - 0.05, pw), bsAA(min(f.x, fsz.x - f.x) - 0.08, pw));
           base = mix(base, bsC(0.14, 0.14, 0.14), strap);
@@ -930,7 +930,7 @@ const FBASE = /* glsl */`
         base = (E == 2 ? bsC(0.9, 0.9, 0.88) : bsC(0.16, 0.22, 0.2)) * (0.85 + 0.25 * step(0.5, fract(f.x / 0.06)));
       } else if (prm == 16) {
         // the GPO's piers: sandstone with a moulded cap
-        base *= 1.0 - 0.2 * bsAA(abs(fract(fy / 0.4) - 0.5) * 0.4 - 0.19, pw);
+        base *= 1.0 - 0.2 * bsAA((0.5 - abs(fract(fy / 0.4) - 0.5)) * 0.4 - 0.01, pw);
         base = mix(base, base * 1.2, bsAA(abs(fy - h + 0.1) - 0.1, pw));
       } else if (prm == 17) {
         // the chimney: soot at the crown in the 1880s, a painted café band TODAY, a light ring in the 3000s
@@ -949,7 +949,7 @@ const FBASE = /* glsl */`
         float topY = vWPos.y - fu.y + fsz.y;   // the face's top
         // a bluestone retaining wall in courses with a moulded coping; the concourse's plinth is sandstone
         vec3 bs = prm == 5 || prm == 2 ? base : bsC(0.36, 0.39, 0.43) * (0.9 + 0.14 * h21(floor(vec2(fu.x / 0.7 + 0.5 * floor(fu.y / 0.33), fu.y / 0.33))));
-        float jt = max(bsAA(abs(fract(fu.x / 0.7 + 0.5 * floor(fu.y / 0.33)) - 0.5) * 0.7 - 0.006, pw), bsAA(abs(fract(fu.y / 0.33) - 0.5) * 0.33 - 0.158, pw));
+        float jt = max(bsAA(abs(fract(fu.x / 0.7 + 0.5 * floor(fu.y / 0.33)) - 0.5) * 0.7 - 0.006, pw), bsAA((0.5 - abs(fract(fu.y / 0.33) - 0.5)) * 0.33 - 0.007, pw));
         base = mix(bs, bs * 0.62, jt);
         float cope = bsAA(abs(y - topY + 0.09) - 0.09, pw);
         base = mix(base, bs * 1.28, cope);
@@ -1026,7 +1026,7 @@ const FBASE = /* glsl */`
         if (E == 2) { float gl = bsAA(abs(min(q.x + 24.5, -16.0 - q.x) - 0.4) - 0.02, pw); base = mix(base, WG, gl); gBsGlow += gl * WG * 0.7; }
         // the kerbstones and the gutter: long bluestone kerbs (every era)
         vec3 kc = bsC(0.33, 0.36, 0.4) * (0.9 + 0.15 * h21(vec2(floor(q.y / 0.9), sign(q.x + 20.0))));
-        base = mix(base, kc * (1.0 - 0.35 * bsAA(abs(fract(q.y / 0.9) - 0.5) * 0.9 - 0.44, pw)), kerb);
+        base = mix(base, kc * (1.0 - 0.35 * bsAA((0.5 - abs(fract(q.y / 0.9) - 0.5)) * 0.9 - 0.01, pw)), kerb);
         base = mix(base, kc * 0.7, bsAA(abs(min(q.x + 24.5, -16.0 - q.x) - 0.36) - 0.04, pw));
       } else if (prm == 0 || prm == 2 || prm == 4) {
         // laneways and the circus: the bluestone pitchers, a dish drain down Hoki Lane and Degrayling Lane, and the
@@ -1053,7 +1053,7 @@ const FBASE = /* glsl */`
         vec2 a = q - vec2(-28.5, -35.0);
         if (E == 0) {
           float bd = fract(a.x / 0.22);
-          base = bsC(0.48, 0.38, 0.28) * (0.85 + 0.25 * h21(vec2(floor(a.x / 0.22), floor(a.y / 2.4)))) * (1.0 - 0.35 * bsAA(abs(bd - 0.5) * 0.22 - 0.104, pw));
+          base = bsC(0.48, 0.38, 0.28) * (0.85 + 0.25 * h21(vec2(floor(a.x / 0.22), floor(a.y / 2.4)))) * (1.0 - 0.35 * bsAA((0.5 - abs(bd - 0.5)) * 0.22 - 0.006, pw));
           base = mix(base, bsC(0.66, 0.62, 0.56), smoothstep(0.55, 0.75, fbm(q * 0.8)) * 0.6);
         } else {
           // black and white diamonds within a border, a star at the centre
@@ -1111,7 +1111,7 @@ const FBASE = /* glsl */`
       if (wall) {
         if (prm == 0) {
           // a stone flight's string: ashlar with a moulded string course along the rake (drawn level here: the face's top)
-          base *= 1.0 - 0.25 * bsAA(abs(fract(fu.y / 0.33) - 0.5) * 0.33 - 0.158, pw);
+          base *= 1.0 - 0.25 * bsAA((0.5 - abs(fract(fu.y / 0.33) - 0.5)) * 0.33 - 0.007, pw);
           base = mix(base, base * 1.2, bsAA(abs(fu.y - fsz.y + 0.1) - 0.1, pw));
         } else if (prm == 1) {
           // the iron flights: a stringer with cast-iron lace panels
