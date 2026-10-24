@@ -36,6 +36,6 @@ pg land9-rise $C/rev9/probe-land9.js 'lv=rise;cap=30'   # (alone: JOB-16 ran it 
 for n in wall9 held9 far9 land9-high land9-rise; do sum $n; grep -E '^(PASS|FAIL)' "$J/$n.log" | grep -vE '^(PASS|FAIL) (wall |B row )' | cut -c1-500 | head -8 >> "$J/$n.txt"; done
 echo "== net-lava alone"
 WIPSTAGES=1 CLIENTS=2 NET=tools/botlab/tests/net-lava.cjs $R tools/botlab/netpage.cjs > "$J/netlava.log" 2>&1
-{ echo "### net-lava"; grep -E '^PASS|^FAIL|^RESULT|console|HARNESS|WATCHDOG' "$J/netlava.log" | cut -c1-300; } > "$J/netlava.txt"
+{ echo "### net-lava"; grep -E '^PASS|^FAIL|^RESULT|console|HARNESS|WATCHDOG' "$J/netlava.log" | cut -c1-1500; } > "$J/netlava.txt"
 echo "== SUMMARY"
 for f in "$J"/*.txt; do grep -hE '^### |^RESULT|^## rule 47' "$f"; done
