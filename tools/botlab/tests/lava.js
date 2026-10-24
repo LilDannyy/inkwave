@@ -551,7 +551,7 @@
     // F8c: on every stone of Alpha's that meets a head or the island (race1, race5, race6, race7), in the rise with the
     // stone 0.45–0.75 m under it (t 39.6 / 40.4), each stone node within 2.6 m of the dry floor sent off it (the stone step)
     // running in at ±40° at 5.5 m/s with its cool-down left by a refused press: up on the dry floor within 4 s, no death
-    const k8c = [], fc = bots[1] || bots[0], FC = fc.bot;
+    const k8c = [], k8cTr = [], fc = bots[1] || bots[0], FC = fc.bot;
     { const heads = nav.nodes.filter((q) => nav.valid[q.id] && M.kind[q.id] === 0 && q.y > 1.0 && q.y < 1.6);
       const headOf = (q) => { let best = null, bd = 2.6; for (const h of heads) { const d = Math.hypot(h.x - q.x, h.z - q.z); if (d < bd) { bd = d; best = h; } } return best; };
       for (const sid of ['race1', 'race5', 'race6', 'race7']) {
@@ -563,13 +563,22 @@
           const h = headOf(sn), dx = h.x - fc.pos.x, dz = h.z - fc.pos.z, dl = Math.hypot(dx, dz) || 1, c = Math.cos(sl), s2 = Math.sin(sl), ux = (dx * c - dz * s2) / dl, uz = (dx * s2 + dz * c) / dl;
           fc.vel.set(ux * 5.5, 0, uz * 5.5); FC.mvYaw = Math.atan2(ux, uz); FC.mvMag = 1; FC.jumpCd = 0.8; FC._jRef = true;
           let died = null, up = null; const o8 = on('splatted', (e) => { if (e.victim === fc && !died) died = [e.cause, r3(Lv.clock.t)]; });
-          for (let i = 0; i < 30 * 4 && !died && up === null; i++) { dbg.step(1000 / 30); const gb = fc.ground?.block >= 0 ? lvl.blocks[fc.ground.block] : null; if (fc.grounded && !gb?.lavaRider && fc.pos.y > 1.0) up = r3(Lv.clock.t - t0); }
+          // (fix round 9, review 9 issue 4: each case's trail — t, x, y, z, what it stands on, speed, vy, the roof slide's
+          // hold, the bot's mode / escape / stone step / jump cool-down / jump pressed, the lava's level — kept for a case
+          // not up or dead, with the state it started from)
+          const tr = [], st0 = { weapon: fc.weaponId, form: fc.form, carry: !!fc.carry, roofT: r3(fc.roofT || 0), roofHeld: r3(fc.roofHeld || 0), jumpBuffer: r3(fc.jumpBuffer || 0), coyote: r3(fc.coyote || 0), hardLand: r3(fc.hardLand || 0), status: Object.entries(fc.status || {}).filter(([, v]) => v > 0).map(([k]) => k), pos: [r3(fc.pos.x), r3(fc.pos.y), r3(fc.pos.z)] };
+          for (let i = 0; i < 30 * 4 && !died && up === null; i++) {
+            dbg.step(1000 / 30); const gb = fc.ground?.block >= 0 ? lvl.blocks[fc.ground.block] : null;
+            if (i % 3 === 0) tr.push([i, r3(fc.pos.x), r3(fc.pos.y), r3(fc.pos.z), fc.grounded ? (gb ? (gb.tag || (gb.lavaRider ? 'rider' : '#' + gb.id)) + (gb.roof ? '/R' : '') : '?') : 'air', r3(Math.hypot(fc.vel.x, fc.vel.z)), r3(fc.vel.y), fc.roofHeld > 0 ? 'H' : '', FC.mode, FC._lavaEsc ? 'E' : '', FC._stoneStep ? 'S' : '', r3(FC.jumpCd || 0), fc.intent.jump ? 'J' : '', r3(Lv.y)]);
+            if (fc.grounded && !gb?.lavaRider && fc.pos.y > 1.0) up = r3(Lv.clock.t - t0);
+          }
           o8(); freezeBots();
           k8c.push([sid, t0, sn.id, sl, up, died]);
+          if ((up === null || died) && k8cTr.length < 3) k8cTr.push({ sid, t0, node: [r3(sn.x), r3(sn.y), r3(sn.z)], sl, start: st0, tr: tr.slice(-30) });
         }
       } }
     R('F8c escapes off a rising stone up the step at its end (race1 / 5 / 6 / 7, the stone 0.45–0.75 m under it): each node within 2.6 m of the floor, run in at ±40° at 5.5 m/s, its jump cool-down left by a refused press — up within 4 s, no death',
-      k8c.length >= 40 && k8c.every((x) => x[4] !== null && !x[5]), { n: k8c.length, died: k8c.filter((x) => x[5]).length, notUp: k8c.filter((x) => x[4] === null).length, bad: k8c.filter((x) => x[4] === null || x[5]).slice(0, 8), slowest: Math.max(...k8c.map((x) => x[4] ?? 0)) });
+      k8c.length >= 40 && k8c.every((x) => x[4] !== null && !x[5]), { n: k8c.length, weapon: fc.weaponId, died: k8c.filter((x) => x[5]).length, notUp: k8c.filter((x) => x[4] === null).length, bad: k8c.filter((x) => x[4] === null || x[5]).slice(0, 8), slowest: Math.max(...k8c.map((x) => x[4] ?? 0)), trails: k8cTr });
     // (fix round 4, review 4 issue 1: a spinner's Zipline zip from the gauge deck went up a wall over Bravo's Casting Floor
     // in the rise warning and its let-go came down in the lava 0.27 s after the floor turned deadly; a bucket's the same)
     // F8d: a bot's Zipline zip (bots.js _zipDry) from spots on the island, every aim (yaw 10°, pitch 0–0.6): the same aims
@@ -704,6 +713,44 @@
       const house = [r3(W.proxAt(-10.5, 4.6, def.high)), r3(W.proxAt(-10.5, 4.6, def.low))];
       R('G8 the lava\'s glow is faded by how near open lava a face stands: the island\'s lake faces glow at HIGH, its dry middle (4.5 m in) and the machine house\'s foot never; the causeway\'s side over the Casting Floor glows only once the floor is under',
         rim.length >= 5 && rim.every((r) => r[2] >= 0.6 && r[3] === 0) && house.every((v) => v === 0) && cw.some((c) => c[2] < 0.3 && c[3] >= 0.6), { rim: rim.map((r) => ({ deg: r[0], rimAt: r[1], face: r[2], in3m: r[3] })), house, causeway: cw, ms: W.proxMs });
+    }
+    // G9 (fix round 9, review 9's probe-held9 A): a hold on cover standing in drowned ground left any other way than the
+    // rescue — a super jump, a special that owns the body (the Slam), put down off the top — ends with it: roofHeld and
+    // roofHeldSum cleared as it leaves, no rescue after, and 5 s on the personal line is not stuck on NO FOOTING → rescued;
+    // in the next rise's warning on a drowning floor it reads GET OFF THE LOW GROUND (it read NO FOOTING till a death)
+    {
+      const g9 = [], pad = lvl.spawnPads[me.team];
+      const tops = [];
+      for (const tg of ['slump-hornito', 'mould-stack', 'ladle-stand']) for (const b of lvl.blocks) {
+        if (!b || b.tag !== tg || tops.some((x) => x.tag === tg)) continue;
+        setT(50); put(me, V(b.center.x, b.center.y + b.half.y + 0.3, b.center.z)); me.invuln = 1e6;
+        let h = false; for (let i = 0; i < 30 && !h; i++) { dbg.step(1000 / 60); if (me.roofHeld > 0) h = true; }
+        if (h) tops.push(b);
+      }
+      let t2 = null; for (let t = 90; t < 112 && t2 === null; t += 0.25) { Lv.debugT(t); if (Lv.st?.warn && Lv.st?.next?.to === 'high') t2 = t + 1; }
+      let dn = null; for (const q of nav.nodes) { if (M.kind[q.id] === 1 && nav.valid[q.id] && Math.abs(lvl.groundHeight(q.x, q.z, q.y + 0.3) - q.y) < 0.3) { dn = q; break; } }
+      for (const b of tops) for (const way of ['superjump', 'slam', 'off']) {
+        setT(50); put(me, V(b.center.x, b.center.y + b.half.y + 0.3, b.center.z)); me.invuln = 1e6; me.special = 0;
+        let i = 0; for (; i < 30 && !(me.roofHeld > 0); i++) dbg.step(1000 / 60);
+        const held = r3(me.roofHeld || 0), resc0 = Lv.stats.rescues || 0;
+        if (way === 'superjump') me.superJump(V(pad.x + 3, pad.y, pad.z));
+        else if (way === 'slam') { me.setSpecial('slam'); me.special = me.specialCost(); me._startSpecial(); }
+        else put(me, V(-10, 1.22, -3.2));
+        dbg.step(1000 / 60);
+        const leaving = { roofHeld: r3(me.roofHeld || 0), roofHeldSum: r3(me.roofHeldSum || 0) };
+        for (let n = 0; n < 420 && (me.superJumpState || me.specialActive || !me.grounded); n++) dbg.step(1000 / 60);
+        const after = { roofHeld: r3(me.roofHeld || 0), roofT: r3(me.roofT || 0), at: [r3(me.pos.x), r3(me.pos.y), r3(me.pos.z)], rescues: (Lv.stats.rescues || 0) - resc0 };
+        for (let n = 0; n < 300; n++) { me.intent.move.set(0, 0, 0); dbg.step(1000 / 60); }
+        const line5 = Lv._mine(me), dom5 = document.querySelector('.lv-mine')?.className || '';
+        let warnLine = null;
+        if (dn && t2 !== null && way !== 'slam') { setT(t2); put(me, V(dn.x, dn.y + 0.02, dn.z)); step(0.2); warnLine = [Lv._mine(me)?.text || null, document.querySelector('.lv-mine')?.textContent || '', r3(Lv.clock.t)]; }
+        g9.push({ top: b.tag + '#' + b.id, way, held, leaving, after, line5: line5 ? { text: line5.text, rescue: !!line5.rescue } : null, dom5, warnLine });
+      }
+      me.invuln = 0; me.special = 0; put(me, V(-10, 1.22, -3.2)); step(0.1);
+      // (the Slam comes down on the same top: held there again and rescued, rightly — its check is the frame it leaves)
+      const bad = g9.filter((x) => !(x.held > 0) || x.leaving.roofHeld > 0 || (x.way !== 'slam' && (x.after.roofHeld > 0 || x.after.rescues > 0)) || x.line5?.rescue || (/is-on/.test(x.dom5) && /is-rescue/.test(x.dom5)) || (x.warnLine && !/GET OFF THE LOW GROUND/.test(x.warnLine[0] || '')));
+      R('G9 a hold left another way than the rescue (a super jump, the Slam, put off the top) ends there: roofHeld cleared, no rescue after, the personal line not stuck on NO FOOTING → rescued 5 s on, GET OFF THE LOW GROUND on a drowning floor in the next warning (review 9\'s probe-held9 A; hornito, mould stack, ladle stand)',
+        tops.length === 3 && g9.length === 9 && !bad.length, { tops: tops.map((b) => b.tag + '#' + b.id), warnAt: t2, node: dn && [dn.x, dn.y, dn.z], bad: bad.slice(0, 4), cases: g9.map((x) => [x.top, x.way, x.held, x.leaving.roofHeld, x.after.roofHeld, x.after.rescues, x.line5?.text || null, x.warnLine?.[0] || null]) });
     }
     const key = g.levelMat.customProgramCacheKey();
     R('G6 the level shader carries the lava band (the stain line at the high mark, its glow and pulse): program key -lava, the shared uniforms; the prop kit\'s materials carry the stain', /-lava/.test(key) && g.levelMat.userData.uniforms.uLavaS === W.uniforms.uLavaS && !!g.props?.mat?.paint?.userData?.lavaStain, { key });
