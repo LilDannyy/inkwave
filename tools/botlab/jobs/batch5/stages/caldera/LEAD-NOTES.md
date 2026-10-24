@@ -116,3 +116,26 @@ Review 6's list holds (the corrected audits, the corners closed, carriers docume
    extend on the real layout.
 5. **net-lava** at the final head, on the Mac mini (push `botlab-b5-caldera`), plus lava-bots once (≤ 1 fight death),
    lava.js twice, boss-check 5, 2 Zone Control matches, check-maps every variant; the crown pictures for the lead.
+
+## After review 8 (2026-10-24): the roof hold's two faults; the lead's rule for cover standing in drowned ground
+
+Review 7's list is met as worded; the new roof hold has two faults the probes outside the checks found. This round:
+1. **Cover standing in drowned ground at HIGH (the Slump hornitos, the mould stack, the ladle stand), decided:** no
+   hold, no fling, no perch. A kid who lands on an off-limits top whose every way off is lava is **rescued**, as the
+   era engine rescues a kid over water: held 0.6 s where it stands (so the player sees what happened), then placed on
+   the nearest dry valid node within 6 m with the rescue's brief invulnerability, never splatted, never thrown; the
+   HUD's personal line says "NO FOOTING → rescued". A held kid is never flung: while held, the slide's clock is
+   reset, and any later slide launches at the slow speed only toward a dry landing.
+2. **The landing check with air braking:** `_roofLandWet` flies the slow arc with the brake (x(t) = v·t − ½·4·t²) and
+   the steer-back bound (½·20·t²), and requires dry floor (or a seam the feet span) from the earliest landing out to
+   the fast landing + 0.6 m. The Tide Boards by the side zone must kill 0 of the reviewer's 738 Mitts landings at LOW
+   and at HIGH.
+3. **Rule 47 widened** into the audit's gate: every point of every roof top beside the lava, landings by hop, running
+   jump, swim jump, Mitts leap and drop with momentum, at LOW, HIGH and during the rise (the reviewer's probe-roof8 and
+   probe-hold8 folded in); the current hop-on probe stays as its first part.
+4. **Rule 44's margin:** extend the steered march to every take-off (probe-steer8, 22.5° headings, steer frames
+   4–12) and add margin at the race-7 corner and coping so the largest steered running jump is under 14 m.
+5. **The boss's 13 s idle at the causeway's south end:** record the idle state there (boss-idle.js) and break it;
+   5 in a row.
+Then lava-bots once, lava.js twice, 2 Zone Control matches, check-maps every variant, net-lava on the Mac mini at the
+final head.
