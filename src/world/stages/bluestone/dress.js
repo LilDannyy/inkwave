@@ -371,7 +371,8 @@ export function registerDress(D, H, KIT) {
     build(B, o) {
       const L = o.len || 2.4;
       for (const [y, c] of [[0.12, K.cream], [0.42, K.maroon]]) {
-        B.lathe('gloss', c, [[0.0, -0.5], [0.12, -0.42], [0.2, -0.2], [0.21, 0.0], [0.2, 0.2], [0.12, 0.42], [0.0, 0.5]], 0, y + 0.1, 0, { seg: 8, sz: L * 1.6, sx: 1.0, sy: 0.55, rx: Math.PI / 2 });
+        // (the lathe's axis is its length: stretched along y, then laid down along local z; flattened to a hull's depth)
+        B.lathe('gloss', c, [[0.0, -0.5], [0.12, -0.42], [0.2, -0.2], [0.21, 0.0], [0.2, 0.2], [0.12, 0.42], [0.0, 0.5]], 0, y + 0.1, 0, { seg: 8, sy: L * 1.6, sx: 1.0, sz: 0.55, rx: Math.PI / 2 });
       }
       for (const z of [-L * 0.45, L * 0.45]) pbox(B, 'wood', K.timberLt, 0.9, 0.06, 0.08, 0, 0.62, z);
     },

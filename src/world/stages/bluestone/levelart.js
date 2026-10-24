@@ -810,7 +810,9 @@ const FBASE = /* glsl */`
             base = mix(base, bsC(0.85, 0.88, 0.9), scr * bsText(f, vec2(fsz.x * 0.74, h * 0.32), 0.05, fsz.x * 0.2, 131.0, pw));
             base = mix(base, bsC(0.6, 0.62, 0.64), bsAA(fy - 0.25, pw));
           }
-          base = mix(base, E == 2 ? mix(bsC(0.84, 0.86, 0.9), WG, 0.2) : bsGlass(f, h * 0.45, h * 0.82, 1.0), win);
+          // (the 3000s: dark smart glass with the timetable in light on it, framed in white-gold)
+          base = mix(base, E == 2 ? mix(bsC(0.2, 0.25, 0.32), bsC(0.32, 0.38, 0.46), smoothstep(h * 0.45, h * 0.82, fy)) : bsGlass(f, h * 0.45, h * 0.82, 1.0), win);
+          if (E == 2) { float tt = win * (bsText(f, vec2(fsz.x * 0.5, h * 0.74), 0.07, fsz.x * 0.5, 141.0, pw) + bsText(f, vec2(fsz.x * 0.5, h * 0.64), 0.05, fsz.x * 0.48, 143.0, pw) + bsText(f, vec2(fsz.x * 0.5, h * 0.56), 0.05, fsz.x * 0.44, 147.0, pw)); base = mix(base, WG, clamp(tt, 0.0, 1.0)); gBsGlow += clamp(tt, 0.0, 1.0) * WG * 0.8; }
           gBsLit += win * (E == 2 ? WG * 0.5 : bsC(1.0, 0.82, 0.58) * 0.6);
           if (win > 0.5) { gBaseRough = 0.1; gTexStr = 0.0; }
           float sign = bsRect(f, vec2(0.1, h - 0.32), vec2(fsz.x - 0.1, h - 0.06), pw);
@@ -895,6 +897,7 @@ const FBASE = /* glsl */`
           if (top) base = prm == 19 ? bsC(0.34, 0.46, 0.26) * (0.7 + 0.5 * vnoise(P.xz * 9.0)) : bsC(0.3, 0.32, 0.32);
         } else {
           base = bsC(0.92, 0.92, 0.9);
+          if (wall && prm == 18) { float win = bsRect(f, vec2(0.12, h * 0.42), vec2(fsz.x - 0.12, h * 0.85), pw); base = mix(base, mix(bsC(0.2, 0.25, 0.32), bsC(0.32, 0.38, 0.46), smoothstep(h * 0.42, h * 0.85, fy)), win); float tt = win * bsText(f, vec2(fsz.x * 0.5, h * 0.7), 0.06, fsz.x * 0.6, 151.0, pw); base = mix(base, WG, tt); gBsGlow += tt * WG * 0.8; }
           if (wall) { float ls = bsAA(abs(fy - h + 0.1) - 0.015, pw); base = mix(base, WG, ls); gBsGlow += ls * WG; if (prm == 19) { float gr = step(h * 0.45, fy) * step(fy, h - 0.2); base = mix(base, bsLeaves(f, pw), gr); } }
           if (top) base = prm == 19 ? bsC(0.4, 0.52, 0.32) : bsC(0.9, 0.9, 0.9);
         }
