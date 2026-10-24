@@ -1057,6 +1057,11 @@ export class StageLava {
       bd = d2; best = n.id;
     }
     if (best < 0) return false;
+    // (fix round 9, review 9: the 6 m measured from the kid's own move) none within 6 m: hold on for one, up to RESCUE.wait
+    // s held in all (the actor asks again every 0.25 s) — in a fall the floor beside the Race dries within a second: from
+    // race 3's boulder at the fall's 50 % the nearest dry node stood 6.00–6.04 m off, the shelf's 3.4 m once it was bare —
+    // then the nearest within 12 m (the outer walls' middles at HIGH, which no kid reaches)
+    if (bd > RESCUE.r * RESCUE.r && (a.roofHeldSum || 0) < RESCUE.wait) return false;
     const n = nav.nodes[best], from = p.clone(), d = Math.sqrt(bd);
     p.set(n.x, n.y + 0.05, n.z); a.vel.set(0, 0, 0); a.netTp = (a.netTp || 0) + 1;
     a.invuln = Math.max(a.invuln || 0, RESCUE.invuln);
@@ -1698,9 +1703,9 @@ const LOOK_PROG = 1;   // s without headway toward the top before a busy claiman
 // off only once the aim had moved on, and the deck stayed the other team's
 const inkTrigger = (a) => { const wr = a.weaponRunner; return !(wr && wr.charging && (wr.charge || 0) >= 0.35); };
 const FOOT_DRY = Object.freeze({ kind: 0, node: -1 });
-// (review 8) the rescue off cover standing in drowned ground: within r m (else up to far), invulnerable invuln s, the HUD's
-// line shown line s from the hold's start to after the move
-const RESCUE = { r: 6, far: 12, invuln: 1.0, line: 1.8, color: new THREE.Color('#f4f1ea') };
+// (review 8) the rescue off cover standing in drowned ground: within r m (none: held on up to wait s in all for one, then up
+// to far), invulnerable invuln s, the HUD's line shown line s from the hold's start to after the move
+const RESCUE = { r: 6, far: 12, wait: 2.0, invuln: 1.0, line: 1.8, color: new THREE.Color('#f4f1ea') };
 const SLOW_FIRE = new Set(['charger', 'splatling', 'spinner', 'bow', 'roller']);   // (an escaper of these lets go of the trigger)   // (StageLava._foot: dry ground, an Organ, airborne long enough)
 const BOULDER_GROW = 0.12;   // m of a stone's travel relative to the lava over which its boulder heaves up / sinks back
 // subs items the sweep ends (placed, stuck or running devices; not thrown subs in flight, clouds or mist)
