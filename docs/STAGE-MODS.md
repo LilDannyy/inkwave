@@ -287,7 +287,7 @@ clone with the era vertex collapse). Untagged placements are merged exactly as t
 | `superJumpLanding(a, s)` | charge → flight, not on the tower | — (move `s.to`) |
 | `noPush(a)` | the soft push between actors | true = skip this actor |
 | `noShove(a)` | `stageKit.shovable`, `subs.blockActor` | true = never shove it |
-| `rescue(a)` ([b5-caldera]) | `actor._roofHeldStep`: a kid held 0.6 s on an off-limits top whose every way off lands in your hazard (`wet`), then every 0.25 s until one answers | place it somewhere safe (a teleport: `a.netTp++`) and return true; false = still held (Highmark: the nearest dry node within 6 m, 1 s invulnerable, the HUD line NO FOOTING → rescued) |
+| `rescue(a)` ([b5-caldera]) | `actor._roofHeldStep`: a kid held 0.6 s on an off-limits top whose every way off lands in your hazard (`wet`), then every 0.25 s until one answers | place it somewhere safe (a teleport: `a.netTp++`) and return true; false = still held (Highmark: the nearest dry node within 6 m — none: false, held on up to 2 s in all for one, then the nearest within 12 m —, 1 s invulnerable, the HUD line NO FOOTING → rescued) |
 
 ### Online (`src/net/netmatch.js`)
 
