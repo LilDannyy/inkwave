@@ -826,7 +826,7 @@
         if ((kid.netTp || 0) !== m.tp) {
           m.rescued++;
           const dx = kid.pos.x - m.last.x, dy = kid.pos.y - m.last.y, dz = kid.pos.z - m.last.z;
-          m.rescueD = Math.max(m.rescueD, Math.hypot(dx, dy, dz)); m.rescueH = Math.max(m.rescueH, Math.hypot(dx, dz));
+          m.rescueD = Math.max(m.rescueD, Math.hypot(dx, dy, dz)); if (Math.hypot(dx, dz) > m.rescueH) { m.rescueH = Math.hypot(dx, dz); m.rescueFrom = [r2(m.last.x), r2(m.last.y), r2(m.last.z)]; }
           if (Math.abs(dy) > Math.abs(m.rescueDy)) m.rescueDy = dy;
         }
         else { m.relaunch++; m.launchF = f; }
@@ -849,7 +849,7 @@
       else {
         if (m.rescueH > T.rescueMaxH) { T.rescueMaxH = r2(m.rescueH); T.rescueMaxAt = { ...info, block: blk, to: [r2(kid.pos.x), r2(kid.pos.y), r2(kid.pos.z)] }; }
         T.rescueMaxM = Math.max(T.rescueMaxM, r2(m.rescueD)); if (Math.abs(m.rescueDy) > Math.abs(T.rescueMaxDy)) T.rescueMaxDy = r2(m.rescueDy);
-        if (m.rescueH > 6) { T.rescueFar++; if (T.egFar.length < 4) T.egFar.push({ ...info, block: blk, rescueH: r2(m.rescueH), to: [r2(kid.pos.x), r2(kid.pos.y), r2(kid.pos.z)] }); }
+        if (m.rescueH > 6) { T.rescueFar++; if (T.egFar.length < 4) T.egFar.push({ ...info, block: blk, rescueH: r2(m.rescueH), from: m.rescueFrom, to: [r2(kid.pos.x), r2(kid.pos.y), r2(kid.pos.z)] }); }
       }
       const bad = m.died || m.flung || m.perched;
       if (m.died) T.died++; if (m.flung) T.flung++; if (m.perched) T.perched++;
@@ -974,6 +974,9 @@
       for (const lvKey of LVS) {
         if (times[lvKey] === undefined) { res[lvKey] = 'no time'; continue; }
         setT(times[lvKey]);
+        // (fix round 9: at the rise's and the fall's levels each trial starts there and the lava's clock runs with its frames,
+        // as in play — a kid held on race 3's boulder in the fall is rescued once the shelf beside it is bare; LOW and HIGH hold)
+        const T0 = times[lvKey], moving = lvKey !== 'low' && lvKey !== 'high';
         const LY = Lv.y, cands = [];
         for (const b of lvl.blocks) {
           if (!b || !b.roof || !b.solid || b.axes[1].y < 0.5 || b.half.x > 8 || b.half.z > 8 || (IDS && !IDS.includes(b.id))) continue;
@@ -1008,9 +1011,11 @@
             for (let k = 0; k < 8; k++) modes.push(['drift', (k * Math.PI) / 4, false]);
             if (reach) for (let k = 0; k < 4; k++) modes.push(['back', (k * Math.PI) / 2 + Math.atan2(ax.z, ax.x), true]);   // (drifting along its axes, then steering back against the slide)
             for (const [mode, h, back] of modes) {
+              if (moving) Lv.debugT(T0);
               reset(V(x, hb.y + 0.3, z), V(h === null ? 0 : 6.5 * Math.cos(h), 0, h === null ? 0 : 6.5 * Math.sin(h)));
               const m = watch(); let offF = 0, away = false, sx = 0, sz = 0; const tr = [];
               for (let f = 0; f < 240; f++) {
+                if (moving && f) Lv.debugT(T0 + f / 60);   // (fix round 9: in the rise and the fall the lava moves on with the frames)
                 if (T.died < 3) tr.push([f, r2(kid.pos.x), r2(kid.pos.y), r2(kid.pos.z), kid.grounded && kid.ground.hit ? kid.ground.block : -1, r2(kid.vel.x), r2(kid.vel.z), kid.roofDir ? [r2(kid.roofDir.x), r2(kid.roofDir.z)] : null, r2(it.move.x), r2(it.move.z)]);
                 // (steering back: against the slide — the way off it took — while on the top it came down on and in the air off it;
                 // on other ground, idle. A steer across the slide is the player's own way: not this rule's)
