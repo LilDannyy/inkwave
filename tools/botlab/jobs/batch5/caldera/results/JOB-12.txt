@@ -1,0 +1,4 @@
+JOB-12 (caldera) @ 0fbd4b1d (fix round 8, as JOB-11) — Mac mini b5-runner, 2026-10-24 19:44–20:07, exit 0. Short summary.
+- full: lava-bots 7/7, lava.js 59/59 (run 1), boss-check 6/6 ×5, lava-karp 10/10, net-lava 13/13, Zone Control 7/7 ×2.
+- not full: boss-foot 2/3 — put down round the causeway's south end, the boss stood idle over 10 s in 3 of 57 states (worst 12 s; 11 over
+  6 s); lava.js run 2 58/59 (F8c: escapes off a rising stone up the step at its end).
