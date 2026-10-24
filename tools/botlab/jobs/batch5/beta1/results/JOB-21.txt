@@ -1,0 +1,4 @@
+JOB-21 (beta1) @ 124e66dd — Mac mini b5-runner, 2026-10-24 12:16–12:26, exit 0. karp-bots ×6, the final code vs the shipped b0cc406c, alternating.
+- H (bots leave a Big Burst's disc, the bar ≥ 16 of 20): THIS CODE 19, 20, 16, 18, 18, 19 (mean 18.3); the SHIPPED code 18, 19, 18, 19, 16, 16
+  (mean 17.7). Every run met the bar; this code is not lower.
+- whole runs: this code 42/42 ×5 and 41/42 (C, one karp-touch); the shipped code 42/42 ×4, 41/42, 40/42 (C twice, B(b2) once).
