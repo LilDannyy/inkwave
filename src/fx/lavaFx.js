@@ -286,7 +286,12 @@ totalEmissiveRadiance += vec3(1.0, 0.13, 0.02) * gCr * uCrack * 1.5;`);
       const g = new THREE.Group(); g.name = 'lava:rider:' + r.id;
       const parts = [colourGeo(new THREE.CylinderGeometry(r.r, r.r, r.depth, 6, 1, false, Math.PI / 2).translate(0, -r.depth / 2, 0), LOOK.basalt),
         colourGeo(new THREE.CylinderGeometry(r.r - 0.04, r.r - 0.04, 0.06, 6, 1, false, Math.PI / 2).translate(0, -0.02, 0), LOOK.basaltTop)];
-      for (const q of r.parts) if (!q.body) parts.push(colourGeo(new THREE.BoxGeometry(q.hx * 2, q.y1 - q.y0, q.hz * 2).rotateY(q.yaw).translate(q.ox, (q.y0 + q.y1) / 2, q.oz), LOOK.basalt));
+      // (fix round 6: the lookout's crown — a part marked `pipe` is drawn as a hexagonal basalt pipe over its square collider,
+      // flats 0.26 m across like the box, a lighter cap on top)
+      for (const q of r.parts) if (!q.body && q.pipe) { const rr = q.hx / Math.cos(Math.PI / 6), h = q.y1 - q.y0;
+        parts.push(colourGeo(new THREE.CylinderGeometry(rr, rr, h, 6, 1, false, Math.PI / 6).rotateY(q.yaw).translate(q.ox, (q.y0 + q.y1) / 2, q.oz), LOOK.basalt),
+          colourGeo(new THREE.CylinderGeometry(rr * 0.92, rr * 0.92, 0.04, 6, 1, false, Math.PI / 6).rotateY(q.yaw).translate(q.ox, q.y1 + 0.01, q.oz), LOOK.basaltTop)); }
+      for (const q of r.parts) if (!q.body && !q.pipe) parts.push(colourGeo(new THREE.BoxGeometry(q.hx * 2, q.y1 - q.y0, q.hz * 2).rotateY(q.yaw).translate(q.ox, (q.y0 + q.y1) / 2, q.oz), LOOK.basalt));
       // (only the lookouts cast shadows: the short columns' shadows cost a draw call per cascade for little)
       const m = new THREE.Mesh(mergeGeos(parts), basalt); m.castShadow = r.look?.role === 'lookout'; m.receiveShadow = true; g.add(m);
       g.rotation.y = r.yaw;
@@ -356,7 +361,7 @@ totalEmissiveRadiance += vec3(1.0, 0.13, 0.02) * gCr * uCrack * 1.5;`);
   _cascades() {
     this.falls = [];
     const fm = (this.fallMat = new THREE.ShaderMaterial({ uniforms: { ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog), uTime: { value: 0 }, uK: { value: 0 }, uA: { value: lin(LOOK.fall[0]) }, uB: { value: lin(LOOK.fall[1]) } },
-      vertexShader: FALL_VS, fragmentShader: FALL_FS, transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: true }));
+      vertexShader: FALL_VS, fragmentShader: FALL_FS, transparent: true, depthWrite: true, side: THREE.DoubleSide, fog: true }));   // (fix round 5: depthWrite, below)
     // a lip is a polyline (the stage's lip line) or a pair of points; each segment's curtain pours to the side that is not
     // lava (tested 0.6 m off each side), out 1.7 m and down `drop`
     for (const c of this.W.cascades) {
@@ -392,10 +397,20 @@ totalEmissiveRadiance += vec3(1.0, 0.13, 0.02) * gCr * uCrack * 1.5;`);
       const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx);
       this.falls.push({ geo, y: c.y });
     }
-    // (one draw call for every lavafall: their lips sit at one height, so one mesh moves with the surface)
+    // (their lips sit at one height, so one group moves with the surface)
+    // (fix round 5, review 5 issue 5: the "rectangular band of finer streaks" mid-curtain was the OTHER half's lavafall, seen
+    // from out past the lip through the void under the arena and through this half's curtain — transparent, no depth write,
+    // one merged mesh: depthWrite off it showed; on, the far one vanished. Each curtain is its own mesh now and writes depth,
+    // and the one nearer the camera draws first (update), so a curtain never shows through another; a sheet of lava hides
+    // what is behind it)
     if (this.falls.length) {
-      const m = new THREE.Mesh(mergeGeos(this.falls.map((f) => f.geo.toNonIndexed())), fm); m.frustumCulled = false; m.renderOrder = 1; m.name = 'lava:falls';
-      this.root.add(m); this.fallMesh = m; this.fallY = Math.max(...this.falls.map((f) => f.y));
+      const grp = new THREE.Group(); grp.name = 'lava:falls';
+      this.fallParts = this.falls.map((f, i) => {
+        const m = new THREE.Mesh(f.geo.toNonIndexed(), fm); m.frustumCulled = false; m.renderOrder = 1; m.name = 'lava:fall' + i;
+        f.geo.computeBoundingSphere(); m.userData.c = f.geo.boundingSphere.center.clone();
+        grp.add(m); return m;
+      });
+      this.root.add(grp); this.fallMesh = grp; this.fallY = Math.max(...this.falls.map((f) => f.y));
     }
   }
   // ---- embers (up, on a rise) and steam (down, on a fall): one Points each, simulated here
@@ -494,7 +509,11 @@ totalEmissiveRadiance += vec3(1.0, 0.13, 0.02) * gCr * uCrack * 1.5;`);
     if (bc) this.beaconMat.color.set(bc).multiplyScalar(0.15 + bk * 1.1); else this.beaconMat.color.set('#1a0a08');
     // the lavafalls: thin at LOW, full while the surface is high over the lip
     this.fallMat.uniforms.uTime.value = this.t;
-    if (this.fallMesh) { const k = Math.max(0, Math.min(1, (st.y - this.fallY) / Math.max(0.3, W.high - this.fallY))); this.fallMesh.position.y = Math.max(st.y, this.fallY) + 0.02; this.fallMat.uniforms.uK.value = k; }
+    if (this.fallMesh) {
+      const k = Math.max(0, Math.min(1, (st.y - this.fallY) / Math.max(0.3, W.high - this.fallY))); this.fallMesh.position.y = Math.max(st.y, this.fallY) + 0.02; this.fallMat.uniforms.uK.value = k;
+      // (the nearer curtain first: depth-tested, the farther one is hidden where the nearer stands in front of it)
+      const cam = G.camera; if (cam && this.fallParts.length > 1) { const d = this.fallParts.map((m) => m.userData.c.distanceToSquared(cam.position)); const order = d.map((v, i) => i).sort((a, b) => d[a] - d[b]); order.forEach((i, r) => { this.fallParts[i].renderOrder = 1 + r * 0.01; }); }
+    }
     this._stepParticles(dt, st);
     this._stepFlotsam(st);
     // the rumble loop
@@ -674,7 +693,8 @@ const CSS = `
   animation: lv-pulse .45s ease-in-out infinite alternate; }
 .lv-mine.is-on { display: flex; } .lv-mine.is-stone { background: rgba(40, 46, 60, .94); box-shadow: 0 0 0 3px #fff, 0 0 22px rgba(220, 230, 255, .5); }
 .lv-mine i { display: inline-block; font-style: normal; font-size: 1.4em; line-height: 1; }
-.lv-mine span { opacity: .85; }`;
+.lv-mine span { opacity: .85; }
+.lv-mine.is-rescue { background: rgba(48, 44, 40, .94); box-shadow: 0 0 0 3px #fff, 0 0 22px rgba(255, 240, 220, .45); animation: none; } .lv-mine.is-rescue i { display: none; }`;
 let cssOn = false;
 // the Hud fields holding each mode's objective HUD under the timer (fix round 2: Bazookarp's is hud.karpDock — the
 // finished HUD (karp-face, SPEC §6) exposes its column under the clock there; until then the chip keeps its Turf War spot)
@@ -720,9 +740,9 @@ export class LavaHud {
     // the local player's own line, its arrow toward the way out (relative to the camera's heading)
     const m = o.mine;
     if (m && a) {
-      this.mine.classList.add('is-on'); this.mine.classList.toggle('is-stone', m.text.includes('STONES'));
+      this.mine.classList.add('is-on'); this.mine.classList.toggle('is-stone', m.text.includes('STONES')); this.mine.classList.toggle('is-rescue', !!m.rescue);
       if (this.mText.textContent !== m.text) this.mText.textContent = m.text;
-      this.mDist.textContent = '→ ' + m.m + ' m';
+      this.mDist.textContent = m.rescue ? '→ rescued' : '→ ' + m.m + ' m';   // (review 8: NO FOOTING → rescued, no arrow)
       if (m.to && G.camera) {
         const c = G.camera, f = new THREE.Vector3(); c.getWorldDirection(f);
         const cy = Math.atan2(f.x, f.z), ty = Math.atan2(m.to[0] - a.pos.x, m.to[1] - a.pos.z);

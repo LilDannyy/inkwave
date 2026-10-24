@@ -12,6 +12,9 @@
 //   K6 a carrier on the drowning Slump shelf gets the warning like anyone (the personal line), and standing still across
 //      the switch never gets the fuse's ×3
 //   K7 a bot carrier on the shelf at the rise warning escapes it (alive, off the low ground when the ledges turn deadly)
+//   K8 (fix round 5, the lead's decision after review 5) the carrier field never relies on a jump over the lava: none of
+//      its hop / gap edges crosses the lava where both its ends stand (always — the lake, the Spillways — or at HIGH
+//      between two dry ends); prints the hopVeto entries to paste (src/world/stages/caldera/karpVeto.js) when one does
 (async () => {
   const g = window.__inkwave, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
@@ -161,6 +164,35 @@
     if (Kp.holder === bot) Kp._release(bot);
   }
   R('K7 a bot carrier on the shelf at the rise warning escapes it: alive and off the low ground when the ledges turn deadly', !!k7 && k7.alive && k7.foot === 0 && !k7.deaths.length, k7);
+
+  // K8 (fix round 5): the field's hop (5) and gap (6) edges whose line (every 0.2 m) crosses the region where there is no
+  // floor at the kill line at LOW (lava always) or at HIGH (lava then: vetoed when both ends are dry floor — an end on
+  // drowning floor or on a rider is masked at HIGH by the state in force). Sampled with the level at LOW and the riders at
+  // their LOW poses, as the field was built (at load): an Organ's deck is solid under its edges, a sunk stone is lava
+  {
+    setT(10);
+    const kill = (await import('./src/game/lavaCore.js')).LAVA.kill, lvl = __G.level, bad = [], kept = { highOnly: 0 };
+    for (let i = 0; i < F.N; i++) for (let p = F.fs[i]; p < F.fs[i + 1]; p++) {
+      const t = F.fy[p]; if (t !== 5 && t !== 6) continue;
+      const a = nav.nodes[i], b = nav.nodes[F.ft[p]], d = Math.hypot(b.x - a.x, b.z - a.z), k = Math.max(2, Math.ceil(d / 0.2));
+      let low = false, high = false;
+      for (let q = 1; q < k; q++) {
+        const x = a.x + ((b.x - a.x) * q) / k, z = a.z + ((b.z - a.z) * q) / k;
+        if (!W.inRegion(x, z)) continue;
+        const gh = lvl.groundHeight(x, z, Math.max(a.y, b.y) + 0.5);
+        if (gh < W.low + kill) low = true;
+        if (gh < W.high + kill) high = true;
+      }
+      if (!low && !high) continue;
+      if (low || (M.kind[a.id] === 0 && M.kind[b.id] === 0)) bad.push([t === 5 ? 'hop' : 'gap', r2(a.x), r2(a.y), r2(a.z), r2(b.x), r2(b.y), r2(b.z)]);
+      else kept.highOnly++;
+    }
+    // (each in Alpha's frame: an edge on Bravo's half turned 180° — the field vetoes an entry and its turn; an edge whose
+    // twin the field never added would be missed by listing Alpha's half only)
+    const paste = [...new Set(bad.map((e) => { const q = e.slice(1); return JSON.stringify(q[2] < 0 || (q[2] === 0 && q[0] < 0) ? q : [-q[0], q[1], -q[2], -q[3], q[4], -q[5]]); }))].map((j) => JSON.parse(j));
+    R('K8 the carrier field never relies on a jump over the lava: none of its hop / gap edges crosses the lava where both ends stand (LAYOUT.bazookarp.hopVeto, karpVeto.js)', !bad.length,
+      { crossing: bad.length, eg: bad.slice(0, 6), keptHighOnlyWithAMaskedEnd: kept.highOnly, fieldHops: F.stats.hops, fieldGaps: F.stats.gaps, vetoes: F.R.hopVeto.length, L: F.L, ...(paste.length ? { paste } : {}) });
+  }
   offs.forEach((f) => f());
   return out;
 })();

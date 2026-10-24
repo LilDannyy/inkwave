@@ -1,0 +1,3 @@
+JOB-6 (caldera) @ 3ef569c4 — Mac mini b5-runner, 2026-10-24 06:58–07:21, exit 0. Short summary.
+- EVERYTHING FULL: lava.js 59/59 ×3 (G8, F10 and F8b all pass), boss-check 6/6 ×5, lava-bots 7/7 ×2 (the gate met both times), net-lava
+  13/13 (alone), Zone Control 7/7 ×2 and Turf War 7/7 (lava-match.js).

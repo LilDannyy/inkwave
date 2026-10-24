@@ -1,0 +1,425 @@
+JOB-16 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 00:24:40
+branch botlab-b5-caldera, ran at 458231a9, exit code 0, wall time 57min
+(a written-up JOB-16.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== check-maps, every caldera variant
+== rule 47: a,c,d | b,e at low,high,r30 | b,e at r60,r90,f50
+== the audit's other rules; rule 44 at LOW and HIGH
+== lava.js x3
+== lava-bots, Zone Control x2
+== boss-check: caldera x5, calamari, treehills, kelpline
+== boss-check baseline: calamari, treehills, kelpline with int4's boss code (f687b4c2)
+== review 9's probes: wall9, held9 A/B/C, far9, land9 (HIGH, rise); lava-karp
+== net-lava alone
+== SUMMARY
+### audit-rest
+RESULT 8/9
+### base-calamari
+RESULT 6/6
+### base-kelpline
+RESULT 5/6
+### base-treehills
+RESULT 4/6
+### boss-1
+RESULT 6/6
+### boss-2
+RESULT 6/6
+### boss-3
+RESULT 6/6
+### boss-4
+RESULT 6/6
+### boss-5
+RESULT 6/6
+### boss-calamari
+RESULT 6/6
+### boss-kelpline
+RESULT 5/6
+### boss-treehills
+RESULT 4/6
+### bots
+RESULT 7/7
+### check-maps
+### far9
+RESULT 2/2
+### held9
+RESULT 35/35
+### karp
+RESULT 10/10
+### land9-high
+RESULT 13/13
+### land9-rise
+### lavajs-1
+RESULT 59/60
+### lavajs-2
+RESULT 60/60
+### lavajs-3
+RESULT 60/60
+### net-lava
+RESULT 12/13
+### r44-high
+RESULT 25/25
+### r44-low
+RESULT 23/23
+### r47acd
+RESULT 2/2
+## rule 47 PASS
+### r47be1
+RESULT 2/2
+## rule 47 PASS
+### r47be2
+RESULT 1/2
+## rule 47 FAIL
+### wall9
+RESULT 1/1
+### zones-1
+RESULT 7/7
+### zones-2
+RESULT 7/7
+
+## last 15 lines of job.log
+### r47acd
+RESULT 2/2
+## rule 47 PASS
+### r47be1
+RESULT 2/2
+## rule 47 PASS
+### r47be2
+RESULT 1/2
+## rule 47 FAIL
+### wall9
+RESULT 1/1
+### zones-1
+RESULT 7/7
+### zones-2
+RESULT 7/7
+
+## audit-rest.txt
+### audit-rest
+FAIL rule 42: no view out of the arena shows void — 96 rays below the horizon from each pad, the 24 highest spots on its outer ring, and over each lip from the Spillway Bridge and the Horn Step (fix round 5), all meet the level, the lava or far scenery (env.sea is off: nothing under the backdrop)  {"viewpoints":12,"raysMissing":62,"of":1152,"perView":[0,0,0,0,0,0,11,11,20,20,0,0],"lipViews":{"br
+RESULT 8/9
+console errors: none
+
+## base-calamari.txt
+### base-calamari
+RESULT 6/6
+console errors: none
+PASS home ground (plannable area for the boss)  {"area_m2":1121,"floorY":0,"box":[-30.3,30.3,-28.8,28.8],"cells":{"floor":5479.5,"wall":1048,"drop":2673.5,"pad":115}}
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":62,"cells4m":9,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":5}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[81,39],"longestSpell_s":44,"at":[-1.4,-1.8],"camps":null,"backOuts":0}
+
+## base-kelpline.txt
+### base-kelpline
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":15,"cells4m":2,"trail":[[19.8,-16.2],[19.6,-16.6],[19.6,-16.6],[25.6,-9],[25.6,-9],[25.5,-8.2],[25.4,-7.9],[25.4,-7.9],[25.4,-7.9],[25.4,-7.9],[25,-6.7],[25,-6.7]]}
+RESULT 5/6
+console errors: none
+PASS home ground (plannable area for the boss)  {"area_m2":175,"floorY":0,"box":[-2.3,27.3,-22.8,1.3],"cells":{"floor":5452.25,"wall":3202.5,"drop":10292.25,"pad":33}}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":15,"cells4m":2,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":4}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[120,0],"longestSpell_s":98,"at":[25.6,-9],"camps":null,"backOuts":0}
+
+## base-treehills.txt
+### base-treehills
+FAIL home ground (plannable area for the boss)  {"area_m2":115,"floorY":0,"box":[-12.8,1.8,-2.3,15.8],"cells":{"floor":4095,"wall":2647,"drop":3046.5,"pad":9.5}}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":16,"cells4m":3,"trail":[[-5.2,11],[-6.5,8.5],[-7.7,8],[-7.7,8],[-7.7,8],[-7.8,8.3],[0.2,10.3],[0.2,10.3],[-2.5,10.4],[-2.5,10.4],[-2.5,10.4],[-2.5,10.4]]}
+RESULT 4/6
+console errors: none
+FAIL home ground (plannable area for the boss)  {"area_m2":115,"floorY":0,"box":[-12.8,1.8,-2.3,15.8],"cells":{"floor":4095,"wall":2647,"drop":3046.5,"pad":9.5}}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":16,"cells4m":3,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[0,120],"longestSpell_s":119,"at":[-5.2,11],"camps":null,"backOuts":0}
+
+## boss-1.txt
+### boss-1
+RESULT 6/6
+console errors: none
+PASS home ground (plannable area for the boss)  {"area_m2":816,"floorY":1.2,"box":[-21.8,21.8,-29.3,29.3],"cells":{"floor":1642,"wall":218.5,"drop":11249.5,"pad":266}}
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":140,"cells4m":20,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":4}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[89,31],"longestSpell_s":29,"at":[-12.6,-25.9],"camps":2,"backOuts":0}
+
+## boss-2.txt
+### boss-2
+RESULT 6/6
+console errors: none
+PASS home ground (plannable area for the boss)  {"area_m2":816,"floorY":1.2,"box":[-21.8,21.8,-29.3,29.3],"cells":{"floor":1642,"wall":218.5,"drop":11249.5,"pad":266}}
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":142,"cells4m":15,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":6}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[84,36],"longestSpell_s":29,"at":[0.8,6.3],"camps":3,"backOuts":1}
+
+## boss-3.txt
+### boss-3
+RESULT 6/6
+console errors: none
+PASS home ground (plannable area for the boss)  {"area_m2":816,"floorY":1.2,"box":[-21.8,21.8,-29.3,29.3],"cells":{"floor":1642,"wall":218.5,"drop":11249.5,"pad":266}}
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":80,"cells4m":11,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[58,62],"longestSpell_s":28,"at":[-1.1,-6.5],"camps":0,"backOuts":0}
+
+## boss-4.txt
+### boss-4
+RESULT 6/6
+console errors: none
+PASS home ground (plannable area for the boss)  {"area_m2":816,"floorY":1.2,"box":[-21.8,21.8,-29.3,29.3],"cells":{"floor":1642,"wall":218.5,"drop":11249.5,"pad":266}}
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":93,"cells4m":15,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[106,14],"longestSpell_s":31,"at":[-0.9,-19.5],"camps":2,"backOuts":0}
+
+## boss-5.txt
+### boss-5
+RESULT 6/6
+console errors: none
+PASS home ground (plannable area for the boss)  {"area_m2":816,"floorY":1.2,"box":[-21.8,21.8,-29.3,29.3],"cells":{"floor":1642,"wall":218.5,"drop":11249.5,"pad":266}}
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":110,"cells4m":11,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":8}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[53,67],"longestSpell_s":38,"at":[-0.5,-1.1],"camps":0,"backOuts":1}
+
+## boss-calamari.txt
+### boss-calamari
+RESULT 6/6
+console errors: none
+PASS home ground (plannable area for the boss)  {"area_m2":1121,"floorY":0,"box":[-30.3,30.3,-28.8,28.8],"cells":{"floor":5479.5,"wall":1048,"drop":2673.5,"pad":115}}
+PASS it roams (distance walked, 4 m cells visited)  {"dist_m":64,"cells4m":10,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":4}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[74,46],"longestSpell_s":49,"at":[-0.3,-0.3],"camps":null,"backOuts":0}
+
+## boss-kelpline.txt
+### boss-kelpline
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":12,"cells4m":4,"trail":[[20.2,-14.2],[18,-14.2],[17.7,-17.8],[17.7,-17.8],[16.2,-21.4],[16.1,-21.4],[16.1,-21.4],[16.1,-21.4],[16.1,-21.4],[16.1,-21.4],[16.1,-21.4],[16.1,-21.4]]}
+RESULT 5/6
+console errors: none
+PASS home ground (plannable area for the boss)  {"area_m2":175,"floorY":0,"box":[-2.3,27.3,-22.8,1.3],"cells":{"floor":5452.25,"wall":3202.5,"drop":10292.25,"pad":33}}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":12,"cells4m":4,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":5}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[120,0],"longestSpell_s":84,"at":[17.4,-19.8],"camps":null,"backOuts":0}
+
+## boss-treehills.txt
+### boss-treehills
+FAIL home ground (plannable area for the boss)  {"area_m2":115,"floorY":0,"box":[-12.8,1.8,-2.3,15.8],"cells":{"floor":4095,"wall":2647,"drop":3046.5,"pad":9.5}}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":8,"cells4m":3,"trail":[[-5.6,11.2],[-7.9,7],[-8.1,7.3],[-8.1,7.3],[-9.2,7],[-9.2,7],[-9.2,7],[-10.2,7.1],[-10.2,7.1],[-10.2,7.1],[-10.2,7.1],[-10.2,7.1]]}
+RESULT 4/6
+console errors: none
+FAIL home ground (plannable area for the boss)  {"area_m2":115,"floorY":0,"box":[-12.8,1.8,-2.3,15.8],"cells":{"floor":4095,"wall":2647,"drop":3046.5,"pad":9.5}}
+FAIL it roams (distance walked, 4 m cells visited)  {"dist_m":8,"cells4m":3,
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":6}
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[0,120],"longestSpell_s":66,"at":[-5.6,11.2],"camps":null,"backOuts":0}
+
+## bots.txt
+### bots
+RESULT 7/7
+console errors: none
+PASS ledges (the rise warning: the Slump shelf, the Casting Floor, the ford, the bays): 20 trials × 6 bots — no crew bot dies in the lava during an escape (every death counted; fight deaths: the gate below)  {"lavaDeaths":0,"escapeDeaths":0,"fightDeaths":0,"botTrials":120,"alive":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6],"other":[],"escapes":288,"deaths":[]}
+PASS stones (the fall warning: every stone of both Races, race6 / race7 included): 20 trials × 6 bots — no crew bot dies in the lava during an escape (every death counted; fight deaths: the gate below)  {"lavaDeaths":0,"escapeDeaths":0,"fightDeaths":0,"botTrials":120,"alive":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6],"other":[],"escapes":843,"deaths":[]}
+PASS edges (dry 1.2 m edges over the Casting Floor, the Spillway, the heads: a rise, then a fall): 20 trials × 6 bots — no crew bot dies in the lava during an escape (every death counted; fight deaths: the gate below)  {"lavaDeaths":0,"escapeDeaths":0,"fightDeaths":0,"botTrials":120,"alive":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6],"other":[],"escapes":3008,"deaths":[]}
+PASS the gate: 0 escape deaths, ≤ 1 fight death per 360 bot-trials (360 here)  {"botTrials":360,"esc":0,"fight":0,"list":[]}
+
+## checkmaps.txt
+### check-maps
+caldera      1805 pieces  ok
+caldera.zones 1805 pieces  ok
+caldera.tower 1805 pieces  ok
+caldera.practice 1805 pieces  ok
+caldera.bazookarp 1867 pieces  ok
+caldera.boss 1674 pieces  ok
+caldera.attract 1805 pieces  ok
+caldera.karp 1805 pieces  ok
+
+## far9.txt
+### far9
+RESULT 2/2
+console errors: none
+PASS rescue distance: engine log vs the kid's own move vs what lava-audit rule 47 reads  {"rows":[{"id":862,"tag":"slump-hornito","put":[-27.16,-11.6],"moved":[-27.16,-11.6,-23.5,-15.5,5.34],"rescues":1,"rescueFarInc":0,"logLen":1,"logGrew":true,"auditReads":5.34},{"id":862,"tag":"slump-hornito","put":[-27.16,-11.9],"moved":[-27.16,-11.9,-23.5,-15.5,5.13],"rescues":1,"rescueFarInc":0,"logLen":2,"l
+PASS after 40 rescues the log stops: the audit reads a stale distance  {"realMove":5.34,"logLen":40,"auditReads":3.93,"rescues":55,"rescueFar":0}
+
+## held9.txt
+### held9
+RESULT 35/35
+console errors: none
+PASS A: a kid that leaves the hold by a super jump does not keep the hold (roofHeld cleared, the HUD line not stuck on NO FOOTING → rescued, the real lava line shown on a drowning floor)  {"A":[{"top":"mould-stack","heldBefore":0.05,"sjOk":true,"frames":151,"pos":[-14,4.8,-62.5],"grounded":true,"roofHeld":0,"roofT":0,"rescues":8,"roofHeld5s":0,"mine5s":null,"onDrowningFloor":{"node":[12.5,0,-22.
+PASS B: every point of every top that holds → rescued within 6 m, alive 4 s later (worst move, height change, soonest cover)  {"worst":{"d":5.53,"up":0,"down":-0.9,"soon":99}}
+PASS C: the tops the audit calls unreachable — a squid can climb onto them by an inked face from dry floor? and then: 0 deaths idle / pushing on / steering back  {"tops":38,"withInkableFace":0,"reachedTop":0,"deaths":0,"deathsEg":[],"reachedEg":[]}
+
+## karp.txt
+### karp
+RESULT 10/10
+console errors: none
+PASS a Bazookarp match on Highmark Foundry: the mode and the lava both run  {"mode":"bazookarp","karp":true,"lava":true,"placeholder":false}
+PASS K1 the Carp Field is built with the lava's states at load: G.match.stage.karpStates() → LOW, HIGH (from restMask); the field's states [as built, low, high]  {"karpStates":["low","high"],"fieldStates":[0,"low","high"],"okN":[4295,4203,3935]}
+PASS K2 rest flags: no rest spot on a rider (a Pumice stone, an Organ: the riders' whole travel is swept) in any state, none on lava-reachable floor at HIGH  {"restOk":{"high":3497,"low":3823,"built":3823},"sweptBoxes":64,"bad":[],"nBad":0}
+PASS K3 the drop spot at HIGH from lava-reachable ground (30 ledge spots, both halves): dry floor on the same half, every time  {"spots":30,"maxM":19.85,"bad":[]}
+PASS K4 the field switches at lava:warn — to HIGH at the rise warning (25 s), to LOW at the fall warning (70 s) — and is never rebuilt (the same arrays)  {"switches":[[25,2],[70.02,1]],"atRise":2,"atFall":1,"warnings":[25,70]}
+PASS K3b from the fall warning (the field LOW) until the ledges dry, no drop spot on ground the lava covers now: 60 ledge-level origins at 6 times (the lava HIGH 10 s more, then falling); a real drop 1 s into the warning lands dry  {"rows":[{"t":70.5,"lavaY":0.8,"state":"low","tried":60,"covered":0,"none":0,"eg":[]},{"t":71,"lavaY":0.8,"state":"low","tried":60,"covered":0,"none":0,"eg":[]},{"t":74
+PASS K5 a Bazookarp resting on a ledge at LOW stays there until the rise's warning, then is moved to dry ground at once (13.8 s before the ledge turns deadly)  {"ledge":[12.5,0,-22.5],"stayedAtLow":true,"moved":[25,"moved",19.5,1.4,-10.5],"restNow":1735,"kindNow":0,"phase":"reforming","leadS":13.8}
+PASS K6 a carrier on the drowning Slump shelf gets the warning like anyone (GET OFF THE LOW GROUND all through the warning), and standing still on its own half across the switch never gets the fuse's ×3  {"carrying":true,"warnSamples":22,"lines":["GET OFF THE LOW GROUND"],"rates":[1]}
+
+## land9-high.txt
+### land9-high
+RESULT 13/13
+console errors: none
+PASS schedule and holders  {"schedule":{"warnAt":25,"riseAt":35,"highAt":45.05,"LO":-0.6,"H":0.8,"K":0.15},"holders":[["mould-stack",852,[12,1.8,-18.4],[1.4,1.4],0,["high","r50","r80"]],["ladle-stand",853,[14,2,-13.6],[1.6,1.6],0,["high","r50","r80"]],["slump-hornito",862,[-27.16,1.3,-12.2],[1.4,1.4],0,["high","r50","r80"]],["slump-hornito",863,[-27.8,1.3,-6.42],[1.4,1.4],0,["high","r50","r80"]],[
+PASS landings high:hop: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":0,"held":0,"rescued":0,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":0,"maxRescueUp":0,"maxRescueDown":0,"maxGain":-1}
+PASS landings high:run: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":160,"held":160,"rescued":160,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":4.67,"maxRescueUp":0,"maxRescueDown":-0.9,"maxGain":6.01}
+PASS landings high:swim: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":256,"held":256,"rescued":256,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":5.34,"maxRescueUp":0.1,"maxRescueDown":-0.9,"maxGain":9.95}
+PASS landings high:mitts: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":480,"held":480,"rescued":480,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":5.61,"maxRescueUp":0.1,"maxRescueDown":-0.9,"maxGain":36.09}
+PASS row mould-stack high  {"top":"mould-stack","id":852,"at":[12,1.8,-18.4],"phase":"high","t0":48.05,"lavaY":0.8,"hop":{"trials":0,"touched":0,"held":0,"rescued":0,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":0,"maxRescueUp":0,"maxRescueDown":0,"maxGain":-1,"eg":[],"egGain":null,"egUp":null},"run":{"trials":18,"touched":18,"held":18,"rescued":18,"slidO
+PASS row ladle-stand high  {"top":"ladle-stand","id":853,"at":[14,2,-13.6],"phase":"high","t0":48.05,"lavaY":0.8,"hop":{"trials":0,"touched":0,"held":0,"rescued":0,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":0,"maxRescueUp":0,"maxRescueDown":0,"maxGain":-1,"eg":[],"egGain":null,"egUp":null},"run":{"trials":2,"touched":2,"held":2,"rescued":2,"slidOff":0,
+PASS row slump-hornito high  {"top":"slump-hornito","id":862,"at":[-27.16,1.3,-12.2],"phase":"high","t0":48.05,"lavaY":0.8,"hop":{"trials":0,"touched":0,"held":0,"rescued":0,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":0,"maxRescueUp":0,"maxRescueDown":0,"maxGain":-1,"eg":[],"egGain":null,"egUp":null},"run":{"trials":28,"touched":28,"held":28,"rescued":2
+
+## land9-rise.txt
+### land9-rise
+WATCHDOG
+
+## lavajs-1.txt
+### lavajs-1
+FAIL F8c escapes off a rising stone up the step at its end (race1 / 5 / 6 / 7, the stone 0.45–0.75 m under it): each node within 2.6 m of the floor, run in at ±40° at 5.5 m/s, its jump cool-down left by a refused press — up within 4 s, no death  {"n":76,"weapon":"mitts","died":1,"notUp":1,"bad":[["race7",39.6,4468,-0.7,null,["lava",41.083]]],"slowest":2.6,"trails":[{"sid":"race7","t0":39.6,"
+RESULT 59/60
+console errors: none
+FAIL F8c escapes off a rising stone up the step at its end (race1 / 5 / 6 / 7, the stone 0.45–0.75 m under it): each node within 2.6 m of the floor, run in at ±40° at 5.5 m/s, its jump cool-down left by a refused press — up within 4 s, no death  {"n":76,"weapon":"mitts","died":1,"notUp":1,"bad":[["race7",39.6,4468,-0.7,null,["lava",41.083]]],"slowest":2.6,"trails":[{"sid":"race7","t0":39.6,"
+PASS G9 a hold left another way than the rescue (a super jump, the Slam, put off the top) ends there: roofHeld cleared, no rescue after, the personal line not stuck on NO FOOTING → rescued 5 s on, GET OFF THE LOW GROUND on a drowning floor in the next warning (review 9's probe-held9 A; hornito, mould stack, ladle stand)  {"tops":["slump-hornito#862","mould-stack#852","ladle-stand#853"],"warnAt":
+
+## lavajs-2.txt
+### lavajs-2
+RESULT 60/60
+console errors: none
+PASS F8c escapes off a rising stone up the step at its end (race1 / 5 / 6 / 7, the stone 0.45–0.75 m under it): each node within 2.6 m of the floor, run in at ±40° at 5.5 m/s, its jump cool-down left by a refused press — up within 4 s, no death  {"n":76,"weapon":"brush","died":0,"notUp":0,"bad":[],"slowest":1.267,"trails":[]}
+PASS G9 a hold left another way than the rescue (a super jump, the Slam, put off the top) ends there: roofHeld cleared, no rescue after, the personal line not stuck on NO FOOTING → rescued 5 s on, GET OFF THE LOW GROUND on a drowning floor in the next warning (review 9's probe-held9 A; hornito, mould stack, ladle stand)  {"tops":["slump-hornito#862","mould-stack#852","ladle-stand#853"],"warnAt":
+
+## lavajs-3.txt
+### lavajs-3
+RESULT 60/60
+console errors: none
+PASS F8c escapes off a rising stone up the step at its end (race1 / 5 / 6 / 7, the stone 0.45–0.75 m under it): each node within 2.6 m of the floor, run in at ±40° at 5.5 m/s, its jump cool-down left by a refused press — up within 4 s, no death  {"n":76,"weapon":"spinner","died":0,"notUp":0,"bad":[],"slowest":1.267,"trails":[]}
+PASS G9 a hold left another way than the rescue (a super jump, the Slam, put off the top) ends there: roofHeld cleared, no rescue after, the personal line not stuck on NO FOOTING → rescued 5 s on, GET OFF THE LOW GROUND on a drowning floor in the next warning (review 9's probe-held9 A; hornito, mould stack, ladle stand)  {"tops":["slump-hornito#862","mould-stack#852","ladle-stand#853"],"warnAt":
+
+## netlava.txt
+### net-lava
+(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.
+PASS a room on Highmark Foundry (Turf War 1:30, 4 bots)  {"map":"caldera","duration":90,"mode":"turf"}
+PASS both screens run the lava on the same schedule (turf:90)  {"a":{"t":0.048,"y":-0.6,"phase":"low","stones":"00000000000000","host":true,"key":"turf:90"},"b":{"t":0.033,"y":-0.6,"phase":"low","stones":"00000000000000","host":false,"key":"turf:90"}}
+PASS the guest plants a Lurk Mine and a Hop Beacon on the shelf before the rise; the host sees them (ghosts)  {"dev":{"t":0.67,"mine":[300001],"beacon":[300002]},"ghosts0":[300001,300002]}
+PASS the level agrees on both screens every 0.5 s through a rise and a fall (± 0.1 m)  {"n":140,"worst":{"d":0.003699999999999995,"at":[61.014,-0.1101,61.033,-0.1138]}}
+PASS the guest left standing on the shelf splats by lava (its own screen judges it); the host's feed shows cause lava, at the rise's deadly moment (30 + 3.8 s ± 0.6)  {"lavaB":[3,"lava",33.85],"deaths":[[1,"shot",13.28],[2,"shot",28.63],[3,"lava",33.85],[4,"blade",42.55],[2,"shot",50.65],[4,"shot",
+PASS …its devices the lava covered are gone on both screens (the owner's sweep and its end records)  {"devAfter":{"host":[],"guest":[]}}
+PASS at the results screen the lava cells agree between the two screens at least as well as the same run's other cells do (splats across the waterline through a rise and a fall: the painter's stage time, field 15)  {"lava":{"n":74242,"differ":5,"ratio":0.99993,"inked":[958,961]},"other":{"n":349401,
+PASS time-up at LOW (the final ebb); the same result on both screens  {"res":[0,0],"fin":{"y":-0.6,"phase":"low"}}
+PASS Practice runs its own loop (practice: rise at 20) between the stage's own levels  {"t":0.25,"y":-0.6,"phase":"low","stones":"00000000000000","host":true,"key":"practice"}
+PASS a late joiner at HIGH: its level and its stones agree with the host's (± 0.1 m) once its clock settles  {"host":{"t":41.998,"y":0.8,"phase":"high","stones":"11111111111111","host":true,"key":"practice"},"joiner":{"t":41.963,"y":0.8,"phase":"high","stones":"11111111111111","host":false,"key":"p
+FAIL …and its paint (the imported grid) equals the host's, lava cells and all; the live guest's lava cells equal the host's too (the host painted the Slump cliff across the waterline at LOW — burned by the rise — and at HIGH), and its other cells agree to a ratio ≥ 0.999  {"lavaCells":{"join
+PASS a timed match: the host leaves mid-rise (35 s) — the new host's fall starts at 55 ± 0.4 s on its screen, and the stones turn deadly (the ledges dry) at 61.2 ± 0.4 s on both remaining screens  {"before":{"t":35.034,"y":0.1071,"phase":"rise","stones":"11111111111111","host":false,"key":"turf:
+PASS …and both remaining screens show the same result at time-up  {"res3":[1,1]}
+RESULT 12/13
+c0 console: none
+c1 console: none
+c2 console: none
+
+## r44-high.txt
+### r44-high
+RESULT 25/25
+console errors: none
+PASS rule 44: a plain running jump across the lava at LOW or HIGH saves at most 20 m against the dry way round, the largest under 15 m (the lead's option 1 and margin; the march takes any standable floor across the lava down to the lava, take-offs that drop onto a dry strip first, and run-ups of 2.6 / 1.5 / 0.8 m; every sample past a 0.35 m seam tried; a flight landing > 1 m off its line counted, 
+PASS rule 44 running jumps, the largest gains: low  []
+PASS rule 44 running jumps, the largest gains: high  [{"from":[-9.5,3.5,-9.5],"dir":-67,"gap":0.4,"drop":-1.15,"how":"run","runup":2.6,"landed":[-7.66,-11.76],"landedY":1.4,"on":"coping","gain":14.74},{"from":[9.5,3.5,9.5],"dir":113,"gap":0.4,"drop":-1.15,"how":"run","runup":2.6,"landed":[7.66,11.76],"landedY":1.4,"on":"coping","gain":14.74},{"from":[-8.5,1.3,-22.5],"dir":68,"gap":9,"drop":0.1,"ho
+PASS rule 44 places saving > 20 m: high 0  [{"at":[9,-9],"n":20,"y":[1.2,1.1,1.56],"how":["swim+dash","run+dash","swim"],"gap":[4.4,10],"gain":[23.24,41.12],"on":["coping","horn-step","ladle-stand"],"eg":{"from":[9.5,1.1,-9.5],"dir":-45,"runup":2.6,"landed":[13.75,-14.33],"how":"run+dash@18"}},{"at":[-15,-21],"n":2,"y":[1.3],"how":["swim+dash"],"gap":[10.1,10.1],"gain":[41.03,41.03],"on":["socket-
+PASS rule 44 places saving > 20 m: high 1  [{"at":[12,-9],"n":8,"y":[1.11,1.56],"how":["swim+dash","run+dash","swim"],"gap":[4.4,8.5],"gain":[24.41,34.68],"on":["coping","ladle-stand"],"eg":{"from":[10.5,1.11,-9.5],"dir":-45,"runup":2.6,"landed":[14.4,-14.12],"how":"run+dash@18"}},{"at":[-9,-12],"n":2,"y":[4.65],"how":["swim+dash"],"gap":[0.5,0.5],"gain":[34.33,34.33],"on":["coping"],"eg":{"from":
+PASS rule 44 places saving > 20 m: high 2  [{"at":[-12,-6],"n":27,"y":[1.4,1.2],"how":["run+dash","swim","swim+dash"],"gap":[5.6,10],"gain":[20.48,29],"on":["lava:race2:0","lava:race1:0","coping","race-kerb","lava:race2~:0","lava:race1~:0","lava:race3~:1"],"eg":{"from":[13.5,1.2,6.5],"dir":68,"runup":2.6,"landed":[17.76,16.78],"how":"swim+dash@30"}},{"at":[24,-9],"n":8,"y":[2.4],"how":["run+dash"]
+PASS rule 44 places saving > 20 m: high 3  [{"at":[-12,-3],"n":4,"y":[1.2],"how":["swim","run+dash"],"gap":[5.6,7.2],"gain":[20.73,22.93],"on":["race-kerb","lava:race1~:0","coping"],"eg":{"from":[11.5,1.2,4.5],"dir":45,"runup":2.6,"landed":[19.01,12.01],"how":"run+dash@30"}},{"at":[-9,-3],"n":2,"y":[1.2],"how":["run+dash"],"gap":[5.6,5.6],"gain":[20.94,20.94],"on":["lava:race1:0","lava:race1~:0"],
+
+## r44-low.txt
+### r44-low
+RESULT 23/23
+console errors: none
+PASS rule 44: a plain running jump across the lava at LOW or HIGH saves at most 20 m against the dry way round, the largest under 15 m (the lead's option 1 and margin; the march takes any standable floor across the lava down to the lava, take-offs that drop onto a dry strip first, and run-ups of 2.6 / 1.5 / 0.8 m; every sample past a 0.35 m seam tried; a flight landing > 1 m off its line counted, 
+PASS rule 44 running jumps, the largest gains: low  [{"from":[23.5,2.4,-10.5],"dir":158,"gap":4.9,"drop":2.3,"strip":true,"how":"run","runup":2.6,"landed":[15.26,-7.32],"landedY":0.1,"on":"coping","gain":13.66},{"from":[-23.5,2.4,10.5],"dir":-23,"gap":4.9,"drop":2.3,"strip":true,"how":"run","runup":2.6,"landed":[-15.26,7.32],"landedY":0.1,"on":"coping","gain":13.66},{"from":[12.5,2.3,-24.5],"dir":
+PASS rule 44 running jumps, the largest gains: high  []
+PASS rule 44 places saving > 20 m: low 0  [{"at":[-15,-6],"n":20,"y":[1.3,1.4],"how":["swim+dash","swim"],"gap":[7.4,10.1],"gain":[30.57,56.53],"on":["coping","race-kerb","slump-shelf"],"eg":{"from":[-14.5,1.3,-6.5],"dir":180,"runup":2.6,"landed":[-24.26,-6.5],"how":"swim"}},{"at":[-12,-12],"n":6,"y":[1.4],"how":["swim","swim+dash"],"gap":[4.6,10.2],"gain":[31.28,55.93],"on":["coping"],"eg":{"from
+PASS rule 44 places saving > 20 m: low 1  [{"at":[-15,-3],"n":4,"y":[1.4],"how":["swim+dash"],"gap":[8.6,9.2],"gain":[43.97,44.2],"on":["lakefront","coping"],"eg":{"from":[-14.5,1.4,-3.5],"dir":-113,"runup":2.6,"landed":[-19.26,-14.99],"how":"swim+dash@30"}},{"at":[-24,-15],"n":2,"y":[1.2],"how":["swim"],"gap":[4.7,4.7],"gain":[41.11,41.11],"on":["lava:organB:1","lava:organB~:1"],"eg":{"from":[-23
+PASS rule 44 places saving > 20 m: low 2  [{"at":[-24,0],"n":8,"y":[1.4,1.5],"how":["swim+dash","swim"],"gap":[5.9,10.2],"gain":[20.64,27.1],"on":["coping"],"eg":{"from":[-24.5,1.5,-1.5],"dir":0,"runup":2.6,"landed":[-13.87,-1.5],"how":"swim+dash@30"}},{"at":[24,-3],"n":22,"y":[1.2,1.4],"how":["swim","swim+dash"],"gap":[1.8,8.9],"gain":[20.02,26.9],"on":["coping"],"eg":{"from":[22.5,1.4,-2.5],"dir
+
+## r47acd.txt
+### r47acd
+RESULT 2/2
+console errors: none
+## rule 47 PASS
+##  a low {"byMode":{"idle":[2166,0],"save":[2166,0]},"trials":4332,"touched":4332,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##  a high {"byMode":{"idle":[2500,0],"save":[2500,0]},"trials":5000,"touched":5000,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##  c holders [["mould-stack",852,["high","r60","r90","f50"]],["ladle-stand",853,["high","r30","r60","r90","f50"]],["slump-hornito",862,["high","r30","r60","r90","f50"]],["slump-hornito",863,["high","r30","r60","r90","f50"]],["caldera-wall",945,["high","r60","r90","f50"]],["caldera-wall",946,["high","r60","r90","
+##  c mitts {"trials":1200,"touched":1077,"died":0,"flung":0,"perched":0,"held":831,"rescued":831,"rescueFar":0,"rescueMaxH":5.77,"rescueMaxM":5.77}
+##    farthest {"part":"c","how":"mitts","level":"high","on":"slump-hornito","from":[24.5,1.5,1.5],"c":0.75,"pitch":0.4,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  c run {"trials":168,"touched":168,"died":0,"flung":0,"perched":0,"held":168,"rescued":168,"rescueFar":0,"rescueMaxH":4.67,"rescueMaxM":4.67}
+##    farthest {"part":"c","how":"run","level":"high","on":"slump-hornito","from":[-26.5,4.2,-18.5],"ru":2.6,"block":"slump-hornito#862","to":[-23.5,1.1,-15.5]}
+##  c swim {"trials":318,"touched":318,"died":0,"flung":0,"perched":0,"held":262,"rescued":262,"rescueFar":0,"rescueMaxH":5.34,"rescueMaxM":5.34}
+##    farthest {"part":"c","how":"swim","level":"high","on":"slump-hornito","from":[-23.5,1.2,-16.5],"ru":2.6,"block":"slump-hornito#862","to":[-23.5,1.1,-15.5]}
+##  c walk {"trials":0,"touched":0,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##  c rise {"trials":616,"touched":616,"died":0,"flung":0,"perched":0,"held":616,"rescued":616,"rescueFar":0,"rescueMaxH":5.06,"rescueMaxM":5.07}
+##    farthest {"part":"c","how":"rise-hop","on":"slump-hornito","hopAt":38.65,"td":38.8,"from":[27.16,0,10.45],"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  d low {"trials":14143,"touched":14143,"died":0,"flung":0,"perched":0,"held":59,"rescued":59,"rescueFar":0,"rescueMaxH":2.55,"rescueMaxM":4.02}
+##    farthest {"part":"d","level":"low","on":"caldera-wall","from":[27.5,2.4,-24.5],"c":0.7,"pitch":0.3,"block":"caldera-wall#1803","to":[23.5,2.6,-27.5]}
+##  d high {"trials":14412,"touched":14412,"died":0,"flung":0,"perched":0,"held":59,"rescued":59,"rescueFar":0,"rescueMaxH":2.55,"rescueMaxM":4.02}
+##    farthest {"part":"d","level":"high","on":"caldera-wall","from":[27.5,2.4,-24.5],"c":0.7,"pitch":0.3,"block":"caldera-wall#1803","to":[23.5,2.6,-27.5]}
+##  total {"touched":40066,"died":0,"flung":0,"perched":0,"held":1995,"rescued":1995,"rescueFar":0,"rescueMaxM":5.77,"rescueMaxH":5.77,"rescueWorst":{"m":5.77,"at":{"part":"c","how":"mitts","level":"high","on":"slump-hornito","from":[24.5,1.5,1.5],"c":0.75,"pitch":0.4,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}},"relaunched":0,"unreachRescue":{"n":0,"over6":0,"maxH":0},"engine":{"rescues":2
+
+## r47be1.txt
+### r47be1
+RESULT 2/2
+console errors: none
+## rule 47 PASS
+##  b low {"weapon":"blade","roofBlocks":112,"reachBy":{"hop":102,"climb":0,"mitts":10},"unreachable":0,"trials":12116,"touched":11610,"died":0,"flung":0,"perched":0,"held":2,"rescued":2,"rescueFar":0,"rescueMaxH":1.73,"rescueMaxM":8.09}
+##    farthest {"part":"b","level":"low","at":[-29.05,7.9,-5.32],"mode":"drift","h":315,"unreach":false,"block":"caldera-wall#952","to":[-27.5,0,-4.5]}
+##  b high {"weapon":"blade","roofBlocks":150,"reachBy":{"hop":122,"climb":0,"mitts":16},"unreachable":12,"trials":16246,"touched":15390,"died":0,"flung":0,"perched":0,"held":2018,"rescued":2018,"rescueFar":0,"rescueMaxH":5.8,"rescueMaxM":8.56,"unreachRescue":{"n":624,"over6":290,"maxH":8.2,"maxAt":["caldera-wall#1775",[29.28,7.9,9.7],[24.5,1.2,16.5]]}}
+##    farthest {"part":"b","level":"high","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  b r30 {"weapon":"blade","roofBlocks":112,"reachBy":{"hop":102,"climb":0,"mitts":10},"unreachable":0,"trials":12116,"touched":11610,"died":0,"flung":0,"perched":0,"held":940,"rescued":940,"rescueFar":0,"rescueMaxH":5.8,"rescueMaxM":7.6}
+##    farthest {"part":"b","level":"r30","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  e low {"tops":44,"feet":295,"byMode":{"idle":{"tries":295,"reached":258,"died":0},"push":{"tries":295,"reached":258,"died":6},"back":{"tries":295,"reached":258,"died":0},"left":{"tries":295,"reached":258,"died":2},"right":{"tries":295,"reached":258,"died":5}},"trials":516,"touched":516,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":774,"died":13,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":1,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"low","on":"gauge-machine-house","id":711,"mode":"right","face":[0,-1],"foot":[-11.7,2.4,2],"block":"gauge-machine-house#711","died":true,"flung":fals
+##  e high {"tops":46,"feet":267,"byMode":{"idle":{"tries":267,"reached":226,"died":0},"push":{"tries":267,"reached":226,"died":6},"back":{"tries":267,"reached":226,"died":0},"left":{"tries":267,"reached":226,"died":3},"right":{"tries":267,"reached":226,"died":5}},"trials":452,"touched":452,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":678,"died":14,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":2,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"high","on":"gauge-machine-house","id":711,"mode":"left","face":[0,1],"foot":[-11.7,1.4,7.2],"block":"gauge-machine-house#711","died":true,"flung":fal
+##  e r30 {"tops":38,"feet":247,"byMode":{"idle":{"tries":247,"reached":210,"died":0},"push":{"tries":247,"reached":210,"died":6},"back":{"tries":247,"reached":210,"died":0},"left":{"tries":247,"reached":210,"died":2},"right":{"tries":247,"reached":210,"died":5}},"trials":420,"touched":420,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":630,"died":13,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":1,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"r30","on":"gauge-machine-house","id":711,"mode":"right","face":[0,-1],"foot":[-11.7,2.4,2],"block":"gauge-machine-house#711","died":true,"flung":fals
+##  total {"touched":39998,"died":0,"flung":0,"perched":0,"held":2960,"rescued":2960,"rescueFar":0,"rescueMaxM":8.56,"rescueMaxH":5.8,"rescueWorst":{"m":5.8,"at":{"part":"b","level":"high","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}},"relaunched":0,"unreachRescue":{"n":624,"over6":290,"maxH":8.2},"engine":{"rescues":2960,"rescueF
+
+## r47be2.txt
+### r47be2
+FAIL rule 47: no roof top beside the lava slides a kid into it, holds it as a perch or flings it — (a) the hop-on probe, (b) every point of every top, still / drifting, idle / steering back (on every top a kid reaches: a hop, a squid climb, a Mitts leap), at LOW, HIGH, the rise's 30 / 60 / 90 % and the fall's 50 %, (c) Mitts leaps, running and swim jumps, walk-offs and hops during the rise onto 
+RESULT 1/2
+console errors: none
+## rule 47 FAIL
+##  b r60 {"weapon":"bow","roofBlocks":150,"reachBy":{"hop":122,"climb":0,"mitts":16},"unreachable":12,"trials":16246,"touched":15390,"died":0,"flung":0,"perched":0,"held":2226,"rescued":2226,"rescueFar":0,"rescueMaxH":5.89,"rescueMaxM":8.56,"unreachRescue":{"n":624,"over6":290,"maxH":8.2,"maxAt":["caldera-wall#1775",[29.28,7.9,9.7],[24.5,1.2,16.5]]}}
+##    farthest {"part":"b","level":"r60","at":[20.38,1.71,6.98],"mode":"back","h":109,"unreach":false,"block":"lava:race3~:1#1812","to":[14.5,1.3,6.5]}
+##  b r90 {"weapon":"bow","roofBlocks":150,"reachBy":{"hop":122,"climb":0,"mitts":16},"unreachable":12,"trials":16246,"touched":15390,"died":0,"flung":0,"perched":0,"held":2018,"rescued":2018,"rescueFar":0,"rescueMaxH":5.8,"rescueMaxM":8.56,"unreachRescue":{"n":624,"over6":290,"maxH":8.2,"maxAt":["caldera-wall#1775",[29.28,7.9,9.7],[24.5,1.2,16.5]]}}
+##    farthest {"part":"b","level":"r90","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  b f50 {"weapon":"bow","roofBlocks":150,"reachBy":{"hop":122,"climb":0,"mitts":16},"unreachable":12,"trials":16246,"touched":15238,"died":0,"flung":0,"perched":0,"held":2076,"rescued":2076,"rescueFar":2,"rescueMaxH":6.02,"rescueMaxM":8.56,"unreachRescue":{"n":624,"over6":290,"maxH":8.2,"maxAt":["caldera-wall#1775",[29.28,7.9,9.7],[24.5,1.2,16.5]]}}
+##    farthest {"part":"b","level":"f50","at":[19.66,1.55,6.73],"mode":"back","h":19,"unreach":false,"block":"lava:race3~:1#1812","to":[24.5,1.5,2.5]}
+##  e r60 {"tops":46,"feet":267,"byMode":{"idle":{"tries":267,"reached":226,"died":0},"push":{"tries":267,"reached":226,"died":6},"back":{"tries":267,"reached":226,"died":0},"left":{"tries":267,"reached":226,"died":3},"right":{"tries":267,"reached":226,"died":5}},"trials":452,"touched":452,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":678,"died":14,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":2,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"r60","on":"gauge-machine-house","id":711,"mode":"left","face":[0,1],"foot":[-11.7,1.4,7.2],"block":"gauge-machine-house#711","died":true,"flung":fals
+##  e r90 {"tops":46,"feet":267,"byMode":{"idle":{"tries":267,"reached":226,"died":0},"push":{"tries":267,"reached":226,"died":6},"back":{"tries":267,"reached":226,"died":0},"left":{"tries":267,"reached":226,"died":3},"right":{"tries":267,"reached":226,"died":5}},"trials":452,"touched":452,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":678,"died":14,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":2,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"r90","on":"gauge-machine-house","id":711,"mode":"left","face":[0,1],"foot":[-11.7,1.4,7.2],"block":"gauge-machine-house#711","died":true,"flung":fals
+##  e f50 {"tops":46,"feet":267,"byMode":{"idle":{"tries":267,"reached":226,"died":0},"push":{"tries":267,"reached":226,"died":6},"back":{"tries":267,"reached":226,"died":0},"left":{"tries":267,"reached":226,"died":3},"right":{"tries":267,"reached":226,"died":5}},"trials":452,"touched":452,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":678,"died":14,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":2,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"f50","on":"gauge-machine-house","id":711,"mode":"left","face":[0,1],"foot":[-11.7,1.4,7.2],"block":"gauge-machine-house#711","died":true,"flung":fals
+##  total {"touched":47374,"died":0,"flung":0,"perched":0,"held":6320,"rescued":6320,"rescueFar":2,"rescueMaxM":8.56,"rescueMaxH":6.02,"rescueWorst":{"m":6.02,"at":{"part":"b","level":"f50","at":[19.66,1.55,6.73],"mode":"back","h":19,"unreach":false,"block":"lava:race3~:1#1812","to":[24.5,1.5,2.5]}},"relaunched":0,"unreachRescue":{"n":1872,"over6":870,"maxH":8.2},"engine":{"rescues":6320,"rescueFa
+
+## wall9.txt
+### wall9
+RESULT 1/1
+console errors: none
+PASS the "unreachable" caldera-wall tops: a squid climb reaches them; 0 deaths idle / pushing on / steering back / left / right  {"times":{"low":10,"r30":38.75,"r60":40.75,"r90":43.25,"high":48,"f50":75},"rows":0,"reached":0,"deaths":0,"byLevelMode":{}}
+
+## zones-1.txt
+### zones-1
+RESULT 7/7
+console errors: none
+PASS zones 300: lava splats per team (and where), sea splats  {"lavaByTeam":[0,0],"deaths":[],"water":0,"byCause":{"shot":44,"mitts":10,"seeker":1,"blast":13,"burst":4,"blaster":5,"zooka":3,"crab":4,"jetpack":2,"mine":1},"perBotPer3min":0}
+PASS no bot drowned by a rise it was warned of (any lava death in an announced surge with nobody credited)  {"n":0,"list":[]}
+PASS stuck: % of bot time; no episode ≥ 10 s; none at the Pumice Races  {"stuckPct":0.49,"longest":[],"atStones":[],"atOrgans":[{"t":70.5,"name":"Coral","pos":[9.6,4.65,11],"mode":"fight","dur":0.25,"stone":false,"organ":true,"crest":false,"lava":"high"},{"t":97.5,"name":"Coral","pos":[9,1.4,7.8],"mode":"paint","dur":1.75,"stone":false,"organ":true,"crest":false,"lava":"low"},{"t":100,"name":"Co
+PASS the Slumps crossed (the shelf or a Race) and the Organ lookouts used (informational: the balance pass)  {"crossings":3,"lookout":{"organA":1.8,"organB":1.7,"organL":78.8},"burned":14615,"devices":0,"redirects":0,"stoneSteps":5}
+PASS an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)  {"lookTeam":[9.5,69.4],"lookLong":[0,69.4],"longKits":[[1,"spinner"]],"applies":true,"claims":23,"held":76.9,"organL":78.8,"log":[{"t":25.2,"team":0,"who":"P1","kit":"twins","up":null,"held":0,"end":"splatted","at":27.3},{"t":25.2,"team":1,"who":"Coral","kit":"spinner","up":52.3,"held":17.9,"end":
+
+## zones-2.txt
+### zones-2
+RESULT 7/7
+console errors: none
+PASS zones 300: lava splats per team (and where), sea splats  {"lavaByTeam":[0,0],"deaths":[],"water":0,"byCause":{"drop":5,"charger":15,"bow":6,"shot":25,"mitts":16,"boomerang":1,"jetpack":3,"roller":3,"zipcaster":1,"burst":2},"perBotPer3min":0}
+PASS no bot drowned by a rise it was warned of (any lava death in an announced surge with nobody credited)  {"n":0,"list":[]}
+PASS stuck: % of bot time; no episode ≥ 10 s; none at the Pumice Races  {"stuckPct":0.34,"longest":[],"atStones":[{"t":166.3,"name":"Drip","pos":[14.1,1.3,-2],"mode":"fight","dur":0.25,"stone":true,"organ":false,"crest":false,"lava":"high"}],"atOrgans":[{"t":70.5,"name":"Nori","pos":[-9.4,4.65,-11.1],"mode":"paint","dur":0.25,"stone":false,"organ":true,"crest":false,"lava":"high"},{"t":76.2,"nam
+PASS the Slumps crossed (the shelf or a Race) and the Organ lookouts used (informational: the balance pass)  {"crossings":3,"lookout":{"organA":4.2,"organB":4.9,"organL":112},"burned":6095,"devices":0,"redirects":0,"stoneSteps":2}
+PASS an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)  {"lookTeam":[50.3,61.7],"lookLong":[49.8,50.5],"longKits":[[0,"charger"],[1,"bow"]],"applies":true,"claims":10,"held":98.4,"organL":112,"log":[{"t":25.2,"team":0,"who":"Nori","kit":"charger","up":52.7,"held":17.4,"end":"released","at":70.1},{"t":25.2,"team":1,"who":"Zest","kit":"twins","up":null,"

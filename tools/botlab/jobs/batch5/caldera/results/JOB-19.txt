@@ -1,0 +1,4 @@
+JOB-19 (caldera) @ a51c7408 (the final code: + 6509d4c6, 01f7ea2b) — Mac mini b5-runner, 2026-10-25 01:33–02:40, exit 0. Short summary.
+- EVERYTHING FULL: net-lava 13/13 (alone; JOB-16 / 18's late-joiner paint miss gone), rule 47 in smaller parts — a,c,d 2/2, b LOW+HIGH 2/2,
+  b r30+r60 2/2, b r90+f50 2/2, e 2/2 — lava.js 60/60 ×3, lava-bots 7/7, land9-rise 61/61 (it timed out in JOB-16 and 18).
+- one note: r47b3 printed its RESULT 2/2 and THEN the 900 s WATCHDOG — the result is complete, the page just ran to its limit at the end.

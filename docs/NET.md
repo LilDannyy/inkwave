@@ -561,7 +561,11 @@ play under the surface, the nav windows and the burn are pure functions of the s
 (a follower catching up, a late joiner) re-derives them at once (`seek`: a late joiner does not burn — its imported grid
 already has no ink under the lava). Each screen judges its own: a squidkid's lava death is its owner's (`R.kill`, cause
 `lava`, the attacker credited by the sea's 4 s rule, forwarded like any splat), a device's destruction is its owner's
-(the 4 Hz sweep while the lava rises: the owner's end record ends the ghosts), shots fizzle where they are simulated. A
+(the 4 Hz sweep while the lava rises: the owner's end record ends the ghosts), shots fizzle where they are simulated; a
+squidkid on cover whose every way off lands in the lava is held 0.6 s and rescued by its owner (actor.js `_roofHeldStep`
+→ `R.rescue`: the nearest dry node within 6 m — none, held on up to 2 s for one, then within 12 m —, a teleport — `netTp`,
+every other screen snaps its ghost there — with 1 s of invulnerability the owner judges damage by; the HUD line is the
+owner's; a hold left by a super jump or a special ends there, on the owner's screen). A
 splat near the region below the high mark carries its painter's stage time (field 15), so ink under the lava is refused —
 and burned ink stays burned — identically everywhere whatever order the records arrive in. Tested by
 `tools/botlab/tests/net-lava.cjs` (`WIPSTAGES=1 CLIENTS=2`: the level in step through a Turf War, a guest's lava death on

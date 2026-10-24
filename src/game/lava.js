@@ -35,6 +35,7 @@ import { inMode } from '../world/variants.js';
 import { BoxPaint } from './towerPaint.js';
 import { LAVA, lavaSchedule, lavaAt, lavaY, lavaMax, crossTime, stoneRel, riderTop, expandLava, partPose, inRider, pointInPoly } from './lavaCore.js';
 import { LavaLook, LavaHud, lavaLevelExt, patchStain, LAVA_ICON, drawLavaMap, proxMix } from '../fx/lavaFx.js';
+import { MAIN_KITS } from './kits/registry.js';
 import '../audio/sfx-lava.js';
 
 export { LAVA, lavaSchedule, lavaAt, lavaMax, riderTop };
@@ -384,6 +385,20 @@ export class LavaWorld {
   }
 
   // ------------------------------------------------------------------------- the nav graph: two poses merged (§4.3)
+  // (fix round 5) the layout's `walks`: nav walk links between two static floors that the 1 m grid misses, [[x, y, z],
+  // [x, y, z]] in Alpha's half, both ways (the twin turned 180° with `mirror`), served as stageMods' navEdges (level.extraEdges:
+  // each end resolves to the node within 0.8 m of it). Highmark: round the gauge deck's corner at each deck stair, where the
+  // deck stands 0.85 m from the lava's edge — a kid walks round it, but no grid cell's centre fell on the copings there, so
+  // every route from the East Pool's coping to the deck stair's foot went over the deck (24 m for a 5 m walk), and
+  // lava-audit rule 44 read a 3.5 m running jump across the pool's corner as saving 19.3 m
+  navEdges() {
+    const out = [], mir = !!this.def.mirror;
+    for (const [a, b] of this.def.walks || []) for (const tw of mir ? [0, 1] : [0]) {
+      const A = tw ? [-a[0], a[1], -a[2]] : a, B = tw ? [-b[0], b[1], -b[2]] : b, d = Math.hypot(B[0] - A[0], B[2] - A[2]);
+      out.push({ a: A, b: B, cost: d, type: 'walk', walkLink: true }, { a: B, b: A, cost: d, type: 'walk', walkLink: true });
+    }
+    return out;
+  }
   buildNav(level, physics) {
     const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
     const R = this.riders, H = this.high;
@@ -537,8 +552,11 @@ export class LavaWorld {
   }
   // the nearest node every lava-reached node can walk to that the lava never reaches (multi-source Dijkstra, reversed);
   // sources = true: the nodes flagged in `kind` are the targets instead (the inland nodes)
+  // (fix round 6: the distances in float64 — in a Float32Array a node's stored distance rounded below the float64 one it
+  // was queued with, so the heap's stale-entry test skipped it and nothing behind it got an exit: two shelf nodes a half
+  // read "no way out" in lava-audit rule 14 once the north head's corner moved, though they walk to the others in 1 m)
   _exits(nav, kind, sources = false) {
-    const N = nav.nodes.length, dist = new Float32Array(N).fill(Infinity), exit = new Int32Array(N).fill(-1);
+    const N = nav.nodes.length, dist = new Float64Array(N).fill(Infinity), exit = new Int32Array(N).fill(-1);
     const radj = Array.from({ length: N }, () => []);
     for (const n of nav.nodes) for (const e of n.nb) if (e.type !== 'climb') radj[e.to].push([n.id, e.cost]);
     const heap = [], push = (id, d) => { heap.push([d, id]); let i = heap.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
@@ -1031,6 +1049,47 @@ export class StageLava {
     this.stats.redirects = (this.stats.redirects || 0) + 1;
   }
   _stoneUpAt(R, t) { const st = lavaAt(t, this.sched, this.otAt, this.held); return stoneRel(R.r, t, this.sched, st) >= LAVA.kill; }
+  // (review 8, the lead's rule for cover standing in drowned ground) a kid held on an off-limits top whose every way off
+  // lands in the lava (actor._roofHeldStep: 0.6 s where it stands, so the player sees what happened) is RESCUED as the era
+  // engine rescues a kid over water: placed on the nearest dry node — static floor that stands, that the lava does not
+  // reach within 8 s, the body fitting — within RESCUE.r (6 m; none there: held on up to RESCUE.wait s for one, then the
+  // nearest within 12 m, counted in stats.rescueFar), with a brief invulnerability (RESCUE.invuln), never splatted, never thrown. The owner's screen does it
+  // (a teleport: netTp, every screen snaps); its HUD's personal line says NO FOOTING → rescued (_mine)
+  rescue(a) {
+    const nav = G.nav, M = this.W.navMeta, L = G.level, Ph = G.physics;
+    if (!nav || !M || nav !== this.W.nav || !L || !a.alive) return false;
+    const t = this.clock.t, p = a.pos, squid = a.form === 'squid';
+    let best = -1, bd = RESCUE.far * RESCUE.far;
+    for (const n of nav.nodes) {
+      const d2 = (n.x - p.x) ** 2 + (n.z - p.z) ** 2;
+      if (d2 >= bd || !nav.valid[n.id] || M.kind[n.id] === 2) continue;
+      if (M.kind[n.id] === 1 && this.maxOver(t, t + 8) >= M.shutY[n.id]) continue;
+      if (this.covers(n.x, n.z, n.y, 8)) continue;
+      const g = L.groundHeight(n.x, n.z, n.y + 0.3);
+      if (!(Math.abs(g - n.y) < 0.3) || g <= PLAYER.waterY + 0.3) continue;
+      if (Ph && !Ph.bodyFits(_v.set(n.x, n.y + 0.02, n.z), PLAYER.radius, PLAYER.stepUp, PLAYER.height * 0.9, squid)) continue;
+      bd = d2; best = n.id;
+    }
+    if (best < 0) return false;
+    // (fix round 9, review 9: the 6 m measured from the kid's own move) none within 6 m: hold on for one, up to RESCUE.wait
+    // s held in all (the actor asks again every 0.25 s) — in a fall the floor beside the Race dries within a second: from
+    // race 3's boulder at the fall's 50 % the nearest dry node stood 6.00–6.04 m off, the shelf's 3.4 m once it was bare —
+    // then the nearest within 12 m (the outer walls' middles at HIGH, which no kid reaches)
+    if (bd > RESCUE.r * RESCUE.r && (a.roofHeldSum || 0) < RESCUE.wait) return false;
+    const n = nav.nodes[best], from = p.clone(), d = Math.sqrt(bd);
+    p.set(n.x, n.y + 0.05, n.z); a.vel.set(0, 0, 0); a.netTp = (a.netTp || 0) + 1;
+    a.invuln = Math.max(a.invuln || 0, RESCUE.invuln);
+    a.lavaRescueT = t;
+    const S = this.stats;
+    S.rescues = (S.rescues || 0) + 1;
+    if (d > RESCUE.r) S.rescueFar = (S.rescueFar || 0) + 1;
+    if ((S.rescueLog ||= []).length < 40) S.rescueLog.push({ t: +t.toFixed(2), bot: !!a.isBot, from: [+from.x.toFixed(2), +from.y.toFixed(2), +from.z.toFixed(2)], to: [+n.x.toFixed(2), +n.y.toFixed(2), +n.z.toFixed(2)], d: +d.toFixed(2), block: a.ground?.block ?? -1 });
+    if (!this.m.attract) try {
+      G.fx?.ring?.(_v.set(from.x, from.y + 0.08, from.z), UP, RESCUE.color, { radius: 1.2, life: 0.45 });
+      G.fx?.ring?.(_v.set(n.x, n.y + 0.08, n.z), UP, RESCUE.color, { radius: 1.6, life: 0.5 });
+    } catch (e) { /* optional */ }
+    return true;
+  }
   // a snap put someone's floor under the lava: shove them to the nearest node dry for 8 s
   _escapeShove() {
     const nav = G.nav, M = this.W.navMeta;
@@ -1154,6 +1213,33 @@ export class StageLava {
     // (on a stone or a drowning ledge the escape and the brain have it: no claim route from there)
     if (!up && this._foot(a).kind) { L.path = null; return; }
     void M;
+    // (fix round 6, review 6 issue 4: a claimant busy with its life once the top is climbable lets the claim go. Both of one
+    // lava.js run's claimants reached the island's foot, then fought, retreated and refilled there until the fall warning —
+    // never up, their route still at the top, so neither the foot's time-out nor the stall release fired. Over LOOK_BUSY s in
+    // a fight, a retreat or a refill below the top after its HIGH-pose nodes open, the claim goes and it is passed over 8 s:
+    // the plan hands it to the team's next kit)
+    // (and only while it makes no headway: the first cut counted a claimant walking its route in a fight — the route is
+    // walked in a fight, see above — and let the claim go halfway up the climb, 2 of 3 lava.js runs: a new best distance to
+    // the top by 0.4 m, or a waypoint of its claim's route passed, within the last LOOK_PROG s is headway)
+    const open = !up && L.ids.some((id) => this.shut(id, t) === 0);
+    if (open) {
+      const R = this.riders[L.ri];
+      let dh = Infinity; for (const id of L.ids) { const n = nav.nodes[id]; dh = Math.min(dh, Math.hypot(n.x - a.pos.x, n.z - a.pos.z)); }
+      const d = dh + Math.max(0, (R ? R.top : a.pos.y) - a.pos.y);
+      const onRoute = !!L.path && b.path === L.path;
+      if (onRoute && L.progPath !== L.path) { L.progPath = L.path; L.progPi = b.pi; }   // (a new route: its own count)
+      if (L.progT == null || d < L.bestD - 0.4 || (onRoute && b.pi > L.progPi)) { L.progT = t; L.bestD = Math.min(d, L.bestD ?? Infinity); }
+      if (onRoute) L.progPi = Math.max(L.progPi, b.pi);
+    }
+    if (open && (b.mode === 'fight' || b.mode === 'refill' || b.mode === 'retreat') && t - L.progT > LOOK_PROG) {
+      L.busyT = (L.busyT || 0) + dt;
+      if (L.busyT > LOOK_BUSY) {
+        b._lookBan = t + 8; this.stats.lookBusyOuts = (this.stats.lookBusyOuts || 0) + 1;
+        if (L.log && !L.log.end) { L.log.end = 'busy'; L.log.at = +t.toFixed(1); L.log.held = +L.held.toFixed(1); }
+        this._lookRelease(b); for (const T of this._lp || []) if (T && T.claim === b) T.claim = null;
+        return;
+      }
+    }
     if (b.mode === 'retreat' || (b.mode === 'refill' && !up)) { L.path = null; L.on = false; return; }   // (its life, its tank first)
     b.goalTimer = Math.max(b.goalTimer || 0, 0.6); b.repath = Math.max(b.repath || 0, 0.6);
     // dry on the top: it stays — the brain's refill paints a puddle where it stands and swims in it (the deck takes ink)
@@ -1176,6 +1262,19 @@ export class StageLava {
       return;
     }
     L.on = false;
+    // (fix round 5, review 5 issue 4: the foot wait's own time-out. The stall release below skips a claimant whose goal is the
+    // climb's foot, and in one lava.js run of two both claimants stood at their feet from the rise to the fall warning, never
+    // up. From the moment its lookout is climbable — the top's HIGH-pose nodes open — a claimant whose goal is still the foot
+    // has found no way up in each 0.8 s re-plan: after FOOT_WAIT s of that the claim goes, and it is passed over 15 s)
+    if (L.goal === L.foot && L.foot >= 0 && L.ids.some((id) => this.shut(id, t) === 0)) {
+      if (L.footT == null) L.footT = t;
+      if (t - L.footT > FOOT_WAIT) {
+        b._lookBan = t + 15; this.stats.lookFootOuts = (this.stats.lookFootOuts || 0) + 1;
+        if (L.log && !L.log.end) { L.log.end = 'foot-timeout'; L.log.at = +t.toFixed(1); L.log.held = +L.held.toFixed(1); }
+        this._lookRelease(b); for (const T of this._lp || []) if (T && T.claim === b) T.claim = null;
+        return;
+      }
+    } else L.footT = null;
     // (fix round 4: a claimant that makes no 0.6 m in 5 s on its way up — not waiting at the climb's foot — lets the claim go
     // and is passed over for 15 s: a bow at Organ A~'s foot on enemy ink its shots never covered, its hop refused, stood
     // there 10.75 s in a Zone Control match; another claimant takes it)
@@ -1385,10 +1484,17 @@ export class StageLava {
       // (bots.js runs this hook ahead of a threat's or a canopy's footwork while it says so: on floor the lava takes, on a
       // stone, or escaping — a bot dodging a Torpedo on a drowning ledge never got its escape)
       b.stageUrgent = k !== 0 || !!b._lavaEsc;
+      // (fix round 6: and while it escapes the route is the module's — a Zone Control guard holding its ground in a fight
+      // dropped the escape's route every frame, which the module planned again only each 0.05–0.25 s: a charger on Bravo's
+      // drowning shelf backed away from its exit for 1 s of strafes and the rise had it, lava-match zones)
+      b.stageRoute = !!b._lavaEsc;
     }
     // the Organ lookouts: each team's claimant (_lookPlan) goes up its own lookout and holds it until the fall warning
     if (!b._lavaEsc && b._look) { const r = this._lookAct(b, dt, it, move, vis); if (r) return r; }   // (fix round 3: its aim while it inks its feet)
     if (b._lavaEsc) {
+      // (fix round 9, lava.js F8c: an escape drops a Sponge Mitts leap charge — the kit swallows the hop's press while it
+      // charges, and the bot code lets the charge go as a pounce along its old aim: off a sinking stone into the lava)
+      MAIN_KITS[a.weapon?.kind]?.dropCharge?.(a.weaponRunner);
       // up the hop out (a 1.2 m step onto the head, the causeway, the island): straight at it, asking for the jump (the
       // brain presses it, on its own cool-down). The brain's steering drops a route whose next node stands that far
       // above it within 1.2 m (its slip rule), so that last metre is steered here, never left to _steer
@@ -1561,6 +1667,8 @@ export class StageLava {
   _mine(a) {
     const M = this.W.navMeta, nav = G.nav;
     if (!M || !nav || nav !== this.W.nav) return null;
+    // (review 8) held on cover with no footing round it, then rescued: NO FOOTING → rescued, from the hold to 1.8 s after
+    if (a.roofHeld > 0 || (a.lavaRescueT !== undefined && this.clock.t - a.lavaRescueT >= 0 && this.clock.t - a.lavaRescueT < RESCUE.line)) return { text: 'NO FOOTING', m: 0, to: null, left: null, rescue: true };
     // (from the feet: _foot — dry ground never gets the line; a stone keeps it until it sinks)
     const f = this._foot(a), s = f.node, ex = s >= 0 ? M.exit[s] : -1;
     if (!f.kind) return null;
@@ -1604,11 +1712,17 @@ export class StageLava {
 }
 // the weapons that take the Organ lookouts at HIGH (long range: height is worth the climb)
 const LOOKOUT_KINDS = new Set(['charger', 'splatling', 'spinner', 'bow']);
+const FOOT_WAIT = 6;   // s a lookout claimant may wait at its climb's foot once the top is climbable (fix round 5)
+const LOOK_BUSY = 3;   // s a lookout claimant may spend fighting / retreating / refilling below the top once it is climbable (fix round 6)
+const LOOK_PROG = 1;   // s without headway toward the top before a busy claimant's time counts (fix round 6)
 // (fix round 3) the trigger while a bot inks the floor at its feet (an escaper at a step, a claimant at a column): a charge
 // kit (charger, bow, spinner) lets go of a charge worth a shot, so the shot leaves while it is aimed down — held, it went
 // off only once the aim had moved on, and the deck stayed the other team's
 const inkTrigger = (a) => { const wr = a.weaponRunner; return !(wr && wr.charging && (wr.charge || 0) >= 0.35); };
 const FOOT_DRY = Object.freeze({ kind: 0, node: -1 });
+// (review 8) the rescue off cover standing in drowned ground: within r m (none: held on up to wait s in all for one, then up
+// to far), invulnerable invuln s, the HUD's line shown line s from the hold's start to after the move
+const RESCUE = { r: 6, far: 12, wait: 2.0, invuln: 1.0, line: 1.8, color: new THREE.Color('#f4f1ea') };
 const SLOW_FIRE = new Set(['charger', 'splatling', 'spinner', 'bow', 'roller']);   // (an escaper of these lets go of the trigger)   // (StageLava._foot: dry ground, an Organ, airborne long enough)
 const BOULDER_GROW = 0.12;   // m of a stone's travel relative to the lava over which its boulder heaves up / sinks back
 // subs items the sweep ends (placed, stuck or running devices; not thrown subs in flight, clouds or mist)

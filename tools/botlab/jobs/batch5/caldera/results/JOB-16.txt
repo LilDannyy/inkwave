@@ -1,0 +1,10 @@
+JOB-16 (caldera) @ 458231a9 (fix round 9: code b083a41e, tests 35cee2be) — Mac mini b5-runner, 2026-10-24 23:27 – 10-25 00:24, exit 0. Short summary.
+- full: rule 44 LOW 23/23 / HIGH 25/25, rule 47 a/c/d 2/2, rule 47 b/e at LOW/HIGH/r30 2/2, lava.js runs 2–3 60/60, lava-bots 7/7, Zone
+  Control 7/7 ×2, boss-check caldera 6/6 ×5, review 9's probes (wall9, held9 35/35, far9, land9 high 13/13 …), lava-karp 10/10.
+- not full:
+  - rule 47 b/e at r60 / r90 / f50: 1/2 (a roof top beside the lava still slides / holds / flings a kid at one of those states);
+  - lava.js run 1 59/60 (F8c, the rising stone's step, again); the audit's rule 42 ('no view shows void') again;
+  - net-lava 12/13: the late joiner's imported paint differs from the host's in the lava cells (the host painted the Slump cliff across …);
+  - boss on other stages, this code vs int4's f687b4c2: calamari 6/6 both; kelpline 5/6 both ('it roams': 12–15 m walked); treehills 4/6
+    both ('home ground' 115 m² and 'it roams') — the same misses with the old boss code, so they predate this round.
+  - review 9's land9-rise probe gave NO result: it hit its WATCHDOG (the page never returned), so the land9 rise case is unmeasured.

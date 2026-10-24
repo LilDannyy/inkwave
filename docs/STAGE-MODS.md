@@ -165,7 +165,10 @@ ready() { this.apply(1, { instant: true }); }
 
 ### Nav (`src/game/nav.js`)
 
-- **Special edges**: `W.navEdges(level)` → `[{ a: [x, y, z], b: [x, y, z], cost, type: 'pipe', key, len, …any }]`.
+- **Special edges**: `W.navEdges(level)` → `[{ a: [x, y, z], b: [x, y, z], cost, type: 'pipe', key, len, …any }]`
+  (pipes: `type: 'pipe'`; lava, fix round 5: the layout's `lava.walks` — `type: 'walk'` links both ways between two static
+  floors the 1 m grid misses, e.g. Highmark's 0.85 m between the gauge deck's corner and the lava's edge; fix round 6: and
+  a nudged node in a pocket on the Ladle Road by the scree ramp, joined by the grid only to the Rim Ridge above).
   `NavGraph._extraEdges` links the nearest node within 0.8 m (xz) and 0.6 m (y) of each end; specs that don't resolve
   go to `nav.edgeProblems`. Edges keep every extra field. `nav.hScale` (= min(1, cost ÷ straight distance) over the
   special edges) scales A*'s heuristic so a cheap long edge is never skipped; 1 on every other stage.
@@ -285,6 +288,7 @@ clone with the era vertex collapse). Untagged placements are merged exactly as t
 | `superJumpLanding(a, s)` | charge → flight, not on the tower | — (move `s.to`) |
 | `noPush(a)` | the soft push between actors | true = skip this actor |
 | `noShove(a)` | `stageKit.shovable`, `subs.blockActor` | true = never shove it |
+| `rescue(a)` ([b5-caldera]) | `actor._roofHeldStep`: a kid held 0.6 s on an off-limits top whose every way off lands in your hazard (`wet`), then every 0.25 s until one answers | place it somewhere safe (a teleport: `a.netTp++`) and return true; false = still held (Highmark: the nearest dry node within 6 m — none: false, held on up to 2 s in all for one, then the nearest within 12 m —, 1 s invulnerable, the HUD line NO FOOTING → rescued) |
 
 ### Online (`src/net/netmatch.js`)
 
@@ -308,8 +312,8 @@ clone with the era vertex collapse). Untagged placements are merged exactly as t
 | `botHold(b)` | `BotBrain.update`'s super-jump early return | true = the bot does nothing this frame (riding) |
 | `edgeTypes: ['pipe']` + `botSteer(b, edge, out)` | `_steer`, after the waypoint advance, when the next edge's type is yours (and the ledge-replan exception) | return `out` (the move) or null |
 | `beforePath(b)` | `_pathTo`, before `nav.path` | set your per-bot nav rule state (`this.botX = …`) |
-| `botAct(b, dt, it, move, vis)` | after the pods' bot hook | an aim (Vector3) to take over, or null. Bot fields it may set for this frame ([b5-caldera]): `b.stageUrgent` (run it ahead of a threat's footwork), `b.guardOff` (a straight run at a step: no edge / water guard), `b._needJump = true` (ask for a hop) with `b.hopAt` (fix round 4: the `{ x, y, z }` the hop is for — `_tail` judges it by the flight steered at that spot, `_hopLands`, and flies it there; a refused ask's press costs no cool-down) |
-| `wet(x, z, gy, ahead)` | `_wet`, `_avoidWater`, `_squidWouldDrop` (ahead 0.5), `stageKit.floorFor` (ahead 1) | true = feet on that floor would be in your hazard (now or within `ahead` s) |
+| `botAct(b, dt, it, move, vis)` | after the pods' bot hook | an aim (Vector3) to take over, or null. Bot fields it may set for this frame ([b5-caldera]): `b.stageUrgent` (run it ahead of a threat's footwork), `b.stageRoute` (fix round 6: while it says so the route — `b.path` — is the module's: the brain's fight navigation leaves it alone, no Zone Control hold-ground drop, no chase re-plan; no device shooting; the move, the dive and a trigger the module let go are kept through the enemy-special danger guard and the kits' botAct, which are told `busy`; the lava sets it while a bot escapes), `b.guardOff` (a straight run at a step: no edge / water guard), `b._needJump = true` (ask for a hop) with `b.hopAt` (fix round 4: the `{ x, y, z }` the hop is for — `_tail` judges it by the flight steered at that spot, `_hopLands`, and flies it there; a refused ask's press costs no cool-down), `b.hopCheck = true` (fix round 4: the hop is judged by that flight even with the guards off — `b.guardOff` — a lookout claimant's column hop, with no lava at its heels a wasted hop is the worse risk; an escape's step leaves it unset). `guardOff`, `hopAt` and `hopCheck` are this frame's only: bots.js clears them just before calling `botAct` (fix round 6 — a brain stopped between a set and its read left `guardOff` on, and the next frame's asked hop skipped the lava check) |
+| `wet(x, z, gy, ahead)` | `_wet`, `_avoidWater`, `_squidWouldDrop` (ahead 0.5), `stageKit.floorFor` (ahead 1); `actor._roofLandWet` (ahead 3: a roof slide's way off whose landing — from the steer-back arc's to 0.6 m past the fast arc's, and off a tall top anywhere within the steer-back's reach behind and beside the exit — is in your hazard is refused; with a `wet` hook the slide owns the move, and every way refused holds the kid 0.6 s, then `rescue` — [b5-caldera]) | true = feet on that floor would be in your hazard (now or within `ahead` s) |
 | `goalWeight(id)` | `_pickPaintGoal` | × on a paint goal's score (eras' fresh nodes ×2) |
 | `sightLanding(e)` | `botSight` `check` / `recheck` | a Vector3: remember this enemy there (`src: 'jump'`), never target it |
 
@@ -380,7 +384,7 @@ generic extension that does nothing until a module sets it.
 | `src/game/match.js` | both setup paths (before the modes); `update` (early / late); `dispose` (first); soft push | `StageRun`, ticks, `noPush` |
 | `src/net/netmatch.js` | `F.stage` (bit 22); `packActor`; `recSplat` (field 15); `recStage`; `_sendTick` (clock); `applyRemote` (`carryRemote`); `_play` `'s'` (`opts.et`) and `'sm'`; `_hostClock` (late restore); `onLeave` (`hostChanged`); `_adopt` | online |
 | `src/net/session.js` | `_practiceJoin` | the late joiner's snapshot (`stage`) |
-| `src/game/actor.js` | `reset`; `update` (body, kill ×2, fall cause); `damage`; `jumpAnchor`; `canSuperJump`; `_updateSuperJump` | actors |
+| `src/game/actor.js` | `reset`; `update` (body, kill ×2, fall cause); `damage`; `jumpAnchor`; `canSuperJump`; `_updateSuperJump`; `wet` in `_roofLandWet`, `rescue` in `_roofHeldStep` (the roof slide, [b5-caldera]) | actors |
 | `src/world/level.js` | `Level.blockField` / `blockKind`; extras forward fields / kinds; `presence` in `pointInside`, face hiding, grounded bottom, bevels; `geomAttrs`; `liquidY` / `noPlace` defaults | the level |
 | `src/game/nav.js` | `ext` / `edgeMask` / `hScale`; `_extraEdges`; `path()` (mask, rule, metres, heuristic; the climb rule adds to the rule's cost); `nearest()` (node rule); `_climbBarred` (`absent`) | nav |
 | `src/game/physics.js` | `skip` in `raycast` | the ride camera's probe |

@@ -152,9 +152,18 @@ const NOTCH_B = [[12.63, 12.73], [11.38, 10.56], [11.25, 10.48], [10.88, 10.51],
 export const NOTCH_EDGES = [...NOTCH_B, ...rotPoly(NOTCH_B)];
 export const RACE2_A = 175.5;                               // Alpha's second Race runs east along θ 175.5 (Bravo's along −4.5)
 const IE = (r, dt) => { const a = (RACE2_A - 180) * D, u = [Math.cos(a), Math.sin(a)], n = [-u[1], u[0]]; return [r3(u[0] * r + n[0] * dt), r3(u[1] * r + n[1] * dt)]; };
-const ISLAND_E = [[0, -11.5], [5, -11.5], [7.8, -10.9], [10.4, -9.2], [12.6, -7.2], [14.4, -6.0], IE(16.2, -2.2), IE(16.2, 2.6), [15.4, 5.4], [13.6, 7.6], [12.8, 9.0]];
+// (fix round 6, review 6 issue 2 — rule 21 at the second Race's island end: the face ran 0.7 / 1.1 m past the stone's sides
+// and the island's edge receded slowly beyond it, so a kid walking off race 7's sides at an angle met the island's
+// copings 0.5–2.2 m away over open lava. The landing is now a pier exactly the stone's width + 0.2 m a side, 2.5 m long;
+// beside it the island's edge stands back at r ≤ 13.7, past where a walk off the stone at up to 67.5° reaches in 2.5 m)
+export const PIER_W = 1.7, PIER_IN = 13.7;
+const ISLAND_E = [[0, -11.5], [5, -11.5], [7.8, -10.9], [10.4, -9.2], [12.6, -7.2], [14.4, -6.0], IE(PIER_IN, -PIER_W), IE(16.2, -PIER_W), IE(16.2, PIER_W), IE(PIER_IN, PIER_W), [15.4, 5.4], [13.6, 7.6], [12.8, 9.0]];
 const ISLAND_HALF = [...ISLAND_E, ...NOTCH_B, [5, 11.5]];
 export const ISLAND = [...ISLAND_HALF, ...rotPoly(ISLAND_HALF)];
+// (Boss Battle holds the lava at LOW — the Race's stones never rise — and keeps the old faces: no bays, its home ground
+// as it was. layout.js builds this outline with onlyIn 'boss' and ISLAND with notIn 'boss')
+const ISLAND_HALF_BOSS = [...ISLAND_E.slice(0, 6), IE(16.2, -2.2), IE(16.2, 2.6), ...ISLAND_E.slice(10), ...NOTCH_B, [5, 11.5]];
+export const ISLAND_BOSS = [...ISLAND_HALF_BOSS, ...rotPoly(ISLAND_HALF_BOSS)];
 export const CW = 5.0;                                       // the causeway's half-width (10 m: the HIGH middle band ≥ Halyard's floor)
 export const CAUSE_Z = -Math.sqrt(RS * RS - CW * CW);        // the causeway's foot on the shore (x ±5)
 const TC = [angOf(-CW, CAUSE_Z), angOf(CW, CAUSE_Z)];          // the foot's corners on the shore (θ)
@@ -201,9 +210,24 @@ export const sp = (b, a, c) => [r3(b[0] + U[0] * a + V[0] * c), r3(b[1] + U[1] *
 export const FACE = 1.9;
 export const TIP_S = [sp(S0, 0, -FACE), sp(S0, 0, FACE)];
 export const TIP_N = [sp(S1, 0, -FACE), sp(S1, 0, FACE)];
+// (the first Race's stones, [x, z, w across, d along] at STONE_YAW: here, before the head that is cut by race 4)
+export const STONES = [[-18.94, -12.46, 2.6, 2.4], [-20.70, -10.11, 2.3, 2.7], [-20.82, -7.13, 2.8, 2.5], [-22.54, -4.76, 2.4, 2.6], [-22.59, -1.86, 2.6, 2.43]];
+export const STONE_YAW = -19.0;
+// (fix round 6, review 6 issue 2 — rule 21 at race 4: the head's south edge west of race 5's kerbs stood 1.6–2.3 m off race
+// 4's north-west corner over open lava. Its corner there is cut back, in race 4's frame (x across toward the island, z
+// along toward the head), past where a walk off the stone at up to 67.5° reaches in 2.5 m)
+const ST4 = (ox, oz) => { const [x, z] = STONES[3], a = STONE_YAW * D, c = Math.cos(a), s = Math.sin(a); return [r3(x + ox * c + oz * s), r3(z - ox * s + oz * c)]; };
+// (one straight edge, so its coping sinks to the 1.1 m hop the shelf's way out needs: from the head's east face 3.95 m
+// along to the old edge 3.4 m across)
+export const CUT4 = [[-1.41, 3.95], [-3.4, 3.26]].map((q) => ST4(...q));
 export const SHELF_S = [P(SH_IN, SA0), SLUMP_SW];            // the shelf's south edge (lake → cliff)
+// (fix round 6, rule 21 at race 2: the south head's north-west tip — between the shelf's edge and the head's tip face —
+// stood 2.39 m off race 2's south-west corner over open lava, met by a walk off it past race 1's kerb. It is cut off
+// along a chamfer from 1.8 m up the shelf's edge to the tip face's west end, 2.7 m off; the shelf runs on into it —
+// dry at LOW, drowned at HIGH)
+export const CHAMF2 = (() => { const [a, b] = [SHELF_S[1], SHELF_S[0]], L = Math.hypot(a[0] - b[0], a[1] - b[1]); return [r3(b[0] + ((a[0] - b[0]) * 1.8) / L), r3(b[1] + ((a[1] - b[1]) * 1.8) / L)]; })();
 export const LAKEFRONT = [
-  W0, QW, ...FRONT_T(TQ, TW).slice(1), RH_FACE[1], SLUMP_SW, SHELF_S[0], TIP_S[0], TIP_S[1],
+  W0, QW, ...FRONT_T(TQ, TW).slice(1), RH_FACE[1], SLUMP_SW, CHAMF2, TIP_S[0], TIP_S[1],
   ...sarcF(RSF, -132, TC[0] + 0.01), [-CW, r3(CAUSE_Z)], [CW, r3(CAUSE_Z)], ...arc(RS, TC[1] - 0.01, -62).slice(0, -1),
 ];
 // the Pumice Moorings (1.8, on the Lakefront): Alpha's side zone, against the terrace face and the Rim Head's face
@@ -222,7 +246,8 @@ export const MOORINGS = (() => {
 export const E0 = A(S_E0, AW);
 export const LEDGE_E = [[CW, r3(CAUSE_Z)], ...arc(RS, TC[1] - 0.01, -62).slice(1), A(FORD_S1, -AW), A(FORD_S1, AW), E0, [14.4, -6.0], [12.6, -7.2], [10.4, -9.2], [7.8, -10.9], [CW, -11.5]];
 // the Slump shelf (0): the flank that drowns, at the cliff's foot, 6.7 m wide at the south head narrowing to 3.7 m
-export const SHELF = [SHELF_S[0], SHELF_S[1], ...sarcF(SHO, SA0, SA1).slice(1, -1), SP(SHO, SA1), P(SH_IN, SA1), ...arc(SH_IN, SA1, SA0).slice(1, -1)];
+// (fix round 6: the shelf runs on under the north head's cut corner by race 4 — CUT4 — dry floor at LOW, drowned at HIGH)
+export const SHELF = [SHELF_S[0], TIP_S[0], CHAMF2, SHELF_S[1], ...sarcF(SHO, SA0, SA1).slice(1, -1), SP(SHO, SA1), ...CUT4.slice().reverse(), P(SH_IN, SA1), ...arc(SH_IN, SA1, SA0).slice(1, -1)];
 
 // ---------------------------------------------------------------------------------------------- the tail
 // Alpha's tail (its rim, round the lake's west side into the NW, defined here as Bravo's in the SE and turned): the north
@@ -230,14 +255,30 @@ export const SHELF = [SHELF_S[0], SHELF_S[1], ...sarcF(SHO, SA0, SA1).slice(1, -
 // Bridge, and the Rim Ridge (3.6) behind them: a 14–15 m band from the Slump to the horn, its outer edge r 37 → 36 → 34
 export const RN = SHO(SA1);                                  // 28.5: the north head's and the Ladle Road's back (the Ridge's foot)
 export const TH_N = 168;                                     // the north head's north end (the Ladle Road starts there)
-export const NORTH_HEAD = [TIP_N[0], P(SH_IN, SA1), SP(SHO, SA1), ...arc(RN, SA1, TH_N - 360).slice(1), P(RIM_SHORE, TH_N - 360),
-  ...arc(RIM_SHORE, TH_N - 360, -180.6).slice(1), TIP_N[1]];
+// (fix round 6, review 6 issue 2 — rule 21 at race 6's north side: past the stone's north-west corner the head's lake
+// edge curved on round under the Ladle Road, 0.8–2.3 m from the stone's side over open lava (fix round 5's kerb there
+// left its own end 0.8–1.3 m off the side). The head's corner between race 6's landing and the Ladle Road's face is cut
+// away: the landing is a face the stone's width + 0.2 m a side (the rim's own curve), its north side runs on straight
+// out to u 23.7 along the Race's line, and the Ladle Road's face stands over the lava north of it — past where a walk
+// off the stone at up to 67.5° reaches in 2.5 m. `R6(u, n)`: u along Alpha's second Race outward (θ 175.5), n north)
+export const R6 = (u, n) => { const a = RACE2_A * D, b = (RACE2_A - 90) * D; return [r3(u * Math.cos(a) + n * Math.cos(b)), r3(u * Math.sin(a) + n * Math.sin(b))]; };
+export const CUT6 = { u0: 21.5, u1: 23.85, n: 1.7, r: r3(23.85 / Math.cos((RACE2_A - TH_N) * D)) };   // (r: the cut's outer corner on the Ladle face θ 168)
+// (and the Ladle Road's south corner over it: a walk off race 6's north side at up to 67.5° reaches, in 2.5 m, u ≤ 21.25
+// + (n − 1.5)·tan(min(67.5°, acos((n − 1.5) / 2.5))) — the Road's corner stands back 0.15 m past that line, from its face
+// θ 168 round to its lake edge (r 21.5) at n 4.15)
+export const BITE6 = [[23.33, 3.1], [23.02, 3.4], [22.59, 3.7], [22.1, 3.9], [21.4, 4.0], [21.1, 4.15]];
+const CUT6_A = angOf(...R6(CUT6.u0, CUT6.n)) - 360;
+export const NORTH_HEAD = [TIP_N[0], ...CUT4, SP(SHO, SA1), ...arc(RN, SA1, TH_N - 360).slice(1), P(CUT6.r, TH_N - 360),
+  R6(CUT6.u1, CUT6.n), R6(CUT6.u0, CUT6.n), ...arc(RIM_SHORE, CUT6_A, -180.6).slice(1), TIP_N[1]];
 export const RO_SE = (a) => (a >= -6 ? 35.5 + (a + 6) / 20 : a >= -20 ? 35.5 : 35.5 - 2 * (-20 - a) / 12);   // the Ridge's outer edge (SE frame): 36 → 35.5 → 33.5
 export const TH_R = -32;                                     // the Ridge's end at the horn (SE frame)
 const TH_HS = angOf(...A(S_HS0, AW + HS_W));
 const HORN_OUT_SE = smooth([P(RO_SE(TH_R), TH_R), [28.7, -23.0], [27.2, -27.4], POINT], 3);   // the horn's outer edge → the point
+// (fix round 6: the Road's face θ 168 split where the head's cut meets it, and its corner bitten back — BITE6 — over the lava)
+const BITE6_A = angOf(...R6(...BITE6[BITE6.length - 1])) - 180;
 export const HL_SE = [A(BR_S[0], AW), HB, ...HORN_OUT_SE.slice().reverse(), P(RN, TH_R), ...arc(RN, TH_R, TH_N - 180).slice(1),
-  P(RIM_SHORE, TH_N - 180), ...arc(RIM_SHORE, TH_N - 180, TH_HS).slice(1, -1), A(S_HS0, AW + HS_W), A(BR_S[0], AW + HS_W)];
+  P(CUT6.r, TH_N - 180), P(r3(BITE6[0][0] / Math.cos((RACE2_A - TH_N) * D)), TH_N - 180), ...BITE6.slice(1).map((q) => rot(R6(...q))),
+  ...arc(RIM_SHORE, BITE6_A, TH_HS).slice(1, -1), A(S_HS0, AW + HS_W), A(BR_S[0], AW + HS_W)];
 export const RIDGE_SE = [P(RN, SA1 + 180), P(RO_SE(SA1 + 178), SA1 + 178), ...sarcF(RO_SE, SA1 + 178, TH_R).slice(1), P(RN, TH_R), ...arc(RN, TH_R, SA1 + 180).slice(1, -1)];
 export const HORN_STEP_SE = [E0, A(BR_S[0], AW), A(BR_S[0], AW + HS_W), A(S_HS0, AW + HS_W)];
 export const HORN_STEP = rotPoly(HORN_STEP_SE);              // Alpha's Horn Step (NW, on Bravo's arm)
@@ -260,8 +301,6 @@ export const EDGES = [
 export const ORG = { L: [-10, -12.8, 2.5], B: [-10, -9.14, 1.5], A: [-10, -6.34, 1.5] };      // Alpha's cluster (x, z, r)
 export const POSE = { L: [2.3, 4.65], B: [1.8, 3.5], A: [1.4, 2.35] };                        // tops at LOW, HIGH
 export const DEPTH = { L: 4.2, B: 3.7, A: 3.3 };
-export const STONES = [[-18.94, -12.46, 2.6, 2.4], [-20.70, -10.11, 2.3, 2.7], [-20.82, -7.13, 2.8, 2.5], [-22.54, -4.76, 2.4, 2.6], [-22.59, -1.86, 2.6, 2.43]];
-export const STONE_YAW = -19.0;
 // the second Race (Alpha's): two stones from the north head's lake edge (r 21.5) to the island's west face (r 16.2) along
 // θ 175.5, 0.25 m seams; [x, z, w across, d along]
 const R2 = (r0, r1) => { const rm = (r0 + r1) / 2; return [...P(rm, RACE2_A), 3.0, r3(r0 - r1)]; };
@@ -273,11 +312,18 @@ export const STONE2_YAW = r3(90 - (RACE2_A - 180));         // local z along the
 // RIM_SHORE 21.5, so the region runs on to 22.0 under it — the lava phase's fix: at 21.0 it stopped 0.5 m short of the
 // face and a fall off the Ladle Road / horn into that strip reported the sea), the Slump bays to the cliff + 0.5, the
 // arms and bays 0.5 m into both banks out to the lip
+// (fix round 6) the rim's arc 0.5 m into the bank, with the north head's cut by race 6 (CUT6) taken in: 0.5 m under the
+// Ladle Road's face north of it, 0.5 m into the head past its outer face and its south side
+const RIM_LAKE = (() => {
+  // (the Ladle Road's bitten corner and the head's cut, 0.5–0.6 m into the bank round them, in race 6's frame (u, n))
+  const out = [[21.5, 4.65], [22.2, 4.45], [22.75, 4.25], [23.3, 3.95], [23.7, 3.6], [CUT6.u1 + 0.5, 3.25], [CUT6.u1 + 0.5, CUT6.n - 0.5], [RIM_SHORE + 0.5, CUT6.n - 0.5]].map((q) => R6(...q));
+  return [...arc(RIM_SHORE + 0.5, 148, angOf(...out[0])), ...out.slice(1), ...arc(RIM_SHORE + 0.5, angOf(...out[out.length - 1]), 179.5).slice(1)];
+})();
 const LAKE_HALF = [
   // (the lava fix round, ENGINE rule 45: the Lakefronts and the arm's mouth 0.9–1.1 m into their banks — the Lakefront's
   // copings stand lake-side of its shore and the outline met them at 0.3–0.4 m; the rims and the Slump heads keep 0.5)
   ...arc(RS + 0.9, -90, -62.5), A(0, -AW - 1.1), A(S_E0 - 0.6, AW + 1.0),
-  ...[...arc(RIM_SHORE + 0.5, 148, 179.5), sp(S1, 0.5, FACE), sp(S1, 0.5, -FACE), sp(S0, -0.5, -FACE), sp(S0, -0.5, FACE), ...sarcF((a) => RSF(a) + 0.9, -132, -92.5)].map(rot),
+  ...[...RIM_LAKE, sp(S1, 0.5, FACE), sp(S1, 0.5, -FACE), sp(S0, -0.5, -FACE), sp(S0, -0.5, FACE), ...sarcF((a) => RSF(a) + 0.9, -132, -92.5)].map(rot),
 ];
 export const LAKE = [...LAKE_HALF, ...rotPoly(LAKE_HALF)];
 // the shore pushed d metres to the right of travel (into the bank, for a bank walked lake-side on its left)

@@ -100,7 +100,7 @@ Lava kills at L + 0.15, the same as the sea. There is no grace hop.
 | `actor.js` `update()` sea check: `pos.y < fallDeathY && groundHeight(...) === -Infinity` | Below −1.45 with no floor means the sea. | Inside the region the lava's kill height (L + 0.15 ≥ −0.45 at Highmark's LOW) is always above the death plane, and the lava check runs first (H3). Outside it, a fall off an edge would say "Fell in the sea": Highmark walls every edge but the two Spillway lips, and the chutes past the lips are `falls` polygons that report `lava` (H3, rule 43). |
 | `actor.js` body-special branch (`_updateSpecial` → `G.specials.body`), slam / storm in `_updateSpecial` | Only `specials.body` checks the sea. Slam and storm do not. | One lava check after `_updateSpecial` covers every special (H3). |
 | `level.js` `addDynamic`: forces `paint: false, hidden: true` | Dynamic blocks are never inked or drawn. | Riders draw their own mesh (`lavaFx`). A float's deck takes ink through `BoxPaint`. A stone is bare crust, like a perch. |
-| `level.js` `queryBlocks`: every query scans all of `this.dyn` linearly | A few moving blocks. | Measured cost in §1.3. Rider parts are capped at 40 (§5 R30). A submerged rider is parked out of every query (moved 50 m down, `solid = false`). |
+| `level.js` `queryBlocks`: every query scans all of `this.dyn` linearly | A few moving blocks. | Measured cost in §1.3. Rider parts are capped at 64 (§5 R30; 40 until fix round 6). A submerged rider is parked out of every query (moved 50 m down, `solid = false`). |
 | `nav.js` `NavGraph._build`: built once from what is solid when `main._buildWorldNow` calls it; `blocked` is soft (+40) | Static geometry. Movers only ever block. | Rider tops need nodes, and a rider top that isn't there must be hard-closed. The graph is built at both rider poses and merged (H1, `LavaWorld.buildNav`), and `path()` gets time windows (H4). |
 | `nav.js` edges join neighbouring 1 m cells by height difference and a waist-height ray (`_blocked`). They never check that there is floor between the cells. | No gaps narrower than a cell. | Two nodes on either side of a lava gap wider than a seam would get a `walk` edge, and a bot would walk into the lava. `buildNav` removes every edge that crosses more than 0.3 m of nothing inside the region (§4.3). Highmark has no such gap on purpose (seams 0.25 / 0.20 / 0.15 m), so v1 builds **no** `leap` edges. |
 | `nav.js` jump edges join only orthogonal cells (line 104: `!(dx && dz)`, 0.5 < dy ≤ 1.25); `_clear` drops nodes within 0.46 m of a taller block; nodes sit at `bounds.min + 0.5` | A step up exists wherever the grid happens to put a node on each side. | Across a 0.20 m seam to a column 1.15 m higher, the lower node must lie 0.56–0.90 m from the seam for its orthogonal neighbour to land on the higher column: a 0.34 m window per seam, so a climb exists or not by the grid's offset (the engineer measured 7 of 16 offsets for revision 1's cluster). **Explicit `steps` links** (§4.3) add the edge pair across each listed seam whatever the offset. |
@@ -911,8 +911,10 @@ cost, Highmark's numbers:
     region. (C)
 
 **Counts**
-30. ≤ 40 rider parts (dynamic blocks) in total, twins included. Highmark: 30 (10 stones; 6 hex columns × 3 boxes; 2
-    stubs). (C)
+30. ≤ 64 rider parts (dynamic blocks) in total, twins included (fix round 6: 40 → 64 for Organ L's crown — the lead's
+    "a lookout must not be a launch pad" after review 6; Treehills runs ~60, §1.3). Highmark: 64, the cap (14 stones and
+    race 3's two boulders; 6 hex columns × 3 boxes; 2 stubs; 28 crown pipes — fix round 7 closed the north-east and
+    north-west edges, 14 a lookout). (C)
 31. ≤ 4 gauges, ≤ 4 cascades, ≤ 12 vents, twins included. (C)
 32. Props below HIGH inside the region use the kit's `paint`, `gloss`, `metal`, `wood` or `rubber` buckets (they get
     the stain). No foliage, cloth, flags, inflatables or custom materials there. (A: a render scan)
@@ -960,7 +962,38 @@ cost, Highmark's numbers:
     head to stone, stone to stone) is listed in `def.steps`; `buildNav` throws if a link yields no edge pair at a pose it
     needs, and `lava-nav.js` rebuilds with the bounds shifted 0.25 m and 0.5 m to prove no climb depends on the grid's
     offset. (A)
-
+47. **No roof top slides a kid into the lava, holds it as a perch, or flings it** (fix round 7, review 7: cover is a
+    `roof` block and so is every rider part; the slide took the nearest way off whatever lay past it. Fix round 8, review 8
+    and the lead's rule for cover standing in drowned ground). The engine side, in `actor.js` (tagged [b5-caldera]):
+    `_roofExitDist` → `_roofLandWet`: a way off whose landing a stage hazard takes is no way off. The fall from the way's
+    exit (the slide's height there, `ry`) at the slide's speed (√(w² + 28 s)) and at a run's (6.5 m/s): the earliest
+    landing is the steer-back arc (x = v·t − ½·20·t², never behind the exit, 30 m/s² down), the latest the fast arc
+    (6.5 m/s kept, 22 m/s²); every 0.15 m from one to 0.6 m past the other the floor under the footprint (a seam the feet
+    span is no gap; off-limits tops in the slide's own 0.6 m band left out) must be floor and dry now and 3 s on; a lip
+    over the fast arc (a face the body meets) refuses the way; on a hazard stage the wall rays start at the slide's height
+    there and also look at a 0.37 m lip. Every way refused → **held** 0.6 s where it stands (`_roofHold` /
+    `_roofHeldStep`: the slide's clock reset while held, so a re-check judges — and a later slide launches — at the slow
+    push 3 m/s, only toward a dry landing; re-checked every 0.25 s), then **rescued**: the stage hook `rescue(a)`
+    (stageMods.js; lava.js) places the kid on the nearest dry nav node within 6 m (static floor that stands, the lava not
+    there within 8 s, the body fitting; 12 m at most, counted), 1 s invulnerable, never splatted, never thrown; a teleport
+    (`netTp`) every screen snaps to; the HUD's personal line says NO FOOTING → rescued. On a stage with a hazard the slide
+    owns the move along the way it checked. `reset()` clears the slide (a spawn onto a roof kept the old slide's way,
+    unchecked). Stages without a `wet` hook: unchanged. (A: lava-audit rule 47 — (a) the hop-on probe; (b) every point of
+    every roof top beside the lava, still or drifting at 6.5 m/s, idle or steering back, at LOW, HIGH, the rise's 30 / 60
+    / 90 % and the fall's 50 %; (c) Mitts leaps, running and swim jumps, walk-offs and hops during the rise onto every top
+    that holds; (d) Mitts leaps onto the tall tops: 0 deaths, 0 flings, 0 perches, every rescue within 6 m)
+    Fix round 9 (review 9): **steering back off a tall top** — a kid lands behind or beside the way off (a face it meets
+    on the way down turns the steer along it) — `_roofLandWet` also needs dry floor (under the body's middle, a seam
+    ≤ 0.24 m bridged, now and 3 s on) at every point a body can stand within B + 0.35 m of the exit, B = ½·20·t² − 0.85·v·t
+    at the fall to the exit's floor (the outer walls' ends a Mitts leap reaches stand over a lava slot or beside the lake);
+    **the hold ends wherever the slide does** (`_roofOff`: off the roof, a super jump, a special that owns the body), so the
+    HUD line never sticks; the Slump cliff is never inkable (`calCliff`, `paint: false`; its rind is the level shader's band).
+    The rescue with no node within 6 m holds on (up to 2 s held in all, asked every 0.25 s) for one before the 12 m fallback
+    (a fall bares the floor beside the Race within a second: race 3's boulder stood 6.00–6.04 m from both heads' nodes).
+    The audit's reach bar counts a hop (≤ 2.6 m over the dry floor within 6 m), a squid climb (an inkable face from dry floor)
+    and a Mitts leap (the kit's predictor from a dry node); (e) squid climbs up every inkable face; a rescue is measured from
+    the kid's own move across the ground (the engine's 6 m), gated on tops a kid reaches — off the outer walls no kid reaches
+    it is the engine's 12 m fallback, listed; at the rise's and the fall's levels b's trials run the lava's clock, as in play
 ---
 
 ## 6. Build plan (each step ends with a test that fails without it)

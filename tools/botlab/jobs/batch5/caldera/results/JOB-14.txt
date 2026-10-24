@@ -1,0 +1,4 @@
+JOB-14 (caldera) @ ae885c9d — Mac mini b5-runner, 2026-10-24 20:26–20:32, exit 0. Short summary.
+- boss-check 6/6 ×3.
+- lava.js 59/59, 59/59, 58/59: F8c passed all three; run 5's miss is F8b instead (no route hop from a stone at a column across the lava,
+  asked with the climb's hop flag left set / 5 s before / while escaping …).

@@ -103,7 +103,8 @@
   // test: the check says so and passes; a Zone Control match of twins / shooters / brollies / blades held both lookouts
   // 47 / 67 s with mid-range claimants and failed it)
   const LONG = new Set(['charger', 'splatling', 'spinner', 'bow']), longKits = m.actors.filter((a) => a.bot && LONG.has(a.weapon?.kind)).map((a) => [a.team, a.weapon.kind]);
-  R('an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)', LL[0] + LL[1] >= 1 || !longKits.length, { lookTeam: LT.map(r1), lookLong: LL.map(r1), longKits, applies: longKits.length > 0, claims: S.lookClaims || 0, held: r1(S.lookHold || 0), organL: r1(S.lookout.organL || 0), log: S.lookLog || [] });
+  // (fix round 5, review 5 issue 6: the line says when it passed for want of a long-range kit — the match table reports it)
+  R('an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)' + (longKits.length ? '' : ' — NOT APPLICABLE: no long-range kit in this match, passed for want of one'), LL[0] + LL[1] >= 1 || !longKits.length, { lookTeam: LT.map(r1), lookLong: LL.map(r1), longKits, applies: longKits.length > 0, claims: S.lookClaims || 0, held: r1(S.lookHold || 0), organL: r1(S.lookout.organL || 0), log: S.lookLog || [] });
   R('the match', true, { mode: MODE, simT: r1(simT), wallS: r1((performance.now() - t0) / 1000), state: m.state, cov, winner: m.result?.winner ?? null, phaseAtEnd: L.st.phase, yAtEnd: L.y });
   return out;
 })();

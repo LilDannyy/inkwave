@@ -17,6 +17,7 @@ import { buildBackdrop } from './backdrop.js';
 import * as G from './geo.js';
 import { fill, edgeKinds, walls, cutColumns, rotBox, splitColumns } from './ground.js';
 import { LAVA, LAVA_VIEW, BLOCKOUT_LAVA, riderStandIns } from './lava.js';
+import { KARP_VETO, KARP_VETO_16 } from './karpVeto.js';   // (fix round 5: the Carp Field's hop / gap edges over the lava, and those checker #16 found no kid makes)
 
 const { P, rotPoly, inPoly } = G;
 const HIGH_BUILD = BLOCKOUT_LAVA && LAVA_VIEW === 'high';
@@ -46,8 +47,11 @@ const white = (o = {}) => ({ color: K.white, pattern: PATTERN.render, roof: true
 const calWall = () => ({ color: K.wall, pattern: PATTERN.concrete, roof: true, tag: 'caldera-wall' });
 // (the caldera walls round the dry floors are collision-only here and drawn by props.js — caldera_walls — so they cost
 // the lightmap nothing: the art pass replaces them with the backdrop's cliffs. The Slump's cliff stays a level block: it
-// stands in the lava region and carries the high-mark rind)
+// stands in the lava region and carries the high-mark rind — the level shader's band, not paint)
 const calWallHidden = () => ({ ...calWall(), hidden: true, paint: false });
+// (fix round 9, review 9 issue 1: the Slump's cliff is never inkable either, as every other outer wall — its faces were, and
+// a squid climbed onto its 7.6–7.9 m off-limits tops: against the map standard)
+const calCliff = () => ({ ...calWall(), paint: false });
 
 // ============================================================================================================ floors
 // the curved floors (geo.js outlines), filled by ground.js. Alpha's half unless `single`. Floors with nothing open
@@ -81,7 +85,7 @@ const BOXES = [
 const ALL0 = [];
 for (const f of [...FLOORS, ...BOXES]) { ALL0.push(f); if (!f.single) ALL0.push({ ...f, poly: rotPoly(f.poly), twin: f }); }
 const floorAt = (x, z) => ALL0.some((f) => !f.wall && inPoly(f.poly, x, z));
-const EDGE_WALLS = G.EDGES.map((e) => ({ e, w: walls(e.pts, { t: e.t, top: e.top, y0: e.y0, ext0: e.ext0, ext1: e.ext1, mk: e.cliff ? calWall : calWallHidden }, floorAt) }));
+const EDGE_WALLS = G.EDGES.map((e) => ({ e, w: walls(e.pts, { t: e.t, top: e.top, y0: e.y0, ext0: e.ext0, ext1: e.ext1, mk: e.cliff ? calCliff : calWallHidden }, floorAt) }));
 const hallMk = () => white({ tag: 'casting-hall', hidden: true, paint: false });   // (props.js draws the hall)
 const HALL_W = [walls(G.HALL_LINE, { t: 4.0, top: 12.0, y0: 0, ext0: 0.3, ext1: 0.3, mk: hallMk }, floorAt)];
 const WALL_FEET = [...EDGE_WALLS.flatMap((x) => x.w.feet), ...HALL_W.flatMap((w) => w.feet)];
@@ -98,6 +102,16 @@ for (const f of FLOORS) {
     : { kind: 'ledge', w: f.w || 1.0 }));
   GROUNDS[f.id] = fill(f.poly, { y0: f.y0, top: f.top, mk: f.mk, ledgeMk: () => coping({ color: f.drown ? '#625c58' : K.basaltDk }), edge: kinds });
 }
+// (fix round 6: Boss Battle's island keeps the old faces — geo.js ISLAND_BOSS, no bays by the second Race's piers: the lava
+// holds LOW there and the stones never rise — built as the island was, against every other floor)
+const ISLAND_F = FLOORS.find((f) => f.id === 'island'), ISLAND_BOSS_F = { ...ISLAND_F, id: 'islandBoss', poly: G.ISLAND_BOSS };
+{ const others = ALL.filter((g) => g !== ISLAND_F);
+  GROUNDS.islandBoss = fill(G.ISLAND_BOSS, { y0: ISLAND_F.y0, top: ISLAND_F.top, mk: ISLAND_F.mk, ledgeMk: () => coping({ color: K.basaltDk }),
+    edge: edgeKinds(ISLAND_BOSS_F, [...others, ISLAND_BOSS_F], (a, b) => (onNotch(a, b)
+      ? { kind: 'ledge', w: 0.6, mk: () => ({ color: '#5f6368', pattern: PATTERN.metalpanel, tag: 'socket-collar' }) }
+      : { kind: 'ledge', w: 1.0 })) }); }
+// (the two islands are each other's variant: neither counts the other's copings)
+const FIXF = [...FLOORS, ISLAND_BOSS_F], twinOf = (a, b) => (a.id === 'island' && b.id === 'islandBoss') || (a.id === 'islandBoss' && b.id === 'island');
 // (lava engine: ENGINE rule 6 — no flat top in the region within 0.3 m of LOW or HIGH. A gutter coping sunk 0.2 / 0.3 m
 // below a 1.2 floor where it meets a drowning ledge would stand 0.2 / 0.1 m over the HIGH surface: pale, above the rind,
 // and the 0.9 one deadly at HIGH (feet under L + 0.15). Each sinks 0.1 instead (1.10, a 1.1 m hop from the ledge), or
@@ -110,7 +124,7 @@ for (const f of FLOORS) {
     return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([i, k]) => [d.center[0] + c * hx * i + s * hz * k, d.center[2] - s * hx * i + c * hz * k]); };
   const near = (A, Bd) => { const a = fp(A), b = fp(Bd); const cx = (p) => p.reduce((s, q) => s + q[0], 0) / 4, cz = (p) => p.reduce((s, q) => s + q[1], 0) / 4;
     return Math.hypot(cx(a) - cx(b), cz(a) - cz(b)) < (Math.max(A.size[0], A.size[2]) + Math.max(Bd.size[0], Bd.size[2])) / 2 + 0.05; };
-  for (const f of FLOORS) {
+  for (const f of FIXF) {
     if (f.top < HI + 0.3 || !GROUNDS[f.id]) continue;
     for (const d of GROUNDS[f.id].ledges) {
       if (d.kind !== 'obox') continue;
@@ -119,12 +133,22 @@ for (const f of FLOORS) {
       if (![d.center, ...fp(d).map(([x, z]) => [x, 0, z])].some((p) => inR(p[0], p[2]))) continue;
       // (the first of 1.10 / 1.40 / 1.50 no overlapping coping — nor the Bazookarp gantry at 1.3 — shares within 8 cm)
       const tops = [];
-      for (const g of FLOORS) for (const o of GROUNDS[g.id]?.ledges || []) if (o !== d && o.kind === 'obox' && near(o, d)) tops.push(o.center[1] + o.size[1] / 2);
+      for (const g of FIXF) { if (twinOf(f, g)) continue; for (const o of GROUNDS[g.id]?.ledges || []) if (o !== d && o.kind === 'obox' && near(o, d)) tops.push(o.center[1] + o.size[1] / 2); }
       if (d.center[0] > 5 && d.center[0] < 12 && d.center[2] > -23 && d.center[2] < -8) tops.push(1.3);
       const t2 = [f.top - 0.1, f.top + 0.2, f.top + 0.3].find((t) => tops.every((u) => Math.abs(u - t) >= 0.08)) ?? f.top - 0.1;
       d.center[1] = G.r3((y0 + t2) / 2); d.size[1] = G.r3(t2 - y0);
       fixed.push({ d, top: t2 });
     }
+  }
+  // (fix round 6: the south head's shelf edge keeps its 1.1 m hop — the shelf's way out — where the chamfer by race 2
+  // (geo.js CHAMF2) meets it: the two copings overlap, and the colouring gave the long one 1.4, which the nav's 1.25 m jump
+  // edges don't reach — the shelf's worst exit grew to 14.2 m. The long one keeps 1.1; the chamfer's stands 1.3)
+  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], topOf = (d) => d.center[1] + d.size[1] / 2;
+  const nearL = (m, r, lo, hi) => (GROUNDS.lakefront?.ledges || []).find((d) => d.kind === 'obox' && Math.hypot(d.center[0] - m[0], d.center[2] - m[1]) < r && d.size[0] >= lo && d.size[0] <= hi);
+  const longE = nearL(mid(G.SLUMP_SW, G.CHAMF2), 1.2, 3, 99), chamf = nearL(mid(G.CHAMF2, G.TIP_S[0]), 0.9, 0.5, 2.5);
+  if (longE && chamf && topOf(longE) > topOf(chamf) + 0.05) {
+    // (the chamfer's coping takes 1.3: clear of the 1.1 shelf edge, the tip face's 1.4 and race 1's 1.5 wedge kerb it meets)
+    for (const [d, t] of [[longE, topOf(chamf)], [chamf, 1.3]]) { const y0 = d.center[1] - d.size[1] / 2; d.center[1] = G.r3((y0 + t) / 2); d.size[1] = G.r3(t - y0); }
   }
 }
 // a lower floor's tucked columns are cut round the higher floors' columns they meet (both halves)
@@ -157,7 +181,7 @@ const railSeg = (a, b, y, h = 1.0, t = 0.25, o = {}) => {
 
 // ---------------------------------------------------------------------------------------- the floors themselves
 for (const f of FLOORS) if (!f.single && !(f.drown && HIGH_BUILD)) add(groundOf(f.id));
-SINGLE.push(...groundOf('island'));
+SINGLE.push(...noBoss(groundOf('island')), ...groundOf('islandBoss').map((p) => ({ ...p, onlyIn: 'boss' })));
 // (a hidden deck slab inside the island: the environment's sea takes the stage's footprint from its deck slabs; at HIGH
 // the drowned ledges are gone. Blockout only: the lava engine's `env.sea: false` (ENGINE H22) removes the sea)
 SINGLE.push(B(-0.37, 0.41, -1.2, 0, -0.43, 0.39, { hidden: true, paint: false, tag: 'footprint' }));
@@ -235,7 +259,10 @@ add(noBoss(B(DECK.x0, DECK.x1, 1.2, 2.4, DECK.z0, DECK.z1, { color: '#7b7e84', p
 add(noBoss(R([-8.7, 1.2, 9.3], [-8.7, 2.4, DECK.z1], 4, steps({ tag: 'deck-stair' }))));             // up from the island's NW toward Bravo's causeway
 add(noBoss(B(-12.0, -9.0, 2.4, 4.6, 2.6, 6.6, white({ tag: 'gauge-machine-house', color: '#dcd6c8' }))));
 add(noBoss(B(-6.9, DECK.x1, 2.4, 3.4, DECK.z0, DECK.z0 + 1.2, cover(K.ironDk, { tag: 'valve-chest' }))));
-for (const [x, z, r, top] of [[-6.4, -8.6, 0.9, 2.1], [-12.9, -2.4, 0.9, 2.4], [-7.0, -3.6, 0.8, 1.8]]) add(noBoss(OCT(x, z, r, 1.2, top, rock({ tag: 'organ-stump', color: K.basaltDk }))));
+// (fix round 8, review 8: the stump by the second Race's landing stood 0.3 m off the island's lava edge, so the corner past it
+// — the coping between it and race 7 — was a dead end 18.7 m round on foot, and a running jump steered off it onto race 7
+// saved 14.5–15 m. 0.6 m nearer the deck and 0.1 m slimmer, a 1.2 m walk opens past it to the pier)
+for (const [x, z, r, top] of [[-6.4, -8.6, 0.9, 2.1], [-12.3, -2.7, 0.8, 2.4], [-7.0, -3.6, 0.8, 1.8]]) add(noBoss(OCT(x, z, r, 1.2, top, rock({ tag: 'organ-stump', color: K.basaltDk }))));
 add(noBoss([stack(2.9, -9.3, 1.2, 1.2, 1.1, 1.2, 'ingot-stack'), drum(7.6, -6.3, 1.0, 1.4, 1.2, 'stilling-drum', '#5d6268'), stack(11.6, 0.8, 1.4, 1.8, 1.4, 1.2, 'ladle-stand', K.ironDk)]));
 
 // ---------------------------------------------------------------------------------------- Alpha's base: the gallery
@@ -324,6 +351,11 @@ add(stairOn(G.ST_EAST, 2.7, 1.2, 2.4, 2.2, steps({ tag: 'east-steps' })));
   for (const [lo, hi] of gaps.slice().sort((p, q) => q[1] - p[1])) { runs.push([a0, hi + 0.5]); a0 = lo - 0.5; }
   runs.push([a0, -106]);
   for (const [r0, r1] of runs) if (r0 - r1 > 1) add(segsAlong(G.sarcF((a) => G.RT(a) + 0.25, r0, r1, [], 3), 0.5, 2.4, 3.3, { color: '#7a7d82', pattern: PATTERN.concrete, roof: true, tag: 'terrace-parapet' })); }
+// (fix round 8, rule 44 steered off every take-off — the lead after review 8) a parapet along the Ladle Road's lake corner by the
+// second Race (its west face and the first 1.6 m of its north face, on the coping; 1.0 m over the road: cover): a running
+// jump north off that corner, steered 45–60° left in the air, came down on race 7 saving 16.3 m of the walk round by the
+// horn. The road's lake view stays over the parapet
+add(noBoss(segsAlong([[-20.22, 8.92], [-20.4, 8.22], [-20.74, 7.34], [-21.03, 6.44], [-21.5, 6.14], [-22.12, 6.02]], 0.5, 2.4, 3.4, { color: '#5f5a55', pattern: PATTERN.concrete, roof: true, tag: 'ladle-parapet' })));   // (Boss Battle holds the lava LOW: as it was)
 // the terrace's masses, all clear of the tower's terrace climb (x −19.5 ± 1.75 off the Moorings), its run (z −34 ± 1.75)
 // and its yard climb (x −9 ± 1.75), and of every stair's landing:
 // - the west end: the Pattern Shop, a weatherboard shed built against the Rim Head's face between the Moorings' corner and
@@ -384,13 +416,42 @@ add(armBox(10.15, 8.2, 0.3, 2.6, 3.6, 4.5, cover(K.basaltDk, { tag: 'gauge-post-
 add(armBox(-2.4, 9.4, 1.2, 1.2, 2.4, 3.6, cover(K.basaltDk, { tag: 'cairn' })));
 
 // ---------------------------------------------------------------------------------------- the Slump and Alpha's tail
-// the Slump shelf: two hornitos against the cliff (1.3 m: cover from the island and the heads), each leaving ≥ 2.6 m
-for (const a of [-157.0, -167.0]) { const r = G.SHO(a) - 0.75, [x, z] = P(r, a); add(O(x, z, 1.4, 1.4, 0, 1.3, -a, cover(K.scoria, { tag: 'slump-hornito' }))); }
+// the Slump shelf: two hornitos against the cliff (1.3 m: cover from the island and the heads), each leaving ≥ 2.6 m.
+// (fix round 9, review 9 issue 2: the middle one 0.64 m south along the cliff, −157° → −155.8°: at HIGH a kid held on it is
+// rescued to the south head's node (∓23.5, 1.1, ∓15.5), and from its far corner that was 6.35 m — over the rescue's 6 m)
+for (const a of [-155.8, -167.0]) { const r = G.SHO(a) - 0.75, [x, z] = P(r, a); add(O(x, z, 1.4, 1.4, 0, 1.3, -a, cover(K.scoria, { tag: 'slump-hornito' }))); }
 // the north Slump head: a mooring bollard back from both Races' landings
 { const [x, z] = P(26.6, 178.5); add(O(x, z, 1.0, 1.2, 1.2, 2.3, -178.5, cover(K.ironDk, { tag: 'race-bollard' }))); }
+// the Race kerbs (the lava fix round 5, the lead's decision after review 5 — ENGINE rule 21: every gap beside a rider is a
+// seam ≤ 0.3 m or ≥ 2.5 m of open lava). Three notches per half stood 0.7–2.4 m wide beside the Pumice stones at HIGH, and
+// a foot walking or swimming off the stone dropped into them: race 1's west side by the south head's wedge (1.0–1.3 m) and
+// its south-east corner past the end of the head's tip coping (0.7 m), race 5's west side by the north head's wedge
+// (0.95–1.25 m), race 6's north-west corner under the rim's curve (2.4 m). Each is closed by a kerb — a coping in its
+// stone's own frame (x across the Race, toward the island; z along it, toward the north head; the stone ±w/2 × ±d/2), its
+// face 0.2 m from the stone (a seam the stone rises and sinks past) and into the bank behind. Beside races 1 and 5 the kerb
+// runs on along the stone, in the strip between it and the shelf's lake edge, to 0.2 m from the next stone's end (races 2
+// and 4 stand 0.9 m further west: a kerb stopping at the wedge left a 1.4–1.9 m notch there instead). Tops 0.1 off the
+// copings each one overlaps (1.5 in the heads' wedges, over their 1.1–1.4 copings; 1.2 along the strips; the stone's HIGH 1.25)
+const raceKerb = ([sx, sz], yaw, [x0, x1], [z0, z1], top, tag = 'race-kerb') => {
+  const a = (yaw * Math.PI) / 180, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  return O(G.r3(sx + Math.cos(a) * cx + Math.sin(a) * cz), G.r3(sz - Math.sin(a) * cx + Math.cos(a) * cz), G.r3(x1 - x0), G.r3(z1 - z0), -1.1, top, yaw, coping({ tag }));
+};
+{ const [r1, r2, r4, r5, r6] = [G.STONES[0], G.STONES[1], G.STONES[3], G.STONES[4], G.STONES2[0]], SEAM = 0.2, Y = G.STONE_YAW;
+  // (the next stone's end in this stone's frame: race 2's south end over race 1, race 4's north end under race 5)
+  const endIn = (st, o, s) => { const a = (Y * Math.PI) / 180, dx = o[0] - st[0], dz = o[1] - st[1]; return dx * Math.sin(a) + dz * Math.cos(a) + (s * o[3]) / 2; };
+  const w1 = -r1[2] / 2 - SEAM, w5 = -r5[2] / 2 - SEAM;
+  add(raceKerb(r1, Y, [-2.35, w1], [-1.95, -0.4], 1.5),                                  // race 1, west: the south head's wedge out to the stone
+    raceKerb(r1, Y, [-2.15, w1], [-0.4, endIn(r1, r2, -1) - SEAM], 1.2),                 //   and on along it, short of the shelf's edge, to race 2
+    raceKerb(r1, Y, [0.85, 1.65], [-2.0, -r1[3] / 2 - SEAM], 1.2),                       //   south-east: the head's corner past its tip coping
+    raceKerb(r5, Y, [-2.4, w5], [0, 1.95], 1.5),                                          // race 5, west: the north head's wedge out to the stone
+    raceKerb(r5, Y, [-2.15, w5], [endIn(r5, r4, 1) + SEAM, 0], 1.2)); void r6; }           //   and on along it to race 4
+// (fix round 6: race 6's kerb north of its west end is gone with the head's corner there — geo.js CUT6: the rim's curve
+// that left a notch beside the stone is now open lava, 2.2 m out along the Race's line, the Ladle Road's face beyond it)
 // the tail (Alpha's, the NW; drawn here in Alpha's frame): the Ladle Road's vent hood and ladle stand, two scree ramps up
 // the Rim Ridge's face, and on the Ridge a spatter cone, a hummock, outcrops and cairns
-{ const [x, z] = P(23.6, 162.5); add(O(x, z, 1.4, 1.4, 2.4, 3.8, -162.5, cover(K.ironDk, { tag: 'vent-hood' }))); }
+// (fix round 6: the vent hood 2.5° on round the Road (r 23.4, θ 160.0): with the Road's corner bitten back by race 6
+// — geo.js BITE6 — it closed the lane past it, and the corner behind it was a pocket the nav reached only round the hood)
+{ const [x, z] = P(23.4, 160.0); add(O(x, z, 1.4, 1.4, 2.4, 3.8, -160.0, cover(K.ironDk, { tag: 'vent-hood' }))); }
 { const [x, z] = P(24.6, 152.0); add(O(x, z, 1.4, 1.8, 2.4, 3.7, -152.0, cover(K.ironDk, { tag: 'ladle-stand' }))); }
 for (const a of [165.5, 154.5]) { const lo = P(G.RN - 2.75, a), hi = P(G.RN + 0.05, a); add(R([lo[0], 2.4, lo[1]], [hi[0], 3.6, hi[1]], 3, rock({ tag: 'scree-ramp', color: K.scoria, pattern: PATTERN.asphalt }))); }
 add(cone(-32.0, 1.6, 1.2, 4.5, 3.2, 3.6, 'spatter-cone'), cone(-27.2, 15.0, 0.8, 4.2, 2.1, 3.6, 'hummock'));
@@ -446,6 +507,10 @@ const BAZOOKARP = {
     gantry: [[-8.5, 10], [-8.5, 20.6], [-3, 25.5]],                                                     // the Ladle Gantry (bazookarp only)
     east: [[-3, 25.5], [-8.6, 24.2], [-8.6, 28.5], [-3, 33.5], [4.8, 35.2], [5.5, 38.6], [18, 50]],      // East Steps → Bay Stair
   },
+  // (the lava fix round 5, the lead's decision after review 5) the carrier field never relies on a jump over the lava: every
+  // hop / gap edge the field would add across it (karpVeto.js; lava-karp.js K8 keeps the list whole); and the edges Bazookarp
+  // checker #16 found no carrying kid makes (as built and at LOW: the Organs' LOW-pose tops to their own HIGH-pose tops)
+  hopVeto: [...KARP_VETO, ...KARP_VETO_16],
 };
 
 // ============================================================================================================ the layout
@@ -468,7 +533,9 @@ const LAYOUT_CALDERA = {
   // Surge Steps toward the squad and stuck between the parapets. The Pour Floor and the Moorings, 0.6 up, stay its ground)
   // roamAfter (bossBrain._roam): with the squad on the terraces over its Lakefront wedges it settled at its preferred
   // distance and played its moves from one spot for the rest of the round
-  boss: { floorY: 1.2, headroom: 4.6, maxRise: 0.65, roamAfter: 12 },
+  // (fix round 5, review 5: noGo — the tips of the west Lakefront wedges, never a goal or a path's anchor: it walked or charged
+  // in, could neither turn nor step out, and spent 70–88 s of a round there; the cells stay its ground: 817.5 m²)
+  boss: { floorY: 1.2, headroom: 4.6, maxRise: 0.65, roamAfter: 12, noGo: [[-20.5, -25.5, 3.5], [20.5, 25.5, 3.5]] },
   single: SINGLE,
   half: HALF,
   decor: { lamps: [], palms: [], flags: [] },

@@ -359,9 +359,12 @@ function clingableAt(pos, n, blockId) {
   return !G.physics.raycast(_v2, DOWN, 0.5, _hitC, false).hit;
 }
 
+// [b5-caldera] standing on an off-limits top (a roof: it slides you off, no jump from it — actor.js)
+function onRoof(a) { return a.grounded && a.ground.hit && a.ground.block >= 0 && a.isRoofFor(G.level.blocks[a.ground.block]); }
 function startCharge(r, k) {
   const a = r.a, w = W();
   if (k.charging || k.leaping) return true;
+  if (onRoof(a)) return false;   // [b5-caldera] fix round 7: no leap off a roof (actor.js's roof gate: no jump from one)
   if (a.ink < w.leapInkMin) { r._empty(); return false; }
   k.charging = true; k.charge = 0; k.chargeT = 0; k.chargeAir = 0; k.full = false;
   if (a.isLocal || near(a.pos)) k.loop = G.audio?.loop('mitts_charge', { pos: a.isLocal ? undefined : a.pos, volume: a.isLocal ? 0.5 : 0.35, pitch: 1 }) || null;
@@ -578,6 +581,7 @@ function update(r, dt, inp, w) {
     }
     // walked off a ledge mid-charge: the crouch has nothing to push off
     if (!a.grounded && !k.cling) { k.chargeAir += dt; if (k.chargeAir > 0.12) cancelCharge(r, k); } else k.chargeAir = 0;
+    if (k.charging && !k.cling && onRoof(a)) cancelCharge(r, k);   // [b5-caldera] (slid onto a roof mid-charge: no leap off it)
     if (k.charging) {
       const go = k.botWant >= 0 ? k.charge >= Math.min(k.botWant, maxC) - 1e-3 || k.chargeT > w.leapChargeTime + 0.6 : !a.intent.jump;
       if (go && k.botWant >= 0 && !botReleaseOk(a, k)) cancelCharge(r, k);   // a bot never leaps somewhere it didn't plan

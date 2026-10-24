@@ -1,0 +1,3 @@
+JOB-13 (caldera) @ b6996b52 (after 4c61604c) — Mac mini b5-runner, 2026-10-24 20:09–20:25, exit 0. Short summary.
+- EVERYTHING FULL: rule 44 37/37, rule 47 a/c/d 2/2, rule 47 b 2/2 at LOW / HIGH / rise 30 % and 2/2 at rise 60 / 90 % / fall 50 % (JOB-11's
+  rule 47 b failures gone). The numbers (nums.cjs) are in JOB-13.raw.txt.

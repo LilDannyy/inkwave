@@ -1,0 +1,4 @@
+JOB-9 (caldera) @ 1ef49940 (fix round 7) — Mac mini b5-runner, 2026-10-24 12:27–12:49, exit 0. Short summary; details in JOB-9.raw.txt.
+- full: lava.js 59/59 ×2, lava-bots 7/7, lava-leap 3/3, lava-notch 3/3, Zone Control 7/7 ×2, net-lava 13/13.
+- not full: lava-audit 45/46 (rule 42 again: 'no view out of the arena shows void'); boss-check 6/6 ×4 and 5/6 once (boss-4: 'it never stands
+  idle for long', maxIdle 46 s); lava-karp 9/10 (K8: a carrier-field hop / gap edge crosses the lava — LAYOUT.bazookarp.hopVeto).

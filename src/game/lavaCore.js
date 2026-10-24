@@ -13,7 +13,7 @@ export const LAVA = {
   poseTol: 0.3,      // m: a rider node is open while its rider's top is within this of the pose it was built at
   seamMax: 0.3,      // m: the widest gap a nav edge may cross
   minFree: 0.35,     // m: a rider's top is never closer than this above L (a sink stone: while surfaced)
-  maxParts: 40,      // dynamic blocks for all riders together, twins included
+  maxParts: 64,      // dynamic blocks for all riders together, twins included (fix round 6: 40 → 64 for the lookout's crown; Treehills runs ~60)
   gone: 0.05,        // m: a flat floor whose whole top is this far under the surface is out of play (its collider off)
 };
 const DEG = Math.PI / 180;
@@ -170,7 +170,7 @@ export function expandLava(def, inMode = () => true) {
         look: d.look || {}, parts: [] };
       if (r.shape === 'hex') for (const a of [0, 60, 120]) r.parts.push({ ox: 0, oz: 0, hx: r.r / 2, hz: (Math.sqrt(3) * r.r) / 2, yaw: a * DEG, y0: -r.depth, y1: 0, body: true });
       else r.parts.push({ ox: 0, oz: 0, hx: d.size[0] / 2, hz: d.size[1] / 2, yaw: 0, y0: -r.depth, y1: 0, body: true });
-      for (const p of d.parts || []) r.parts.push({ ox: p.x || 0, oz: p.z || 0, hx: (p.w || 1) / 2, hz: (p.d || 1) / 2, yaw: (p.yaw || 0) * DEG, y0: p.y0 || 0, y1: p.y1 ?? 1, body: false, roof: p.roof !== false });
+      for (const p of d.parts || []) r.parts.push({ ox: p.x || 0, oz: p.z || 0, hx: (p.w || 1) / 2, hz: (p.d || 1) / 2, yaw: (p.yaw || 0) * DEG, y0: p.y0 || 0, y1: p.y1 ?? 1, body: false, roof: p.roof !== false, ...(p.pipe ? { pipe: true } : {}) });
       riders.push(r);
     }
   }

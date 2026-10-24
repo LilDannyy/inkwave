@@ -1,0 +1,2 @@
+JOB-10 (caldera) @ 6153c5f7 — Mac mini b5-runner, 2026-10-24 13:02–13:13, exit 0. Short summary.
+- EVERYTHING FULL: lava-karp 10/10 (K8 passes with the 4 gap pairs vetoed), boss-check 6/6 ×10 (JOB-9's idle miss did not recur), net-lava 13/13.
