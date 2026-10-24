@@ -35,6 +35,7 @@ import { inMode } from '../world/variants.js';
 import { BoxPaint } from './towerPaint.js';
 import { LAVA, lavaSchedule, lavaAt, lavaY, lavaMax, crossTime, stoneRel, riderTop, expandLava, partPose, inRider, pointInPoly } from './lavaCore.js';
 import { LavaLook, LavaHud, lavaLevelExt, patchStain, LAVA_ICON, drawLavaMap, proxMix } from '../fx/lavaFx.js';
+import { MAIN_KITS } from './kits/registry.js';
 import '../audio/sfx-lava.js';
 
 export { LAVA, lavaSchedule, lavaAt, lavaMax, riderTop };
@@ -1478,6 +1479,9 @@ export class StageLava {
     // the Organ lookouts: each team's claimant (_lookPlan) goes up its own lookout and holds it until the fall warning
     if (!b._lavaEsc && b._look) { const r = this._lookAct(b, dt, it, move, vis); if (r) return r; }   // (fix round 3: its aim while it inks its feet)
     if (b._lavaEsc) {
+      // (fix round 9, lava.js F8c: an escape drops a Sponge Mitts leap charge — the kit swallows the hop's press while it
+      // charges, and the bot code lets the charge go as a pounce along its old aim: off a sinking stone into the lava)
+      MAIN_KITS[a.weapon?.kind]?.dropCharge?.(a.weaponRunner);
       // up the hop out (a 1.2 m step onto the head, the causeway, the island): straight at it, asking for the jump (the
       // brain presses it, on its own cool-down). The brain's steering drops a route whose next node stands that far
       // above it within 1.2 m (its slip rule), so that last metre is steered here, never left to _steer
