@@ -1,0 +1,45 @@
+JOB-17 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 00:30:08
+branch botlab-b5-caldera, ran at 72d1b348, exit code 0, wall time 4min
+(a written-up JOB-17.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== lava.js x3
+== SUMMARY
+### lavajs-4
+RESULT 60/60
+### lavajs-5
+RESULT 60/60
+### lavajs-6
+RESULT 59/60
+
+## last 15 lines of job.log
+== lava.js x3
+== SUMMARY
+### lavajs-4
+RESULT 60/60
+### lavajs-5
+RESULT 60/60
+### lavajs-6
+RESULT 59/60
+
+## lavajs-4.txt
+### lavajs-4
+RESULT 60/60
+console errors: none
+PASS F8c escapes off a rising stone up the step at its end (race1 / 5 / 6 / 7, the stone 0.45–0.75 m under it): each node within 2.6 m of the floor, run in at ±40° at 5.5 m/s, its jump cool-down left by a refused press — up within 4 s, no death  {"n":76,"weapon":"twins","died":0,"notUp":0,"bad":[],"slowest":1.267,"trails":[]}
+PASS G9 a hold left another way than the rescue (a super jump, the Slam, put off the top) ends there: roofHeld cleared, no rescue after, the personal line not stuck on NO FOOTING → rescued 5 s on, GET OFF THE LOW GROUND on a drowning floor in the next warning (review 9's probe-held9 A; hornito, mould stack, ladle stand)  {"tops":["slump-hornito#862","mould-stack#852","ladle-stand#853"],"warnAt":
+
+## lavajs-5.txt
+### lavajs-5
+RESULT 60/60
+console errors: none
+PASS F8c escapes off a rising stone up the step at its end (race1 / 5 / 6 / 7, the stone 0.45–0.75 m under it): each node within 2.6 m of the floor, run in at ±40° at 5.5 m/s, its jump cool-down left by a refused press — up within 4 s, no death  {"n":76,"weapon":"brush","died":0,"notUp":0,"bad":[],"slowest":1.267,"trails":[]}
+PASS G9 a hold left another way than the rescue (a super jump, the Slam, put off the top) ends there: roofHeld cleared, no rescue after, the personal line not stuck on NO FOOTING → rescued 5 s on, GET OFF THE LOW GROUND on a drowning floor in the next warning (review 9's probe-held9 A; hornito, mould stack, ladle stand)  {"tops":["slump-hornito#862","mould-stack#852","ladle-stand#853"],"warnAt":
+
+## lavajs-6.txt
+### lavajs-6
+FAIL F10 the lookout claim: a claim for each team with a long- or mid-range kit; a claimant reaches its own lookout at HIGH and holds it (≥ 2 s); every claim let go at the fall warning  {"claims":[["P1",0,"bow",34.45],["Zest",1,"bow",34.45]],"claimed":[0,1],"upAt":[null,null],"seconds":[0,0],"long
+RESULT 59/60
+console errors: none
+PASS F8c escapes off a rising stone up the step at its end (race1 / 5 / 6 / 7, the stone 0.45–0.75 m under it): each node within 2.6 m of the floor, run in at ±40° at 5.5 m/s, its jump cool-down left by a refused press — up within 4 s, no death  {"n":76,"weapon":"brush","died":0,"notUp":0,"bad":[],"slowest":1.267,"trails":[]}
+PASS G9 a hold left another way than the rescue (a super jump, the Slam, put off the top) ends there: roofHeld cleared, no rescue after, the personal line not stuck on NO FOOTING → rescued 5 s on, GET OFF THE LOW GROUND on a drowning floor in the next warning (review 9's probe-held9 A; hornito, mould stack, ladle stand)  {"tops":["slump-hornito#862","mould-stack#852","ladle-stand#853"],"warnAt":

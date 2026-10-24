@@ -376,7 +376,7 @@ Every bank and island face that meets the lava reaches down to **−1.1** (LOW �
 | Rim Head parapet | from P(31.5, −145.5) to P(36, −148.5) | 0.4 × 0.9 | 4.5 | roof | The edge over the Slump cliff: a vantage, not a drop route. |
 | Rim Head ground | spatter cone at (−29.5, −33.0): top r 1.2 at 4.5 (0.9 up), base r 3.2, eight radial ramp facets (craters `coneFacets`, ≤ 24°); hummock at (−28.5, −24.5): top r 0.8 at 4.2, base r 2.15; outcrops (roof) (−33.0, −38.0) 2.4 × 1.6 × 1.4, (−29.8, −40.8) 1.6 × 1.4 × 1.3, (−24.5, −29.0) 1.6 × 1.4 × 1.3; cairns (roof) (−26.0, −27.0), (−32.2, −27.5) 1.2 × 1.2 × 1.2 | — | — | mounds walkable; outcrops roof | Not a flat terrace: lava-rock mounds you climb and outcrops you hide behind. |
 | **Slump shelf** | `[P(27, SA0), P(31.5, SA0)]`, `arc(31.5, SA0 - 2.5, SA1 + 2.5)`, P(31.5, SA1), P(27, SA1), `arc(27, SA1 + 2.5, SA0 - 2.5)`, with SA0 = −145.5, SA1 = −176.5 | 4.5 m wide, about 16 m long, 71 m² | 0 | drowns, sides to −1.1 | **The flank that drowns.** At LOW the only way along this shore: a cliff-foot path between the two heads (hop 1.2 down and up). Hornitos (roof, 1.4 × 1.4 × 2.0) against the cliff at P(30.4, −152) (−26.84, −14.27) and P(30.4, −168) (−29.74, −6.32), leaving a 2.7 m path on their lake side. |
-| The Slump cliff | outside the arc r 31.5 from θ −145.5 to −176.5, and from P(31.5, −176.5) to P(30.5, 178) | 1.5 m thick | 7.0 | roof | Edge piece E3: the caldera wall comes down to the lake here. Its face is in the lava region (it carries the rind). |
+| The Slump cliff | outside the arc r 31.5 from θ −145.5 to −176.5, and from P(31.5, −176.5) to P(30.5, 178) | 1.5 m thick | 7.0 | roof, never inkable (fix round 9) | Edge piece E3: the caldera wall comes down to the lake here. Its face is in the lava region (it carries the rind). |
 | **South Slump head** | the Lakefront's west end (above) | tip face 3.8 m wide, square to the stone line | 1.2 | — | The Race's south landing; the shelf's south end (hop). |
 | **North Slump head** | `sp(S1, 0, -FACE)` (−25.29, −1.23), P(27, SA1) (−26.95, −1.65), P(31.5, SA1) (−31.44, −1.92), P(30.5, 178) (−30.48, 1.06), P(21, 178) (−20.99, 0.73), `sp(S1, 0, FACE)` (−21.70, 0.00) | 20 m² | 1.2 | sides to −1.1 | The Race's north landing; the shelf's north end; a hop up to the Ladle Road. |
 | **Ladle Road** | `arc(21, 157.5, 178)`, `arc(26, 178, 157.5)` | 5 m wide, 43 m² | 2.4 | sides to −1.1 | The rim's road of rough basalt from the north head to the horn tip; the West Bridge leaves it. Vent hood (roof) 1.4 × 1.4 × 1.4 at P(24, 177) (−23.97, 1.26). |
@@ -698,10 +698,182 @@ Colour is never the only signal: the arrows, the words, the pitch direction and 
 - **Nothing appears inside a player:** the stones rise from under the lava, where nobody can be alive, and become solid
   only at the kill height (anyone airborne over one lands on it). The Organs only move vertically inside their notch
   (0.15 m) and carry their riders; nothing is ever above them (clear sky, the nearest static piece ≥ 3.7 m away).
-- **Nothing pinches:** every gap beside a rider is a ≤ 0.3 m seam (stones 0.25, columns 0.20 and 0.15) or ≥ 2.5 m of
-  open lava. No leap gaps.
-- **No unplanned jumps:** the narrowest level gap between two floors across lava is 4.5 m (the south head's tip to the
-  island's SW corner); everything narrower is a seam. The dash-reach audit (§6.2) checks hop + air dash at both levels.
+- **Nothing pinches** (ENGINE rule 21): every gap beside a rider is a ≤ 0.3 m seam (stones 0.25 to the heads and to each
+  other, 0.2 to the Race kerbs; columns 0.20 and 0.15) or ≥ 2.5 m of open lava. **Measured since fix round 6 the way a foot
+  meets it** (review 6 found the straight-out march blind at the corners: races 4, 6 and 7 dropped kids walking off at an
+  angle): lava-audit rule 21 fans out from every 0.1 m of each stone's outline, corners included, to ±67.5° off the face
+  (every 7.5°), over a 0.05 m map of the static tops; a top within 2.5 m reached after a stretch of over 0.3 m where the
+  foot (0.24 m) touches nothing is a pinch (walking, a kid is unsupported 0.1 s over 0.3 m and drops 0.13 m of the 0.30 m
+  to the kill height). The physical proof is lava-notch.js's diagonals (the reviewer's probe-notch6 rebuilt: every solid
+  rider, outline every 7.5°, the normal and ±22.5 / 45 / 67.5°, walk / run / swim off and walk back on): **0 deaths in a
+  gap**. What closes them: **the Race kerbs** (fix round 5; layout.js `raceKerb`: copings in each stone's frame 0.2 m off
+  it, beside races 1 and 5 from the heads' wedges on to races 2 and 4, the south head's corner by race 1); and fix round 6's
+  corners (geo.js): **race 7's island end is a pier** the stone's width + 0.2 m a side, 2.5 m long (`PIER_W`, `PIER_IN`),
+  the island's edge beside it standing back at r ≤ 13.7 — past where such a walk reaches in 2.5 m (the face had run 0.7 /
+  1.1 m past the stone); **race 6's north side**: fix round 5's kerb is gone with the north head's corner by the landing
+  (`CUT6`, 2.35 m out along the Race's line) and the Ladle Road's corner over it (`BITE6`, 0.15 m past the walks' reach;
+  the rim had stood 2.0–2.5 m off the stone), the vent hood 2.5° round the Road so the lane past the bitten corner stays
+  open; **race 4**: the north head's south-west corner cut back in one straight edge (`CUT4`); **race 2**: the south head's
+  north-west tip chamfered off (`CHAMF2`, its coping 1.3, the shelf edge's keeping its 1.1 m hop). Under the cuts by races
+  4 and 2 the Slump shelf runs on (dry at LOW, drowned at HIGH); the lava region runs 0.5–0.6 m under the new banks
+  (`RIM_LAKE`). Boss Battle keeps the island's old faces (`ISLAND_BOSS`: the lava holds LOW there; the boss's home ground
+  818 m² as before). No leap gaps.
+- **No roof top slides a kid into the lava** (fix round 7, the lead after review 7; ENGINE rule 47). Cover on Highmark
+  is a `roof` block (layout.js `cover()`) and so is every rider part (the stub, race 3's boulder, the crown's pipes): you
+  can't stand on it, you slide off — and the slide took the nearest way off whatever lay past it, so a hop onto race 3's
+  boulder at HIGH ended in the lava 42 times in 50, onto Organ L's stub 30 in 64 (review 7's probe-roofslide7b: 460
+  deaths in 8,472 landings). **The engine refuses a way off whose landing the lava takes** (actor.js `_roofExitDist` →
+  `_roofLandWet`: the fall from the way's exit at the slide's speed and at a run's, the floor under the footprint every
+  0.15 m, to 0.6 m past the fast landing, against `G.match.stage.wet`), **holds the kid where it is when every way is
+  refused** (it walks off by itself; no jump from a roof, as ever), and on a stage with a hazard the slide owns the move
+  along the way it checked (a landing's drift or a steer across the slide had thrown kids off a narrow coping). Every
+  piece keeps its place: each has a safe side. lava-audit rule 47 (the probe as a rule): **0 deaths in 3,908 landings at
+  LOW and 4,572 at HIGH, 0 kids held**; the same rule on the old actor.js reads 176 / 284, as the review.
+  **Fix round 8 (review 8; the lead's rule for cover standing in drowned ground: rescue, never perch, never fling).** The
+  hold made perches of the cover the HIGH lava stands round (the Slump hornitos, the mould stack, the ladle stands: a
+  running jump, a swim jump, a Mitts leap or a hop as the shelf drowned left a kid on them for the whole HIGH) and the
+  re-check every 0.25 s flung held kids off at 7–9 m/s; the landing march ignored air braking (a Tide Board slid 54 of 738
+  Mitts landings into the lava). Now: **a kid on an off-limits top whose every way off lands in the lava is held 0.6 s
+  where it stands, then rescued** — placed on the nearest dry nav node within 6 m (static floor that stands, the lava not
+  there within 8 s; 2.8–5.5 m in the audit), 1 s invulnerable, never splatted, never thrown, with the rescue's rings, and
+  the HUD's personal line reads **NO FOOTING → rescued** (pictures `out/fix8/fix8-*`). While held the slide's clock
+  stays at its start, so a later way off (re-checked every 0.25 s) launches at the slow push 3 m/s. The landing check flies
+  the steer-back arc (x = v·t − ½·20·t²) for the earliest landing and the fast arc for the latest, and needs dry floor
+  from one to 0.6 m past the other, now and 3 s on; a lip over the arc refuses a way; the floor near the exit leaves out
+  the slide's own top; the wall look starts at the slide's height there. **Rule 47 is widened into the gate**: (a) the
+  hop-on probe, (b) every point of every roof top beside the lava put down still or drifting (idle, or steering back
+  against the slide on tops a kid reaches), at LOW, HIGH, the rise's 30 / 60 / 90 % and the fall's 50 %, (c) Mitts leaps,
+  running and swim jumps, walk-offs and hops during the rise onto every top that holds, (d) Mitts leaps onto every tall top
+  (the Tide Boards: 0 of 738 at LOW and HIGH); **0 deaths, 0 flings, 0 perches, every rescue within 6 m**.
+  **Fix round 9 (review 9).** The Slump cliff's faces were inkable, so a squid climbed onto its 7.6–7.9 m off-limits tops,
+  and steering back there at HIGH and through the rise came down in the lava (review 9: 24 deaths in 1,015 climbs): the
+  cliff is **never inkable** now, as every other outer wall (`calCliff`; the high mark's rind is the level shader's band and
+  reads on it — `out/fix9/fix9-slump-cliff-rind-*`). The audit's reach bar now counts a squid climb and a **Sponge Mitts
+  leap** too, and a leap reaches the cliff's ends and three more outer-wall ends (#907, #943, #954 and twins: 3.1–3.4 m over
+  the Rim Head or the yard); steering back off them came down in a lava slot or beside the lake (18 deaths at HIGH and 18
+  at r60 in rule 47 b), so the landing check needs dry floor within the steer-back's reach of the way off, behind and
+  beside it (0 since). The middle Slump hornito moved 0.64 m south along the cliff (−157° → −155.8°): measured from the
+  kid's own move its far corner was 6.35 m from the south head's node, over the rescue's 6 m (5.8 m now). A hold left
+  another way than the rescue (a super jump, a special) ends there: the HUD line no longer sticks on NO FOOTING. With no
+  dry node within 6 m the rescue holds on (up to 2 s in all) for one: in the fall race 3's boulder stood 6.00–6.04 m from
+  both heads' nodes, and the shelf beside it is bare within a second.
+- **Jumps across the lava (rule 44) — decided by the lead after review 5: option 1; corrected after review 6.** **Swim
+  jumps and jumps + the Dash Pellet's air dash over the lava are skill movement** (own ink at the take-off, a squid at
+  speed or the sub spent, over open lava: the risk is the price) — listed, no gate. **The Bazookarp carrier swims its own
+  ink** (SPEC S21, 9.44 m/s), so it makes the swim jumps too — fix round 5's sentence "a carrier makes neither" was false.
+  The lead's decision after review 6: a carrier's swim and dash jumps over the lava are skill movement in general, the same
+  as for everyone (its dash jumps are out anyway: it holds no sub); **what a carrier may bypass is judged per stage by the
+  Bazookarp checker's shortcut probes (#7d) when Highmark's Bazookarp layout is built** — that layout must place the Pond,
+  the weirs and the Gate so no carrier jump saves over 20 m on the carrier field or skips a weir, with rails where it must.
+  The carrier list for that builder: `jobs/batch5/karp-stages/caldera-carrier-crossings.json` — **a lower bound** that the
+  checker's #7d must extend by probing Highmark's Bazookarp layout itself (review 7). Fix round 7 merged into it review 6's
+  probe-carry44 over review 6's and review 7's candidate sets with lava-audit's carrier row (every swim crossing saving
+  > 10 m tried again with actor.carry set), at the fix-round-7 geometry: **LOW 133 crossings, 87 over 20 m, the most
+  55.9 m; HIGH 144, 87 over 20 m, the most 40.6 m** (the audit's row alone: 75 / 53 / 55.9 and 79 / 46 / 37.1). The carrier *field* still holds no hop or gap edge over the lava (LAYOUT.bazookarp.hopVeto,
+  `karpVeto.js`, 201 pairs; lava-karp.js K8). **Plain running jumps are judged by the 20 m skill-route bar: no running jump
+  may save more than 20 m against the dry way round, and the largest stays under 15 m** (lava-audit's gate, the margin in
+  it since fix round 6). Bots never take any of them (the nav has no links over the lava).
+  **Air steering (fix round 7, review 7):** the gate's running jumps include those off rider tops flown with the stick
+  turned 0 / ±45 / ±90° eight frames after the jump — every rider-top node (the Organs, the stones), 16 headings,
+  whatever lies past the edge, and the Organ tops finer (every 0.3 m within 0.9 m of the rim, every 7.5°, run-ups 0.8 /
+  1.5 / 2.6 m, as the reviewer's probe-crown7c); a steered crossing has over 0.35 m with the whole footprint (0.24 m) over
+  lava. **The Sponge Mitts' leap (the lead after review 7): a leap over the lava is skill movement like a swim jump** (it
+  flies 4.5–13 m on flat ground, more from height), listed in rule 44's information, no gate — **but never off a roof
+  top** (actor.js asks no kit jump on a roof and mitts.js starts no charge there: the roof gate holds for the kit; a leap
+  off the stub would clear the crown) and **a bot's leap flies as it was planned**: its landing passed the 2 s look-ahead
+  at the release (mitts `landingOk` / `botReleaseOk`), and bots.js holds the stick along a kit leap and never steers it
+  with the air guard (review 7: the guard's pick bent a leap off the causeway 0.33 m short into the lava). Proof:
+  lava-leap.js (A: fire + jump on the stub or the boulder starts no charge and no jump, on the lookout's top it does; B: a
+  bot's leap over 13 m of lava with an enemy behind it holds its stick along the leap and lands 0.38 m from the plan; both
+  fail on the old code). A carrier makes no leap (no leap while carrying, actor.js).
+- **The lookout is no launch pad** (fix round 6, the lead after review 6). The corrected march found Organ L's HIGH top,
+  3.45 m over the Race and the causeway, launching plain running jumps onto race 1 (saving up to 38.6 m) and the causeway
+  (up to 22.9 m). A parapet low enough to see over is cleared by that jump (its peak is 1.35 m and the column's drop does
+  the rest); one a kid can't clear hides the lake. So the lava-facing rim carries **a crown of 12 basalt pipes** (the stage's
+  lava.js `CROWN`, rider parts): hexagonal, 0.26 m across, 2.0–2.2 m tall (over a kid's 1.8 m reach), clear gaps ≤ 0.52 m (a
+  kid is 0.76 m across), each square to its rim, un-inked (no squid climbs them); from the middle of the north-west edge round
+  the west corner, the south-west, south (the stub fills its middle) and south-east edges and the east corner to the middle
+  of the north-east edge. The north flat (the climb from B) stays open. **62 % open** along the crown's line: you see and
+  shoot between the pipes. Rule 25 measures the crown as a screen (≥ 60 % open, no gap a kid fits, pipes ≤ 0.3 m and
+  ≥ 2.0 m), its cover without it. The rider parts grow 36 → 60 (ENGINE R30's cap 40 → 64; Treehills runs ~60 dynamic
+  blocks).
+  **Fix round 7 (review 7, air steering):** a kid steers in the air, and the march flew straight. A jump out through the
+  open north half of the north-east edge, the stick turned 45° eight frames up, swung round the crown's end and came down
+  on the causeway over 0.6–2.7 m of lava: **16.9 m saved** (lava-audit's steered march at fix round 6's crown: 26 over
+  15 m). The review's one pipe a quarter of the way from the north flat on each edge still left 0.45 m by the corner:
+  turned 10 frames up, 16.1 m. So **the north-east and north-west edges are crowned whole**, like the others (4 pipes an
+  edge, 0.51 m clear): the crown runs from the north-west corner round the lake side to the north-east corner, **only the
+  north flat is open** (the climb from B, and the walk down onto B). 14 pipes a lookout, 64 rider parts (R30's cap, all
+  used); **65 % open**, widest gap 0.52 m (rule 25). Off Organ L's HIGH top **no steered running jump crosses the lava**
+  (0 / ±45 / ±90° after 6, 8 or 10 frames) and four straight ones do, **the most 3.3 m**; at LOW (2.3 m) 17 straight, the
+  most 6.9 m, and 4 steered, 3.8 m. Pictures:
+  `out/fix7/fix7-*`. The flights
+  that still read 17–18 m in review 7's center-line probe land on the island, the socket collar, the coping or the organ
+  stump beside the cluster, over lava only where the notch's 0.15–0.2 m seams pass under them: a kid walks the same way
+  (off the north flat onto B, 3.1 m, then off B's island side, ~4 m: probe-dropnotch, 20 of 24 headings alive at HIGH,
+  the 4 dead ones off B's lake side); their "gain" is the nav's missing drop links. The audit lists them as seam flights
+  (no gate).
+- **Rule 44 at fix round 7's final geometry** (lava-audit.js, `full=1`; the table and the list below are fix round 6's,
+  the fix-round-7 numbers follow them). **The march** (corrected after review 6): every
+  nav node standing at the lava's edge now, 16 headings, 0.1 m steps out to 11 m; the far floor is **any** standable floor
+  across the lava down to the lava itself (it took only floors within 1.3 m below the take-off before), a take-off may drop
+  onto a lower dry strip (≤ 3 m) before the lava, and each jump is tried from **2.6, 1.5 and 0.8 m** behind the edge; every
+  sample past a 0.35 m seam tried physically — the kid stepped by the real physics running, then swimming out of its own
+  ink, then with the real Dash Pellet's air dash pressed on the rise, at the apex and on the fall; a crossing is a flight
+  airborne over a lava cell that comes down alive on floor past it, wherever; "saves" = the nav walk from the take-off node
+  to where it landed minus the flight. At 4faa8d6f it reproduced review 6: HIGH 24 over 20 m, the most 38.57 (Organ L); LOW
+  15.9 (a nudged nav node in a pocket on the Ladle Road: a `walks` link, as the deck corner's). **The kid's reach on flat
+  ground**: running jump **3.9 m** (peak 1.35 m), swim jump **8.65 m** (peak 1.70 m), run + air dash 6.9–7.1 m, swim + air
+  dash 8.9–**10.4 m**. A drop adds to every one of them.
+
+  | | LOW | HIGH |
+  |---|---|---|
+  | **plain running jumps** | **1,100** crossings (1,060 over gaps < 4.4 m; 144 with a drop over 1.3 m, 106 over a dry strip first; 60 off their line) | **1,435** (1,387 < 4.4 m; 28 deep, 56 over a strip; 76 off) |
+  | …saving ≤ 5 m / 5–10 m / 10–15 m / > 15 m | 760 / 302 / **38** / 0 — **the most 13.55 m** | 1,058 / 337 / **40** / 0 — **the most 14.15 m** |
+  | **swim jumps, swim / run + air dash** | 1,092 (swim 980, swim + dash 377, run + dash 112 — a candidate counts once) | 1,981 (swim 1,568, swim + dash 623, run + dash 413) |
+  | …saving > 20 m / > 40 m | 352 / 151 — the most 56.5 m | 416 / 16 — the most 41.2 m |
+  | **the carrier's swim jumps** (of the swim crossings > 10 m) | 72 — 50 over 20 m, the most 51.6 m | 85 — 42 over 20 m, the most 37.1 m |
+
+  The running jumps saving more than 12 m: at HIGH, off race 7 across the island's south bay onto its coping (14.15 m, the
+  largest: the bay is the pier's price, the walk round goes over the pier), the Ladle Road's bitten corner down across the
+  head's cut onto race 6 / 7 (12.3–13.0 m), the Lakefront's coping onto the causeway (12.5 m, both levels); at LOW, the quay's
+  2.3 m copings down onto the Casting Floor (12.4–13.6 m), the horn's 2.6 m coping onto the Casting Floor's (12.3 m), the
+  causeway onto the Lakefront's coping (12.1 m), the island's south-west coping onto the pier's (12.1 m). Every crossing:
+  `out/fix6/rule44-crossings.json`.
+
+  **Fix round 7** (the crown's north-east and north-west edges closed; air steering; leaps; `out/fix7/rule44-crossings.json`):
+
+  | | LOW | HIGH |
+  |---|---|---|
+  | **plain running jumps, straight** | 1,101 — over 5 / 10 / 15 m: 341 / 38 / 0, **the most 13.55 m** | 1,437 — 381 / 44 / 0, **the most 14.74 m** |
+  | **running jumps off rider tops, steered** (0 / ±45 / ±90°) | 6 — **the most 3.84 m** (Organ L) | 312 — 19 / 4 / 0, **the most 14.15 m** (race 7; **none off Organ L**) |
+  | seam flights (listed: drops past the notch) | 978, the most 8.9 m | 1,290, the most 18.2 m |
+  | swim jumps, swim / run + air dash (listed) | 1,081 — 354 over 20 m, 170 over 40, the most 56.5 m | 1,957 — 412, 16, the most 41.2 m |
+  | **Mitts leaps** (listed; half / full charge, aim level) | 2,201 — 702 over 20 m, 230 over 40, the most 57.9 m | 2,693 — 441, 6, the most 43.3 m |
+  | the carrier's swim jumps (the audit's row) | 75 — 53 over 20 m, the most 55.9 m | 79 — 46, the most 37.1 m |
+
+  The gate (straight + steered running jumps): **no running jump saves over 20 m, the largest 14.74 m** — new at HIGH:
+  off Organ B's top toward L, the kid meets the closed north-east crown and drops onto the island's coping past the
+  0.2 m seams (14.74 m by the straight march's centre-line count; it is a seam flight: the walk is B → island, ~4 m).
+  With the stick turned at 6 / 8 / 10 frames (PAGE_ARGS `sf=6,8,10`) the steered largest stays 14.15 m.
+  **Fix round 8 (the lead after review 8: rule 44's margin).** The steered march runs off **every take-off** too (every
+  valid static nav node within 3.5 m of lava, 16 headings, the stick turned 0 / ±45 / ±90° at 4, 8 and 12 frames) and
+  round the 4 most-saving a finer look (±0.3 m, ±9° in 3°, the stick ±15 … ±90° in 15°); the gate adds **every steered
+  running jump under 14 m**. Two places broke it: the island's coping past the stump by the second Race's landing was a
+  dead end 18.7 m round on foot (review 8's 14.96 m onto race 7) — **the stump moved 0.6 m toward the deck and 0.1 m
+  slimmer**, a 1.2 m walk now opens past it to the pier (10.4 m round; that jump saves 6.7 m); and the finer look found
+  a jump north off the **Ladle Road's corner by the second Race**, steered 45–60° left, onto race 7 saving 16.3 m —
+  **a 1.0 m parapet (cover) along that corner** (its west face and the first 1.6 m of its north face; not in Boss
+  Battle). At HIGH the steered largest is now **13.13 m** (off the Lakefront by the Tide Board onto the causeway, steered
+  15° at 12 frames), the straight largest still B's 14.74 m seam flight; review 8's probe-steer8 reads 12.5 m at either
+  level, its fine search 6.72 m.
+- **The options the lead chose from** (fix round 4's, with its numbers): 1. *Accept swim / dash jumps over the lava as
+  skill movement* and judge plain running jumps by the 20 m skill-route bar (chosen; the margin at the East Pool corner);
+  2. *make the lava unjumpable* (every corner's gap past a running jump with its drop at ~2,000 corner samples, or solid
+  un-inkable lips ≥ 1.8 m on every shore: a stage revision); 3. *change the physics over the lava* (a squid's air speed
+  decaying over it: a game-wide feel change). The round-3 decision ("widen the three running-jump corners to ≥ 5.5 m; the
+  45 m swim route to ≥ 6.5 m or a rail lip") could not pass: the running jumps were 94 / 106 places, a swim jump flies
+  8.65 m, and squids pass rails.
 - **Symmetric:** one lake, a 180° layout, both sides change at the same instant.
 - **Objectives never drown:** the Pour Floor (1.8), both Moorings (1.8), the whole tower track (≥ 1.2), the Pond, weir
   and Gates (≥ 1.2), the Ladle Gantry (1.2), every spawn (≥ 30 m from the region).
@@ -863,9 +1035,47 @@ The layout also carries the Ladle Gantry (`onlyIn: 'bazookarp'`, §2.3), so the 
 ### 4.5 Boss Battle: yes
 
 - Lava **held at LOW** (`schedule.boss: 'low'`): ledges dry, the Race sunk, the Organs at their LOW pose.
-- `boss: { floorY: 1.2 }`. HULLBREAKER's home ground is the 1.2 tier: the island, both causeways, both Lakefronts and
-  south heads: about 1,300 m² connected (the check needs ≥ 150). The ledges are 1.2 m below it (drops: it never walks
+- `boss: { floorY: 1.2, headroom: 4.6, maxRise: 0.65, roamAfter: 12 }`. HULLBREAKER's home ground is the 1.2 tier: the island, both causeways, both Lakefronts and
+  south heads: about 1,300 m² connected (the check needs ≥ 150).
+- **Boss Battle's own variant (the lava engine's fix round 3, the lead's decision: "800 connected beats 1,300 in necks").**
+  The boss needs 2.9 m from any wall and 1.8 m from any drop; built as the other modes, the Surge Gauge's four piers and the
+  island's dressing cut its ground into 463 m² (the island in pieces and the causeways). In Boss Battle (`notIn: 'boss'`)
+  there is no Surge Gauge (piers, tie girders, works, its two lava boards and the prop), none of the island's stacks,
+  stumps, plinths, gauge deck, machine house and valve chest, and none of the Lakefronts' and Moorings' dressing in the
+  boss's clearance ring (tide board, mooring bollards, ladle cradle, capstan, chain bollard, stone crate, the bridge's slag
+  pot): its ground is one 910 m² piece — the island, both causeways and a wedge of each Lakefront at the causeway's foot
+  (`out/fix3/fix3-boss-homeground-before-after.jpg`). Every other mode is built exactly as before. The art phase may give
+  Boss Battle a landmark of its own outside the clearance ring (the gauge's place is the boss's floor). The ledges are 1.2 m below it (drops: it never walks
   them); the lake is void (a drop). Its charges stop on the piers, the ladle cars, the drums (stun windows).
+- **The boss's footing (fix round 3, the takeover).** The terraces stand only 1.2 m over its tier, inside BossNav's 1.35 m
+  stride, so its home ground ran up the Lower Surge Steps: it walked up them toward a squad on the terrace and stuck between
+  the parapets (boss-check: 29 m walked in 120 s, two runs in five). `boss.maxRise: 0.65` makes ground more than 0.65 m over
+  its floor no floor to it (the Pour Floor and the Moorings, 0.6 up, stay its ground): **818 m², one piece**
+  (`out/fix3/fix3-boss-homeground-maxrise.jpg`). `boss.roamAfter: 12`: having stood within 5 m of one spot for 12 s it picks
+  its next goal ≥ 9 m away (with the squad on a terrace it settled at its preferred 10 m and played every move from there).
+  (Fix round 4, after review 4 — it could still keep to one Lakefront wedge for most of a round: the spot is 8 m round,
+  every further 12 s there counts again, and from the second count its goals favour the far side and the other half — up
+  to 30 m from the camp, its fight distance weighing less — and it walks there before its next move, for up to 8 s.
+  `boss-check.js` prints the seconds on each half and the longest spell within 6 m of one spot.)
+  And, in the shared brain, a walk blocked straight at its waypoint (a charge left it off-centre on a 10 m causeway, where
+  only a pose along the causeway fits) takes the heading a pose fits that best closes on the waypoint until the straight
+  step fits again (it stood 80 s turning to and fro).
+- **Fix round 5 (after review 5: one run in six still spent 88 s at Alpha's west Lakefront).** `boss.noGo: [[−20.5, −25.5,
+  3.5], [20.5, 25.5, 3.5]]`: the tips of the west Lakefront wedges are never a goal or a path's anchor (BossNav keeps them
+  as its ground: 817.5 m², a boss standing there plans from the nearest cell outside). The five-in-a-row then found the same
+  camp at both causeways' feet, by a different cause — a leg string-pulled 0.3 m short of the plan's clearance cut the corner
+  where the causeway's foot meets the lake (1.55 m from it), the body stopped fitting there, and every 1 cm step was refused
+  because the pose it stood in did not fit either: on `roamAfter` stages the legs keep the full clearance, a boss off its
+  plan walks to the path's first cell before its first leg, and out of a pose that doesn't fit a step need only keep the
+  turn's rule (claws clear of walls, belly over floor).
+- **Fix round 6 (after review 6: whole rounds on one half, 3 in 10).** The brain keeps the half it stands on (z < 0 / z ≥ 0)
+  and since when: after 25 s there its goal picks weigh its fight distance at 0.3 and the other half's goals gain a pull
+  growing from +8 to +20 (at 65 s); a crossing once picked is kept, re-pathed, until it stands on the other half (14 s at
+  most). Two stalls the five-in-a-rows found (87 s at the Lower Surge Steps' foot, 105 s by Alpha's causeway end) were a
+  wedge: a move's end left it in a heading where neither the turn toward its waypoint nor a step fit. A turn without
+  headway for 1 s now goes the long way round, then through (claws clip for a moment); a heading the turn's rule refuses
+  where it stands first turns to the nearest one it takes; no new move meanwhile. Boss Battle keeps the island's old
+  faces (`ISLAND_BOSS`, no bays by race 7's pier): 818 m².
 - The engine adds the rider parts before `BossNav` builds (ENGINE H21), so the Organ columns are walls to it.
 - Verify with a copy of `tools/botlab/jobs/stretch/boss-check.js`: home ground, roams > 50 m, never idle ≥ 12 s, moves
   played.

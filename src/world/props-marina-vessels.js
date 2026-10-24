@@ -2235,7 +2235,7 @@ export function registerMarinaVessels(D, H) {
       });
       // the locked gate is a rail collider (a kid on the quay can't walk through it; shots / ink / squids pass)
       const Wg = (o.width ?? 1.3) / 2 + 0.13;
-      B.col(0.27, 0, -Wg, 0.37, 2.15, Wg, { rail: true });
+      B.col(0.27, 0, -Wg, 0.37, 2.15, Wg, { rail: true, roof: true });   // [b5-int3] (off-limits on top: a dash off the boathouse's wall climb stood a kid on it — dash-reach.js)
     },
   };
 
@@ -2763,7 +2763,7 @@ export const HALYARD_VESSELS = [
   { type: 'ferry_hull', pos: [0, 0, 0], notIn: 'tower' },
   { type: 'ferry_hull', pos: [0, 0, 0], linkspan: true, onlyIn: 'tower' },   // Tower Command: floats against both ends
   { type: 'ferry_cabin', pos: [0, 0, 0] },
-  { type: 'ferry_bridge', pos: [0, 3.8, 0], mirror: false, notIn: 'tower' },
+  { type: 'ferry_bridge', pos: [0, 3.8, 0], mirror: false, notIn: ['tower', 'bazookarp'] },   // [karp-face] (its wheelhouse block isn't built there: the Pond is on the cabin roof — the dressing and funnel stood inside the Roe Shell)
   // cover pieces from docs/HALYARD.md (Alpha half; mirrored)
   { type: 'ferry_locker', pos: [11.75, 1.3, 2.15], notIn: 'tower' },
   { type: 'ferry_cargo', pos: [14.2, 1.3, 0.4], notIn: 'tower' },

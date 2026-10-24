@@ -23,8 +23,9 @@ import { G, emit, clamp, lerp } from '../../core/ctx.js';
 import { WEAPONS, PLAYER } from '../../config.js';
 import { Physics, Hit } from '../physics.js';
 import { superEllipsoid } from '../character-geo.js';
-import { MAIN_KITS, netRec } from './registry.js';
+import { MAIN_KITS, SUB_KITS, netRec } from './registry.js';
 import { MELEE } from '../bots.js';
+import { karpShellIn } from '../botsKarp.js';   // [b5-karp-bots] (bots keep their lunges / leaps off the Roe Shell)
 import './mitts-model.js';
 import './mitts-assets.js';
 
@@ -170,6 +171,7 @@ function burstFist(f, at, direct, normal) {
   }
   if (G.subs) G.subs.damageArea(c, w.splashRadius, w.splashMin, f.team, o); else G.specials?.areaHit?.(c, w.splashRadius, w.splashMin, f.team, o);   // [b5-deploy] enemy devices too
   if (direct !== 'boss') G.boss?.splash(o, c, w.splashRadius, w.splashMax, w.splashMin, 'mitts');   // Boss Battle
+  if (direct !== 'karp') G.objTargets?.splash(o, c, w.splashRadius, w.splashMax, w.splashMin, 'mitts');   // [b5-karp] the Roe Shell
   burstFx(f, o, c, direct, normal, w);
 }
 function burstFx(f, o, c, direct, normal, w) {
@@ -220,6 +222,10 @@ function stepFist(f, i, w, dt) {
     if (!dead && G.boss) {
       const bh = G.boss.segHit(f.prev, f.pos, hr0);
       if (bh) { const at = bh.point.clone(); G.boss.hit(f.owner, w.punchDamage, bh.target, 'mitts', at); burstFist(f, at, 'boss', null); dead = true; }
+    }
+    if (!dead && G.objTargets) {   // [b5-karp] the Roe Shell
+      const kh = G.objTargets.segHit(f.prev, f.pos, hr0);
+      if (kh) { const at = kh.point.clone(); if (!f.ghost) G.objTargets.hit(f.owner, w.punchDamage, 'mitts', at, { target: kh.target }); burstFist(f, at, 'karp', null); dead = true; }
     }
     // enemy curtains / devices / special objects catch it (and it bursts there) — a ghost's blow costs them nothing
     const fd = f.ghost ? 0 : w.punchDamage;
@@ -353,9 +359,12 @@ function clingableAt(pos, n, blockId) {
   return !G.physics.raycast(_v2, DOWN, 0.5, _hitC, false).hit;
 }
 
+// [b5-caldera] standing on an off-limits top (a roof: it slides you off, no jump from it — actor.js)
+function onRoof(a) { return a.grounded && a.ground.hit && a.ground.block >= 0 && a.isRoofFor(G.level.blocks[a.ground.block]); }
 function startCharge(r, k) {
   const a = r.a, w = W();
   if (k.charging || k.leaping) return true;
+  if (onRoof(a)) return false;   // [b5-caldera] fix round 7: no leap off a roof (actor.js's roof gate: no jump from one)
   if (a.ink < w.leapInkMin) { r._empty(); return false; }
   k.charging = true; k.charge = 0; k.chargeT = 0; k.chargeAir = 0; k.full = false;
   if (a.isLocal || near(a.pos)) k.loop = G.audio?.loop('mitts_charge', { pos: a.isLocal ? undefined : a.pos, volume: a.isLocal ? 0.5 : 0.35, pitch: 1 }) || null;
@@ -455,6 +464,7 @@ function landSplash(a, at, n) {
   }
   if (G.subs) G.subs.damageArea(c, w.landRadius, w.landDamageMin, a.team, a); else G.specials?.areaHit?.(c, w.landRadius, w.landDamageMin, a.team, a);   // [b5-deploy] enemy devices too
   G.boss?.splash(a, c, w.landRadius, w.landDamageMax, w.landDamageMin, 'mitts');   // Boss Battle
+  G.objTargets?.splash(a, c, w.landRadius, w.landDamageMax, w.landDamageMin, 'mitts');   // [b5-karp]
   landFx(a, at, n, c);
   netRec(a, 'mitts', [1, r2(at.x), r2(at.y), r2(at.z), r2(n.x), r2(n.y), r2(n.z)]);
   emit('mitts:land', { actor: a, pos: c.clone(), normal: n.clone(), radius: w.landRadius });
@@ -571,6 +581,7 @@ function update(r, dt, inp, w) {
     }
     // walked off a ledge mid-charge: the crouch has nothing to push off
     if (!a.grounded && !k.cling) { k.chargeAir += dt; if (k.chargeAir > 0.12) cancelCharge(r, k); } else k.chargeAir = 0;
+    if (k.charging && !k.cling && onRoof(a)) cancelCharge(r, k);   // [b5-caldera] (slid onto a roof mid-charge: no leap off it)
     if (k.charging) {
       const go = k.botWant >= 0 ? k.charge >= Math.min(k.botWant, maxC) - 1e-3 || k.chargeT > w.leapChargeTime + 0.6 : !a.intent.jump;
       if (go && k.botWant >= 0 && !botReleaseOk(a, k)) cancelCharge(r, k);   // a bot never leaps somewhere it didn't plan
@@ -626,7 +637,7 @@ function update(r, dt, inp, w) {
     const wallThere = G.physics.raycast(_v2, _v3, PLAYER.radius + 0.5, _hitC, false).hit;
     if (a.ink <= 0) dropCling(r, k, 'empty');
     else if (a.grounded || !wallThere || !a.alive) dropCling(r, k, 'lost');
-    else if (a.isBot && (k.botHold -= dt) < -0.6) dropCling(r, k, 'jump');   // (bot code leaps / lets go at 0; this is the backstop)
+    else if (a.isBot && (k.botHold -= dt) < -0.6) botLetGo(a.bot, a, r, k);   // (bot code leaps / lets go at 0; this is the backstop) [b5-caldera] botLetGo
   }
 
   // ---- punches (not while charging or mid-leap; from the wall only the right glove is free)
@@ -685,9 +696,18 @@ function botPlan(a, k, yaw, pitch, dist) {
 // above or below
 function landingOk(a, P) {
   if (P.kind !== 'ground') return false;
+  if (SUB_KITS.bobber?.webHit?.(a.team, P.pos.x, P.pos.y, P.pos.z, W().landRadius)) return false;   // [b5-int3] its smash would set off an own idle Chain Bobber web
+  if (karpShellIn(a, P.pos.x, P.pos.z, P.pos.x, P.pos.z, 0.6)) return false;   // [b5-karp-bots] nor a landing on the Roe Shell's sting
   const b = P.block >= 0 ? G.level.blocks[P.block] : null;
   if (b && (b.roof || b.perch || b.rail)) return false;
   if (Math.abs(P.pos.y - a.pos.y) > 4) return false;
+  if (G.match?.stage?.wet(P.pos.x, P.pos.z, P.pos.y, 2)) return false;   // [b5-caldera] never onto floor a stage hazard takes (lava)
+  // [b5-caldera] fix round 3: … nor where it slides on into one — a leap lands at up to 11 m/s and carries on along its line
+  // (a bot's pounce onto the island's narrow SE coping slid off into the lake: lava-bots ledges)
+  if (G.match?.stage) {
+    const dx = P.pos.x - a.pos.x, dz = P.pos.z - a.pos.z, d = Math.hypot(dx, dz) || 1, SM = G.match.stage;
+    for (const k of [0.8, 1.6, 2.4]) { const x = P.pos.x + (dx / d) * k, z = P.pos.z + (dz / d) * k, gy = G.level.groundHeight(x, z, P.pos.y + 0.5); if (gy === -Infinity || SM.wet(x, z, gy, 2)) return false; }
+  }
   if (!G.nav) return true;
   const id = G.nav.nearest(P.pos, 0.6);
   if (id < 0) return false;
@@ -703,7 +723,23 @@ function botLeap(r, k, c, yaw, pitch, kind = 'ground') {
 // at release: does the leap still come down where the bot planned (it may have been nudged while crouching)?
 function botReleaseOk(a, k) {
   predictLeap(a.pos, leapVelocity(a, k, k.charge, _bv), _bp, null);
-  return k.botKind === 'wall' ? _bp.kind === 'wall' : landingOk(a, _bp);
+  return k.botKind === 'wall' ? _bp.kind === 'wall' && !SUB_KITS.bobber?.webHit?.(a.team, _bp.pos.x, _bp.pos.y, _bp.pos.z, W().landRadius) && !wallOverHazard(_bp.pos) : landingOk(a, _bp);   // ([b5-int3] a wall landing smashes too)
+}
+// [b5-caldera] fix round 3: a wall to cling to only where the floor under it isn't one a stage hazard takes (the lava): its
+// let-go drops the kid there (lava-bots: a bot clinging over the Slump bay dropped into the lake)
+function wallOverHazard(p) {
+  const SM = G.match?.stage; if (!SM) return false;
+  const gy = G.level.groundHeight(p.x, p.z, p.y);
+  return gy === -Infinity ? !!SM.under?.({ x: p.x, y: -50, z: p.z }) : SM.wet(p.x, p.z, gy, 2);
+}
+// [b5-caldera] fix round 3: a bot lets go of a wall with a hop only where that hop comes down dry (the brain's flight model);
+// over the lava it leaps for dry floor away from the wall instead, or hangs on a moment longer
+function botLetGo(brain, a, r, k) {
+  const n = k.clingN, SM = G.match?.stage, f = SM && brain?._flight ? brain._flight(a, n.x * 3.4, 4.6, n.z * 3.4, null, 1.6) : null;
+  if (!f || (f.gy > -Infinity && !SM.wet(f.x, f.z, f.gy, 0.5))) { dropCling(r, k, 'jump'); return; }
+  const out = Math.atan2(n.x, n.z);
+  for (const dy of [0, 0.6, -0.6, 1.2, -1.2]) { const yaw = out + dy, c = botPlan(a, k, yaw, 0.05, 9); if (landingOk(a, _bp) && botLeap(r, k, c, yaw, 0.05)) return; }
+  k.botHold = 0.4;
 }
 // a wall near the fight worth sticking to: probe round the bot at chest and head height
 function botFindWall(a, target) {
@@ -774,7 +810,7 @@ const bot = {
           const c = botPlan(a, k, yaw, -0.1, dist);
           if (landingOk(a, _bp) && botLeap(r, k, c, yaw, -0.1)) { B.leapCd = 3 + Math.random() * 3; return false; }
         }
-        dropCling(r, k, 'jump');
+        botLetGo(brain, a, r, k);   // [b5-caldera] (was dropCling 'jump': never into the lava)
       }
       return inReach;
     }
@@ -820,7 +856,7 @@ const bot = {
     const r = a.weaponRunner, k = K(r), B = botState(brain);
     B.travelCd -= dt;
     if (k.charging || k.leaping) return false;
-    if (k.cling) { if (k.botHold <= 0 || inkFrac < 0.15) dropCling(r, k, 'jump'); return inkFrac > 0.1; }   // hang a moment, ink the wall + the ground below
+    if (k.cling) { if (k.botHold <= 0 || inkFrac < 0.15) botLetGo(brain, a, r, k); return inkFrac > 0.1; }   // [b5-caldera] botLetGo   // hang a moment, ink the wall + the ground below
     // cover ground: a long pounce along the path (paints the landing), with plenty of ink and a long way to go
     if (B.travelCd <= 0 && a.grounded && inkFrac > 0.7 && wantMove && brain._pathRemaining && brain._pathRemaining() > 14 && Math.random() < dt * 0.8) {
       B.travelCd = 6 + Math.random() * 6;
@@ -878,6 +914,9 @@ MAIN_KITS.mitts = {
   update,
   jump,
   busy: (r) => !!(r.kit && r.kit.mitts && r.kit.leaping),
+  // [b5-sub-dash] a dash (kits/dash.js, SPEC §0.5 / D1.5): let go of the wall first; a leap charge is dropped, no leap
+  letGo: (r, why) => { if (r.kit && r.kit.mitts) dropCling(r, r.kit, why); },
+  dropCharge: (r) => { const k = r.kit && r.kit.mitts ? r.kit : null; if (!k || !k.charging) return false; cancelCharge(r, k); return true; },
   // leap armour: an incoming leap is otherwise picked off before it lands — mid-air (and on the landing beat) the kid
   // takes W().leapArmor of any damage. Sponge guard: punching with the gloves up (and a beat after), a hit from the
   // front (within guardArc° of the facing) takes W().guardArmor — the sponge soaks part of it (a squish off the gloves).
@@ -919,6 +958,14 @@ MAIN_KITS.mitts = {
     }
     if (prevShown && G.time - prevShown > 0.05) { hidePreview(); prevShown = 0; }
     updateFists(dt);
+  },
+  // [b5-beta1] a match is about to be shown: the fists' mesh (built on the first punch) and the local player's leap
+  // preview (on the first charge) now, into the scene, so the stage warm compiles their programs (registry.js warmKits;
+  // main.js _warmStage). (The gloves' sponge is made on their first animation: character.js warmAll runs it.)
+  warm(actors) {
+    const mesh = ensureFistMesh();
+    if (mesh) mesh.count = 0;
+    if (actors.some((a) => a?.isLocal && a.weapon?.kind === 'mitts')) ensurePreview();
   },
   clear() {
     for (const f of fists) { f.owner = null; fistPool.push(f); }

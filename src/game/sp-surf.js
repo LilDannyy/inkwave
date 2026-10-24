@@ -251,7 +251,7 @@ export class Buoy {
       const vn = this.vel.dot(h.normal);
       if (vn < 0) this.vel.addScaledVector(h.normal, -1.3 * vn);
       this.vel.x *= 0.35; this.vel.z *= 0.35; if (h.normal.y < -0.5) this.vel.y = Math.min(0, this.vel.y);
-    }
+    } else if (this.phase === 'fly') G.objTargets?.bounce(this.prev, this.pos, this.vel, 0.25, 1.3, 0.5);   // [b5-karp] off the Roe Shell (a buoy inside it would be crushed: karpShell.js)
     if (this.pos.y < PLAYER.waterY - 1 || this.airT > 5 || G.match?.stage?.under(this.pos)) return 'lost';   // [b5-stagehooks] (the lava)
     return null;
   }
@@ -506,6 +506,12 @@ export class Buoy {
 
   // ---- hits: this screen's own players only (the victim's owner judges — see the header)
   _judge(R) {
+    // [b5-karp] the Roe Shell: once per ring, as its front reaches it (the owner's copy; a special: × 0.5)
+    if (G.objTargets && !this.ghost && !R.karp) for (const t of G.objTargets.targets) {
+      if (!t.hittable()) continue;
+      const c = t.center();
+      if (Math.hypot(c.x - R.c.x, c.z - R.c.z) - t.radius() <= R.r && Math.abs(c.y - R.c.y) < D.height + t.radius()) { R.karp = true; G.objTargets.hit(this.owner, D.damage, 'surf', c.clone(), { special: true, target: t }); }
+    }
     for (const e of G.actors) {
       if (!e.alive || e.team === this.team || e.remote || R.judged.has(e)) continue;
       const dx = e.pos.x - R.c.x, dz = e.pos.z - R.c.z, d = Math.hypot(dx, dz);
@@ -717,7 +723,9 @@ function heldTick(a, s, dt) {
   H.look.emitter.rotation.y += dt * 4;
   H.look.lampMat.emissiveIntensity = 0.8 + 0.8 * (0.5 + 0.5 * Math.sin(s.t * 7));
 }
+let warmSet = null;   // [b5-beta1] a Wave Breaker buoy and its ring as stand-ins (specials.js warm: compiled at the match's load)
 export const IMPL = {
+  warm() { if (!warmSet) { const g = new THREE.Group(); g.add(makeBuoy(0).group); new RingRibbon(g, 0, {}); warmSet = [g]; } return warmSet; },
   start(a, s) {
     Object.assign(s, { speed: D.moveSpeed, noSquid: true, aimFace: true, raise: true, showArc: true, bomb: { kind: 'surf', throwSpeed: D.throwSpeed, inkCost: 0 }, dur: 0, thrown: false });
     a.character.subPropHidden = true;

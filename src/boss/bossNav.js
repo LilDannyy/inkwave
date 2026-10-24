@@ -47,6 +47,15 @@ export class BossNav {
     // Treehills, whose 1.3 m terraces out-cover the meadow the boss belongs on
     if (Number.isFinite(L.layout?.boss?.floorY)) best = L.layout.boss.floorY;
     this.floorY = best;
+    // [b5-caldera] a stage can give the boss headroom (layout.boss.headroom, m over its floor): a piece wholly above it is
+    // overhead, not a wall — Highmark's Surge Gauge tie girders at 4.8 m over the island clear its ~4.5 m shell, and as
+    // walls they cut the island (its home ground) in two
+    // [b5-caldera] and the most its floor may rise under it (layout.boss.maxRise, m over its floor): higher ground is no
+    // floor to it (kept 1.8 m clear of, like a deck's edge; a wall's 2.9 m cut its Lakefront wedges off, 775 m² left). Highmark's terraces stand only 1.2 m over the boss's tier, within its 1.35 m stride: its home ground ran up the
+    // Lower Surge Steps, it walked up them toward the squad on the terrace and stuck between the parapets (boss-check: 29 m
+    // walked in 120 s, parked at the steps' foot, two runs in five)
+    const MR = Number.isFinite(L.layout?.boss?.maxRise) ? L.layout.boss.maxRise : Infinity;
+    const HR = Number.isFinite(L.layout?.boss?.headroom) ? L.layout.boss.headroom : null, HS = HR ? [STRIDE + 0.1, 2.6, 3.8, HR].filter((h) => h <= HR) : [STRIDE + 0.1, 2.6, 3.8, 5.2];
     for (let i = 0; i < N; i++) {
       const [x, z] = this.xz(i);
       // ground under the body: the main floor, or anything low enough to stride over (curbs, benches, planters, crates);
@@ -56,7 +65,8 @@ export class BossNav {
       if (!(g >= best - 0.55)) k = 2;
       else {
         this.floor[i] = g;
-        for (const h of [STRIDE + 0.1, 2.6, 3.8, 5.2]) if (L.pointInside(_p.set(x, best + h, z), 0)) { k = 1; break; }
+        for (const h of HS) if (L.pointInside(_p.set(x, best + h, z), 0)) { k = 1; break; }
+        if (!k && g - best > MR) k = 2;   // [b5-caldera] (layout.boss.maxRise: no floor for it, as the edge of a deck)
       }
       if (k !== 1) this.pads.forEach((pd, t) => { if (Math.hypot(x - pd.x, z - pd.z) < pd.r + PAD_MARGIN[t]) k = 3; });
       this.kind[i] = k;
@@ -69,6 +79,7 @@ export class BossNav {
     const nx = this.nx, nz = this.nz;
     const ok = new Uint8Array(N);
     for (let i = 0; i < N; i++) ok[i] = this.Dw[i] >= PLAN_WALL && this.Dv[i] >= PLAN_FLOOR ? 1 : 0;
+
     const comp = new Int32Array(N).fill(-1);
     let bestC = -1, bestScore = 0, c = 0;
     const pad = this.pads[0], span = Math.hypot(L.bounds.maxX - L.bounds.minX, L.bounds.maxZ - L.bounds.minZ);
@@ -94,6 +105,25 @@ export class BossNav {
     this.planIds = [];
     for (let i = 0; i < N; i++) if (ok[i] && comp[i] === bestC) { this.plan[i] = 1; this.planIds.push(i); }
     this.area = this.planIds.length * st * st;
+    // [b5-caldera] a stage's no-go spots (layout.boss.noGo: [[x, z, r], …]): plan cells within r stay its ground (the area,
+    // a path may pass) but are never a goal (randomPoint) or a path's anchor (nearestPlan: a boss standing there plans from
+    // the nearest cell outside, so its route leads out). Highmark's west Lakefront wedge tips: it walked or charged in, could
+    // neither turn nor step out, and spent 70–88 s of a round there (boss-check, caldera reviews 4 and 5)
+    // (fix round 5's five-in-a-row then found another: 88 s in the tongue of plan along the terrace face at the Moorings' east
+    // end. On roamAfter stages the same holds for every plan cell where it can't turn round — fewer than 6 of 8 headings
+    // turnOk, the tongues along walls and drops — the clearance test review 5 named)
+    this.noGo = null; this.goalIds = this.planIds;
+    const NG = L.layout?.boss?.noGo, RA = L.layout?.boss?.roamAfter > 0;
+    if (NG?.length || RA) {
+      this.noGo = new Uint8Array(N);
+      for (const i of this.planIds) {
+        const [x, z] = this.xz(i);
+        if (NG?.some(([gx, gz, gr]) => Math.hypot(x - gx, z - gz) < gr)) { this.noGo[i] = 1; continue; }
+        if (RA) { let k = 0; for (let q = 0; q < 8; q++) if (this.turnOk(x, z, (q * Math.PI) / 4)) k++; if (k < 6) this.noGo[i] = 2; }
+      }
+      this.goalIds = this.planIds.filter((i) => !this.noGo[i]);
+      this.noGoArea = (this.planIds.length - this.goalIds.length) * st * st;
+    }
   }
 
   // distance from each cell centre to the nearest matching cell's edge (brute force within 7 m; off-grid counts when edge)
@@ -130,6 +160,8 @@ export class BossNav {
   floorAt(x, z) { const i = this.cell(x, z); const f = i < 0 || this.kind[i] ? this.floorY : this.floor[i]; return f - this.floorY < 0.45 ? f : this.floorY; }
   inPad(x, z, margin = 0) { for (const p of this.pads) if (Math.hypot(x - p.x, z - p.z) < p.r + margin) return true; return false; }
   isPlan(x, z) { const i = this.cell(x, z); return i >= 0 && !!this.plan[i]; }
+  // [b5-caldera] a goal / anchor cell: plan, and not a no-go spot (layout.boss.noGo, or where it can't turn round on roamAfter stages)
+  isGoal(x, z) { const i = this.cell(x, z); return i >= 0 && !!this.plan[i] && !this.noGo?.[i]; }
 
   // the whole footprint fits: claws/legs clear of walls, body over floor
   poseOk(x, z, yaw) {
@@ -185,13 +217,13 @@ export class BossNav {
         const jx = ix + dx, jz = iz + dz;
         if (jx < 0 || jz < 0 || jx >= this.nx || jz >= this.nz) continue;
         const j = jz * this.nx + jx;
-        if (!this.plan[j]) continue;
+        if (!this.plan[j] || this.noGo?.[j]) continue;   // [b5-caldera] (no anchor in a no-go spot)
         const d = dx * dx + dz * dz;
         if (d < bd) { bd = d; best = j; }
       }
       if (best >= 0) return best;
     }
-    return this.planIds[0] ?? -1;
+    return this.goalIds[0] ?? this.planIds[0] ?? -1;
   }
 
   // A* over plannable cells (prefers open floor), string-pulled into a few straight legs. Returns [[x, z], …] or null.
@@ -227,11 +259,15 @@ export class BossNav {
     for (let k = b; k !== -1; k = from[k]) { cells.push(k); if (cells.length > 8000) break; }
     cells.reverse();
     const out = [this.xz(cells[0])];
+    // [b5-caldera] fix round 5 (roamAfter stages): legs string-pulled only across full plan clearance (slack 0), not 0.3 m
+    // short of it: a leg from the west Lakefront to Alpha's causeway cut the corner where the causeway's foot meets the lake
+    // (1.55 m from the drop), its body stopped fitting there, and it played its moves on that spot for 88 s (boss-check)
+    const sl = this.level.layout?.boss?.roamAfter > 0 ? 0 : 0.3;
     let i = 0;
     while (i < cells.length - 1) {
       let j = cells.length - 1;
       const [ax, az] = this.xz(cells[i]);
-      while (j > i + 1) { const [qx, qz] = this.xz(cells[j]); if (this.lineOk(ax, az, qx, qz)) break; j--; }
+      while (j > i + 1) { const [qx, qz] = this.xz(cells[j]); if (this.lineOk(ax, az, qx, qz, sl)) break; j--; }
       out.push(this.xz(cells[j]));
       i = j;
     }
@@ -239,7 +275,7 @@ export class BossNav {
   }
 
   // a plannable point: rnd() → [0,1)
-  randomPoint(rnd) { const i = this.planIds[(rnd() * this.planIds.length) | 0]; return i === undefined ? [0, 0] : this.xz(i); }
+  randomPoint(rnd) { const I = this.goalIds || this.planIds, i = I[(rnd() * I.length) | 0]; return i === undefined ? [0, 0] : this.xz(i); }   // [b5-caldera] (goalIds: not in a no-go spot)
 }
 
 class MinHeap {

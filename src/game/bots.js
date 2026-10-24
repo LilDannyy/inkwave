@@ -12,15 +12,20 @@
 import * as THREE from 'three';
 import { G, clamp, angleDiff } from '../core/ctx.js';
 import { PLAYER, DIFFICULTY, SUB, SPECIALS, TOWER, weaponRange } from '../config.js';
-import { Hit } from './physics.js';
+import { Hit, GroundHit, makeContacts } from './physics.js';   // [b5-caldera] GroundHit, makeContacts: _flight
 import { MAIN_KITS, SUB_KITS } from './kits/registry.js';
 import { Sight, SIGHT, SIGHT_STATS, teamKnown } from './botSight.js';
 import { SpecialSense, SPECIAL_AI, SPECIAL_STATS } from './botSpecials.js';   // enemy specials: dangers, the untouchable
 import { surfWant } from './sp-surf-bots.js';   // Surf N' Turf: when to pop it (the throw itself: botSpecials act → surfOwnAim)
 import { devShootAim } from './deployables-bots.js';   // [b5-deploy] nothing better to shoot: enemy beacons / sprinklers / buoys
+import { karpPlan, karpSync, karpEngage, karpGoal, karpFightNav, karpCarrierAct, karpAim, karpPathArgs, karpPathFallback, karpShellAvoid, KARP_W,
+  karpMove, karpPaintAim, karpSpecial, karpStrikeAt, karpJump, karpShields, karpSteerOk, karpRefillSpot, KARP_FB_STEPS, karpFallbackNote } from './botsKarp.js';   // [b5-karp] [b5-karp-bots]
 export { SIGHT, SIGHT_STATS, teamKnown, SPECIAL_AI, SPECIAL_STATS };
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
+const _vStart = new THREE.Vector3();   // [b5-beta1] (_pathTo's own: its callers hand it _v)
+const _wv = new THREE.Vector3();   // [b5-caldera] (_wetHi's probe)
+const _escMv = new THREE.Vector3();   // [b5-caldera] (a stage module's escape footwork, kept through the kits' botAct)
 const _walkHit = new Hit();
 const _stats = { own: 0, enemy: 0, empty: 0, n: 0 };
 const _down = new THREE.Vector3(0, -1, 0), _stepHit = new Hit();
@@ -40,6 +45,23 @@ export const CHARGES = { charger: true, spinner: true, splatling: true };
 // a wall: a try beats standing there)
 export const CLIMB = { stall: 1.75, off: 12, max: 8, ink: 0.2, dry: 40, unreach: 150, reach: { brush: { max: 2.0 }, roller: { min: 1.8 } } };
 export const CLIMB_STATS = { tries: 0, done: 0, stalled: 0, dry: 0, long: 0 };
+export const STRAND_STATS = { jumps: 0, log: [], pinned: 0 };   // [b5-beta1] stranded bots' super jumps out (tests / probes; log: the last 20; pinned: checks that found a bot pinned)
+const INK_STEP_R = [0.55, 0.95, 1.45, 2.05], INK_STEP_R_FAR = [0.55, 0.95, 1.45, 2.05, 2.75, 3.5];   // [b5-beta1] (_inkStep)
+// [b5-beta1, review 1] the nav's dead ends: nodes from which no route, by any edge the graph has (walk, hop, drop, climb,
+// whatever era or gate masks them), reaches either spawn deck — Gulper Aquarium's Great Tank: its 108 nodes, the rim's
+// with the sand bed's, have no edge out. Per nav (a reverse search from the spawn decks' nodes), built on first ask.
+const _navOut = new WeakMap();
+function navCanLeave(nav) {
+  let c = _navOut.get(nav);
+  if (c && c.n === nav.nodes.length) return c.ok;
+  const N = nav.nodes.length, rev = Array.from({ length: N }, () => []), ok = new Uint8Array(N), q = [];
+  for (let i = 0; i < N; i++) for (const e of nav.nodes[i].nb || []) if (e.to >= 0 && e.to < N) rev[e.to].push(i);
+  for (const pad of G.level?.spawnPads || []) { const s = pad ? nav.nearest(pad, 1.5, true) : -1; if (s >= 0 && !ok[s]) { ok[s] = 1; q.push(s); } }
+  if (!q.length) ok.fill(1);   // (no spawn deck on the graph: nothing is judged a dead end)
+  while (q.length) { const v = q.pop(); for (const u of rev[v]) if (!ok[u]) { ok[u] = 1; q.push(u); } }
+  _navOut.set(nav, c = { n: N, ok });
+  return ok;
+}
 
 // ============================================================================================ Zone Control team plan
 // Shared by every bot in a zones match (one per ZoneControl): each zone's paint cells mapped to the nav nodes you'd
@@ -591,6 +613,13 @@ export class BotBrain {
     this.setDifficulty(difficulty);
     this.reset();
   }
+  // [b5-beta1] standing still on purpose (the botlab harnesses' stuck rule leaves these out, and so does the beta's issue
+  // log, src/core/issueLog.js): a Zone Control guard or a Tower Command waiter at the end of its route, a Bazookarp keeper
+  // / breaker / grabber holding its spot (botsKarp kHoldUntil, on the game clock), a perch (pods, lava lookouts, eras)
+  holdingOnPurpose() {
+    const done = !this.path || this.pi >= this.path.length;
+    return (this.zHoldUntil > this.t && done) || (this.tHoldUntil > this.t && done) || (this.kHoldUntil || 0) > G.time || (this.perchUntil || 0) > this.t;
+  }
   setDifficulty(d) { this.diff = DIFFICULTY[d] || DIFFICULTY.normal; }
   // [drainbow] the ink as this bot can tell it. Inside an enemy Drainbow (src/game/sp-drainbow.js blind(): a player in
   // there sees everything grey, both teams' ink one shade) it can't tell its own ink from theirs, so none of it reads as
@@ -658,9 +687,10 @@ export class BotBrain {
     // noticed (+ reaction time), line of sight to it, evade heading / sidestep side, canopy steering + flanking state
     this.thr = null; this.thrCand = null; this.thrScanT = Math.random() * 0.25; this._thrMem = new Map(); this._shl = [];
     this.thrLos = false; this.thrLosT = 0; this.thrAct = null; this.thrActs = 0; this.thrFiring = false; this.thrPulse = false;
-    this.thrEvT = 0; this.thrEvYaw = 0; this.thrSide = 0; this.thrAcqT = 9; this.thrSignY = 0; this.thrSignP = 0;
+    this.thrEvT = 0; this.thrEvYaw = 0; this.thrEvNew = false; this.thrIn = 9; this.thrSide = 0; this.thrAcqT = 9; this.thrSignY = 0; this.thrSignP = 0;
     this.canRef = null; this.canSide = 0; this.canT = 0; this.flankSide = 0; this.blockT = 0; this.flankT = 0;
     this.navBack = null; this.navBackT = 0;   // off-graph recovery (_backOnNav)
+    this._stranded = false; this.strandAcc = 0; this._strandSeen = undefined; this._strandChk = 0; this._pinH = null; this._pinSeen = undefined;   // [b5-beta1] (the stranded watch)
   }
 
   update(dt) {
@@ -676,9 +706,10 @@ export class BotBrain {
       // just respawned: face the way the body faces, then sometimes super jump to the teammate furthest up the field
       this._wasDead = false;
       this.aimYaw = a.yaw; this.aimPitch = 0; this.aimYawV = 0; this.aimPitchV = 0;
-      const zp0 = zonePlan(), tp0 = zp0 ? null : towerPlan();
+      const zp0 = zonePlan(), tp0 = zp0 ? null : towerPlan(), kp0 = zp0 || tp0 ? null : karpPlan();
       if (zp0) this._zoneJump(zp0);
       else if (tp0) this._towerJump(tp0);
+      else if (kp0 && karpJump(this, kp0)) { /* [b5-karp-bots] to our carrier (or the anchor); defenders stay home */ }
       else if (Math.random() < 0.5) {
         const enemyPad = G.level.spawnPads[1 - a.team];
         let best = null, bd = Infinity;
@@ -696,6 +727,62 @@ export class BotBrain {
         if (ok) { this.path = null; this.goalTimer = 0; }
       }
     }
+    // [b5-beta1] stranded: standing where the nav has no way out — no node to start a route from within 3 m at our level
+    // or below (Gulper Aquarium's Great Tank sand bed, inside its glass: its nodes have no edge out, so a route began at a
+    // rim node 0.6–1 m up and walked on, no hop — bots pressed into the rim 4–9.25 s, JOB-5; mid-bed, no route at all) —
+    // for 1.5 s → super jump out, to the nearest teammate (or the spawn), as a player would. (Checked every 0.5 s.)
+    if ((this._strandChk = (this._strandChk || 0) - dt) <= 0) {
+      this._strandChk = 0.5;
+      const nav = G.nav;
+      // (judged at the floor under it, hops and all: a stranded bot hops — the unstick's — and a check mid-hop reset it)
+      const fy = !nav || a.climbing || a.pipe || a.carry || G.match?.lava ? -Infinity : G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.1);
+      // ([b5-beta1, review 1] …or the node it would start from is a dead end of the graph: a bot hopping up onto the tank's
+      // rim found the rim's nodes there and was no longer stranded — a spot out late, 1 run in 3 on the Mac mini, JOB-15)
+      const sn = fy > -Infinity && a.pos.y - fy < 1.5 ? nav.nearest(_vStart.set(a.pos.x, fy, a.pos.z), 0.45, true) : 0;
+      const s = fy > -Infinity && a.pos.y - fy < 1.5 && (sn < 0 || !navCanLeave(nav)[sn]);   // (a stage with lava: its escapes have it)
+      // [b5-beta1, review 1] latched for 1 s: one check that finds the hopping bot over the rim (a node there, under it) no
+      // longer restarts the 1.5 s count — bot-stuck 'tank' had a spot out at 8.67 s, 1 run in 3
+      if (s) this._strandSeen = this.t;
+      // [b5-beta1, review 1] …or pinned: asking to move along a route yet within 1.2 m of where it stood 3 s ago, its hops
+      // and replans spent — wedged where the nav says it can walk. Bluestone's curb corner by (5.8, 0, 46.4): its route
+      // began past a 0.66 m curb, a crate on its other side, the canal behind it, so no stuck hop is allowed there (the
+      // hop guards keep 3 m off the water) — a blaster stood there 60.75 s (JOB-8); out in ~4.5 s now
+      // (asking to move: along a route, or with none — a route that won't plan from here; never while refilling with no
+      // route or in its ink, nor holding a spot on purpose, nor standing to draw a shot. The last 7 checks, all within 1.2 m:
+      // the unstick's shake carries a wedged bot ~1 m off and back, and the 0.6 m this was at first restarted on it)
+      const ph = this._pinH || (this._pinH = []);
+      const free = a.alive && !a.climbing && !a.pipe && !a.carry && !a.specialActive && !G.match?.lava && !this.holdingOnPurpose() && !G.match?.tower?.riderList?.includes(a);
+      const wr = a.weaponRunner, drawing = !!(wr && (wr.charging || wr.burstT > 0 || wr.streaming));   // (a draw / spin / stream in place: on purpose, as the harnesses judge it)
+      // (never in a fight: a duel's footwork keeps it about a spot, and a pinned fighter's foe moves on soon — matches had
+      // fighters jump out of 2–3 s pins by a wall; out of the fight, the watch takes it)
+      // ([b5-beta1, review 1] a draw counts only when it stands for it: a bow or charger walking its route as it draws and
+      // not getting anywhere is pinned too — on Lockgate by the post at (9.6, 0, 15.3) one drew, walked into the post, drew
+      // again, and stood there for good: the unstick's count restarts at every draw, and this watch skipped every draw.
+      // Never a refill's draw: its shots at the floor and its steps onto their puddles keep it about its spot on purpose)
+      const trying = free && this.mode !== 'fight' && (this.path ? this.mvMag > 0.2 && !(this.mode === 'refill' && (a.submerged || drawing)) : this.mode !== 'refill' && !drawing);
+      ph.push(a.pos.x, a.pos.z, trying ? 1 : 0); if (ph.length > 21) ph.splice(0, 3);
+      let pinned = free && ph.length >= 21, tries = 0;
+      for (let i = 0; pinned && i < ph.length; i += 3) { tries += ph[i + 2]; if (Math.hypot(ph[i] - a.pos.x, ph[i + 1] - a.pos.z) > 1.2) pinned = false; }
+      pinned = pinned && tries >= 7;   // (every check: a charger standing to paint lines draws between them — on purpose)
+      if (pinned) STRAND_STATS.pinned = (STRAND_STATS.pinned || 0) + 1;
+      // ([b5-beta1, review 1] latched for 2 s while within 2.5 m of where it was found: the unstick's shake carries the bot
+      // ~1–1.4 m off and back, and each trip restarted the 1.5 s count — a charger by Lockgate's post stood ~6.7 s)
+      if (pinned) { this._pinSeen = this.t; this._pinAt = [a.pos.x, a.pos.z]; }
+      const pinLatch = !pinned && free && this.mode !== 'fight' && this.mode !== 'refill' && this._pinSeen !== undefined && this.t - this._pinSeen < 2.0 && Math.hypot(a.pos.x - this._pinAt[0], a.pos.z - this._pinAt[1]) < 2.5;   // (not into a fight or a refill begun meanwhile)
+      this._stranded = s || pinned || pinLatch || (this._strandSeen !== undefined && this.t - this._strandSeen < 1.0 && !a.climbing && !a.pipe && !a.carry && !G.match?.lava);
+      if (this._stranded) this._strandWhy = s ? (sn < 0 ? 'stranded' : 'dead end') : pinned || pinLatch ? 'pinned' : 'stranded';
+    }
+    if (this._stranded && !a.superJumpState) {
+      this.strandAcc = (this.strandAcc || 0) + dt;
+      if (this.strandAcc > 1.5 && G.match?.playing() && a.canSuperJump()) {
+        let mate = null, md = Infinity;
+        for (const o of G.actors) { if (o === a || o.team !== a.team || !o.alive || o.superJumpState) continue; const d = o.pos.distanceTo(a.pos); if (d > 6 && d < md) { md = d; mate = o; } }
+        if (a.superJump(mate || G.level.spawnPads[a.team].clone())) {
+          STRAND_STATS.jumps++; STRAND_STATS.log.push([+G.time.toFixed(2), a.name, +a.pos.x.toFixed(2), +a.pos.y.toFixed(2), +a.pos.z.toFixed(2), this._strandWhy || 'stranded', this.mode, a.weaponId]); if (STRAND_STATS.log.length > 20) STRAND_STATS.log.shift();
+          this.path = null; this.goalTimer = 0; this.strandAcc = 0; this._stranded = false; this._strandSeen = undefined; this._pinSeen = undefined; if (this._pinH) this._pinH.length = 0;
+        }
+      }
+    } else this.strandAcc = 0;
     if (a.superJumpState || (G.match?.stage && G.match.stage.botHold(this))) { it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; this.mvMag = 0; return; }   // [b5-stagehooks] botHold (riding a pipe)
     if (!G.match || !G.match.playing()) { it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.jump = it.special = false; this.mvMag = 0; return; }
     this.think -= dt; this.jumpCd -= dt; this.bombCd -= dt; this.strafeT -= dt; this.paintPause -= dt; this.dodgeCd -= dt;
@@ -724,24 +811,29 @@ export class BotBrain {
     // ---------------- Tower Command: the team plan (null in every other mode); a new role re-targets at once
     const tp = zp ? null : towerPlan();
     if (tp) this._towerSync(tp);
+    // [b5-karp] Bazookarp: the team plan (null in every other mode); a carrier's weapon is the stand-in (no kit hook)
+    const kp = zp || tp ? null : karpPlan();
+    if (kp) karpSync(this, kp);
+    const carry = !!a.carry;
     const rider = !!tp && this.tRole === 'ride', onT = !!tp && tp.onTower(a);
 
     // ---------------- mode selection (retreat = break line of sight and heal in own ink when losing a duel)
     const inkFrac = a.ink / PLAYER.inkMax;
     const hpFrac = a.hp / PLAYER.hp;
-    const w = a.weapon;
+    const w = carry ? KARP_W : a.weapon;   // [b5-karp]
+    if (carry && (this.mode === 'retreat' || this.mode === 'refill')) this.mode = 'paint';   // [b5-karp] (a carrier never retreats or refills)
     if (this.mode === 'retreat') {
       this.retreatT -= dt;
       // (a tower rider a few metres from an empty tower takes it rather than backing off)
       const grab = rider && tp.T.riders[0] + tp.T.riders[1] === 0 && Math.hypot(tp.T.pos.x - a.pos.x, tp.T.pos.z - a.pos.z) < 6;
       if (hpFrac > 0.85 || this.retreatT <= 0 || (!this.target && hpFrac > 0.6) || grab) { this.mode = 'paint'; this.path = null; this.goalTimer = 0; }
     } else if (this.target && this.seeTimer > 0 && ((hpFrac < 0.34 && !MELEE[w.kind] && a.lastDamage < 0.8) || hpFrac < 0.2) && Math.random() < 0.6 * dt * 60 * this.diff.fireDiscipline
-      && !MAIN_KITS[w.kind]?.bot?.stayIn?.(this) && !rider) {   // (a kit may veto: e.g. the Cutlass finishing a fight at blade range; tower riders hold on)
+      && !MAIN_KITS[w.kind]?.bot?.stayIn?.(this) && !rider && !carry) {   // (a kit may veto: e.g. the Cutlass finishing a fight at blade range; tower riders hold on) [b5-karp] carry
       this.mode = 'retreat'; this.retreatT = 2.2 + Math.random() * 1.4; this.repath = 0; this._pickRetreat();
     }
     // (a tower rider on it doesn't hop off to refill — it holds its fire while the tank tops up, and keeps it moving)
     const stayDry = rider && onT;
-    if (this.mode !== 'refill' && this.mode !== 'retreat' && inkFrac < 0.12 && !(this.target && this.seeTimer > 0 && !MELEE[w.kind] && inkFrac > 0.05) && !stayDry) {
+    if (this.mode !== 'refill' && this.mode !== 'retreat' && inkFrac < 0.12 && !(this.target && this.seeTimer > 0 && !MELEE[w.kind] && inkFrac > 0.05) && !stayDry && !carry) {   // [b5-karp] carry
       this.mode = 'refill'; this.refillUntil = 0.85 + Math.random() * 0.1;
     }
     if (this.mode === 'refill' && inkFrac >= this.refillUntil) this.mode = 'paint';
@@ -760,13 +852,21 @@ export class BotBrain {
         if (m === 'paint' && this.mode === 'fight') { this.goalTimer = 0; this.tHoldUntil = 0; }
         this.mode = m;
       }
+    } else if (kp) {   // [b5-karp] the objective first: fights in range, by the objective, or at their carrier
+      if (this.mode !== 'refill' && this.mode !== 'retreat') {
+        const m = this.target && karpEngage(this, kp) ? 'fight' : 'paint';
+        if (m === 'paint' && this.mode === 'fight') this.goalTimer = 0;
+        this.mode = m;
+      }
     } else if (this.mode !== 'refill' && this.mode !== 'retreat') this.mode = this.target ? 'fight' : 'paint';
 
     // ---------------- navigation goal
     this.goalTimer -= dt; this.repath -= dt;
     if (this.mode === 'fight' && this.target) {
-      if (zp && this._zoneHoldGround(zp)) { this.path = null; this.repath = 0.3; }   // watchers / guards: don't chase off the zone
+      if (this.stageRoute) { /* [b5-caldera] fix round 6: a stage module's route (the lava's escape, botAct) is kept — no zone hold, no chase */ }
+      else if (zp && this._zoneHoldGround(zp)) { this.path = null; this.repath = 0.3; }   // watchers / guards: don't chase off the zone
       else if (tp && this._towerFightNav(tp)) { /* riders make for the tower; perches / escorts hold their ground */ }
+      else if (kp && karpFightNav(this, kp)) { /* [b5-karp] the carrier keeps walking its route */ }
       else if (this.repath <= 0) this._pathTo(this.tv.pos, 0.6);   // (out of sight: where we think it is)
     } else if (this.mode === 'refill') {
       if (this.repath <= 0 || !this.path) this._pickRefill();
@@ -786,6 +886,7 @@ export class BotBrain {
         if (arrived && this.zHoldDur > 0) { this.zHoldUntil = this.t + this.zHoldDur; this.zHoldDur = 0; }
         if (this.wiggleT <= 0 && (this.goalTimer <= 0 || (arrived && this.t >= (this.zHoldUntil || 0)))) this._pickZoneGoal(zp);
       } else if (tp) this._towerGoal(tp);
+      else if (kp) karpGoal(this, kp);   // [b5-karp]
       else if (this.goalTimer <= 0 || !this.path || this.pi >= this.path.length) this._pickPaintGoal();
     }
 
@@ -805,7 +906,9 @@ export class BotBrain {
     const kAge = this.tk && !enemyVisible ? G.time - this.tk.t : 0;
     let fightDist = 0, idealYaw = 0, idealPitch = 0, aimDist = 6;
 
-    if ((this.mode === 'fight' || this.mode === 'retreat') && this.target) {
+    // [b5-karp] the carrier gate: the Carp Shot is a carrier's only trigger (no main, sub or special; SPEC §8.7)
+    if (carry) { const ka = karpCarrierAct(this, kp, { dt, it, move, enemyVisible }); if (ka) { wantYaw = ka.yaw; wantPitch = ka.pitch; aimDist = ka.dist; } }
+    else if ((this.mode === 'fight' || this.mode === 'retreat') && this.target) {
       const t = this.tv;   // (in sight: the foe; out of sight: our memory of it — see botSight.js)
       const dx = t.pos.x - a.pos.x, dz = t.pos.z - a.pos.z;
       const dist = Math.hypot(dx, dz);
@@ -899,6 +1002,7 @@ export class BotBrain {
         } else if (!enemyVisible && this._spray(dist, range, aimed, inkFrac)) it.fire = true;   // a short spray where it went
         // out of range with own ink underfoot: swim in (fast, hard to hit) instead of walking
         if (!it.fire && !a.weaponRunner.charging && dist > range * 1.15 && this.groundSeen === 1) it.squid = true;
+        if (a.weaponRunner.mainLocked) { move.multiplyScalar(0.35); it.squid = false; }   // [b5-sub-glide] cooking a held sub (its trigger locked): plant for the throw, stay a kid
         if (w.kind === 'dualies') {
           // dodge roll: while firing, roll sideways when hit or when the fight gets close (the runner locks the turret
           // after) — never toward the sea
@@ -916,7 +1020,9 @@ export class BotBrain {
         if (enemyVisible) this._shieldFight(t, dist, move, it, dt); else this.blockT = 0;
         // kit weapons with their own fight tactics (bot.tactics, e.g. the Cutlass: flank, pre-charge, swim in, strafe):
         // every fight frame, aimed or not, after the defaults above — may override move, fire, squid and jump
-        if (BK?.tactics) BK.tactics(this, { a, w, dist, range, dt, it, move, target: t, visible: enemyVisible, aimed, canFire: enemyVisible && this.react <= 0 && aimed && inkFrac > 0.02 });
+        // ([b5-int3] not while a held sub cooks — a Glide Bomb: the plant above holds; a melee kit's tactics would walk, swim or
+        // leap it in, so the cook went off point-blank or fizzled — the Cutlass, the Mitts)
+        if (BK?.tactics && !(a.weaponRunner.mainLocked || a.weaponRunner.glide)) BK.tactics(this, { a, w, dist, range, dt, it, move, target: t, visible: enemyVisible, aimed, canFire: enemyVisible && this.react <= 0 && aimed && inkFrac > 0.02 });
         // out of sight: now and then a sub lobbed where it went (once per loss; turn to it, throw)
         if (!enemyVisible) { const mb = this._memBombAim(dt); if (mb) { wantYaw = mb.yaw; wantPitch = mb.pitch; } }
         // Tower Command: lob a bomb onto their riders (turn to the platform, throw, back to the duel)
@@ -925,8 +1031,9 @@ export class BotBrain {
           if (tb) { wantYaw = tb.yaw; wantPitch = tb.pitch; this._towerBombGo(tb); }
         }
         // special
-        if (a.specialReady() && (((enemyVisible || kAge < SIGHT.fresh) && this._wantSpecial('fight', dist, enemyVisible)) || (zp && this._zoneSpecial(zp, true)) || (tp && this._towerSpecial(tp, true, onT)))
-          && !(tp && !this._towerSpecialOk(onT))) it.special = true;
+        const ks = kp ? karpSpecial(this, kp, true, dist, enemyVisible) : null;   // [b5-karp-bots] (null: the usual rules)
+        if (a.specialReady() && (ks ?? (((enemyVisible || kAge < SIGHT.fresh) && this._wantSpecial('fight', dist, enemyVisible)) || (zp && this._zoneSpecial(zp, true)) || (tp && this._towerSpecial(tp, true, onT))))
+          && !(tp && !this._towerSpecialOk(onT)) && !this._stranded) it.special = true;   // [b5-beta1] (stranded: see below)
       } else {
         // retreat: swim away through own ink, keep eyes on the threat
         it.squid = true;
@@ -964,6 +1071,7 @@ export class BotBrain {
       }
       // Tower Command: a rider inks the route ahead of the tower; about to throw a special → face where it should land
       if (tp) zAim = this._towerAim(tp, dt, onT, !!MELEE[w.kind]);
+      else if (kp) zAim = karpPaintAim(this, kp, dt) || null;   // [b5-karp-bots] a lead escort inks the carrier's route, a keeper the approach
       if (zAim) {
         wantYaw = Math.atan2(zAim.x - a.pos.x, zAim.z - a.pos.z) + Math.sin(this.sweep) * 0.22;
         if (CHARGES[w.kind] || zAim.d < 3.2) wantPitch = clamp(Math.atan2(zAim.y + 0.05 - (a.pos.y + 1.1), Math.max(0.5, zAim.d)), -0.95, 0.15);
@@ -1003,7 +1111,7 @@ export class BotBrain {
       }
       // travel as a squid through own ink when not painting
       if (!it.fire && this._pathRemaining() > 5 && this.groundSeen === 1) it.squid = true;
-      if (this.bombCd <= 0 && !onT && this._paintSub()) { it.sub = true; this._bombAim = true; }   // (nothing planted on a moving tower)
+      if (this.bombCd <= 0 && (!onT || SUB_KITS[a.sub?.kind]?.bot?.rides) && this._paintSub()) { it.sub = true; this._bombAim = true; }   // (nothing planted on a moving tower — [b5-subs] but a sub that rides it: the Scrap Sentry)
       else if (zp) {
         // Zone Control: lob a bomb onto a patch of their ink on the zone (turn to it, then throw)
         const zb = this._zoneBombAim(zp, dt);
@@ -1017,10 +1125,16 @@ export class BotBrain {
         const tb = this._towerBombAim(tp, dt, onT);
         if (tb) { wantYaw = tb.yaw; wantPitch = tb.pitch; this._towerBombGo(tb); }
       }
-      if (a.specialReady() && (zp ? this._zoneSpecial(zp) : tp ? this._towerSpecial(tp, false, onT) : this._wantSpecial('paint', 0, false))) it.special = true;
+      // ([b5-beta1, review 1] never while stranded: a special running holds off the super jump out — a bucket bot on the
+      // tank's bed set off its Kraken and sat there 7 s, bot-stuck 'tank' late again)
+      if (a.specialReady() && !this._stranded && (zp ? this._zoneSpecial(zp) : tp ? this._towerSpecial(tp, false, onT) : (kp ? karpSpecial(this, kp, false, 0, false) : null) ?? this._wantSpecial('paint', 0, false))) it.special = true;   // [b5-karp-bots] karpSpecial
     } else if (this.mode === 'refill') {
-      it.squid = this.groundSeen === 1 || this._pathRemaining() > 2;
-      if (this.groundSeen !== 1 && this._pathRemaining() < 1.5) {
+      // [b5-beta1, review 1] a finished route is an arrival wherever it ends: a step onto a puddle (_inkStep) carries the
+      // bot up to 3.5 m off the route's last node, and with that node over 1.5 m away it neither walked nor painted — a
+      // kid refilling 4.8 s, or a squid on bare ground at half that rate 6.5 s (bot-stuck refill: the bow, the bucket)
+      const routeDone = !this.path || this.pi >= this.path.length;
+      it.squid = this.groundSeen === 1 || (!routeDone && this._pathRemaining() > 2);
+      if (this.groundSeen !== 1 && (routeDone || this._pathRemaining() < 1.5)) {
         // arrived, but not on our ink: our ink right by us (the patch it was sent to, the puddle it just painted —
         // a weapon's puddle lands a step ahead of the feet) → step onto it; none → paint a puddle to swim in. A charging
         // weapon starts its draw only once it's aimed at the floor (a draw begun level looses a long shot instead)
@@ -1030,36 +1144,78 @@ export class BotBrain {
           if (move.lengthSq() > 1e-4) { move.normalize(); wantYaw = Math.atan2(move.x, move.z); }
           it.squid = false;
         } else if (inkFrac > 0.03) {
-          it.squid = false; it.fire = !CHARGES[w.kind] || a.weaponRunner.charging || this.aimPitch < -0.7;
-          wantPitch = -1.0;
+          it.squid = false; wantPitch = -1.0;
+          // [b5-beta1] …and a draw is let go: held "while charging" it was held for good once the charge stood at what the
+          // tank allows (a charger at 6–10 % charged to its cap and never shot: no puddle, and a held trigger stops the
+          // kid's refill too — it never refilled). Released at that cap or after 0.6 s of drawing, whichever comes first
+          // [b5-beta1, review 1] Every shot here waits for the aim to be down at the floor (a charging weapon's draw always
+          // did): a shot loosed level lands its puddle out of the step's reach (_inkStep, 3.5 m), spends the last ink and
+          // restarts the kid's refill delay — a roller at 10 % flicked level, ran dry, kid-refilled to a flick's 9 and
+          // flicked level again (bot-stuck refill: never at 40 % in 12 s); the dualies and the spinner took 8–9 s
+          // (down: within ~7° of the -1.0 asked for — at -0.7 a roller's flick still landed past the step's 3.5 m now and then)
+          const wr = a.weaponRunner, down = this.aimPitch < -0.88;
+          if (CHARGES[w.kind] && wr.charging) {
+            this._drawT = (this._drawT || 0) + dt;
+            const cap = Math.min(1, a.ink / (w.inkFull || PLAYER.inkMax));
+            it.fire = !(this._drawT > 0.6 || (typeof wr.charge === 'number' && wr.charge >= cap - 0.02));
+          } else if (w.kind === 'roller' || w.kind === 'brush') {
+            // [b5-beta1] a roller / brush taps — a flick each, with a flick's ink: held, its drum rolls in place, puts no
+            // ink down and holds off the kid's refill every frame (a roller at 6 % on bare ground never refilled)
+            this._drawT = 0; it.fire = down && a.ink >= (w.flickInk ?? w.swipeInk ?? 0) && !this._tapHeld; this._tapHeld = it.fire;
+          } else { this._drawT = 0; it.fire = down; }
+        } else if (!this._refillBad || this.t - this._refillBad.t > 6) {
+          // [b5-caldera] fix round 4: too dry to paint and no own ink to step onto here (the patch it was sent to is a level
+          // off, behind a wall or across a gap): it looks elsewhere for 6 s instead of standing ~10 s for the kid's slow
+          // refill (lava-match: refilling bots stood 11–13.5 s on the Lakefront corner and on a lookout's top)
+          this._refillBad = { x: a.pos.x, z: a.pos.z, t: this.t }; this.repath = 0; this.path = null;
         }
       }
     }
     // ---------------- running specials (and cheering on a teammate's Cheer Orb)
-    this._specialCtl(dt, it, move, fightDist, enemyVisible);
+    if (!carry) this._specialCtl(dt, it, move, fightDist, enemyVisible);   // [b5-karp] (not a carrier)
     // ---------------- enemy Waddles / Torpedoes after us: shoot them down or get out of the way (aim + trigger + move);
     // enemy launched canopies in the way: steer round the nearer edge (or break one we're boxed in by)
-    let thrAim = this._threatCtl(dt, it, move);
-    const canAim = this._canopyCtl(dt, it, move, !thrAim);
+    let thrAim = carry ? null : this._threatCtl(dt, it, move);   // [b5-karp]
+    const canAim = carry ? null : this._canopyCtl(dt, it, move, !thrAim);
     if (!thrAim && canAim) thrAim = canAim;
+    if (!thrAim && kp && !carry && this.mode === 'paint') thrAim = karpAim(this, kp, dt, it) || null;   // [b5-karp] a breaker: the shell
     // ---------------- sprout pods (pods.js StagePods.bot): ink a pod between us and a foe to grow cover and fight from
     // behind it; our team's hedge: swim up an inked column of it and fight from its top
-    if (!thrAim && G.match?.pods) thrAim = G.match.pods.bot(this, dt, it, move, enemyVisible) || null;
-    if (!thrAim && G.match?.stage) thrAim = G.match.stage.botAct(this, dt, it, move, enemyVisible) || null;   // [b5-stagehooks] (escape the lava …)
+    if (!thrAim && G.match?.pods && !carry) thrAim = G.match.pods.bot(this, dt, it, move, enemyVisible) || null;   // [b5-karp] carry
+    // [b5-caldera] fix round 6: a stage module's per-frame asks (guardOff, hopAt, hopCheck) are only this frame's botAct's —
+    // a brain stopped between one's set and its read left guardOff on, and the next frame's asked hop went unchecked
+    // (lava.js F8b case A, the first case after F8's escapes: a route hop off race 1 at Organ L across the lava, 0.033 s)
+    this.guardOff = false; this.hopAt = null; this.hopCheck = false;
+    if (G.match?.stage && (!thrAim || this.stageUrgent)) thrAim = G.match.stage.botAct(this, dt, it, move, enemyVisible) || thrAim || null;   // [b5-stagehooks] (escape the lava …) [b5-caldera] stageUrgent: a module's escape outranks a threat's footwork
     // [b5-deploy] nothing else to shoot: an enemy device in sight (its footwork goes first: the tower's, the climb's and
     // the danger guard's below have the last word) [b5-int2: after the stage module's botAct, which outranks it]
-    if (!thrAim && this.sp.on()) thrAim = devShootAim(this.sp, dt, it, move, tp, onT, zp);
+    if (!thrAim && !this.stageRoute && this.sp.on() && !carry) thrAim = devShootAim(this.sp, dt, it, move, tp, onT, zp);   // [b5-karp] carry [b5-caldera] fix round 6: not while a stage module's escape owns the route (a charger on a sinking stone, hunting a lost foe, charged shot after shot at an enemy device 8 s, its trigger back on and its feet still, until the stone sank: lava-bots stones)
     if (thrAim) { wantYaw = thrAim.yaw; wantPitch = thrAim.pitch; }
     // ---------------- Tower Command: riders hold the platform's middle, or climb on (ink its wall, swim up); others off it
     const tAim = tp ? this._towerMove(tp, dt, move, it, thrAim, onT) : null;
     // ---------------- wall climb (nav 'climb' edge): ink the wall column up to the top, then swim up it (the tower's
     // wall too: tAim, inking it on the way onto its deck)
-    this._climbAim = this._climb(dt, move, it) || tAim;
+    this._climbAim = carry ? null : this._climb(dt, move, it) || tAim;   // [b5-karp] (a carrier never climbs)
     if (this._climbAim) { wantYaw = this._climbAim.yaw; wantPitch = this._climbAim.pitch; }
     // ---------------- enemy specials (botSpecials.js), after everything else: out of a danger area it's in, never a
     // step into one, no shots into the untouchable; popping our team's bubble on one of theirs (an aim to hold)
+    // [b5-caldera] fix round 6: while a stage module owns the route (stageRoute: the lava's escape) its footwork is kept
+    // through what follows — an enemy special's danger guard and the kits' botAct: a Chain Bobber bot laying its chain held
+    // still (move × 0.05) and dove to top up its tank on a drowning shelf as the rise came (lava-bots ledges), and a charger
+    // on a sinking stone was turned to and fro each frame, its trigger back on (lava-bots stones); dying in the lava is
+    // never the better choice
+    const escK = this.stageRoute && a.alive ? { squid: it.squid, fire: it.fire } : null;
+    if (escK) _escMv.copy(move);
     const spAim = this.sp.act(dt, it, move);
     if (spAim) { wantYaw = spAim.yaw; wantPitch = spAim.pitch; if (!thrAim) thrAim = spAim; }
+    // [b5-subs] kit subs' own bot behaviour (SPEC §0.5 botAct, every bot: the Chain Bobber's teammates set its chains off;
+    // [b5-sub-dash] the Dash Pellet's dodges, break-offs, gap closes), last, so nothing later in the frame clears what they
+    // set; busy — something above already owns the aim; an aim a kit returns is held like a device's (a later kit's wins)
+    { const busy = !!thrAim || !!escK; for (const k in SUB_KITS) { const r = SUB_KITS[k].botAct?.(this, dt, it, move, busy); if (r) { wantYaw = r.yaw; wantPitch = r.pitch; thrAim = r; } } }
+    if (escK) { move.copy(_escMv); it.squid = escK.squid; if (!escK.fire) it.fire = false; }   // [b5-caldera] (above)
+    if (this._bombAim) SUB_KITS.bobber?.holdThrow?.(this, it);   // [b5-int3] a sub throw that would set off an own idle Chain Bobber web: held
+    if (kp) karpMove(this, kp, dt, move, it);   // [b5-karp-bots] round the Bazookarp: never into the shell, breakers strafe, the grabber's hold and run
+    if (carry) { it.sub = false; it.special = false; this._bombAim = false; }   // [b5-karp] the last word: a carrier never throws or starts a special ([b5-int3] after the kits' botAct, and no press _tail would make from _bombAim)
     this._tail(dt, move, wantYaw, wantPitch, aimDist, wantMove, thrAim, enemyVisible);
   }
 
@@ -1067,9 +1223,25 @@ export class BotBrain {
   // thrAim: a device / canopy the turf code is drawing a bead on; enemyVisible: in a duel (both unset in boss play)
   _tail(dt, move, wantYaw, wantPitch, aimDist, wantMove, thrAim = null, enemyVisible = false) {
     const a = this.a, it = a.intent, w = a.weapon;
+    if ((a.weaponRunner.mainLocked || a.weaponRunner.glide) && !this.sp.esc) it.squid = false;   // [b5-sub-glide] cooking a held sub (a Glide Bomb, its grace too): no dive (it would drop the cook) — but out of a danger, yes
+    // [b5-int3] …and a real plant, whatever set the move this frame (fight footwork, a threat, a device, a kit's botAct):
+    // no step toward its target (sidesteps only, at half pace), no hop — the cook is planned from where it stands; a melee
+    // kit walked 9 m in and threw point-blank at full cook (sub-glide 'bots')
+    if ((a.weaponRunner.mainLocked || a.weaponRunner.glide) && !this.sp.esc && this.target?.pos) {
+      const tx = this.target.pos.x - a.pos.x, tz = this.target.pos.z - a.pos.z, tl = Math.hypot(tx, tz);
+      if (tl > 0.1) { const f = (move.x * tx + move.z * tz) / tl; if (f > 0) { move.x -= (tx / tl) * f; move.z -= (tz / tl) * f; } }
+      move.multiplyScalar(0.5); it.jump = false;
+    }
     // throws and placements only happen in humanoid form: stay upright for the press and the release
     if (this._bombAim) { it.sub = true; it.squid = false; this._bombAim = false; this._releaseBomb = true; }
-    else if (this._releaseBomb) { it.sub = false; it.squid = false; this._releaseBomb = false; }
+    else if (this._releaseBomb) {
+      it.sub = false; it.squid = false; this._releaseBomb = false;
+      // [b5-int3] the release frame checked again (the press was checked with last frame's aim; a fight's lob turns onto its
+      // target in between): a throw now going off by an own idle Chain Bobber web isn't made
+      // (not a held sub — a Glide Bomb's cook, a Shaker's shake: their kits check their own release)
+      const bsub = a.specialActive?.kind === 'barrage' ? a.specialActive.bomb : a.sub;
+      if (a.weaponRunner.aimingSub && !SUB_KITS[bsub?.kind]?.hold && SUB_KITS.bobber?.webThrow?.(a)) { a.weaponRunner.aimingSub = false; this.bombCd = Math.max(this.bombCd, 1.2); }
+    }
 
     // ---------------- aim: critically-damped spring with a turn-rate cap (flicks accelerate and settle; no twitch)
     const fighting = this.mode === 'fight';
@@ -1094,7 +1266,16 @@ export class BotBrain {
     }
 
     // ---------------- never walk, strafe or swim off into the sea; stay a kid over grates spanning water
-    if (!this._clMove) this._avoidWater(move);   // (a climb's step to its spot in front of the wall: picked clear of the sea)
+    // [b5-caldera] guardOff: a stage module steers it straight at a step up this frame (the lava's hop out): no guard
+    const gOff = !!this.guardOff; this.guardOff = false;
+    // [b5-caldera] fix round 4: hopAt — the node a stage module's hop ask (_needJump) is for this frame (the lava's escape up
+    // a step): the hop is judged by the flight steered at it and flown at it (lava-bots edges: an escaper's hop off Race 7
+    // was judged by the ballistic arc along its slide beside the island's face, refused, and it slid off the stone)
+    const hopAt = this.hopAt || null; this.hopAt = null;
+    // (and hopCheck: that hop is judged even with the guards off — a lookout claimant's column hop; an escape's straight run
+    // at a step keeps its unchecked hop)
+    const hopChk = !!this.hopCheck; this.hopCheck = false;
+    if (!this._clMove && !gOff) this._avoidWater(move);   // (a climb's step to its spot in front of the wall: picked clear of the sea)
     if (it.squid && (this._squidWouldDrop(move) || (a.grounded && this._swimDrop(move)))) it.squid = false;
 
     // ---------------- smooth the move command: heading slews (no twitch at waypoint switches / strafe flips)
@@ -1111,7 +1292,9 @@ export class BotBrain {
     // edge guard (after the smoothing, which can swing the heading past what _avoidWater checked): never steer off a
     // deck into the sea. Probe the ground a stopping distance ahead; if it's water, slide along the edge (whichever
     // diagonal is safe) or stop.
-    if (this.mvMag > 0.05 && a.grounded && !a.climbing) this._edgeGuard(a, it.move);
+    // [b5-caldera] also with no move asked (momentum), and a frame or two off the ground stepping down a lip (a 0.1 m coping)
+    const gNear = a.grounded || (a.vel.y <= 0.8 && a.pos.y - G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.05) < 0.35);   // (a rising Organ, a step-up's tiny hop)
+    if ((this.mvMag > 0.05 || Math.hypot(a.vel.x, a.vel.z) > 1.0) && gNear && !a.climbing && !gOff) this._edgeGuard(a, it.move);
     // stuck recovery, based on progress toward the current waypoint: hop → skip the waypoint → replan
     const trying = this.path && wantMove && !a.specialActive?.pin && !(CHARGES[w.kind] && (a.weaponRunner.charging || a.weaponRunner.burstT > 0));   // ([b5-zipcheer] pin: a Cheer Orb's lift holds us)
     if (!trying) this.noProg = 0;
@@ -1125,7 +1308,75 @@ export class BotBrain {
     }
     if (this.noProg === 0) this._skipped = false;
     this.stuck = this.noProg;
-    if (this._needJump && this.jumpCd <= 0 && a.grounded) { it.jump = true; this.jumpCd = 0.6; this._needJump = false; }
+    let pathHop = false;   // [b5-caldera] (a route's own hop up a step: only the arc check below)
+    // [b5-caldera] fix round 3 (lava.js F8: a bow claimant hopped off a Pumice stone into the lava): a hop asked for and not
+    // made within 0.5 s is dropped (one asked for at a column's foot was made 13 s later from a stone, steered at that
+    // column across the lake), and a climb's top-strip hop is one only while the climb drives it (after a hop onto the top
+    // the flag stayed set, and every later hop — a duel's, a stuck one, a route's — skipped the lava check below)
+    if (this._needJump) { if (!this._njT) this._njT = G.time; else if (G.time - this._njT > 0.5) { this._needJump = false; this._njT = 0; } } else this._njT = 0;
+    if (a.grounded && !this._climbAim) this._clHop = false;
+    // [b5-caldera] fix round 4: an ask goes ahead whatever cool-down a REFUSED press left (_jRef: the guards below took it back,
+    // no jump was made) — refused stuck / route hops burned 0.6–1.0 s each, and an escaper at the step of a head held still
+    // 0.6 s at a time until its stone slid it off (lava-bots edges, probe-esc)
+    if (this._needJump && (this.jumpCd <= 0 || this._jRef) && a.grounded) { it.jump = true; this.jumpCd = 0.6; pathHop = this._needJump === true; this._needJump = false; }   // [b5-caldera] ('wiggle': a stuck hop)
+    // [b5-caldera] no hop that comes down in the sea or the lava: at run speed a hop (a duel's dodge, a stuck hop, a kit's
+    // own) flies 4–6 m, far past what the edge guard looks ahead (lava-bots.js: blaster / twins / brolly bots hopped off
+    // the causeway into the drowning Casting Floor mid-fight); a route's hop up a step lands on dry ground and passes
+    // — and none at all for a dodge, a stuck hop or a kit's own within 3 m of the sea or the lava: air control bends the
+    // flight, so a predicted landing is only a guess there
+    // (a twins / dualies jump while firing is a dodge roll along the move: a route's hop lets go of the trigger; any other
+    // roll only where its whole slide stays on dry floor)
+    if (it.jump && pathHop && it.fire && w.rollDist && !this._climbAim) it.fire = false;
+    const rolls = it.jump && it.fire && w.rollDist && !pathHop;
+    // [b5-caldera] fix round 3: a jump while firing (twins, dualies, the Cutlass) is checked as a roll AND as a hop — a
+    // Twinfire press in its roll lockout (or short of ink, or barely moving) is a plain hop, and its arc went unchecked
+    // (lava-bots edges: a twins bot hopped off the Horn Step's 1.2 m edge into the lava); a route's own hop with the sea or
+    // the lava within 1.5 m only where its flight, steered at the route's node as the brain steers it, comes down on that
+    // node's top (a Cutlass bot's hop up to the Ladle Road slid along the road's face and dropped into the lava beside it)
+    if (it.jump && a.grounded && !a.climbing && !this._clHop && !this._climbAim && (!gOff || (hopChk && pathHop && hopAt))) {   // [b5-caldera] fix round 4: hopChk
+      let bad;
+      if (rolls) bad = !this._rollSafe(a, it.move, w.rollDist) || !this._hopSafe(a, it.move) || this._nearWetHi(a, 3.0);
+      // (fix round 3: near the lava a route's hop is judged by the flight it will fly, steered at its node — the ballistic
+      // arc along the velocity refused a lookout claimant's hop onto the next column whenever it still drifted the other
+      // way, and with the climb's hop flag no longer left set, chargers and bows stopped getting up)
+      else if (pathHop && hopAt) bad = !this._hopLands(a, hopAt);   // [b5-caldera] fix round 4 (a module's ask: its node)
+      // (fix round 4: an escaper's route hop too — judged along its velocity and flown at the route's node, a bot escaping
+      // off a stone hopped at an Organ top across the lava and drowned: lava.js F8b with the escape left on)
+      else if (pathHop && this.path && this.pi < this.path.length && this._wetWithin(a, 1.5)) bad = !this._hopLands(a, G.nav.nodes[this.path[this.pi]]);
+      else bad = !this._hopSafe(a, it.move) || (!pathHop && this._nearWetHi(a, 3.0));
+      if (bad) { it.jump = false; this._jRef = true; }   // [b5-caldera] fix round 4 (_jRef: refused, no jump made)
+    }
+    if (it.jump) this._jRef = false;
+    // [b5-caldera] in the air: never let the flight come down on the sea or the lava — when the arc as it flies now would
+    // land there, steer back the way it came (air control pulls it back over the floor it left)
+    // (not in a route's own hop — up the Organ columns the arc meets the next column's face and the model drops it into the
+    // seam: it pulled the lookout claimants back off every hop)
+    if (it.jump && pathHop) { this._hopPath = true; this._hopTo = hopAt || (this.path && this.pi < this.path.length ? G.nav.nodes[this.path[this.pi]] : null); } else if (a.grounded) { this._hopPath = false; this._hopTo = null; }   // [b5-caldera] fix round 4: hopAt
+    // [b5-caldera] fix round 3: a route's own hop is flown at the node it was made for (as a player commits to a jump): a
+    // goal picked again mid-air turned a hop off the Casting Floor round toward the next goal and dropped it into the lake
+    if (this._hopPath && this._hopTo && !a.grounded && !gOff && !this._climbAim) { const n = this._hopTo, dx = n.x - a.pos.x, dz = n.z - a.pos.z, d = Math.hypot(dx, dz); if (d > 0.3) it.move.set(dx / d, 0, dz / d); }
+    // [b5-caldera] fix round 7: a kit leap (the Mitts) flies as it was planned — its landing passed the 2 s look-ahead at the
+    // release (mitts landingOk / botReleaseOk) — so the stick holds along it and the air guard never steers it (the guard's
+    // pick bent a leap off the causeway 0.33 m short into the lava: lava-bots edges, review 7)
+    const kLeap = !a.grounded && !!a.weaponRunner.kit?.leaping;
+    if (kLeap) { const v = Math.hypot(a.vel.x, a.vel.z); if (v > 0.05) it.move.set(a.vel.x / v, 0, a.vel.z / v); }
+    if (!a.grounded && !kLeap && !gNear && !a.climbing && !gOff && !this._hopPath && !a.superJumpState && (this._arcWet(a, a.vel.x, a.vel.z) || this._flightWet(a, it.move))) {   // (fix round 3: a climb's own hop too, while not on the wall — a squid climb up the Ladle Road's face let go and flew off the Horn Step into the arm)   // [b5-caldera] fix round 3: _flightWet (air control keeps pulling it the brain's way: a twins hop drifted 1.3 m off the edge at 3 m/s while the ballistic arc still read the floor it left)
+      const bx = (this._lastFoot?.x ?? a.pos.x) - a.pos.x, bz = (this._lastFoot?.z ?? a.pos.z) - a.pos.z, bl = Math.hypot(bx, bz);
+      // [b5-caldera] fix round 6: the way back is flown in the model first, then no steer, then the 8 headings — the first
+      // that comes down dry is kept 0.1 s (a Mitts bot letting go of a wall, its last foot a Race stone, steered "back" at
+      // the stone and came down short in the bay beside race 7's pier: lava-bots edges); none dry: the way back as before
+      const F = this._airFix;
+      if (F && this.t - F.t < 0.1) it.move.set(F.x, 0, F.z);
+      else {
+        let pick = null;
+        if (bl > 0.05 && this._airDry(a, bx / bl, bz / bl)) pick = [bx / bl, bz / bl];
+        else if (this._airDry(a, 0, 0)) pick = [0, 0];
+        else for (let k = 0; k < 8 && !pick; k++) { const cx = Math.cos((k * Math.PI) / 4), cz = Math.sin((k * Math.PI) / 4); if (this._airDry(a, cx, cz)) pick = [cx, cz]; }
+        if (pick) { this._airFix = { t: this.t, x: pick[0], z: pick[1] }; it.move.set(pick[0], 0, pick[1]); }
+        else if (bl > 0.05) it.move.set(bx / bl, 0, bz / bl); else if (Math.hypot(a.vel.x, a.vel.z) > 0.05) it.move.set(-a.vel.x, 0, -a.vel.z).normalize();
+      }
+    }
+    if (a.grounded) (this._lastFoot ||= new THREE.Vector3()).copy(a.pos);
     // displacement watchdog: asking to move for 1.5 s but covering < 0.4 m means something the waypoint logic can't
     // see is holding us (re-plans reset its progress timer, so it can't catch this). Duels are exempt: strafing
     // back and forth is meant to stay put.
@@ -1348,14 +1599,186 @@ export class BotBrain {
     for (let k = 0; k < 8; k++) { const t = (k / 8) * Math.PI * 2; if (this._wet(a.pos.x + Math.cos(t) * r, a.pos.z + Math.sin(t) * r, a.pos.y)) return true; }
     return false;
   }
+  // [b5-caldera] a hop's flight, stepped as a ballistic arc (PLAYER.jumpVel, gravity) along where it is carried (its
+  // velocity, else the move at run speed): it lands where the arc first meets a top under it (a step up, the next
+  // column, the floor beyond a gap) — safe unless that is the sea or the lava, or nothing is under it within 1.4 s
+  _hopSafe(a, mv) {
+    const vx = a.vel.x, vz = a.vel.z, sp = Math.hypot(vx, vz), ml = Math.hypot(mv.x, mv.z);
+    let ux, uz, s;
+    if (sp > 1) { ux = vx / sp; uz = vz / sp; s = Math.max(sp, ml * PLAYER.runSpeed); } else if (ml > 0.05) { ux = mv.x / ml; uz = mv.z / ml; s = ml * PLAYER.runSpeed; } else return true;
+    const L = G.level, SM = G.match?.stage, g = PLAYER.gravity, vy0 = PLAYER.jumpVel, y0 = a.pos.y;
+    let px = a.pos.x, pz = a.pos.z, ox = 0, oz = 0;
+    for (let t = 0.05; t <= 1.4; t += 0.05) {
+      let x = a.pos.x + ux * s * t + ox, z = a.pos.z + uz * s * t + oz;
+      const y = y0 + vy0 * t - 0.5 * g * t * t, down = vy0 - g * t <= 0;
+      let gh = down ? L.groundHeight(x, z, y + 0.3) : -Infinity;
+      // (into a wall or a higher column's side: the body stops there and drops — it lands under where it was)
+      if (!(gh > -Infinity && y <= gh + 0.05) && L.pointInside(_wv.set(x, y + 0.25, z), 0)) { ox += px - x; oz += pz - z; x = px; z = pz; if (down) gh = L.groundHeight(x, z, y + 0.3); }
+      px = x; pz = z;
+      if (!down) continue;   // (still rising)
+      if (gh > -Infinity && y <= gh + 0.05) {
+        if (SM && SM.wet(x, z, gh, 0.5)) return false;
+        // (up onto something: only a top a route can stand on — a roof-flagged stub slides you off into whatever is below)
+        if (gh > y0 + 0.3 && G.nav && !this._standable(x, gh, z)) return false;
+        return true;
+      }
+    }
+    return false;
+  }
+  // [b5-caldera] fix round 3: a flight as the body flies it — actor.js's air rules (gravity with its fall and apex factors;
+  // air control toward the move at the kit's speed, airMinSpeed at least; a squid's own), the body pushed out of what it
+  // meets (the velocity into a face taken off: it slides along it) and the landing probe with the ledge assist — at 20 Hz
+  // from the body as it is with velocity (vx, vy, vz). steer(x, y, z) → [ux, uz] (the move this step) or null (none).
+  // → { x, y, z, gy (the top it lands on; −Infinity: nothing within maxT), wall (a face pushed it), t }
+  _flight(a, vx, vy, vz, steer, maxT = 1.5) {
+    const P = PLAYER, ph = G.physics, dt = 0.05, sq = a.form === 'squid';
+    const c = (this._flC ||= makeContacts()), gh = (this._flG ||= new GroundHit()), p = (this._flP ||= new THREE.Vector3());
+    const spd = sq ? null : Math.max(a.carry ? P.runSpeed * 0.8 : a.weaponRunner?.moveSpeed?.() ?? P.runSpeed, P.airMinSpeed);
+    const acc = sq ? P.squidAirAccel : P.airAccel, dec = sq ? P.squidAirDecel : P.airDecel;
+    const lift = sq ? P.squidBodyLift : P.stepUp, height = sq ? P.squidHeight : P.height, assist = sq ? P.squidStepUp : P.ledgeAssist;
+    p.copy(a.pos);
+    let wall = false;
+    const out = this._flO || (this._flO = { x: 0, y: 0, z: 0, gy: -Infinity, wall: false, t: 0 });
+    for (let t = dt; t <= maxT + 1e-6; t += dt) {
+      const u = steer ? steer(p.x, p.y, p.z) : null, sp = Math.hypot(vx, vz);
+      const tgt = sq ? Math.max(P.squidDrySpeed, sp) : spd, tvx = u ? u[0] * tgt : 0, tvz = u ? u[1] * tgt : 0;
+      const ex = tvx - vx, ez = tvz - vz, el = Math.hypot(ex, ez), r = (u ? acc : dec) * dt;
+      if (el <= r) { vx = tvx; vz = tvz; } else { vx += (ex / el) * r; vz += (ez / el) * r; }
+      let g = P.gravity; if (vy < 0) g *= P.fallGravityMul; if (Math.abs(vy) < P.apexBand) g *= P.apexGravityMul;
+      vy = Math.max(-P.maxFall, vy - g * dt);
+      const y0 = p.y;
+      p.x += vx * dt; p.y += vy * dt; p.z += vz * dt;
+      ph.collideBody(p, P.radius, lift, height, c, false, sq);
+      if (c.ceiling && vy > 0) vy = 0;
+      if (c.wall) { const n = c.wallNormal, vn = vx * n.x + vz * n.z; if (vn < 0) { vx -= n.x * vn; vz -= n.z * vn; wall = true; } }
+      if (vy <= 0.5) {
+        const top = Math.max(y0, p.y);
+        ph.groundProbe(p.x, p.y, p.z, top - p.y + assist, 0.02, P.footRadius, gh, sq);
+        if (gh.hit && gh.y >= p.y - 0.02 && vy <= 0) { out.x = p.x; out.y = gh.y; out.z = p.z; out.gy = gh.y; out.wall = wall; out.t = t; return out; }
+      }
+      if (p.y < PLAYER.waterY) break;
+    }
+    out.x = p.x; out.y = p.y; out.z = p.z; out.gy = -Infinity; out.wall = wall; out.t = maxT;
+    return out;
+  }
+  // [b5-caldera] fix round 3: a route's own hop onto node n — the take-off velocity as it is (vy: the jump's), the brain
+  // steering at n all the way (its look-ahead holds n until it is within reach): it comes down on n's top (within 0.35 m
+  // of its height, 1.2 m of it across) and on nothing the sea or the lava takes
+  _hopLands(a, n) {
+    if (!n) return false;
+    const vy0 = (a.submerged ? PLAYER.swimJumpVel : PLAYER.jumpVel) * (a.groundTeam === 2 ? 0.72 : 1);
+    const st = (x, y, z) => { const dx = n.x - x, dz = n.z - z, d = Math.hypot(dx, dz); return d > 0.3 ? [dx / d, dz / d] : null; };
+    const f = this._flight(a, a.vel.x, vy0, a.vel.z, st, 1.4);
+    // (on n's top: n's height, and a route's node there — an Organ column's top is a 2–5 m hexagon on a 1 m lattice, the
+    // landing rarely within a metre of the one node the route names)
+    if (!(f.gy > -Infinity) || Math.abs(f.gy - n.y) > 0.35 || Math.hypot(f.x - n.x, f.z - n.z) > 2.6 || !this._standable(f.x, f.gy, f.z)) return false;
+    const SM = G.match?.stage;
+    return !(SM && SM.wet(f.x, f.z, f.gy, 0.5));
+  }
+  // [b5-caldera] fix round 6: does the flight as it flies now, steered along (ux, uz) (0, 0: no steer), come down dry?
+  _airDry(a, ux, uz) {
+    const u = [ux, uz], f = this._flight(a, a.vel.x, a.vel.y, a.vel.z, ux || uz ? () => u : null, 1.5), SM = G.match?.stage;
+    return f.gy > -Infinity && !(SM && SM.wet(f.x, f.z, f.gy, 0.5));
+  }
+  // [b5-caldera] fix round 3: in the air, the flight as the brain steers it now (the move held): does it come down on the
+  // sea or the lava, or on nothing within 1.5 s? (no move: the ballistic _arcWet answers)
+  // (asked again at most every 0.1 s of the flight, or at once when the move turns by more than ~25°: the answer is kept)
+  _flightWet(a, mv) {
+    const ml = Math.hypot(mv.x, mv.z);
+    if (ml < 0.05) return false;
+    const ux = mv.x / ml, uz = mv.z / ml, K = (this._fwK ||= { t: -1, ux: 0, uz: 0, v: false });
+    if (this.t - K.t < 0.1 && ux * K.ux + uz * K.uz > 0.9) return K.v;
+    const u = [ux, uz], f = this._flight(a, a.vel.x, a.vel.y, a.vel.z, () => u, 1.5), SM = G.match?.stage;
+    K.t = this.t; K.ux = ux; K.uz = uz;
+    return (K.v = !(f.gy > -Infinity) || !!(SM && SM.wet(f.x, f.z, f.gy, 0.5)));
+  }
+  // [b5-caldera] a nav node (any: rider nodes too) within 1.5 m of (x, z) standing within 0.35 m of y
+  _standable(x, y, z) {
+    const N = G.nav, ix = Math.round((x - N.x0) / N.step), iz = Math.round((z - N.z0) / N.step);
+    for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) {
+      const jx = ix + dx, jz = iz + dz;
+      if (jx < 0 || jz < 0 || jx >= N.nx || jz >= N.nz) continue;
+      for (const id of N.cells[jz * N.nx + jx]) { const n = N.nodes[id]; if (Math.abs(n.y - y) <= 0.35 && Math.hypot(n.x - x, n.z - z) <= 1.5) return true; }
+    }
+    return false;
+  }
+  // [b5-caldera] a dodge roll's slide straight along the move for its distance (+0.6 m): dry floor all the way
+  _rollSafe(a, mv, dist) {
+    const ml = Math.hypot(mv.x, mv.z); if (ml < 0.05) return true;
+    const ux = mv.x / ml, uz = mv.z / ml;
+    for (let d = 0.4; d <= dist + 0.6 + 1e-6; d += 0.4) if (this._wetHi(a.pos.x + ux * d, a.pos.z + uz * d, a.pos.y)) return false;
+    return true;
+  }
+  // [b5-caldera] the arc from where the body is now with velocity (vx, vy, vz): does it come down on the sea or the lava
+  // (or on nothing within 1.5 s)?
+  _arcWet(a, vx, vz) {
+    const L = G.level, SM = G.match?.stage, g = PLAYER.gravity, vy0 = a.vel.y;
+    let px = a.pos.x, pz = a.pos.z, ox = 0, oz = 0;
+    for (let t = 0.05; t <= 1.5; t += 0.05) {
+      let x = a.pos.x + vx * t + ox, z = a.pos.z + vz * t + oz;
+      const y = a.pos.y + vy0 * t - 0.5 * g * t * t, down = vy0 - g * t <= 0;
+      let gh = down ? L.groundHeight(x, z, y + 0.3) : -Infinity;
+      if (!(gh > -Infinity && y <= gh + 0.05) && L.pointInside(_wv.set(x, y + 0.25, z), 0)) { ox += px - x; oz += pz - z; x = px; z = pz; if (down) gh = L.groundHeight(x, z, y + 0.3); }   // (a wall stops it: it drops where it was)
+      px = x; pz = z;
+      if (!down) continue;
+      if (gh > -Infinity && y <= gh + 0.05) return !!(SM && SM.wet(x, z, gh, 0.5));
+    }
+    return true;
+  }
+  // [b5-caldera] fix round 3: the sea or the lava anywhere within r of the actor (rings 0.5 m apart, 12 directions): a 0.4 m
+  // lava seam between the Casting Floor and a coping slips between the 1.5 m ring's samples
+  _wetWithin(a, r) {
+    for (let d = 0.5; d <= r + 1e-6; d += 0.5) for (let k = 0; k < 12; k++) { const t = (k * Math.PI) / 6; if (this._wetHi(a.pos.x + Math.cos(t) * d, a.pos.z + Math.sin(t) * d, a.pos.y)) return true; }
+    return false;
+  }
+  // [b5-caldera] the sea or the lava anywhere on rings 1.5 m and r round the actor (16 samples)
+  _nearWetHi(a, r) {
+    for (const d of [1.5, r]) for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4; if (this._wetHi(a.pos.x + Math.cos(t) * d, a.pos.z + Math.sin(t) * d, a.pos.y)) return true; }
+    return false;
+  }
+  // [b5-caldera] _wet with a step or a wall there counting as ground (solid at knee height: the body bumps it, it doesn't
+  // fall) — but not a bridge deck over the lava with open air under it
+  _wetHi(x, z, y) {
+    if (!this._wet(x, z, y)) return false;
+    return !G.level.pointInside(_wv.set(x, y + 0.3, z), 0);
+  }
   // final move command: if the ground a stopping distance ahead is water, slide along the edge or stop
   _edgeGuard(a, mv) {
+    const px = a.pos.x, py = a.pos.y, pz = a.pos.z;
+    // [b5-caldera] momentum first: where the body is carried in the next 0.3 s (+0.3 m) — a slide along a lava lip with
+    // speed toward it went over (lava-bots.js trails) — brake against it
+    const vx = a.vel.x, vz = a.vel.z, sp = Math.hypot(vx, vz);
+    // (fix round 3: also from 0.25 m/s when the move points away from the drift — a duel's strafe reversing on a lava lip
+    // drifted over it at 0.7–1.0 m/s while the move pointed back inland; never against a slow walk the move itself asks
+    // for: from stone to stone across a seam the brake held escapers still until the stone sank; a squid's carry 0.45 s)
+    const ct = a.form === 'squid' ? 0.45 : 0.3, away = mv.x * vx + mv.z * vz < 0;
+    if ((sp > 1.0 || (sp > 0.25 && away)) && this._wetHi(px + vx * ct + (vx / sp) * 0.3, pz + vz * ct + (vz / sp) * 0.3, py)) { mv.set(-vx / sp, 0, -vz / sp); return; }
+    // [b5-caldera] standing on a lip with the body's middle over the sea or the lava (the foot holds it): back onto the floor
+    // (fix round 3: onto open floor at its own level — the mean of those directions, never into a wall: on the north head's
+    // coping sliver between the lake and the Ladle Road's face the first dry direction was the face, and pushed into it at
+    // a slant the body slid along it to the sliver's tip and off it: three bots in four lava-bots runs)
+    // (and of those the one nearest the way it wants to go — an escaper off a sinking stone onto a head's coping was turned
+    // back toward the stone, the first dry direction, and went in with it)
+    if (a.grounded && this._wet(px, pz, py)) {
+      let sx = 0, sz = 0, bx = 0, bz = 0, bd = -2;
+      const ml = Math.hypot(mv.x, mv.z), ux = ml > 0.05 ? mv.x / ml : 0, uz = ml > 0.05 ? mv.z / ml : 0;
+      for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t), x = px + cx * 0.45, z = pz + cz * 0.45; if (!this._wet(x, z, py) && !G.level.pointInside(_wv.set(x, py + 0.3, z), 0)) { sx += cx; sz += cz; const d = cx * ux + cz * uz; if (d > bd) { bd = d; bx = cx; bz = cz; } } }
+      const sl = Math.hypot(sx, sz);
+      if (ml > 0.05 && bd > -2) { mv.set(bx * 0.8, 0, bz * 0.8); return; }
+      if (sl > 0.1) { mv.set((sx / sl) * 0.8, 0, (sz / sl) * 0.8); return; }
+      for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t); if (!this._wet(px + cx * 0.45, pz + cz * 0.45, py)) { mv.set(cx * 0.8, 0, cz * 0.8); return; } }
+    }
     const m = Math.hypot(mv.x, mv.z); if (m < 1e-4) return;
     const dx = mv.x / m, dz = mv.z / m;
     const look = 0.6 + Math.hypot(a.vel.x, a.vel.z) * 0.17;
-    const px = a.pos.x, py = a.pos.y, pz = a.pos.z;
     const bad = (ux, uz) => this._wet(px + ux * 0.45, pz + uz * 0.45, py) || this._wet(px + ux * look, pz + uz * look, py);
     if (!bad(dx, dz)) return;
+    // [b5-caldera] on a tip (half or more of a 0.55 m ring round it over the sea or the lava — a coping wedge's point):
+    // back toward the floor (the dry samples' mean), not along the edge to the point
+    { let wn = 0, sx = 0, sz = 0;
+      for (let k = 0; k < 8; k++) { const t = (k * Math.PI) / 4, cx = Math.cos(t), cz = Math.sin(t), x = px + cx * 0.55, z = pz + cz * 0.55; if (this._wetHi(x, z, py)) wn++; else if (!G.level.pointInside(_wv.set(x, py + 0.3, z), 0)) { sx += cx; sz += cz; } }   // (a column or a wall beside it is no drop: _wetHi — nor a way back: fix round 3)
+      const sl = Math.hypot(sx, sz);
+      if (wn >= 4 && sl > 0.1) { mv.set((sx / sl) * m, 0, (sz / sl) * m); return; } }
     for (const ang of [0.8, -0.8, 1.45, -1.45]) {
       const c = Math.cos(ang), s = Math.sin(ang), nx = dx * c + dz * s, nz = -dx * s + dz * c;
       if (!bad(nx, nz)) { mv.set(nx * m, 0, nz * m); return; }
@@ -1372,6 +1795,11 @@ export class BotBrain {
     // (a swimmer carries on a couple of metres after it surfaces: the faster it goes, the further ahead it looks)
     const look = 0.6 + Math.hypot(a.vel.x, a.vel.z) * 0.22;
     for (const d of look > 1.5 ? [1.2, look] : [1.2]) if (!dry(a.pos.x + (move.x / l) * d, a.pos.z + (move.z / l) * d)) return true;
+    // [b5-caldera] fix round 3: and where its momentum carries it (the edge guard's look-ahead at swim-speed reach: 0.3 s
+    // + 0.3 m along the velocity) — a squid strafing a duel at 6–7 m/s along a 1.4 m lava lip swam over it while the move
+    // pointed back along the lip (lava-bots ledges); `dry` reads the lava with its look-ahead (wet … 0.5 → 8 s near it)
+    const sp = Math.hypot(a.vel.x, a.vel.z);
+    if (sp > 2 && G.match?.stage) { const ux = a.vel.x / sp, uz = a.vel.z / sp; for (const d of [0.6, 0.3 + sp * 0.3]) if (!dry(a.pos.x + ux * d, a.pos.z + uz * d)) return true; }
     return false;
   }
 
@@ -1381,6 +1809,12 @@ export class BotBrain {
     const a = this.a, l = Math.hypot(move.x, move.z);
     if (l < 0.05) return false;
     const ux = move.x / l, uz = move.z / l, gy = G.level.groundHeight(a.pos.x + ux * 1.1, a.pos.z + uz * 1.1, a.pos.y + 0.6);
+    // [b5-caldera] fix round 3: along its momentum too, at swim speed (a drop beside the lava the move doesn't point at)
+    const sp = Math.hypot(a.vel.x, a.vel.z);
+    if (sp > 2 && G.match?.stage) {
+      const vx = a.vel.x / sp, vz = a.vel.z / sp, gv = G.level.groundHeight(a.pos.x + vx * 1.1, a.pos.z + vz * 1.1, a.pos.y + 0.6);
+      if (gv > -Infinity && gv <= a.pos.y - 0.5) for (const d of [2.2, 3.4]) if (this._wet(a.pos.x + vx * d, a.pos.z + vz * d, gv)) return true;
+    }
     if (gy === -Infinity || gy > a.pos.y - 0.5) return false;   // level ahead (the open sea ahead: _avoidWater / _squidWouldDrop)
     for (const d of [2.2, 3.4, 4.6]) if (this._wet(a.pos.x + ux * d, a.pos.z + uz * d, gy)) return true;
     return false;
@@ -1476,6 +1910,8 @@ export class BotBrain {
         }
       }
     }
+    // [b5-karp-bots] Bazookarp: onto the known enemy carrier, else beside the shell (ours to break)
+    if (s.id === 'strike' && s.aiming && s.target && !s._zoneAimed && G.match && G.match.karp) { s._zoneAimed = true; const p = karpStrikeAt(this); if (p) s.target.set(p.x, 0, p.z); }
     const fighting = this.mode === 'fight' && !!this.target;
     const t = this.tv;
     // charge straight at the target only when it's close (further out the nav path + water avoidance steer)
@@ -1544,9 +1980,35 @@ export class BotBrain {
         it.fire = fighting && vis && dist < 30;
         break;
       case 'zipcaster':
-        if (fighting && vis && dist > 6 && dist < 18 && Math.random() < dt * 0.6) it.sub = true;
+        if (fighting && vis && dist > 6 && dist < 18 && Math.random() < dt * 0.6 && this._zipDry(s)) it.sub = true;   // [b5-caldera] _zipDry
         break;
     }
+  }
+  // [b5-caldera] fix round 4: a Zipline zip only where nothing of it comes down on what the stage calls wet (the lava) within
+  // 4 s (the zip ≤ 0.7 s, the 1.4 s hang, the fall): the tether's line as it would fire now (the aim, its range), the
+  // floor under its end and under every 2 m of the line (an enemy met mid-zip stops the body there and it drops), and for a
+  // wall the floor its let-go flies onto (pushed off at 4 m/s for ~1.2 s, air control: up to ~6 m out, ±45°) — lava-bots: two zips
+  // up a wall over a drowning Casting Floor came down in the lava just after it turned deadly
+  _zipDry(s) {
+    const a = this.a, SM = G.match?.stage, L = G.level;
+    if (!SM) return true;
+    const from = _v.set(a.pos.x, a.pos.y + 1.2, a.pos.z), dir = _v2.copy(a.aimPoint).sub(from);
+    if (dir.lengthSq() < 1e-6) return false;
+    dir.normalize();
+    const h = this._zh || (this._zh = new Hit()), g = G.physics.raycast(from, dir, s.def?.range ?? 21, h, true);
+    if (!g.hit) return true;   // (a miss: no zip)
+    const n = g.normal, wall = Math.abs(n.y) < 0.55, ex = g.point.x + n.x * 0.5, ez = g.point.z + n.z * 0.5, ey = g.point.y;
+    // (the stage's own wet only — a floor the lava takes, open lava (no floor: −Infinity) — not the sea round other
+    // stages: bots' zips there are as they were)
+    const wet = (x, z, y) => SM.wet(x, z, L.groundHeight(x, z, y + 0.3), 4);
+    const len = g.dist;
+    for (let d = 2; d < len; d += 2) if (wet(from.x + dir.x * d, from.z + dir.z * d, from.y + dir.y * d)) return false;
+    if (wet(ex, ez, ey)) return false;
+    if (wall) {
+      const hl = Math.hypot(n.x, n.z) || 1, nx = n.x / hl, nz = n.z / hl;
+      for (const t of [0, 0.8, -0.8]) { const c = Math.cos(t), sn = Math.sin(t), ux = nx * c - nz * sn, uz = nx * sn + nz * c; for (const k of [1.5, 3, 4.5, 6]) if (wet(g.point.x + ux * k, g.point.z + uz * k, ey)) return false; }
+    }
+    return true;
   }
 
   _fightSub(dist) {
@@ -2482,6 +2944,7 @@ export class BotBrain {
     for (const k in SUB_KITS) SUB_KITS[k].threats?.(L);
     G.deploy?.threats(L);   // [b5-deploy] Skitter Bombs (they can be shot down now)
     for (const k in MAIN_KITS) MAIN_KITS[k].shields?.(S);
+    if (G.match?.karp) karpShields(this, S);   // [b5-karp-bots] the Roe Shell stops shots: flank round it
     for (let i = S.length - 1; i >= 0; i--) if (S[i].team === a.team) { S[i] = S[S.length - 1]; S.pop(); }
     let best = null, bs = 0.2;
     for (const d of L) {
@@ -2501,7 +2964,11 @@ export class BotBrain {
     const a = this.a, dx = d.pos.x - a.pos.x, dz = d.pos.z - a.pos.z, dh = Math.hypot(dx, dz);
     const dy = d.pos.y + d.aimY - (a.pos.y + 0.8);
     if (dh > 18 || Math.abs(dy) > 6) return 0;
+    if (d.slider) return d.score(a);   // [b5-sub-glide] a Glide Bomb: in its stop disc, or on its lane ahead (kits/glide.js)
     const st = d.state, mine = d.target === a;
+    // [b5-subs] a turret (the Scrap Sentry: it stands and shoots what it sees): 2.0 locked on us within its range, 0.6
+    // within its range, else nothing
+    if (d.turret) { const d3 = Math.hypot(dh, dy); return d3 > d.range ? 0 : d.locked && mine ? 2.0 : 0.6; }
     if (st === 'fly') {
       // still in the air after the throw: a human sees it coming, so it's noticed now (the reaction time runs during its
       // flight) — a walker coming down within its sensing circle of us (it'll lock on), a flyer heading our way
@@ -2568,9 +3035,10 @@ export class BotBrain {
     const inkOk = a.ink > Math.max(2.5, w.inkPerShot || 0, (w.inkFull || 0) * 0.25);
     const canShoot = !moveOnly && d.shootable && this.thrLos && d3 >= lo && d3 <= hi && inkOk;
     // a walker coming at us from just out of reach: stand and let it walk into it (running only buys time)
-    const waitIn = !canShoot && !moveOnly && d.ground && d.shootable && this.thrLos && inkOk && d3 > hi && d3 < hi + 4 && hi - (d.trigger || 1.2) > 2.5;
+    const waitIn = !canShoot && !moveOnly && d.ground && !d.turret && d.shootable && this.thrLos && inkOk && d3 > hi && d3 < hi + 4 && hi - (d.trigger || 1.2) > 2.5;   // ([b5-subs] a turret never walks into reach)
     const mine = d.target === a, ttl = !d.ground && d.state === 'launch' ? d3 / Math.max(2, v.length()) : 9;
     const eta = d.ground ? Math.max(0, dh - (d.trigger || 1.2)) / (d.speed || 4) : ttl;
+    this.thrIn = d.slider ? d.fuse ?? eta : !d.ground ? ttl : eta;   // [b5-sub-dash] s until it lands (the dash's dodge: SUB_KITS.dash.botAct)
     // a duel with an enemy player close by outranks a device that isn't about to arrive
     const T = this.target;
     if (T && this.mode === 'fight' && this.seeTimer > 0) {
@@ -2579,7 +3047,7 @@ export class BotBrain {
       if (score < pd) { if (mine || dh < 4) this._thrDrift(d, move, 0.6); return null; }
     }
     // far off / out of reach and not about to arrive: carry on, edging away from it
-    const urgent = d.ground ? eta < 2.2 || dh < (d.radius || 3) + 0.5 : d.state === 'launch' || d.state === 'unfold';
+    const urgent = d.slider ? d.urgent(a) : d.turret ? !!(d.locked && mine && d3 < d.range) : d.ground ? eta < 2.2 || dh < (d.radius || 3) + 0.5 : d.state === 'launch' || d.state === 'unfold';   // ([b5-sub-glide] slider; [b5-subs] a turret: locked on us in its reach)
     if (!canShoot && !waitIn && !urgent) { this._thrDrift(d, move, 0.5); return null; }
     const act = canShoot || waitIn ? 'shoot' : 'evade', bit = act === 'shoot' ? 1 : 2;
     if (!(this.thrActs & bit)) { this.thrActs |= bit; THREAT_STATS[act]++; }
@@ -2592,6 +3060,7 @@ export class BotBrain {
       // too late to count on the shot (a charge weapon a little sooner): sidestep its line, still firing if on it
       dodge = !d.ground && d.state === 'launch' && ttl < (CHARGES[kind] ? 0.8 : 0.45);
       if (dodge) this._thrSidestep(d, move, it, ttl < 0.3);
+      else if (d.turret && !melee && kind !== 'charger') { const rx2 = rx / rl, rz2 = rz / rl, sg = this.thrSide || (this.thrSide = Math.random() < 0.5 ? -1 : 1); move.set(-rz2 * sg * 0.8, 0, rx2 * sg * 0.8); if (this.t % 1.6 < dt) this.thrSide = -sg; }   // [b5-subs] a turret: strafe across its line while shooting (it doesn't lead)
       else if (waitIn || (d.ground && kind === 'roller')) move.set(0, 0, 0);                          // (a flick lands a fixed way out)
       else if (d.ground && melee) move.set((rx / rl) * 0.35, 0, (rz / rl) * 0.35);                   // let it walk into the swing
       else if (d.ground && dh < 4.5) move.set(rx / rl, 0, rz / rl);                                  // kite while shooting
@@ -2636,8 +3105,9 @@ export class BotBrain {
   _thrEvade(d, dt, move, it, ttl) {
     const a = this.a;
     if (!d.ground && d.state === 'launch' && ttl < 0.55) { this._thrSidestep(d, move, it, ttl < 0.35); return; }
+    if (d.slider) { this._thrSidestep(d, move, it, false); return; }   // [b5-sub-glide] step off a Glide Bomb's line (its stop disc: botSpecials' escape)
     this.thrEvT -= dt;
-    if (this.thrEvT <= 0) { this.thrEvT = 0.45 + Math.random() * 0.3; this.thrEvYaw = this._pickEvade(d); }
+    if (this.thrEvT <= 0) { this.thrEvT = 0.45 + Math.random() * 0.3; this.thrEvYaw = this._pickEvade(d); this.thrEvNew = true; }   // [b5-sub-dash] (thrEvNew: a fresh heading)
     move.set(Math.sin(this.thrEvYaw), 0, Math.cos(this.thrEvYaw));
     const swim = this.groundSeen === 1 && !this._squidWouldDrop(move);
     if (swim && !(this.thrActs & 4)) { this.thrActs |= 4; THREAT_STATS.swim++; }
@@ -2655,6 +3125,7 @@ export class BotBrain {
       let s = rx * px + rz * pz >= 0 ? 1 : -1;
       if (!ok(s) && ok(-s)) s = -s;
       this.thrSide = s;
+      this.thrEvYaw = Math.atan2(px * s, pz * s); this.thrEvNew = true;   // [b5-sub-dash] (the side picked: a dash can take it)
       if (!(this.thrActs & 8)) { this.thrActs |= 8; THREAT_STATS.sidestep++; }
     }
     move.set(px * this.thrSide, 0, pz * this.thrSide);
@@ -2674,7 +3145,8 @@ export class BotBrain {
       const st = G.paint.regionStats(px, y0, pz, 1.3, this.inkTeam, _stats);
       if (st.n) sc += st.own * 1.5;
       if (wp) { const wx = wp.x - x0, wz = wp.z - z0, wl = Math.hypot(wx, wz) || 1; sc += (0.4 * (wx * sx + wz * sz)) / wl; }
-      if (!d.ground && !G.physics.los(_v.copy(d.pos), _v2.set(px, y0 + 1, pz))) sc += 2;
+      if ((!d.ground || d.turret) && !G.physics.los(_v.set(d.pos.x, d.pos.y + (d.turret ? 0.55 : 0), d.pos.z), _v2.set(px, y0 + 1, pz))) sc += 2;   // ([b5-subs] a turret: from its eye)
+      if (d.turret && Math.hypot(px - d.pos.x, pz - d.pos.z) > d.range) sc += 1.5;   // [b5-subs] (out of its reach)
       sc += Math.random() * 0.3;
       if (sc > bs) { bs = sc; best = yw; }
     }
@@ -2685,7 +3157,7 @@ export class BotBrain {
   _meleeWindow(w, d) {
     switch (w.kind) {
       // (ground, aimed low: the flick comes down 5–6.6 m out ~0.6 s after the press — a walker is ~2.3 m closer by then)
-      case 'roller': return !d.ground ? [1.5, 6] : d.state === 'walk' ? [7.3, 9] : [5, 6.6];
+      case 'roller': return !d.ground ? [1.5, 6] : d.state === 'walk' ? [7.3, 9] : d.turret ? [5.9, 7.2] : [5, 6.6];   // [b5-int3] (a turret — the Scrap Sentry, 0.72 m tall — takes the flick 6–7 m out at its −0.3 aim: from 5.0–5.5 m it flew over it; a roller stood there flicking and missing, locked on)
       case 'brush': return !d.ground ? [0.8, 4.5] : d.state === 'walk' ? [99, 99] : [0.8, 2.8];   // (a walker inside 2.8 m is too close to call: run)
       case 'blade': return d.ground ? [0, 4] : [0, 5.5];
       default: return [0, weaponRange(w) * 0.95];
@@ -2823,6 +3295,7 @@ export class BotBrain {
   }
 
   _range() {
+    if (this.a.carry) return KARP_W.range;   // [b5-karp]
     const w = this.a.weapon;
     return weaponRange(w) * (CHARGES[w.kind] ? 0.9 : 1);
   }
@@ -2842,7 +3315,7 @@ export class BotBrain {
     for (const [e, k] of S.mem) {
       if (!k.seen) continue;
       const d = e.pos.distanceTo(a.pos);
-      const score = d - (e === this.target ? 4 : 0) + (bias ? bias(this, e, d) : 0) - (TP && TP.riding(e) ? 7 : 0) + this.sp.targetBias(e, d);   // (enemy specials: the untouchable last)
+      const score = d - (e === this.target ? 4 : 0) + (bias ? bias(this, e, d) : 0) - (TP && TP.riding(e) ? 7 : 0) + this.sp.targetBias(e, d) - (e.carry ? 40 : 0);   // (enemy specials: the untouchable last) [b5-karp] the enemy carrier first
       if (score < bd) { bd = score; best = e; }
     }
     if (best) {
@@ -2931,15 +3404,30 @@ export class BotBrain {
     let s = nav.nearest(this.a.pos, 1.2, true);
     // standing at the foot of a step: don't start the route from the ledge above (we can't get up there from here)
     if (s >= 0 && this.a.grounded && nav.nodes[s].y - this.a.pos.y > 0.5) { const s2 = nav.nearest(this.a.pos, 0.45, true); if (s2 >= 0) s = s2; }
+    // [b5-beta1] …nor mid-hop: in the air the route starts from the floor under us, not from the ledge the hop is reaching
+    // for (a route planned at the top of a hop from Gulper Aquarium's Feeding Step began on the deck above it — a walk edge
+    // on from there, no hop asked for — and the bot pressed into the step's 1.2 m face, 11.75 s in one match)
+    else if (s >= 0 && !this.a.grounded && !this.a.climbing && !this.a.superJumpState) {
+      // (not over the sea, nor a floor a stage's hazard takes within 10 s, nor anywhere on a stage with lava: its escapes'
+      // and fights' hops up off the floors it takes were tuned to the old start — with the 10 s test alone lava-bots.js
+      // still met an escape death in 1 of 7 runs, against none in 11 before; there they start as before)
+      const a = this.a, fy = G.level.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.1), SM = G.match?.stage;
+      if (fy > -Infinity && nav.nodes[s].y - fy > 0.5 && !G.match?.lava && !(SM && SM.wet(a.pos.x, a.pos.z, fy, 10))) { const s2 = nav.nearest(_vStart.set(a.pos.x, fy, a.pos.z), 0.45, true); if (s2 >= 0) s = s2; }
+    }
     const g = this.sp.goalOk(nav.nearest(pos, maxUp));   // (enemy specials: a goal inside an area we know hurts → just outside it)
     this.repath = 0.8 + Math.random() * 0.4;
     if (s < 0 || g < 0) { this.path = null; return false; }
     const rule = this._climbRule();
     G.match?.stage?.beforePath(this);   // [b5-stagehooks] (a module's per-bot nav rule: pipe costs …)
-    let p = nav.path(s, g, this.a.team, undefined, rule, null, this.sp.cost());   // (… and round those areas; climbs: _climbRule)
+    // [b5-karp] a carrier plans with its own rules (no climbs, its avoid mask: spawns, own free zones, carrierBlock, the
+    // shell, the retreat mark); everyone else in a Bazookarp match routes round the shell
+    const KA = this.a.carry ? karpPathArgs(this) : null, SA = KA ? null : G.match?.karp ? karpShellAvoid(this) : null;
+    let p = KA ? nav.path(s, g, this.a.team, undefined, true, KA.avoid, KA.cost) : nav.path(s, g, this.a.team, undefined, rule, SA, this.sp.cost());   // (… and round those areas; climbs: _climbRule) [b5-karp-bots] KA.cost: dangers + its route's corridor
+    if (!p && SA && SA !== karpShellAvoid(this, true)) p = nav.path(s, g, this.a.team, undefined, rule, karpShellAvoid(this, true), this.sp.cost());   // [b5-karp-bots] (no way round the full swell — a narrow bridge: round the shell itself)
+    if (!p && KA) for (const [lv, sl] of KARP_FB_STEPS) { const F = karpPathFallback(this, lv, sl); if (F) p = nav.path(s, g, this.a.team, undefined, true, F.avoid, F.cost); if (p) { karpFallbackNote(this, F); break; } }   // [b5-karp] (no forward path: a short ×3 beats standing still) [b5-karp-bots] the rules loosened least first; level 2: through its own free zone
     // climbs are off after a failed one and there's no way there without one (a pit whose only way out is up a wall): up
     // one anyway, the failed one last — unless too dry to ink it (no route: the tank refills while it stands)
-    if (!p && rule === true && this.a.ink >= PLAYER.inkMax * CLIMB.ink) p = nav.path(s, g, this.a.team, undefined, this._climbRule(true), null, this.sp.cost());
+    if (!p && !KA && rule === true && this.a.ink >= PLAYER.inkMax * CLIMB.ink) p = nav.path(s, g, this.a.team, undefined, this._climbRule(true), SA, this.sp.cost());
     if (!p) { this.path = null; return false; }
     this.path = p; this.pi = Math.min(1, p.length - 1); this.goal = g; this.bestD = Infinity; this.noProg = 0;
     return true;
@@ -2993,11 +3481,15 @@ export class BotBrain {
       this.repath = 0.5;
       return;
     }
+    // [b5-karp-bots] a breaker by the Roe Shell refills inside its band (never by the shell, nor off at its spawn)
+    { const kpR = G.match?.karp ? karpPlan() : null, kr = kpR ? karpRefillSpot(this, kpR) : null; if (kr && this._pathTo(kr, 0.6)) { this.repath = 1.2; return; } }
     // search nearby for own ink
     let bestP = null, bd = Infinity;
+    const RB = this._refillBad && this.t - this._refillBad.t < 6 ? this._refillBad : null;   // [b5-caldera] fix round 4 (not the patch it couldn't use)
     for (let i = 0; i < 14; i++) {
       const ang = Math.random() * Math.PI * 2, r = 1 + Math.random() * 7;
       _v.set(a.pos.x + Math.cos(ang) * r, a.pos.y, a.pos.z + Math.sin(ang) * r);
+      if (RB && Math.hypot(_v.x - RB.x, _v.z - RB.z) < 3) continue;
       const st = G.paint.regionStats(_v.x, _v.y, _v.z, 1.2, this.inkTeam, _stats);
       if (st.n && st.own > 0.6 && r < bd) { bd = r; bestP = _v.clone(); }
     }
@@ -3005,6 +3497,7 @@ export class BotBrain {
     for (let i = 0; i < 16 && !bestP; i++) {
       const ang = Math.random() * Math.PI * 2, r = 8 + Math.random() * 14;
       _v.set(a.pos.x + Math.cos(ang) * r, a.pos.y, a.pos.z + Math.sin(ang) * r);
+      if (RB && Math.hypot(_v.x - RB.x, _v.z - RB.z) < 3) continue;
       const st = G.paint.regionStats(_v.x, _v.y, _v.z, 1.5, this.inkTeam, _stats);
       if (st.n && st.own > 0.6) bestP = _v.clone();
     }
@@ -3012,7 +3505,7 @@ export class BotBrain {
     this.repath = 1.2;
   }
 
-  // Our own ink within a couple of metres, on our level, nothing in the way: the nearest such spot well inside it (two
+  // Our own ink within 3.5 m (2 m on a stage with lava), on our level, nothing in the way: the nearest such spot well inside it (two
   // samples deep along the way there), or null. Re-checked every 0.2 s. (Refill: a spot that isn't quite under us.)
   _inkStep(dt) {
     const a = this.a;
@@ -3024,9 +3517,14 @@ export class BotBrain {
       const h = G.physics.raycast(_v3.set(x, a.pos.y + 0.6, z), _down, 1.3, _stepHit, true);
       return h.hit && h.normal.y > 0.7 && Math.abs(h.point.y - a.pos.y) < 0.5 && G.paint.sample(h.face, h.u, h.v) === own ? h.point.y : null;
     };
-    for (const r of [0.55, 0.95, 1.45, 2.05]) {
-      for (let k = 0; k < 8; k++) {
-        const ang = (k + 0.5 * (r > 1)) * (Math.PI / 4), sx = Math.sin(ang), sz = Math.cos(ang);
+    // [b5-beta1] 2.75, 3.5: where a roller's flick or a Mitts punch lands its puddle — not on a stage with lava (a longer
+    // step onto ink is a step toward the floor it takes: lava-bots met deaths in 3 of 6 runs with it, 0 of 6 without)
+    // [b5-beta1, review 1] the facing first, then the eight fixed ways: a roller's flick lands a narrow stripe straight
+    // ahead, and past 1 m the fixed ways (22.5° off the axes) missed one aimed along an axis — a roller at 10 % facing
+    // +z flicked, found nothing, ran dry, kid-refilled to a flick and flicked again (bot-stuck refill: never at 40 %)
+    for (const r of G.match?.lava ? INK_STEP_R : INK_STEP_R_FAR) {
+      for (let k = -1; k < 8; k++) {
+        const ang = k < 0 ? this.aimYaw : (k + 0.5 * (r > 1)) * (Math.PI / 4), sx = Math.sin(ang), sz = Math.cos(ang);
         const x = a.pos.x + sx * r, z = a.pos.z + sz * r;
         const y = inkAt(x, z);
         if (y === null || inkAt(x + sx * 0.25, z + sz * 0.25) === null) continue;
@@ -3044,7 +3542,7 @@ export class BotBrain {
   _wiggle(t) {
     this.wiggleT = t; this.wiggleYaw = Math.random() * Math.PI * 2;
     this.path = null; this.goalTimer = 0; this.repath = 0;
-    if (this.a.grounded) this._needJump = true;
+    if (this.a.grounded) this._needJump = 'wiggle';   // [b5-caldera] (a stuck hop, not a route's own: the hop guards' ring applies — lava-bots: a wiggle's random heading flew a blade off the Race head into the lava)
   }
   _unstick(dt, move) {
     const a = this.a;
@@ -3154,6 +3652,7 @@ export class BotBrain {
         if (nav.edgeType(this.path[k - 1], this.path[k]) !== 'walk') break;
         if (!this._fatLos(a.pos.x, a.pos.y, a.pos.z, n.x, n.y, n.z)) break;
         if (!this._dryLine(a.pos.x, a.pos.y, a.pos.z, n.x, n.z)) break;   // never cut a corner across water
+        if (a.carry && !karpSteerOk(this, a.pos.x, a.pos.y, a.pos.z, n.x, n.z)) break;   // [b5-karp-bots] nor a carrier's across its own free zone
         ti = k;
       }
       this._laT = 0.1; this._laPi = this.pi; this._laPath = this.path; this._laTi = ti;
@@ -3273,7 +3772,8 @@ export class BotBrain {
         else it.fire = true;
         this._firing = it.fire;
         this.mode = 'fight';   // (the aim spring's combat stiffness while shooting; reset each frame)
-        if (this.bombCd <= 0 && !T.crab && a.ink > SUB.bomb.inkCost + 10 && dist > 5 && dist < 13 && Math.random() < 0.025) { it.sub = true; this.bombCd = 6 + Math.random() * 6; this._bombAim = true; }
+        if (this.bombCd <= 0 && !T.crab && !SUB_KITS[a.sub?.kind]?.onPress && a.ink > SUB.bomb.inkCost + 10 && dist > 5 && dist < 13 && Math.random() < 0.025
+          && (SUB_KITS[a.sub?.kind]?.bot?.boss?.(this, boss) ?? true)) { it.sub = true; this.bombCd = 6 + Math.random() * 6; this._bombAim = true; }   // ([b5-sub-glide] a kit sub may refuse: the Glide throws only a slide that stops by the boss; [b5-sub-dash] an onPress sub, the Dash Pellet, is no throw: its botAct below)
       } else if ((w.kind === 'charger' || w.kind === 'splatling' || w.kind === 'spinner' || w.kind === 'bow') && a.weaponRunner.charging && T.los) it.fire = true;   // hold a charge through a blink
       // specials: slam from under its claws, the storm cloud onto it
       if (a.specialReady() && !th.level && !T.crab) {
@@ -3300,6 +3800,8 @@ export class BotBrain {
     if (dive) { it.squid = true; it.fire = false; }
     else if (!it.fire && !a.weaponRunner.charging && a.groundTeam === 1 && (this._pathRemaining() > 4 || evading)) it.squid = true;
     if (!wantMove && !it.fire && a.groundTeam !== 1) it.squid = false;
+    // [b5-sub-dash] kit subs' own bot moves (SPEC §0.5 botAct), as in the turf think; th: the boss's telegraphs on us
+    { const busy = evading || dive; for (const k in SUB_KITS) { const r = SUB_KITS[k].botAct?.(this, dt, it, move, busy, th); if (r) { wantYaw = r.yaw; wantPitch = r.pitch; } } }
     this._tail(dt, move, wantYaw, wantPitch, aimDist, wantMove);
     if (this.mode === 'fight') this.mode = 'boss';
   }

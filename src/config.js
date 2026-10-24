@@ -461,8 +461,48 @@ export const SUBS = {
     radius: 2.4, damageMax: 100, damageMin: 30, paintRadius: 2.2,                 // the burst beside you at the end
     contact: 0.3, hitFuse: 0.6, hitRadius: 3.1, hitDamageMax: 180, hitDamageMin: 35, hitPaintRadius: 2.7,   // hit a foe in flight: Splat Bomb
   },
+  // ---- [b5-subscaf] batch 5's four kit subs (tools/botlab/jobs/batch5/subs/SPEC.md §A–D, DECISIONS.md). Each kind lives in
+  // src/game/kits/<kind>.js, a stub until its builder lands it (using one says "Can't use"). The numbers are the spec's
+  // tables (A2, B2, C2, D2); each builder owns its entry from here. pad*: metres added to G.level.spawnBarrier.
+  glide: {
+    id: 'glide', name: 'Glide Bomb', kind: 'glide', blurb: 'Slides straight along the floor, inking a lane and bouncing off walls, then blows when its fuse runs out. Hold to cook it: a shorter slide and a bigger blast.',
+    inkCost: 65, speed0: 10, decel: 3.0, minSpeed: 1.2, fuse: 2.4, cookGrace: 0.15, cookMax: 1.8, overHold: 1.0,
+    radius: 2.2, radiusMax: 3.2, damageMax: 180, damageMin: 35, paintRadius: 1.8, paintRadiusMax: 2.8, devDamage: 40, devDamageMax: 60,   // uncooked → full cook (linear in cook / cookMax)
+    trailEvery: 0.35, trailRadius: 0.55, bodyRadius: 0.28, hitR: 0.22, hitH: 0.24, hp: 40,
+    restitution: 0.8, scrape: 0.92, playerE: 0.5, playerKeep: 0.6, step: 1 / 60,
+  },
+  sentry: {
+    id: 'sentry', name: 'Scrap Sentry', kind: 'sentry', blurb: 'A turret built from junk. Set it down and for 15 s it shoots foes it can see with a little ink gun, until it\'s shot down. One at a time.',
+    inkCost: 65, placed: true, max: 1, spacing: 4.0, padPlace: 4, padTarget: 1,
+    hp: 120, setup: 0.6, life: 15, range: 11, lock: 0.4, burst: 3, burstGap: 0.11, burstPause: 0.5, damage: 22,
+    speed: 30, straight: 0.12, spread: 4.5, turnYaw: 4, turnPitch: 3, fireCone: 6, eyeH: 0.55, muzzleH: 0.5, hitR: 0.32, hitH: 0.72,
+  },
+  bobber: {
+    id: 'bobber', name: 'Chain Bobber', kind: 'bobber', blurb: 'A floating bomb that tethers to your others close by. Your team\'s shots set the chain off; foes\' shots disarm it. The longer the chain, the bigger every blast. Throw as many as you like.',
+    inkCost: 40, throwSpeed: 12, floatH: 1.0, wallOut: 0.45, floatMin: 0.6, floatMax: 2.2, deployTime: 0.35,
+    linkRange: 5.0, linkSnap: 5.5, maxTethers: 3, hopDelay: 0.07, hp: 25, life: 30, hitR: 0.2, maxPerPlayer: 24, padNoDeploy: 2,
+    // the blast by chain size N (index N − 1; every bobber of a chain blows at that size): C2 for 1–4; DECISIONS.md 20 grows
+    // the radius on to 8 links (+0.2 m each, 3.8 m) with the centre damage held at 180, and stops there. Past an array's end
+    // its last value holds (DECISIONS.md doesn't give min damage, paint or device damage past 4: the bobber builder's call)
+    // [b5-subs] the builder's call: past 4 the edge damage (35), the paint (2.5: a big chain covers more ground already —
+    // every bobber paints) and the device damage (60) hold; only the radius (and its lethal core) grows
+    chainRadius: [1.8, 2.2, 2.6, 3.0, 3.2, 3.4, 3.6, 3.8], chainDamageMax: [60, 95, 140, 180], chainDamageMin: [25, 30, 35, 35],
+    chainPaint: [1.3, 1.7, 2.1, 2.5], chainDevDamage: [25, 35, 45, 60],
+    // [b5-subs] disarmed: it sags this long, then pops; a chain's explosions share ≤ particleCap particles (C4.1); drawn to
+    // drawDist m from the camera; the bots' danger discs: ≤ dangerCap in all, armed while a foe known within armRange m
+    // has a line to one of the chain (C7)
+    sagTime: 0.4, particleCap: 400, drawDist: 60, dangerCap: 48, armRange: 20,
+    dangerCore: 0,   // [b5-subs] (fix round 1, an A/B knob for the lead, off: 1 = foes' bots treat an armed chain's lethal core, not R + 0.3, as its danger)
+    dangerHear: 0,   // [b5-int3] (an A/B knob for the lead, off: m — foes' bots notice an armed chain within this, else only in front of them with a clear line; 0 = within 5 m whatever way they face, as a beeping bomb)
+  },
+  dash: {
+    id: 'dash', name: 'Dash Pellet', kind: 'dash', blurb: 'Pops under your feet and blasts you a few metres the way you\'re steering, on the ground or in the air. Its blast hits anyone you leave behind.',
+    inkCost: 55, dashDist: 4.5, airDashDist: 3.5, dashTime: 0.22, endSpeed: 7, airVyMin: -1.5, airVyMax: 1.0, airGravMul: 0.3,
+    radius: 2.2, damageMax: 50, damageMin: 25, paintRadius: 2.0, devDamage: 25, substep: 0.2, streakEvery: 0.6, streakRadius: 0.45, airDashes: 1,
+  },
 };
-export const SUB_ORDER = ['bomb', 'sticky', 'burst', 'shaker', 'seeker', 'waddle', 'torpedo', 'tracer', 'boomerang', 'scan', 'curtain', 'sprinkler', 'mine', 'beacon', 'mist'];
+export const SUB_ORDER = ['bomb', 'sticky', 'burst', 'shaker', 'seeker', 'waddle', 'torpedo', 'tracer', 'boomerang', 'scan', 'curtain', 'sprinkler', 'mine', 'beacon', 'mist',
+  'glide', 'sentry', 'bobber', 'dash'];   // [b5-subscaf] (online records index into this: it only ever grows at the end)
 export const SUB = SUBS; // older code reads SUB.bomb
 // ---- [sub-view] Sub weapons' world models: how many times bigger than before each one is drawn in the world — what
 // flies, lands, sticks, rolls, walks, hovers or stands there (the Bomb Barrage's Splat Bombs too). VISUAL ONLY: every
@@ -474,6 +514,7 @@ export const SUB = SUBS; // older code reads SUB.bomb
 export const SUB_VIEW_SCALE = {
   bomb: 2, sticky: 2, burst: 2, seeker: 2, scan: 2, curtain: 1.5, sprinkler: 2, mine: 2, beacon: 2, mist: 2,
   shaker: 2, waddle: 2, torpedo: 2, tracer: 2, boomerang: 1.5,
+  glide: 1.6, sentry: 1.5, bobber: 1.5, dash: 2,   // [b5-subscaf] (SPEC §F)
 };
 export const subViewScale = (kind) => SUB_VIEW_SCALE[kind] ?? 1;
 
@@ -671,6 +712,72 @@ export const TOWER = {
   snapHz: 10,                 // online: host snapshots a second
 };
 
+// [b5-karp] Bazookarp (src/game/bazookarp.js): carry the Bazookarp to the enemy's Dragon Gate — the user's Rainmaker with
+// Splatoon 3's checkpoints (tools/botlab/jobs/batch5/bazookarp/SPEC.md, its appendix; DECISIONS.md)
+export const BAZOOKARP = {
+  duration: 300,              // 5:00 + overtime
+  count: 100,                 // 100 at the Pond, 0 at the enemy's Dragon Gate (the Carp Field, karpField.js)
+  snapHz: 10, stateHz: 1,     // online: snapshots / full state a second
+  // the Roe Shell: a tug-of-war meter ±hp (Alpha +, Bravo −); a burst splats the other team within burstR (with a line)
+  shell: {
+    r: 1.6, rMax: 2.3, lift: 1.3,          // radius at rest / about to burst; centre above its floor
+    hp: 600, reformHp: 500,                 // net damage to burst: the opening shell / every re-formed one ([b5-karp-bots] 1000 → 600: the bots reach the Pond at 8–11 s, the first pop ran 13–18 s at 1000 / 11–15 at 800, SPEC §9.1 wants 6–12)
+    regen: 200, regenDelay: 1.5,           // drift back toward 0 (/s) after this long with no hits
+    reform: 0.8,                            // s to grow back after a drop / plant / reset / move
+    hitCap: 220, specialMul: 0.5, contMul: 0.5,
+    touch: 20, touchGap: 0.5, touchShove: 6, touchFloor: 1, shoveEdge: 1.2,   // no push toward a > 1.2 m drop
+    burstR: 4.5, burstPaint: 3.5,
+    crackAt: 0.6, warnAt: 0.75,
+  },
+  // picking it up
+  pickR: 1.3, pickBelow: 0.6, pickAbove: 1.8, pickHold: 0.25,
+  claimLockMax: 1.5, claimRetry: 0.3, claimSlack: 0.5,   // online (§7.3)
+  claimAge: 0.4,              // s: a claim's sample age; the window-close grace; the wait for a decline (kx) after a death
+  claimWait: 0.3, claimNear: 6,   // [karp-face] the host's longest wait for claims in flight; m: a guest this far past pickR can't have touched it as early
+  // the carrier
+  speedMul: 0.8, chargeWalk: 2.4,         // × PLAYER's speeds, never the weapon's
+  fuse: 60, fuseFast: 3, fuseWarn: 10,
+  retreatOn: 8, retreatOff: 3,            // m of progress lost on your own half: ×3 on / back within (off)
+  explodeR: 4.5, explodePaint: 5.0,       // the Carp Blast (its ink is the other team's)
+  // the Carp Shot
+  gun: {
+    tapMin: 0.15, chargeTime: 1.2, cooldown: 0.25,
+    speed: [12.7, 22.4], lob: 25, gravity: 22,  // launch speed at charge 0 → 1; degrees over the aim; m/s²
+    muzzleUp: 1.4, muzzleFwd: 0.5,               // the carp's mouth above the feet / in front of the body
+    landPaint: [0.9, 1.5], swell: 0.45,
+    radius: [1.8, 3.4], dmg: [40, 90], edge: 25,            // partial charges (linear in c)
+    fullRadius: 4.0, fullDmg: 180, fullKillR: 2.4, fullEdge: 55,
+    paintK: 0.85,
+    kick: [2.5, 6.0], kickTau: 0.3, kickAir: 0.6,
+  },
+  // weirs, the Dragon Gate (triggers: radius, and feet within ±trigBand of the floor)
+  weirR: 1.8, gateR: 1.7, trigBand: 0.6, gateRise: 1.4, weirLower: 1.2, resetFly: 1.5,
+  // the Carp Field (§3.2): the reading; the carrier graph's extra edges; the host's continuity clamp (§3.4)
+  field: { n0R: 0.9, n0Dy: 0.5 },
+  hop: { riseMin: 1.25, riseMax: 1.8, flatMax: 1.2, head: 1.6 },   // a kid lands on up to ~1.8 m
+  gap: { flatMin: 1.2, flatMax: 3.0, upMax: 0.6, downMax: 3.4, airBelow: 1.0, walkMin: 6 },
+  // [b5-karp] slack 2.0 (the SPEC's 0.5): the reading itself steps by up to ~1–2 m where the own node changes between
+  // neighbours the nav graph doesn't join (SPEC §3.2's own sweep: 1 m worst, 2.08 m on kelpline) — 0.5 refused those
+  // honest steps (42 in one halyard match, each accepted 3–5 frames later); 2.0 still refuses every jump it exists for
+  // (a remote carrier's 4 m correction, a wall's far side). holeR: two own nodes this close with a clear waist line are
+  // a straight walk — the reading may drop by the graph's detour round a small nav hole at once (bazookarp.js _holeStep)
+  clamp: { vMax: 15.5, slack: 2.0, holeR: 3.0 },   // m/s (swim 9.44 + kick 6.0, rounded up); m; m
+  // the drop spot (§2.7)
+  rest: { clear: 2.3, padR: 9.7, weirR: 2.8, gateR: 2.7, band: 1.6, near: 4, check: 0.5 },
+  // the carrier's HUD fuse (§7.2): snap forward when > fwd s long; give time back at most back s per second
+  fuseSync: { fwd: 0.1, back: 0.2 },
+  gauge: 3,                   // passive special points / s (the user's 3p)
+  // overtime (the user's rules; see §2.1 S38 / S39): strict "less than"; the pick-up window pauses while untouchable
+  otDropWindow: 15, otPlantWindow: 5, otPick: 10, overtimeMax: 300,
+};
+// [b5-karp] battle modes under construction (the stages' `wip` flag, for modes): in no player-facing mode list — the
+// offline mode screen, the stage select's mode chip, the online lobby's mode picker, a room's mode setting, ?autostart's
+// mode — yet the harness still starts one by name (api.startMatch / MODE=bazookarp). The page option ?wipmodes (harness:
+// WIPMODES=1) can expose a future unplayable mode while it remains in this list.
+export const WIP_MODES = [];
+export const SHOW_WIP_MODES = typeof location !== 'undefined' && new URLSearchParams(location.search).has('wipmodes');
+export const modeListed = (id) => !WIP_MODES.includes(id) || SHOW_WIP_MODES;
+
 export const DIFFICULTY = {
   // aimOmega / aimTurn: bot aim spring stiffness (rad/s) and turn-rate cap (rad/s) — see bots.js
   easy:   { id: 'easy',   name: 'Chill',  reaction: 0.55, aimError: 0.11, fireDiscipline: 0.55, awareness: 16, aimOmega: 9,  aimTurn: 7 },
@@ -703,10 +810,10 @@ export const MAPS = [
   { id: 'calamari', name: 'Calamari County', blurb: 'Callie and Marie\'s snowy home village: fight over the little station, up its footbridges and down the lanes to the harbour.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
   { id: 'spirhalite', name: 'Spirhalite Islands', blurb: 'An S-shaped chain of islets risen from the sea: hold the sandbar under the Great Arch, cross the lagoons or loop round by the causeway.', theme: 'golden', times: { day: 'golden', dusk: 'sunset' } },
   { id: 'treehills', name: 'Eco-Forest Treehills', blurb: 'Alterna\'s tiered forest biome under a simulated sky: grow your team\'s hedges from the sprout pods and hold the meadow plaza.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
-  // [b5-stages] batch 5's stages, under construction (wip: in no player's stage list until the lead removes the flag)
-  { id: 'bluestone', name: 'Bluestone Junction', blurb: 'Under the station clocks, Commander Tartar is winding the city forward: the streets jump from the 1880s to today to the 3000s, opening new routes and raising new ground as the match goes on.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, wip: true },
-  { id: 'aquarium', name: 'Gulper Aquarium', blurb: 'A 1936 aquarium on an islet in the bay: fight round the Great Tank and ride the clear Tubeway pipes from one side to the other.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, wip: true },
-  { id: 'caldera', name: 'Highmark Foundry', blurb: 'A foundry inside a breathing volcano. Every surge drowns the low floors, floats the Pumice Race and heaves the Organ Pipes up. Mind the high mark.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, wip: true },
+  // [b5-int4] playable but unfinished content stays in every picker with the public beta badge.
+  { id: 'bluestone', name: 'Bluestone Junction', blurb: 'Under the station clocks, Commander Tartar is winding the city forward: the streets jump from the 1880s to today to the 3000s, opening new routes and raising new ground as the match goes on.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, beta: true },
+  { id: 'aquarium', name: 'Gulper Aquarium', blurb: 'A 1936 aquarium on an islet in the bay: fight round the Great Tank and ride the clear Tubeway pipes from one side to the other.', theme: 'day', times: { day: 'day', dusk: 'sunset' } },
+  { id: 'caldera', name: 'Highmark Foundry', blurb: 'A foundry inside a breathing volcano. Every surge drowns the low floors, floats the Pumice Race and heaves the Organ Pipes up. Mind the high mark.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, beta: true },
   // (src/world/stages/cargo, ported from PR #8's rebuilt Kelpline) — online only, humans only, never a Boss Battle
   { id: 'cargo', name: 'Cargo Terminal', blurb: 'A container terminal at shift change: a gantry crane straddles the pier between two moored box ships.', theme: 'day', times: { day: 'day', dusk: 'sunset' }, onlineOnly: true, noBots: true, noBoss: true },
 ];
@@ -715,7 +822,8 @@ export const MAPS = [
 //   noBots      humans only: "fill with bots" is forced off, a match needs 2+ players with one on each side, and a player
 //               who leaves mid-match is removed instead of handed to a bot; the menu backdrop runs without bots too
 //   noBoss      never a Boss Battle stage (a boss room switches away from it)
-//   wip         [b5-stages] unfinished (a stage under construction): in no player-facing stage list — the offline stage
+//   beta        [b5-int4] playable but unfinished: visible in all lists with a PUBLIC BETA badge
+//   wip         unfinished (a stage not playable): in no player-facing stage list — the offline stage
 //               select (Turf War, Zone Control, Tower Command, Boss Battle), the online lobby's stage picker, Random (the
 //               lobby's roll, the Practice stage swap, Practice's new stage), the stage the game boots on (the menu
 //               backdrop) and the room it opens — yet it still loads by id (api.startMatch: the botlab harness, MAP=<id>),
@@ -776,6 +884,7 @@ export const PROGRESSION = {
   // zone counts extra, and a knockout win pays a flat bonus — a typical match lands close to a Turf War's XP
   zones: { turfScale: 0.6, xpPerZoneTurfPoint: 1.0, xpKnockout: 300 },
   tower: { turfScale: 0.6, xpPerRideSecond: 6, xpKnockout: 300 },   // Tower Command: per second riding the tower
+  bazookarp: { turfScale: 0.6, xpPerCarryM: 3, xpPerPop: 60, xpKnockout: 300 },   // [b5-karp] per metre carried, per shell burst
 };
 
 // ---- Settings defaults (persisted in localStorage 'inkwave.settings') ----
@@ -797,7 +906,7 @@ export const DEFAULT_SETTINGS = {
   colorblind: false,
   minimap: true,
   matchLength: 180,
-  lastMode: 'turf',         // battle mode last picked on the stage select: 'turf' | 'zones' | 'tower' | 'boss'
+  lastMode: 'turf',         // battle mode last picked on the stage select: 'turf' | 'zones' | 'tower' | 'boss' ([b5-karp] | 'bazookarp' once listed)
   difficulty: 'normal',
   rumble: 1.0,              // gamepad vibration 0..1 (only while the pad is the last-used device)
   aimAssist: 1.0,           // gamepad aim assist 0..1

@@ -27,6 +27,7 @@ import { Physics, Hit } from '../physics.js';
 import { THROWN } from '../bots.js';
 import { SUB_ICONS } from '../../ui/ui-icons.js';
 import { SFX } from '../../audio/audio.js';
+import { karpShellAvoid } from '../botsKarp.js';   // [b5-karp-bots] (a Bazookarp match: its route goes round the shell)
 
 const { Parts, C, M, at, screw, decal, squidShape, wrapLathe, profR, orient } = GEO_KIT;
 const V3 = THREE.Vector3;
@@ -345,7 +346,7 @@ function fly(it, dt) {
     it.pos.copy(h.point).addScaledVector(n, 0.15);
     const vn = it.vel.dot(n);
     it.vel.addScaledVector(n, -vn * 1.45).multiplyScalar(0.55);
-  }
+  } else G.objTargets?.bounce(_v, it.pos, it.vel, 0.15, 1.45);   // [b5-karp] off the Roe Shell (never into it)
   if (it.pos.y < PLAYER.waterY - 1.8 || G.match?.stage?.sink(it.pos, 'waddle')) { it.why = 'sea'; plop(it); return; }   // [b5-stagehooks]
   it.m.outer.position.copy(it.pos).setY(it.pos.y - MID * it.vs);   // (the drawn middle on the flight path)
   it.m.tilt.rotation.x += it.spin.x * dt; it.m.tilt.rotation.z += it.spin.z * dt;
@@ -416,7 +417,7 @@ function repath(it) {
   if (!nav || !T) return;
   const a = nav.nearest(it.pos, 0.8), b = nav.nearest(T.pos, 1.5);
   if (a < 0 || b < 0 || a === b) return;
-  const p = nav.path(a, b, it.team, 2500, true);   // no climb edges: it can't swim up walls
+  const p = nav.path(a, b, it.team, 2500, true, karpShellAvoid());   // no climb edges: it can't swim up walls ([b5-karp-bots] nor through the Roe Shell)
   if (p && p.length > 1) { it.path = p; it.pi = 1; }
 }
 // where to head: the foe itself when close on the same level (or with no route), else the next node on the route
@@ -514,6 +515,9 @@ function stepWalk(it, dt, spd) {
   let mx = hx * step, mz = hz * step;
   _v.copy(it.pos); _v.y += 0.42;
   const w = G.physics.raycast(_v, _v2.set(hx, 0, hz), step + 0.2, _hit);
+  // [b5-karp] the Roe Shell is a wall to it: it slides round it (pressed into it, the stuck rule sets it off there)
+  const kn = w.hit && Math.abs(w.normal.y) < 0.5 ? null : G.objTargets?.meet(_v, _c.copy(_v).addScaledVector(_v2, step + 0.2), 0.2)?.normal;
+  if (kn) { const l = Math.hypot(kn.x, kn.z) || 1, nx = kn.x / l, nz = kn.z / l, dn = mx * nx + mz * nz; if (dn < 0) { mx -= dn * nx; mz -= dn * nz; } }
   if (w.hit && Math.abs(w.normal.y) < 0.5) {
     const n = w.normal, dn = mx * n.x + mz * n.z;
     mx -= dn * n.x; mz -= dn * n.z;
@@ -641,6 +645,7 @@ function blast(it) {
   }
   G.subs?.damageArea(c, s.radius, 60, team, a);   // [b5-deploy] (by)
   G.boss?.splash(a, c, s.radius, s.damageMax, s.damageMin, 'waddle');   // Boss Battle
+  G.objTargets?.splash(a, c, s.radius, s.damageMax, s.damageMin, 'waddle', { special: !!it.sp });   // [b5-karp] the Roe Shell
   it.state = 'dead';
 }
 // popped by enemy fire / an enemy blast: harmless
@@ -731,7 +736,9 @@ function threatOf(it) {
 }
 
 // ================================================================================================= registration
+let warmSet = null;   // [b5-beta1] a walker and its sensing circle as stand-ins (registry.js warmKits)
 SUB_KITS.waddle = {
+  warm() { return warmSet || (warmSet = [makeMesh(0, subViewScale('waddle')).outer, makeRing(G.teamColors[0])]); },
   use,
   ghost,
   netHurt(gid, dmg) { const it = items.find((x) => !x.ghost && x.gid === gid && x.state !== 'dead'); if (it) hurt(it, dmg); },

@@ -1,0 +1,2 @@
+JOB-8 (caldera) @ 25329fb1 — Mac mini b5-runner, 2026-10-24 07:43–07:57, exit 0. Short summary.
+- EVERYTHING FULL: lava-bots 7/7 ×2, lava.js 59/59 ×3, Zone Control 7/7 ×2, Turf War 7/7.

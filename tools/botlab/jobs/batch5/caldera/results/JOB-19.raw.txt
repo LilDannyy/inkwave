@@ -1,0 +1,203 @@
+JOB-19 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 02:40:52
+branch botlab-b5-caldera, ran at a51c7408, exit code 0, wall time 67min
+(a written-up JOB-19.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== net-lava alone
+== rule 47 in parts
+== lava.js x3, lava-bots
+== review 9's land9-rise alone
+== SUMMARY
+### bots
+RESULT 7/7
+### land9-rise
+RESULT 61/61
+### lavajs-1
+RESULT 60/60
+### lavajs-2
+RESULT 60/60
+### lavajs-3
+RESULT 60/60
+### net-lava
+RESULT 13/13
+### r47acd
+RESULT 2/2
+## rule 47 PASS
+### r47b1
+RESULT 2/2
+## rule 47 PASS
+### r47b2
+RESULT 2/2
+## rule 47 PASS
+### r47b3
+RESULT 2/2
+## rule 47 PASS
+### r47e
+RESULT 2/2
+## rule 47 PASS
+
+## last 15 lines of job.log
+### r47acd
+RESULT 2/2
+## rule 47 PASS
+### r47b1
+RESULT 2/2
+## rule 47 PASS
+### r47b2
+RESULT 2/2
+## rule 47 PASS
+### r47b3
+RESULT 2/2
+## rule 47 PASS
+### r47e
+RESULT 2/2
+## rule 47 PASS
+
+## bots.txt
+### bots
+RESULT 7/7
+console errors: none
+PASS the gate: 0 escape deaths, ≤ 1 fight death per 360 bot-trials (360 here)  {"botTrials":360,"esc":0,"fight":0,"list":[]}
+
+## land9-rise.txt
+### land9-rise
+RESULT 61/61
+console errors: none
+PASS landings rise15:hop: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":114,"held":114,"rescued":114,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":5.05,"maxRescueUp":0,"maxRescueDown":-0.2,"maxGain":25.37}
+PASS landings rise15:run: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":146,"held":146,"rescued":146,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":4.67,"maxRescueUp":0,"maxRescueDown":-0.9,"maxGain":1.17}
+PASS landings rise15:swim: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":206,"held":206,"rescued":206,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":5.34,"maxRescueUp":0.1,"maxRescueDown":-0.9,"maxGain":9.9
+PASS landings rise15:mitts: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":240,"held":240,"rescued":240,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":5.6,"maxRescueUp":0,"maxRescueDown":-0.9,"maxGain":33.37
+PASS landings rise35:hop: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":0,"held":0,"rescued":0,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":0,"maxRescueUp":0,"maxRescueDown":0,"maxGain":-1}
+PASS landings rise35:run: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":146,"held":146,"rescued":146,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":4.67,"maxRescueUp":0,"maxRescueDown":-0.9,"maxGain":1.17}
+PASS landings rise35:swim: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":214,"held":214,"rescued":214,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":5.38,"maxRescueUp":0.1,"maxRescueDown":-0.9,"maxGain":23.
+PASS landings rise35:mitts: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":240,"held":240,"rescued":240,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":5.55,"maxRescueUp":0,"maxRescueDown":-0.9,"maxGain":26.2
+PASS landings rise55:hop: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":0,"held":0,"rescued":0,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":0,"maxRescueUp":0,"maxRescueDown":0,"maxGain":-1}
+PASS landings rise55:run: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":146,"held":146,"rescued":146,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":4.67,"maxRescueUp":0,"maxRescueDown":-0.9,"maxGain":1.17}
+PASS landings rise55:swim: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":206,"held":206,"rescued":206,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":5.34,"maxRescueUp":0.1,"maxRescueDown":-0.9,"maxGain":9.9
+PASS landings rise55:mitts: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":240,"held":240,"rescued":240,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":5.54,"maxRescueUp":0,"maxRescueDown":-0.9,"maxGain":24.5
+PASS landings rise75:hop: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":0,"held":0,"rescued":0,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":0,"maxRescueUp":0,"maxRescueDown":0,"maxGain":-1}
+PASS landings rise75:run: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":146,"held":146,"rescued":146,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":4.67,"maxRescueUp":0,"maxRescueDown":-0.9,"maxGain":1.17}
+PASS landings rise75:swim: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":206,"held":206,"rescued":206,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":5.34,"maxRescueUp":0.1,"maxRescueDown":-0.9,"maxGain":9.9
+PASS landings rise75:mitts: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":240,"held":240,"rescued":240,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":5.54,"maxRescueUp":0,"maxRescueDown":-0.9,"maxGain":24.5
+PASS landings rise92:hop: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":0,"held":0,"rescued":0,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":0,"maxRescueUp":0,"maxRescueDown":0,"maxGain":-1}
+PASS landings rise92:run: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":156,"held":156,"rescued":156,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":4.67,"maxRescueUp":0,"maxRescueDown":-0.9,"maxGain":6.01}
+PASS landings rise92:swim: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":218,"held":218,"rescued":218,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":5.34,"maxRescueUp":0.1,"maxRescueDown":-0.9,"maxGain":9.9
+PASS landings rise92:mitts: 0 deaths, 0 perches, 0 flings, rescue ≤ 6 m  {"touched":240,"held":240,"rescued":240,"slidOff":0,"died":0,"diedAfterRescue":0,"perched3":0,"deadBy6":0,"flung":0,"maxRescueD":5.61,"maxRescueUp":0,"maxRescueDown":-0.9,"maxGain":24.5
+
+## lavajs-1.txt
+### lavajs-1
+RESULT 60/60
+console errors: none
+PASS G9 a hold left another way than the rescue (a super jump, the Slam, put off the top) ends there: roofHeld cleared, no rescue after, the personal line not stuck on NO FOOTING → rescued 5 s on, GET OFF THE LOW GROUND on a drowning floor in the next warning (review 9's probe-held9 A; hornito, mo
+## F8c PASS {"n":76,"weapon":"blade","died":0,"notUp":0,"slowest":1.3,"bad":[]}
+
+## lavajs-2.txt
+### lavajs-2
+RESULT 60/60
+console errors: none
+PASS G9 a hold left another way than the rescue (a super jump, the Slam, put off the top) ends there: roofHeld cleared, no rescue after, the personal line not stuck on NO FOOTING → rescued 5 s on, GET OFF THE LOW GROUND on a drowning floor in the next warning (review 9's probe-held9 A; hornito, mo
+## F8c PASS {"n":76,"weapon":"bucket","died":0,"notUp":0,"slowest":1.267,"bad":[]}
+
+## lavajs-3.txt
+### lavajs-3
+RESULT 60/60
+console errors: none
+PASS G9 a hold left another way than the rescue (a super jump, the Slam, put off the top) ends there: roofHeld cleared, no rescue after, the personal line not stuck on NO FOOTING → rescued 5 s on, GET OFF THE LOW GROUND on a drowning floor in the next warning (review 9's probe-held9 A; hornito, mo
+## F8c PASS {"n":76,"weapon":"bow","died":0,"notUp":0,"slowest":1.267,"bad":[]}
+
+## netlava.txt
+### net-lava
+(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.
+PASS a room on Highmark Foundry (Turf War 1:30, 4 bots)  {"map":"caldera","duration":90,"mode":"turf"}
+PASS both screens run the lava on the same schedule (turf:90)  {"a":{"t":0.048,"y":-0.6,"phase":"low","stones":"00000000000000","host":true,"key":"turf:90"},"b":{"t":0.033,"y":-0.6,"phase":"low","stones":"00000000000000","host":false,"key":"turf:90"}}
+PASS the guest plants a Lurk Mine and a Hop Beacon on the shelf before the rise; the host sees them (ghosts)  {"dev":{"t":0.63,"mine":[300001],"beacon":[300002]},"ghosts0":[300001,300002]}
+PASS the level agrees on both screens every 0.5 s through a rise and a fall (± 0.1 m)  {"n":140,"worst":{"d":0.003400000000000014,"at":[36.382,0.3828,36.4,0.3862]}}
+PASS the guest left standing on the shelf splats by lava (its own screen judges it); the host's feed shows cause lava, at the rise's deadly moment (30 + 3.8 s ± 0.6)  {"lavaB":[3,"lava",33.85],"deaths":[[3,"lava",33.85],[1,"jetpack",41.5],[2,"blast",49.6],[1,"blast",53.4]]}
+PASS …its devices the lava covered are gone on both screens (the owner's sweep and its end records)  {"devAfter":{"host":[],"guest":[]}}
+PASS at the results screen the lava cells agree between the two screens at least as well as the same run's other cells do (splats across the waterline through a rise and a fall: the painter's stage time, field 15)  {"lava":{"n":74242,"differ":53,"ratio":0.99929,"inked":[2233,2204]},"other":{"n":349401,"differ":466,"ratio":0.99867,"inked":[52041,52043]},"painted":168,"diffWhere":{"n":53,"minY":-0.5
+PASS time-up at LOW (the final ebb); the same result on both screens  {"res":[1,1],"fin":{"y":-0.6,"phase":"low"}}
+PASS Practice runs its own loop (practice: rise at 20) between the stage's own levels  {"t":0.167,"y":-0.6,"phase":"low","stones":"00000000000000","host":true,"key":"practice"}
+PASS a late joiner at HIGH: its level and its stones agree with the host's (± 0.1 m) once its clock settles  {"host":{"t":41.965,"y":0.8,"phase":"high","stones":"11111111111111","host":true,"key":"practice"},"joiner":{"t":41.907,"y":0.8,"phase":"high","stones":"11111111111111","host":false,"key":"practice"},"skew":[0]}
+PASS …and its paint (the imported grid) equals the host's, lava cells and all; the live guest's lava cells equal the host's too (the host painted the island's lake face across the waterline at LOW — burned by the rise — and at HIGH), and its other cells agree to a ratio ≥ 0.999  {"lavaCells":{"joiner":{"n":74242,"differ":0,"inked":[67,67]},"guest":{"n":74242,"differ":0,"inked":[67,67]}},"g
+PASS a timed match: the host leaves mid-rise (35 s) — the new host's fall starts at 55 ± 0.4 s on its screen, and the stones turn deadly (the ledges dry) at 61.2 ± 0.4 s on both remaining screens  {"before":{"t":35.218,"y":0.1457,"phase":"rise","stones":"11111111111111","host":false,"key":"turf:90"},"fall":{"B":55.01,"C":55.01},"stonesDeadly":{"B":61.22,"C":61.23},"after":{"B":{"t":63.493,"y":
+PASS …and both remaining screens show the same result at time-up  {"res3":[0,0]}
+RESULT 13/13
+c0 console: none
+c1 console: none
+c2 console: none
+
+## r47acd.txt
+### r47acd
+RESULT 2/2
+console errors: none
+## rule 47 PASS
+##  a low {"byMode":{"idle":[2166,0],"save":[2166,0]},"trials":4332,"touched":4332,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##  a high {"byMode":{"idle":[2500,0],"save":[2500,0]},"trials":5000,"touched":5000,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##  c holders [["mould-stack",852,["high","r60","r90","f50"]],["ladle-stand",853,["high","r30","r60","r90","f50"]],["slump-hornito",862,["high","r30","r60","r90","f50"]],["slump-hornito",863,["high","r30","r60","r90","f50"]],["caldera-wall",945,["high","r60","r90","f50"]],["caldera-wall",946,["high","r60","r90","
+##  c mitts {"trials":1200,"touched":1077,"died":0,"flung":0,"perched":0,"held":831,"rescued":831,"rescueFar":0,"rescueMaxH":5.77,"rescueMaxM":5.77}
+##    farthest {"part":"c","how":"mitts","level":"high","on":"slump-hornito","from":[24.5,1.5,1.5],"c":0.75,"pitch":0.4,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  c run {"trials":168,"touched":168,"died":0,"flung":0,"perched":0,"held":168,"rescued":168,"rescueFar":0,"rescueMaxH":4.67,"rescueMaxM":4.67}
+##    farthest {"part":"c","how":"run","level":"high","on":"slump-hornito","from":[-26.5,4.2,-18.5],"ru":2.6,"block":"slump-hornito#862","to":[-23.5,1.1,-15.5]}
+##  c swim {"trials":318,"touched":318,"died":0,"flung":0,"perched":0,"held":262,"rescued":262,"rescueFar":0,"rescueMaxH":5.34,"rescueMaxM":5.34}
+##    farthest {"part":"c","how":"swim","level":"high","on":"slump-hornito","from":[-23.5,1.2,-16.5],"ru":2.6,"block":"slump-hornito#862","to":[-23.5,1.1,-15.5]}
+##  c walk {"trials":0,"touched":0,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##  c rise {"trials":616,"touched":616,"died":0,"flung":0,"perched":0,"held":616,"rescued":616,"rescueFar":0,"rescueMaxH":5.06,"rescueMaxM":5.07}
+##    farthest {"part":"c","how":"rise-hop","on":"slump-hornito","hopAt":38.65,"td":38.8,"from":[27.16,0,10.45],"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  d low {"trials":14143,"touched":14143,"died":0,"flung":0,"perched":0,"held":59,"rescued":59,"rescueFar":0,"rescueMaxH":2.55,"rescueMaxM":4.02}
+##    farthest {"part":"d","level":"low","on":"caldera-wall","from":[27.5,2.4,-24.5],"c":0.7,"pitch":0.3,"block":"caldera-wall#1803","to":[23.5,2.6,-27.5]}
+##  d high {"trials":14412,"touched":14412,"died":0,"flung":0,"perched":0,"held":59,"rescued":59,"rescueFar":0,"rescueMaxH":2.55,"rescueMaxM":4.02}
+##    farthest {"part":"d","level":"high","on":"caldera-wall","from":[27.5,2.4,-24.5],"c":0.7,"pitch":0.3,"block":"caldera-wall#1803","to":[23.5,2.6,-27.5]}
+##  total {"touched":40066,"died":0,"flung":0,"perched":0,"held":1995,"rescued":1995,"rescueFar":0,"rescueMaxM":5.77,"rescueMaxH":5.77,"rescueWorst":{"m":5.77,"at":{"part":"c","how":"mitts","level":"high","on":"slump-hornito","from":[24.5,1.5,1.5],"c":0.75,"pitch":0.4,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}},"relaunched":0,"unreachRescue":{"n":0,"over6":0,"maxH":0},"engine":{"rescues":2
+
+## r47b1.txt
+### r47b1
+RESULT 2/2
+console errors: none
+## rule 47 PASS
+##  b low {"weapon":"spinner","roofBlocks":112,"reachBy":{"hop":102,"climb":0,"mitts":10},"unreachable":0,"trials":12116,"touched":11610,"died":0,"flung":0,"perched":0,"held":2,"rescued":2,"rescueFar":0,"rescueMaxH":1.73,"rescueMaxM":8.09}
+##    farthest {"part":"b","level":"low","at":[-29.05,7.9,-5.32],"mode":"drift","h":315,"unreach":false,"block":"caldera-wall#952","to":[-27.5,0,-4.5]}
+##  b high {"weapon":"spinner","roofBlocks":150,"reachBy":{"hop":122,"climb":0,"mitts":16},"unreachable":12,"trials":16246,"touched":15390,"died":0,"flung":0,"perched":0,"held":2018,"rescued":2018,"rescueFar":0,"rescueMaxH":5.8,"rescueMaxM":8.56,"unreachRescue":{"n":624,"over6":290,"maxH":8.2,"maxAt":["caldera-wall#1775",[29.28,7.9,9.7],[24.5,1.2,16.5]]}}
+##    farthest {"part":"b","level":"high","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  total {"touched":27000,"died":0,"flung":0,"perched":0,"held":2020,"rescued":2020,"rescueFar":0,"rescueMaxM":8.56,"rescueMaxH":5.8,"rescueWorst":{"m":5.8,"at":{"part":"b","level":"high","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}},"relaunched":0,"unreachRescue":{"n":624,"over6":290,"maxH":8.2},"engine":{"rescues":2020,"rescueF
+
+## r47b2.txt
+### r47b2
+RESULT 2/2
+console errors: none
+## rule 47 PASS
+##  b r30 {"weapon":"twins","roofBlocks":112,"reachBy":{"hop":102,"climb":0,"mitts":10},"unreachable":0,"trials":12116,"touched":11086,"died":0,"flung":0,"perched":0,"held":940,"rescued":940,"rescueFar":0,"rescueMaxH":5.8,"rescueMaxM":7.6}
+##    farthest {"part":"b","level":"r30","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  b r60 {"weapon":"twins","roofBlocks":150,"reachBy":{"hop":122,"climb":0,"mitts":16},"unreachable":12,"trials":16246,"touched":14683,"died":0,"flung":0,"perched":0,"held":2058,"rescued":2058,"rescueFar":0,"rescueMaxH":5.99,"rescueMaxM":8.56,"unreachRescue":{"n":624,"over6":290,"maxH":8.2,"maxAt":["caldera-wall#1775",[29.28,7.9,9.7],[24.5,1.2,16.5]]}}
+##    farthest {"part":"b","level":"r60","at":[-19.53,1.89,-7.09],"mode":"drift","h":180,"unreach":false,"block":"lava:race3:1#1810","to":[-24.5,1.5,-2.5]}
+##  total {"touched":25769,"died":0,"flung":0,"perched":0,"held":2998,"rescued":2998,"rescueFar":0,"rescueMaxM":8.56,"rescueMaxH":5.99,"rescueWorst":{"m":5.99,"at":{"part":"b","level":"r60","at":[-19.53,1.89,-7.09],"mode":"drift","h":180,"unreach":false,"block":"lava:race3:1#1810","to":[-24.5,1.5,-2.5]}},"relaunched":0,"unreachRescue":{"n":624,"over6":290,"maxH":8.2},"engine":{"rescues":2998,"resc
+
+## r47b3.txt
+### r47b3
+RESULT 2/2
+console errors: none
+WATCHDOG
+## rule 47 PASS
+##  b r90 {"weapon":"twins","roofBlocks":150,"reachBy":{"hop":122,"climb":0,"mitts":16},"unreachable":12,"trials":16246,"touched":14730,"died":0,"flung":0,"perched":0,"held":2018,"rescued":2018,"rescueFar":0,"rescueMaxH":5.8,"rescueMaxM":8.56,"unreachRescue":{"n":624,"over6":290,"maxH":8.2,"maxAt":["caldera-wall#1775",[29.28,7.9,9.7],[24.5,1.2,16.5]]}}
+##    farthest {"part":"b","level":"r90","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  b f50 {"weapon":"twins","roofBlocks":150,"reachBy":{"hop":122,"climb":0,"mitts":16},"unreachable":12,"trials":16246,"touched":15390,"died":0,"flung":0,"perched":0,"held":2174,"rescued":1930,"rescueFar":0,"rescueMaxH":5.8,"rescueMaxM":8.56,"unreachRescue":{"n":380,"over6":0,"maxH":5.98,"maxAt":["caldera-wall#946",[-28.32,7.9,-12.85],[-25.5,1.2,-17.5]]}}
+##    farthest {"part":"b","level":"f50","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  total {"touched":30120,"died":0,"flung":0,"perched":0,"held":4192,"rescued":3948,"rescueFar":0,"rescueMaxM":8.56,"rescueMaxH":5.8,"rescueWorst":{"m":5.8,"at":{"part":"b","level":"r90","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}},"relaunched":244,"unreachRescue":{"n":1004,"over6":290,"maxH":8.2},"engine":{"rescues":3948,"rescu
+
+## r47e.txt
+### r47e
+RESULT 2/2
+console errors: none
+## rule 47 PASS
+##  e low {"tops":44,"feet":295,"byMode":{"idle":{"tries":295,"reached":258,"died":0},"push":{"tries":295,"reached":258,"died":6},"back":{"tries":295,"reached":258,"died":0},"left":{"tries":295,"reached":258,"died":2},"right":{"tries":295,"reached":258,"died":5}},"trials":516,"touched":516,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":774,"died":13,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":1,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"low","on":"gauge-machine-house","id":711,"mode":"right","face":[0,-1],"foot":[-11.7,2.4,2],"block":"gauge-machine-house#711","died":true,"flung":fals
+##  e high {"tops":46,"feet":267,"byMode":{"idle":{"tries":267,"reached":226,"died":0},"push":{"tries":267,"reached":226,"died":6},"back":{"tries":267,"reached":226,"died":0},"left":{"tries":267,"reached":226,"died":3},"right":{"tries":267,"reached":226,"died":5}},"trials":452,"touched":452,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":678,"died":14,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":2,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"high","on":"gauge-machine-house","id":711,"mode":"left","face":[0,1],"foot":[-11.7,1.4,7.2],"block":"gauge-machine-house#711","died":true,"flung":fal
+##  e r30 {"tops":38,"feet":247,"byMode":{"idle":{"tries":247,"reached":210,"died":0},"push":{"tries":247,"reached":210,"died":6},"back":{"tries":247,"reached":210,"died":0},"left":{"tries":247,"reached":210,"died":2},"right":{"tries":247,"reached":210,"died":5}},"trials":420,"touched":420,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":630,"died":13,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":1,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"r30","on":"gauge-machine-house","id":711,"mode":"right","face":[0,-1],"foot":[-11.7,2.4,2],"block":"gauge-machine-house#711","died":true,"flung":fals
+##  e r60 {"tops":46,"feet":267,"byMode":{"idle":{"tries":267,"reached":226,"died":0},"push":{"tries":267,"reached":226,"died":6},"back":{"tries":267,"reached":226,"died":0},"left":{"tries":267,"reached":226,"died":3},"right":{"tries":267,"reached":226,"died":5}},"trials":452,"touched":452,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":678,"died":14,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":2,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"r60","on":"gauge-machine-house","id":711,"mode":"left","face":[0,1],"foot":[-11.7,1.4,7.2],"block":"gauge-machine-house#711","died":true,"flung":fals
+##  e r90 {"tops":46,"feet":267,"byMode":{"idle":{"tries":267,"reached":226,"died":0},"push":{"tries":267,"reached":226,"died":6},"back":{"tries":267,"reached":226,"died":0},"left":{"tries":267,"reached":226,"died":3},"right":{"tries":267,"reached":226,"died":5}},"trials":452,"touched":452,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":678,"died":14,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":2,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"r90","on":"gauge-machine-house","id":711,"mode":"left","face":[0,1],"foot":[-11.7,1.4,7.2],"block":"gauge-machine-house#711","died":true,"flung":fals
+##  e f50 {"tops":46,"feet":267,"byMode":{"idle":{"tries":267,"reached":226,"died":0},"push":{"tries":267,"reached":226,"died":6},"back":{"tries":267,"reached":226,"died":0},"left":{"tries":267,"reached":226,"died":3},"right":{"tries":267,"reached":226,"died":5}},"trials":452,"touched":452,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":678,"died":14,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":2,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"f50","on":"gauge-machine-house","id":711,"mode":"left","face":[0,1],"foot":[-11.7,1.4,7.2],"block":"gauge-machine-house#711","died":true,"flung":fals
+##  total {"touched":2744,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxM":0,"rescueMaxH":0,"rescueWorst":null,"relaunched":0,"unreachRescue":{"n":0,"over6":0,"maxH":0},"engine":{"rescues":0,"rescueFar":0}}

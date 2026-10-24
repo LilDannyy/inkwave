@@ -1,9 +1,11 @@
 // Match: turf-war rules, lifecycle (intro → countdown → play → time's up → judge → results), team setup.
 import * as THREE from 'three';
 import { G, emit, on, clamp } from '../core/ctx.js';
-import { MATCH, PLAYER, WEAPON_ORDER, SUB_ORDER, SPECIAL_ORDER, BOT_NAMES, TEAM_NAMES, ZONES, TOWER } from '../config.js';
+import { MATCH, PLAYER, WEAPON_ORDER, SUB_ORDER, SPECIAL_ORDER, BOT_NAMES, TEAM_NAMES, ZONES, TOWER, BAZOOKARP } from '../config.js';
 import { ZoneControl } from './zones.js';
 import { TowerCommand } from './tower.js';
+import { Bazookarp } from './bazookarp.js';   // [b5-karp]
+import { LoopWire, NetWire } from './karpWire.js';   // [b5-karp]
 import { StageMovers } from './movers.js';
 import { StagePods } from './pods.js';
 import { StageRun } from './stageMods.js';   // [b5-stagehooks] stage modules (docs/STAGE-MODS.md)
@@ -24,10 +26,11 @@ export class Match {
     this.practice = !!opts.practice;
     // turf | zones (Zone Control) | tower (Tower Command) | boss (one squad, team 0, vs HULLBREAKER); attract backdrops
     // and practice are turf
-    this.mode = this.attract || this.practice ? 'turf' : ['boss', 'zones', 'tower'].includes(opts.mode) ? opts.mode : 'turf';
-    this.duration = opts.duration || (this.mode === 'zones' ? ZONES.duration : this.mode === 'tower' ? TOWER.duration : this.mode === 'boss' ? BOSS_MODE.duration : MATCH.defaultDuration);
+    this.mode = this.attract || this.practice ? 'turf' : ['boss', 'zones', 'tower', 'bazookarp'].includes(opts.mode) ? opts.mode : 'turf';   // [b5-karp] bazookarp
+    this.duration = opts.duration || (this.mode === 'zones' ? ZONES.duration : this.mode === 'tower' ? TOWER.duration : this.mode === 'bazookarp' ? BAZOOKARP.duration : this.mode === 'boss' ? BOSS_MODE.duration : MATCH.defaultDuration);   // [b5-karp]
     this.zones = null;             // ZoneControl (Zone Control mode)
     this.tower = null;             // TowerCommand (Tower Command mode)
+    this.karp = null;              // [b5-karp] Bazookarp (src/game/bazookarp.js)
     this.time = this.duration;
     this.state = 'init';
     this.stateT = 0;
@@ -114,6 +117,7 @@ export class Match {
     if (this.mode === 'boss') { this.bossMode = new BossMode(this); this.boss = this.bossMode.boss; }
     this.movers = StageMovers.create(this);   // stage set pieces on a timetable (movers.js), when the stage has any
     this.pods = StagePods.create(this);       // sprout pods: growable cover (pods.js), when the stage has any
+    if (this.mode === 'bazookarp') this.karp = new Bazookarp(this, new LoopWire());   // [b5-karp] (after the movers / pods: its rest flags read their paths)
   }
 
   // Online: the host's roster — who owns which squidkid (players their own, the host the bots).
@@ -150,6 +154,7 @@ export class Match {
     if (this.mode === 'boss') { this.bossMode = new BossMode(this); this.boss = this.bossMode.boss; }
     this.movers = StageMovers.create(this);   // (a pure function of the synced match clock: nothing on the wire)
     this.pods = StagePods.create(this);       // (the host grows them: pods.js netEvent)
+    if (this.mode === 'bazookarp') this.karp = new Bazookarp(this, new NetWire(G.net?.match || G.netm));   // [b5-karp] the host runs the rules (bazookarp.js netEvent)
   }
 
   // Online Practice: someone joined the session (or the host's roster says so) — their squidkid drops in at its team's pad
@@ -182,6 +187,7 @@ export class Match {
   }
   // Tower Command likewise (knockout at a goal / overtime result)
   endTower(winner, reason) { this.endZones(winner, reason); }
+  endKarp(winner, reason) { this.endZones(winner, reason); }   // [b5-karp]
 
   start() {
     this.setState(this.attract || this.practice ? 'playing' : 'intro');
@@ -198,6 +204,7 @@ export class Match {
     this.pods?.dispose(); this.pods = null;
     this.bossMode?.dispose(); this.bossMode = null; this.boss = null;
     this.tower?.dispose(); this.tower = null;
+    this.karp?.dispose(); this.karp = null;   // [b5-karp]
     for (const a of this.actors) { G.scene.remove(a.character.root); a.weaponRunner.reset(); a.character.dispose?.(); }
     this.unsubs?.forEach((u) => u());
     G.actors = [];
@@ -245,6 +252,11 @@ export class Match {
           if (this.state !== 'playing') break;
           if (this.tower.overtime) break;
         }
+        if (this.karp) {   // [b5-karp]
+          this.karp.update(dt);
+          if (this.state !== 'playing') break;
+          if (this.karp.overtime) break;
+        }
         // [b5-eras] a follower a little ahead of the host gives the time back by running slow (0.5–0.9×), never by stepping
         // its clock back: the timer's seconds and the final countdown each come once, in order
         let tdt = dt;
@@ -258,7 +270,7 @@ export class Match {
         if (this.time <= 0) {
           this.time = 0;
           // Zone Control may go to overtime instead; online, the host calls time
-          const obj = this.zones || this.tower;
+          const obj = this.zones || this.tower || this.karp;   // [b5-karp]
           if (!this.follower && (!obj || obj.timeUp())) { if (this.state === 'playing') this.setState('finish'); }
         }
         break;
@@ -300,6 +312,7 @@ export class Match {
         b.pos.x += (dx / d) * push * kb; b.pos.z += (dz / d) * push * kb;
       }
     }
+    this.karp?.lateUpdate(dt);   // [b5-karp] the carrier's gauge guard: after the actors, specials and subs
   }
 
   updateController(dt) {
@@ -310,6 +323,14 @@ export class Match {
   }
 
   _judge() {
+    if (this.karp) {   // [b5-karp]
+      const Kp = this.karp, c = Kp.resultCoin();
+      this.result = { mode: 'bazookarp', coverage: G.paint.coverage(), winner: Kp.winner ?? Kp.winning(), reason: Kp.reason || 'time', counts: [...Kp.count],
+        best: Kp.bestM.map((b) => +b.toFixed(2)), len: [...Kp.L], overtime: Kp.overtime, ...(c !== undefined ? { coin: c } : {}) };
+      G.netm?.sendResult(this.result);
+      this.setState('judge');
+      return;
+    }
     if (this.tower) {
       const T = this.tower;
       this.result = { mode: 'tower', coverage: G.paint.coverage(), winner: T.winner ?? (Math.random() < 0.5 ? 0 : 1), reason: T.reason,
@@ -343,7 +364,7 @@ export class Match {
     return [0, 1].map((t) => ({
       color: G.teamHex[t],
       players: this.actors.filter((a) => a.team === t).map((a) => ({
-        name: a.name, weapon: a.weaponId, alive: a.alive, respawn: a.alive ? 0 : Math.max(0, a.respawnTimer), specialReady: a.specialReady(), isSelf: a.isLocal,
+        name: a.name, weapon: a.weaponId, alive: a.alive, respawn: a.alive ? 0 : Math.max(0, a.respawnTimer), specialReady: a.specialReady(), isSelf: a.isLocal, carrier: !!this.karp && a === this.karp.holder,   // [b5-karp]
       })),
     }));
   }

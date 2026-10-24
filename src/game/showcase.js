@@ -1611,11 +1611,17 @@ export class Showcase {
   _lobLoad(L) {
     import('./lobbySet.js').then(async (mod) => {
       if (this.lob !== L) return;
+      await this._lobMenuIdle(L);   // [b5-beta1]
+      if (this.lob !== L) return;
       const q = G.settings?.quality || 'high';
       const set = new mod.LobbySet(this.r, { quality: q, texlib: G.game?.texlib || null });
       L.set = set; L.quality = q;
       L.scene.add(set.root);
       await set.ready;
+      if (this.lob !== L) { set.dispose(); return; }
+      // [b5-beta1] a preload (main.js, at the menu) that a match overtook: the rest of the build — a squidkid, the decks, a
+      // compile of the whole set: 110–190 ms of script — waits for the menu instead of landing in the match's first frames
+      await this._lobMenuIdle(L);
       if (this.lob !== L) { set.dispose(); return; }
       this._lobDecks(L);
       this._lobColors();
@@ -1635,6 +1641,12 @@ export class Showcase {
     }).catch((e) => { console.error('[showcase] lobby set', e); L.failed = true; });
   }
 
+  // [b5-beta1] a lobby preload waits while a match is loading (the loading fade is up) or on (G.mode 'match'), unless the
+  // lobby is wanted meanwhile (shown): its set's build, environment bake and compile ran in the first match's frames
+  async _lobMenuIdle(L) {
+    const busy = () => G.mode === 'match' || +(G.game?.fadeEl?.style.opacity || 0) > 0.5;
+    while (L.preload && !L.wanted && this.lob === L && busy()) await new Promise((r) => setTimeout(r, 400));
+  }
   _lobEnv(L) {
     const S = L.set;
     L.scene.environment = (S && S.environment) || G.env?.envMap || null;
@@ -1685,7 +1697,7 @@ export class Showcase {
 
   /** Online hub (menus.js 'online'): your kid on the set's hub spot, framed right of the create / join cards. */
   showHub(style, color, weapon) {
-    const L = this._lobEnsure();
+    const L = this._lobEnsure(); L.wanted = true;   // [b5-beta1] (shown: a preload's wait for the menu ends)
     if (!color || !color.isColor) color = new THREE.Color(color || this.color);
     const look = style ? { ...style } : this._profileStyle();
     weapon = weapon || G.game?.profile?.weapon || 'shooter';
@@ -1721,7 +1733,7 @@ export class Showcase {
   /** opts.reduced: prefers-reduced-motion (no camera drift or glides). opts.quick is accepted for compatibility: coming
    *  back to a room whose line-up is parked here (locker, a match) always finds everyone already standing. */
   showLobby(players, colors, opts = {}) {
-    const L = this._lobEnsure();
+    const L = this._lobEnsure(); L.wanted = true;   // [b5-beta1]
     L.reduced = !!opts.reduced;
     if (this.mode !== 'lobby') {
       this._enterSetMode('lobby');

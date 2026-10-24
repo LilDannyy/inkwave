@@ -196,7 +196,12 @@ export class Physics {
   // Resolve the character BODY: a vertical capsule whose bottom is lifted `lift` above the feet (everything below the
   // lift is the feet's job — step-ups, curbs). `horizontal` (grounded) turns push-outs into horizontal pushes so walls
   // never shove a grounded character up or down (no fighting with the ground snap). Mutates pos, fills contacts `c`.
-  collideBody(pos, radius, lift, height, c, horizontal = false, skipGrates = false, iterations = 3) {
+  // [b5-int3] fromY (actor.js _resolve: the feet's height the frame before): a body found INSIDE a block is never put out
+  // through its top when that top stands more than a step (lift) over its feet, now and the frame before — its other
+  // faces still do (down, or out the side). A kid caught inside a thin slab or rail went up through it onto its top: a
+  // swim jump's squid turned kid by the dash under lockgate's loading-bay canopy, a swim jump + dash into crossmarket's
+  // veranda rail (dash-reach.js: 2.71 m and 2.42 m over the start, a running hop's best 1.90)
+  collideBody(pos, radius, lift, height, c, horizontal = false, skipGrates = false, iterations = 3, fromY = null) {
     c.ground = false; c.wall = false; c.ceiling = false;
     c.groundNormal.set(0, 1, 0); c.wallNormal.set(0, 0, 0); c.groundBlock = -1; c.wallBlock = -1;
     const blocks = this.level.blocks;
@@ -231,8 +236,14 @@ export class Physics {
           let bestPen = Infinity;
           for (let k = 0; k < 3; k++) {
             const ax = b.axes[k], h = k === 0 ? b.half.x : k === 1 ? b.half.y : b.half.z;
-            const d = _o.dot(ax), pk = h - Math.abs(d);
-            if (pk < bestPen) { bestPen = pk; _n.copy(ax).multiplyScalar(d >= 0 ? 1 : -1); }
+            const d = _o.dot(ax), pk = h - Math.abs(d), sg = d >= 0 ? 1 : -1;
+            // ([b5-int3] out through its top, more than a step over the feet: not that way — its far face along this axis)
+            if (fromY != null && ax.y * sg > 0.6 && this._faceY(b, ax, sg, h, pos.x, pos.z) - Math.max(fromY, pos.y) > lift + 0.05) {
+              const pf = h + Math.abs(d);
+              if (pf < bestPen) { bestPen = pf; _n.copy(ax).multiplyScalar(-sg); }
+              continue;
+            }
+            if (pk < bestPen) { bestPen = pk; _n.copy(ax).multiplyScalar(sg); }
           }
           pen = bestPen + radius;
         }
@@ -253,6 +264,12 @@ export class Physics {
       if (!moved) break;
     }
     return c;
+  }
+
+  // [b5-int3] the height at (x, z) of block b's face whose outward normal is ax × sg (half-size h along it): its plane
+  _faceY(b, ax, sg, h, x, z) {
+    const nx = ax.x * sg, ny = ax.y * sg, nz = ax.z * sg, fx = b.center.x + nx * h, fy = b.center.y + ny * h, fz = b.center.z + nz * h;
+    return fy - (nx * (x - fx) + nz * (z - fz)) / ny;
   }
 
   // Would a body capsule (same shape as collideBody) at `pos` overlap solid geometry? (step-up / ledge checks)

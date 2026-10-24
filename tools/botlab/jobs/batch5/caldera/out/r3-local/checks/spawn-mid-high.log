@@ -1,0 +1,3 @@
+PASS spawn to mid  {"t0":{"m":66.3,"s":5.62,"straight":64.9},"t1":{"m":70.1,"s":5.94,"straight":64.9},"spawns":[[-7,-64.5],[7,64.5]],"mid":[0,0]}
+RESULT 1/1
+console errors: none

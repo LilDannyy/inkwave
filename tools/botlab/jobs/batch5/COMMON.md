@@ -53,13 +53,12 @@ Battle). Read `README.md`, `tools/botlab/README.md` and the docs your package to
   online tests use the local relay the harness starts.
 - Audio tests (`sfx-cues`, `audio-pause`) only pass when run alone.
 
-**THE MAC MINI IS UNAVAILABLE from 2026-10-09 (the user is away for a few days, and its runner and session are down).
-Do not wait for it: run everything on this Mac, one Electron instance at a time under the shared SLOTS=3 lock (about
-eight builders share it, so queue patiently and keep every run focused). Run regression suites one at a time and only
-the ones your change can touch; run bot matches in the smallest number that answers the question (2–4 per cell); skip
-balance sets entirely and say so (the lead runs one consolidated balance pass when the Mac mini is back); bake lightmaps
-locally only when a stage is final. You may still commit JOB-<n>.sh files for the record; they will run when the Mac
-mini returns. The section below describes the Mac mini protocol for when it is back.**
+**THE MAC MINI IS BACK (2026-10-16; it was unavailable 2026-10-09 … 10-16).** The runner protocol below applies again. Send it
+what it is for: balance sets (still capped at 8 matches per mode and config), repeat-for-flakiness runs, lightmap bakes,
+picture sets you do not need instantly, the dash-reach audit at 1/24, perf and load-budget measurements that need a quiet
+machine. Keep local only what you need to iterate (this Mac stays shared under the SLOTS=3 lock). A `JOB-<n>.sh` you
+committed "for the record" while it was down will now run once its branch is pushed. The Claude session there ("Inkwave
+botlab helper") is awake and reports written `JOB-<n>.txt` summaries; the lead talks to it, you do not need to.
 
 **On the Mac mini (about 5× faster; the user wants it used for everything heavy):** an autonomous runner there watches
 the fork and runs job scripts from your scratch branch by itself, with no Claude session involved, so it keeps working

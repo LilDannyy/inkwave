@@ -245,7 +245,15 @@ function botHold(a, st, inp) {
   }
   const keep = a.alive && a.form === 'kid' && st.level < st.botLevel && G.time - st.t0 < st.botMax;
   if (keep) { inp.sub = true; inp.subReleased = false; }
-  else if (!inp.sub) inp.subReleased = true;       // the brain let go frames ago: throw now
+  else if (!inp.sub) {
+    // [b5-int3] the release with its aim now would go off by one of its team's idle Chain Bobber webs (the press was checked,
+    // but a Shaker is held a second or more and the aim moves): held up to 1.5 s more for a clear aim, then not thrown
+    if (SUB_KITS.bobber?.webThrow?.(a)) {
+      if (G.time - st.t0 < st.botMax + 1.5) { inp.sub = true; inp.subReleased = false; return; }
+      inp.sub = false; inp.subReleased = false; a.weaponRunner.aimingSub = false; return;
+    }
+    inp.subReleased = true;       // the brain let go frames ago: throw now
+  }
 }
 
 // ---- the can in the fist: rattles harder as it charges (jolts on each clink), its lamps count the charges, the vent fizzes
@@ -427,6 +435,9 @@ function update(it, dt) {
       const dn = it.dir.x * n.x + it.dir.z * n.z;
       if (dn < 0 && Math.abs(n.y) < 0.6) { it.dir.x -= 2 * dn * n.x; it.dir.z -= 2 * dn * n.z; it.dir.y = 0; it.dir.normalize(); }
     }
+  } else if (G.objTargets) {   // [b5-karp] off the Roe Shell as off a wall (its hops carry on away from it)
+    const n = G.objTargets.bounce(_v, it.pos, it.vel, RAD, 1.5, 0.62);
+    if (n) { const l = Math.hypot(n.x, n.z), dn = l > 1e-4 ? (it.dir.x * n.x + it.dir.z * n.z) / l : 0; if (dn < 0) { it.dir.x -= 2 * dn * n.x / l; it.dir.z -= 2 * dn * n.z / l; it.dir.y = 0; it.dir.normalize(); } }
   }
   if (!floor) {
     const g = G.physics.raycast(_v2.copy(it.pos), DOWN, RAD, _hit2);
@@ -531,6 +542,7 @@ function blast(it) {
   }
   G.subs?.damageArea(c, s.radius, 40, team, a);   // [b5-deploy] (by)
   G.boss?.splash(a, c, s.radius, s.damageMax, s.damageMin, 'shaker');   // Boss Battle
+  G.objTargets?.splash(a, c, s.radius, s.damageMax, s.damageMin, 'shaker', { special: !!a.specialActive });   // [b5-karp] the Roe Shell
   if (it.left > 0) {
     // the blast kicks it forward and up; the next one goes off `gap` later (usually just after it lands)
     it.vel.set(it.dir.x * s.hopSpeed, s.hopUp, it.dir.z * s.hopSpeed);
@@ -584,7 +596,9 @@ function pips() {
 }
 
 // ================================================================================================= registration
+let warmSet = null;   // [b5-beta1] a thrown shaker as a stand-in (registry.js warmKits)
 SUB_KITS.shaker = {
+  warm() { return warmSet || (warmSet = [makeMesh(0, subViewScale('shaker')).outer]); },
   use,
   hold,
   ghost,

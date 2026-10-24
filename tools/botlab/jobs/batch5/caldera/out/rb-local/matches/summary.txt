@@ -1,0 +1,53 @@
+### turf-low
+== caldera [turf 180s]: turf 37.4% vs 33.6%
+   stuck 0.1% | splats 46 (water 2) | specials 11 | super jumps 21 | turf 37.4/33.6 | sim 180s in 27s (wall 27s) | {"cpuSimMs":0.77}
+   splats by cause {"charger":3,"shot":10,"bow":5,"brolly":1,"boomerang":3,"drop":5,"blaster":1,"blast":4,"mitts":8,"jetpack":3,"water":2,"roller":1}
+   stuck {"t":91.8,"name":"Coral","w":"blaster","mode":"paint","role":"-","pos":[-8.5,4.8,21.7],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":74.3,"name":"Riptide","w":"charger","mode":"refill","role":"-","pos":[8.3,1.2,3.8],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":83.3,"name":"Riptide","w":"charger","mode":"refill","role":"-","pos":[0,1.2,13.1],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":88.8,"name":"P1","w":"shooter","mode":"retreat","role":"-","pos":[-5.9,0,12.8],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+### zones-low
+== caldera [zones]: winner Bravo (time) | final 82 vs 39 (penalty +10/+0) | OT no
+   held A 52s B 140.5s neutral 107.3s | captures 10 (takeovers 6), control events 19, first capture @23.6s | rotations 7
+   stuck 0.3% | splats 91 (water 1) | specials 16 | super jumps 30 | turf 22.5/29.9 | sim 300s in 39s (wall 39s) | {"cpuSimMs":0.69}
+   splats by cause {"drop":10,"slosh":9,"shot":35,"bow":11,"blade":15,"shaker":2,"seeker":1,"crab":2,"booyah":2,"water":1,"stamp":1,"brush":2}
+   stuck {"t":103.8,"name":"Riptide","w":"spinner","mode":"fight","role":"paint","pos":[4.2,1.8,3.6],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":136.5,"name":"Riptide","w":"spinner","mode":"paint","role":"watch","pos":[17.1,2.95,37.9],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":175.8,"name":"P1","w":"bow","mode":"fight","role":"stage","pos":[-7.6,1.2,-29.6],"path":false,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":220.5,"name":"Marlo","w":"brush","mode":"paint","role":"stage","pos":[-20.7,1.2,15],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":299.3,"name":"Riptide","w":"spinner","mode":"paint","role":"watch","pos":[-2.2,1.2,11.3],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":37.5,"name":"Riptide","w":"spinner","mode":"paint","role":"watch","pos":[4.1,1.8,0.7],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"simT":300,"simMs":39033,"state":"finish","stuckPct":0.3,"splats":91,"water":1,"specials":16,"jumps":30,"cov":[22.5,29.9],"teamKD":[{"k":34,"d":57,"sp":3,"by":{"crab":2,"stamp":1}},{"k":57,"d":34,"sp":2,"by":{"booyah":2}}],"spUses":[{"zipcaster":2,"strike":5,"booyah":1},{"bubbler":3,"crab":3,"zipcaster":1,"stamp":1}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended"
+### turf-high
+== caldera [turf 180s]: turf 42.9% vs 34.7%
+   stuck 0.1% | splats 42 (water 0) | specials 8 | super jumps 14 | turf 42.9/34.7 | sim 180s in 36s (wall 36s) | {"cpuSimMs":2.76}
+   splats by cause {"blade":6,"charger":6,"mitts":8,"roller":3,"blast":5,"blaster":1,"shot":4,"slosh":3,"drop":2,"burst":1,"kraken":2,"jetpack":1}
+   stuck {"t":55.8,"name":"Nori","w":"mitts","mode":"paint","role":"-","pos":[24.4,1.2,-4.8],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":123.8,"name":"Coral","w":"roller","mode":"paint","role":"-","pos":[-20.7,1.2,15],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":25.5,"name":"Blotch","w":"charger","mode":"paint","role":"-","pos":[-6.7,1.2,23.6],"path":true,"hold":false,"pod":"-","dur":0.5}
+CONSOLE 1 unique warning/error line(s)
+### zones-high
+== caldera [zones]: winner Alpha (knockout) | final 0 vs 86 (penalty +0/+4) | OT no
+   held A 80.3s B 28.5s neutral 73s | captures 5 (takeovers 2), control events 9, first capture @27.3s | rotations 4
+   stuck 0.3% | splats 50 (water 0) | specials 9 | super jumps 19 | turf 34.3/14.8 | sim 182s in 31s (wall 31s) | {"cpuSimMs":1.03}
+   splats by cause {"shot":15,"blast":7,"charger":3,"bow":9,"seeker":2,"slosh":4,"blaster":2,"crab":4,"zooka":3,"jetpack":1}
+   stuck {"t":137.3,"name":"Fizz","w":"bow","mode":"fight","role":"watch","pos":[2.8,1.2,24.3],"path":false,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":166,"name":"Nori","w":"bucket","mode":"paint","role":"stage","pos":[4.5,1.2,26.4],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":21.8,"name":"Fizz","w":"bow","mode":"fight","role":"paint","pos":[-2.7,1.8,-3],"path":false,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":63.5,"name":"Bubbles","w":"charger","mode":"refill","role":"watch","pos":[18,3.44,39],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":67.5,"name":"Nori","w":"bucket","mode":"paint","role":"paint","pos":[13.5,1.8,24],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":83.3,"name":"Bubbles","w":"charger","mode":"paint","role":"watch","pos":[20.3,3.6,40.7],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"simT":182,"simMs":30817,"state":"finish","stuckPct":0.3,"splats":50,"water":0,"specials":9,"jumps":19,"cov":[34.3,14.8],"teamKD":[{"k":32,"d":18,"sp":4,"by":{"zooka":3,"jetpack":1}},{"k":18,"d":32,"sp":4,"by":{"crab":4}}],"spUses":[{"bubbler":2,"crab":2,"strike":1},{"zooka":2,"jetpack":1,"sonar":1}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"sp
+### towermatch-low
+== caldera [tower len 100.7/100.7]: winner Bravo (retake) | counts 96 vs 21 (score 96/21) | best push A 7.3m B 80.7m | OT 27.4s | sim 327.3s
+   held A 118s B 191s | contested 3.8s (6×) | neutral 18s | control changes 20 (takes 22) | idle→neutral 4
+   checkpoints cleared A 0 B 2 (reached 0/3, refills 0/1) | riders avg while held A 1.17 B 1.24 | mounts 32/34
+   left empty while held: 27× (>2 s: 9, of those with a teammate up within 15 m: 8; team wiped: 0; longest 4.9s; [5,5,5,5,4.75,3.25]) | off the tower {"death":34,"role":28,"fell":1,"refill":1,"retreat":2}, last one off a held tower {"death":21,"role":5,"retreat":1}
+   stuck 0% | by the tower's side 3.4% of bot-time, stuck there 0s (0 episodes) | splats 142 (water 0) | specials 13 (ready 20) | super jumps 65 | turf 14.1/23.8 | sim 327.3s in 66s (wall 66s) | {"cpuSimMs":1.33}
+   stuck {"t":170.8,"name":"P1","w":"bow","mode":"fight","role":"ride","pos":[-21.9,3.5,-30.8],"tower":3,"path":true,"dur":0.5}
+CONSOLE 1 unique warning/error line(s)
+RESULT_JSON {"map":"caldera","winner":1,"reason":"retake","counts":[96,21],"best":[7.3,80.7],"held":[118,191],"controlChanges":20,"cpClear":[0,2],"stuckPct":0,"console":1,"frameErrors":0,"mounts":[32,34],"ridersAvg":[1.17,1.24],"x":{"climbs":[35,31],"sjRider":12,"kills":142,"killsNear":[91,51],"attempts":192,"boarded":56,"aborted":133,"climbMounts":50,"sjMounts":1,"toBoard":{"med":3.5,"p80":9.75},"nearBoard":{"med":1
+RESULT bots done

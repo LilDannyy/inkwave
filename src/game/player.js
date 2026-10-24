@@ -134,6 +134,7 @@ export class PlayerController {
     if (this.mapHeld) { it.fire = false; it.sub = false; }
     // super jump: while the map is open, 1-3 (or d-pad left/up/right) jumps to that teammate, 4 / d-pad down to spawn
     if (this.mapHeld && a.canSuperJump()) this._mapKeys(false);
+    else if (this.mapHeld && a.carry && ([1, 2, 3, 4, 5, 6, 7, 8, 9, 0].some((d) => inp.wasPressed('Digit' + d)) || [12, 13, 14, 15].some((b) => inp.padPressed.has(b)))) G.match?.karp?.refuse?.(a, 'jump');   // [karp-face] a carrier's jump key on the map: "Can't super jump with the Bazookarp"
 
     // ---- aim point from the camera centre ray
     this.computeAim();

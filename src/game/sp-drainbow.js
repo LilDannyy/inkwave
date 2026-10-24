@@ -381,7 +381,15 @@ function build(sys, a, s, c, r, life, ghost) {
   emit('drainbow:place', { actor: a, bubble: b });
   return b;
 }
+let warmSet = null;   // [b5-beta1] the bubble's film and rim as stand-ins (specials.js warm: compiled at the match's load)
 registerSpecial('drainbow', {
+  // (and the grey wave's post pass, built at the first crossing: added now, idle — main.js _warmStage draws one frame with
+  // the post passes on; without GTAO its depth pre-pass too, whose override material compiles per kind of mesh)
+  warm() {
+    if (!warmSet) { const g = new THREE.Group(); new BubbleLook(g, new THREE.Color(1, 1, 1)); warmSet = [g]; }
+    try { VIEW._ensurePass(); if (!(G.post?.gtao && G.post.gtao.enabled !== false && G.post.gtao.depthTexture)) { const cam = G.post?.camera || G.camera; if (cam) VIEW._depth(G.renderer, G.post, cam); } } catch (e) { console.warn('[inkwave] drainbow warm', e); }
+    return warmSet;
+  },
   start(a, s) {
     s.free = true;   // (not holding the body or the weapon: actor / bots / camera treat you as unhindered)
     const d = s.def, c = placeAt(a);

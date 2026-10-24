@@ -187,6 +187,7 @@ export class CameraRig {
     // fisheye); kicks/zoom are in vertical degrees
     const vBase = 2 * Math.atan(Math.tan((this.baseFov * Math.PI) / 360) / (16 / 9)) * (180 / Math.PI);
     let fov = vBase + (this.fovKick - this.zoom) * 0.8;
+    { const k = G.dashKick, t = k && this.mode === 'follow' && k.a === this.target ? G.time - k.t0 : -1; if (t >= 0 && t < k.attack + k.decay) fov += (t < k.attack ? t / k.attack : (1 - (t - k.attack) / k.decay) ** 2) * k.fov * 0.8; }   // [b5-int3] the Dash Pellet's kick (kits/dash.js localKick)
     // pose blend (mode transitions)
     const b = this.blend;
     if (b && b.active) {

@@ -301,14 +301,14 @@ export class Boss {
     this.applyDamage(attacker, d, weak, point);
   }
   // splash damage (blaster burst, slosh splash, bombs, Tidal Slam): falloff from the nearest body sphere, cover blocks
-  splash(attacker, c, R, dmax, dmin, wid) {
+  splash(attacker, c, R, dmax, dmin, wid, o) {
     if (!attacker || attacker.remote || this.dead) return;
     for (const cr of this.crabs.values()) {
       if (cr.dead) continue;
       const d = Math.hypot(cr.x - c.x, cr.y + 0.3 - c.y, cr.z - c.z);
       if (d < R + 0.4) this._hitCrab(attacker, cr, dmax);
     }
-    if (!this.visible) return;
+    if (!this.visible || o?.body === false) return;   // [b5-subs] (o.body false: the crablets only — a Chain Bobber's chain hits the body once)
     let best = null, bd = Infinity;
     for (const h of this.model.hitShapes) {
       if (!h.active || h.weak) continue;

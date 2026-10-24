@@ -1,0 +1,110 @@
+### turf-low-1
+== caldera [turf 180s]: turf 37.2% vs 36.7%
+   per bot: turf 1601p, on-zone ink 0p, splats 4.8 → XP beyond the win/lose base ≈ 1791
+   stuck 0.1% | splats 38 (water 0) | specials 14 | super jumps 14 | turf 37.2/36.7 | sim 180s in 42s (wall 42s) | {"cpuSimMs":1.58}
+   splats by cause {"mitts":14,"zooka":1,"shot":15,"charger":3,"drop":1,"blade":2,"slosh":2}
+   stuck {"t":156.8,"name":"P1","w":"mitts","mode":"paint","role":"-","pos":[9.7,0,-10.2],"path":true,"hold":false,"pod":"-","dur":1.5}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+### zones-low-1
+== caldera [zones]: winner Bravo (time) | final 57 vs 22 (penalty +15/+0) | OT no
+   held A 43.8s B 138.5s neutral 117.5s | captures 9 (takeovers 2), control events 17, first capture @25.8s | rotations 6
+   bots in the active zone 64.3% of the time | avg inside A 0.23 B 0.8 | within 12 m A 0.68 B 1.56
+   per bot: turf 1839p, on-zone ink 616p, splats 10.6 → XP beyond the win/lose base ≈ 2144
+   stuck 0.4% | splats 87 (water 3) | specials 20 | super jumps 35 | turf 16.5/26.7 | sim 300s in 124s (wall 124s) | {"cpuSimMs":1.21}
+   splats by cause {"blade":8,"bow":15,"mitts":11,"blaster":4,"blast":19,"drop":16,"kraken":1,"brush":1,"roller":2,"shaker":1,"boomerang":4,"water":3,"burst":2}
+   stuck {"t":102,"name":"P1","w":"mitts","mode":"fight","role":"push","pos":[-3.8,2.27,0.8],"path":true,"hold":false,"pod":"-","dur":4.5}
+   stuck {"t":172.3,"name":"P1","w":"mitts","mode":"paint","role":"stage","pos":[19.4,0.1,-21.2],"path":true,"hold":true,"pod":"-","dur":1.5}
+   stuck {"t":177,"name":"P1","w":"mitts","mode":"paint","role":"paint","pos":[21.8,1.2,-20.2],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":62.5,"name":"Marlo","w":"bow","mode":"paint","role":"watch","pos":[13.7,2.4,34.7],"path":true,"hold":true,"pod":"-","dur":0.25}
+   stuck {"t":108,"name":"Squiddo","w":"roller","mode":"paint","role":"stage","pos":[-1.4,1.2,20.1],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":121,"name":"Coral","w":"bow","mode":"paint","role":"watch","pos":[8.6,1.85,-7.8],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":300,"simMs":123850,"state":"finish","stuckPct":0.4,"splats":87,"water":3,"specials":20,"jumps":35,"cov":[16.5,26.7],"teamKD":[{"k":34,"d":53,"sp":0,"by":{}},{"k":51,"d":34,"sp":1,"by":{"kraken":1}}],"spUses":[{"kraken":3,"strike":5,"booyah":1,"slam":2},{"barrage":3,"strike":3,"wail":2,"kraken":1}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0}
+### turf-high-1
+== caldera [turf 180s]: turf 36.7% vs 33.6%
+   per bot: turf 1190p, on-zone ink 0p, splats 4 → XP beyond the win/lose base ≈ 1350
+   stuck 0% | splats 35 (water 3) | specials 6 | super jumps 20 | turf 36.7/33.6 | sim 180s in 41s (wall 41s) | {"cpuSimMs":1.5}
+   splats by cause {"drop":2,"zipcaster":1,"brush":2,"jetpack":1,"blast":13,"water":3,"shot":6,"blaster":2,"charger":4,"blade":1}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+### zones-high-1
+== caldera [zones]: winner Bravo (time) | final 78 vs 24 (penalty +18/+25.4) | OT no
+   held A 22.3s B 145.8s neutral 131.8s | captures 8 (takeovers 2), control events 15, first capture @23.8s | rotations 6
+   bots in the active zone 62.5% of the time | avg inside A 0.14 B 0.88 | within 12 m A 0.54 B 1.83
+   per bot: turf 1681p, on-zone ink 537p, splats 10.8 → XP beyond the win/lose base ≈ 1976
+   stuck 0.2% | splats 87 (water 1) | specials 15 | super jumps 22 | turf 20.1/25.5 | sim 300s in 75s (wall 76s) | {"cpuSimMs":2.77}
+   splats by cause {"mitts":5,"shot":35,"water":1,"blast":18,"bow":12,"blade":2,"surf":2,"crab":3,"blaster":1,"boomerang":5,"brush":2,"drop":1}
+   stuck {"t":248,"name":"Tako","w":"bow","mode":"fight","role":"stage","pos":[-2.3,1.2,14.7],"path":false,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":33,"name":"Nori","w":"spinner","mode":"paint","role":"watch","pos":[9.1,4.65,12.2],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":42,"name":"Nori","w":"spinner","mode":"paint","role":"watch","pos":[-5.6,2.4,4.8],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":205,"name":"Loop","w":"brush","mode":"paint","role":"paint","pos":[7.5,1.58,10.9],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":206.8,"name":"Loop","w":"brush","mode":"paint","role":"paint","pos":[7.6,1.46,10.9],"path":true,"hold":true,"pod":"-","dur":0.5}
+   stuck {"t":48.5,"name":"Nori","w":"spinner","mode":"paint","role":"watch","pos":[-3.6,1.8,3.8],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":300,"simMs":75344,"state":"finish","stuckPct":0.2,"splats":87,"water":1,"specials":15,"jumps":22,"cov":[20.1,25.5],"teamKD":[{"k":29,"d":57,"sp":2,"by":{"surf":2}},{"k":57,"d":30,"sp":3,"by":{"crab":3}}],"spUses":[{"crab":3,"barrage":5,"bubbler":1},{"surf":3,"bubbler":2,"barrage":1}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"n
+### turf-low-2
+== caldera [turf 180s]: turf 28.2% vs 35.6%
+   per bot: turf 1305p, on-zone ink 0p, splats 5.5 → XP beyond the win/lose base ≈ 1525
+   stuck 0% | splats 44 (water 0) | specials 9 | super jumps 27 | turf 28.2/35.6 | sim 180s in 47s (wall 47s) | {"cpuSimMs":1.41}
+   splats by cause {"slosh":5,"brush":3,"mitts":10,"drop":5,"slam":1,"blast":6,"shot":8,"stamp":3,"crab":2,"brolly":1}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+### zones-low-2
+== caldera [zones]: winner Bravo (time) | final 50 vs 44 (penalty +31.8/+38.5) | OT no
+   held A 107s B 69.8s neutral 123s | captures 7 (takeovers 3), control events 13, first capture @23.8s | rotations 6
+   bots in the active zone 67.6% of the time | avg inside A 0.63 B 0.43 | within 12 m A 1.44 B 0.84
+   per bot: turf 2011p, on-zone ink 447p, splats 9.1 → XP beyond the win/lose base ≈ 2018
+   stuck 0.1% | splats 76 (water 3) | specials 24 | super jumps 24 | turf 26.6/28.5 | sim 300s in 66s (wall 66s) | {"cpuSimMs":1.47}
+   splats by cause {"shot":8,"bow":9,"blaster":4,"blast":23,"crab":7,"slosh":6,"water":3,"blower":2,"zooka":4,"tracer":1,"blade":5,"stamp":1,"burst":1,"seeker":1,"sprinkler":1}
+   stuck {"t":40,"name":"Marlo","w":"bow","mode":"fight","role":"watch","pos":[6.3,2.4,-5.8],"path":false,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":31.8,"name":"Suki","w":"blaster","mode":"paint","role":"stage","pos":[7.5,2.93,42.9],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":46.5,"name":"Inky Vee","w":"blade","mode":"paint","role":"paint","pos":[8.6,1.2,30.8],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":48,"name":"Marlo","w":"bow","mode":"refill","role":"watch","pos":[0.1,1.2,-9.7],"path":true,"hold":true,"pod":"-","dur":0.25}
+   stuck {"t":54.5,"name":"Drip","w":"bucket","mode":"retreat","role":"paint","pos":[3.1,1.8,3.4],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":120.5,"name":"Drip","w":"bucket","mode":"paint","role":"stage","pos":[-6.8,2.4,-35.5],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":300,"simMs":65981,"state":"finish","stuckPct":0.1,"splats":76,"water":3,"specials":24,"jumps":24,"cov":[26.6,28.5],"teamKD":[{"k":45,"d":29,"sp":6,"by":{"blower":2,"zooka":4}},{"k":28,"d":47,"sp":9,"by":{"crab":7,"stamp":1,"barrage":1}}],"spUses":[{"crab":4,"stamp":3,"barrage":3,"zipcaster":3},{"zipcaster":3,"blower":5,"zooka":3}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":
+### turf-high-2
+== caldera [turf 180s]: turf 34.9% vs 40.6%
+   per bot: turf 1646p, on-zone ink 0p, splats 5 → XP beyond the win/lose base ≈ 1846
+   stuck 0% | splats 40 (water 0) | specials 10 | super jumps 19 | turf 34.9/40.6 | sim 180s in 41s (wall 41s) | {"cpuSimMs":1.16}
+   splats by cause {"boomerang":1,"shot":4,"mitts":14,"jetpack":3,"slam":1,"blaster":2,"roller":1,"slosh":4,"blade":3,"blast":3,"bow":2,"drop":2}
+   stuck {"t":96,"name":"Moxie","w":"shooter","mode":"paint","role":"-","pos":[-21.4,2.5,23.4],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":159.3,"name":"Loop","w":"blaster","mode":"paint","role":"-","pos":[21.1,2.28,-22.9],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+### zones-high-2
+== caldera [zones]: winner Alpha (comeback) | final 76 vs 76 (penalty +0/+13) | OT 5.9s
+   held A 77s B 28.8s neutral 200s | captures 9 (takeovers 4), control events 17, first capture @42.2s | rotations 6
+   bots in the active zone 72% of the time | avg inside A 0.72 B 0.42 | within 12 m A 1.42 B 1.06
+   per bot: turf 1880p, on-zone ink 838p, splats 12.5 → XP beyond the win/lose base ≈ 2466
+   stuck 0.3% | splats 101 (water 1) | specials 15 | super jumps 41 | turf 19.9/22.4 | sim 306s in 67s (wall 67s) | {"cpuSimMs":1.25}
+   splats by cause {"charger":9,"drop":12,"mitts":18,"blast":17,"seeker":2,"blade":10,"shot":22,"burst":1,"roller":3,"blaster":4,"shaker":1,"water":1,"sticky":1}
+   stuck {"t":21,"name":"Drip","w":"charger","mode":"refill","role":"watch","pos":[-3,1.2,8.2],"path":true,"hold":true,"pod":"-","dur":0.75}
+   stuck {"t":44.3,"name":"Drip","w":"charger","mode":"paint","role":"watch","pos":[-2.8,1.8,1.6],"path":true,"hold":true,"pod":"-","dur":0.75}
+   stuck {"t":51.8,"name":"Drip","w":"charger","mode":"paint","role":"watch","pos":[-9,1.2,-4],"path":true,"hold":true,"pod":"-","dur":0.5}
+   stuck {"t":165.5,"name":"Drip","w":"charger","mode":"retreat","role":"watch","pos":[-0.4,1.2,-7.3],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":260.3,"name":"Drip","w":"charger","mode":"paint","role":"watch","pos":[-6.1,1.2,-1.1],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":64,"name":"Bubbles","w":"mitts","mode":"paint","role":"stage","pos":[-7.4,2.4,32.5],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"simT":306,"simMs":67260,"state":"finish","stuckPct":0.3,"splats":101,"water":1,"specials":15,"jumps":41,"cov":[19.9,22.4],"teamKD":[{"k":45,"d":55,"sp":0,"by":{}},{"k":55,"d":46,"sp":0,"by":{}}],"spUses":[{"kraken":2,"bubbler":1,"jetpack":1},{"barrage":4,"bubbler":4,"wail":3}],"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":171,"
+### towermatch-low
+== caldera [tower len 73/73]: winner Alpha (retake) | counts 34 vs 88 (score 34/88) | best push A 49.8m B 11.2m | OT 35.1s | sim 335.3s
+   held A 172.8s B 145s | contested 2.5s (5×) | neutral 17.3s | control changes 12 (takes 16) | idle→neutral 5
+   checkpoints cleared A 1 B 0 (reached 2/0, refills 1/0) | riders avg while held A 1.26 B 1.11 | mounts 38/34
+   stuck 0.1% | by the tower's side 3.1% of bot-time, stuck there 0s (0 episodes) | splats 144 (water 1) | specials 14 (ready 19) | super jumps 64 | turf 20.3/15 | sim 335.3s in 82s (wall 82s) | {"cpuSimMs":1.45}
+   stuck {"t":137.8,"name":"Bubbles","w":"charger","mode":"paint","role":"perch","pos":[-7.3,0,11.6],"tower":15.5,"path":true,"dur":0.5}
+   stuck {"t":170,"name":"Bubbles","w":"charger","mode":"fight","role":"perch","pos":[2.8,1.2,11.4],"tower":18.3,"path":false,"dur":0.5}
+   stuck {"t":56.3,"name":"Bubbles","w":"charger","mode":"paint","role":"perch","pos":[-2.4,1.8,1.9],"tower":13.9,"path":true,"dur":0.25}
+   stuck {"t":114.3,"name":"Bubbles","w":"charger","mode":"paint","role":"perch","pos":[-1.7,1.2,15.1],"tower":4.9,"path":true,"dur":0.25}
+   stuck {"t":149.8,"name":"Bubbles","w":"charger","mode":"refill","role":"perch","pos":[-2.6,1.2,20.1],"tower":9.1,"path":true,"dur":0.25}
+   stuck {"t":155.8,"name":"Marlo","w":"brolly","mode":"paint","role":"escort","pos":[7.7,4.8,60.5],"tower":32.8,"path":true,"dur":0.25}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON
+RESULT_JSON {"map":"caldera","winner":0,"reason":"retake","counts":[34,88],"best":[49.8,11.2],"held":[172.8,145],"controlChanges":12,"cpClear":[1,0],"stuckPct":0.1,"console":1,"frameErrors":0,"mounts":[38,34],"ridersAvg":[1.26,1.11],"x":{"climbs":[26,38],"sjRider":11,"kills":144,"killsNear":[60,83],"attempts":174,"boarded":58,"aborted":113,"climbMounts":49,"sjMounts":1,"toBoard":{"med":2,"p80":7.5},"nearBoard":{"med"
+RESULT done

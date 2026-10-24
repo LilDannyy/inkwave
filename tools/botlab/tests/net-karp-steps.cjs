@@ -1,0 +1,616 @@
+// [karp-face] Bazookarp online — the rest of SPEC §10.2's two-client steps (net-karp.cjs's base part has WP1's 19 checks;
+// the migration steps are net-karp-host.cjs's). Real clients on the local relay; karpbox with the TWO-weir data injected
+// into both; host A on Alpha, guest B on Bravo, one bot a side, parked; every screen's own kids driven by the test.
+//   part 'face':   2 Bravo bursts it: A's kid at 3 m is splatted on A's screen (its owner), both screens agree ·
+//                  3 a race: A and B both touch it right after the hold — exactly one gets it, the same on both, the
+//                  other's lock ends on p · 4 B swims through its spot at full speed: granted (the newest-sample check) ·
+//                  5 grab share: 10 bursts, a host bot and B at 3 m (reported) · 6 B carries: × 0.8 on B's screen, no
+//                  super jump, B's own Bubble Guard (started just before) gone on both screens, the host's count = B's HUD ·
+//                  6b the thin-wall stall: B's ticks frozen 0.4 s while it swims pressed into the 0.3 m wall — the host's
+//                  best never ahead of B's own reading by more than 2, no plant / knockout, stats.clamped reported ·
+//                  7 a Big Burst on A: A steps out during the swell (not splatted), A stays (splatted, on A's screen), one
+//                  splat each side · 8 B's gauge +3 p/s while Alpha holds it; touching the shell: 20 hp per 0.5 s on B ·
+//                  10 B plants one of its two weirs: both lowered, its Gate up, on every screen · 11 the fuse runs out on B's
+//                  own half: B and a teammate at 3 m splatted, back to the Pond on both · 16 the same results on both
+//                  screens (counts, reason, winner, karpM, karpPops)
+//   part 'lag' (URLQ='netlag=150&netjitter=60'): 1 B's hits move the host's meter · 3 B's grab · 9 B retreats: DON'T
+//                  RETREAT! the same frame, the host's rate agrees · 9b the fuse ring under ×3 never goes up by more than
+//                  0.2 s in any 1 s, ≤ 0.3 s at the Carp Blast · 15b a declined grant · 15c the window's close: B claims
+//                  0.2 s before an S39b window closes — granted, overtime goes on · results on both
+//   CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' NET_ARGS='part=face' NET=tools/botlab/tests/net-karp.cjs tools/botlab/run.sh tools/botlab/netpage.cjs
+//   CLIENTS=2 Q0='autopilot&wipmodes' Q1='autopilot&wipmodes' URLQ='netlag=150&netjitter=60' NET_ARGS='part=lag' NET=tools/botlab/tests/net-karp.cjs tools/botlab/run.sh tools/botlab/netpage.cjs
+module.exports = async ({ clients, R, wait, say, open }, part) => {
+  for (const c of clients.slice(0, 2)) {
+    if (/[?&]wipmodes(&|=|$)/.test(c.url || '') && /[?&]autopilot(&|=|$)/.test(c.url || '')) continue;
+    await open(c.i, 'autopilot&wipmodes');
+  }
+  const [A, B] = clients;
+  const J = async (c, code) => JSON.parse(await c.js(`JSON.stringify(${code})`));
+  const r2 = (x) => Math.round(x * 100) / 100;
+  for (const c of [A, B]) await c.js(`(async () => { const m = await import('./tools/botlab/karpbox.js'); return m.defineKarpbox(m.KARPBOX_TWO); })()`);
+  const code = await A.js(`__G.net.create('Hosty')`);
+  await A.js(`__G.net.setSettings({ mode: 'bazookarp', map: 'karpbox', time: 'day', botCount: 2, difficulty: 'easy' }); 1`);
+  await B.js(`__G.net.join(${JSON.stringify(code)}, 'Guesty').then(() => 1)`);
+  await A.until(`__G.net.lobby.players.length === 2`, 15000);
+  await A.js(`__G.net.setMe({ team: 0 }); 1`); await B.js(`__G.net.setMe({ team: 1, special: 'bubbler', weapon: 'shooter' }); 1`);
+  await A.until(`(() => { const p = __G.net.lobby.players; return p[0].team === 0 && p[1].team === 1; })()`, 8000);
+  await B.js(`__G.net.setMe({ ready: true }); 1`);
+  await A.until(`__G.net.canStart()`, 8000);
+  await A.js(`__G.net.start()`);
+  for (const c of [A, B]) await c.until(`__G.net.state === 'match' && __G.match && !__G.match.attract && __G.match.state === 'playing'`, 120000, 250);
+  say(`match up (${part})`);
+  const still = (c) => c.js(`(() => { for (const a of __G.match.actors) if (!a.remote && a.bot) a.bot.update = () => {}; for (const a of __G.match.actors) if (!a.remote) { const it = a.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.sub = it.special = it.jump = false; } return 1; })()`);
+  await still(A); await still(B);
+  await A.js(`(() => { __G.match.time = 290; for (const a of __G.match.actors) if (a.bot && !a.remote) { const p = __G.level.spawnPads[a.team]; a.pos.set(p.x + (a.slot % 4) * 1.5 - 2, p.y, p.z + (a.team ? 2 : -2)); a.vel.set(0, 0, 0); } return 1; })()`);
+  // in every page: a log of events (splats, hits, karp records), the kid's own helpers
+  for (const c of [A, B]) await c.js(`(() => { window.__ev = []; import('./src/core/ctx.js').then((m) => { for (const k of ['splatted', 'karp:pickup', 'karp:burst', 'karp:land', 'karp:blast', 'karp:plant', 'karp:explode', 'karp:reset', 'damage']) m.on(k, (e) => window.__ev.push({ k, t: performance.now(), v: e.victim ? e.victim.nid : e.actor ? e.actor.nid : null, c: e.cause || e.source || null, amt: e.amount, ghost: !!e.ghost })); }); return 1; })()`);
+  // (timers on each page's own SIM clock — the engine's — not the wall: on a loaded machine a frame's dt is capped and
+  // the sim runs slower than the wall, so a wall-clock 900 ms of running covers less ground)
+  for (const c of [A, B]) await c.js(`(() => { window.__simAfter = (sec, fn) => { const t0 = __G.match.karp.clock; const id = setInterval(() => { const K = __G.match && __G.match.karp; if (!K || K.clock - t0 >= sec) { clearInterval(id); fn(); } }, 4); }; return 1; })()`);
+  const aNid = await J(A, `__G.match.local.nid`), bNid = await J(B, `__G.match.local.nid`);
+  const info = async (c) => J(c, `(() => { const K = __G.match.karp; if (!K) return null; const s = K.state(); return { follower: K.follower, phase: s.phase, holder: s.holder && s.holder.nid, meter: Math.round(s.meter), count: s.count, shell: s.shell, pos: s.pos.map((x) => +x.toFixed(2)), lowered: [...K.lowered], gate: [...K.gateUp], weirsLow: s.weirs.map((l) => l.map((w) => w.lowered)), overtime: s.overtime, winner: s.winner, reason: s.reason, clamped: K.stats.clamped, lock: K.lockT, fuse: +s.fuse.toFixed(2), fuseShown: +s.fuseShown.toFixed(2), rate: s.rate, rec: K.wire.log, declined: K.stats.declined, remote: { half: K.remote.half, rate: K.remote.rate, why: K.remote.why } }; })()`);
+  const put = (c, x, y, z, yaw) => c.js(`(() => { const a = __G.match.local; if (!a.alive) return 0; a.pos.set(${x}, ${y}, ${z}); a.vel.set(0, 0, 0); ${yaw != null ? `a.yaw = a.aimYaw = ${yaw};` : ''} return 1; })()`);
+  const alive = (c) => c.until(`__G.match.local.alive`, 14000, 200).catch(() => {});
+  const zeroB = () => B.js(`(() => { const it = __G.match.local.intent; it.move.set(0, 0, 0); it.fire = it.squid = it.jump = false; return 1; })()`);
+  // host: back to the Pond, shielded (a fresh 500 shell): nobody holds it
+  const toPond = async () => {
+    await A.js(`(() => { const K = __G.match.karp; if (K.holder) { if (K.holder.remote) K._lose(K.holder, 'splat'); else K._lose(K.holder, 'splat'); } return 1; })()`);
+    await wait(150);
+    await A.js(`(() => { const K = __G.match.karp; if (K.phase !== 'resetting') K._reset(K.pos.clone(), 'none'); return 1; })()`);
+    await A.until(`__G.match.karp.phase === 'shielded' && Math.hypot(__G.match.karp.pos.x, __G.match.karp.pos.z) < 0.4`, 8000, 100).catch(() => {});
+    await B.until(`__G.match.karp.phase === 'shielded'`, 4000, 100).catch(() => {});
+  };
+  const burst = (team) => A.js(`(() => { const K = __G.match.karp, by = __G.match.actors.find((o) => o.nid === ${team ? bNid : aNid}); K.shell.add(${team}, 3000, by); return 1; })()`);
+  // B grabs it where it rests: B waits 3 m off (outside the shell's shove), steps onto it the moment it hears the burst
+  const grabB = async () => {
+    const kp = (await info(A)).pos;
+    await put(B, kp[0], kp[1], kp[2] + 3.2);
+    await B.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const a = __G.match.local; a.pos.set(${kp[0]}, ${kp[1]}, ${kp[2]} + 0.5); a.vel.set(0, 0, 0); }); }); return 1; })()`);
+    await wait(250);
+    await burst(1);
+    await A.until(`__G.match.karp.holder && __G.match.karp.holder.nid === ${bNid}`, 5000, 30).catch(() => {});
+    await B.until(`__G.match.karp.holder === __G.match.local`, 3000, 30).catch(() => {});
+  };
+  const bHud = () => J(B, `(() => { const s = __inkwave.hud && __inkwave.hud.karp && __inkwave.hud.karp.state(); return s ? { status: s.status, bottom: s.bottom, reticle: s.reticle, line: s.line } : null; })()`);
+  await wait(1500);
+
+  // ---- 5. grab share: N bursts, a Bravo host bot and B each 3 m from it, both running in on hearing the burst
+  // (kid = true: the host's OWN player races B instead of a host bot)
+  // (swap: the host's racer on the −x side, B on the +x side; 'alt' (the default): the sides alternate round by round —
+  // karpbox's Pond is not symmetric: from its +x side a racer touches it 0.063 s later than from its −x side, and that
+  // side lost every race whoever stood there: race4 / racekid2 / 3 guest 16 / 16 from −x, raceswap1 host bot 12 / 12)
+  const grabShare = async (N = 10, kid = false, swap = 'alt') => {
+    const bot = kid ? aNid : await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
+    const wins = { bot: 0, guest: 0, none: 0 }, dec = [];
+    // (each page's frame rate and sim speed meanwhile: a touch is timed on its own screen's simulation, so a page running
+    // at a lower frame rate covers the 1.7 m in more of its sim time — its actors arrive later)
+    const fps0 = `(() => { window.__fr = 0; window.__frT = performance.now(); window.__frK = __G.match.karp.clock; if (!window.__frOn) { window.__frOn = 1; (function f() { window.__fr++; requestAnimationFrame(f); })(); } return 1; })()`;
+    const fps1 = `(() => { const s = (performance.now() - window.__frT) / 1000; return { fps: +(window.__fr / s).toFixed(1), sim: +((__G.match.karp.clock - window.__frK) / s).toFixed(2) }; })()`;
+    await A.js(fps0); await B.js(fps0);
+    const bySide = { hostMinusX: { host: 0, guest: 0 }, hostPlusX: { host: 0, guest: 0 } };
+    for (let k = 0; k < N; k++) {
+      const sg = (swap === 'alt' ? k % 2 === 1 : swap) ? -1 : 1;
+      await toPond();
+      // (3 m either side of where it really rests — the Pond's resting point isn't exactly x 0: at ±3 from x 0, B stood
+      // 0.3 m nearer and won every race in race3 once the race was fair)
+      const kp5 = (await info(A)).pos;
+      await A.js(`(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); b.pos.set(${kp5[0]} + ${3 * sg}, 0, ${kp5[2]}); b.vel.set(0, 0, 0); b.yaw = b.aimYaw = ${-sg} * Math.PI / 2; b.intent.move.set(0, 0, 0); return 1; })()`);
+      await put(B, kp5[0] - 3 * sg, 0, kp5[2], sg * Math.PI / 2);
+      // (a burst splats the other team's players close by, so the host's own player — an Alpha kid — races B for a
+      // Bazookarp set free without one: the host's 'u' frees it on every screen; each side starts on hearing it)
+      const ev = kid ? `'karp:phase', (e) => { if (e.phase !== 'free') return;` : `'karp:burst', () => {`;
+      await A.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on(${ev} off(); const b = __G.match.actors.find((o) => o.nid === ${bot}); b.intent.move.set(${-sg}, 0, 0); __simAfter(0.9, () => b.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
+      await B.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on(${ev} off(); const a = __G.match.local; a.intent.move.set(${sg}, 0, 0); __simAfter(0.9, () => a.intent.move.set(0, 0, 0)); }); }); return 1; })()`);
+      await wait(250);
+      if (kid) await A.js(`(() => { const K = __G.match.karp; K.shell.clear(); K._rec(['u', -1, +K.pos.x.toFixed(2), +K.pos.y.toFixed(2), +K.pos.z.toFixed(2)]); K._setPhase('free', 0); return 1; })()`);
+      else await burst(1);
+      await A.until(`!!__G.match.karp.holder`, 6000, 30).catch(() => {});
+      const h = (await info(A)).holder;
+      if (h === bot) wins.bot++; else if (h === bNid) wins.guest++; else wins.none++;
+      { const side = bySide[sg < 0 ? 'hostMinusX' : 'hostPlusX']; if (h === bot) side.host++; else if (h === bNid) side.guest++; }
+      if (kid) await alive(A);
+      // ([karp-face] the host's decision: each claim's since — after it went free on its own screen — and when it was in)
+      dec.push(await J(A, `(() => { const g = (__G.match.karp.stats.grantLog || []).slice(-1)[0]; return g ? { wait: g.wait, won: g.won, c: g.claims.map((c) => [c.remote ? 'B' : 'bot', c.since, c.at, c.ok ? 1 : 0]), late: (g.late || []).map((l) => [l.since, l.after]) } : null; })()`));
+      await wait(300);
+    }
+    const wpn = await J(A, `(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}), g = __G.match.actors.find((o) => o.nid === ${bNid}); return { bot: b.weaponId, guest: g.weaponId }; })()`);
+    const frames = { host: await J(A, fps1), guest: await J(B, fps1) };
+    R(`5${kid ? 'k' : ''}. grab share over ${N} bursts, ${kid ? 'the host\'s own player' : 'a host bot'} vs guest B at equal distance, the sides alternating (reported; no threshold)`, wins.bot + wins.guest >= N - 2, { wins, bySide, wpn, frames, at: (await info(A)).pos, dec });
+
+  };
+
+  if (part === 'face') {
+    // ---- 2. Bravo bursts it: A's own kid, 3 m from it, is splatted on A's screen; B's screen agrees
+    await put(A, 0, 0, -3); await put(B, 0, 0, 12);
+    await A.js(`(() => { const a = __G.match.local; a.invuln = 0; a.hp = 100; return 1; })()`);
+    await wait(400);
+    await burst(1);
+    await wait(1500);
+    const a2 = await J(A, `({ alive: __G.match.local.alive, splat: window.__ev.filter((e) => e.k === 'splatted' && e.v === ${aNid}).map((e) => e.c) })`);
+    const b2 = await J(B, `({ aAlive: __G.match.actors.find((o) => o.nid === ${aNid}).alive, splat: window.__ev.filter((e) => e.k === 'splatted' && e.v === ${aNid}).map((e) => e.c) })`);
+    R('2. Bravo bursts the shell: A\'s kid 3 m away is splatted on A\'s screen (karp-burst), and B\'s screen agrees', !a2.alive && a2.splat.includes('karp-burst') && !b2.aAlive && b2.splat.length >= 1, { a2, b2 });
+    await alive(A);
+
+    // ---- 3. a race: both touch it right after the burst (each screen moves its own kid in on hearing the burst)
+    await toPond();
+    await put(A, 0, 0, -6); await put(B, 0, 0, 6);
+    for (const [c, z] of [[A, -1.0], [B, 0.95]]) await c.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const a = __G.match.local; a.pos.set(0, 0, ${z}); a.vel.set(0, 0, 0); }); }); return 1; })()`);
+    await wait(300);
+    await A.js(`(() => { const K = __G.match.karp; K.shell.add(1, 3000, __G.match.actors.find((o) => o.nid === ${bNid})); return 1; })()`);
+    await A.until(`!!__G.match.karp.holder`, 4000, 30).catch(() => {});
+    await wait(700);
+    const r3a = await info(A), r3b = await info(B);
+    R('3. a race: exactly one of A and B gets it, the same one on both screens, and B\'s claim lock has ended', (r3a.holder === aNid || r3a.holder === bNid) && r3b.holder === r3a.holder && !(r3b.lock > 0), { host: r3a.holder, guest: r3b.holder, aNid, bNid, lock: r3b.lock, claims: r3b.rec.claim });
+
+    // ---- 4. B swims through its spot at full swim speed, never stopping: granted (judged at B's newest sample)
+    await toPond();
+    await put(A, 0, 0, -14);
+    await B.js(`(() => { const a = __G.match.local; for (let z = 7; z >= -7; z -= 1.2) __G.paint.splat(new (a.pos.constructor)(0.3, 0.2, z), 1.4, a.team, { seed: z * 7 }); return 1; })()`);
+    await put(B, 0.3, 0, 7, Math.PI);
+    await wait(500);
+    // (B starts its swim 0.3 s of its own sim after it hears the burst — past the host's 0.25 s hold — and swims 0.9 s)
+    await B.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); __simAfter(0.3, () => { const a = __G.match.local; a.pos.set(0.3, 0, 3.6); a.intent.squid = true; a.intent.move.set(0, 0, -1); __simAfter(0.9, () => { a.intent.move.set(0, 0, 0); a.intent.squid = false; }); }); }); }); __G.match.local.intent.squid = true; return 1; })()`);
+    await wait(300);
+    await burst(1);
+    await A.until(`!!__G.match.karp.holder`, 8000, 30).catch(() => {});
+    await B.until(`!!__G.match.karp.holder`, 3000, 30).catch(() => {});
+    await wait(400);
+    const r4a = await info(A), r4b = await info(B);
+    const sw = await J(B, `({ sub: __G.match.local.submerged, form: __G.match.local.form })`);
+    R('4. B swims through the spot at full speed without stopping: the host grants B\'s claim (its newest sample), the same on both screens', r4a.holder === bNid && r4b.holder === bNid, { host: r4a.holder, guest: r4b.holder, claims: r4b.rec.claim, sw });
+    await zeroB();
+
+    await grabShare(10);
+    const bot = await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);   // (the Bravo host bot: step 11)
+
+    // ---- 6. B carries: × 0.8 on B's screen, no super jump, B's own Bubble Guard gone on both screens, counts agree
+    await toPond();
+    await put(A, 0, 0, -14);
+    await put(B, 0, 0, 3.5, Math.PI);
+    await B.js(`(() => { const a = __G.match.local; a.special = a.specialCost(); __G.specials.start(a, a.specialId); import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); a.pos.set(0, 0, 0.9); a.vel.set(0, 0, 0); }); }); return 1; })()`);
+    await wait(600);
+    const sh0 = await J(B, `({ id: __G.match.local.specialId, sh: __G.match.local.status.shield })`);
+    const sh0a = await J(A, `(() => { const b = __G.match.actors.find((o) => o.nid === ${bNid}); return { sh: b.status.shield, sp: !!b.specialActive }; })()`);
+    await burst(1);
+    await A.until(`__G.match.karp.holder && __G.match.karp.holder.nid === ${bNid}`, 4000, 30).catch(() => {});
+    await wait(600);
+    const sh1 = await J(B, `({ sh: __G.match.local.status.shield, sp: !!__G.match.local.specialActive, sj: __G.match.local.canSuperJump(), carry: !!__G.match.local.carry })`);
+    const sh1a = await J(A, `(() => { const b = __G.match.actors.find((o) => o.nid === ${bNid}); return { sh: b.status.shield, carry: !!b.carry }; })()`);
+    R('6. B\'s own Bubble Guard (started just before) ends at the pick-up on both screens; B can\'t super jump', sh0.sh > 0 && sh1.carry && !(sh1.sh > 0) && !sh1.sp && sh1.sj === false && sh1a.carry && !(sh1a.sh > 0), { before: { b: sh0, a: sh0a }, after: { b: sh1, a: sh1a } });
+    await B.js(`(() => { __G.paint.clear(); const a = __G.match.local; a.form = 'kid'; a.pos.set(0, 0, -1); a.intent.move.set(0, 0, -1); return 1; })()`);
+    await wait(500);
+    // (timed on B's own sim clock: on a loaded machine a frame's dt is capped, so wall time runs ahead of the sim)
+    const p0 = await J(B, `({ z: __G.match.local.pos.z, t: __G.match.karp.clock })`);
+    await wait(1200);
+    const p1 = await J(B, `({ z: __G.match.local.pos.z, t: __G.match.karp.clock })`);
+    await zeroB();
+    const speed = Math.abs(p1.z - p0.z) / Math.max(1e-3, p1.t - p0.t);
+    const runK = await B.js(`(async () => { const { PLAYER } = await import('./src/config.js'); return PLAYER.runSpeed * 0.8; })()`);
+    // (B stands still now: the guest's count comes from the host's snapshots, one trip plus the playback delay behind)
+    await wait(900);
+    // (and the host's own reading of B's last samples settles a playback delay after B stops: compare once both agree, ≤ 6 s)
+    let c6a = await info(A), c6b = await info(B);
+    for (let k = 0; k < 12 && c6b.count[1] !== c6a.count[1]; k++) { await wait(500); c6a = await info(A); c6b = await info(B); }
+    const c6h = await bHud();
+    R('6b. … B runs at PLAYER.runSpeed × 0.8 on its own screen (measured over 1.2 s)', Math.abs(speed - runK) < 0.45, { speed: r2(speed), want: r2(runK) });
+    R('6c. … the host\'s count falls as B carries and B\'s HUD shows the same count', c6a.count[1] < 100 && c6b.count[1] === c6a.count[1] && JSON.stringify(c6h.line ? c6h.line : null) !== 'null', { host: c6a.count, guest: c6b.count, hud: c6h && c6h.status });
+
+    // ---- 6b. the thin-wall stall: B swims along the 0.3 m wall pressed into it, its ticks frozen 0.4 s mid-way
+    await B.js(`(() => { const a = __G.match.local; for (let z = -4; z >= -20; z -= 1.2) __G.paint.splat(new (a.pos.constructor)(-5.25, 0.2, z), 0.9, a.team, { seed: 31 + z }); return 1; })()`);
+    await wait(300);
+    // (walk there from where B stands, so the clamp sees a real walk; then the swim)
+    await B.js(`(() => { const a = __G.match.local; a.intent.move.set(-0.9, 0, -0.45); return 1; })()`);
+    await B.until(`__G.match.local.pos.x < -4.9 || !__G.match.local.carry`, 6000, 30).catch(() => {});
+    await B.js(`(() => { const a = __G.match.local, nm = __G.netm; window.__freeze = 0; if (!nm.__st) { nm.__st = nm._sendTick.bind(nm); nm._sendTick = () => { if (performance.now() < window.__freeze) return; nm.__st(); }; }
+      a.intent.squid = true; a.intent.move.set(-0.35, 0, -1); setTimeout(() => { window.__freeze = performance.now() + 400; }, 500); return 1; })()`);
+    const stall = [];
+    for (let k = 0; k < 9; k++) {
+      await wait(200);
+      const h = await info(A), own = await J(B, `(() => { const K = __G.match.karp, a = __G.match.local, r = K.field.fieldAt(a.team, a.pos); return { c: r ? K.field.count(a.team, r.d) : null, x: +a.pos.x.toFixed(2), z: +a.pos.z.toFixed(2) }; })()`);
+      stall.push([h.count[1], own.c, own.x, own.z]);
+    }
+    await zeroB();
+    const s6 = await info(A);
+    R('6d. the thin-wall stall (B\'s ticks frozen 0.4 s, pressed into the wall): the host\'s count never 2+ below B\'s own reading, no plant or knockout; clamp rejections reported',
+      stall.every(([h, o]) => o == null || h >= o - 2) && !s6.lowered[1] && s6.winner == null, { stall, clamped: s6.clamped });
+
+    // ---- 7. a Big Burst on A: A steps out during the swell on its own screen (safe); then A stays (splatted there)
+    await B.js(`(() => { const a = __G.match.local; a.intent.squid = false; a.form = 'kid'; return 1; })()`);
+    await A.js(`(() => { window.__step = 1; import('./src/core/ctx.js').then((m) => m.on('karp:land', (e) => { if (e.ghost && window.__step === 1) { const a = __G.match.local; a.pos.x += 6.5; } })); return 1; })()`);
+    await B.js(`(() => { const a = __G.match.local; a.pos.set(0, 0, -16); a.vel.set(0, 0, 0); return 1; })()`);
+    await wait(300);
+    const bp = await J(B, `__G.match.local.pos.toArray().map((x) => +x.toFixed(2))`);
+    await put(A, bp[0], 0, bp[2] - 20.4); await A.js(`(() => { const a = __G.match.local; a.hp = 100; a.invuln = 0; return 1; })()`);
+    await wait(600);
+    // (A is judged when B's [2] plays on A's screen — B's blast plus the trip and B's playback delay: wait for it there)
+    const blastsA = () => `window.__ev.filter((e) => e.k === 'karp:blast').length`;
+    const nb7 = await J(A, blastsA());
+    await B.js(`(() => { const a = __G.match.local; a.aimYaw = a.yaw = Math.PI; a.aimPitch = 0; a.intent.fire = true; __simAfter(1.6, () => { a.intent.fire = false; }); return 1; })()`);
+    await A.until(`${blastsA()} > ${nb7}`, 9000, 40).catch(() => {});
+    await wait(300);
+    const s7a = await J(A, `({ alive: __G.match.local.alive, hp: Math.round(__G.match.local.hp), x: +__G.match.local.pos.x.toFixed(2) })`);
+    const landB = await J(B, `__G.karpGun.shots.filter((s) => !s.ghost && s.land).map((s) => ({ c: s.c, land: s.land.toArray().map((x) => +x.toFixed(1)) }))`);
+    R('7. A steps out of a Big Burst\'s swell on its own screen: not splatted', s7a.alive, { a: s7a, shots: landB });
+    await A.js(`(() => { window.__step = 2; const a = __G.match.local; a.pos.x -= 6.5; a.hp = 100; a.invuln = 0; return 1; })()`);
+    await put(A, bp[0], 0, bp[2] - 20.4);
+    await wait(500);
+    const n0a = await J(A, `window.__ev.filter((e) => e.k === 'splatted' && e.v === ${aNid}).length`), n0b = await J(B, `window.__ev.filter((e) => e.k === 'splatted' && e.v === ${aNid}).length`);
+    const nb7b = await J(A, blastsA());
+    await B.js(`(() => { const a = __G.match.local; a.aimYaw = a.yaw = Math.PI; a.aimPitch = 0; a.intent.fire = true; __simAfter(1.6, () => { a.intent.fire = false; }); return 1; })()`);
+    await A.until(`${blastsA()} > ${nb7b}`, 9000, 40).catch(() => {});
+    await wait(600);
+    const n1a = await J(A, `window.__ev.filter((e) => e.k === 'splatted' && e.v === ${aNid}).map((e) => e.c)`), n1b = await J(B, `window.__ev.filter((e) => e.k === 'splatted' && e.v === ${aNid}).length`);
+    R('7b. A stays in it: splatted by the Carp Shot on A\'s own screen, one splat on each screen (never two)', n1a.length === n0a + 1 && n1a[n1a.length - 1] === 'karp' && n1b === n0b + 1, { a: n1a, before: [n0a, n0b], b: n1b });
+    await alive(A);
+
+    // ---- 8. B's gauge while Alpha holds it (+3 p/s); the shell's sting on B (20 per 0.5 s)
+    await toPond();
+    await put(B, 0, 0, 14);
+    // (A waits 3 m off, outside the shell's shove, and steps onto it the moment it bursts)
+    await put(A, 0, 0, -3.2);
+    await A.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const a = __G.match.local; a.pos.set(0, 0, -0.5); a.vel.set(0, 0, 0); }); }); return 1; })()`);
+    await wait(250);
+    await burst(0);
+    await A.until(`__G.match.karp.holder === __G.match.local`, 6000, 30).catch(() => {});
+    await B.until(`!!__G.match.karp.holder && __G.match.karp.holder.nid === ${aNid}`, 4000, 30).catch(() => {});
+    await B.js(`(() => { const a = __G.match.local; a.special = 10; return 1; })()`);
+    await wait(300);
+    // (on B's own sim clock: the gauge charges per simulated second)
+    const g0 = await J(B, `({ sp: __G.match.local.special, t: __G.match.karp.clock, h: __G.match.karp.holder ? __G.match.karp.holder.nid : null })`);
+    await wait(2000);
+    const g1 = await J(B, `({ sp: __G.match.local.special, t: __G.match.karp.clock, h: __G.match.karp.holder ? __G.match.karp.holder.nid : null })`);
+    const rate8 = (g1.sp - g0.sp) / Math.max(1e-3, g1.t - g0.t);
+    R('8. while Alpha holds it, B\'s gauge rises at 3 p/s on B\'s screen', g0.h === aNid && g1.h === aNid && Math.abs(rate8 - 3) < 0.6, { rate: r2(rate8), holder: [g0.h, g1.h], aNid });
+    await toPond();
+    await put(A, 0, 0, -14);
+    await B.js(`(() => { const a = __G.match.local; a.hp = 100; a.invuln = 0; window.__touch = setInterval(() => { const K = __G.match.karp, c = K.shell.center(), R = K.shell.radius(); a.pos.set(c.x, 0, c.z + R + 0.2); a.vel.set(0, 0, 0); }, 8); setTimeout(() => clearInterval(window.__touch), 1150); return 1; })()`);
+    await wait(1600);
+    const st8 = await J(B, `window.__ev.filter((e) => e.k === 'damage' && e.v === ${bNid} && e.c === 'karp-touch').slice(-4).map((e) => ({ amt: e.amt, t: Math.round(e.t) }))`);
+    const gaps = st8.slice(1).map((e, i) => e.t - st8[i].t);
+    R('8b. touching the shell stings B on B\'s screen: 20 hp a time, at most every 0.5 s', st8.length >= 2 && st8.every((e) => Math.abs(e.amt - 20) < 0.01) && gaps.every((g) => g >= 450), { st8, gaps });
+
+    // ---- 10. B plants one of its two weirs (the raised deck): both of Bravo's weirs lower, its Gate rises, everywhere
+    await put(B, 0, 0, 10);
+    await A.js(`(() => { const K = __G.match.karp; K._dropAt(new (K.pos.constructor)(0, 0, -16.5), 0, 'moved'); return 1; })()`);
+    await A.until(`__G.match.karp.phase === 'shielded'`, 4000, 100).catch(() => {});
+    const kp10 = (await info(A)).pos;
+    await B.until(`__G.match.karp.phase === 'shielded'`, 4000, 100).catch(() => {});
+    await grabB();
+    await B.js(`(() => { const a = __G.match.local; a.aimYaw = a.yaw = Math.PI; a.intent.move.set(${-kp10[0] * 0.04}, 0, -1); return 1; })()`);
+    await A.until(`__G.match.karp.lowered[1]`, 9000, 50).catch(() => {});
+    await zeroB();
+    await wait(800);
+    const w10a = await info(A), w10b = await info(B);
+    const fx10 = await J(B, `(__G.karpFx.weirs || []).filter((x) => x.w.team === 1).map((x) => x.low >= 0)`);
+    const dbg10 = { kp10, holder: w10a.holder, bPos: await J(B, `__G.match.local.pos.toArray().map((x) => +x.toFixed(2))`), bCarry: await J(B, `!!__G.match.local.carry`) };
+    R('10. B lands it on one of Bravo\'s two weirs (the platform\'s): both lowered and Bravo\'s Gate up, on both screens (the looks too)',
+      w10a.weirsLow[1].length === 2 && w10a.weirsLow[1].every(Boolean) && w10b.weirsLow[1].every(Boolean) && w10a.gate[1] && w10b.gate[1] && !w10a.lowered[0] && fx10.length === 2 && fx10.every(Boolean), { host: { low: w10a.weirsLow, gate: w10a.gate }, guest: { low: w10b.weirsLow, gate: w10b.gate }, fx10, dbg10 });
+
+    // ---- 11. the fuse runs out with B on its own half: B and a Bravo bot 3 m away splatted, back to the Pond on both
+    await toPond();
+    await put(A, 0, 0, -14);
+    await grabB();
+    await B.js(`(() => { const a = __G.match.local; a.pos.set(0, 0, 6); a.vel.set(0, 0, 0); return 1; })()`);
+    await wait(500);
+    await A.js(`(() => { const K = __G.match.karp, b = __G.match.actors.find((o) => o.nid === ${bot}); if (!K.holder) return 0; const s = K.wire.newest(K.holder); b.pos.set(s.x + 3, 0, s.z); b.vel.set(0, 0, 0); b.hp = 100; b.invuln = 0; K.fuse = 1.2; return 1; })()`);
+    await A.until(`!__G.match.karp.holder`, 6000, 30).catch(() => {});
+    await wait(900);
+    const f11a = await J(A, `({ bot: __G.match.actors.find((o) => o.nid === ${bot}).alive, bAlive: __G.match.actors.find((o) => o.nid === ${bNid}).alive, phase: __G.match.karp.phase, blasts: __G.match.karp.stats.blasts })`);
+    const f11b = await J(B, `({ me: __G.match.local.alive, phase: __G.match.karp.phase, cause: window.__ev.filter((e) => e.k === 'splatted' && e.v === ${bNid}).map((e) => e.c).slice(-1)[0] })`);
+    R('11. the fuse runs out on B\'s own half: B (on its screen) and the Bravo bot 3 m away (on the host\'s) splatted by the Carp Blast; it flies back to the Pond on both screens',
+      !f11b.me && f11b.cause === 'karp-fuse' && !f11a.bot && f11a.blasts.own >= 1 && ['resetting', 'reforming', 'shielded'].includes(f11a.phase) && ['resetting', 'reforming', 'shielded'].includes(f11b.phase), { host: f11a, guest: f11b });
+    await alive(B);
+  }
+
+  if (part === 'lag') {
+    // ---- 1. B's shots on the shell move the host's meter under lag
+    await put(B, 0, 0, 6);
+    await wait(500);
+    await B.js(`(() => { const a = __G.match.local, c = __G.match.karp.shell.center(); a.intent.fire = true; window.__aim = setInterval(() => { a.aimYaw = Math.atan2(c.x - a.pos.x, c.z - a.pos.z); a.yaw = a.aimYaw; a.aimPitch = Math.atan2(c.y - (a.pos.y + 1.2), 6); a.ink = 100; }, 30); return 1; })()`);
+    await wait(2000);
+    await B.js(`(() => { clearInterval(window.__aim); __G.match.local.intent.fire = false; return 1; })()`);
+    await wait(900);
+    const l1a = await info(A), l1b = await info(B);
+    R('lag 1. B\'s shots move the host\'s meter (kh), B follows within a snapshot', l1a.meter < -40 && Math.abs(l1b.meter - l1a.meter) < 150, { host: l1a.meter, guest: l1b.meter });
+    // ---- 3. B grabs it under lag
+    await toPond();
+    await put(A, 0, 0, -14);
+    await grabB();
+    const l3a = await info(A), l3b = await info(B);
+    R('lag 3. B\'s claim is granted under lag, the same on both screens', l3a.holder === bNid && l3b.holder === bNid, { host: l3a.holder, guest: l3b.holder });
+    // ---- 9 / 9b. B retreats on its own half: DON'T RETREAT! at once on B; the shown fuse never rewinds > 0.2 s a second
+    await B.js(`(() => { const a = __G.match.local; a.pos.set(0, 0, 4); a.vel.set(0, 0, 0); window.__fz = []; window.__fzT = setInterval(() => { const K = __G.match.karp; window.__fz.push([Math.round(performance.now()), +K.hud.fuseShown.toFixed(3), K.state().rate, K.holder === __G.match.local ? 1 : 0]); }, 50); return 1; })()`);
+    await wait(500);
+    await B.js(`(() => { const a = __G.match.local; a.intent.move.set(0, 0, 1); return 1; })()`);
+    await B.until(`__G.match.karp.state().rate === 3`, 6000, 16).catch(() => {});
+    const hud9 = await bHud();
+    await zeroB();
+    await A.until(`__G.match.karp.remote.rate === 3`, 3000, 30).catch(() => {});
+    const l9a = await info(A);
+    R('lag 9. B retreats on its own half: DON\'T RETREAT! on B\'s screen the moment its own judgement says ×3; the host\'s rate follows (kr)', /DON'T RETREAT/.test(hud9?.bottom?.[0] || '') && l9a.remote.rate === 3 && l9a.remote.why === 'retreat', { hud: hud9 && hud9.bottom, host: l9a.remote });
+    // ---- 9c. [karp-face] review round 1: B's ring against the host's fuse while B carries at ×3 (8 pairs, the host read
+    // just before and just after B; reported B − host). The ring ran 0.4–0.6 s long here when snapshots were aged by the
+    // match clock (a guest's trails the host's by the one-way delay, inside a 0.2 s dead band)
+    await wait(1500);
+    const pairs = [];
+    for (let k = 0; k < 8; k++) {
+      const h = await J(A, `+__G.match.karp.fuse.toFixed(3)`), gB = await J(B, `+__G.match.karp.hud.fuseShown.toFixed(3)`), h2 = await J(A, `+__G.match.karp.fuse.toFixed(3)`);
+      pairs.push([+(gB - (h + h2) / 2).toFixed(2), +((h - h2) / 2).toFixed(2)]);
+      await wait(250);
+    }
+    const gaps = pairs.map((q) => q[0]), mean9 = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+    R('lag 9c. while B carries at ×3, B\'s ring stays with the host\'s fuse: mean |B − host| ≤ 0.3 s, none past 0.6 s (8 pairs; ± the read skew)', Math.abs(mean9) <= 0.3 && gaps.every((q) => Math.abs(q) <= 0.6), { mean: +mean9.toFixed(2), pairs });
+    // the host lets the fuse run down to the blast (B stays retreated, ×3)
+    await A.js(`(() => { const K = __G.match.karp; K.fuse = Math.min(K.fuse, 4.5); window.__xF = null; return 1; })()`);
+    await B.js(`(() => { const K = __G.match.karp, ne = K.netEvent.bind(K); window.__xF = null; K.netEvent = (e, s) => { if (Array.isArray(e) && e[0] === 'x' && window.__xF == null) window.__xF = +K.hud.fuseShown.toFixed(3); return ne(e, s); }; return 1; })()`);
+    await B.until(`window.__xF != null`, 9000, 30).catch(() => {});
+    await wait(300);
+    const fz = await J(B, `(() => { clearInterval(window.__fzT); return { fz: window.__fz, xF: window.__xF }; })()`);
+    let worst = 0;
+    const s9 = fz.fz.filter((q) => q[3] === 1);   // (while B carries)
+    for (let i = 0; i < s9.length; i++) for (let j = i + 1; j < s9.length && s9[j][0] - s9[i][0] <= 1000; j++) worst = Math.max(worst, s9[j][1] - s9[i][1]);
+    R('lag 9b. the fuse ring under ×3: in any 1 s it never goes up by more than 0.2 s, and at the Carp Blast B\'s ring shows ≤ 0.3 s', worst <= 0.2 + 1e-6 && fz.xF != null && fz.xF <= 0.3, { worstRise: r2(worst), atBlast: fz.xF, samples: s9.length });
+    await alive(B);
+    // ---- 15b. a declined grant under lag: B dies on its own screen the moment its grant plays
+    await toPond();
+    await put(A, 0, 0, -14);
+    await put(B, 0, 0, 4);
+    await wait(400);
+    await B.js(`(() => { const K = __G.match.karp, me = __G.match.local, ne = K.netEvent.bind(K); window.__died = 0; K.netEvent = (e, s) => { if (Array.isArray(e) && e[0] === 'p' && e[2] === me.nid && !window.__died) { window.__died = 1; me.splat(null, 'weapon'); } return ne(e, s); }; return 1; })()`);
+    await burst(1);
+    await B.until(`__G.match.karp.phase === 'free'`, 4000, 20).catch(() => {});
+    await put(B, 0.3, 0, 0.3);
+    await A.until(`__G.match.karp.stats.declined >= 1`, 5000, 30).catch(() => {});
+    await wait(1200);
+    const d15a = await info(A), d15b = await info(B);
+    R('lag 15b. a grant B\'s screen can no longer take (B died first) is declined (kx) and undone (u): free at the same spot on both screens',
+      d15a.declined >= 1 && d15a.holder == null && d15b.holder == null && d15a.phase === 'free' && d15b.phase === 'free' && Math.hypot(d15a.pos[0] - d15b.pos[0], d15a.pos[2] - d15b.pos[2]) < 0.5, { host: { d: d15a.declined, holder: d15a.holder, phase: d15a.phase, pos: d15a.pos }, guest: { holder: d15b.holder, phase: d15b.phase, pos: d15b.pos } });
+    await alive(B);
+    await B.js(`(() => { const K = __G.match.karp; delete K.netEvent; return 1; })()`);
+    // ---- 15c. the window's close: an S39b overtime (Bravo behind); B's claim leaves 0.2 s before the window closes
+    await toPond();
+    await A.js(`(() => { const K = __G.match.karp, m = __G.match; K.count = [60, 100]; K.reachT = [5, 0]; K.touched = true; K.lastCarrier = { team: 0, how: 'splat', left: 5 }; m.time = 0.3; return 1; })()`);
+    await A.until(`__G.match.karp.overtime && __G.match.karp.otWin.open`, 4000, 50).catch(() => {});
+    await B.until(`__G.match.karp.overtime`, 4000, 50).catch(() => {});
+    // (the host's window closes 0.2 s after B's first claim was sent — by B's own stamp on the host's clock, ts + off —
+    // and that claim is handed to the engine 0.3 s after the close, as a claim that was still in flight would be; the
+    // grace counts from the close, as the engine's own does. B's re-sent claims, stamped after the close, pass through.)
+    await A.js(`(() => { const K = __G.match.karp, w = K.wire, em = w._emit.bind(w); window.__closed = null;
+      w._emit = (k, d) => { const W = K.otWin;
+        if (k === 'claim' && d.actor && d.actor.nid === ${bNid} && window.__closed == null && W.open && W.closeT == null) {
+          const now = w.now(); W.left = 0; W.closeT = d.ts + 0.2; W.grace = 0.4 + Math.max(0, W.closeT - now);
+          window.__closed = { ts: +d.ts.toFixed(3), now: +now.toFixed(3), closeT: +W.closeT.toFixed(3) };
+          setTimeout(() => { window.__closed.at = +w.now().toFixed(3); em(k, d); }, Math.max(0, (W.closeT + 0.3 - now) * 1000)); return; }
+        return em(k, d); };
+      K.otWin.left = 30; return 1; })()`);
+    await grabB();
+    await A.until(`__G.match.karp.holder || __G.match.karp.winner != null`, 6000, 30).catch(() => {});
+    await wait(1200);
+    const c15a = await info(A), c15b = await info(B), cl = await J(A, `window.__closed`);
+    R('lag 15c. B\'s claim, sent 0.2 s before the S39b window closed and reaching the engine 0.3 s after the close, is still granted: overtime goes on',
+      !!cl && cl.at != null && cl.at - cl.closeT >= 0.25 && c15a.holder === bNid && c15b.holder === bNid && c15a.winner == null && c15a.overtime, { host: { holder: c15a.holder, winner: c15a.winner, reason: c15a.reason, ot: c15a.overtime }, guest: c15b.holder, closed: cl });
+  }
+
+  if (part === 'race') { await zeroB(); await put(A, 0, 0, -14); await grabShare(16); await toPond(); }
+  // ([karp-face] the race's rule itself, free of the run's physics: a host bot and B each step onto the Bazookarp a set
+  // time after it went free on their own screens — 0.30 s and 0.36 s, the host's first in even rounds, B's in odd: the
+  // earlier one must win, whichever side it is on)
+  if (part === 'racefair') {
+    await zeroB(); await put(A, 0, 0, -14);
+    const bot = await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
+    const N = 12, rows = []; let right = 0;
+    for (let k = 0; k < N; k++) {
+      await toPond();
+      const kp = (await info(A)).pos, hostFirst = k % 2 === 0, tH = hostFirst ? 0.3 : 0.36, tB = hostFirst ? 0.36 : 0.3;
+      await A.js(`(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); b.pos.set(${kp[0]} + 4, 0, ${kp[2]}); b.vel.set(0, 0, 0); b.intent.move.set(0, 0, 0); import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); __simAfter(${tH}, () => { b.pos.set(${kp[0]} + 0.5, ${kp[1]}, ${kp[2]}); b.vel.set(0, 0, 0); }); }); }); return 1; })()`);
+      await put(B, kp[0] - 4, 0, kp[2]);
+      await B.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); __simAfter(${tB}, () => { const a = __G.match.local; a.pos.set(${kp[0]} - 0.5, ${kp[1]}, ${kp[2]}); a.vel.set(0, 0, 0); }); }); }); return 1; })()`);
+      await wait(250);
+      await burst(1);
+      await A.until(`!!__G.match.karp.holder`, 6000, 30).catch(() => {});
+      const h = (await info(A)).holder, want = hostFirst ? bot : bNid;
+      if (h === want) right++;
+      const g = await J(A, `(() => { const g = (__G.match.karp.stats.grantLog || []).slice(-1)[0]; return g ? { w: g.wait, c: g.claims.map((c) => [c.remote ? 'B' : 'bot', c.since]) } : null; })()`);
+      rows.push([hostFirst ? 'bot first' : 'B first', h === bot ? 'bot' : h === bNid ? 'B' : String(h), g]);
+      await wait(300);
+    }
+    await toPond();
+    R(`5f. the race's rule: the claimant that touched it first on its own screen wins, host bot or guest alike (each steps on 0.30 s / 0.36 s after it went free on its own screen; ${N} rounds, alternating)`, right >= N - 1, { right, N, rows });
+  }
+
+  // [karp-face] review round 2: running starts. A host bot and B both RUN in from 7 m, setting off at the same moment of
+  // the host's clock (B reads it as NetWire.hostNow: its peer offset plus the one-way delay), 6 m/s, moved by each page
+  // on its own clock (no frame-rate or weapon-speed difference); the host bursts it 0.45 s after they set off (both
+  // still well outside the shell, so neither is held up by its shove). They reach it at the same real moment; the race
+  // orders claims by `since` on each claimant's own screen, and B learned of the burst one way late — so B's since is
+  // smaller by about that one-way delay. Reported (no threshold): the winners by side, each round's touch gap on the
+  // host's clock and its since gap. Run it with URLQ netlag to see the bias the reviewer predicted.
+  if (part === 'racerun') {
+    await zeroB(); await put(A, 0, 0, -14);
+    const bot = await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
+    const N = +(process.env.RACE_N || 12), rows = [], wins = { bot: 0, guest: 0, none: 0 };
+    const mover = (clk, nid) => `((x0, y0, z0, dir, T, kx, kz) => { const a = ${nid != null ? `__G.match.actors.find((o) => o.nid === ${nid})` : '__G.match.local'}, K = __G.match.karp; window.__touch = null;
+      const id = setInterval(() => { const now = ${clk}, t = now - T; const d = Math.max(0, Math.min(t * 6, 6.7)); a.pos.set(x0 + dir * d, a.pos.y, z0); a.vel.set(0, 0, 0); a.intent.move.set(0, 0, 0);
+        if (window.__touch == null && K.phase === 'free' && Math.hypot(a.pos.x - K.pos.x, a.pos.z - K.pos.z) <= 1.3) window.__touch = now;
+        if (t > 2.5) clearInterval(id); }, 4); return 1; })`;
+    for (let k = 0; k < N; k++) {
+      const sg = k % 2 === 1 ? -1 : 1;   // (the host bot on +x in even rounds, on −x in odd ones)
+      await toPond();
+      const kp = (await info(A)).pos;
+      await A.js(`(() => { const b = __G.match.actors.find((o) => o.nid === ${bot}); b.pos.set(${kp[0]} + ${7 * sg}, 0, ${kp[2]}); b.vel.set(0, 0, 0); b.intent.move.set(0, 0, 0); return 1; })()`);
+      await put(B, kp[0] - 7 * sg, 0, kp[2]);
+      await wait(300);
+      // ([karp-face] review round 3, 2nd fixer: both pages on the MACHINE's clock — timeOrigin + now() is one clock for every
+      // page here — not B on its own estimate of the host's: that estimate is what the claims are judged by, and B set off
+      // and timed its touch on it, so a bias in it hid in the touch gap: the race looked a dead heat when B was ahead)
+      const T = await J(A, `+((performance.timeOrigin + performance.now()) / 1000 + 1.2).toFixed(4)`);
+      await A.js(`${mover('(performance.timeOrigin + performance.now()) / 1000', bot)}(${kp[0]} + ${7 * sg}, 0, ${kp[2]}, ${-sg}, ${T})`);
+      await B.js(`${mover('(performance.timeOrigin + performance.now()) / 1000', null)}(${kp[0]} - ${7 * sg}, 0, ${kp[2]}, ${sg}, ${T})`);
+      await A.js(`(() => { setTimeout(() => { const K = __G.match.karp; K.shell.add(1, 3000, __G.match.actors.find((o) => o.nid === ${bNid})); }, Math.max(0, (${T} + 0.45 - (performance.timeOrigin + performance.now()) / 1000) * 1000)); return 1; })()`);
+      await A.until(`!!__G.match.karp.holder`, 8000, 30).catch(() => {});
+      await wait(900);
+      const h = (await info(A)).holder;
+      if (h === bot) wins.bot++; else if (h === bNid) wins.guest++; else wins.none++;
+      const tA = await J(A, `window.__touch`), tB = await J(B, `window.__touch`), oneWay = await J(B, `+__G.match.karp.wire.oneWay(__G.match.karp.wire.hostId()).toFixed(3)`);
+      const g = await J(A, `(() => { const g = (__G.match.karp.stats.grantLog || []).slice(-1)[0]; return g ? { wait: g.wait, c: g.claims.map((c) => [c.remote ? 'B' : 'bot', c.since, c.cr ?? 0]) } : null; })()`);
+      const sB = g && g.c.find((c) => c[0] === 'B'), sH = g && g.c.find((c) => c[0] === 'bot');
+      // (touchGap: B's touch − the bot's on the machine's clock, > 0: the bot first; sinceGap: the same as the host judged it;
+      // cr: what the host added to B's since for its running start)
+      // (the two ways of reading B's lateness, side by side on the same round: 'new' — B's floor read at its frame plus half
+      // the two floor offsets, what the host now adds — and 'old' — hostNow at the record's arrival, the one-way estimate
+      // added, ≥ 0 — what it added before; and none at all)
+      const kb = await J(B, `(() => { const S = __G.match.karp.stats; return { kc: (S.kcLog || []).slice(-1)[0] || null, b: (S.bLog || []).slice(-1)[0] || null }; })()`);
+      const offA = await J(A, `(() => { const w = __G.match.karp.wire, b = __G.match.actors.find((o) => o.nid === ${bNid}); return w.off ? w.off(b && b.owner) : null; })()`);
+      let alt = null;
+      // (B's own since: the host's — the smallest of its re-sent claims, 0.3 s apart — less what it added; kcLog's last
+      // entry is the last re-send)
+      if (kb.kc && kb.b && sH && sB) {
+        const cl = (v, a, b) => Math.max(a, Math.min(b, v)), run = kb.kc.run || 0;
+        const lateNew = kb.kc.late != null && kb.kc.fo != null && offA != null ? kb.kc.late + cl((offA + kb.kc.fo) / 2, 0, 0.3) : null;
+        const lateOld = kb.b.off != null && kb.b.oneWay != null ? cl(kb.b.arr - kb.b.off + kb.b.oneWay - kb.b.tb, 0, 0.4) : null;
+        const g0 = sB[1] - sB[2] - sH[1];
+        alt = { raw: +g0.toFixed(3), new: +(sB[1] - sH[1]).toFixed(3), old: lateOld != null ? +(g0 + run * Math.min(0.25, lateOld)).toFixed(3) : null, run, lateNew: lateNew != null ? +lateNew.toFixed(3) : null, lateOld: lateOld != null ? +lateOld.toFixed(3) : null };
+      }
+      rows.push({ hostSide: sg > 0 ? '+x' : '-x', won: h === bot ? 'bot' : h === bNid ? 'B' : String(h), touchGap: tA != null && tB != null ? +(tB - tA).toFixed(3) : null, sinceGap: sB && sH ? +(sB[1] - sH[1]).toFixed(3) : null, cr: sB ? sB[2] : null, alt, oneWay, wait: g && g.wait });
+      await wait(300);
+    }
+    await toPond();
+    const avg = (k) => { const v = rows.map((r) => r[k]).filter((x) => x != null); return v.length ? +(v.reduce((a, b) => a + b, 0) / v.length).toFixed(3) : null; };
+    // (the judging's own error: sinceGap − touchGap; > 0 favours the host's bot. And the order it got wrong: a gap of
+    // ≥ 15 ms one way decided the other way — a closer one is a dead heat, either may win it)
+    const err = rows.filter((r) => r.touchGap != null && r.sinceGap != null).map((r) => +(r.sinceGap - r.touchGap).toFixed(3)).sort((a, b) => a - b);
+    const wrong = rows.filter((r) => r.touchGap != null && Math.abs(r.touchGap) >= 0.015 && (r.touchGap > 0 ? r.won === 'B' : r.won === 'bot')).length;
+    // (each reading's error against the machine's clock, on the same rounds: median and mean |error|)
+    const errOf = (k) => {
+      const R = rows.filter((r) => r.alt && r.alt[k] != null && r.touchGap != null && Math.abs(r.touchGap) < 0.3), v = R.map((r) => r.alt[k] - r.touchGap).sort((a, b) => a - b);
+      const ties = R.filter((r) => Math.abs(r.touchGap) < 0.015), wrongK = R.filter((r) => Math.abs(r.touchGap) >= 0.015 && (r.touchGap > 0) !== (r.alt[k] > 0)).length;
+      return v.length ? { n: v.length, median: +v[v.length >> 1].toFixed(3), meanAbs: +(v.reduce((a, b) => a + Math.abs(b), 0) / v.length).toFixed(3), wrong: wrongK, deadHeats: { bot: ties.filter((r) => r.alt[k] > 0).length, B: ties.filter((r) => r.alt[k] <= 0).length } } : null;
+    };
+    const readings = { raw: errOf('raw'), new: errOf('new'), old: errOf('old') };
+    const skew = await J(B, `+((performance.timeOrigin + performance.now()) - Date.now()).toFixed(1)`) - await J(A, `+((performance.timeOrigin + performance.now()) - Date.now()).toFixed(1)`);
+    R(`5r. running starts (reported): a host bot and B run in from 7 m, setting off at the same moment of the machine's clock; ${N} rounds, sides alternating`, wins.bot + wins.guest >= N - 2,
+      { wins, wrong, readings, meanTouchGap: avg('touchGap'), meanSinceGap: avg('sinceGap'), errMedian: err.length ? err[err.length >> 1] : null, err, clockSkewMs: +skew.toFixed(1), rows });
+  }
+
+  if (part === 'raceswap') { await zeroB(); await put(A, 0, 0, -14); await grabShare(12, false, true); await toPond(); }   // (the host's racer always on −x)
+  if (part === 'raceside') { await zeroB(); await put(A, 0, 0, -14); await grabShare(12, false, false); await toPond(); }   // (the host's racer always on +x)
+
+  if (part === 'racekid') { await zeroB(); await grabShare(16, true); await toPond(); }   // ([karp-face] the host's own player vs the guest)
+
+  // ---- [karp-face] review round 3, NET_ARGS='part=ottag': the results screen's OVERTIME +m:ss on both screens. A Bravo
+  // host bot holds it while Alpha leads at time-up (S38 'held': overtime), and the host splats it just past a whole second
+  // of its own overtime clock ('stopped'). A follower's own clock trails the host's by its playback delay; the results
+  // round it UP to whole seconds — the reviewer's 3.04 / 2.92 read +0:04 / +0:03. Both screens: the same overtimeT and the
+  // same tag
+  if (part === 'ottag') {
+    const tb = await J(A, `(() => { const b = __G.match.actors.find((o) => o.bot && !o.remote && o.team === 1); return b ? b.nid : -1; })()`);
+    await A.js(`(() => { const K = __G.match.karp, b = __G.match.actors.find((o) => o.nid === ${tb}); b.pos.set(0, 0, 1.0); b.vel.set(0, 0, 0); K.shell.add(1, 3000, b); return 1; })()`);
+    for (const c of [A, B]) await c.until(`__G.match.karp.holder && __G.match.karp.holder.nid === ${tb}`, 5000, 30).catch(() => {});
+    await A.js(`(() => { const K = __G.match.karp; K.count[0] = 50; K.reachT[0] = 1; K.fuse = 60; __G.match.time = 0.3; return 1; })()`);
+    for (const c of [A, B]) await c.until(`__G.match.karp.overtime`, 5000, 20).catch(() => {});
+    const frac = 0.03 + Math.random() * 0.07;
+    await A.js(`(() => { const K = __G.match.karp; window.__otEnd = null; const id = setInterval(() => { const t = K.overtimeT; if (K.winner != null) { clearInterval(id); return; } if (t > 3 && t % 1 > ${frac.toFixed(3)} && t % 1 < 0.12) { window.__otEnd = +t.toFixed(3); const h = K.holder; if (h) { h.invuln = 0; h.splat(null, 'weapon'); } clearInterval(id); } }, 3); return 1; })()`);
+    for (const c of [A, B]) await c.until(`!!__G.match.result`, 30000, 100).catch(() => {});
+    const res = async (c) => J(c, `(() => { const r = __G.match.result, K = __G.match.karp; return r ? { winner: r.winner, reason: r.reason, counts: r.counts, otT: +K.overtimeT.toFixed(3) } : null; })()`);
+    const rA = await res(A), rB = await res(B), at = await J(A, `window.__otEnd`);
+    for (const c of [A, B]) await c.until(`__inkwave.menus.current === 'results'`, 40000, 300).catch(() => {});
+    await wait(6000);
+    const tag = async (c) => J(c, `(() => { const t = [...document.querySelectorAll('.iw-res__tag--zot')].map((e) => e.textContent.replace(/\\s+/g, ' ').trim()); return t.length ? t : null; })()`);
+    const tA = await tag(A), tB = await tag(B);
+    R('ottag. an overtime that ends just past a whole second on the host: the same overtime played on both screens, and the same OVERTIME +m:ss tag on both results screens',
+      !!rA && !!rB && rA.reason === 'stopped' && rB.reason === rA.reason && rA.otT === rB.otT && !!tA && JSON.stringify(tA) === JSON.stringify(tB), { splatAt: at, host: rA, guest: rB, tags: { host: tA, guest: tB } });
+  }
+  if (part === 'snap') {
+    // [karp-face] review round 1 (the blocker and its twin): a snapshot the host took BEFORE a discrete record plays on a
+    // guest AFTER it (records go at once, snapshots ride the timeline). It must change nothing there: not a new carrier's
+    // fuse (the old code synced B's own ring to the last carry's leftover and kept it there: 5 grabs in 6 at ~5 s, red,
+    // ticking, while the host's fuse was ~58), not a follower's view of a fresh carrier's fuse, not the counts after a
+    // knockout (the old code put the guest's 0 back up to the host's pre-'e' count, 2 runs in 2).
+    const grabBy = async (c, team, nid) => {
+      const kp = await J(A, `__G.match.karp.pos.toArray()`);
+      await put(c, kp[0], kp[1], kp[2] + (team ? 3.2 : -3.2));
+      await c.js(`(() => { import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const a = __G.match.local; a.pos.set(${kp[0]}, ${kp[1]}, ${kp[2]} + ${team ? 0.5 : -0.5}); a.vel.set(0, 0, 0); }); }); return 1; })()`);
+      await wait(250);
+      await burst(team);
+      await A.until(`__G.match.karp.holder && __G.match.karp.holder.nid === ${nid}`, 5000, 30).catch(() => {});
+      await B.until(`!!__G.match.karp.holder && __G.match.karp.holder.nid === ${nid}`, 3000, 10).catch(() => {});
+    };
+    const LEFT = 7, rows = [], rows2 = [];
+    for (let k = 0; k < 5; k++) {
+      await alive(A); await alive(B);
+      // A carries; its carry ends with the host's fuse at LEFT (k = 4: at 0 — a Carp Blast's leftover)
+      await toPond();
+      await put(B, 0, 0, 14);
+      await grabBy(A, 0, aNid);
+      await A.js(`(() => { const K = __G.match.karp; K.fuse = ${k === 4 ? 0.3 : LEFT}; return 1; })()`);
+      await wait(k === 4 ? 900 : 300);
+      await alive(A);
+      await toPond();
+      await put(A, 0, 0, -14);
+      // B grabs: B's own ring (fuseShown) for 1.5 s, sampled every frame-ish
+      await B.js(`(() => { window.__fz = []; window.__fzI = setInterval(() => { const K = __G.match.karp; if (K.holder === __G.match.local) window.__fz.push(+K.hud.fuseShown.toFixed(2)); }, 8); return 1; })()`);
+      await grabBy(B, 1, bNid);
+      await wait(1500);
+      const fz = await J(B, `(() => { clearInterval(window.__fzI); return window.__fz; })()`);
+      const host = await J(A, `+__G.match.karp.fuse.toFixed(2)`), shown = await J(B, `+__G.match.karp.hud.fuseShown.toFixed(2)`);
+      rows.push({ min: fz.length ? Math.min(...fz) : null, n: fz.length, host, shown });
+      // B's carry ends at LEFT; A grabs: B's view of A's fuse (the marker over A's head) for 0.9 s
+      await A.js(`(() => { const K = __G.match.karp; K.fuse = ${LEFT}; return 1; })()`);
+      await wait(300);
+      await toPond();
+      await put(B, 0, 0, 14);
+      await B.js(`(() => { window.__fz2 = []; window.__fzI2 = setInterval(() => { const K = __G.match.karp; if (K.holder && K.holder.nid === ${aNid}) window.__fz2.push(+K.fuse.toFixed(2)); }, 8); return 1; })()`);
+      await grabBy(A, 0, aNid);
+      await wait(900);
+      const f2 = await J(B, `(() => { clearInterval(window.__fzI2); return window.__fz2; })()`);
+      const mk = await J(B, `(() => { const s = __inkwave.hud && __inkwave.hud.karp && __inkwave.hud.karp.state(); return s && s.marker ? s.marker.secs : null; })()`);
+      rows2.push({ min: f2.length ? Math.min(...f2) : null, n: f2.length, marker: mk });
+    }
+    R('17. B grabs after a carry that left the host\'s fuse at 7 s (and once at 0, a Carp Blast\'s): B\'s own ring starts at 60 and stays within 1 s of the host\'s (5 grabs, 1.5 s each)',
+      rows.every((r) => r.n > 20 && r.min >= 50 && Math.abs(r.shown - r.host) < 1), { rows });
+    R('17b. … and a follower\'s view of a fresh carrier\'s fuse (B\'s marker over A) never shows the last carry\'s leftover (5 grabs, 0.9 s each)',
+      rows2.every((r) => r.n > 20 && r.min >= 50 && r.marker >= 50), { rows: rows2 });
+    // ---- 18. a knockout: A's kid lands it on Alpha's weir, grabs again and walks into Bravo's Gate; B's count stays at
+    // the end record's numbers for 2 s after karp:end (no older snapshot puts them back)
+    await alive(A);
+    await toPond();
+    await put(B, -8, 0, -10);
+    const grabA = async () => {
+      await A.js(`(() => { const K = __G.match.karp, a = __G.match.local; import('./src/core/ctx.js').then((m) => { const off = m.on('karp:burst', () => { off(); const id = setInterval(() => { if (K.holder || !a.alive) { clearInterval(id); return; } a.pos.copy(K.pos); a.vel.set(0, 0, 0); }, 5); setTimeout(() => clearInterval(id), 3000); }); }); return 1; })()`);
+      await wait(300);
+      await burst(0);
+      await A.until(`__G.match.karp.holder === __G.match.local`, 6000, 30).catch(() => {});
+    };
+    await grabA();
+    // (karpbox: Alpha's weir A on its platform at z 28, up the ramp from z 20; the clamp's baseline reset for the move)
+    await A.js(`(() => { const K = __G.match.karp, a = __G.match.local; a.pos.set(0, 0, 21.5); a.vel.set(0, 0, 0); K.base = null; a.yaw = a.aimYaw = 0; a.intent.move.set(0, 0, 1); return 1; })()`);
+    await A.until(`__G.match.karp.lowered[0]`, 9000, 20).catch(() => {});
+    await A.js(`(() => { __G.match.local.intent.move.set(0, 0, 0); return 1; })()`);
+    await A.until(`__G.match.karp.phase === 'shielded'`, 6000, 50).catch(() => {});
+    await grabA();
+    const g = await J(A, `__G.match.karp.gates[0].pos.toArray()`);
+    await A.js(`(() => { const K = __G.match.karp, a = __G.match.local; a.pos.set(${g[0]}, ${g[1]}, ${g[2]} - 5); a.vel.set(0, 0, 0); K.base = null; a.yaw = a.aimYaw = 0; return 1; })()`);
+    await wait(600);
+    await B.js(`(() => { window.__kc = []; window.__e = null; import('./src/core/ctx.js').then((m) => m.on('karp:end', () => { window.__e = performance.now(); })); const id = setInterval(() => { const K = __G.match && __G.match.karp; if (!K) return; if (window.__e != null) window.__kc.push([Math.round(performance.now() - window.__e), K.count[0], K.count[1]]); if (window.__kc.length > 300) clearInterval(id); }, 8); return 1; })()`);
+    await A.js(`(() => { const a = __G.match.local; a.intent.move.set(0, 0, 1); return 1; })()`);
+    await A.until(`__G.match.karp.winner != null`, 8000, 10).catch(() => {});
+    const ea18 = await J(A, `({ winner: __G.match.karp.winner, reason: __G.match.karp.reason, count: __G.match.karp.count })`);
+    await wait(2300);
+    const kc = await J(B, `window.__kc`), badge = await J(B, `[...document.querySelectorAll('.iw-zc__num')].map((e) => e.textContent)`);
+    const span = kc.length ? kc[kc.length - 1][0] : 0, off = kc.filter((r) => r[1] !== ea18.count[0] || r[2] !== ea18.count[1]);
+    R('18. a knockout: on B the counts stay at the end record\'s for 2 s after karp:end (no older snapshot puts them back up), and the badges show them',
+      ea18.reason === 'knockout' && kc.length > 30 && span >= 1900 && off.length === 0 && badge.includes(String(ea18.count[0])), { host: ea18, samples: kc.length, spanMs: span, off: off.slice(0, 6), badge });
+  }
+
+  // ---- 16. the end: the same results on both screens (counts, reason, winner, karpM, karpPops)
+  await A.js(`(() => { const K = __G.match.karp; if (K.overtime) K._end(K.losing(), 'comeback'); else __G.match.time = 0.2; return 1; })()`);
+  for (const c of [A, B]) await c.until(`!!__G.match.result`, 25000, 250).catch(() => {});
+  await wait(800);
+  // ([karp-face] review round 3: and the overtime played — the results screen's OVERTIME +m:ss — from the end record)
+  const end = async (c) => J(c, `(() => { const r = __G.match.result; return r ? { mode: r.mode, winner: r.winner, reason: r.reason, counts: r.counts, ot: r.overtime ? +__G.match.karp.overtimeT.toFixed(2) : null, st: __G.match.actors.map((a) => [a.nid, Math.round(a.stats.karpM || 0), a.stats.karpPops || 0]).sort((x, y) => x[0] - y[0]) } : null; })()`);
+  const ea = await end(A), eb = await end(B);
+  R(`${part === 'lag' ? 'lag ' : ''}16. both screens show the same result: mode, winner, reason, counts, the overtime played and every player's karpM / karpPops`, !!ea && !!eb && ea.mode === 'bazookarp' && JSON.stringify(ea) === JSON.stringify(eb) && (part === 'racekid' || part === 'racefair' || part === 'racerun' || part === 'raceswap' || part === 'raceside' || part === 'ottag' || ea.st.some((q) => q[1] > 0 || q[2] > 0)), { host: ea, guest: eb });   // (racekid: no burst, no carry made progress)
+  const errs = [];
+  for (const c of [A, B]) errs.push(...(c.log || []).filter((l) => /TypeError|ReferenceError|Uncaught/.test(l)));
+  R('no page errors on either screen', errs.length === 0, errs.slice(0, 4));
+};

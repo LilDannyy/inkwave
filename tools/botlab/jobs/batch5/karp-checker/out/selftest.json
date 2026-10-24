@@ -1,0 +1,5110 @@
+[
+ {
+  "id": "clean",
+  "check": null,
+  "what": "the clean box",
+  "expect": null,
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f1",
+  "check": 1,
+  "what": "a NO CARP sign standing in the spawn zone",
+  "expect": "sign at .* in team \\d's spawn zone",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   1
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f2",
+  "check": 2,
+  "what": "a wall on Bravo's half only (a `single`): Alpha's walk 50 % longer, L_A ≠ L_B",
+  "expect": "\\(Δ (?:[3-9]|[1-9]\\d)(?:\\.\\d)? %\\)",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   2,
+   15
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f3",
+  "check": 3,
+  "what": "the weir at 85 % of the way (count ≈ 15)",
+  "expect": "weir 1 at count \\d+ \\([\\d.]+ %: band 45–60\\)",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   3,
+   15
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f4",
+  "check": 4,
+  "what": "the weir on a 3 m box only a climb reaches",
+  "expect": "Pond → weir 1 has no climb-free carrier route",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   3,
+   4,
+   5,
+   9,
+   15
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f5",
+  "check": 5,
+  "what": "the weir at the end of a 3 m dead-end corridor (one way in, 12 m long)",
+  "expect": "Pond → weir 1: no second route",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   1,
+   3,
+   5,
+   15
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f6",
+  "check": 6,
+  "what": "a third opening in the ring wall, straight in from the south: Pond → Gate ≈ 10 s",
+  "expect": "= [0-9](?:\\.\\d)? s walking \\(11\\.5–18\\)",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   3,
+   6
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f7",
+  "check": 7,
+  "what": "a 1.5 m non-inkable ledge through the ring wall into the Gate's ring that only a hop climbs, screened from the spawn deck",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[hop over off-field ground\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f8",
+  "check": 8,
+  "what": "the Gate 45° off the pad → Pond line",
+  "expect": "° off the pad → Pond line \\(±40°\\)",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   3,
+   5,
+   6,
+   8
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f9",
+  "check": 9,
+  "what": "a free-zone entrance with no sign",
+  "expect": "an entrance at .* with no sign within 2 m",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   9
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f10",
+  "check": 10,
+  "what": "low walls either side of the Pond: the own-half route walks back toward its own base",
+  "expect": "on its own half dips [\\d.]+ m in progress",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   10
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f11",
+  "check": 11,
+  "what": "a noRest polygon over 26 m of the routes: splats there find no resting spot within 12 m",
+  "expect": "drop coverage: \\d+ of \\d+ splats bad",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   11
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f12",
+  "check": 12,
+  "what": "a crate tagged notIn: 'turf' (it leaks into Zone Control and Tower Command too)",
+  "expect": "not tagged for it: kcheck-leak",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   12
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f13",
+  "check": 13,
+  "what": "the apron's crates gone (no cover between the deck and the Gate)",
+  "expect": "apron: 0 cover block",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   13
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f14",
+  "check": 14,
+  "what": "two 3 m walls 5.5 m out from the Pond (N and NE; mirrored S and SW): seen from 3 of 8",
+  "expect": "the shell seen from [0-5]/8 directions",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   14
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f15",
+  "check": 15,
+  "what": "a pillar 2 m from the weir",
+  "expect": "solid within 3 m: kcheck-pillar",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   15
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f16",
+  "check": 16,
+  "what": "an awning over the flank lane's 1.5 m step: the field adds the hop, no kid makes it",
+  "expect": "\\d+ made, [1-9]\\d* not \\([1-9]\\d* hops, \\d+ gaps up / level, \\d+ gaps down\\) → hopVeto",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   16
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "f16w",
+  "check": 16,
+  "what": "a 2.5 m thin fence across the Pond → weir approach with a 0.5 m slot on route 1's line: the graph walks through the slot (its centre ray passes), no carrier's 0.76 m body fits",
+  "expect": "NOT WALKED: team \\d Pond → weir 1, route 1",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   16
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x5",
+  "check": 5,
+  "what": "two weirs 8 m apart",
+  "expect": "the weirs 8 m apart \\(≥ 12\\)",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   3,
+   5,
+   15
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7b",
+  "check": 7,
+  "what": "a climb shortcut: the ring's only opening far round by the deck, and an inkable stretch of its wall facing the Pond (a climb saves 30 %)",
+  "expect": "\\(b\\) \\d+ climb edge\\(s\\) on climb shortcuts saving > 20 %",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   3,
+   5,
+   6,
+   7,
+   9,
+   10
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7d",
+  "check": 7,
+  "what": "a squid-only gap (0.7 m headroom) through the ring wall into the Gate's ring",
+  "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: lowGap",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x9a",
+  "check": 9,
+  "what": "a climb-only 3 m plateau with a zone over half of it",
+  "expect": "reachable by its carrier, the enemy only by climbing, \\d+/\\d+ nodes in its zones",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   9
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x9b",
+  "check": 9,
+  "what": "a noRetreat polygon over the spawn deck's zone",
+  "expect": "a noRetreat polygon within 3 m of",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   9
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "states",
+  "check": 15,
+  "what": "a stage module's second state (G.match.stage.karpStates(), its world on ?kcstate=w) puts a wall 2.6 m from the weir",
+  "expect": null,
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": true,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "runs": [
+   {
+    "key": 0,
+    "query": null,
+    "c15": "OK",
+    "fails": []
+   },
+   {
+    "key": "w",
+    "query": "kcstate=w",
+    "c15": "FAIL",
+    "fails": [
+     15
+    ]
+   }
+  ],
+  "states": [
+   {
+    "key": 0,
+    "query": null
+   },
+   {
+    "key": "w",
+    "query": "kcstate=w"
+   },
+   {
+    "key": 1,
+    "query": null
+   }
+  ]
+ },
+ {
+  "id": "x9c",
+  "check": 9,
+  "what": "a free zone poking 2 m over the halfway line",
+  "expect": "node\\(s\\) not on its owner's half",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   9
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7r",
+  "check": 7,
+  "what": "H2p: f7's ledge replaced by a 2.0 m moat and a 1.0 m landing just inside the ring (off the field), behind f7's screen: a running jump 1 m up across the moat",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[(rising gap|jump onto off-field ground)\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7rb",
+  "check": 7,
+  "what": "H2bp: the same with a 1.3 m moat and a 1.5 m landing (a hop over a gap onto ground off the field)",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[(rising gap|jump onto off-field ground)\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7rq",
+  "check": 7,
+  "what": "H2q: the 2.0 m moat and 1.0 m landing on the field (a ramp down from it into the ring), screened north of it: a rising gap into the ring",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[rising gap\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7a",
+  "check": 7,
+  "what": "two more openings in the ring wall on the deck side (west): six entrances",
+  "expect": "\\(a\\) team \\d: (?:[6-9]|\\d{2}) entrances into its Gate's 15 m ring \\(2–5\\)",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7c",
+  "check": 7,
+  "what": "a 3 m deck outside a west opening in the ring wall, up a ramp: its edge drops 3 m into the ring",
+  "expect": "\\(c\\) \\d+ drop\\(s\\) > 2\\.5 m into a Gate's ring",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7t",
+  "check": 7,
+  "what": "a 5.8 m inkable platform up a long ramp: its far wall a squid climbs (nav stops at 5.5 m)",
+  "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*tallWall",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7l",
+  "check": 7,
+  "what": "a 4 m platform up a long ramp: its far edge drops 4 m (nav stops at 3.4)",
+  "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*longDrop",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7h",
+  "check": 7,
+  "what": "a 1.83 m ledge (no ink) in a west opening of the ring wall, a ramp down from it into the ring, the SW opening closed: a kid hops onto it from outside (just beyond the hop rule) instead of walking round to the SE opening",
+  "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*highHop",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   5,
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7g",
+  "check": 7,
+  "what": "the GAP's far platform moved 1 m on and 0.5 m down: 3.6 m of air (just beyond the gap rule), the long way round 14 m more",
+  "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*longGap",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x3",
+  "check": 3,
+  "what": "the weir past its platform, 13 m from the ring",
+  "expect": "weir 1 → Gate [\\d.]+ m \\(≥ 25 m",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   3,
+   15
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x5b",
+  "check": 5,
+  "what": "a wall across the deck at z 15 with a 3 m gap on route 1: route 2 goes round by the flank lane",
+  "expect": "Pond → weir 1: route 2 [\\d.]+ m = [\\d.]+ × route 1 \\(≤ 1\\.6\\)",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   5
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x9d",
+  "check": 9,
+  "what": "a free zone over the weir's platform",
+  "expect": "zone \\d+ touches .*weir",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   9,
+   15
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x9e",
+  "check": 9,
+  "what": "a free zone on the floor across the Pond → weir routes",
+  "expect": "touches \\d+ route 1 / route 2 node",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   9
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x9f",
+  "check": 9,
+  "what": "an open-floor zone (6 × 8 m) signed at one corner only: one wide entrance, an end unsigned",
+  "expect": "a [\\d.]+ m entrance at .* needs a sign within 2 m of each end",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   9
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x9g",
+  "check": 9,
+  "what": "a free zone over the Gate",
+  "expect": "touches .*Gate",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   8,
+   9
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x13",
+  "check": 13,
+  "what": "two of the parapet's three openings closed",
+  "expect": "spawn deck: [0-2] way\\(s\\) off \\(≥ 3\\)",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   13
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x14",
+  "check": 14,
+  "what": "the floor east of the Pond cut away (open water x 3…14, z 0…10; mirrored)",
+  "expect": "^ring 4\\.5–10 m (?:[0-9]|[1-6][0-9])(?:\\.\\d)? % floor",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   14
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x15t",
+  "check": 15,
+  "what": "T1: a 0.2 m lamp post 2.2 m from the weir's centre, on its platform",
+  "expect": "solid within 3 m: kcheck-lamp",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   15
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x15a",
+  "check": 15,
+  "what": "the weir in the alley behind a chicane of two baffles: 8 m back along route 1 the baffle hides it",
+  "expect": "not seen from the (?:attackers'|defenders') approach",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   3,
+   5,
+   15
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x1",
+  "check": 1,
+  "what": "W5: the weir 2 m off its platform's centre line: its east post stands past the platform's edge",
+  "expect": "kit piece\\(s\\) not resting on floor: karp-weir-base",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   1
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x11",
+  "check": 11,
+  "what": "f16w's fence with its 0.5 m slot on route 1: the scripted carrier sticks at it",
+  "expect": "stuck episode\\(s\\)|the carry picked",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": true,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   11
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x11r",
+  "check": 11,
+  "what": "a noRetreat polygon over each whole half: the retreat walk's ×3 never comes on",
+  "expect": "team \\d: retreat ×3 on at null m",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": true,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   9,
+   11
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "w4",
+  "check": null,
+  "what": "W4: the weir's platform a 1.5 m inkable box, its ramps gone (nav gives it climb edges; a kid hops it)",
+  "expect": null,
+  "notFail": [
+   4,
+   9
+  ],
+  "expect16": "climbs of ≤ 1\\.8 m tried as hops: [1-9]\\d* of",
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7m2",
+  "check": 7,
+  "what": "f7's ledge from x -17.2: the cell centre at x −17.5 is 0.3 m from its west face (< 0.46: no node), so the floor node and the top node beside it stand two cells apart",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[hop over off-field ground\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7m4",
+  "check": 7,
+  "what": "f7's ledge from x -17.4: the cell centre at x −17.5 is 0.1 m from its west face (< 0.46: no node), so the floor node and the top node beside it stand two cells apart",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[hop over off-field ground\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7m6",
+  "check": 7,
+  "what": "f7's ledge from x -17.6: its west face clear of the cell centres (the floor node and the top node one cell apart: the aligned control)",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[hop over off-field ground\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7m8",
+  "check": 7,
+  "what": "f7's ledge from x -17.8: its west face clear of the cell centres (the floor node and the top node one cell apart: the aligned control)",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[hop over off-field ground\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7m45",
+  "check": 7,
+  "what": "f7's ledge turned 45° (a 3.6 m square, 1.5 m, no ink, its diamond filling the ring wall's west opening): every floor node and top node beside a face are diagonal, none orthogonal",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[hop over off-field ground\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7p2",
+  "check": 7,
+  "what": "P2: a 2.6 m moat in front of a 0.8 m landing inside the ring (a ramp down to the Gate), screened: a running jump 0.8 m up, nodes 4.0 m apart",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[rising gap\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7p4",
+  "check": 7,
+  "what": "P4: a 6 m inkable tower through the ring wall (its top off the field: nav climbs stop at 5.5 m), a screen inside: squid up its face, over the wall, drop 6 m into the ring",
+  "expect": "\\(c\\) \\d+ drop\\(s\\) > 2\\.5 m into a Gate's ring: .*\\(drop off off-field ground \\(a squid climb up\\)\\).*\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*tallWall",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x15m",
+  "check": 15,
+  "what": "Wc: the weir on the east strip where the car parks (its stop moved to (18.5, 26))",
+  "expect": "a mover sweeps within 3 m: kcar",
+  "notFail": null,
+  "expect16": null,
+  "also": [
+   [
+    1,
+    "in a mover's path"
+   ]
+  ],
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   1,
+   5,
+   15
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x9n",
+  "check": 9,
+  "what": "a 0.4 m noRetreat strip (x −10.2…−9.8, z 4…26) across an open-floor free zone (x −14…−6, z 11…19)",
+  "expect": "a noRetreat polygon within 3 m of team \\d's zone",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   9
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "reach",
+  "check": null,
+  "what": "REACH: platform pairs over the sea, each a near rim a cell short of its rim node and a far platform `air` m on and `dy` up or down: every pair #16's kid makes lies inside the probes' window at its rise, and each window's outer edge lies beyond the last made gap with both rim nodes a cell back",
+  "expect": null,
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": "kid",
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "reachRows": [
+   {
+    "dy": 2,
+    "air": 0.2,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 2,
+    "dyN": 2,
+    "from": [
+     20.5,
+     0.6,
+     -54.5
+    ],
+    "to": [
+     22.5,
+     2.6,
+     -54.5
+    ],
+    "winOn": 2.4,
+    "winOff": 2.4
+   },
+   {
+    "dy": 2,
+    "air": 0.5,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 2,
+    "dyN": 2,
+    "from": [
+     20.5,
+     0.6,
+     -51.5
+    ],
+    "to": [
+     22.5,
+     2.6,
+     -51.5
+    ],
+    "winOn": 2.4,
+    "winOff": 2.4
+   },
+   {
+    "dy": 1.9,
+    "air": 0.3,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 2,
+    "dyN": 1.9,
+    "from": [
+     20.5,
+     0.6,
+     -48.5
+    ],
+    "to": [
+     22.5,
+     2.5,
+     -48.5
+    ],
+    "winOn": 4.199999999999996,
+    "winOff": 4.199999999999996
+   },
+   {
+    "dy": 1.9,
+    "air": 1,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 2,
+    "dyN": 1.9,
+    "from": [
+     20.5,
+     0.6,
+     -45.5
+    ],
+    "to": [
+     22.5,
+     2.5,
+     -45.5
+    ],
+    "winOn": 4.199999999999996,
+    "winOff": 4.199999999999996
+   },
+   {
+    "dy": 1.9,
+    "air": 1.7,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 3,
+    "dyN": 1.9,
+    "from": [
+     20.5,
+     0.6,
+     -42.5
+    ],
+    "to": [
+     23.5,
+     2.5,
+     -42.5
+    ],
+    "winOn": 4.199999999999996,
+    "winOff": 4.199999999999996
+   },
+   {
+    "dy": 1.9,
+    "air": 2.4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 4,
+    "dyN": 1.9,
+    "from": [
+     20.5,
+     0.6,
+     -39.5
+    ],
+    "to": [
+     24.5,
+     2.5,
+     -39.5
+    ],
+    "winOn": 4.199999999999996,
+    "winOff": 4.199999999999996
+   },
+   {
+    "dy": 1.8,
+    "air": 0.3,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 2,
+    "dyN": 1.8,
+    "from": [
+     20.5,
+     0.6,
+     -36.5
+    ],
+    "to": [
+     22.5,
+     2.4,
+     -36.5
+    ],
+    "winOn": 4.9,
+    "winOff": 4.9
+   },
+   {
+    "dy": 1.8,
+    "air": 0.9,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 2,
+    "dyN": 1.8,
+    "from": [
+     20.5,
+     0.6,
+     -33.5
+    ],
+    "to": [
+     22.5,
+     2.4,
+     -33.5
+    ],
+    "winOn": 4.9,
+    "winOff": 4.9
+   },
+   {
+    "dy": 1.8,
+    "air": 1.5,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 3,
+    "dyN": 1.8,
+    "from": [
+     20.5,
+     0.6,
+     -30.5
+    ],
+    "to": [
+     23.5,
+     2.4,
+     -30.5
+    ],
+    "winOn": 4.9,
+    "winOff": 4.9
+   },
+   {
+    "dy": 1.8,
+    "air": 2.1,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 4,
+    "dyN": 1.8,
+    "from": [
+     20.5,
+     0.6,
+     -27.5
+    ],
+    "to": [
+     24.5,
+     2.4,
+     -27.5
+    ],
+    "winOn": 4.9,
+    "winOff": 4.9
+   },
+   {
+    "dy": 1.8,
+    "air": 2.7,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 4,
+    "dyN": 1.8,
+    "from": [
+     20.5,
+     0.6,
+     -24.5
+    ],
+    "to": [
+     24.5,
+     2.4,
+     -24.5
+    ],
+    "winOn": 4.9,
+    "winOff": 4.9
+   },
+   {
+    "dy": 1.5,
+    "air": 1.4,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 3,
+    "dyN": 1.5,
+    "from": [
+     20.5,
+     0.6,
+     -21.5
+    ],
+    "to": [
+     23.5,
+     2.1,
+     -21.5
+    ],
+    "winOn": 5.6,
+    "winOff": 5.6
+   },
+   {
+    "dy": 1.5,
+    "air": 2.2,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 4,
+    "dyN": 1.5,
+    "from": [
+     20.5,
+     0.6,
+     -18.5
+    ],
+    "to": [
+     24.5,
+     2.1,
+     -18.5
+    ],
+    "winOn": 5.6,
+    "winOff": 5.6
+   },
+   {
+    "dy": 1.5,
+    "air": 2.6,
+    "made": true,
+    "how": "jump at the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 4,
+    "dyN": 1.5,
+    "from": [
+     20.5,
+     0.6,
+     -15.5
+    ],
+    "to": [
+     24.5,
+     2.1,
+     -15.5
+    ],
+    "winOn": 5.6,
+    "winOff": 5.6
+   },
+   {
+    "dy": 1.5,
+    "air": 3,
+    "made": true,
+    "how": "coyote jump 0.45 m past the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 4,
+    "dyN": 1.5,
+    "from": [
+     20.5,
+     0.6,
+     -12.5
+    ],
+    "to": [
+     24.5,
+     2.1,
+     -12.5
+    ],
+    "winOn": 5.6,
+    "winOff": 5.6
+   },
+   {
+    "dy": 1.5,
+    "air": 3.4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 5,
+    "dyN": 1.5,
+    "from": [
+     20.5,
+     0.6,
+     -9.5
+    ],
+    "to": [
+     25.5,
+     2.1,
+     -9.5
+    ],
+    "winOn": 5.6,
+    "winOff": 5.6
+   },
+   {
+    "dy": 1.2,
+    "air": 2.2,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 4,
+    "dyN": 1.2,
+    "from": [
+     20.5,
+     0.6,
+     -6.5
+    ],
+    "to": [
+     24.5,
+     1.8,
+     -6.5
+    ],
+    "winOn": 5.6,
+    "winOff": 5.6
+   },
+   {
+    "dy": 1.2,
+    "air": 2.6,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 4,
+    "dyN": 1.2,
+    "from": [
+     20.5,
+     0.6,
+     -3.5
+    ],
+    "to": [
+     24.5,
+     1.8,
+     -3.5
+    ],
+    "winOn": 5.6,
+    "winOff": 5.6
+   },
+   {
+    "dy": 1.2,
+    "air": 3,
+    "made": true,
+    "how": "coyote jump 0.25 m past the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 4,
+    "dyN": 1.2,
+    "from": [
+     20.5,
+     0.6,
+     -0.5
+    ],
+    "to": [
+     24.5,
+     1.8,
+     -0.5
+    ],
+    "winOn": 5.6,
+    "winOff": 5.6
+   },
+   {
+    "dy": 1.2,
+    "air": 3.4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 5,
+    "dyN": 1.2,
+    "from": [
+     20.5,
+     0.6,
+     2.5
+    ],
+    "to": [
+     25.5,
+     1.8,
+     2.5
+    ],
+    "winOn": 5.6,
+    "winOff": 5.6
+   },
+   {
+    "dy": 1.2,
+    "air": 3.8,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 5,
+    "dyN": 1.2,
+    "from": [
+     20.5,
+     0.6,
+     5.5
+    ],
+    "to": [
+     25.5,
+     1.8,
+     5.5
+    ],
+    "winOn": 5.6,
+    "winOff": 5.6
+   },
+   {
+    "dy": 0.9,
+    "air": 2.4,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 4,
+    "dyN": 0.9,
+    "from": [
+     20.5,
+     0.6,
+     24.5
+    ],
+    "to": [
+     24.5,
+     1.5,
+     24.5
+    ],
+    "winOn": 6.199999999999999,
+    "winOff": 6.199999999999999
+   },
+   {
+    "dy": 0.9,
+    "air": 2.8,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 4,
+    "dyN": 0.9,
+    "from": [
+     20.5,
+     0.6,
+     27.5
+    ],
+    "to": [
+     24.5,
+     1.5,
+     27.5
+    ],
+    "winOn": 6.199999999999999,
+    "winOff": 6.199999999999999
+   },
+   {
+    "dy": 0.9,
+    "air": 3.2,
+    "made": true,
+    "how": "coyote jump 0.25 m past the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 5,
+    "dyN": 0.9,
+    "from": [
+     20.5,
+     0.6,
+     30.5
+    ],
+    "to": [
+     25.5,
+     1.5,
+     30.5
+    ],
+    "winOn": 6.199999999999999,
+    "winOff": 6.199999999999999
+   },
+   {
+    "dy": 0.9,
+    "air": 3.6,
+    "made": true,
+    "how": "coyote jump 0.45 m past the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 5,
+    "dyN": 0.9,
+    "from": [
+     20.5,
+     0.6,
+     33.5
+    ],
+    "to": [
+     25.5,
+     1.5,
+     33.5
+    ],
+    "winOn": 6.199999999999999,
+    "winOff": 6.199999999999999
+   },
+   {
+    "dy": 0.9,
+    "air": 4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 5,
+    "dyN": 0.9,
+    "from": [
+     20.5,
+     0.6,
+     36.5
+    ],
+    "to": [
+     25.5,
+     1.5,
+     36.5
+    ],
+    "winOn": 6.199999999999999,
+    "winOff": 6.199999999999999
+   },
+   {
+    "dy": 0.6,
+    "air": 2.8,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 4,
+    "dyN": 0.6,
+    "from": [
+     20.5,
+     0.6,
+     39.5
+    ],
+    "to": [
+     24.5,
+     1.2,
+     39.5
+    ],
+    "winOn": 6.199999999999999,
+    "winOff": 6.199999999999999
+   },
+   {
+    "dy": 0.6,
+    "air": 3.2,
+    "made": true,
+    "how": "jump at the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 5,
+    "dyN": 0.6,
+    "from": [
+     20.5,
+     0.6,
+     42.5
+    ],
+    "to": [
+     25.5,
+     1.2,
+     42.5
+    ],
+    "winOn": 6.199999999999999,
+    "winOff": 6.199999999999999
+   },
+   {
+    "dy": 0.6,
+    "air": 3.6,
+    "made": true,
+    "how": "coyote jump 0.45 m past the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 5,
+    "dyN": 0.6,
+    "from": [
+     20.5,
+     0.6,
+     45.5
+    ],
+    "to": [
+     25.5,
+     1.2,
+     45.5
+    ],
+    "winOn": 6.199999999999999,
+    "winOff": 6.199999999999999
+   },
+   {
+    "dy": 0.6,
+    "air": 4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 5,
+    "dyN": 0.6,
+    "from": [
+     20.5,
+     0.6,
+     48.5
+    ],
+    "to": [
+     25.5,
+     1.2,
+     48.5
+    ],
+    "winOn": 6.199999999999999,
+    "winOff": 6.199999999999999
+   },
+   {
+    "dy": 0.6,
+    "air": 4.4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 6,
+    "dyN": 0.6,
+    "from": [
+     20.5,
+     0.6,
+     51.5
+    ],
+    "to": [
+     26.5,
+     1.2,
+     51.5
+    ],
+    "winOn": 6.199999999999999,
+    "winOff": 6.199999999999999
+   },
+   {
+    "dy": 0,
+    "air": 3.2,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 5,
+    "dyN": 0,
+    "from": [
+     20.5,
+     0.6,
+     54.5
+    ],
+    "to": [
+     25.5,
+     0.6,
+     54.5
+    ],
+    "winOn": 6.6,
+    "winOff": 6.6
+   },
+   {
+    "dy": 0,
+    "air": 3.6,
+    "made": true,
+    "how": "jump at the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 5,
+    "dyN": 0,
+    "from": [
+     -20.5,
+     0.6,
+     30.5
+    ],
+    "to": [
+     -25.5,
+     0.6,
+     30.5
+    ],
+    "winOn": 6.6,
+    "winOff": 6.6
+   },
+   {
+    "dy": 0,
+    "air": 4,
+    "made": true,
+    "how": "coyote jump 0.45 m past the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 5,
+    "dyN": 0,
+    "from": [
+     -20.5,
+     0.6,
+     33.5
+    ],
+    "to": [
+     -25.5,
+     0.6,
+     33.5
+    ],
+    "winOn": 6.6,
+    "winOff": 6.6
+   },
+   {
+    "dy": 0,
+    "air": 4.4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 6,
+    "dyN": 0,
+    "from": [
+     -20.5,
+     0.6,
+     36.5
+    ],
+    "to": [
+     -26.5,
+     0.6,
+     36.5
+    ],
+    "winOn": 6.6,
+    "winOff": 6.6
+   },
+   {
+    "dy": 0,
+    "air": 4.8,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 6,
+    "dyN": 0,
+    "from": [
+     -20.5,
+     0.6,
+     39.5
+    ],
+    "to": [
+     -26.5,
+     0.6,
+     39.5
+    ],
+    "winOn": 6.6,
+    "winOff": 6.6
+   },
+   {
+    "dy": -0.6,
+    "air": 3.6,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 5,
+    "dyN": -0.6,
+    "from": [
+     -20.5,
+     1.2,
+     42.5
+    ],
+    "to": [
+     -25.5,
+     0.6,
+     42.5
+    ],
+    "winOn": 6.6,
+    "winOff": 6.6
+   },
+   {
+    "dy": -0.6,
+    "air": 4,
+    "made": true,
+    "how": "coyote jump 0.25 m past the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 5,
+    "dyN": -0.6,
+    "from": [
+     -20.5,
+     1.2,
+     45.5
+    ],
+    "to": [
+     -25.5,
+     0.6,
+     45.5
+    ],
+    "winOn": 6.6,
+    "winOff": 6.6
+   },
+   {
+    "dy": -0.6,
+    "air": 4.4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 6,
+    "dyN": -0.6,
+    "from": [
+     -20.5,
+     1.2,
+     48.5
+    ],
+    "to": [
+     -26.5,
+     0.6,
+     48.5
+    ],
+    "winOn": 6.6,
+    "winOff": 6.6
+   },
+   {
+    "dy": -0.6,
+    "air": 4.8,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 6,
+    "dyN": -0.6,
+    "from": [
+     -20.5,
+     1.2,
+     51.5
+    ],
+    "to": [
+     -26.5,
+     0.6,
+     51.5
+    ],
+    "winOn": 6.6,
+    "winOff": 6.6
+   },
+   {
+    "dy": -0.6,
+    "air": 5.2,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 7,
+    "dyN": -0.6,
+    "from": [
+     -20.5,
+     1.2,
+     54.5
+    ],
+    "to": [
+     -27.5,
+     0.6,
+     54.5
+    ],
+    "winOn": 6.6,
+    "winOff": 6.6
+   },
+   {
+    "dy": -1.2,
+    "air": 3.8,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 5,
+    "dyN": -1.2,
+    "from": [
+     -20.5,
+     1.8,
+     0.5
+    ],
+    "to": [
+     -25.5,
+     0.6,
+     0.5
+    ],
+    "winOn": 6.799999999999999,
+    "winOff": 6.799999999999999
+   },
+   {
+    "dy": -1.2,
+    "air": 4.2,
+    "made": true,
+    "how": "coyote jump 0.25 m past the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 6,
+    "dyN": -1.2,
+    "from": [
+     -20.5,
+     1.8,
+     3.5
+    ],
+    "to": [
+     -26.5,
+     0.6,
+     3.5
+    ],
+    "winOn": 6.799999999999999,
+    "winOff": 6.799999999999999
+   },
+   {
+    "dy": -1.2,
+    "air": 4.6,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 6,
+    "dyN": -1.2,
+    "from": [
+     -20.5,
+     1.8,
+     -54.5
+    ],
+    "to": [
+     -26.5,
+     0.6,
+     -54.5
+    ],
+    "winOn": 6.799999999999999,
+    "winOff": 6.799999999999999
+   },
+   {
+    "dy": -1.2,
+    "air": 5,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 6,
+    "dyN": -1.2,
+    "from": [
+     -20.5,
+     1.8,
+     -51.5
+    ],
+    "to": [
+     -26.5,
+     0.6,
+     -51.5
+    ],
+    "winOn": 6.799999999999999,
+    "winOff": 6.799999999999999
+   },
+   {
+    "dy": -1.2,
+    "air": 5.4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 7,
+    "dyN": -1.2,
+    "from": [
+     -20.5,
+     1.8,
+     -48.5
+    ],
+    "to": [
+     -27.5,
+     0.6,
+     -48.5
+    ],
+    "winOn": 6.799999999999999,
+    "winOff": 6.799999999999999
+   },
+   {
+    "dy": -2.2,
+    "air": 4.2,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 6,
+    "dyN": -2.2,
+    "from": [
+     -20.5,
+     2.8,
+     -45.5
+    ],
+    "to": [
+     -26.5,
+     0.6,
+     -45.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": -2.2,
+    "air": 4.6,
+    "made": true,
+    "how": "coyote jump 0.25 m past the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 6,
+    "dyN": -2.2,
+    "from": [
+     -20.5,
+     2.8,
+     -42.5
+    ],
+    "to": [
+     -26.5,
+     0.6,
+     -42.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": -2.2,
+    "air": 5,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 6,
+    "dyN": -2.2,
+    "from": [
+     -20.5,
+     2.8,
+     -39.5
+    ],
+    "to": [
+     -26.5,
+     0.6,
+     -39.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": -2.2,
+    "air": 5.4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 7,
+    "dyN": -2.2,
+    "from": [
+     -20.5,
+     2.8,
+     -36.5
+    ],
+    "to": [
+     -27.5,
+     0.6,
+     -36.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": -2.2,
+    "air": 5.8,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 7,
+    "dyN": -2.2,
+    "from": [
+     -20.5,
+     2.8,
+     -33.5
+    ],
+    "to": [
+     -27.5,
+     0.6,
+     -33.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": -3.4,
+    "air": 4.6,
+    "made": true,
+    "how": "jump 0.2 m before the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 6,
+    "dyN": -3.4,
+    "from": [
+     -20.5,
+     4,
+     -30.5
+    ],
+    "to": [
+     -26.5,
+     0.6,
+     -30.5
+    ],
+    "winOn": 7.6,
+    "winOff": 7.6
+   },
+   {
+    "dy": -3.4,
+    "air": 5,
+    "made": true,
+    "how": "coyote jump 0.25 m past the rim",
+    "by": "kid",
+    "swim": false,
+    "flat": 6,
+    "dyN": -3.4,
+    "from": [
+     -20.5,
+     4,
+     -27.5
+    ],
+    "to": [
+     -26.5,
+     0.6,
+     -27.5
+    ],
+    "winOn": 7.6,
+    "winOff": 7.6
+   },
+   {
+    "dy": -3.4,
+    "air": 5.4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 7,
+    "dyN": -3.4,
+    "from": [
+     -20.5,
+     4,
+     -24.5
+    ],
+    "to": [
+     -27.5,
+     0.6,
+     -24.5
+    ],
+    "winOn": 7.6,
+    "winOff": 7.6
+   },
+   {
+    "dy": -3.4,
+    "air": 5.8,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 7,
+    "dyN": -3.4,
+    "from": [
+     -20.5,
+     4,
+     -5.5
+    ],
+    "to": [
+     -27.5,
+     0.6,
+     -5.5
+    ],
+    "winOn": 7.6,
+    "winOff": 7.6
+   },
+   {
+    "dy": -3.4,
+    "air": 6.2,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": false,
+    "flat": 8,
+    "dyN": -3.4,
+    "from": [
+     -20.5,
+     4,
+     -2.5
+    ],
+    "to": [
+     -28.5,
+     0.6,
+     -2.5
+    ],
+    "winOn": 7.6,
+    "winOff": 7.6
+   }
+  ],
+  "byDy": [
+   {
+    "dy": 2,
+    "made": 0,
+    "of": 2,
+    "swimMade": 0,
+    "swim": false,
+    "lastAir": null,
+    "firstNot": 0.2,
+    "worstFlat": null,
+    "winOn": 2.4,
+    "winOff": 2.4,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 1.9,
+    "made": 0,
+    "of": 4,
+    "swimMade": 0,
+    "swim": false,
+    "lastAir": null,
+    "firstNot": 0.3,
+    "worstFlat": null,
+    "winOn": 4.199999999999996,
+    "winOff": 4.199999999999996,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 1.8,
+    "made": 4,
+    "of": 5,
+    "swimMade": 0,
+    "swim": false,
+    "lastAir": 2.1,
+    "firstNot": 2.7,
+    "worstFlat": 4,
+    "winOn": 4.9,
+    "winOff": 4.9,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 1.5,
+    "made": 4,
+    "of": 5,
+    "swimMade": 0,
+    "swim": false,
+    "lastAir": 3,
+    "firstNot": 3.4,
+    "worstFlat": 4.9,
+    "winOn": 5.6,
+    "winOff": 5.6,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 1.2,
+    "made": 3,
+    "of": 5,
+    "swimMade": 0,
+    "swim": false,
+    "lastAir": 3,
+    "firstNot": 3.4,
+    "worstFlat": 4.9,
+    "winOn": 5.6,
+    "winOff": 5.6,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 0.9,
+    "made": 4,
+    "of": 5,
+    "swimMade": 0,
+    "swim": false,
+    "lastAir": 3.6,
+    "firstNot": 4,
+    "worstFlat": 5.5,
+    "winOn": 6.199999999999999,
+    "winOff": 6.199999999999999,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 0.6,
+    "made": 3,
+    "of": 5,
+    "swimMade": 0,
+    "swim": false,
+    "lastAir": 3.6,
+    "firstNot": 4,
+    "worstFlat": 5.5,
+    "winOn": 6.199999999999999,
+    "winOff": 6.199999999999999,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 0,
+    "made": 3,
+    "of": 5,
+    "swimMade": 0,
+    "swim": false,
+    "lastAir": 4,
+    "firstNot": 4.4,
+    "worstFlat": 5.9,
+    "winOn": 6.6,
+    "winOff": 6.6,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": -0.6,
+    "made": 2,
+    "of": 5,
+    "swimMade": 0,
+    "swim": false,
+    "lastAir": 4,
+    "firstNot": 4.4,
+    "worstFlat": 5.9,
+    "winOn": 6.6,
+    "winOff": 6.6,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": -1.2,
+    "made": 2,
+    "of": 5,
+    "swimMade": 0,
+    "swim": false,
+    "lastAir": 4.2,
+    "firstNot": 4.6,
+    "worstFlat": 6.1,
+    "winOn": 6.799999999999999,
+    "winOff": 6.799999999999999,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": -2.2,
+    "made": 2,
+    "of": 5,
+    "swimMade": 0,
+    "swim": false,
+    "lastAir": 4.6,
+    "firstNot": 5,
+    "worstFlat": 6.5,
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": -3.4,
+    "made": 2,
+    "of": 5,
+    "swimMade": 0,
+    "swim": false,
+    "lastAir": 5,
+    "firstNot": 5.4,
+    "worstFlat": 6.9,
+    "winOn": 7.6,
+    "winOff": 7.6,
+    "inside": true,
+    "edgeOk": true
+   }
+  ]
+ },
+ {
+  "id": "v5",
+  "check": 7,
+  "what": "V5: the ring wall's NW stretch (155–165°) a 1.4 m roof wall: a kid vaults it into the ring instead of walking round by the SW opening",
+  "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*vault",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "v5h",
+  "check": 7,
+  "what": "V5h: the same stretch a 1.7 m roof wall",
+  "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*vault",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "rl",
+  "check": 7,
+  "what": "RL: the ring wall's west opening (175–185°) closed by a 1.2 m railing (rail: true, 0.1 m), f7's screen inside: a kid hops onto it and down, a squid slips through it",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[(?:vault over a low wall or rail|squid gap)(?: \\(swim-jump\\))?\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "rlh",
+  "check": 7,
+  "what": "the same opening closed by a 2.6 m railing (beyond any vault or swim-jump), the screen inside: only a squid slips through it",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[squid gap\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "h20",
+  "check": 7,
+  "what": "H20: f7 with its ledge 2.0 m high (no ink), f7's screen: beyond a kid's hop, a carrier swim-jumping from its own ink on the floor outside lands on it",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[hop over off-field ground(?: \\(swim-jump\\))?\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "g5",
+  "check": 7,
+  "what": "G5: a 5.0 m moat of open water through the ring wall's west opening (x −17…−12), inkable floor both sides: beyond a kid's jump, a carrier swim-jumping from its own ink clears it",
+  "expect": "\\(d\\) \\d+ connection\\(s\\) the graph lacks gaining > 10 m: .*longGap",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "reachs",
+  "check": null,
+  "what": "REACH (swimming): the same platform pairs with inkable near platforms (6 m: the run-up) and the stage widened to x ±44 for the far ones: every pair #16's kid or its swimming carrier makes lies inside the swimming windows, and each window's edge beyond the last made gap with both rim nodes a cell back",
+  "expect": null,
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": "swim",
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "reachRows": [
+   {
+    "dy": 2.3,
+    "air": 3.5,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 5,
+    "dyN": 2.3,
+    "from": [
+     26.5,
+     0.6,
+     -54.5
+    ],
+    "to": [
+     31.5,
+     2.9,
+     -54.5
+    ],
+    "winOn": 0,
+    "winOff": 0
+   },
+   {
+    "dy": 2.3,
+    "air": 4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 5,
+    "dyN": 2.3,
+    "from": [
+     26.5,
+     0.6,
+     -51.5
+    ],
+    "to": [
+     31.5,
+     2.9,
+     -51.5
+    ],
+    "winOn": 0,
+    "winOff": 0
+   },
+   {
+    "dy": 2.25,
+    "air": 3,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 4,
+    "dyN": 2.25,
+    "from": [
+     26.5,
+     0.6,
+     -48.5
+    ],
+    "to": [
+     30.5,
+     2.85,
+     -48.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2.25,
+    "air": 3.5,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 5,
+    "dyN": 2.25,
+    "from": [
+     26.5,
+     0.6,
+     -45.5
+    ],
+    "to": [
+     31.5,
+     2.85,
+     -45.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2.25,
+    "air": 4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 5,
+    "dyN": 2.25,
+    "from": [
+     26.5,
+     0.6,
+     -42.5
+    ],
+    "to": [
+     31.5,
+     2.85,
+     -42.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2.25,
+    "air": 4.5,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 6,
+    "dyN": 2.25,
+    "from": [
+     26.5,
+     0.6,
+     -39.5
+    ],
+    "to": [
+     32.5,
+     2.85,
+     -39.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2.2,
+    "air": 0.3,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 2,
+    "dyN": 2.2,
+    "from": [
+     26.5,
+     0.6,
+     -36.5
+    ],
+    "to": [
+     28.5,
+     2.8,
+     -36.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2.2,
+    "air": 3,
+    "made": true,
+    "how": "swim-jump, letting go at the top, jump 1.4 m before the rim",
+    "by": "swimRel",
+    "swim": true,
+    "flat": 4,
+    "dyN": 2.2,
+    "from": [
+     26.5,
+     0.6,
+     -33.5
+    ],
+    "to": [
+     30.5,
+     2.8,
+     -33.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2.2,
+    "air": 4,
+    "made": true,
+    "how": "swim-jump, letting go at the top, jump 0.5 m before the rim",
+    "by": "swimRel",
+    "swim": true,
+    "flat": 5,
+    "dyN": 2.2,
+    "from": [
+     26.5,
+     0.6,
+     -30.5
+    ],
+    "to": [
+     31.5,
+     2.8,
+     -30.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2.2,
+    "air": 4.5,
+    "made": true,
+    "how": "swim-jump, letting go at the top, jump at the rim",
+    "by": "swimRel",
+    "swim": true,
+    "flat": 6,
+    "dyN": 2.2,
+    "from": [
+     26.5,
+     0.6,
+     -27.5
+    ],
+    "to": [
+     32.5,
+     2.8,
+     -27.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2.2,
+    "air": 5,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 6,
+    "dyN": 2.2,
+    "from": [
+     26.5,
+     0.6,
+     -24.5
+    ],
+    "to": [
+     32.5,
+     2.8,
+     -24.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2.1,
+    "air": 0.3,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 2,
+    "dyN": 2.1,
+    "from": [
+     26.5,
+     0.6,
+     -21.5
+    ],
+    "to": [
+     28.5,
+     2.7,
+     -21.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2.1,
+    "air": 2.5,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 4,
+    "dyN": 2.1,
+    "from": [
+     26.5,
+     0.6,
+     -18.5
+    ],
+    "to": [
+     30.5,
+     2.7,
+     -18.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2.1,
+    "air": 3.5,
+    "made": true,
+    "how": "swim-jump, letting go at the top, jump 0.5 m before the rim",
+    "by": "swimRel",
+    "swim": true,
+    "flat": 5,
+    "dyN": 2.1,
+    "from": [
+     26.5,
+     0.6,
+     -15.5
+    ],
+    "to": [
+     31.5,
+     2.7,
+     -15.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2.1,
+    "air": 4.5,
+    "made": true,
+    "how": "swim-jump, letting go at the top, jump 0.2 m before the rim",
+    "by": "swimRel",
+    "swim": true,
+    "flat": 6,
+    "dyN": 2.1,
+    "from": [
+     26.5,
+     0.6,
+     -12.5
+    ],
+    "to": [
+     32.5,
+     2.7,
+     -12.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2.1,
+    "air": 5,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 6,
+    "dyN": 2.1,
+    "from": [
+     26.5,
+     0.6,
+     -9.5
+    ],
+    "to": [
+     32.5,
+     2.7,
+     -9.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2.1,
+    "air": 5.5,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 7,
+    "dyN": 2.1,
+    "from": [
+     26.5,
+     0.6,
+     -6.5
+    ],
+    "to": [
+     33.5,
+     2.7,
+     -6.5
+    ],
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999
+   },
+   {
+    "dy": 2,
+    "air": 0.3,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 2,
+    "dyN": 2,
+    "from": [
+     26.5,
+     0.6,
+     -3.5
+    ],
+    "to": [
+     28.5,
+     2.6,
+     -3.5
+    ],
+    "winOn": 7.699999999999999,
+    "winOff": 7.699999999999999
+   },
+   {
+    "dy": 2,
+    "air": 1.5,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 3,
+    "dyN": 2,
+    "from": [
+     26.5,
+     0.6,
+     -0.5
+    ],
+    "to": [
+     29.5,
+     2.6,
+     -0.5
+    ],
+    "winOn": 7.699999999999999,
+    "winOff": 7.699999999999999
+   },
+   {
+    "dy": 2,
+    "air": 2.5,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 4,
+    "dyN": 2,
+    "from": [
+     26.5,
+     0.6,
+     2.5
+    ],
+    "to": [
+     30.5,
+     2.6,
+     2.5
+    ],
+    "winOn": 7.699999999999999,
+    "winOff": 7.699999999999999
+   },
+   {
+    "dy": 2,
+    "air": 3.5,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 5,
+    "dyN": 2,
+    "from": [
+     26.5,
+     0.6,
+     5.5
+    ],
+    "to": [
+     31.5,
+     2.6,
+     5.5
+    ],
+    "winOn": 7.699999999999999,
+    "winOff": 7.699999999999999
+   },
+   {
+    "dy": 2,
+    "air": 4.5,
+    "made": true,
+    "how": "swim-jump jump at the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 6,
+    "dyN": 2,
+    "from": [
+     26.5,
+     0.6,
+     24.5
+    ],
+    "to": [
+     32.5,
+     2.6,
+     24.5
+    ],
+    "winOn": 7.699999999999999,
+    "winOff": 7.699999999999999
+   },
+   {
+    "dy": 2,
+    "air": 5,
+    "made": true,
+    "how": "swim-jump, letting go at the top, jump at the rim",
+    "by": "swimRel",
+    "swim": true,
+    "flat": 6,
+    "dyN": 2,
+    "from": [
+     26.5,
+     0.6,
+     27.5
+    ],
+    "to": [
+     32.5,
+     2.6,
+     27.5
+    ],
+    "winOn": 7.699999999999999,
+    "winOff": 7.699999999999999
+   },
+   {
+    "dy": 2,
+    "air": 5.5,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 7,
+    "dyN": 2,
+    "from": [
+     26.5,
+     0.6,
+     30.5
+    ],
+    "to": [
+     33.5,
+     2.6,
+     30.5
+    ],
+    "winOn": 7.699999999999999,
+    "winOff": 7.699999999999999
+   },
+   {
+    "dy": 1.8,
+    "air": 3,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 4,
+    "dyN": 1.8,
+    "from": [
+     26.5,
+     0.6,
+     33.5
+    ],
+    "to": [
+     30.5,
+     2.4,
+     33.5
+    ],
+    "winOn": 7.799999999999999,
+    "winOff": 7.799999999999999
+   },
+   {
+    "dy": 1.8,
+    "air": 4,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 5,
+    "dyN": 1.8,
+    "from": [
+     26.5,
+     0.6,
+     36.5
+    ],
+    "to": [
+     31.5,
+     2.4,
+     36.5
+    ],
+    "winOn": 7.799999999999999,
+    "winOff": 7.799999999999999
+   },
+   {
+    "dy": 1.8,
+    "air": 4.8,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 6,
+    "dyN": 1.8,
+    "from": [
+     26.5,
+     0.6,
+     39.5
+    ],
+    "to": [
+     32.5,
+     2.4,
+     39.5
+    ],
+    "winOn": 7.799999999999999,
+    "winOff": 7.799999999999999
+   },
+   {
+    "dy": 1.8,
+    "air": 5.6,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 7,
+    "dyN": 1.8,
+    "from": [
+     26.5,
+     0.6,
+     42.5
+    ],
+    "to": [
+     33.5,
+     2.4,
+     42.5
+    ],
+    "winOn": 7.799999999999999,
+    "winOff": 7.799999999999999
+   },
+   {
+    "dy": 1.5,
+    "air": 4,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 5,
+    "dyN": 1.5,
+    "from": [
+     26.5,
+     0.6,
+     45.5
+    ],
+    "to": [
+     31.5,
+     2.1,
+     45.5
+    ],
+    "winOn": 8.399999999999999,
+    "winOff": 8.399999999999999
+   },
+   {
+    "dy": 1.5,
+    "air": 5,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 6,
+    "dyN": 1.5,
+    "from": [
+     26.5,
+     0.6,
+     48.5
+    ],
+    "to": [
+     32.5,
+     2.1,
+     48.5
+    ],
+    "winOn": 8.399999999999999,
+    "winOff": 8.399999999999999
+   },
+   {
+    "dy": 1.5,
+    "air": 5.6,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 7,
+    "dyN": 1.5,
+    "from": [
+     26.5,
+     0.6,
+     51.5
+    ],
+    "to": [
+     33.5,
+     2.1,
+     51.5
+    ],
+    "winOn": 8.399999999999999,
+    "winOff": 8.399999999999999
+   },
+   {
+    "dy": 1.5,
+    "air": 6.2,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 8,
+    "dyN": 1.5,
+    "from": [
+     26.5,
+     0.6,
+     54.5
+    ],
+    "to": [
+     34.5,
+     2.1,
+     54.5
+    ],
+    "winOn": 8.399999999999999,
+    "winOff": 8.399999999999999
+   },
+   {
+    "dy": 1.2,
+    "air": 5,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 6,
+    "dyN": 1.2,
+    "from": [
+     -26.5,
+     0.6,
+     30.5
+    ],
+    "to": [
+     -32.5,
+     1.8,
+     30.5
+    ],
+    "winOn": 8.6,
+    "winOff": 8.6
+   },
+   {
+    "dy": 1.2,
+    "air": 5.8,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 7,
+    "dyN": 1.2,
+    "from": [
+     -26.5,
+     0.6,
+     33.5
+    ],
+    "to": [
+     -33.5,
+     1.8,
+     33.5
+    ],
+    "winOn": 8.6,
+    "winOff": 8.6
+   },
+   {
+    "dy": 1.2,
+    "air": 6.4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 8,
+    "dyN": 1.2,
+    "from": [
+     -26.5,
+     0.6,
+     36.5
+    ],
+    "to": [
+     -34.5,
+     1.8,
+     36.5
+    ],
+    "winOn": 8.6,
+    "winOff": 8.6
+   },
+   {
+    "dy": 1.2,
+    "air": 7,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 8,
+    "dyN": 1.2,
+    "from": [
+     -26.5,
+     0.6,
+     39.5
+    ],
+    "to": [
+     -34.5,
+     1.8,
+     39.5
+    ],
+    "winOn": 8.6,
+    "winOff": 8.6
+   },
+   {
+    "dy": 0.6,
+    "air": 6,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 7,
+    "dyN": 0.6,
+    "from": [
+     -26.5,
+     0.6,
+     42.5
+    ],
+    "to": [
+     -33.5,
+     1.2,
+     42.5
+    ],
+    "winOn": 9.6,
+    "winOff": 9.6
+   },
+   {
+    "dy": 0.6,
+    "air": 6.8,
+    "made": true,
+    "how": "swim-jump jump at the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 8,
+    "dyN": 0.6,
+    "from": [
+     -26.5,
+     0.6,
+     45.5
+    ],
+    "to": [
+     -34.5,
+     1.2,
+     45.5
+    ],
+    "winOn": 9.6,
+    "winOff": 9.6
+   },
+   {
+    "dy": 0.6,
+    "air": 7.4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 9,
+    "dyN": 0.6,
+    "from": [
+     -26.5,
+     0.6,
+     48.5
+    ],
+    "to": [
+     -35.5,
+     1.2,
+     48.5
+    ],
+    "winOn": 9.6,
+    "winOff": 9.6
+   },
+   {
+    "dy": 0.6,
+    "air": 8,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 9,
+    "dyN": 0.6,
+    "from": [
+     -26.5,
+     0.6,
+     51.5
+    ],
+    "to": [
+     -35.5,
+     1.2,
+     51.5
+    ],
+    "winOn": 9.6,
+    "winOff": 9.6
+   },
+   {
+    "dy": 0,
+    "air": 6.6,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 8,
+    "dyN": 0,
+    "from": [
+     -26.5,
+     0.6,
+     54.5
+    ],
+    "to": [
+     -34.5,
+     0.6,
+     54.5
+    ],
+    "winOn": 10.200000000000001,
+    "winOff": 10.200000000000001
+   },
+   {
+    "dy": 0,
+    "air": 7.4,
+    "made": true,
+    "how": "swim-jump jump at the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 9,
+    "dyN": 0,
+    "from": [
+     -26.5,
+     0.6,
+     0.5
+    ],
+    "to": [
+     -35.5,
+     0.6,
+     0.5
+    ],
+    "winOn": 10.200000000000001,
+    "winOff": 10.200000000000001
+   },
+   {
+    "dy": 0,
+    "air": 8,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 9,
+    "dyN": 0,
+    "from": [
+     -26.5,
+     0.6,
+     3.5
+    ],
+    "to": [
+     -35.5,
+     0.6,
+     3.5
+    ],
+    "winOn": 10.200000000000001,
+    "winOff": 10.200000000000001
+   },
+   {
+    "dy": 0,
+    "air": 8.6,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 10,
+    "dyN": 0,
+    "from": [
+     -26.5,
+     0.6,
+     -54.5
+    ],
+    "to": [
+     -36.5,
+     0.6,
+     -54.5
+    ],
+    "winOn": 10.200000000000001,
+    "winOff": 10.200000000000001
+   },
+   {
+    "dy": -1.2,
+    "air": 7.6,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 9,
+    "dyN": -1.2,
+    "from": [
+     -26.5,
+     1.8,
+     -51.5
+    ],
+    "to": [
+     -35.5,
+     0.6,
+     -51.5
+    ],
+    "winOn": 11.200000000000001,
+    "winOff": 11.200000000000001
+   },
+   {
+    "dy": -1.2,
+    "air": 8.4,
+    "made": true,
+    "how": "swim-jump coyote jump 0.9 m past the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 10,
+    "dyN": -1.2,
+    "from": [
+     -26.5,
+     1.8,
+     -48.5
+    ],
+    "to": [
+     -36.5,
+     0.6,
+     -48.5
+    ],
+    "winOn": 11.200000000000001,
+    "winOff": 11.200000000000001
+   },
+   {
+    "dy": -1.2,
+    "air": 9,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 10,
+    "dyN": -1.2,
+    "from": [
+     -26.5,
+     1.8,
+     -45.5
+    ],
+    "to": [
+     -36.5,
+     0.6,
+     -45.5
+    ],
+    "winOn": 11.200000000000001,
+    "winOff": 11.200000000000001
+   },
+   {
+    "dy": -1.2,
+    "air": 9.6,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 11,
+    "dyN": -1.2,
+    "from": [
+     -26.5,
+     1.8,
+     -42.5
+    ],
+    "to": [
+     -37.5,
+     0.6,
+     -42.5
+    ],
+    "winOn": 11.200000000000001,
+    "winOff": 11.200000000000001
+   },
+   {
+    "dy": -3.4,
+    "air": 8.8,
+    "made": true,
+    "how": "swim-jump jump 0.2 m before the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 10,
+    "dyN": -3.4,
+    "from": [
+     -26.5,
+     4,
+     -39.5
+    ],
+    "to": [
+     -36.5,
+     0.6,
+     -39.5
+    ],
+    "winOn": 12.600000000000001,
+    "winOff": 12.600000000000001
+   },
+   {
+    "dy": -3.4,
+    "air": 9.6,
+    "made": true,
+    "how": "swim-jump jump at the rim",
+    "by": "swim",
+    "swim": true,
+    "flat": 11,
+    "dyN": -3.4,
+    "from": [
+     -26.5,
+     4,
+     -36.5
+    ],
+    "to": [
+     -37.5,
+     0.6,
+     -36.5
+    ],
+    "winOn": 12.600000000000001,
+    "winOff": 12.600000000000001
+   },
+   {
+    "dy": -3.4,
+    "air": 10.4,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 12,
+    "dyN": -3.4,
+    "from": [
+     -26.5,
+     4,
+     -33.5
+    ],
+    "to": [
+     -38.5,
+     0.6,
+     -33.5
+    ],
+    "winOn": 12.600000000000001,
+    "winOff": 12.600000000000001
+   },
+   {
+    "dy": -3.4,
+    "air": 11,
+    "made": false,
+    "how": null,
+    "by": null,
+    "swim": true,
+    "flat": 12,
+    "dyN": -3.4,
+    "from": [
+     -26.5,
+     4,
+     -30.5
+    ],
+    "to": [
+     -38.5,
+     0.6,
+     -30.5
+    ],
+    "winOn": 12.600000000000001,
+    "winOff": 12.600000000000001
+   }
+  ],
+  "byDy": [
+   {
+    "dy": 2.3,
+    "made": 0,
+    "of": 2,
+    "swimMade": 0,
+    "swim": true,
+    "lastAir": null,
+    "firstNot": 3.5,
+    "worstFlat": null,
+    "winOn": 0,
+    "winOff": 0,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 2.25,
+    "made": 0,
+    "of": 4,
+    "swimMade": 0,
+    "swim": true,
+    "lastAir": null,
+    "firstNot": 3,
+    "worstFlat": null,
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 2.2,
+    "made": 3,
+    "of": 5,
+    "swimMade": 3,
+    "swim": true,
+    "lastAir": 4.5,
+    "firstNot": 5,
+    "worstFlat": 6.4,
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 2.1,
+    "made": 2,
+    "of": 6,
+    "swimMade": 2,
+    "swim": true,
+    "lastAir": 4.5,
+    "firstNot": 5,
+    "worstFlat": 6.4,
+    "winOn": 7.199999999999999,
+    "winOff": 7.199999999999999,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 2,
+    "made": 6,
+    "of": 7,
+    "swimMade": 6,
+    "swim": true,
+    "lastAir": 5,
+    "firstNot": 5.5,
+    "worstFlat": 6.9,
+    "winOn": 7.699999999999999,
+    "winOff": 7.699999999999999,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 1.8,
+    "made": 3,
+    "of": 4,
+    "swimMade": 3,
+    "swim": true,
+    "lastAir": 4.8,
+    "firstNot": 5.6,
+    "worstFlat": 6.7,
+    "winOn": 7.799999999999999,
+    "winOff": 7.799999999999999,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 1.5,
+    "made": 3,
+    "of": 4,
+    "swimMade": 3,
+    "swim": true,
+    "lastAir": 5.6,
+    "firstNot": 6.2,
+    "worstFlat": 7.5,
+    "winOn": 8.399999999999999,
+    "winOff": 8.399999999999999,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 1.2,
+    "made": 2,
+    "of": 4,
+    "swimMade": 2,
+    "swim": true,
+    "lastAir": 5.8,
+    "firstNot": 6.4,
+    "worstFlat": 7.7,
+    "winOn": 8.6,
+    "winOff": 8.6,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 0.6,
+    "made": 2,
+    "of": 4,
+    "swimMade": 2,
+    "swim": true,
+    "lastAir": 6.8,
+    "firstNot": 7.4,
+    "worstFlat": 8.7,
+    "winOn": 9.6,
+    "winOff": 9.6,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": 0,
+    "made": 2,
+    "of": 4,
+    "swimMade": 2,
+    "swim": true,
+    "lastAir": 7.4,
+    "firstNot": 8,
+    "worstFlat": 9.3,
+    "winOn": 10.200000000000001,
+    "winOff": 10.200000000000001,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": -1.2,
+    "made": 2,
+    "of": 4,
+    "swimMade": 2,
+    "swim": true,
+    "lastAir": 8.4,
+    "firstNot": 9,
+    "worstFlat": 10.3,
+    "winOn": 11.200000000000001,
+    "winOff": 11.200000000000001,
+    "inside": true,
+    "edgeOk": true
+   },
+   {
+    "dy": -3.4,
+    "made": 2,
+    "of": 4,
+    "swimMade": 2,
+    "swim": true,
+    "lastAir": 9.6,
+    "firstNot": 10.4,
+    "worstFlat": 11.5,
+    "winOn": 12.600000000000001,
+    "winOff": 12.600000000000001,
+    "inside": true,
+    "edgeOk": true
+   }
+  ]
+ },
+ {
+  "id": "x8n",
+  "check": 8,
+  "what": "the Gate 10 m from the pad (z 50)",
+  "expect": "the Gate (?:[0-9]|1[01])(?:\\.\\d)? m from the pad \\(12–20\\)",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   8
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x8f",
+  "check": 8,
+  "what": "the Gate 22 m from the pad (z 38)",
+  "expect": "the Gate (?:2[1-9]|[3-9]\\d)(?:\\.\\d)? m from the pad \\(12–20\\)",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7,
+   8
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x8u",
+  "check": 8,
+  "what": "the Gate on a 3.4 m dais up a ramp: 1 m above the pad",
+  "expect": "the Gate [\\d.]+ m above the pad \\(≤ 0\\.2\\)",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   1,
+   3,
+   7,
+   8
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x8s",
+  "check": 8,
+  "what": "a 4.6 m screen across the apron (x ±7, z 50.4…50.9) between the spawn deck and the Gate",
+  "expect": "the Gate not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   8
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x11f",
+  "check": 11,
+  "what": "a noRest polygon (x 1…27, z 0…22: the main floor's east side, the channel's south end, the east strip, the GAP) round the enemy half's water edge nearest the Pond: a carrier falling there is dropped ≥ 13.5 m away (12 m the rule)",
+  "expect": "a fall on the enemy half → ",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": true,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   11
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x11w",
+  "check": 11,
+  "what": "open water across the main floor at z 6…20 but a 1 m causeway (x −1…0) on route 1: a splat on it rests on the causeway (no wide floor within reach)",
+  "expect": "a splat on the narrow walk by weir 1 rested on narrow floor",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": true,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   5,
+   11,
+   14
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x11z",
+  "check": 1,
+  "what": "the spawn-deck zone with its eras written as strings (['0']): the engine compares strictly and never applies it (review 3 caught it only by #11's zone visit)",
+  "expect": "free zone 1's eras entry \"0\" matches no field state",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   1,
+   9
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x1e",
+  "check": 1,
+  "what": "a second free zone (the apron's east crate corner, Bravo's own) with eras ['1'] on a box whose states are keyed 0 and 1 (numbers): it never exists in the game, and #9 would read it",
+  "expect": "free zone 2's eras entry \"1\" matches no field state",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   1
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x1v",
+  "check": 1,
+  "what": "a carrierBlock with eras [1]: the engine honours eras on free zones only, so it stands in every state",
+  "expect": "carrierBlock 2 carries eras \\[1\\], which the engine ignores",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   1
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "L1t",
+  "check": 7,
+  "what": "L1t: a 1.0 m no-ink ledge on the field (x −15.4…−13, its face 0.1 m past a cell centre: floor node 2 m from its top node, no edge) into the ring, a ramp down from it inside, screened",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[step off the nav grid(?: \\(swim-jump\\))?\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "L2t",
+  "check": 7,
+  "what": "L2t: L1t at 0.8 m",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[step off the nav grid(?: \\(swim-jump\\))?\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "L3t",
+  "check": 7,
+  "what": "L3t: a 1.0 m walkway outside the ring (up a ramp) through the opening, its end 0.1 m past a cell centre: a kid steps 1.0 m down off it into the ring",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[step off the nav grid(?: \\(swim-jump\\))?\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "L1tc",
+  "check": 7,
+  "what": "the control: L1t with its face on the grid (x −15.0): nav's own jump edge, a plain entrance",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[jump\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "T4",
+  "check": 7,
+  "what": "T4: a 1.0 m-high squid culvert 3.5 m long (x −18.75…−15.25, sealed sides) through the ring wall's west opening, screened inside: a squid slips into the ring, a kid can't; the nodes either side stand 5 m apart",
+  "expect": "\\(a\\) team \\d: an entrance at .*\\[squid gap(?: \\(swim-jump\\))?\\] not seen from the spawn deck",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   7
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "g5w",
+  "check": null,
+  "what": "G5 with KARP_SWIM=warn: its swim-jump finds are a WARN, not a FAIL",
+  "expect": null,
+  "notFail": [
+   7
+  ],
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": "warn",
+  "unplaced": false,
+  "notFailText": [
+   [
+    7,
+    "WARN \\(KARP_SWIM=warn\\) made only by the swimming carrier: [1-9]\\d* #7d find"
+   ]
+  ],
+  "pass": true,
+  "failing": [],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "g5o",
+  "check": null,
+  "what": "G5 with KARP_SWIM=off: the kid alone, who can't clear 5 m",
+  "expect": null,
+  "notFail": [
+   7
+  ],
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": "off",
+  "unplaced": false,
+  "notFailText": [
+   [
+    16,
+    "the swimming carrier not modelled \\(KARP_SWIM=off"
+   ]
+  ],
+  "pass": true,
+  "failing": [],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x7w",
+  "check": null,
+  "what": "G5 with one waiver (probe longGap, at one find's takeoff on the moat's far bank): every find of its flag group is waived, not only those within 2 m",
+  "expect": null,
+  "notFail": [
+   7
+  ],
+  "expect16": null,
+  "also": null,
+  "phys": true,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": [
+   [
+    7,
+    "[1-9]\\d* waived \\(\\d+ flag group"
+   ]
+  ],
+  "pass": true,
+  "failing": [],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x2h",
+  "check": 2,
+  "what": "a hole: a 3.2 m platform north of the alley (up a ramp) a kid drops off over the alley's 3 m wall, and a carrierBlock over the alley's mouth, its only way out: reached from the Pond, no walk on to a Gate",
+  "expect": "holes [1-9]",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   2
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x2s",
+  "check": 2,
+  "what": "a reading fault planted in the field (sweepFault: between the alley's nodes fieldAt reads 4 m low; at the nodes exact) — the sweep's FAIL branch",
+  "expect": "[1-9]\\d* > 2\\.5 m \\(worst",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": null,
+  "after": "sweepFault",
+  "swim": null,
+  "unplaced": false,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   2
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x12s",
+  "check": 12,
+  "what": "a fixture lightmap with a wrong hash in place of the stage's own (karpbox judged as baked)",
+  "expect": "its lightmap is stale \\(the build differs from the bake: hash stale0 baked",
+  "notFail": null,
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": "data:application/json,%7B%22hash%22%3A%22stale0%22%2C%22ppm%22%3A5%2C%22size%22%3A1024%7D",
+  "after": null,
+  "swim": null,
+  "unplaced": true,
+  "notFailText": null,
+  "pass": true,
+  "failing": [
+   12
+  ],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ },
+ {
+  "id": "x12f",
+  "check": null,
+  "what": "the same fixture with the build's own hash: fresh",
+  "expect": null,
+  "notFail": [
+   12
+  ],
+  "expect16": null,
+  "also": null,
+  "phys": false,
+  "carry": false,
+  "allStates": false,
+  "reach": false,
+  "lightmap": "data:application/json,%7B%22hash%22%3A%22%40level%22%2C%22ppm%22%3A5%2C%22size%22%3A1024%7D",
+  "after": null,
+  "swim": null,
+  "unplaced": false,
+  "notFailText": [
+   [
+    12,
+    "lightmap karpbox\\.bazookarp fresh"
+   ]
+  ],
+  "pass": true,
+  "failing": [],
+  "why": true,
+  "why16": true,
+  "alsoOk": true,
+  "flagged": true,
+  "textOk": true
+ }
+]

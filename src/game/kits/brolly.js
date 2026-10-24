@@ -286,19 +286,23 @@ function addLaunched(a, pos, dir, hp, h0, ghost) {
   if (ghost) sound(a, 'brolly_launch', 0.8);
   return c;
 }
-function buildLaunchedMesh(c) {
+function launchedLook(col) {
   const geo = canopyOpenGeo();
-  const col = G.teamColors?.[c.team] || c.owner.color;
   const ink = makeFabric(col, true), cream = makeFabric(new THREE.Color(1, 1, 1), false);
   ink.transparent = cream.transparent = true;
   const root = new THREE.Group(), inner = new THREE.Group();
   const mi = new THREE.Mesh(geo.ink, ink), mc = new THREE.Mesh(geo.cream, cream), mh = new THREE.Mesh(geo.hub, getPlasticMaterial());
   for (const m of [mi, mc, mh]) { m.castShadow = true; inner.add(m); }
   root.add(inner);
-  root.rotation.y = Math.atan2(c.dir.x, c.dir.z);
-  G.scene?.add(root);
-  c.mesh = root; c.inner = inner; c.mats = [ink, cream];
+  return { root, inner, mats: [ink, cream] };
 }
+function buildLaunchedMesh(c) {
+  const L = launchedLook(G.teamColors?.[c.team] || c.owner.color);
+  L.root.rotation.y = Math.atan2(c.dir.x, c.dir.z);
+  G.scene?.add(L.root);
+  c.mesh = L.root; c.inner = L.inner; c.mats = L.mats;
+}
+let warmSet = null;   // [b5-beta1] a launched canopy's stand-in (registry.js warmKits: its programs at the match's load)
 function disposeLaunched(c) {
   if (c.mesh) { c.mesh.parent?.remove(c.mesh); for (const m of c.mats) m.dispose(); }
   c.mesh = null;
@@ -368,21 +372,24 @@ function updateLaunched(c, dt) {
 // enemy players can't pass a launched canopy: push them back out to the side they're on (allies walk through)
 function blockActors(c) {
   if (!c.alive) return;
+  for (const e of G.actors || []) blockOne(c, e);
+}
+// [b5-sub-dash] one player against one canopy (idempotent: a body already out of the band isn't moved) — the tick runs
+// it for everyone; MAIN_KITS.brolly.blockActor for each body right after its move, inside every dash substep too
+function blockOne(c, e) {
+  if (!c.alive || !e.alive || e.team === c.team) return;
   const N = c.dir, tx = -N.z, tz = N.x, rr = PLAYER.radius + 0.18;
-  for (const e of G.actors || []) {
-    if (!e.alive || e.team === c.team) continue;
-    const dx = e.pos.x - c.pos.x, dz = e.pos.z - c.pos.z, dy = e.pos.y - c.pos.y;
-    if (dy < -1.2 || dy > 1.6) continue;
-    const along = dx * tx + dz * tz;
-    if (Math.abs(along) > LAUNCH_R + PLAYER.radius * 0.6) continue;
-    const across = dx * N.x + dz * N.z + DEPTH * 0.5;   // from the blocking plane
-    if (Math.abs(across) >= rr) continue;
-    const side = across >= 0 ? 1 : -1, push = side * rr - across;
-    e.pos.x += N.x * push; e.pos.z += N.z * push;
-    const vn = e.vel.x * N.x + e.vel.z * N.z;
-    if (vn * side < 0) { e.vel.x -= N.x * vn; e.vel.z -= N.z * vn; }
-    if (side > 0) c.shoving = true;   // shoving someone along slows it (next frame)
-  }
+  const dx = e.pos.x - c.pos.x, dz = e.pos.z - c.pos.z, dy = e.pos.y - c.pos.y;
+  if (dy < -1.2 || dy > 1.6) return;
+  const along = dx * tx + dz * tz;
+  if (Math.abs(along) > LAUNCH_R + PLAYER.radius * 0.6) return;
+  const across = dx * N.x + dz * N.z + DEPTH * 0.5;   // from the blocking plane
+  if (Math.abs(across) >= rr) return;
+  const side = across >= 0 ? 1 : -1, push = side * rr - across;
+  e.pos.x += N.x * push; e.pos.z += N.z * push;
+  const vn = e.vel.x * N.x + e.vel.z * N.z;
+  if (vn * side < 0) { e.vel.x -= N.x * vn; e.vel.z -= N.z * vn; }
+  if (side > 0) c.shoving = true;   // shoving someone along slows it (next frame)
 }
 
 // ---------------------------------------------------------------------------------------------- per-frame (world)
@@ -446,6 +453,17 @@ function tick(dt) {
     predict(p, dt, _v);
     // Boss Battle: pellets into HULLBREAKER / a crablet add up per blast the same way (one hit; the core pass ends
     // the pellet there)
+    if (G.objTargets) {   // [b5-karp] the Roe Shell: one summed hit per blast, as the boss
+      const kh = G.objTargets.segHit(p.pos, _v, p.size);
+      if (kh) {
+        const key = e.blast * 64 + 62;
+        let rec = PEND.get(key);
+        if (!rec) PEND.set(key, (rec = { owner: e.owner, karp: kh.target, point: kh.point.clone(), dmg: 0, n: 0, at: G.time + MERGE }));
+        rec.dmg += pelletDamage(p.start.distanceTo(kh.point)); rec.n++;
+        p._bid = -p._bid;
+        continue;
+      }
+    }
     if (G.boss) {
       const bh = G.boss.segHit(p.pos, _v, p.size);
       if (bh) {
@@ -477,7 +495,8 @@ function tick(dt) {
   for (const [key, rec] of PEND) {
     if (G.time < rec.at - 1e-6) continue;
     PEND.delete(key);
-    if (rec.boss) G.boss?.hit(rec.owner, rec.dmg, rec.boss, 'brolly', rec.point); else PJ.applyHit(rec.owner, rec.victim, rec.dmg, 'brolly');
+    if (rec.karp) G.objTargets?.hit(rec.owner, rec.dmg, 'brolly', rec.point, { target: rec.karp });   // [b5-karp]
+    else if (rec.boss) G.boss?.hit(rec.owner, rec.dmg, rec.boss, 'brolly', rec.point); else PJ.applyHit(rec.owner, rec.victim, rec.dmg, 'brolly');
   }
   snapShields();
   // 3) launched canopies hold enemy players back
@@ -655,6 +674,7 @@ const _gp = new THREE.Vector3(), _gd = new THREE.Vector3();
 const r2 = (x) => Math.round(x * 100) / 100, r3 = (x) => Math.round(x * 1000) / 1000;
 
 MAIN_KITS.brolly = {
+  warm() { return [(warmSet || (warmSet = launchedLook(new THREE.Color(1, 1, 1)))).root]; },   // [b5-beta1]
   netState,
   netApply,
   ghost,
@@ -664,6 +684,7 @@ MAIN_KITS.brolly = {
   moveSpeed: (r, w) => (r.kit && r.kit.brolly && r.kit.open > 0.2 ? w.moveSpeedShield : 0),
   spreadDeg: (r, w) => (r.a.grounded ? w.spreadDeg : w.spreadAir),
   tick, clear: clearAll, blockShot, blockRay, shields,
+  blockActor(a) { for (const c of LAUNCHED) blockOne(c, a); },   // [b5-sub-dash] (subs.js blockActor: SPEC §0.5)
   bot,
   // test / tooling access
   _state: { LAUNCHED, PELLETS, SH, STATS, refreshShields, pelletDamage, kitOf },

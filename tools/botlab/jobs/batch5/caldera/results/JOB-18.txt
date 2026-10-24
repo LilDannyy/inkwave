@@ -1,0 +1,6 @@
+JOB-18 (caldera) @ 218bd500 (the round's final code a01dc415) — Mac mini b5-runner, 2026-10-25 00:31–01:23, exit 0. Short summary.
+- RULE 47 UNMEASURED: all three parts (a,c,d | b,e LOW/HIGH/r30 | b,e r60/r90/f50) hit the page's 900 s WATCHDOG together and returned
+  nothing (JOB-16 finished them inside it; the rise / fall clock this round adds must take them past 15 min with three at once).
+  land9-rise timed out again too (WATCHDOG, as in JOB-16).
+- full: boss-check 6/6 ×5, lava-bots 7/7, Zone Control 7/7 ×2, held9 35/35, far9 2/2, land9-high 13/13, wall9 1/1, lava.js runs 2–3 60/60.
+- not full: lava.js run 1 59/60 (F10, the lookout claim); net-lava 12/13 (the late joiner's imported paint differs in the lava cells, as in JOB-16).

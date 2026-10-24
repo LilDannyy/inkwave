@@ -1,0 +1,6 @@
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/o-high/caldera-day-top.png
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/o-high/caldera-day-aerialA.png
+shot /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/shots/o-high/caldera-day-shape.png
+REPORT {"map":"caldera","mode":"turf","time":"day","loadMs":6584,"blocks":1272,"solidBlocks":1272,"propMeshes":6,"navNodes":4938,"bounds":{"minX":-44,"maxX":44,"minZ":-76,"maxZ":76},"perf":{"calls":86,"tris":193842,"cpuRenderMs":2.26,"cpuSimMs":1.82},"coverage":[2.2,5]}
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for caldera Unexpected token 'N', "Not found" is not valid JSON

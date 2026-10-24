@@ -1,0 +1,6 @@
+FAIL lightmap applied (baked for this build, not stale)  {"id":"caldera","mode":"tower"}
+PASS spawn → mid (s, bots' default search cap)  {"secs":[5.62,5.94],"avg":5.78,"straight":64.9}
+PASS no climb barred by a railing  {"bad":0}
+PASS tower: 100 s to the goal  {"len":73,"cps":["34%","68%"],"toGoal":[100,100],"placeholder":false}
+RESULT 3/4
+console errors: none

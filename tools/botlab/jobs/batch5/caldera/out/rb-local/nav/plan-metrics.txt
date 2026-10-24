@@ -1,0 +1,8 @@
+low: floor 4716 m2, footprint 5984, solidity 0.786, IoU Halyard 0.528, IoU Gulper 0.406, IoU Craters 0.596, band |z|<20 floor 1600
+   widths -60:35 -56:34 -52:33 -48:25 -44:25 -40:34 -36:37 -32:40 -28:55 -24:59 -20:57 -16:57 -12:60 -8:63 -4:63 0:72 4:63 8:62 12:60 16:57 20:58 24:60 28:52 32:40 36:36 40:33 44:25 48:25 52:33 56:35 60:36
+high: floor 4380 m2, footprint 5848, solidity 0.768, IoU Halyard 0.530, IoU Gulper 0.392, IoU Craters 0.579, band |z|<20 floor 1324
+   widths -60:35 -56:34 -52:33 -48:25 -44:25 -40:34 -36:37 -32:40 -28:55 -24:59 -20:57 -16:53 -12:55 -8:57 -4:59 0:72 4:59 8:56 12:55 16:55 20:58 24:60 28:52 32:40 36:36 40:33 44:25 48:25 52:33 56:35 60:36
+halyard: floor 4252, footprint 6488, solidity 0.984, IoU Halyard 1.000, band 1220
+craters: floor 5818, footprint 6796, solidity 0.918, IoU Halyard 0.727, band 2010
+aquarium: floor 5240, footprint 5972, solidity 0.828, IoU Halyard 0.713, band 1848
+wrote /private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/rb1/plan-sheet.png

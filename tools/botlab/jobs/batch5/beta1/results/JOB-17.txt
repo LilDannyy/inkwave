@@ -1,0 +1,5 @@
+JOB-17 (beta1) @ 016c9e2c (the final code) — Mac mini b5-runner, 2026-10-24 09:50–10:15, exit 0. Short summary.
+- cold first frames, 16 stages + Cargo (DEVSTAGE=1), twice: 48/48 both times (JOB-15's kelpline / craters / spirhalite misses gone).
+- bot-stuck 6/7, 7/7, 6/7: both misses are 'tank' (a bot on the Great Tank's sand bed not out within 6 s); pocket 1/1.
+- the matches on the pinned / stranded stages (17 read): every one ≤ 1 % stuck; ONE episode over 5 s — Turf War on lockgate #1, 5.25 s at
+  (10.1, 0, 15.1), 'paint'.

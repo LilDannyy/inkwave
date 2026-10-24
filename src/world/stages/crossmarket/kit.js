@@ -70,7 +70,7 @@ export function makeKit(D, H) {
     }
     B.col(ax, ay, az, bx, by, bz, flags);
   }
-  const RAIL = { rail: true };
+  const RAIL = { rail: true }, RAIL_ROOF = { rail: true, roof: true };   // [b5-int3] RAIL_ROOF (the balconettes)
   // raked railing collider beside a stair (local +Z from the foot up to (0, rise, run)): `n` stepped rail boxes from
   // x0 to x1, each from the ground (below == null) or `below` m under the flight up to the handrail height
   function rakedRail(B, x0, x1, rise, run, HR, n = 5, below = null) {
@@ -368,7 +368,7 @@ export function makeKit(D, H) {
     const W = w + 0.5, dz = o.depth ?? 0.42, ic = o.iron ?? K.iron;
     B.box('paint', o.slab ?? K.stone, W, 0.1, dz + 0.04, x, y - 0.05, dz / 2, { r: 0.02 });
     for (const sx of [-1, 1]) B.box('paint', o.slab ?? K.stone, 0.1, 0.24, 0.18, x + sx * (W / 2 - 0.12), y - 0.2, 0.09, { r: 0.02 });   // corbels
-    colT(B, x - W / 2, y - 0.1, 0, x + W / 2, y + 0.95, dz, RAIL);                             // see-through iron: a rail
+    colT(B, x - W / 2, y - 0.1, 0, x + W / 2, y + 0.95, dz, RAIL_ROOF);                        // see-through iron: a rail ([b5-int3] and off-limits on top: a swim jump + air dash off the spawn terrace stood a kid on a first-floor one, 3.55 m up — dash-reach.js)
     const top = y + 0.9;
     B.tube(NS('metal'), ic, [P3(x - W / 2 + 0.03, top, 0.02), P3(x - W / 2 + 0.03, top, dz - 0.03), P3(x + W / 2 - 0.03, top, dz - 0.03), P3(x + W / 2 - 0.03, top, 0.02)], 0.02, { radial: 5 });
     pbox(B, NS('metal'), ic, W - 0.06, 0.025, 0.025, x, y + 0.09, dz - 0.03);

@@ -1,0 +1,5858 @@
+{
+ "about": "Highmark Foundry (caldera): the Bazookarp carrier's swim jumps over the lava, for the Bazookarp layout builder (karp-stages/). THIS LIST IS A LOWER BOUND: it holds every carrier crossing two searches found from their own take-off sets, and the Bazookarp checker's shortcut probes (#7d) must probe Highmark's Bazookarp layout itself (every edge of the carrier field, not these candidates) once it is built. The lead's decisions (caldera LEAD-NOTES, after reviews 6 and 7): a carrier swims its own ink (SPEC S21, 9.44 m/s), so its swim jumps over the lava are skill movement like everyone's; what a carrier may bypass is judged PER STAGE by #7d: the layout must place the Pond, the weirs and the Gate so no carrier jump saves over 20 m on the carrier field or skips a weir, with rails where it must (squids pass rails: a rail stops the kid's hop, not the swim). Its dash jumps are out (a carrier holds no sub); a Mitts leap is out too (no leap while carrying, actor.js). Fix round 7 merged (review 7 issue 4): (1) 'audit' = tools/botlab/tests/lava-audit.js rule 44's carrier row with PAGE_ARGS full=1 at the fix-round-7 geometry: every plain swim crossing the kid makes from the march's take-off nodes saving > 10 m, tried again with actor.carry set from the same take-off, run-up and heading; (2) 'probe-carry44:r6' / ':r7' = review 6's probe-carry44 run at the same geometry over review 6's candidate set (805 LOW / 362 HIGH swim crossings of the older audit) and review 7's rebuild (242 / 279), each tried with the carrier's movement from 2.6 m behind its edge along its heading (the probe's own landing rule: the far floor's height). Entries are deduplicated by take-off (0.1 m) and heading (22.5 deg); 'src' says which search found each; 'gain' = the nav walk from the take-off node to where it landed minus the flight, the largest the searches measured ('kidGain' beside it: the plain kid's). Both halves (x, z in world metres; Bravo's are the 180-degree turns).",
+ "levels": {
+  "low": {
+   "summary": {
+    "n": 133,
+    "over10": 124,
+    "over15": 93,
+    "over20": 87,
+    "over40": 39,
+    "maxGain": 55.93,
+    "fromAudit": 75,
+    "fromProbeOnly": 58
+   },
+   "crossings": [
+    {
+     "from": [
+      -12.5,
+      1.4,
+      -11.5
+     ],
+     "dir": -158,
+     "gap": 4.6,
+     "runup": 0.8,
+     "landed": [
+      -17.8,
+      -13.61
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 55.93,
+     "gain": 55.93,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -17.5,
+      1.5,
+      -15.5
+     ],
+     "dir": 45,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      -12.82,
+      -11.53
+     ],
+     "landedY": 1.4,
+     "kidGain": 52.01,
+     "gain": 52.01,
+     "src": [
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      17.5,
+      1.5,
+      15.5
+     ],
+     "dir": -135,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      12.82,
+      11.53
+     ],
+     "landedY": 1.4,
+     "kidGain": 52.01,
+     "gain": 52.01,
+     "src": [
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -9.5
+     ],
+     "dir": -135,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      -17.45,
+      -14.45
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 48.67,
+     "gain": 51.63,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      9.5
+     ],
+     "dir": 45,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      17.45,
+      14.45
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 48.67,
+     "gain": 51.63,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -19.5,
+      1.4,
+      -14.5
+     ],
+     "dir": 23,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      -11.72,
+      -10.69
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 46.37,
+     "gain": 50.73,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -11.5,
+      1.2,
+      -7.5
+     ],
+     "dir": -135,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      -17.58,
+      -13.58
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 46.74,
+     "gain": 50.61,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      11.5,
+      1.2,
+      7.5
+     ],
+     "dir": 45,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      17.58,
+      13.58
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 46.74,
+     "gain": 50.61,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      19.5,
+      1.4,
+      14.5
+     ],
+     "dir": -158,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      11.71,
+      10.68
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 46.37,
+     "gain": 48.95,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -11.5,
+      1.5,
+      -8.5
+     ],
+     "dir": -135,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      -17.44,
+      -14.44
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 45.86,
+     "gain": 48.82,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      11.5,
+      1.5,
+      8.5
+     ],
+     "dir": 45,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      17.44,
+      14.44
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 45.86,
+     "gain": 48.82,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -11.5,
+      1.5,
+      -9.5
+     ],
+     "dir": -135,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      -17.51,
+      -15.51
+     ],
+     "landedY": 1.3,
+     "on": "coping",
+     "kidGain": 42.16,
+     "gain": 48.72,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      11.5,
+      1.5,
+      9.5
+     ],
+     "dir": 45,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      17.51,
+      15.51
+     ],
+     "landedY": 1.3,
+     "on": "coping",
+     "kidGain": 42.16,
+     "gain": 48.72,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      -5.5
+     ],
+     "dir": -113,
+     "gap": 7.1,
+     "runup": 2.6,
+     "landed": [
+      -16.73,
+      -13.36
+     ],
+     "landedY": 1.2,
+     "kidGain": 46.72,
+     "gain": 48.7,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      5.5
+     ],
+     "dir": 68,
+     "gap": 7.1,
+     "runup": 2.6,
+     "landed": [
+      16.73,
+      13.36
+     ],
+     "landedY": 1.2,
+     "kidGain": 46.72,
+     "gain": 48.7,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -18.5,
+      1.4,
+      -14.5
+     ],
+     "dir": 23,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      -11.59,
+      -10.46
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 48.06,
+     "gain": 48.62,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      18.5,
+      1.4,
+      14.5
+     ],
+     "dir": -158,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      11.59,
+      10.46
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 48.06,
+     "gain": 48.62,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.4,
+      11.5
+     ],
+     "dir": 23,
+     "gap": 4.6,
+     "runup": 0.8,
+     "landed": [
+      17.8,
+      13.61
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 48.39,
+     "gain": 48.39,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      -4.5
+     ],
+     "dir": -113,
+     "gap": 7.2,
+     "runup": 2.6,
+     "landed": [
+      -17.08,
+      -13.08
+     ],
+     "landedY": 1.2,
+     "kidGain": 46.34,
+     "gain": 48.21,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      4.5
+     ],
+     "dir": 68,
+     "gap": 7.2,
+     "runup": 2.6,
+     "landed": [
+      17.08,
+      13.08
+     ],
+     "landedY": 1.2,
+     "kidGain": 46.34,
+     "gain": 48.21,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      18.5,
+      1.2,
+      15.5
+     ],
+     "dir": -158,
+     "gap": 5.4,
+     "runup": 2.6,
+     "landed": [
+      11.58,
+      10.45
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 47.72,
+     "gain": 47.65,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      1.4,
+      -11.5
+     ],
+     "dir": -135,
+     "gap": 7.2,
+     "runup": 2.6,
+     "landed": [
+      -17.57,
+      -16.39
+     ],
+     "landedY": 1.3,
+     "kidGain": 39.17,
+     "gain": 47.42,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -22.5,
+      1.2,
+      -15.5
+     ],
+     "dir": 23,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      -12.34,
+      -11.29
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 42.69,
+     "gain": 47.04,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -19.5,
+      1.2,
+      -15.5
+     ],
+     "dir": 23,
+     "gap": 5.4,
+     "runup": 2.6,
+     "landed": [
+      -11.59,
+      -10.46
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 50.24,
+     "gain": 45.83,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      19.5,
+      1.2,
+      15.5
+     ],
+     "dir": -158,
+     "gap": 5.4,
+     "runup": 2.6,
+     "landed": [
+      11.59,
+      10.46
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 44.91,
+     "gain": 45.83,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -11.5,
+      2.3,
+      -11.5
+     ],
+     "dir": -135,
+     "gap": 8.2,
+     "runup": 2.6,
+     "landed": [
+      -17.39,
+      -16.24
+     ],
+     "landedY": 1.3,
+     "kidGain": 35.47,
+     "gain": 45.65,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -20.5,
+      1.4,
+      -15.5
+     ],
+     "dir": 23,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      -11.6,
+      -10.48
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 47.59,
+     "gain": 43.99,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -21.5,
+      1.2,
+      -15.5
+     ],
+     "dir": 23,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      -11.59,
+      -10.46
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 45.83,
+     "gain": 43.51,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -22.5,
+      1.2,
+      -17.5
+     ],
+     "dir": 23,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      -11.66,
+      -10.58
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 45.13,
+     "gain": 42.76,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      22.5,
+      1.2,
+      17.5
+     ],
+     "dir": -158,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      11.66,
+      10.58
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 37.59,
+     "gain": 42.76,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -20.5,
+      1.2,
+      -16.5
+     ],
+     "dir": 23,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      -11.6,
+      -10.47
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 46.92,
+     "gain": 42.46,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      20.5,
+      1.2,
+      16.5
+     ],
+     "dir": -158,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      11.6,
+      10.47
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 42.54,
+     "gain": 42.46,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -20.5,
+      1.2,
+      -19.5
+     ],
+     "dir": 45,
+     "gap": 7.1,
+     "runup": 2.6,
+     "landed": [
+      -12.83,
+      -11.84
+     ],
+     "landedY": 1.2,
+     "kidGain": 33.96,
+     "gain": 42.2,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -20.5,
+      1.2,
+      -18.5
+     ],
+     "dir": 45,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      -12.84,
+      -11.56
+     ],
+     "landedY": 1.4,
+     "kidGain": 41.81,
+     "gain": 41.81,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      20.5,
+      1.2,
+      18.5
+     ],
+     "dir": -135,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      12.84,
+      11.56
+     ],
+     "landedY": 1.4,
+     "kidGain": 41.81,
+     "gain": 41.81,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -23.5,
+      1.2,
+      -16.5
+     ],
+     "dir": 23,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      -11.6,
+      -10.47
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 41.11,
+     "gain": 41.7,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      23.5,
+      1.2,
+      16.5
+     ],
+     "dir": -158,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      11.6,
+      10.47
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 41.11,
+     "gain": 41.7,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -23.5,
+      1.2,
+      -17.5
+     ],
+     "dir": 23,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      -11.6,
+      -10.47
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 45.26,
+     "gain": 40.8,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      23.5,
+      1.2,
+      17.5
+     ],
+     "dir": -158,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      11.6,
+      10.47
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 40.87,
+     "gain": 40.8,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.4,
+      11.5
+     ],
+     "dir": 45,
+     "gap": 7.2,
+     "runup": 2.6,
+     "landed": [
+      17.57,
+      16.39
+     ],
+     "landedY": 1.3,
+     "kidGain": 39.17,
+     "gain": 39.88,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -18.25,
+      1.5,
+      -16.5
+     ],
+     "dir": 68,
+     "gap": 7,
+     "runup": 2.6,
+     "landed": [
+      -14.22,
+      -7.11
+     ],
+     "landedY": 1.3,
+     "kidGain": 42.93,
+     "gain": 39.88,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      22.5,
+      1.2,
+      15.5
+     ],
+     "dir": -158,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      12.34,
+      11.29
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 42.69,
+     "gain": 39.5,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      11.5,
+      2.3,
+      11.5
+     ],
+     "dir": 45,
+     "gap": 8.2,
+     "runup": 2.6,
+     "landed": [
+      17.59,
+      16.43
+     ],
+     "landedY": 1.3,
+     "kidGain": 35.47,
+     "gain": 36.61,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      20.5,
+      1.2,
+      19.5
+     ],
+     "dir": -135,
+     "gap": 7.1,
+     "runup": 2.6,
+     "landed": [
+      12.83,
+      11.84
+     ],
+     "landedY": 1.2,
+     "kidGain": 33.96,
+     "gain": 34.66,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -15.5,
+      1.4,
+      2.5
+     ],
+     "dir": 180,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      -22.7,
+      2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 24.9,
+     "gain": 32.91,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -15.5,
+      1.4,
+      0.5
+     ],
+     "dir": 158,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      -22.34,
+      3.33
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.84,
+     "gain": 32.51,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      15.5,
+      1.4,
+      -2.5
+     ],
+     "dir": 0,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      22.7,
+      -2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 24.9,
+     "gain": 31.5,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -21.5,
+      1.4,
+      2.5
+     ],
+     "dir": -23,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      -15.22,
+      -0.1
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 28.47,
+     "gain": 31.35,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      15.5,
+      1.4,
+      -0.5
+     ],
+     "dir": -23,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      22.34,
+      -3.33
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.84,
+     "gain": 31.1,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -10.5,
+      1.2,
+      -2.5
+     ],
+     "dir": 158,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      -22.43,
+      2.44
+     ],
+     "landedY": 1.4,
+     "kidGain": 25.94,
+     "gain": 31.01,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.4,
+      -0.5
+     ],
+     "dir": 158,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      -22.37,
+      3.17
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.06,
+     "gain": 29.9,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      21.5,
+      1.2,
+      -0.5
+     ],
+     "dir": -158,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      15.31,
+      -3.06
+     ],
+     "landedY": 1.4,
+     "kidGain": 26.33,
+     "gain": 29.74,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -21.5,
+      1.2,
+      0.5
+     ],
+     "dir": 23,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      -15.31,
+      3.06
+     ],
+     "landedY": 1.4,
+     "kidGain": 26.33,
+     "gain": 29.74,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      10.5,
+      1.2,
+      2.5
+     ],
+     "dir": -23,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      22.43,
+      -2.44
+     ],
+     "landedY": 1.4,
+     "kidGain": 25.94,
+     "gain": 29.6,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -14.5,
+      1.2,
+      2.5
+     ],
+     "dir": 180,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      -22.7,
+      2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 21.48,
+     "gain": 29.5,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      21.5,
+      1.4,
+      -2.5
+     ],
+     "dir": 158,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      15.22,
+      0.1
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 25.64,
+     "gain": 28.53,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      13.5,
+      1.4,
+      0.5
+     ],
+     "dir": -23,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      22.37,
+      -3.17
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.06,
+     "gain": 28.49,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -14.5,
+      1.3,
+      -0.5
+     ],
+     "dir": 158,
+     "gap": 5.6,
+     "runup": 1.5,
+     "landed": [
+      -22.35,
+      2.75
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 23.1,
+     "gain": 28.3,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      14.5,
+      1.3,
+      0.5
+     ],
+     "dir": -23,
+     "gap": 5.6,
+     "runup": 1.5,
+     "landed": [
+      22.35,
+      -2.75
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 23.1,
+     "gain": 28.3,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -15.5,
+      1.2,
+      -0.5
+     ],
+     "dir": 180,
+     "gap": 6.9,
+     "runup": 2.6,
+     "landed": [
+      -22.9,
+      -0.5
+     ],
+     "landedY": 1.4,
+     "kidGain": 28.04,
+     "gain": 28.28,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -14.5,
+      1.2,
+      -0.5
+     ],
+     "dir": 180,
+     "gap": 6.9,
+     "runup": 2.6,
+     "landed": [
+      -22.9,
+      -0.5
+     ],
+     "landedY": 1.4,
+     "kidGain": 26.63,
+     "gain": 28.28,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      14.5,
+      1.2,
+      0.5
+     ],
+     "dir": 0,
+     "gap": 6.9,
+     "runup": 2.6,
+     "landed": [
+      22.9,
+      0.5
+     ],
+     "landedY": 1.4,
+     "kidGain": 26.63,
+     "gain": 28.28,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      15.5,
+      1.2,
+      0.5
+     ],
+     "dir": 0,
+     "gap": 6.9,
+     "runup": 2.6,
+     "landed": [
+      22.9,
+      0.5
+     ],
+     "landedY": 1.4,
+     "kidGain": 28.04,
+     "gain": 28.28,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      14.5,
+      1.2,
+      -2.5
+     ],
+     "dir": 0,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      22.7,
+      -2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 21.48,
+     "gain": 28.08,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      2.5
+     ],
+     "dir": 180,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      -22.7,
+      2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 19.48,
+     "gain": 27.5,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -23.5,
+      1.4,
+      -0.5
+     ],
+     "dir": 23,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      -15.37,
+      2.87
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.64,
+     "gain": 27.23,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      23.5,
+      1.4,
+      0.5
+     ],
+     "dir": -158,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      15.37,
+      -2.87
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.64,
+     "gain": 27.23,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      -0.5
+     ],
+     "dir": 180,
+     "gap": 6.9,
+     "runup": 2.6,
+     "landed": [
+      -22.9,
+      -0.5
+     ],
+     "landedY": 1.4,
+     "kidGain": 25.21,
+     "gain": 26.87,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      0.5
+     ],
+     "dir": 0,
+     "gap": 6.9,
+     "runup": 2.6,
+     "landed": [
+      22.9,
+      0.5
+     ],
+     "landedY": 1.4,
+     "kidGain": 25.21,
+     "gain": 26.87,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -15.5,
+      1.4,
+      -1.5
+     ],
+     "dir": 180,
+     "gap": 7.9,
+     "runup": 2.6,
+     "landed": [
+      -23,
+      -0.5
+     ],
+     "landedY": 1.4,
+     "kidGain": 30.18,
+     "gain": 26.77,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      15.5,
+      1.4,
+      1.5
+     ],
+     "dir": 0,
+     "gap": 7.9,
+     "runup": 2.6,
+     "landed": [
+      23,
+      0.5
+     ],
+     "landedY": 1.4,
+     "kidGain": 30.18,
+     "gain": 26.77,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      22.5,
+      1.4,
+      -2.5
+     ],
+     "dir": 158,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      15.29,
+      0.49
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 24.74,
+     "gain": 26.53,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -22.5,
+      1.4,
+      2.5
+     ],
+     "dir": -23,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      -15.29,
+      -0.49
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 24.74,
+     "gain": 26.53,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      -2.5
+     ],
+     "dir": 0,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      22.7,
+      -2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 19.48,
+     "gain": 26.08,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      1.4,
+      2.5
+     ],
+     "dir": 180,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      -22.7,
+      2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 18.07,
+     "gain": 26.08,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -26.5,
+      1.2,
+      -1.5
+     ],
+     "dir": 23,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      -15.32,
+      3.13
+     ],
+     "landedY": 1.4,
+     "kidGain": 21.51,
+     "gain": 25.35,
+     "src": [
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      26.5,
+      1.2,
+      1.5
+     ],
+     "dir": -158,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      15.32,
+      -3.13
+     ],
+     "landedY": 1.4,
+     "kidGain": 21.51,
+     "gain": 25.35,
+     "src": [
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.4,
+      -2.5
+     ],
+     "dir": 0,
+     "gap": 5.3,
+     "runup": 2.6,
+     "landed": [
+      22.7,
+      -2.5
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 18.07,
+     "gain": 24.67,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      -3.5
+     ],
+     "dir": 23,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      22.28,
+      0.14
+     ],
+     "landedY": 1.4,
+     "kidGain": 22.63,
+     "gain": 24.28,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      3.5
+     ],
+     "dir": -158,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      -22.28,
+      -0.14
+     ],
+     "landedY": 1.4,
+     "kidGain": 22.63,
+     "gain": 24.28,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      23.5,
+      1.4,
+      -3.5
+     ],
+     "dir": 158,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      15.18,
+      -0.05
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 21.02,
+     "gain": 24.01,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -23.5,
+      1.4,
+      3.5
+     ],
+     "dir": -23,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      -15.18,
+      0.05
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 21.02,
+     "gain": 24.01,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      24.5,
+      1.4,
+      -3.5
+     ],
+     "dir": 158,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      15.26,
+      0.33
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.12,
+     "gain": 21.92,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -24.5,
+      1.4,
+      3.5
+     ],
+     "dir": -23,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      -15.26,
+      -0.33
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 20.12,
+     "gain": 21.92,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -22.5,
+      2.4,
+      5.5
+     ],
+     "dir": -23,
+     "gap": 5.4,
+     "runup": 2.6,
+     "landed": [
+      -14.54,
+      2.2
+     ],
+     "landedY": 1.3,
+     "kidGain": 20.4,
+     "gain": 21.81,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      25.5,
+      1.2,
+      -4.5
+     ],
+     "dir": 158,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      15.15,
+      -0.21
+     ],
+     "landedY": 1.4,
+     "kidGain": 20.23,
+     "gain": 20.81,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -25.5,
+      1.2,
+      4.5
+     ],
+     "dir": -23,
+     "gap": 5.5,
+     "runup": 2.6,
+     "landed": [
+      -15.15,
+      0.21
+     ],
+     "landedY": 1.4,
+     "kidGain": 20.23,
+     "gain": 20.81,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      26.5,
+      1.2,
+      -4.5
+     ],
+     "dir": 158,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      15.23,
+      0.17
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 16.47,
+     "gain": 19.36,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -26.5,
+      1.2,
+      4.5
+     ],
+     "dir": -23,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      -15.23,
+      -0.17
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 16.47,
+     "gain": 19.36,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -21.5,
+      1.4,
+      3.5
+     ],
+     "dir": 45,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      -15.33,
+      8.67
+     ],
+     "landedY": 0.1,
+     "kidGain": 13.17,
+     "gain": 18.13,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -21.5,
+      2.4,
+      6.5
+     ],
+     "dir": -45,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      -15.93,
+      0.53
+     ],
+     "landedY": 1.4,
+     "kidGain": 15.89,
+     "gain": 17.91,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      21.5,
+      1.4,
+      -3.5
+     ],
+     "dir": -135,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      15.33,
+      -8.67
+     ],
+     "landedY": 0.1,
+     "kidGain": 13.17,
+     "gain": 15.3,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -23.5,
+      2.4,
+      8.5
+     ],
+     "dir": -45,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      -15.58,
+      0.02
+     ],
+     "landedY": 1.4,
+     "kidGain": 11.23,
+     "gain": 15.11,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -8.5,
+      1.3,
+      -22.5
+     ],
+     "dir": 45,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      -3.79,
+      -17.31
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.8,
+     "gain": 14.84,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      8.5,
+      1.3,
+      22.5
+     ],
+     "dir": -135,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      3.79,
+      17.31
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.8,
+     "gain": 14.84,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -18.5
+     ],
+     "dir": -135,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      -9.57,
+      -22.79
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 11,
+     "gain": 14.34,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      18.5
+     ],
+     "dir": 45,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      9.57,
+      22.79
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 11,
+     "gain": 14.34,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      24.5,
+      2.4,
+      -9.5
+     ],
+     "dir": 135,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      15.63,
+      -0.06
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 12.42,
+     "gain": 13.7,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -24.5,
+      2.4,
+      9.5
+     ],
+     "dir": -45,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      -15.63,
+      0.06
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 12.42,
+     "gain": 13.7,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      23.5,
+      2.4,
+      -10.5
+     ],
+     "dir": 158,
+     "gap": 4.9,
+     "runup": 2.6,
+     "landed": [
+      12.84,
+      -6.08
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 13.06,
+     "gain": 13.36,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -23.5,
+      2.4,
+      10.5
+     ],
+     "dir": -23,
+     "gap": 4.9,
+     "runup": 2.6,
+     "landed": [
+      -12.84,
+      6.08
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 13.06,
+     "gain": 13.36,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -9.5,
+      1.3,
+      -22.5
+     ],
+     "dir": 45,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      -4.62,
+      -17.62
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.01,
+     "gain": 12.85,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      9.5,
+      1.3,
+      22.5
+     ],
+     "dir": -135,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      4.62,
+      17.62
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.01,
+     "gain": 12.85,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      17.5
+     ],
+     "dir": 45,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      9.63,
+      22.63
+     ],
+     "landedY": 1.4,
+     "kidGain": 12.36,
+     "gain": 12.36,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      22.5,
+      1.2,
+      -2.5
+     ],
+     "dir": -135,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      15.77,
+      -9.23
+     ],
+     "landedY": 0.1,
+     "kidGain": 11.19,
+     "gain": 11.78,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -22.5,
+      1.2,
+      2.5
+     ],
+     "dir": 45,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      -15.77,
+      9.23
+     ],
+     "landedY": 0.1,
+     "kidGain": 11.19,
+     "gain": 11.78,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -16.5
+     ],
+     "dir": 158,
+     "gap": 3.9,
+     "runup": 2.6,
+     "landed": [
+      -8.32,
+      -14.68
+     ],
+     "landedY": 2.3,
+     "kidGain": 12.17,
+     "gain": 11.62,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -9.5,
+      1.2,
+      -23.5
+     ],
+     "dir": 45,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      -3.66,
+      -17.2
+     ],
+     "landedY": 1.2,
+     "kidGain": 11.44,
+     "gain": 11.44,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      9.5,
+      1.2,
+      23.5
+     ],
+     "dir": -135,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      3.66,
+      17.2
+     ],
+     "landedY": 1.2,
+     "kidGain": 11.44,
+     "gain": 11.44,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      16.5
+     ],
+     "dir": -23,
+     "gap": 3.9,
+     "runup": 2.6,
+     "landed": [
+      8.32,
+      14.68
+     ],
+     "landedY": 2.3,
+     "kidGain": 12.17,
+     "gain": 11.39,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -17.5
+     ],
+     "dir": -113,
+     "gap": 4,
+     "runup": 2.6,
+     "landed": [
+      -7.31,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.68,
+     "gain": 10.9,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      17.5
+     ],
+     "dir": 68,
+     "gap": 4,
+     "runup": 2.6,
+     "landed": [
+      7.31,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.68,
+     "gain": 10.9,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      17.5
+     ],
+     "dir": -23,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      10.13,
+      15.18
+     ],
+     "landedY": 2.3,
+     "kidGain": 12.8,
+     "gain": 10.83,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -16.5
+     ],
+     "dir": -113,
+     "gap": 5,
+     "runup": 2.6,
+     "landed": [
+      -7.44,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.12,
+     "gain": 10.44,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      16.5
+     ],
+     "dir": 68,
+     "gap": 5,
+     "runup": 2.6,
+     "landed": [
+      7.44,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.12,
+     "gain": 10.44,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      23.5,
+      1.2,
+      -1.5
+     ],
+     "dir": -135,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      15.78,
+      -9.22
+     ],
+     "landedY": 0.1,
+     "kidGain": 10.37,
+     "gain": 10.38,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -23.5,
+      1.2,
+      1.5
+     ],
+     "dir": 45,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      -15.78,
+      9.22
+     ],
+     "landedY": 0.1,
+     "kidGain": 10.37,
+     "gain": 10.38,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -3.5,
+      1.2,
+      -13.5
+     ],
+     "dir": -113,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      -7.49,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.96,
+     "gain": 10.37,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      3.5,
+      1.2,
+      13.5
+     ],
+     "dir": 68,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      7.49,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.96,
+     "gain": 10.37,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      3.5,
+      1.2,
+      16.5
+     ],
+     "dir": 45,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      9.62,
+      22.62
+     ],
+     "landedY": 1.4,
+     "kidGain": 10.37,
+     "gain": 10.37,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -11.5,
+      1.8,
+      -24.5
+     ],
+     "dir": 45,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      -4.49,
+      -17.49
+     ],
+     "landedY": 1.2,
+     "kidGain": 10.06,
+     "gain": 10.05,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      11.5,
+      1.8,
+      24.5
+     ],
+     "dir": -135,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      4.49,
+      17.49
+     ],
+     "landedY": 1.2,
+     "kidGain": 10.06,
+     "gain": 10.05,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -10.5,
+      1.2,
+      -24.5
+     ],
+     "dir": 45,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      -3.74,
+      -17.22
+     ],
+     "landedY": 1.2,
+     "kidGain": 10.04,
+     "gain": 10.04,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      10.5,
+      1.2,
+      24.5
+     ],
+     "dir": -135,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      3.74,
+      17.22
+     ],
+     "landedY": 1.2,
+     "kidGain": 10.04,
+     "gain": 10.04,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -15.5
+     ],
+     "dir": -113,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      -7.5,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.41,
+     "gain": 9.84,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      15.5
+     ],
+     "dir": 68,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      7.5,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.41,
+     "gain": 9.84,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -17.5
+     ],
+     "dir": 158,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      -10.13,
+      -15.18
+     ],
+     "landedY": 2.3,
+     "kidGain": 12.8,
+     "gain": 9.74,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -3.5,
+      1.2,
+      -12.5
+     ],
+     "dir": -113,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      -7.5,
+      -22.15
+     ],
+     "landedY": 1.4,
+     "kidGain": 13.43,
+     "gain": 9.73,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      3.5,
+      1.2,
+      12.5
+     ],
+     "dir": 68,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      7.5,
+      22.15
+     ],
+     "landedY": 1.4,
+     "kidGain": 13.43,
+     "gain": 9.73,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -3.5,
+      1.2,
+      -16.5
+     ],
+     "dir": 158,
+     "gap": 3.7,
+     "runup": 2.6,
+     "landed": [
+      -8.32,
+      -14.68
+     ],
+     "landedY": 2.3,
+     "kidGain": 10.27,
+     "gain": 9.72,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      3.5,
+      1.2,
+      16.5
+     ],
+     "dir": -23,
+     "gap": 3.7,
+     "runup": 2.6,
+     "landed": [
+      8.32,
+      14.68
+     ],
+     "landedY": 2.3,
+     "kidGain": 10.27,
+     "gain": 9.49,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -3.5,
+      1.2,
+      -20.5
+     ],
+     "dir": 113,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      -7.56,
+      -10.7
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 10.44,
+     "gain": 7.46,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      3.5,
+      1.2,
+      20.5
+     ],
+     "dir": -67,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      7.56,
+      10.7
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 10.44,
+     "gain": 7.46,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    }
+   ]
+  },
+  "high": {
+   "summary": {
+    "n": 144,
+    "over10": 128,
+    "over15": 97,
+    "over20": 87,
+    "over40": 1,
+    "maxGain": 40.6,
+    "fromAudit": 79,
+    "fromProbeOnly": 65
+   },
+   "crossings": [
+    {
+     "from": [
+      -18.25,
+      1.5,
+      -16.5
+     ],
+     "dir": 45,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      -12.83,
+      -11.86
+     ],
+     "landedY": 1.2,
+     "kidGain": 29.27,
+     "gain": 40.6,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -17.5,
+      1.2,
+      -13.5
+     ],
+     "dir": 23,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      -11.62,
+      -10.52
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 32.77,
+     "gain": 37.08,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      1.4,
+      -11.5
+     ],
+     "dir": -158,
+     "gap": 4.6,
+     "runup": 0.8,
+     "landed": [
+      -17.8,
+      -13.61
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 37.08,
+     "gain": 37.08,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.4,
+      11.5
+     ],
+     "dir": 23,
+     "gap": 4.6,
+     "runup": 0.8,
+     "landed": [
+      17.8,
+      13.61
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 37.08,
+     "gain": 37.08,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      17.5,
+      1.2,
+      13.5
+     ],
+     "dir": -158,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      11.62,
+      10.52
+     ],
+     "landedY": 1.5,
+     "on": "socket-collar",
+     "kidGain": 32.77,
+     "gain": 37.08,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -17.5,
+      1.5,
+      -15.5
+     ],
+     "dir": 45,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      -12.82,
+      -11.53
+     ],
+     "landedY": 1.4,
+     "kidGain": 30.34,
+     "gain": 36.58,
+     "src": [
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      17.5,
+      1.5,
+      15.5
+     ],
+     "dir": -135,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      12.82,
+      11.53
+     ],
+     "landedY": 1.4,
+     "kidGain": 31.76,
+     "gain": 36.58,
+     "src": [
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -20.5,
+      1.2,
+      -19.5
+     ],
+     "dir": 45,
+     "gap": 7.1,
+     "runup": 2.6,
+     "landed": [
+      -12.83,
+      -11.84
+     ],
+     "landedY": 1.2,
+     "kidGain": 29.94,
+     "gain": 36.19,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      20.5,
+      1.2,
+      19.5
+     ],
+     "dir": -135,
+     "gap": 7.1,
+     "runup": 2.6,
+     "landed": [
+      12.83,
+      11.84
+     ],
+     "landedY": 1.2,
+     "kidGain": 31.36,
+     "gain": 36.19,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -23.5,
+      1.2,
+      -16.5
+     ],
+     "dir": 23,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      -11.77,
+      -10.78
+     ],
+     "landedY": 1.4,
+     "on": "lava:organB:2",
+     "kidGain": 29.92,
+     "gain": 34.8,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      23.5,
+      1.2,
+      16.5
+     ],
+     "dir": -158,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      11.77,
+      10.78
+     ],
+     "landedY": 1.4,
+     "on": "lava:organB~:2",
+     "kidGain": 29.92,
+     "gain": 34.8,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -22.5,
+      1.2,
+      -15.5
+     ],
+     "dir": 23,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      -12.34,
+      -11.29
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 31.83,
+     "gain": 34.79,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -21.5,
+      1.2,
+      -15.5
+     ],
+     "dir": 23,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      -11.71,
+      -10.66
+     ],
+     "landedY": 1.4,
+     "on": "lava:organB:1",
+     "kidGain": 28.67,
+     "gain": 34.79,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -9.5
+     ],
+     "dir": -135,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      -17.45,
+      -14.45
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 33.24,
+     "gain": 34.79,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      9.5
+     ],
+     "dir": 45,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      17.45,
+      14.45
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 33.24,
+     "gain": 34.79,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      21.5,
+      1.2,
+      15.5
+     ],
+     "dir": -158,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      11.71,
+      10.66
+     ],
+     "landedY": 1.4,
+     "on": "lava:organB~:1",
+     "kidGain": 28.67,
+     "gain": 34.79,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      22.5,
+      1.2,
+      15.5
+     ],
+     "dir": -158,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      12.34,
+      11.29
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 31.83,
+     "gain": 34.79,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -19.5,
+      1.4,
+      -14.5
+     ],
+     "dir": 23,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      -11.63,
+      -10.54
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 30.08,
+     "gain": 34.47,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      19.5,
+      1.4,
+      14.5
+     ],
+     "dir": -158,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      11.63,
+      10.54
+     ],
+     "landedY": 1.4,
+     "on": "socket-collar",
+     "kidGain": 30.08,
+     "gain": 34.47,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      20.5,
+      1.2,
+      18.5
+     ],
+     "dir": -135,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      12.84,
+      11.56
+     ],
+     "landedY": 1.4,
+     "kidGain": 29.56,
+     "gain": 34.38,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -20.5,
+      1.2,
+      -18.5
+     ],
+     "dir": 45,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      -12.84,
+      -11.56
+     ],
+     "landedY": 1.4,
+     "kidGain": 33.99,
+     "gain": 34.38,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -10.5
+     ],
+     "dir": -158,
+     "gap": 5.2,
+     "runup": 1.5,
+     "landed": [
+      -19.04,
+      -13.21
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 35.1,
+     "gain": 33.29,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      10.5
+     ],
+     "dir": 23,
+     "gap": 5.2,
+     "runup": 1.5,
+     "landed": [
+      19.04,
+      13.21
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 35.1,
+     "gain": 33.29,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -18.25,
+      1.5,
+      -16.5
+     ],
+     "dir": 68,
+     "gap": 7,
+     "runup": 2.6,
+     "landed": [
+      -14.22,
+      -7.11
+     ],
+     "landedY": 1.3,
+     "kidGain": 22.67,
+     "gain": 33.28,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -11.5,
+      1.5,
+      -8.5
+     ],
+     "dir": -135,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      -17.44,
+      -14.44
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 31.26,
+     "gain": 32.8,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      11.5,
+      1.5,
+      8.5
+     ],
+     "dir": 45,
+     "gap": 5.7,
+     "runup": 1.5,
+     "landed": [
+      17.44,
+      14.44
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 31.26,
+     "gain": 32.8,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      1.4,
+      -8.5
+     ],
+     "dir": -158,
+     "gap": 6.8,
+     "runup": 1.5,
+     "landed": [
+      -19.3,
+      -11.31
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 28.44,
+     "gain": 31.43,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.4,
+      8.5
+     ],
+     "dir": 23,
+     "gap": 6.8,
+     "runup": 1.5,
+     "landed": [
+      19.3,
+      11.31
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 28.44,
+     "gain": 31.43,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -14.5,
+      1.3,
+      -6.5
+     ],
+     "dir": -135,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      -19.35,
+      -11.35
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 32.01,
+     "gain": 31.34,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      14.5,
+      1.3,
+      6.5
+     ],
+     "dir": 45,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      19.35,
+      11.35
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 32.01,
+     "gain": 31.34,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.4,
+      -7.5
+     ],
+     "dir": -135,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      -18.45,
+      -12.35
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 29.04,
+     "gain": 31.29,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      13.5,
+      1.4,
+      7.5
+     ],
+     "dir": 45,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      18.45,
+      12.35
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 29.04,
+     "gain": 31.29,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -11.5,
+      1.5,
+      -8.5
+     ],
+     "dir": -158,
+     "gap": 5.6,
+     "runup": 1.5,
+     "landed": [
+      -19.18,
+      -11.63
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 27.92,
+     "gain": 30.91,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      11.5,
+      1.5,
+      8.5
+     ],
+     "dir": 23,
+     "gap": 5.6,
+     "runup": 1.5,
+     "landed": [
+      19.18,
+      11.63
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 27.92,
+     "gain": 30.91,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -19.5,
+      1.2,
+      -15.5
+     ],
+     "dir": 23,
+     "gap": 9.6,
+     "runup": 2.6,
+     "landed": [
+      -10.88,
+      -10.03
+     ],
+     "landedY": 3.5,
+     "on": "lava:organB:1",
+     "kidGain": 30.37,
+     "gain": 30.33,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      19.5,
+      1.2,
+      15.5
+     ],
+     "dir": -158,
+     "gap": 9.6,
+     "runup": 2.6,
+     "landed": [
+      10.88,
+      10.03
+     ],
+     "landedY": 3.5,
+     "on": "lava:organB~:1",
+     "kidGain": 30.37,
+     "gain": 30.33,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      -6.5
+     ],
+     "dir": -135,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      -18.85,
+      -11.85
+     ],
+     "landedY": 1.25,
+     "kidGain": 23.23,
+     "gain": 30.29,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      6.5
+     ],
+     "dir": 45,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      18.85,
+      11.85
+     ],
+     "landedY": 1.25,
+     "kidGain": 24.64,
+     "gain": 30.29,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -14.5,
+      1.4,
+      -3.5
+     ],
+     "dir": -113,
+     "gap": 6.6,
+     "runup": 2.6,
+     "landed": [
+      -17.93,
+      -11.77
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 27.09,
+     "gain": 29.42,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      14.5,
+      1.4,
+      3.5
+     ],
+     "dir": 68,
+     "gap": 6.6,
+     "runup": 2.6,
+     "landed": [
+      17.93,
+      11.77
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 27.09,
+     "gain": 29.42,
+     "src": [
+      "audit",
+      "probe-carry44:r6",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      -5.5
+     ],
+     "dir": -113,
+     "gap": 7.1,
+     "runup": 2.6,
+     "landed": [
+      -16.73,
+      -13.36
+     ],
+     "landedY": 1.2,
+     "kidGain": 28.71,
+     "gain": 28.68,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      5.5
+     ],
+     "dir": 68,
+     "gap": 7.1,
+     "runup": 2.6,
+     "landed": [
+      16.73,
+      13.36
+     ],
+     "landedY": 1.2,
+     "kidGain": 28.71,
+     "gain": 28.68,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      -5.5
+     ],
+     "dir": -135,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      -19.34,
+      -11.34
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 29.2,
+     "gain": 28.53,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -6.5
+     ],
+     "dir": -135,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      -18.56,
+      -12.43
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 26.22,
+     "gain": 28.48,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      6.5
+     ],
+     "dir": 45,
+     "gap": 5.9,
+     "runup": 2.6,
+     "landed": [
+      18.56,
+      12.43
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 26.22,
+     "gain": 28.48,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -14.5,
+      1.2,
+      -4.5
+     ],
+     "dir": -113,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      -17.66,
+      -12.13
+     ],
+     "landedY": 1.25,
+     "kidGain": 18.6,
+     "gain": 28.25,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      14.5,
+      1.2,
+      4.5
+     ],
+     "dir": 68,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      17.66,
+      12.13
+     ],
+     "landedY": 1.25,
+     "kidGain": 20.01,
+     "gain": 28.25,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -5.5
+     ],
+     "dir": -135,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      -18.84,
+      -11.84
+     ],
+     "landedY": 1.25,
+     "kidGain": 21.83,
+     "gain": 27.48,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      5.5
+     ],
+     "dir": 45,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      18.84,
+      11.84
+     ],
+     "landedY": 1.25,
+     "kidGain": 23.24,
+     "gain": 27.48,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      -4.5
+     ],
+     "dir": -113,
+     "gap": 7.2,
+     "runup": 2.6,
+     "landed": [
+      -17.07,
+      -13.08
+     ],
+     "landedY": 1.2,
+     "kidGain": 27.5,
+     "gain": 27.37,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      4.5
+     ],
+     "dir": 68,
+     "gap": 7.2,
+     "runup": 2.6,
+     "landed": [
+      17.07,
+      13.08
+     ],
+     "landedY": 1.2,
+     "kidGain": 27.5,
+     "gain": 27.37,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -14.5,
+      1.2,
+      -5.5
+     ],
+     "dir": -135,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      -19.53,
+      -10.53
+     ],
+     "landedY": 1.25,
+     "kidGain": 17.9,
+     "gain": 26.97,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      14.5,
+      1.2,
+      5.5
+     ],
+     "dir": 45,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      19.53,
+      10.53
+     ],
+     "landedY": 1.25,
+     "kidGain": 19.31,
+     "gain": 26.97,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      5.5
+     ],
+     "dir": 45,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      19.34,
+      11.34
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 29.2,
+     "gain": 26.67,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -11.5,
+      1.2,
+      -5.5
+     ],
+     "dir": -135,
+     "gap": 6,
+     "runup": 2.6,
+     "landed": [
+      -18.55,
+      -12.41
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 23.29,
+     "gain": 25.56,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      11.5,
+      1.2,
+      5.5
+     ],
+     "dir": 45,
+     "gap": 6,
+     "runup": 2.6,
+     "landed": [
+      18.55,
+      12.41
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 23.29,
+     "gain": 25.56,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -14.5,
+      1.2,
+      -3.5
+     ],
+     "dir": -135,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      -19.87,
+      -8.82
+     ],
+     "landedY": 1.25,
+     "kidGain": 13.79,
+     "gain": 25.45,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -14.5,
+      1.3,
+      -6.5
+     ],
+     "dir": 180,
+     "gap": 5,
+     "runup": 2.6,
+     "landed": [
+      -20.1,
+      -6.5
+     ],
+     "landedY": 2.25,
+     "kidGain": 17.16,
+     "gain": 24.81,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      14.5,
+      1.3,
+      6.5
+     ],
+     "dir": 0,
+     "gap": 5,
+     "runup": 2.6,
+     "landed": [
+      20.1,
+      6.5
+     ],
+     "landedY": 2.25,
+     "kidGain": 18.57,
+     "gain": 24.81,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -11.5,
+      1.2,
+      -4.5
+     ],
+     "dir": -135,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      -18.9,
+      -11.9
+     ],
+     "landedY": 1.25,
+     "kidGain": 21.01,
+     "gain": 24.67,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      11.5,
+      1.2,
+      4.5
+     ],
+     "dir": 45,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      18.9,
+      11.9
+     ],
+     "landedY": 1.25,
+     "kidGain": 22.43,
+     "gain": 24.67,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      -4.5
+     ],
+     "dir": -135,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      -19.53,
+      -10.53
+     ],
+     "landedY": 1.25,
+     "on": "lava:race2:0",
+     "kidGain": 22.86,
+     "gain": 24.43,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      4.5
+     ],
+     "dir": 45,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      19.53,
+      10.53
+     ],
+     "landedY": 1.25,
+     "on": "lava:race2~:0",
+     "kidGain": 22.86,
+     "gain": 24.43,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -4.5
+     ],
+     "dir": -135,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      -19.33,
+      -11.33
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1:0",
+     "kidGain": 26.39,
+     "gain": 23.86,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      4.5
+     ],
+     "dir": 45,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      19.33,
+      11.33
+     ],
+     "landedY": 1.25,
+     "on": "lava:race1~:0",
+     "kidGain": 26.39,
+     "gain": 23.86,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -6.5
+     ],
+     "dir": -158,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      -20.42,
+      -9.63
+     ],
+     "landedY": 1.25,
+     "kidGain": 17.51,
+     "gain": 23.76,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      6.5
+     ],
+     "dir": 23,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      20.42,
+      9.63
+     ],
+     "landedY": 1.25,
+     "kidGain": 18.93,
+     "gain": 23.76,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      -6.5
+     ],
+     "dir": 180,
+     "gap": 5,
+     "runup": 2.6,
+     "landed": [
+      -20.1,
+      -6.5
+     ],
+     "landedY": 2.25,
+     "kidGain": 15.74,
+     "gain": 22.81,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      6.5
+     ],
+     "dir": 0,
+     "gap": 5,
+     "runup": 2.6,
+     "landed": [
+      20.1,
+      6.5
+     ],
+     "landedY": 2.25,
+     "kidGain": 17.16,
+     "gain": 22.81,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      20.5,
+      2.4,
+      -9.5
+     ],
+     "dir": 158,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      12.42,
+      -6.15
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 19.72,
+     "gain": 22.14,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -20.5,
+      2.4,
+      9.5
+     ],
+     "dir": -23,
+     "gap": 6.4,
+     "runup": 2.6,
+     "landed": [
+      -12.42,
+      6.15
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 19.72,
+     "gain": 22.14,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -14.5,
+      1.4,
+      -5.5
+     ],
+     "dir": 180,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      -21.38,
+      -5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4:0",
+     "kidGain": 19.81,
+     "gain": 22.02,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      14.5,
+      1.4,
+      5.5
+     ],
+     "dir": 0,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      21.38,
+      5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4~:0",
+     "kidGain": 19.81,
+     "gain": 22.02,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -10.5,
+      1.2,
+      -3.5
+     ],
+     "dir": -135,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      -18.89,
+      -11.89
+     ],
+     "landedY": 1.25,
+     "kidGain": 19.03,
+     "gain": 21.85,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      10.5,
+      1.2,
+      3.5
+     ],
+     "dir": 45,
+     "gap": 5.6,
+     "runup": 2.6,
+     "landed": [
+      18.89,
+      11.89
+     ],
+     "landedY": 1.25,
+     "kidGain": 21.86,
+     "gain": 21.85,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      20.5,
+      2.4,
+      -10.5
+     ],
+     "dir": 158,
+     "gap": 6.9,
+     "runup": 2.6,
+     "landed": [
+      12.77,
+      -7.25
+     ],
+     "landedY": 1.4,
+     "kidGain": 15.49,
+     "gain": 21.72,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -20.5,
+      2.4,
+      10.5
+     ],
+     "dir": -23,
+     "gap": 6.9,
+     "runup": 2.6,
+     "landed": [
+      -12.77,
+      7.25
+     ],
+     "landedY": 1.4,
+     "kidGain": 16.31,
+     "gain": 21.72,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -6.5
+     ],
+     "dir": 180,
+     "gap": 5,
+     "runup": 2.6,
+     "landed": [
+      -20.1,
+      -6.5
+     ],
+     "landedY": 2.25,
+     "kidGain": 15.16,
+     "gain": 21.4,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      6.5
+     ],
+     "dir": 0,
+     "gap": 5,
+     "runup": 2.6,
+     "landed": [
+      20.1,
+      6.5
+     ],
+     "landedY": 2.25,
+     "kidGain": 16.57,
+     "gain": 21.4,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -11.5,
+      1.2,
+      -3.5
+     ],
+     "dir": -135,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      -19.32,
+      -11.32
+     ],
+     "landedY": 1.25,
+     "kidGain": 16.8,
+     "gain": 21.04,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      11.5,
+      1.2,
+      3.5
+     ],
+     "dir": 45,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      19.32,
+      11.32
+     ],
+     "landedY": 1.25,
+     "kidGain": 18.21,
+     "gain": 21.04,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -4.5
+     ],
+     "dir": -158,
+     "gap": 4.4,
+     "runup": 2.6,
+     "landed": [
+      -20.11,
+      -7.84
+     ],
+     "landedY": 1.25,
+     "on": "lava:race3:0",
+     "kidGain": 19.63,
+     "gain": 20.5,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      4.5
+     ],
+     "dir": 23,
+     "gap": 4.4,
+     "runup": 2.6,
+     "landed": [
+      20.11,
+      7.84
+     ],
+     "landedY": 1.25,
+     "on": "lava:race3~:0",
+     "kidGain": 19.63,
+     "gain": 20.5,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      21.5,
+      2.4,
+      -9.5
+     ],
+     "dir": 158,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      12.57,
+      -5.86
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 17.65,
+     "gain": 20.44,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -21.5,
+      2.4,
+      9.5
+     ],
+     "dir": -23,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      -12.57,
+      5.86
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 17.65,
+     "gain": 20.44,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      -5.5
+     ],
+     "dir": 180,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      -21.38,
+      -5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4:0",
+     "kidGain": 17.81,
+     "gain": 20.02,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      13.5,
+      1.2,
+      5.5
+     ],
+     "dir": 0,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      21.38,
+      5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4~:0",
+     "kidGain": 17.81,
+     "gain": 20.02,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -11.5,
+      1.2,
+      -2.5
+     ],
+     "dir": -135,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      -19.38,
+      -10.44
+     ],
+     "landedY": 1.25,
+     "kidGain": 13.7,
+     "gain": 18.53,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      11.5,
+      1.2,
+      2.5
+     ],
+     "dir": 45,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      19.38,
+      10.44
+     ],
+     "landedY": 1.25,
+     "kidGain": 15.11,
+     "gain": 18.53,
+     "src": [
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      1.2,
+      -5.5
+     ],
+     "dir": 180,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      -21.38,
+      -5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4:0",
+     "kidGain": 15.81,
+     "gain": 18.02,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      1.2,
+      5.5
+     ],
+     "dir": 0,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      21.38,
+      5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4~:0",
+     "kidGain": 15.81,
+     "gain": 18.02,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      23.5,
+      2.58,
+      -11.5
+     ],
+     "dir": 158,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      13.17,
+      -6.56
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 15.25,
+     "gain": 17.69,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -23.5,
+      2.58,
+      11.5
+     ],
+     "dir": -23,
+     "gap": 6.8,
+     "runup": 2.6,
+     "landed": [
+      -13.17,
+      6.56
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 15.25,
+     "gain": 17.69,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      23.5,
+      2.4,
+      -10.5
+     ],
+     "dir": 158,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      12.56,
+      -5.97
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 14.47,
+     "gain": 17.14,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -23.5,
+      2.4,
+      10.5
+     ],
+     "dir": -23,
+     "gap": 6.3,
+     "runup": 2.6,
+     "landed": [
+      -12.83,
+      6.08
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 14.47,
+     "gain": 17.14,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -11.5,
+      1.2,
+      -5.5
+     ],
+     "dir": 180,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      -21.38,
+      -5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4:0",
+     "kidGain": 14.4,
+     "gain": 16.6,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      11.5,
+      1.2,
+      5.5
+     ],
+     "dir": 0,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      21.38,
+      5.5
+     ],
+     "landedY": 1.25,
+     "on": "lava:race4~:0",
+     "kidGain": 14.4,
+     "gain": 16.6,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -8.5,
+      1.3,
+      -22.5
+     ],
+     "dir": 45,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      -3.79,
+      -17.31
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.8,
+     "gain": 14.84,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      8.5,
+      1.3,
+      22.5
+     ],
+     "dir": -135,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      3.79,
+      17.31
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.8,
+     "gain": 14.84,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -14.5,
+      1.2,
+      -1.5
+     ],
+     "dir": -113,
+     "gap": 7.3,
+     "runup": 2.6,
+     "landed": [
+      -17.86,
+      -10.94
+     ],
+     "landedY": 1.25,
+     "kidGain": 13.91,
+     "gain": 14.8,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -18.5
+     ],
+     "dir": -135,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      -9.57,
+      -22.79
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 11,
+     "gain": 14.34,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      18.5
+     ],
+     "dir": 45,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      9.57,
+      22.79
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 11,
+     "gain": 14.34,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      20.5,
+      2.4,
+      -10.5
+     ],
+     "dir": 113,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      16.84,
+      -1.75
+     ],
+     "landedY": 1.25,
+     "on": "lava:race7~:0",
+     "kidGain": 13.11,
+     "gain": 13.61,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -9.5,
+      1.3,
+      -22.5
+     ],
+     "dir": 45,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      -4.62,
+      -17.62
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.01,
+     "gain": 12.85,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      9.5,
+      1.3,
+      22.5
+     ],
+     "dir": -135,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      4.62,
+      17.62
+     ],
+     "landedY": 1.2,
+     "on": "causeway",
+     "kidGain": 11.01,
+     "gain": 12.85,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -13.5,
+      1.2,
+      -0.5
+     ],
+     "dir": -113,
+     "gap": 6.6,
+     "runup": 2.6,
+     "landed": [
+      -18.04,
+      -11.45
+     ],
+     "landedY": 1.25,
+     "kidGain": 12.61,
+     "gain": 12.61,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      17.5
+     ],
+     "dir": 45,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      9.63,
+      22.63
+     ],
+     "landedY": 1.4,
+     "kidGain": 12.36,
+     "gain": 12.36,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      20.5,
+      2.4,
+      -7.5
+     ],
+     "dir": 113,
+     "gap": 4.9,
+     "runup": 2.6,
+     "landed": [
+      18.13,
+      -2.26
+     ],
+     "landedY": 1.25,
+     "on": "lava:race7~:0",
+     "kidGain": 10.38,
+     "gain": 11.91,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -20.5,
+      2.4,
+      7.5
+     ],
+     "dir": -67,
+     "gap": 4.9,
+     "runup": 2.6,
+     "landed": [
+      -18.13,
+      2.26
+     ],
+     "landedY": 1.25,
+     "on": "lava:race7:0",
+     "kidGain": 10.38,
+     "gain": 11.91,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -20.5,
+      2.4,
+      10.5
+     ],
+     "dir": -67,
+     "gap": 6.2,
+     "runup": 2.6,
+     "landed": [
+      -16.84,
+      1.75
+     ],
+     "landedY": 1.25,
+     "on": "lava:race7:0",
+     "kidGain": 11.7,
+     "gain": 11.83,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      2.4,
+      2.5
+     ],
+     "dir": 23,
+     "gap": 5.5,
+     "runup": 1.5,
+     "landed": [
+      20.58,
+      5.85
+     ],
+     "landedY": 1.25,
+     "on": "lava:race3~:0",
+     "kidGain": 10.95,
+     "gain": 11.69,
+     "src": [
+      "audit"
+     ]
+    },
+    {
+     "from": [
+      -9.5,
+      1.2,
+      -23.5
+     ],
+     "dir": 45,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      -3.66,
+      -17.2
+     ],
+     "landedY": 1.2,
+     "kidGain": 11.44,
+     "gain": 11.44,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      9.5,
+      1.2,
+      23.5
+     ],
+     "dir": -135,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      3.66,
+      17.2
+     ],
+     "landedY": 1.2,
+     "kidGain": 11.44,
+     "gain": 11.44,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -17.5
+     ],
+     "dir": -113,
+     "gap": 4,
+     "runup": 2.6,
+     "landed": [
+      -7.31,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.68,
+     "gain": 10.9,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      17.5
+     ],
+     "dir": 68,
+     "gap": 4,
+     "runup": 2.6,
+     "landed": [
+      7.31,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.68,
+     "gain": 10.9,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -16.5
+     ],
+     "dir": -113,
+     "gap": 5,
+     "runup": 2.6,
+     "landed": [
+      -7.44,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.12,
+     "gain": 10.44,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      16.5
+     ],
+     "dir": 68,
+     "gap": 5,
+     "runup": 2.6,
+     "landed": [
+      7.44,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 10.12,
+     "gain": 10.44,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      -3.5,
+      1.2,
+      -13.5
+     ],
+     "dir": -113,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      -7.49,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.96,
+     "gain": 10.37,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      3.5,
+      1.2,
+      13.5
+     ],
+     "dir": 68,
+     "gap": 5.7,
+     "runup": 2.6,
+     "landed": [
+      7.49,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.96,
+     "gain": 10.37,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      3.5,
+      1.2,
+      16.5
+     ],
+     "dir": 45,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      9.62,
+      22.62
+     ],
+     "landedY": 1.4,
+     "kidGain": 10.37,
+     "gain": 10.37,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      11.5,
+      2.4,
+      -25.5
+     ],
+     "dir": 45,
+     "gap": 8,
+     "runup": 2.6,
+     "landed": [
+      19.25,
+      -17.75
+     ],
+     "landedY": 1.1,
+     "kidGain": 10.06,
+     "gain": 10.06,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -11.5,
+      2.4,
+      25.5
+     ],
+     "dir": -135,
+     "gap": 8,
+     "runup": 2.6,
+     "landed": [
+      -19.25,
+      17.75
+     ],
+     "landedY": 1.1,
+     "kidGain": 10.06,
+     "gain": 10.06,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -11.5,
+      1.8,
+      -24.5
+     ],
+     "dir": 45,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      -4.49,
+      -17.49
+     ],
+     "landedY": 1.2,
+     "kidGain": 10.06,
+     "gain": 10.05,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      11.5,
+      1.8,
+      24.5
+     ],
+     "dir": -135,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      4.49,
+      17.49
+     ],
+     "landedY": 1.2,
+     "kidGain": 10.06,
+     "gain": 10.05,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -10.5,
+      1.2,
+      -24.5
+     ],
+     "dir": 45,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      -3.74,
+      -17.22
+     ],
+     "landedY": 1.2,
+     "kidGain": 10.04,
+     "gain": 10.04,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      12.5,
+      2.3,
+      -24.5
+     ],
+     "dir": 45,
+     "gap": 8,
+     "runup": 2.6,
+     "landed": [
+      19.24,
+      -17.76
+     ],
+     "landedY": 1.1,
+     "kidGain": 10.04,
+     "gain": 10.04,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -12.5,
+      2.3,
+      24.5
+     ],
+     "dir": -135,
+     "gap": 8,
+     "runup": 2.6,
+     "landed": [
+      -19.24,
+      17.76
+     ],
+     "landedY": 1.1,
+     "kidGain": 10.04,
+     "gain": 10.04,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      10.5,
+      1.2,
+      24.5
+     ],
+     "dir": -135,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      3.74,
+      17.22
+     ],
+     "landedY": 1.2,
+     "kidGain": 10.04,
+     "gain": 10.04,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -4.5,
+      1.2,
+      -15.5
+     ],
+     "dir": -113,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      -7.5,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.41,
+     "gain": 9.84,
+     "src": [
+      "audit",
+      "probe-carry44:r6+r7"
+     ]
+    },
+    {
+     "from": [
+      4.5,
+      1.2,
+      15.5
+     ],
+     "dir": 68,
+     "gap": 6.1,
+     "runup": 2.6,
+     "landed": [
+      7.5,
+      22.72
+     ],
+     "landedY": 1.4,
+     "on": "coping",
+     "kidGain": 13.41,
+     "gain": 9.84,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -3.5,
+      1.2,
+      -12.5
+     ],
+     "dir": -113,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      -7.5,
+      -22.15
+     ],
+     "landedY": 1.4,
+     "kidGain": 13.43,
+     "gain": 9.73,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      3.5,
+      1.2,
+      12.5
+     ],
+     "dir": 68,
+     "gap": 6.7,
+     "runup": 2.6,
+     "landed": [
+      7.5,
+      22.15
+     ],
+     "landedY": 1.4,
+     "kidGain": 13.43,
+     "gain": 9.73,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -2.5,
+      1.2,
+      -11.5
+     ],
+     "dir": -113,
+     "gap": 5.2,
+     "runup": 2.6,
+     "landed": [
+      -7.46,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "kidGain": 10.35,
+     "gain": 8.63,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -2.5,
+      1.2,
+      -12.5
+     ],
+     "dir": -113,
+     "gap": 4.2,
+     "runup": 2.6,
+     "landed": [
+      -7.33,
+      -22.72
+     ],
+     "landedY": 1.4,
+     "kidGain": 11.74,
+     "gain": 7.63,
+     "src": [
+      "probe-carry44:r6"
+     ]
+    },
+    {
+     "from": [
+      -3.5,
+      1.2,
+      -20.5
+     ],
+     "dir": 113,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      -7.56,
+      -10.7
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 10.44,
+     "gain": 7.46,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      3.5,
+      1.2,
+      20.5
+     ],
+     "dir": -67,
+     "gap": 4.8,
+     "runup": 2.6,
+     "landed": [
+      7.56,
+      10.7
+     ],
+     "landedY": 1.2,
+     "on": "island",
+     "kidGain": 10.44,
+     "gain": 7.46,
+     "src": [
+      "audit",
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      22.5,
+      2.4,
+      -17.5
+     ],
+     "dir": 158,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      14.95,
+      -14.37
+     ],
+     "landedY": 2,
+     "kidGain": 40.76,
+     "gain": 3.44,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -22.5,
+      2.4,
+      17.5
+     ],
+     "dir": -23,
+     "gap": 4.7,
+     "runup": 2.6,
+     "landed": [
+      -14.95,
+      14.37
+     ],
+     "landedY": 2,
+     "kidGain": 40.76,
+     "gain": 3.44,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      25.5,
+      2.4,
+      -18.5
+     ],
+     "dir": 158,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      14.9,
+      -14.11
+     ],
+     "landedY": 2,
+     "kidGain": 37.7,
+     "gain": 2.65,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -25.5,
+      2.4,
+      18.5
+     ],
+     "dir": -23,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      -14.9,
+      14.11
+     ],
+     "landedY": 2,
+     "kidGain": 37.7,
+     "gain": 2.65,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      23.5,
+      2.4,
+      -17.5
+     ],
+     "dir": 158,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      14.94,
+      -13.95
+     ],
+     "landedY": 2,
+     "kidGain": 40.07,
+     "gain": 2.34,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -23.5,
+      2.4,
+      17.5
+     ],
+     "dir": -23,
+     "gap": 4.6,
+     "runup": 2.6,
+     "landed": [
+      -14.94,
+      13.95
+     ],
+     "landedY": 2,
+     "kidGain": 40.07,
+     "gain": 2.34,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      21.5,
+      2.3,
+      -16.5
+     ],
+     "dir": 158,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      15.02,
+      -13.82
+     ],
+     "landedY": 2,
+     "kidGain": 35.42,
+     "gain": 2.13,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    },
+    {
+     "from": [
+      -21.5,
+      2.3,
+      16.5
+     ],
+     "dir": -23,
+     "gap": 4.5,
+     "runup": 2.6,
+     "landed": [
+      -15.02,
+      13.82
+     ],
+     "landedY": 2,
+     "kidGain": 35.42,
+     "gain": 2.13,
+     "src": [
+      "probe-carry44:r7"
+     ]
+    }
+   ]
+  }
+ }
+}

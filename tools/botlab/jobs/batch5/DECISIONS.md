@@ -64,3 +64,38 @@ marked TELL THE USER goes into the lead's final report as a choice they may want
 3. Then, on the merged base: the four subs (parallel), and the Bazookarp packages in the spec's order (`karp-engine`,
    `karp-checker`, then `karp-face` and `karp-bots` in parallel, then `karp-ref`).
 4. Then a Bazookarp layout for every stage, the consolidated balance run, the full verification sweep.
+
+## Balance decisions from the Mac mini's first measurement pass (2026-10-16, b5-int3 @ b97b3ebf, n = 8–24 per cell)
+25. **Carp Field load budget (SPEC ≤ 60 ms per state at match start): met.** On a quiet machine every stage builds under
+    60 ms (worst Cargo 43.4 ms, Treehills 34.7). The 75–190 ms readings came from the loaded local Mac. No per-stage cache.
+26. **Cheer Orb after the rework: no change.** The A/B in Zone Control is about even (3/8 wins, count lead −2.2, K/D 1.12
+    vs 1.11, 34 cheers a match).
+27. **The barrages: no change now.** Splat Barrage, Waddle Bomb Barrage and Mystery Bomb Barrage all splat 0.03–0.07
+    per use in bot Turf War; the new two match the old one. Bots aim barrages badly in general: a bot item for later.
+28. **Roller: kept.** `rollSpeed` 6.5 against `runSpeed` 6.0 (was 4.4) is the user's "slightly faster than walking". In
+    a mixed lobby the roller's turf rises from ×1.04 to ×1.17 of the lobby mean while it rolls less of its time (34.6 →
+    27.5 %). TELL THE USER: a real turf gain for rollers follows from their words.
+29. **Zone Control forgiveness: kept, closed.** Pooled n = 40 per code against the pre-batch base: neutral time
+    210 → 178 s (zones are taken and held sooner), captures 6.1 → 6.6, lead changes 0.47 → 0.65, first takes unchanged,
+    disputed time unchanged (4.0 vs 3.9 %: an earlier "more contested" reading was an artefact of each code's own warn
+    line). A late run-away seen in one 16-match sample reversed in the next; the margin difference is within noise
+    (35.0 ± 4.1 vs 42.1 ± 5.4); the penalty a trailer's late take hands the leader is bigger (21.6 vs 13.8), which
+    means the leader gets further in each stint before it is taken back and pays for it in proportion. Only knockouts 7/40 vs 2/40 remain lopsided (p ≈ 0.15): watch them in the consolidated
+    pass with a larger n; no change to the penalty or the flip hold.
+30. **Scrap Sentry: no buff.** 0.25 (Turf) / 0.12 (Zones) splats per use, 8× any other sub, while locked on only
+    3.7 / 7.2 % of its life; bot placement is being improved in the polish, its numbers are not.
+31. **Glide Bomb bots: a fight bias is required** (1 enemy hit in 545 glides in Zone Control; three paint throws per
+    fight throw). Part of the wave 2 polish.
+32. **Dash Pellet reach:** a swim jump + air dash lands 2.3–2.7 m up on tidewater, crossmarket, lockgate (a thin prop
+    at 4.15 m) and calamari. Rule: off-limits tops never hold a kid (fix the stage or the slide); a shortcut onto
+    walkable ground is accepted when it saves ≤ 20 m and bypasses no spawn barrier or mode-only wall; otherwise a rail
+    lip on the take-off. The same rule as Highmark Foundry's rule 44.
+
+## The user's rule for unfinished content (2026-10-17)
+33. **Playable-but-unfinished content ships tagged BETA, not hidden.** The user: "stuff that is playable but not
+    finished yet can have the 'beta' tag on it like the boss battle mode". So at the next integration (`int4`): the
+    three stages lose `wip` and get `beta: true` (shown in every stage picker, the lobby, the results and the stage
+    select with the same `iw-beta` 'PUBLIC BETA' badge Boss Battle's mode card uses, `src/ui/menus.js` ~1136 / 3678 /
+    4969), and Bazookarp leaves `WIP_MODES` with `beta: true` on its mode card. `wip` stays only for what is not yet
+    playable at all. The art passes, the per-stage Bazookarp layouts and the balance passes then land on a live beta,
+    and the tags come off stage by stage when the lead judges each finished.

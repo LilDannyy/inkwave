@@ -1,0 +1,37 @@
+JOB-21 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 12:26:31
+branch botlab-b5-beta1, ran at 124e66dd, exit code 0, wall time 9min
+(a written-up JOB-21.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+## base: b0cc406c + this branch's karp-bots.js
+### beta1 JOB-21 head 124e66dd
+[base-1] RESULT 42/42 | H 18 of 20
+[new-1] RESULT 42/42 | H 19 of 20
+[new-4] RESULT 42/42 | H 18 of 20
+[new-5] RESULT 41/42 | H 19 of 20
+[new-2] RESULT 42/42 | H 20 of 20
+[base-2] RESULT 42/42 | H 19 of 20
+[base-4] RESULT 42/42 | H 16 of 20
+[new-3] RESULT 42/42 | H 16 of 20
+[new-6] RESULT 42/42 | H 18 of 20
+[base-5] RESULT 41/42 | H 19 of 20
+[base-3] RESULT 40/42 | H 18 of 20
+[base-6] RESULT 42/42 | H 16 of 20
+### done
+
+## last 15 lines of job.log
+[new-4] RESULT 42/42 | H 18 of 20
+[new-5] RESULT 41/42 | H 19 of 20
+[new-5] FAIL C no bot takes touch damage (karp-touch) in 20 bursts, all eight bots playing  {"bursts":20,"touches":1,"simS":53.37,"who":[{"n":"P1","w":"shooter","role":"grab","mode":"paint","ph":"shielded","d":2.67,"r":2.3,"esc":false,"side":1,"vel":[-6.5,-3.6],"mv":[-0.99,0.15],"form":"kid","spot":
+[new-2] RESULT 42/42 | H 20 of 20
+[base-2] RESULT 42/42 | H 19 of 20
+[base-4] RESULT 42/42 | H 16 of 20
+[new-3] RESULT 42/42 | H 16 of 20
+[new-6] RESULT 42/42 | H 18 of 20
+[base-5] RESULT 41/42 | H 19 of 20
+[base-5] FAIL C no bot takes touch damage (karp-touch) in 20 bursts, all eight bots playing  {"bursts":20,"touches":1,"simS":57.1,"who":[{"n":"Inky Vee","w":"spinner","role":"grab","mode":"paint","ph":"shielded","d":2.67,"r":2.29,"esc":false,"side":0.99,"vel":[-6.4,-1.7],"mv":[-0.98,0.2],"form":"kid
+[base-3] RESULT 40/42 | H 18 of 20
+[base-3] FAIL B(b2) melee breakers closing in at 75 % of ours refill inside their band (≤ 5 m from the centre): never walking off to the ring or the spawn for ink  {"maxR":4.19,"minR":2.87,"minAt":{"f":0,"w":"roller","mode":"paint","form":"kid","ink":8,"refillBad":false},"refillFrames":1196}
+[base-3] FAIL C no bot takes touch damage (karp-touch) in 20 bursts, all eight bots playing  {"bursts":20,"touches":1,"simS":65.38,"who":[{"n":"Suki","w":"blade","role":"grab","mode":"paint","ph":"shielded","d":2.5,"r":2.12,"esc":false,"side":0.86,"vel":[-4.1,-4.6],"mv":[-0.19,0.11],"form":"kid","sp
+[base-6] RESULT 42/42 | H 16 of 20
+### done

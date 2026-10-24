@@ -533,6 +533,12 @@ class LensInk {
 
 // ------------------------------------------------------------------------------------------------ ScreenFX
 export class ScreenFX {
+  // [b5-beta1] a match is about to be shown (main.js _warmStage): the lens ink's pass compiled now, into its own target —
+  // it was compiled the first time ink hit the lens, mid-match. Returns the compile (a thenable) for the warm to await.
+  warm() {
+    const r = this.renderer, L = this.lens, rt0 = r.getRenderTarget();
+    try { r.setRenderTarget(L.rt); return [r.compileAsync(L.scene, L.cam)]; } catch (e) { return []; } finally { r.setRenderTarget(rt0); }
+  }
   constructor(R, Gctx) {
     this.R = R;
     this.G = Gctx || CTX;

@@ -1,0 +1,156 @@
+// Highmark Foundry — the Bellows' breath: the lava's data in ENGINE.md §3.3's exact format (DESIGN.md §3.2), plus the
+// BLOCKOUT's stand-in for the engine (which is not built yet).
+//
+// LAVA (exported, in LAYOUT.lava) is pure data for src/game/lava.js (`LavaWorld.create(layout)` once it exists).
+//
+// The blockout stand-in (until the lava engine lands; then set BLOCKOUT_LAVA = false and nothing below it is used):
+// the stage is built at ONE lava level, chosen by the page's `?lava=low|high` (the harness: LAVA=low|high, see
+// tools/botlab/offscreen-boot.cjs) or, in Node (check-maps), by the LAVA env var; default LOW. At that level
+//   • the Organ Pipes are static hexagonal columns at that level's pose (LOW 1.4 / 1.8 / 2.3, HIGH 2.35 / 3.5 / 4.65),
+//   • both Pumice Races' stones are static perches (top 1.25) at HIGH, absent at LOW,
+//   • at HIGH every floor the lava covers (the Slump shelves, the Casting Floors with the Spillway fords: tops at 0) is left out
+//     of the build, so the nav, the cover map, spawn-mid and the bots see it as gone,
+//   • props.js draws a placeholder lava surface at the level over the whole region.
+import { P, A, sp, rot, S0, S1, FACE, LAKE, SPILL, SLUMP, CHUTE, STONES, STONE_YAW, STONES2, STONE2_YAW, RACE2_A, ORG, POSE, DEPTH, LIP_LINE, AW, r3 } from './geo.js';
+
+export const BLOCKOUT_LAVA = false;   // (the lava engine, src/game/lava.js, owns the level, the riders and the look)
+export const LAVA_VIEW = (() => {
+  let v = null;
+  try { if (typeof location !== 'undefined' && location.search) v = new URLSearchParams(location.search).get('lava'); } catch (e) { /* no page */ }
+  try { if (!v && typeof process !== 'undefined' && process.env) v = process.env.LAVA || null; } catch (e) { /* no node */ }
+  return v === 'high' ? 'high' : 'low';
+})();
+export const LAVA_Y = LAVA_VIEW === 'high' ? 0.8 : -0.6;
+
+// the boulder on stone 3, in the stone's frame (x across the line, toward the island; z along it)
+export const RACE_BOULDER = { x: 0.85, z: 0, w: 1.0, d: 1.0, y0: 0, y1: 1.0, ink: false };
+// the lookout's crown (fix round 6, the lead's decision after review 6: "a lookout must not be a launch pad across the
+// lake"). From Organ L's HIGH top, 3.45 m over the Race and the causeway, a plain running jump flew 6 m: onto race 1
+// (saving up to 38.6 m against the climb down and round by the north head) and onto the causeway (up to 22.9 m). A
+// parapet low enough to see over is cleared by that jump (its peak is 1.35 m, and the column's own drop does the rest),
+// and one a kid can't clear hides the lake from the lookout. So the lava-facing rim carries a crown of basalt pipes —
+// the Organ Pipes' own motif, hexagonal, 2.0–2.2 m tall (over the 1.8 m a kid reaches), 0.26 m across, with clear gaps
+// of ≤ 0.6 m (a kid is 0.76 m across, a squid too): nobody passes or climbs it, and you see and shoot between them
+// (~60 % open). The crown runs from the north-west corner round the west corner, the south-west, south (the stub fills
+// its middle) and south-east edges and the east corner to the north-east corner (fix round 6 stopped at the middles of
+// the north-west and north-east edges; fix round 7 closed them, below); the north flat (the climb from B) stays open.
+// Pipes are rider parts: un-inked (no squid climbs them), roofs; 14 per lookout (lavaCore LAVA.maxParts 64: all 64 used)
+export const CROWN = (() => {
+  const R0 = 2.5, IN = 0.16, PW = 0.26, D = Math.PI / 180, Li = R0 - (IN * 2) / Math.sqrt(3);
+  const Ci = (a) => [Li * Math.cos(a * D), Li * Math.sin(a * D)];
+  const lerp = (a, b, f) => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+  // (each pipe square to the rim it stands on: its collider turned along that edge — a corner pipe along the bisector)
+  const pts = [], add = (q, a, b) => { const yaw = Math.atan2(-(b[1] - a[1]), b[0] - a[0]); const o = pts.find((p) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 0.05); if (o) o[2] = (o[2] + yaw) / 2 + (Math.abs(o[2] - yaw) > Math.PI ? Math.PI : 0); else pts.push([q[0], q[1], yaw]); };
+  const full = (a, b, inner = 2) => { add(a, a, b); for (let k = 1; k <= inner; k++) add(lerp(a, b, k / (inner + 1)), a, b); add(b, a, b); };
+  // (fix round 7, review 7: the north-west and north-east edges were crowned only on their lake halves; a jump out through
+  // an open half, steered 45° in the air, swung round the crown's end onto the causeway — 16.9 m saved. One more pipe a
+  // quarter of the way from the north flat left 0.45 m by the corner: steered 10 frames up, 16.1 m. Both edges are now
+  // crowned whole, as the others — 4 pipes, 0.51 m clear — with the same 14 pipes; only the north flat, the climb from B,
+  // is open)
+  full(Ci(120), Ci(180)); full(Ci(180), Ci(240)); full(Ci(240), Ci(300), 0); full(Ci(300), Ci(0)); full(Ci(60), Ci(0));
+  const H = [2.0, 2.2, 2.1];   // (organ-pipe heights in turn: all over a kid's 1.8 m reach, under rule 22's 2.2 m sky)
+  return pts.map((q, i) => ({ x: Math.round(q[0] * 1000) / 1000, z: Math.round(q[1] * 1000) / 1000, w: PW, d: PW, yaw: Math.round((q[2] * 180) / Math.PI * 10) / 10, y0: 0, y1: H[i % 3], ink: false, pipe: true }));
+})();
+export const LAVA = {
+  low: -0.6,
+  high: 0.8,                                     // the high mark: the stain line (rind) at 0.8 on every face in the region
+  region: { polys: [LAKE], half: [SPILL, SLUMP] }, // union; the set is 180°-symmetric
+  falls: { half: [CHUTE] },                      // a fall below the death plane here reports cause 'lava' (ENGINE H3)
+  timing: { warn: 10, rise: 10, fall: 10, ease: 'smooth' },
+  schedule: {
+    'turf:180': { moves: [35, 70, 110, 140] },   // rise, fall, rise, fall
+    'turf:90': { moves: [30, 55] },
+    zones: { loop: { first: 35, high: 35, low: 35 }, overtime: 'hold' },
+    tower: 'zones', bazookarp: 'zones',
+    practice: { loop: { first: 20, high: 35, low: 35 } },   // looked up by m.practice (ENGINE H24)
+    attract: { loop: { first: 8, high: 15, low: 15 } },     // looked up by m.attract
+    boss: 'low',
+  },
+  mirror: true,
+  riders: [
+    // the Pumice Race: sink stones; top = L + 0.45 while up; solid while top ≥ L + 0.15; surface / sink timed to the shelf
+    // (fix round 2: stone 3 carries a 1.0 m pumice boulder on its island side, a rider part like Organ L's stub: cover on
+    // the Race, which was 15 m of bare crossing in full view of the island; 1.8 m of the stone stays walkable beside it,
+    // clear of the overlaps with stones 2 and 4 the steps cross. 32 rider parts of the 40 with the twins)
+    ...STONES.map(([x, z, w, d], i) => ({ id: 'race' + (i + 1), kind: 'stone', pos: [x, z], size: [w, d], yaw: STONE_YAW,
+      top: [-0.15, 1.25], depth: 0.9, sink: { at: -0.15, ease: 2.4, rel: [-0.45, 0.45] },
+      ...(i === 2 ? { parts: [RACE_BOULDER] } : {}),
+      look: { type: 'caldera_pumice', variant: i, chain: [-21.2, -19.6] } })),
+    // (round B: the second Race, from the north Slump head east onto the island's west face along θ 175.5 — the own-rim
+    // flank's door onto mid at HIGH, when the Casting Floor's closes; the same stones, timing and seams. 36 rider parts
+    // of the 40 with the twins)
+    ...STONES2.map(([x, z, w, d], i) => ({ id: 'race' + (6 + i), kind: 'stone', pos: [x, z], size: [w, d], yaw: STONE2_YAW,
+      top: [-0.15, 1.25], depth: 0.9, sink: { at: -0.15, ease: 2.4, rel: [-0.45, 0.45] },
+      look: { type: 'caldera_pumice', variant: 5 + i } })),
+    // the Organ Pipes (Alpha's cluster, SSW): hexagonal basalt columns, corners on ±x, in a line along z
+    { id: 'organL', kind: 'float', shape: 'hex', pos: [-10, -12.80], r: 2.5, top: [2.3, 4.65], depth: 4.2, ink: 'all',
+      inLake: true, parts: [{ x: 0, z: -1.4, w: 1.2, d: 1.2, y0: 0, y1: 1.0, ink: false }, ...CROWN],   // the stub on its lake side: 1.0 m, cover (rule 25: ≤ 1.0); the crown (fix round 6)
+      look: { type: 'caldera_organ', role: 'lookout' } },
+    { id: 'organB', kind: 'float', shape: 'hex', pos: [-10, -9.14], r: 1.5, top: [1.8, 3.5], depth: 3.7, ink: 'deck',
+      look: { type: 'caldera_organ' } },
+    { id: 'organA', kind: 'float', shape: 'hex', pos: [-10, -6.34], r: 1.5, top: [1.4, 2.35], depth: 3.3, ink: 'deck',
+      look: { type: 'caldera_organ' } },
+  ],
+  steps: [   // explicit nav links across every rider seam (ENGINE §4.3): [from, to]; a point is static floor nearest it
+    [[-10, -4.45], 'organA'], ['organA', 'organB'], ['organB', 'organL'],
+    [[-18.74, -14.40], 'race1'], ['race1', 'race2'], ['race2', 'race3'], ['race3', 'race4'], ['race4', 'race5'],
+    ['race5', [-23.64, -0.19]],
+    [P(21.75, RACE2_A), 'race6'], ['race6', 'race7'], ['race7', P(15.9, RACE2_A)],
+  ],
+  // (fix round 5) nav walk links between static floors the 1 m grid misses (engine: LavaWorld.navEdges): round the gauge
+  // deck's NW corner (Bravo's: SE) from the coping in the pocket beside the deck stair to the island's coping by the pool
+  // (fix round 6) and on the Ladle Road at the scree ramp's foot (Bravo's twin has it): a nudged node in a pocket the grid
+  // joined only to the Rim Ridge above (jumps), so lava-audit rule 44 read a 3.2 m running jump from it onto the other
+  // works' Casting Floor at LOW as saving 15.9 m (its twin, on a node the grid joins: 4.3 m). A kid walks it (1.1 m, flat)
+  walks: [[[-11.5, 1.4, 7.5], [-12.5, 1.2, 6.5]], [[-26.5, 2.4, 8.95], [-25.5, 2.4, 9.5]]],
+  gauges: [
+    { kind: 'bar', pos: [0, 8.0, -2.5], yaw: Math.PI, h: 7.0, single: true, notIn: 'boss' },    // the Surge Gauge's south board (to Alpha)
+    { kind: 'bar', pos: [0, 8.0, 2.5], yaw: 0, h: 7.0, single: true, notIn: 'boss' },           //   and its north board (to Bravo) (no gauge in Boss Battle)
+    { kind: 'bar', pos: [-31.15, 5.3, -46.5], yaw: Math.PI / 2, h: 1.8 },        // the Surge Board on the Surge Office's east face, toward the yard (twin; pos y = its foot)
+  ],
+  // (each Spillway is a lava arm from the mouth into its bay at both levels — at LOW only its ford (s ≤ 3, joined to the
+  // Casting Floor) is dry — so the bay's lip sits at the LOW level and the lavafall pours at both levels, thin at LOW)
+  cascades: [{ lip: LIP_LINE, y: -0.65, drop: 14 }],    // Alpha's Spillway Bay's lip, the whole curve (2 with Bravo's): the lavafall pours off it
+  vents: [[-9.5, -0.6, -18.5], [17.5, -0.6, -5.0], [10.0, 0, -15.0], [...A(15, -3)].reduce((a, v, i) => (i ? [a[0], -0.6, v] : [v]), [])],   // pools, a floor drain, the bay (8 with twins)
+  flotsam: { count: 48, size: [0.3, 0.9], keepOff: 1.0 },  // cosmetic pumice drifting on the open lava, no collider
+  look: { crust: 'ember', cone: [230, 0, 150] },           // warm charcoal-maroon crust, lit seams (§5.3); the Bellows Vent
+  text: {
+    warnRise: ['LAVA RISING', 'Off the low ground: {n}'],
+    rise: ['SURGE!', 'The Pumice Races are coming up'],
+    high: ['HIGH MARK', 'Race up · Organ Pipes up'],
+    warnFall: ['LAVA FALLING', 'The stones sink in {n}'],
+    low: ['EBB', 'Slump shelf, Spillway ford and Casting Floor open'],
+    hold: ['LAVA HOLDS', ''],
+  },
+};
+// (the steps' static ends, for the record: the island's socket collar just north of A's north flat; the south head
+// 0.45 m behind its tip face; the north head 0.45 m behind its tip face)
+export const STEP_ENDS = { island: [-10, -4.45], south: sp(S0, -0.45, 0), north: sp(S1, 0.45, 0) };
+void P; void rot; void FACE; void A; void AW;
+
+// ---------------------------------------------------------------------------------------------- the blockout stand-ins
+// hexagonal column (corners on ±x) as three boxes turned 0 / 60 / 120°: the middle one carries the deck, the turned
+// pair sit 0.1 / 0.2 m lower so no two tops z-fight (a static stand-in: the engine's riders are dynamic blocks)
+const DEGR = Math.PI / 180;
+function hexBlocks(cx, cz, r, top, depth, o) {
+  const w = r, d = Math.sqrt(3) * r, y0 = top - depth;
+  return [0, 60, 120].map((a, i) => ({ kind: 'obox', center: [cx, (y0 + top - 0.1 * i) / 2, cz], size: [w, top - 0.1 * i - y0, d], rotY: -a, ...o(i) }));
+}
+// the riders at this build's level, as static layout pieces (Alpha's half; the half list mirrors them)
+export function riderStandIns(mk) {
+  const e = LAVA_VIEW === 'high' ? 1 : 0, out = [];
+  for (const k of ['L', 'B', 'A']) {
+    const [x, z, r] = ORG[k], top = POSE[k][0] + (POSE[k][1] - POSE[k][0]) * e;
+    out.push(...hexBlocks(x, z, r, top, DEPTH[k], (i) => mk('organ', { tag: 'organ-' + k + i })));
+    if (k === 'L') out.push({ kind: 'box', min: [x - 0.6, top, z - 1.4 - 0.6], max: [x + 0.6, top + 1.0, z - 1.4 + 0.6], ...mk('organ-stub', { tag: 'organ-stub', paint: false }) });
+  }
+  if (e === 1) {
+    STONES.forEach(([x, z, w, d], i) => out.push({ kind: 'obox', center: [x, (0.35 + 1.25) / 2, z], size: [w, 0.9, d], rotY: STONE_YAW, ...mk('stone', { tag: 'race' + (i + 1), perch: true }) }));
+    STONES2.forEach(([x, z, w, d], i) => out.push({ kind: 'obox', center: [x, (0.35 + 1.25) / 2, z], size: [w, 0.9, d], rotY: STONE2_YAW, ...mk('stone', { tag: 'race' + (6 + i), perch: true }) }));
+    // the boulder on stone 3 (a roof: you hide behind it, you slide off it)
+    { const [x, z] = STONES[2], a = STONE_YAW * DEGR, ax = [Math.cos(a), -Math.sin(a)], b = RACE_BOULDER;
+      out.push({ kind: 'obox', center: [x + ax[0] * b.x, 1.25 + (b.y1 - b.y0) / 2, z + ax[1] * b.x], size: [b.w, b.y1 - b.y0, b.d], rotY: STONE_YAW, ...mk('organ-stub', { tag: 'race-boulder', paint: false, color: '#a9a39a' }) }); }
+  }
+  void DEGR;
+  return out;
+}

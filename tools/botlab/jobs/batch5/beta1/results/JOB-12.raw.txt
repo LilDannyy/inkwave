@@ -1,0 +1,37 @@
+JOB-12 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 04:10:38
+branch botlab-b5-beta1, ran at 7c5cf6bd, exit code 0, wall time 52min
+(a written-up JOB-12.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### beta1 JOB-12 head 7c5cf6bd
+## base: 1378ceb2 + d3e4f164 issueLog.js
+[final-1] RESULT 7/7
+[base-1] RESULT 7/7
+[final-2] RESULT 7/7
+[base-2] RESULT 7/7
+[final-3] RESULT 7/7
+[base-3] RESULT 5/7
+[final-4] RESULT 7/7
+[base-4] RESULT 7/7
+[final-5] RESULT 7/7
+[base-5] RESULT 7/7
+[final-6] RESULT 7/7
+[base-6] RESULT 7/7
+### done
+
+## last 15 lines of job.log
+[base-3] RESULT 5/7
+[base-3] "esc":1,"fight":2,"list":[["ledges",18,"Kelp","spinner","fight","fight",32.33,[5.44,-0.63,12.16]],["edges",8,"Zest","blade","fight","fight",77.32,[20.11,-0.21,11.04]],["edges",13,"Sprinkle","charger","fight","escape",76.25,[-19.28,-0.01,-13.25]]]}
+[final-4] RESULT 7/7
+[final-4] "esc":0,"fight":0,"list":[]}
+[base-4] RESULT 7/7
+[base-4] "esc":0,"fight":0,"list":[]}
+[final-5] RESULT 7/7
+[final-5] "esc":0,"fight":1,"list":[["edges",12,"Zest","twins","fight","fight",45.22,[19.99,0.92,-21.54]]]}
+[base-5] RESULT 7/7
+[base-5] "esc":0,"fight":1,"list":[["stones",0,"Pip","bucket","paint","fight",70.08,[-19.87,0.92,21.56]]]}
+[final-6] RESULT 7/7
+[final-6] "esc":0,"fight":0,"list":[]}
+[base-6] RESULT 7/7
+[base-6] "esc":0,"fight":0,"list":[]}
+### done

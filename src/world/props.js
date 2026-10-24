@@ -3380,6 +3380,10 @@ export class PropKit {
         box = { min: [r4(pos[0] + x0), r4(pos[1] + b[1] * s), r4(pos[2] + z0)], max: [r4(pos[0] + x1), r4(pos[1] + b[4] * s), r4(pos[2] + z1)] };
       }
       if (b[6] & 1) box.roof = true;
+      // [b5-int3] a post's top — a collider under 0.3 m across both ways and 1.5 m tall or more (a sign's or a lamp's pole,
+      // a gate post) — is off-limits: nothing stands on one, and a dash that stood a kid there reached what no walk or hop
+      // does (dash-reach.js rule (a): halyard's pontoon-sign posts, 2.3 m; kelpline's 4.1 m posts)
+      else if (!(b[6] & 2) && (b[3] - b[0]) * s < 0.3 && (b[5] - b[2]) * s < 0.3 && (b[4] - b[1]) * s >= 1.5) box.roof = true;
       if (b[6] & 2) box.rail = true;
       if (b[6] & 4) box.perch = true;
       out.push(box);

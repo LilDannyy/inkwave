@@ -438,6 +438,7 @@ const _dAxis = new THREE.Vector3(), _dQ = new THREE.Quaternion(), _dC = new THRE
 const ANIM_OF = { twins: 'shooter', brush: 'roller', sp_blower: 'shooter', sp_jetgun: 'blaster', sp_stamp: 'roller' };
 // families too heavy / long for the idle and dance weapon twirls
 const NO_TWIRL = { roller: true, charger: true, spinner: true, bucket: true, sp_zooka: true, sp_stamp: true };
+ANIM_OF.sp_karp = 'sp_zooka'; NO_TWIRL.sp_karp = true;   // [karp-face] the Bazookarp rides the shoulder like the Zooka (karpModel.js)
 // ---- Canopy Brolly (kits/brolly.js): held and aimed like a shooter
 ANIM_OF.brolly = 'shooter';
 // ---- Sponge Mitts (kits/mitts.js): a sponge boxing glove in each fist (dual wield), a boxer's guard in front of the
@@ -835,7 +836,7 @@ export class Character {
     if (d.glow) g.add(new THREE.Mesh(d.glow, this.mats.glow));
     g.visible = false;
     this.bones.handL.add(g);
-    this.bomb = { group: g, ink, spinInk, kind };
+    this.bomb = { group: g, ink, spinInk, kind, low: d.low || null };   // [b5-sub-glide] low: carried low by its handle (_poseSubAim / _poseThrow)
   }
   setSub(kind) {
     if (this.bomb && this.bomb.kind === kind) return;
@@ -1139,6 +1140,10 @@ export class Character {
         w.bind(this.skeleton, IDENT); w.castShadow = m.userData.iwShadow; w.receiveShadow = true; w.frustumCulled = false; grp.add(w);
       }
       this.kid.add(grp);
+      // [b5-beta1] a kit weapon model builds parts of itself on its first animation (the Sponge Mitts' sponge, the
+      // Cutlass' edge and aura, the Brolly's canopy): animate the held one once now, so they are in the tree compiled
+      // below (the sponge's program was compiled in play: review 1, issue 1)
+      try { const hw = this.weapons[this.weaponKind]; if (hw) this._animWeapon(0, {}, hw); } catch (e) { console.warn('[character] weapon warm', e); }
       // far weapon decimation (CPU, cached per weapon geometry) — built now rather than at the first far switch
       for (const k in this.weapons) for (let w = this.weapons[k]; w; w = w.left) { farGeometry(w.def.body, 700); farGeometry(w.def.ink, 300); }
       // everything a match can show, shown for the synchronous part only (compile + one shadow pass)
@@ -2540,6 +2545,7 @@ export class Character {
 
   // Bomb / storm throw with the free (left) arm: cocked → whip → follow-through (the projectile leaves at t≈0).
   _poseThrow(P, tt) {
+    if (this.bomb?.low) { this._poseRoll(P, tt, this.bomb.low); return; }   // [b5-sub-glide] a low-carried sub is rolled, underhand
     const X = this.PX; X.set(P);
     const w = win(tt, 0, 0.03, 0.4, 0.62);
     const cock = 1 - ease(tt / 0.06), whip = ease(tt / 0.1) * (1 - ease((tt - 0.1) / 0.16)), fol = ease((tt - 0.08) / 0.14);
@@ -2555,9 +2561,31 @@ export class Character {
     poseLerp(P, P, X, w);
   }
 
+  // [b5-sub-glide] a sub carried low by its handle (getSubDef(kind).low = { arm: [upper arm x, y, z, forearm, hand x, y, z],
+  // lean: [spine x, chest y, hips drop], roll: [arm back, arm through, follow-through] }: the Glide Bomb's curling hold,
+  // beside the hip and clear of the leg) and its underhand roll on 'throw' — back, through low along the floor, follow-through
+  _poseLow(X, A, k = 1) {
+    X[IKL] = 0; X[LTW] = 0; X[HANDPL] = 0;
+    X[UARML] = A.arm[0]; X[UARML + 1] = A.arm[1]; X[UARML + 2] = A.arm[2]; X[FARML] = A.arm[3]; X[HANDL] = A.arm[4]; X[HANDL + 1] = A.arm[5]; X[HANDL + 2] = A.arm[6];
+    X[SPINE] += A.lean[0] * k; X[CHEST + 1] += A.lean[1] * k; X[HIPS_P + 1] -= A.lean[2] * k;
+  }
+  _poseRoll(P, tt, A) {
+    const X = this.PX; X.set(P);
+    // ([b5-int3] straight through from the carry — the stone leaves the hand low in front as it swings (glide.js fromHand
+    // draws it out of the fist): the back-swing used to come after the release, the arm going back while the stone was
+    // already down ahead)
+    const w = win(tt, 0, 0.02, 0.4, 0.62), back = 0, thru = ease(tt / 0.07) * (1 - ease((tt - 0.07) / 0.2)), fol = ease((tt - 0.06) / 0.16);
+    this._poseLow(X, A, back + thru);
+    X[UARML] += A.roll[0] * back + A.roll[1] * thru + A.roll[2] * fol * (1 - thru);
+    X[FARML] += 0.25 * thru; X[SPINE] += 0.12 * thru; X[CHEST + 1] -= 0.25 * thru;
+    this._effort = Math.max(this._effort || 0, thru);
+    poseLerp(P, P, X, w);
+  }
+
   // Holding the splat bomb up behind the head (free arm cocked, chest turned), ready to throw.
   _poseSubAim(P, w) {
     const X = this.PX; X.set(P);
+    if (this.bomb?.low) { this._poseLow(X, this.bomb.low); this._effort = Math.max(this._effort || 0, 0.2 * w); poseLerp(P, P, X, w); return; }   // [b5-sub-glide]
     X[IKL] = 0; X[LTW] = 0;
     X[UARML] = -2.55; X[UARML + 2] = 0.48; X[FARML] = -1.85; X[HANDL] = 0.2;
     X[CLAVL + 2] += 0.15; X[CLAVL + 1] -= 0.08;

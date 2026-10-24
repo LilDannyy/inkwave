@@ -1,0 +1,126 @@
+// Gulper Aquarium — the Tubeway's data (LAYOUT.pipes, ENGINE.md §3.3's exact format) and the blockout's reading of it:
+// the centreline with its fillets, the ends, approach and landing points. Pure data (no three.js): layout.js reads it
+// (the Bazookarp noRest circles). The pipe engine (src/game/pipes.js + src/world/pipes-data.js) reads LAYOUT.pipes
+// itself; nothing here is engine code.
+const r3 = (v) => Math.round(v * 1000) / 1000;
+// a point in Alpha's blade frame (DESIGN.md's conventions: s along the blade from (0, −32.5), w across it)
+const BL = (s, w) => [r3(0.5 * s + 0.866 * w), r3(-32.5 - 0.866 * s + 0.5 * w)];
+
+export const PIPES = {
+  label: 'TUBEWAY',              // the HUD's name for the network (≤ 14 characters)
+  mirror: true,                  // every leg gets its 180° twin (id + '~'), except `single: true` legs
+  enter: 'any',                  // 'any' (kid or squid) | 'squid' (a kid bumps the mouth like a wall)
+  speed: 18,                     // m/s, the default for every leg (12–24)
+  cooldown: 3.5,                 // s after touchdown; lead's camping fix from the Aquarium match set
+  modes: {                       // per match mode; omitted = every leg as listed
+    bazookarp: { shut: [], carp: [] },   // nothing shut (no end within 15 m of a Gate); carriers refused on every leg
+    boss: 'open',                // 'open' | 'off' (every leg shut, still drawn and solid)
+  },
+  // device aprons (DECISIONS.md #24; LEAD-NOTES 2026-10-09: "only where DESIGN.md wants an apron: pipe mouths, the deck's
+  // exits"): the engine keeps every mouth's IN apron and every landing free of devices itself; these are the spawn deck's
+  // exits, the 4 m landings at the foot of both pavilion stairs (the stair's 3 m + 1 m either side, to the plaza's
+  // edge), mirrored for Bravo. G.level.noPlace refuses a device there (a Lurk Mine, a Hop Beacon, a sprinkler …)
+  aprons: [
+    { poly: [BL(27, 12), BL(31, 12), BL(31, 16.25), BL(27, 16.25)], y: [-0.5, 2.5], why: 'east stair landing' },
+    { poly: [BL(27, -16.25), BL(31, -16.25), BL(31, -12), BL(27, -12)], y: [-0.5, 2.5], why: 'west stair landing' },
+  ],
+  water: [                       // looks only: volumes where the ride camera gets the underwater grade
+    { cyl: [0, 0, 7.4], y: [-0.6, 2.3] },                    // the Great Tank, down to its sunken sand bed (its own twin)
+    { cyl: [25, 0, 4.4], y: [0, 9.9], open: 1.2 },           // the E kelp drum (twin: the W drum); open to the sky: no grade
+                                                             //   in its top 1.2 m (a lens there looks out over the promenade)
+    { box: [-5.9, 5.9, -30.9, -19.1], y: [6.05, 8.95] },     // the South Arch Tank over the hall (twin: the North)
+  ],
+  // mid's high ground for PAGEQ=pipestats' arrival share (DESIGN.md §6.2(e)): the Feeding Deck (in the Great Tank's 16-gon,
+  // 2.4) and both Sea Promenades with their Lookouts, telescope bays and the Kelp Balconies over them (2.4 and up)
+  highGround: { y: 2.3, cyl: [[0, 0, 7.6]], sector: [[20.6, 33.5, -175, -105], [20.6, 33.5, 5, 75]] },
+  legs: [
+    { id: 'gulper', way: 'two', single: true, bend: 2.0,    // the Gulper Run, through the Great Tank under the deck
+      names: ['EAST GULPER', 'WEST GULPER'],
+      pts: [[12.7, 0.8, 0], [9.6, 0.8, 0], [7.6, 0.5, 0], [-7.6, 0.5, 0], [-9.6, 0.8, 0], [-12.7, 0.8, 0]],
+      ends: [{ nozzle: 'level' }, { nozzle: 'level' }],
+      hide: [[0, 5.2], [20.2, 25.4]],                         // inside the bronze heads and necks (x 7.5…12.7)
+      look: { tint: 'clear', collars: 'brass', mouth: 'gulper', deckLight: [-7.5, 7.5, -1.2, 1.2, 2.4] } },
+    { id: 'arch', way: 'two', bend: 1.8,                     // the Arch Line, through the Arch Tank over the hall
+      names: ['S. REEF HALL', 'S. PROMENADE'],
+      twinNames: ['N. REEF HALL', 'N. PROMENADE'],
+      pts: [[9.58, 0.8, -26.31], [7.32, 0.8, -27.13], [7.32, 7.5, -27.13], [-7.32, 7.5, -27.13],
+            [-7.32, 3.2, -27.13], [-9.96, 3.2, -26.17]],    // [blockout] B 0.4 m further out: the west pylon's face
+      ends: [{ nozzle: 'level' }, { nozzle: 'level' }],         //   overhangs the promenade's edge by 0.4 m (layout.js)
+      hide: [[0, 1.16], [26.21, 27.8]],                       // the end runs inside the pylons (the risers are glazed: drawn; the glass runs on into the back wall, review 10)
+      look: { tint: 'clear', collars: 'brass' } },
+    { id: 'express', way: 'one', speed: 24, bend: 2.7,        // the Express, across the wing over the Pump Hall roof
+      names: ['FERRY PLAZA', 'PENGUIN POINT'],
+      // [fix round 1] A re-seated: the plaza stop closes the Pump Hall bund's south end, its mouth at (s 22.75, w 12.5)
+      // facing across the plaza (−w), 8.3 m from the east stair's foot (DESIGN.md's faced the stair, 2–5 m off); the
+      // end run goes +w into the stop and the riser stands at the sea edge. The span runs at 8.0 m over the Pump Hall's
+      // roof to a bend at (9, −32) in front of the east pylon, then along the gatehouse's wing face to Penguin Point:
+      // from the spawn's play camera it crosses the sight line to the bathysphere 35 m out, under the ball with ~1° to
+      // spare (ball-view.js); one straight span crossed it 25 m out, over the ball, at any height under rule 16's 11 m
+      pts: [[22.2, 0.8, -45.95], [25.14, 0.8, -44.25], [25.14, 8.0, -44.25], [9.0, 8.0, -32.0], [-14.29, 8.0, -37.75],
+            [-14.29, 2.0, -37.75], [-15.99, 2.0, -34.8]],
+      ends: [{ nozzle: 'level' }, { nozzle: 'level' }],
+      hide: [[0, 4.65], [54.2, 59.44]],                       // inside the two Express stops (tops 3.2 and 5.0; 59.44 m)
+      look: { tint: 'clear', collars: 'steel', chevrons: true } },
+    { id: 'kelp', speed: 24, bend: 2.7,                       // the Kelp Line, up the E drum, along the North Promenade
+      way: { flip: { every: 90, first: 'ab', warn: 10, close: 3, reopen: 1, quietEnd: 15 } },   // the tide (E2)
+      names: ['S. REEF HALL', 'N. PROMENADE'],
+      twinNames: ['N. REEF HALL', 'S. PROMENADE'],
+      pts: [[27.4, 0.8, -4.6], [27.4, 0.8, -1.2], [27.4, 9.0, -1.2], [21.28, 9.0, 23.63],
+            [21.28, 3.2, 23.63], [18.94, 3.2, 21.03]],
+      ends: [{ nozzle: 'level' }, { nozzle: 'level' }],
+      hide: [[0, 0.8], [37.7, 41.8]],                         // the low stop's frame; the deep stop's housing
+      look: { tint: 'clear', collars: 'steel', chevrons: true, tag: 'KELP LINE' } },   // tidal: the engine adds the split-flap signs (tag: over their words)
+  ],
+};
+
+// ---------------------------------------------------------------------------------------------------- the blockout's reading
+// (what expandPipes will compute, enough for placeholder looks and the Bazookarp's noRest circles)
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const add = (a, b, k = 1) => [a[0] + b[0] * k, a[1] + b[1] * k, a[2] + b[2] * k];
+const len = (a) => Math.hypot(a[0], a[1], a[2]);
+const nrm = (a) => { const l = len(a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+const turnLeg = (pts) => pts.map(([x, y, z]) => [-x, y, -z]);
+// every leg with its twin: { id, way, speed, pts, single }
+export function allLegs(P = PIPES) {
+  const out = [];
+  for (const L of P.legs) {
+    out.push({ ...L, names: L.names });
+    if (P.mirror && !L.single) out.push({ ...L, id: L.id + '~', pts: turnLeg(L.pts), names: L.twinNames || L.names, twin: true });
+  }
+  return out;
+}
+// the centreline as a polyline: straight runs joined by circular fillets of radius `bend`, sampled every ~0.25 m of arc
+export function centreline(leg, step = 0.25) {
+  const p = leg.pts, r = leg.bend || 1.5, out = [p[0]];
+  for (let i = 1; i < p.length - 1; i++) {
+    const a = nrm(sub(p[i - 1], p[i])), b = nrm(sub(p[i + 1], p[i]));
+    const cosT = Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2])), th = Math.acos(cosT);   // angle between the runs
+    const t = r / Math.tan(th / 2);                                  // tangent length from the corner
+    const A = add(p[i], a, t), Bp = add(p[i], b, t);
+    const bis = nrm(add(a, b)), C = add(p[i], bis, r / Math.sin(th / 2));   // fillet centre
+    const u = nrm(sub(A, C)), v = nrm(sub(Bp, C)), phi = Math.acos(Math.max(-1, Math.min(1, u[0] * v[0] + u[1] * v[1] + u[2] * v[2])));
+    const n = Math.max(2, Math.ceil((phi * r) / step));
+    for (let k = 0; k <= n; k++) {   // slerp between u and v
+      const s = k / n, w1 = Math.sin((1 - s) * phi) / Math.sin(phi), w2 = Math.sin(s * phi) / Math.sin(phi);
+      out.push(add(C, [u[0] * w1 + v[0] * w2, u[1] * w1 + v[1] * w2, u[2] * w1 + v[2] * w2], r));
+    }
+  }
+  out.push(p[p.length - 1]);
+  return out;
+}
+// the two ends of a leg: mouth, outward axis (horizontal unit), mouth floor, approach point (1.0 m out), landing point
+// (a level pop with no input lands 3.1 m out, on the floor below: ENGINE.md §1.3)
+export function endsOf(leg) {
+  const p = leg.pts, n = p.length;
+  return [[p[0], p[1]], [p[n - 1], p[n - 2]]].map(([m, q], k) => {
+    const o = nrm([m[0] - q[0], 0, m[2] - q[2]]), fy = m[1] - 0.8;
+    const landY = leg.id.startsWith('express') && k === 1 ? 1.2 : fy;
+    return { k, pos: m, out: o, floorY: fy, approach: [m[0] + o[0] * 1.0, fy, m[2] + o[2] * 1.0], land: [m[0] + o[0] * 3.1, landY, m[2] + o[2] * 3.1] };
+  });
+}
+// which end is IN for a one-way leg (k = 0 = A) in a tide state ('up' = the first state, A→B)
+export function inEnd(leg, tide = 'up') {
+  if (leg.way === 'two') return [0, 1];
+  if (leg.way === 'one') return [0];
+  return tide === 'up' ? [0] : [1];
+}

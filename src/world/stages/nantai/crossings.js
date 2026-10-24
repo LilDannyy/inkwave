@@ -2,7 +2,7 @@
 // white water), the log bridge (split logs, rope rail), the lookout platform and its boardwalk. (registered by props.js)
 export function registerCrossings(D, H, T) {
   const { THREE, PI, TAU, HP, extrudeGeo } = H;
-  const { K, NS, tpl, kf, hash, pbox, ccyl, seg, colC, RAIL, letters, boardSign, railing, rock } = T;
+  const { K, NS, tpl, kf, hash, pbox, ccyl, seg, colC, RAIL, ROOF, letters, boardSign, railing, rock } = T;
   const WY = -1.6;
 
   // ------------------------------------------------------------------------------------------ the Old Stone Bridge
@@ -81,7 +81,7 @@ export function registerCrossings(D, H, T) {
       const gh = 3.7;
       for (const sz of [-1, 1]) {
         pbox(B, 'metal', K.navy, 0.2, gh - top + 2.9, 0.2, Wd / 2 + 0.25, (gh + top - 2.9) / 2, sz * 0.9);
-        colC(B, Wd / 2 + 0.25, top - 0.5, sz * 0.9, 0.24, gh - top + 0.6, 0.24);
+        colC(B, Wd / 2 + 0.25, top - 0.5, sz * 0.9, 0.24, gh - top + 0.6, 0.24, ROOF);   // [b5-int3] (off-limits: a hop + air dash off the boardwalk landed on a column top, 3.8 m, and stood there — dash-reach.js)
       }
       B.box('metal', K.navy, 0.3, 0.3, 2.3, Wd / 2 + 0.25, gh, 0, { r: 0.03 });
       B.box('metal', K.navy, 0.55, 0.5, 0.6, Wd / 2 + 0.25, gh + 0.35, 0, { r: 0.05 });

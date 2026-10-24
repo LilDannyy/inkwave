@@ -1,0 +1,31 @@
+[51225:1009/223113.969489:ERROR:ui/gl/angle_platform_impl.cc:48] mtl_command_buffer.mm:690 (onCommandBufferCompleted): Completed MTLCommandBuffer failed, and error is Discarded (victim of GPU error/recovery) (00000005:kIOGPUCommandBufferCallbackErrorInnocentVictim)
+== caldera tower track · heading 0° · length 100 / 100 m (Alpha's / Bravo's side) · speed 1.67 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 19 pieces · 15 runs, 0 inclines, 3 climbs, 1 drops · 100 m
+     run      s=     0  [0,1.8,0] → [0,1.8,6.2]  6.2 m
+     run      s=   6.2  [0,1.8,6.2] → [0,1.8,6.21]  0.01 m
+     DROP     s=  6.21  [0,1.8,6.21] → [0,1.2,6.21]  -0.6 m
+     run      s=  6.81  [0,1.2,6.21] → [0,1.2,26]  19.79 m
+     run      s=  26.6  [0,1.2,26] → [9.7,1.2,26]  9.7 m
+     run      s=  36.3  [9.7,1.2,26] → [9.79,1.2,26]  0.09 m
+     CLIMB    s= 36.39  [9.79,1.2,26] → [9.79,1.8,26]  0.6 m  onto [{"id":1249,"tag":"moorings","centre":[11.5,1.5,27.3],"size":[0.99,0.6,8.46]}]
+     run      s= 36.99  [9.79,1.8,26] → [19.5,1.8,26]  9.71 m
+     run      s=  46.7  [19.5,1.8,26] → [19.5,1.8,29]  3 m
+     run      s=  49.7  [19.5,1.8,29] → [19.5,1.8,29.05]  0.05 m
+     CLIMB    s= 49.75  [19.5,1.8,29.05] → [19.5,2.4,29.05]  0.6 m  onto [{"id":1091,"tag":"terrace","centre":[18.56,1.43,34.83],"size":[1.32,1.95,9.14]},{"id":1090,"tag":"terrace","centre":[20.05,1.43,34.83],"size":[1.66,1.95,9.13]}]
+     run      s= 50.35  [19.5,2.4,29.05] → [19.5,2.4,34]  4.95 m
+     run      s=  55.3  [19.5,2.4,34] → [9,2.4,34]  10.5 m
+     run      s=  65.8  [9,2.4,34] → [9,2.4,37.7]  3.7 m
+     run      s=  69.5  [9,2.4,37.7] → [9,2.4,37.79]  0.09 m
+     CLIMB    s= 69.59  [9,2.4,37.79] → [9,3.6,37.79]  1.2 m  onto [{"id":996,"tag":"yard","centre":[9,2.03,47.25],"size":[3.2,3.15,16.5]}]
+     run      s= 70.79  [9,3.6,37.79] → [9,3.6,45]  7.21 m
+     run      s=    78  [9,3.6,45] → [24,3.6,45]  15 m
+     run      s=    93  [24,3.6,45] → [24,3.6,52]  7 m
+   side Bravo (s<0), the mirror — pieces in the JSON: 19 pieces · 15 runs, 0 inclines, 3 climbs, 1 drops · 100 m
+   checkpoints [{"team":0,"index":0,"d":24.1,"dur":13.33,"at":[0,1.2,23.5]},{"team":0,"index":1,"d":58.3,"dur":13.33,"at":[16.5,2.4,34]},{"team":0,"index":2,"d":80,"dur":13.33,"at":[11,3.6,45]},{"team":1,"index":0,"d":24.1,"dur":13.33,"at":[0,1.2,-23.5]},{"team":1,"index":1,"d":58.3,"dur":13.33,"at":[-16.5,2.4,-34]},{"team":1,"index":2,"d":80,"dur":13.33,"at":[-11,3.6,-45]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 100 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -100 after 83.3 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   pictures (/private/tmp/claude-501/-Users-danielosling-Desktop-1/dd09cb28-6f60-4591-8992-4f7ec6fb49a8/scratchpad/fx2/tc): caldera-top.png, caldera-01-drop-s6.png, caldera-02-checkpoint1-s24.png, caldera-03-corner-s27.png, caldera-04-climb-s36.png, caldera-05-corner-s47.png, caldera-06-climb-s50.png, caldera-07-corner-s55.png, caldera-08-checkpoint2-s58.png, caldera-09-corner-s66.png, caldera-10-climb-s70.png, caldera-11-corner-s78.png, caldera-12-checkpoint3-s80.png, caldera-13-corner-s93.png, caldera-14-goal-s100.png
+   console errors: none
+RESULT_JSON {"map":"caldera","len":[100,100],"holes":0,"issues":0,"climbs":3,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}

@@ -2805,6 +2805,7 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 .iw-mode__beta { position: absolute; left: calc(var(--u) * 7.4); top: calc(var(--u) * 1.45); rotate: 2deg; }
 .iw-lob__beta { position: absolute; z-index: 5; right: calc(var(--u) * .5); top: calc(100% + var(--u) * 1.15); display: none; rotate: 3deg; }
 .iw-lobby.is-bossmode .iw-lob__beta { display: inline-flex; animation: iw-pop .4s var(--spring2); }
+.iw-lobby.is-betamode .iw-lob__beta { display: inline-flex; animation: iw-pop .4s var(--spring2); }
 .iw-res__beta { rotate: 2deg; }
 
 /* =====================================================================================
@@ -3217,3 +3218,59 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 /* (the stat labels whole at 960×600 too — INK COVERAGE: --fs-xs bottoms out at 11 px, the column didn't) */
 .iw-stat { grid-template-columns: max(calc(var(--u) * 8.8), calc(var(--fs-xs) * 11.5)) 1fr calc(var(--u) * 2.3) calc(var(--u) * 2.2); }
 .iw-ldr__detail .iw-stat { grid-template-columns: max(calc(var(--u) * 8.4), calc(var(--fs-xs) * 11.5)) 1fr; }
+
+/* [karp-face] Bazookarp: the results table's CARRIED and POPS columns; the pause strip's weir pips; a PREVIEW stage */
+.iw-ttable--karp .iw-ttable__head, .iw-ttable--karp .iw-prow { grid-template-columns: calc(var(--u) * 2.5) 1fr max(54px, calc(var(--u) * 5.6)) max(50px, calc(var(--u) * 5)) max(34px, calc(var(--u) * 3.2)) calc(var(--u) * 2.9) calc(var(--u) * 2.9); gap: calc(var(--u) * .4); }
+.iw-ttable--karp .iw-ttable__head { letter-spacing: .05em; }
+.iw-ttable--karp .iw-ttable__head > :nth-child(3), .iw-ttable--karp .iw-ttable__head > :nth-child(4) { font-size: .86em; letter-spacing: .02em; }
+.iw-ttable--karp .iw-ttable__head > :nth-child(3) i { display: none; }
+.iw-ttable--karp .iw-ttable__col i { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -.2em; }
+.iw-ttable--karp .iw-ttable__col i svg { width: 100%; height: 100%; }
+.iw-kpip { display: inline-block; width: .62em; height: .62em; margin: 0 .16em; rotate: 45deg; border-radius: 2px; background: currentColor; box-shadow: 0 0 0 1.5px #15121c; }
+.iw-pzone__team--a .iw-kpip { color: var(--ta); } .iw-pzone__team--b .iw-kpip { color: var(--tb); }
+.iw-kpip.is-low { color: #6b6f7a !important; }
+.iw-ticket__preview { position: absolute; right: calc(var(--u) * 3); top: calc(var(--u) * .4); z-index: 3; padding: .25em .55em; border-radius: 99px; background: #ffd54a; color: #15121c;
+  font: 900 var(--fs-xs) / 1 'Rubik', sans-serif; letter-spacing: .12em; box-shadow: 0 0 0 2px #15121c; transform: rotate(4deg); }
+.iw-ticket__beta { position: absolute; left: calc(var(--u) * .6); top: calc(var(--u) * .55); z-index: 4; font-size: max(8px, calc(var(--u) * .45)); }
+.iw-lstage__preview { position: absolute; right: calc(var(--u) * .7); top: calc(var(--u) * .7); z-index: 3; padding: .25em .55em; border-radius: 99px; background: #ffd54a; color: #15121c;
+  font: 900 var(--fs-xs) / 1 'Rubik', sans-serif; letter-spacing: .12em; box-shadow: 0 0 0 2px #15121c; }
+.iw-lstage__beta { position: relative; display: inline-flex; margin-left: calc(var(--u) * .45); vertical-align: .12em; font-size: max(8px, calc(var(--u) * .45)); rotate: 2deg; }
+/* [karp-face] the mode screen with Bazookarp listed: five cards in the row (narrower again), and its koi-coral card */
+.iw-modesel__row.is-five { gap: calc(var(--u) * 1.1); }
+.iw-modesel__row.is-five .iw-mode { width: calc(var(--u) * 17.2); height: calc(var(--u) * 36.4); }
+.iw-modesel__row.is-five .iw-mode__hero.is-boss { width: calc(var(--u) * 17.2); }
+.iw-modesel__row.is-five .iw-mode__splat { width: calc(var(--u) * 15); height: calc(var(--u) * 15); }
+.iw-modesel__row.is-five .iw-mode__squid { width: calc(var(--u) * 5.9); height: calc(var(--u) * 5.9); }
+.iw-modesel__row.is-five .iw-mode__zone { width: calc(var(--u) * 5.6); height: calc(var(--u) * 5.6); }
+.iw-modesel__row.is-five .iw-mode__tape .iw-display { font-size: calc(var(--u) * 1.42); }
+.iw-modesel__row.is-five .iw-mode__new { scale: .86; right: calc(var(--u) * -.35); top: calc(var(--u) * -1.5); }   /* ([karp-face] inside the 1.1 u gap: the next card covered it) */
+.iw-modesel__row.is-five .iw-mode__beta { left: calc(var(--u) * 1.5); top: calc(var(--u) * 4.1); rotate: -2deg; font-size: max(8px, calc(var(--u) * .66)); letter-spacing: .1em; }   /* (under the kicker: beside it, it ran into the next card) */
+.iw-modesel__row.is-five .iw-mode__blurb { margin: calc(var(--u) * 2.3) calc(var(--u) * 1.3) 0; font-size: max(10px, calc(var(--u) * .84)); }
+.iw-modesel__row.is-five .iw-mode__chips { gap: calc(var(--u) * .35); margin: auto calc(var(--u) * 1.1) calc(var(--u) * 1.2); }
+.iw-modesel__row.is-five .iw-mode__chips .iw-chip { font-size: max(9px, calc(var(--u) * .72)); padding: .3em .55em .3em .3em; }
+.iw-mode--bazookarp { --mc: #ff7448; --mc-rgb: 255, 116, 72; --mc-l: #ffc0a6; --mc-d: #b23c16; --mc-ink: #3a0e00; }
+.iw-mode--bazookarp .iw-mode__tape .iw-display { color: #2c0b00; }
+.iw-mode--bazookarp.is-focus .iw-mode__zone { animation: iw-mode-bob 1.2s ease-in-out infinite .25s; }
+/* [karp-face] How to Play with Bazookarp listed: four mode tabs, and its rules cards a touch more compact (they carry more
+   text than the other modes'), so the cards and the notes fit a small window */
+.iw-howto__modes.is-four .iw-seg__opt { font-size: .84em; letter-spacing: .03em; }
+.iw-howto__modes.is-four .iw-segico { gap: .35em; }
+.iw-howto__rules.is-karp { gap: calc(var(--u) * 1.1); }
+.iw-howto__rules.is-karp .iw-rule__art { height: calc(var(--u) * 7.4); margin-bottom: calc(var(--u) * .6); }
+.iw-howto__rules.is-karp .iw-rule__title { font-size: calc(var(--u) * 1.45); }
+.iw-howto__rules.is-karp .iw-rule__text { font-size: max(11px, calc(var(--u) * .88)); line-height: 1.3; }
+/* [karp-face] review round 1: on a short window (960×600) the Overtime note ran under the key bar — smaller art, tighter
+   cards and the note's short wording there */
+.iw-hnote__short { display: none; }
+@media (max-height: 720px) {
+  .iw-howto__rules.is-karp { gap: calc(var(--u) * .8); }
+  .iw-howto__rules.is-karp .iw-rule { padding: calc(var(--u) * .7) calc(var(--u) * .8) calc(var(--u) * .9); }
+  .iw-howto__rules.is-karp .iw-rule__art { height: calc(var(--u) * 4.6); margin-bottom: calc(var(--u) * .45); }
+  .iw-howto__rules.is-karp .iw-rule__text { line-height: 1.24; }
+  .iw-howto__rules.is-karp + .iw-howto__noteslot .iw-hnote__long { display: none; }
+  .iw-howto__rules.is-karp + .iw-howto__noteslot .iw-hnote__short { display: inline; }
+}
+@media (max-width: 1100px) {
+  .iw-howto__modes.is-four .iw-segico i { display: none; }
+  .iw-howto__modes.is-four .iw-seg__opt { font-size: .76em; letter-spacing: .01em; }
+}

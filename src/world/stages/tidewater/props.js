@@ -1693,7 +1693,7 @@ export function register(D, H) {
         B.tor(NS('gloss'), c, 0.4, 0.02, 0, 1.3, 0, { ry: HP, rs: 3, ts: 14 });
         B.pop();
       }
-      COL(B, -0.1, 0, -2.5, 0.4, 2.3, 2.5, { rail: true });
+      COL(B, -0.1, 0, -2.5, 0.4, 2.3, 2.5, { rail: true, roof: true });   // [b5-int3] (off-limits: its 2.3 m top held a kid — a dash off the booth's wall climb, dash-reach.js)
       // ---- the pier over the sea (outside the arena): deck at 0 from x = 0 to -58, pavilion at the end
       const L0 = -0.2, L1 = -60, W = 6.4, DK = K.woodLt;
       B.box(NS('wood'), DK, L0 - L1, 0.35, W, (L0 + L1) / 2, -0.175, 0, { r: 0.03 });

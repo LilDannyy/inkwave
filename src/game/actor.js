@@ -13,7 +13,7 @@
 //  · jump buffer + coyote time, apex hang, hard-landing recovery, fire buffer across form changes
 import * as THREE from 'three';
 import { G, emit, clamp, damp, angleDiff, smoothstep } from '../core/ctx.js';
-import { PLAYER, WEAPONS, SPECIALS, SUBS, TOWER } from '../config.js';
+import { PLAYER, WEAPONS, SPECIALS, SUBS, TOWER, BAZOOKARP } from '../config.js';
 import { makeContacts, Hit, GroundHit, WALKABLE } from './physics.js';
 import { WeaponRunner } from './weapons.js';
 import { MAIN_KITS } from './kits/registry.js';
@@ -22,6 +22,8 @@ import { sjFlightDur } from './jumpMarks.js';   // [b5-jumpui] the flight time t
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _fwd = new THREE.Vector3();
 const DOWN = new THREE.Vector3(0, -1, 0);
 const TAU = Math.PI * 2;
+const _rxO = new THREE.Vector3(), _rxD = new THREE.Vector3(), _rxH = new Hit(), _rxA = new THREE.Vector3();   // [b5-int3] (_roofExitDist, _roofSlide)
+const _RX_W0 = [0.5, 1.1], _RX_WH = [0.37, 0.5, 1.1];   // [b5-caldera] (_roofExitDist's wall rays over the feet; a hazard stage's also at a lip over a step)
 const _ZERO_MOVE = Object.freeze(new THREE.Vector3());   // move input while planted after a dualies dodge roll
 
 // Local-player gamepad rumble (subtle, scaled by settings.rumble, no-op without a pad).
@@ -31,6 +33,7 @@ export function rumble(actor, strong, weak, ms) {
 }
 
 const _dodgeV = new THREE.Vector3();
+const _dashV = new THREE.Vector3();   // [b5-sub-dash]
 export class Actor {
   constructor({ team, name, weapon = 'shooter', sub = null, special = null, isLocal = false, isBot = false, style = { hair: 0, skin: 0 }, slot = 0, CharacterClass }) {
     this.team = team; this.name = name; this.isLocal = isLocal; this.isBot = isBot; this.slot = slot;
@@ -100,6 +103,7 @@ export class Actor {
     this.hardLand = 0;           // 0..1 recovery weight after a hard landing
     this.coyote = 0;
     this.jumpBuffer = 0;
+    this.roofT = 0; this.roofDir = null; this.roofHeld = this.roofHeldSum = 0;   // [b5-caldera] (a spawn / teleport onto a roof starts its own slide: a kept roofDir slid it the old way unchecked)
     this.fireBuffer = 0;
     this.kidT = 99;              // time since becoming a kid (emerge delay for the first shot)
     this.climbExit = 0;
@@ -112,6 +116,7 @@ export class Actor {
     this._evSub = false; this._evEnemy = false; this._evClimb = false; this._evForm = 'kid';
     if (this.status) { this.status.track = 0; this.status.poison = 0; this.status.reveal = 0; this.status.shield = 0; }
     this._jumpBeacon = null;
+    this.carry = null;   // [b5-karp] carrying the Bazookarp: { since, sp, gun, kick, j } (set and cleared by bazookarp.js)
     this.weaponRunner?.reset();
     G.match?.stage?.actorReset(this);   // [b5-stagehooks] (a stage module's own per-actor state: a pipe ride, its cooldown)
   }
@@ -131,7 +136,7 @@ export class Actor {
 
   specialCost() { return this.weapon.specialCost; }
   specialFrac() { return clamp(this.special / this.specialCost(), 0, 1); }
-  specialReady() { return this.special >= this.specialCost() && !this.specialActive; }
+  specialReady() { return this.special >= this.specialCost() && !this.specialActive && !this.carry && !(this.isLocal && G.match?.karp?.lockT > 0); }   // [b5-karp] no special while carrying (or while a pick-up claim is out)
 
   addTurf(area) {
     if (area <= 0) return;
@@ -267,6 +272,7 @@ export class Actor {
     const firePressed = intent.fire && !prev.fire;
     const jumpPressed = intent.jump && !prev.jump;
     const subReleased = !intent.sub && prev.sub;
+    const subPressed = intent.sub && !prev.sub;   // [b5-sub-dash] (onPress subs: trySubPress below)
     const specialPressed = intent.special && !prev.special;
     if (intent.squid && !prev.squid) this._squidPressT = G.time;
     if (firePressed) this._firePressT = G.time;
@@ -277,7 +283,8 @@ export class Actor {
     this.lastDamage += dt; this.lastFire += dt; this.landT += dt; this.kidT += dt;
     this.hurtFlash = Math.max(0, this.hurtFlash - dt * 0.6);
     this.inkWarnCd -= dt;
-    this.jumpBuffer = jumpPressed ? P.jumpBuffer : Math.max(0, this.jumpBuffer - dt);
+    const wr = this.weaponRunner, dashing0 = wr.dashT > 0 && this.grounded;   // [b5-sub-dash] a jump pressed mid ground dash waits for its end
+    this.jumpBuffer = jumpPressed ? P.jumpBuffer : dashing0 ? this.jumpBuffer : Math.max(0, this.jumpBuffer - dt);
     this.fireBuffer = firePressed ? P.fireBuffer : Math.max(0, this.fireBuffer - dt);
     this.hardLand = Math.max(0, this.hardLand - dt / P.hardLandTime);
 
@@ -286,10 +293,13 @@ export class Actor {
     this.aimDir.set(Math.sin(this.aimYaw) * cp, Math.sin(this.aimPitch), Math.cos(this.aimYaw) * cp);
 
     // ---- super jump / specials in progress own the body
+    if ((this.roofT || this.roofHeld) && (this.superJumpState || this.specialActive?.body || this.specialActive?.pin || this.specialActive?.hang > 0)) this._roofOff();   // [b5-caldera] (review 9: the hold ends)
     if (this.superJumpState) { this._updateSuperJump(dt); this._finishFrame(dt); return; }
     const spx = this.specialActive;
-    if (spx && spx.body) { this._updateSpecial(dt); if (this.alive && !(SM && SM.kill(this))) this._finishFrame(dt); return; }   // [b5-stagehooks] kill: the lava
+    if (spx && spx.body) { if (wr.dashT > 0) wr.endDash();   // [b5-sub-dash] a body phase ends a dash (never paused, then resumed)
+      this._updateSpecial(dt); if (this.alive && !(SM && SM.kill(this))) this._finishFrame(dt); return; }   // [b5-stagehooks] kill: the lava
     if (specialPressed && this.specialReady()) { this._startSpecial(); this._finishFrame(dt); return; }
+    if (this.carry && (specialPressed || (intent.sub && this._subPressT === G.time))) emit('sub:cantuse', { actor: this, kind: 'karp' });   // [b5-karp] "Can't use your kit while carrying"
 
     // ---- form: squid while the swim button is held. Swim + fire / sub held together → the most recent press wins, so
     // diving mid-spray and popping out of the ink to shoot or throw both work instantly (the pop-out shot is buffered,
@@ -324,6 +334,8 @@ export class Actor {
     if (!this.climbing) this._horizontal(dt, isSquid, onEnemy);
     const dv = this.weaponRunner.dodgeVelocity(_dodgeV);
     if (dv) { this.vel.x = dv.x; this.vel.z = dv.z; }
+    const kick = this.carry && this.carry.kick && (this.carry.kick.x || this.carry.kick.z) ? this.carry.kick : null;   // [b5-karp] the Carp Shot's knockback, after the movement model
+    if (kick) { this.vel.x += kick.x; this.vel.z += kick.z; }
 
     // ---- dodge roll (twin pistols / dualies): jump pressed while firing and moving rolls instead of jumping. The
     // runner's tryDodge dispatches by weapon kind (it spends the ink, triggers the character's roll, emits the FX events)
@@ -332,18 +344,24 @@ export class Actor {
     // as big, so every cost and every "enough ink?" check comes to inkMul of what it was (here and round the weapon below)
     const inkMul = spx?.def?.inkUse || 1;
     if (inkMul !== 1) this.ink /= inkMul;
-    if (this.jumpBuffer > 0 && !isSquid && !this._spWeapon && this.weaponRunner.tryDodge(intent)) this.jumpBuffer = 0;
+    // [b5-sub-dash] an onPress sub (the Dash Pellet, SPEC §0.5): the press acts here, before the move, so the press frame
+    // already moves; while a dash runs it owns the horizontal velocity (enemy ink never slows it)
+    wr.trySubPress(intent.sub, subPressed);
+    { const dsv = wr.dashVelocity(_dashV, dt); if (dsv) { this.vel.x = dsv.x; this.vel.z = dsv.z; } }
+    const dashing = wr.dashT > 0;
+    if (this.jumpBuffer > 0 && !isSquid && !this._spWeapon && !this.carry && this.weaponRunner.tryDodge(intent)) this.jumpBuffer = 0;   // [b5-karp] (no roll while carrying)
     // kit weapons (kits/*.js) may take the jump press instead: MAIN_KITS[kind].jump(runner, intent) → true swallows it
     // (Sponge Mitts: fire + jump charges a leap; jump lets go of a wall)
-    if (this.jumpBuffer > 0 && !isSquid && MAIN_KITS[this.weapon.kind]?.jump?.(this.weaponRunner, intent)) this.jumpBuffer = 0;
+    const onRoof = this.grounded && this.ground.hit && this.ground.block >= 0 && this.isRoofFor(G.level.blocks[this.ground.block]);   // [b5-karp] isRoofFor
+    if (this.jumpBuffer > 0 && !isSquid && !dashing && !this.carry && !onRoof && MAIN_KITS[this.weapon.kind]?.jump?.(this.weaponRunner, intent)) this.jumpBuffer = 0;   // [b5-karp] (no Mitts leap while carrying) [b5-caldera] (nor off a roof: the roof gate below holds for a kit's jump too)
     if (inkMul !== 1) this.ink *= inkMul;
 
     // ---- jump (buffered, with coyote time). An off-limits top (a roof) is no ground to jump from: you slide off it, and
     // no coyote jump carries off its edge either (perches, railings and swim-jumps are ground as usual)
-    const onRoof = this.grounded && this.ground.hit && this.ground.block >= 0 && !!G.level.blocks[this.ground.block]?.roof;
-    this.coyote = this.grounded && !onRoof ? P.coyoteTime : onRoof ? 0 : this.coyote - dt;
+    // ([b5-sub-dash] none during a dash, and no coyote jump off a dash: it never gains height)
+    this.coyote = this.grounded && !onRoof ? P.coyoteTime : onRoof || (dashing && !this.grounded) ? 0 : this.coyote - dt;
     let jumped = false;
-    if (this.jumpBuffer > 0 && ((this.grounded && !onRoof) || this.coyote > 0) && !this.climbing) {
+    if (this.jumpBuffer > 0 && ((this.grounded && !onRoof) || this.coyote > 0) && !this.climbing && !dashing) {
       let jv = this.submerged ? P.swimJumpVel : P.jumpVel;
       if (onEnemy) jv *= 0.72;
       this.vel.y = jv;
@@ -355,10 +373,18 @@ export class Actor {
       emit('actor:jump', { actor: this, surface: this.groundTeam, swim: this.submerged });
     }
 
-    // ---- integrate + collide (feet + body)
-    this._integrate(dt, isSquid, jumped);
-    G.subs?.blockActor(this);
-    this._spawnBarrier();
+    // ---- integrate + collide (feet + body). [b5-sub-dash] a dash moves in substeps of ≤ 0.2 m (SPEC D1.3), so no wall,
+    // curtain, canopy, bubble, shell or spawn barrier is ever passed through at any frame rate
+    const fastN = dashing ? 0 : this._fastN(dt);   // [b5-int3] DECISIONS #22: a Twinfire roll / a Mitts leap in the dash's steps
+    if (dashing) this._dashSteps(dt, isSquid, jumped);
+    else if (fastN > 1) this._fastSteps(dt, isSquid, jumped, fastN);
+    else this._integrate(dt, isSquid, jumped);
+    if (kick) { this.vel.x -= kick.x; this.vel.z -= kick.z; const k = Math.exp(-dt / BAZOOKARP.gun.kickTau); kick.x *= k; kick.z *= k; if (Math.abs(kick.x) + Math.abs(kick.z) < 0.02) kick.set(0, 0, 0); }   // [b5-karp]
+    if (!dashing && !(fastN > 1)) {   // (the substep loops ran these in every substep)
+      G.subs?.blockActor(this);
+      this._spawnBarrier();
+    }
+    if (wr.dashT <= 0 && (this.grounded || this.climbing)) wr.airDashUsed = false;   // [b5-sub-dash] the air dash comes back on landing / a climb
 
     // ---- ink / hp
     if (onEnemy) {
@@ -403,6 +429,7 @@ export class Actor {
     if (inkMul !== 1) this.ink /= inkMul;   // [b5-zipcheer] (see above)
     // specials that replace the main weapon (zooka, stamp, blower, crab …) take the trigger; others may take the sub
     this._spWeapon = !!(spx && G.specials.weapon(this, spx, dt, winp));
+    if (this.carry) this._spWeapon = !!G.karpGun?.update(this, dt, winp) || true;   // [b5-karp] the trigger drives the Carp Shot; no main, no sub
     if (!this._spWeapon) this.weaponRunner.update(dt, winp);
     else if (this.weaponRunner.dodgeT > 0 || this.weaponRunner.dodge) this.weaponRunner.endDodge();   // (never a roll frozen mid-slide)
     if (inkMul !== 1) this.ink *= inkMul;
@@ -475,7 +502,7 @@ export class Actor {
     if (!this.grounded) {
       let target, accel, decel;
       if (isSquid) { target = Math.max(P.squidDrySpeed, sp); accel = P.squidAirAccel; decel = P.squidAirDecel; }
-      else { target = Math.max(this.specialActive?.speed ?? this.weaponRunner.moveSpeed(), P.airMinSpeed); accel = P.airAccel; decel = P.airDecel; }
+      else { target = Math.max(this.carry ? P.runSpeed * BAZOOKARP.speedMul : this.specialActive?.speed ?? this.weaponRunner.moveSpeed(), P.airMinSpeed); accel = P.airAccel; decel = P.airDecel; }   // [b5-karp] (a carrier: PLAYER's speed × 0.8, never the weapon's)
       const tvx = mh > 0.01 ? (mv.x / mh) * target * mag : 0, tvz = mh > 0.01 ? (mv.z / mh) * target * mag : 0;
       const dvx = tvx - vx, dvz = tvz - vz, dl = Math.hypot(dvx, dvz);
       const rate = (mh > 0.01 ? accel : decel) * dt;
@@ -489,13 +516,14 @@ export class Actor {
     } else if (isSquid) {
       vt = P.squidDrySpeed; A = P.squidAccel; aIn = 0.6; inKnee = 1; outKnee = 0.3; D = P.squidDecel; dMin = 0.5; dKnee = 2; W = P.squidTurn;
     } else {
-      vt = this.weaponRunner.moveSpeed(); A = P.runAccel; aIn = P.runAccelIn; inKnee = P.runInKnee; outKnee = P.runOutKnee;
+      vt = this.carry ? (G.karpGun?.charging(this) ? BAZOOKARP.chargeWalk : P.runSpeed * BAZOOKARP.speedMul) : this.weaponRunner.moveSpeed(); A = P.runAccel; aIn = P.runAccelIn; inKnee = P.runInKnee; outKnee = P.runOutKnee;   // [b5-karp]
       D = P.runDecel; dMin = P.runDecelMin; dKnee = P.runDecelKnee; W = P.turnRate;
       if (this.hardLand > 0) vt *= 1 - (1 - P.hardLandSlow) * this.hardLand;
     }
     const spx = this.specialActive;
     if (spx && spx.speed != null) { vt = spx.speed; if (spx.accel) { A = spx.accel; aIn = 1; D = Math.max(D, spx.accel); } }
-    if (onEnemy) { vt = Math.min(vt, P.enemyInkSpeed); A = Math.min(A, P.enemyInkAccel); D = Math.max(P.enemyInkDecel, 0); }
+    if (this.carry && isSquid) vt *= BAZOOKARP.speedMul;   // [b5-karp] swimming / squid on dry ground × 0.8
+    if (onEnemy) { vt = Math.min(vt, P.enemyInkSpeed * (this.carry ? BAZOOKARP.speedMul : 1)); A = Math.min(A, P.enemyInkAccel); D = Math.max(P.enemyInkDecel, 0); }
     if (this.status.poison > 0) vt *= SUBS.mist.slow;
     if (this.status.reveal > 0) vt *= SPECIALS.sonar.slow;
     if (mh < 0.01) {
@@ -565,7 +593,7 @@ export class Actor {
     }
     // off-limits tops (roofs, crane tops …): nobody can stand there — you slide off
     const rb = wasGrounded && this.ground.hit && this.ground.block >= 0 ? G.level.blocks[this.ground.block] : null;
-    if (rb && rb.roof) this._roofSlide(rb, dt); else if (this.roofT) { this.roofT = 0; this.roofDir = null; }
+    if (rb && this.isRoofFor(rb)) this._roofSlide(rb, dt); else if (this.roofT || this.roofHeld) this._roofOff();   // [b5-karp] isRoofFor [b5-caldera] _roofOff
     // balancing on a railing: the feet settle onto its line (unless you're stepping off it)
     if (rb && rb.rail && !isSquid) this._railCentre(rb, dt);
     if (wasGrounded) {
@@ -576,6 +604,7 @@ export class Actor {
       let g = P.gravity;
       if (this.vel.y < 0) g *= P.fallGravityMul;
       if (Math.abs(this.vel.y) < P.apexBand) g *= P.apexGravityMul;
+      { const wr = this.weaponRunner; if (this.vel.y < 0 && wr.dashT > 0 && wr.dashAirRule) g *= wr.dashGrav ?? 1; }   // [b5-sub-dash] an air dash flattens the fall (never the rise: no height gain)
       this.vel.y = Math.max(-P.maxFall, this.vel.y - g * dt);
     }
     const prevY = this.pos.y;
@@ -583,9 +612,80 @@ export class Actor {
     this._resolve(isSquid, prevY, wasGrounded);
   }
 
+  // [b5-sub-dash] a dash's frame (SPEC D1.3): `_integrate → blockActor → _spawnBarrier` in n = ceil(|v_h| dt / substep)
+  // substeps of ≤ 0.2 m — less than the body's radius, a curtain's half-width or a canopy's band, so the body is always
+  // pushed back out the side it came from. The velocity is set once, before them (a wall met removes what goes into it,
+  // the rest slides on); `jumped` reaches the first only; airTime grows by one frame's 1/60 when it was airborne in every
+  // substep (_resolve adds 1/60 a call). From the substep it's off the ground, the air rules: vy clamped to
+  // [airVyMin, airVyMax] once, and it counts as the air dash (gravity × airGravMul while falling: _integrate)
+  // [b5-int3] DECISIONS #22: the Twinfire roll and the Mitts leap take the dash's sub-step rule. At a low frame rate one
+  // frame's move (a roll's opening ~20 m/s, a pounce's up to ~20) carried the body more than its radius past a thin wall's
+  // middle, and the push-out finished the crossing on the far side. A frame whose move is over SUBS.dash.substep (0.2 m)
+  // runs in that many even substeps — _integrate, blockActor (curtains, canopies, the shell) and the spawn barrier in each
+  // — with the jump on the first only and airTime grown by one frame's 1/60 once (as _dashSteps). 0 or 1: one plain step.
+  _fastN(dt) {
+    const wr = this.weaponRunner, k = wr.kit;
+    if (!(wr.dodgeT > 0 || wr.dodge || (k && k.mitts && k.leaping))) return 1;
+    return Math.ceil((Math.hypot(this.vel.x, this.vel.z) * dt) / (SUBS.dash?.substep || 0.2));
+  }
+  _fastSteps(dt, isSquid, jumped, n) {
+    const air0 = this.airTime;
+    let air = true;
+    for (let i = 0; i < n; i++) {
+      this._integrate(dt / n, isSquid, jumped && i === 0);
+      G.subs?.blockActor(this);
+      this._spawnBarrier();
+      if (this.grounded) air = false;
+    }
+    if (air) this.airTime = air0 + 1 / 60;
+    this.weaponRunner.fastSteps = n;   // (tests)
+  }
+  _dashSteps(dt, isSquid, jumped) {
+    const wr = this.weaponRunner, D = SUBS.dash;
+    const airRule = () => { if (!this.grounded && !wr.dashAirRule) { wr.dashAirRule = true; wr.airDashUsed = true; this.vel.y = clamp(this.vel.y, D.airVyMin, D.airVyMax); } };
+    const n = Math.max(1, Math.ceil((Math.hypot(this.vel.x, this.vel.z) * dt) / (D.substep || 0.2)));
+    const air0 = this.airTime;
+    let air = true;
+    this._dashFlat = true;   // (no height from collisions either: pressed into a ledge's corner at 29 m/s, the body's push-out
+                             // along the corner's normal would walk it up over the top a little every substep)
+    for (let i = 0; i < n; i++) {
+      airRule();
+      this._integrate(dt / n, isSquid, jumped && i === 0);
+      G.subs?.blockActor(this);
+      this._spawnBarrier();
+      if (this.grounded) air = false;
+    }
+    this._dashFlat = false;
+    airRule();
+    if (air) this.airTime = air0 + 1 / 60;
+    wr.dashSteps = n;   // (tests)
+    wr.tickDash(dt);
+  }
+  // [b5-sub-dash] an airborne dash substep whose body was pushed UP by a floor-like face (collideBody: a slope gentler than
+  // ~17°, or a top's face; steeper ones push it sideways under _dashFlat): it lands on what's under its feet, within the
+  // ledge assist as any landing, instead of riding up the face while still airborne. At dash speed that ride raised the
+  // feet 0.1–0.25 m over a plain hop's reach before the assist landed them (dash-reach.js: lockgate's cart ramp, 1.93 m
+  // over the start; saltpan's pitched shed roof, 2.13 m; a plain hop from the same spots 1.79 / 1.90). False (no ground
+  // under the feet in reach): the push stands, as before.
+  _dashLand(isSquid, prevY, y0, gh) {
+    const P = PLAYER, top = Math.max(prevY, y0);
+    G.physics.groundProbe(this.pos.x, y0, this.pos.z, (top - y0) + P.ledgeAssist, 0.02, P.footRadius, gh, isSquid);
+    if (!isSquid) this._railFeet(gh, y0 - 0.02, top + P.ledgeAssist);
+    if (!gh.hit || gh.y < y0 - 0.02 || gh.y > top + P.ledgeAssist + 1e-3) return false;
+    const pop = gh.y - prevY;
+    this.pos.y = gh.y;
+    if (pop > 0.035) this.smoothY -= pop;
+    return true;
+  }
+
   // Standing on a roof block: pushed toward its nearest edge (a pitched top: downhill), picking up speed until you drop
   // off. The direction sticks for the whole slide (adjacent roof boxes would otherwise push back and forth at a seam);
   // blocked by a wall for a moment → turn 90° and try the next way out. Input still steers across the slide.
+  // [b5-int3] the way off: the block's nearest edge (a pitched top: downhill) unless that way doesn't get off the roof within
+  // 8 m (a wall, or another roof block running on) and another does sooner — then that one (_roofExit). Blocked for a
+  // moment: the next nearest way off, else a quarter turn. (dash-reach.js, calamari: a kid on the 2 m wide hill-wall top
+  // slid its 'nearest edge' onto the next roof block, into the hill, a quarter turn into a building, then 16 m along the
+  // wall — still on it after 3 s; the way off, a 1 m step to the street below, was never tried)
   _roofSlide(b, dt) {
     const n = b.axes[1];
     if (!this.roofDir || !this.roofT) {
@@ -597,16 +697,163 @@ export class Actor {
         const s = (b.half.x - Math.abs(lx) < b.half.z - Math.abs(lz)) ? [ax, Math.sign(lx) || 1] : [az, Math.sign(lz) || 1];
         this.roofDir.set(s[0].x * s[1], 0, s[0].z * s[1]);
       }
+      // [b5-int3] that way, unless it doesn't get off within 8 m and another does — or, on a flat top, another gets off over
+      // 0.3 m sooner (a row of off-limits tops a footprint apart: crossmarket's balconettes 0.75 m apart slid a kid off the
+      // end of one onto the next and back, the way off their open front 0.3 m away)
+      this._rxHz = false; this.roofHeld = this.roofHeldSum = 0;   // [b5-caldera] (_rxHz: set when a way off is refused for its landing, _roofLandWet)
+      const e0 = this._roofExitDist(this.roofDir.x, this.roofDir.z);
+      if (e0 === Infinity) { if (this._roofExit(b, null, this.roofDir) === Infinity && this._rxHz) this._roofHold(); }   // [b5-caldera] (every way off lands in the lava)
+      else if (n.y >= 0.995 && this._roofExit(b, null, _rxA) < e0 - 0.3) this.roofDir.copy(_rxA);
+      this.roofHz = !!G.match?.stage?.h.wet.length;   // [b5-caldera] (a stage with a hazard: the slide owns the move, below)
     }
     const d = this.roofDir;
+    if (this.roofHeld > 0) { this._roofHeldStep(b, dt); return; }   // [b5-caldera] (held: _roofHeldStep)
     this.roofT = (this.roofT || 0) + dt;
     const moved = (this.pos.x - this.roofP.x) * d.x + (this.pos.z - this.roofP.z) * d.z;
     this.roofP.copy(this.pos);
     this.roofStall = this.roofT > 0.1 && moved < 0.3 * dt ? this.roofStall + dt : 0;
-    if (this.roofStall > 0.25) { d.set(-d.z, 0, d.x); this.roofStall = 0; }
+    if (this.roofStall > 0.25) { this._rxHz = false; if (this._roofExit(b, d, d) === Infinity) { if (!this._rxHz) d.set(-d.z, 0, d.x); else if (d.x || d.z) this._roofHold(); } this.roofStall = 0; }   // [b5-int3] (the next way off) [b5-caldera] (none but into the lava: held)
     const want = Math.min(9, 3 + 14 * this.roofT);
     const along = this.vel.x * d.x + this.vel.z * d.z;
-    if (along < want) { this.vel.x += d.x * (want - along); this.vel.z += d.z * (want - along); }
+    // [b5-caldera] on a stage with a hazard (the lava) the slide owns the move: along the way off it checked, at its speed or
+    // a run's, nothing across it (a landing's drift or a steer across the slide threw kids off a cover's lava side onto a
+    // narrow coping and past it, review 7); held (no way off but into the lava): _roofHeldStep
+    if (this.roofHz) { if (d.x || d.z) { const v = Math.max(want, Math.min(along, 6.5)); this.vel.x = d.x * v; this.vel.z = d.z * v; } }
+    else if (along < want) { this.vel.x += d.x * (want - along); this.vel.z += d.z * (want - along); }
+  }
+  // [b5-caldera] every way off lands in the lava: held where it is (review 8, the lead's rule: no perch, no fling). The slide's
+  // clock stays at its start while held (a re-check judges, and a slide launches, at the slow push 3 m/s); every 0.25 s the
+  // ways off are looked at again (one dry now: the slide starts along it), and after 0.6 s (the player sees what happened)
+  // the stage rescues the kid (G.match.stage.rescue: the nearest dry node within 6 m, a brief invulnerability; lava.js)
+  _roofHold() { this.roofDir.set(0, 0, 0); this.vel.x = 0; this.vel.z = 0; this.roofT = 1e-3; if (!(this.roofHeld > 0)) this.roofHeld = 1e-4; }
+  // (review 9) the slide and its hold end together wherever they end — off the roof, a super jump, a special that owns the
+  // body: a hold left any other way than the rescue kept roofHeld, and the HUD's line stuck on NO FOOTING → rescued
+  _roofOff() { this.roofT = 0; this.roofDir = null; this.roofHeld = this.roofHeldSum = 0; }
+  _roofHeldStep(b, dt) {
+    const h0 = this.roofHeld, s0 = this.roofHeldSum || 0, q = Math.floor((h0 + dt) / 0.25) > Math.floor(h0 / 0.25);
+    this.roofT = 1e-3; this.vel.x = 0; this.vel.z = 0; this.roofHeld += dt; this.roofHeldSum = s0 + dt;
+    if (q && this._roofExit(b, null, _rxA) < Infinity) { this.roofDir.copy(_rxA); this.roofHeld = 0; this.roofStall = 0; this.roofP.copy(this.pos); return; }
+    if (this.roofHeldSum >= 0.6 && (s0 < 0.6 || q) && G.match?.stage?.rescue(this)) { this.roofHeld = this.roofHeldSum = 0; this.roofT = 0; this.roofDir = null; }   // (0.6 s held in all on this top)
+  }
+
+  // [b5-int3] how far along (dx, dz) a kid sliding from here gets off the roof it's on: the first 0.3 m step where no part
+  // of its footprint is over an off-limits top (a drop — over 0.6 m down, or none — or a top that isn't off-limits for it)
+  // and stays so for the next 0.6 m (it is still sliding on as it drops) — Infinity when a wall (knee or chest high) shuts
+  // that way first, or none within 8 m
+  _roofExitDist(dx, dz, maxD = 8) {
+    const FOOT = PLAYER.footRadius;   // [b5-int3]
+    const y = this.pos.y, O = _rxO, D = _rxD, H = _rxH, L = G.level;
+    // [b5-caldera] on a stage with a hazard, from the roof top under the feet there (ry: a chain of tops at 7.6–7.9 m walked a kid
+    // into a 0.4 m lip unseen from its start's height, which turned it over the outer wall) and from a lip the slide can't step
+    const hz = !!G.match?.stage?.h.wet.length, WH = hz ? _RX_WH : _RX_W0;
+    const wall = (px, pz) => { D.set(dx, 0, dz); for (const h of WH) if (G.physics.raycast(O.set(px, (hz ? ry : y) + h, pz), D, 0.3 + PLAYER.radius, H).hit && Math.abs(H.normal.y) < 0.5) return true; return false; };
+    // (the feet over an off-limits top here: the centre and the footprint's four points — a kid's feet are held by any top
+    // the footprint covers, so a gap narrower than it is no way off: crossmarket's row of balconettes 0.75 m apart sent a
+    // kid sliding off one onto the next and back for 3 s)
+    const over = (px, pz) => {
+      D.set(0, -1, 0);
+      for (let k = 0; k < 5; k++) {
+        const ox = k === 1 ? FOOT : k === 2 ? -FOOT : 0, oz = k === 3 ? FOOT : k === 4 ? -FOOT : 0;
+        const g = G.physics.raycast(O.set(px + ox, y + 0.3, pz + oz), D, 8, H);
+        if (!g.hit || H.point.y < y - 0.6) continue;
+        const gb = L.blocks[H.block];
+        if (gb && this.isRoofFor(gb)) { ry = H.point.y; return true; }   // [b5-caldera] ry
+      }
+      return false;
+    };
+    let px = this.pos.x, pz = this.pos.z, ry = y;   // [b5-caldera] (ry: the roof top last under the feet — the slide's height at its way off)
+    for (let s = 0.3; s <= maxD + 1e-6; s += 0.3) {
+      if (wall(px, pz)) return Infinity;
+      px += dx * 0.3; pz += dz * 0.3;
+      if (over(px, pz)) continue;
+      // (and clear for the next 0.6 m — a wall there ends the look: it drops beside it. At 1/24 a kid sliding 3.5 m/s off the
+      // end of one balconette crossed the 0.43 m where neither holds its feet in three frames, dropped 2 cm, and the next one's
+      // end caught it — back and forth for 3 s, dash-reach.js 1/24)
+      let qx = px, qz = pz, clear = true;
+      for (let j = 0; j < 2 && clear; j++) { if (wall(qx, qz)) break; qx += dx * 0.3; qz += dz * 0.3; if (over(qx, qz)) clear = false; }
+      if (clear) { if (!this._roofLandWet(px, pz, dx, dz, s, ry)) return s; this._rxHz = true; return Infinity; }   // [b5-caldera] (a way off into the lava is none)
+    }
+    return Infinity;
+  }
+  // the way off that gets there soonest, of the block's four sides and four corners (not `not`, the way just blocked) →
+  // into `out`, its distance; Infinity when none does within 8 m (out untouched)
+  _roofExit(b, not, out) {
+    const ax = b.axes[0], az = b.axes[2];
+    let best = Infinity, bx = 0, bz = 0;
+    for (const [u, w] of [[1, 0], [-1, 0], [0, 1], [0, -1], [0.7071, 0.7071], [0.7071, -0.7071], [-0.7071, 0.7071], [-0.7071, -0.7071]]) {
+      const x = ax.x * u + az.x * w, z = ax.z * u + az.z * w, l = Math.hypot(x, z) || 1, dx = x / l, dz = z / l;
+      if (not && dx * not.x + dz * not.z > 0.95) continue;
+      const e = this._roofExitDist(dx, dz);
+      if (e < best - 1e-6) { best = e; bx = dx; bz = dz; }
+    }
+    if (best === Infinity) return Infinity;
+    out.set(bx, 0, bz);
+    return best;
+  }
+  // [b5-caldera] would a kid sliding off this way come down where a stage hazard takes it (the lava: G.match.stage.wet)?
+  // From the way's exit (px, pz), s m along the slide, it leaves at the slide's speed there (v = √(w² + 28 s): the push w
+  // now, 14 m/s² more; held, w is the slow push 3) or at a run's (6.5). In the air (review 8) an idle kid brakes at
+  // PLAYER.airDecel (4 m/s²) and one steering back at airAccel (20): the earliest landing is the steer-back arc's (x = v·t −
+  // ½·20·t², never behind the exit; falling at 30 m/s², downhill off a pitched top), the latest the fast arc's (6.5 m/s
+  // kept, 22 m/s²; a face over that arc in the way — a lip the body meets — refuses the way: it would turn the kid). Every
+  // 0.15 m from the earliest landing to 0.6 m past the latest the floor under the footprint (a seam the feet span is no gap)
+  // must be floor and dry now and 3 s on (a rise: no slide onto floor about to drown). No hazard on the stage: false.
+  // lava-audit rule 47
+  _roofLandWet(px, pz, dx, dz, s, y0 = this.pos.y) {
+    const S = G.match?.stage;
+    if (!S || !S.h.wet.length) return false;
+    const P = PLAYER, L = G.level, F = P.footRadius, w = Math.min(9, 3 + 14 * (this.roofT || 0)), n = this.groundN;
+    const vLo = Math.min(9, Math.sqrt(w * w + 28 * s)), vHi = Math.max(vLo, 6.5), vy0 = Math.min(0, (-vLo * (dx * n.x + dz * n.z)) / Math.max(0.35, n.y));
+    // (the floor under a footprint point, leaving out off-limits tops in the slide's own band — within 0.6 m below its top, as
+    // _roofExitDist's over() — : groundHeight and over()'s ray disagree near an edge, and a kid sliding off a vent hood's
+    // corner "landed" on the hood itself 0.15 m past its exit, the lava beyond never looked at)
+    const qb = (this._rlQ ||= []), gh = (x, z) => {
+      let best = -Infinity;
+      for (const id of L.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, qb)) {
+        const b = L.blocks[id], n = b.axes[1];
+        if (!b.solid || n.y < 0.5) continue;
+        const y = b.center.y + n.y * b.half.y - (n.x * (x - b.center.x - n.x * b.half.y) + n.z * (z - b.center.z - n.z * b.half.y)) / n.y;
+        if (y > y0 + 0.05 || y <= best || (y >= y0 - 0.6 && this.isRoofFor(b)) || !L.pointInBlock(b, _rxO.set(x, y - 0.01, z), 0.001)) continue;
+        best = y;
+      }
+      return best;
+    }, fl = (this._rlF ||= []);
+    const floor = (k) => { if (fl[k] === undefined) { const x = px + dx * k * 0.15, z = pz + dz * k * 0.15; fl[k] = Math.max(gh(x, z), gh(x + F, z), gh(x - F, z), gh(x, z + F), gh(x, z - F)); } return fl[k]; };
+    fl.length = 0;
+    let kE = -1, kF = -1;
+    for (let t = 1 / 60; t < 2 && kE < 0; t += 1 / 60) {   // (the earliest: steering back)
+      const k = Math.floor(Math.max(0, vLo * t - 0.5 * P.airAccel * t * t) / 0.15), y = y0 + vy0 * t - 15 * t * t;
+      if (y <= Math.max(floor(k), floor(k + 1))) kE = k;
+    }
+    const R = P.radius, top = (x, z) => L.groundHeight(x, z, y0 + 1.6);
+    for (let k = 1; k <= 80 && kF < 0; k++) {   // (the latest; a face over the arc in the way — a lip the body meets — is no way: it turns the kid)
+      const x = px + dx * k * 0.15, z = pz + dz * k * 0.15, y = y0 - 11 * ((k * 0.15) / vHi) ** 2;
+      if (Math.max(top(x, z), top(x - dz * R, z + dx * R), top(x + dz * R, z - dx * R)) > y + P.ledgeAssist) return true;
+      if (y <= floor(k)) kF = k;
+    }
+    if (kE < 0 || kF < 0) return true;
+    for (let k = Math.min(kE, kF), k1 = kF + 4; k <= k1; k++) {
+      const f = floor(k);
+      if (!(f > P.waterY) || S.wet(px + dx * k * 0.15, pz + dz * k * 0.15, f, 3)) return true;
+    }
+    // [b5-caldera] (review 9) off a tall top a kid steering back comes down behind the way off, or beside it — a face it meets
+    // on the way down turns the steer along it, and it lands with the speed it steered back at: B = ½·20·t² − v·t past the
+    // exit (t its fall to the exit's floor; v 0.85 × the slide's: the push's ramp and a frame's step leave it slower, and B is
+    // a difference of two large numbers), and 0.35 m more to stop. Every point within that of the exit that a body can stand
+    // at must be over dry floor (under the body's middle, a seam ≤ 0.24 m bridged; now and 3 s on): the outer walls' ends a
+    // Mitts leap reaches stand over a lava slot or beside the lake, and a kid steering back off them came down in it
+    const yF = floor(0);
+    let tL = 0; for (let t = 1 / 60; t < 2 && yF > -Infinity; t += 1 / 60) if (y0 + vy0 * t - 15 * t * t <= yF) { tL = t; break; }
+    const B = 0.5 * P.airAccel * tL * tL - 0.85 * vLo * tL;
+    if (B > 0.05) {
+      const dry = (x, z) => { const f = Math.max(gh(x, z), gh(x + 0.12, z), gh(x - 0.12, z), gh(x, z + 0.12), gh(x, z - 0.12)); return f > P.waterY && !S.wet(x, z, f, 3); };
+      if (!dry(px, pz)) return true;
+      for (let r = 0.15, rr = B + 0.35; r <= rr + 1e-6; r += 0.15) for (let i = 0, na = Math.max(8, Math.ceil((2 * Math.PI * r) / 0.3)); i < na; i++) {
+        const a = (i / na) * 2 * Math.PI, x = px + Math.cos(a) * r, z = pz + Math.sin(a) * r;
+        if (!L.pointInside(_rxO.set(x, yF + 0.6, z), 0) && !dry(x, z)) return true;   // (inside a wall: no body there)
+      }
+    }
+    return false;
   }
 
   // Body (walls/ceilings) then feet (ground stick / landing). `stick` = we were grounded and did not jump.
@@ -614,7 +861,8 @@ export class Actor {
     const P = PLAYER;
     const lift = isSquid ? P.squidBodyLift : P.stepUp;
     const height = isSquid ? P.squidHeight : P.height;
-    const c = G.physics.collideBody(this.pos, P.radius, lift, height, this.contacts, stick, isSquid);
+    const y0 = this.pos.y;
+    const c = G.physics.collideBody(this.pos, P.radius, lift, height, this.contacts, stick || this._dashFlat, isSquid, 3, prevY);   // [b5-sub-dash] (a dash: walls push it out sideways only, never up over a ledge's corner) [b5-int3] (prevY: never up through a block's top more than a step over the feet)
     if (c.ceiling && this.vel.y > 0) this.vel.y = 0;
     if (c.wall) {
       const n = c.wallNormal;
@@ -635,6 +883,8 @@ export class Actor {
         // discontinuities (curbs, steps up / down) are eased visually; slope following and ramp creases stay exact
         if (Math.abs(dy) > 0.06) this.smoothY -= dy;
       }
+    } else if (this._dashFlat && c.ground && this.pos.y > y0 + 1e-4 && this._dashLand(isSquid, prevY, y0, gh)) {
+      grounded = true;   // [b5-sub-dash] an airborne dash's body met a gentle slope or a top: it lands (_dashLand)
     } else if (this.vel.y <= 0.5) {
       // landing: probe from the highest point this frame passed through (never tunnels), with ledge assist
       const top = Math.max(prevY, this.pos.y);
@@ -712,8 +962,15 @@ export class Actor {
     }
   }
 
+  // [b5-karp] an off-limits top for this actor: a roof, or (carrying the Bazookarp) a Treehills hedge (SPEC §2.9)
+  isRoofFor(b) { return !!b && (!!b.roof || (!!this.carry && !!b.tag && b.tag.startsWith('plant:'))); }
+
   _spawnBarrier() {
-    const pad = G.level.spawnPads[this.enemyTeam];
+    if (this.carry) { const k = this._padBarrier(G.level.spawnPads[this.team]) | this._padBarrier(G.level.spawnPads[this.enemyTeam]); if (k && this.isLocal) G.match?.karp?.refuse?.(this, 'spawn'); G.match?.karp?.field.pushOutBlock(this); return; }   // [b5-karp] a carrier enters neither spawn, nor a carrierBlock ([karp-face] "You can't take it into a spawn")
+    this._padBarrier(G.level.spawnPads[this.enemyTeam]);
+  }
+  // (true when it pushed)
+  _padBarrier(pad) {
     const R = G.level.spawnBarrier;
     const dx = this.pos.x - pad.x, dz = this.pos.z - pad.z;
     const d = Math.hypot(dx, dz);
@@ -722,7 +979,9 @@ export class Actor {
       this.pos.x += dx * k; this.pos.z += dz * k;
       const vn = (this.vel.x * dx + this.vel.z * dz) / Math.max(d, 0.01);
       if (vn < 0) { this.vel.x -= (dx / d) * vn * 1.6; this.vel.z -= (dz / d) * vn * 1.6; }
+      return true;
     }
+    return false;
   }
 
   // ------------------------------------------------------------------ wall climb
@@ -766,7 +1025,7 @@ export class Actor {
     const capped = hu.hit && Math.abs(hu.normal.y) < 0.5 && !this._wallInk(hu);
     // climb speed eases in (no instant 0 → 7.5 m/s snap), cling when the stick is neutral, and eases toward the
     // ledge-pop speed as the top comes into reach (so the pop never yanks the squid's vertical speed)
-    let want = capped ? 0 : P.climbSpeed * clamp(into, 0, 1) * mag;
+    let want = capped ? 0 : P.climbSpeed * (this.carry ? BAZOOKARP.speedMul : 1) * clamp(into, 0, 1) * mag;   // [b5-karp]
     if (!hu.hit && want > 0) want = Math.min(want, Math.sqrt(2 * P.gravity * P.apexGravityMul * (P.ledgePopClear + 0.3)));
     const a = P.climbAccel * dt * (want > this.climbV ? 1 : 1.6);
     this.climbV = this.climbV < want ? Math.min(want, this.climbV + a) : Math.max(want, this.climbV - a);
@@ -775,8 +1034,9 @@ export class Actor {
     const n = h.normal;
     const side = _v2.set(mv.x, 0, mv.z);
     side.addScaledVector(n, -side.dot(n));
-    this.vel.x = side.x * P.climbSideSpeed - n.x * 1.2;
-    this.vel.z = side.z * P.climbSideSpeed - n.z * 1.2;
+    const css = P.climbSideSpeed * (this.carry ? BAZOOKARP.speedMul : 1);   // [b5-karp]
+    this.vel.x = side.x * css - n.x * 1.2;
+    this.vel.z = side.z * css - n.z * 1.2;
     this.anim.wallNormal.copy(n);
   }
 
@@ -822,7 +1082,7 @@ export class Actor {
     }
     return this.pos;
   }
-  canSuperJump() { return this.alive && !this.superJumpState && (!this.specialActive || this.specialActive.free) && G.match?.playing() && !(G.match.stage && !G.match.stage.canSuperJump(this)); }   // [b5-stagehooks] (not mid-pipe)   // ([drainbow] free: a special that leaves you be)
+  canSuperJump() { return this.alive && !this.carry && !(this.isLocal && G.match?.karp?.lockT > 0) && !this.superJumpState && (!this.specialActive || this.specialActive.free) && G.match?.playing() && !(G.match.stage && !G.match.stage.canSuperJump(this)); }   // [b5-stagehooks] (not mid-pipe)   // ([drainbow] free: a special that leaves you be)
 
   // Launch toward an ally (or a fixed point). Charge in place as a glowing squid, then arc through the sky.
   // opts.instant: skip the ~0.75 s crouch charge and launch on the next frame; opts.home: an Ink Jet / Zipline jump
@@ -998,6 +1258,7 @@ export class Actor {
       if (G.physics.los(_v2.copy(c).setY(c.y + 0.8), _v)) G.projectiles.applyHit(this, a, dmg, 'slam');
     }
     G.subs?.damageArea(_v.copy(c).setY(c.y + 0.5), sp.radius, 60, this.team, this);   // [b5-deploy] enemy devices (and special objects) in the slam
+    G.objTargets?.splash(this, _v.copy(c).setY(c.y + 0.5), sp.radius, sp.damageMax, sp.damageMin, 'slam');   // [b5-karp] the Roe Shell (a special: × 0.5)
   }
 
   addTurfNoSpecial(area) { if (area > 0) { this.stats.turf += area; emit('turf', { actor: this, area }); } }

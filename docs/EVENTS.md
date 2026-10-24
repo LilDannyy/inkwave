@@ -21,6 +21,9 @@ screen-FX modules should subscribe to these instead of editing gameplay code.
 | `actor:<name>` | `{ actor, surface, ...data }` — re-emitted from `character.onEvent(name, data)`; surface 0 dry · 1 own ink · 2 enemy ink | actor.js wiring |
 | `actor:added` | `{ actor }` — online Practice: someone dropped into the running session (`{k:'pj'}`) | net/netmatch.js addActor |
 | `actor:loadout` | `{ actor }` — online Practice: a remote squidkid's new loadout landed (`['lo' …]`) | net/netmatch.js |
+| `sub:cantuse` | `{ actor, kind, reason? }` — a sub refused the press / throw ("Can't use"); `reason` (`[b5-sub-dash]`, a kit's `blockedWhy`: "Already dashing", "Air dash used", "Rolling", "Mid-leap") is the HUD callout's second line | weapons.js (the sub block, trySubPress), kits |
+| `sub:dash` | `{ actor, from, dir, air, remote? }` — `[b5-sub-dash]` a Dash Pellet dash: the take-off point, the unit way it went (horizontal), whether it was the air dash; `remote`: a ghost's, from its owner's record | kits/dash.js |
+| `bomb:explode` (dash) | `{ actor, pos, team, radius: 2.2, kind: 'dash' }` — the pellet's pop at the take-off point (every screen; a ghost's never hurts) | kits/dash.js |
 
 ## To add
 | event | payload |
@@ -91,6 +94,11 @@ longer emitted.
 | `sub:land` / `sub:arm` / `sub:cloud` / `sub:destroyed` | `{ kind, pos, team, radius? }` | subs.js |
 | `sub:charge` | `{ actor, kind: 'shaker', level, max }` — the Shaker Bomb in hand reached a new charge (2, then 3 = max) | kits/shaker.js |
 | `sub:lock` / `sub:end` | `{ kind: 'waddle', pos, team, actor, target }` / `{ kind, why, team, pos }` (why: reached · travel · life · lost · stuck · fuse · popped · sea · fell · cleared) | kits/waddle.js |
+| `sub:charge` (glide) | `{ actor, kind: 'glide', level, max }` — a Glide Bomb's cook in the hand reached a level (1, 2, 3 = full) | kits/glide.js |
+| `sub:use` (glide) | `{ actor, kind: 'glide', cook }` — released (cook: the seconds it was cooked) | kits/glide.js |
+| `glide:bounce` | `{ pos, kind, speed, team, who, ghost, byRec }` — a Glide Bomb bounced (kind: wall · mover · kid · curtain · sentry · shell; who: the kid; byRec: a ghost's clonk played from its owner's `[4]` at the bounce) | kits/glide.js |
+| `glide:slip` / `glide:fizzle` | `{ actor }` — held a second past full cook it slipped out (thrown) / a cook dropped in the hand (no ink) | kits/glide.js |
+| `glide:end` | `{ why, pos, team }` — ended without a blast (why: sunk · popped · smashed) | kits/glide.js |
 | `zones:zone` | `{ zone, owner }` — one zone taken (≥ ZONES.control ink, 70 %, kept over that line for ZONES.flipHold s) or neutralised (owner −1: the other team ≥ ZONES.contest, likewise held); a taken zone is then flooded with the taker's ink | zones.js |
 | `zones:control` | `{ owner, prev, objective }` — the live objective's holder changed (owner −1 = neutral) | zones.js |
 | `zones:contest` | `{ zone, holder, share }` — the other team has inked a held zone to the warning share (ZONES.warn) | zones.js |
@@ -98,5 +106,19 @@ longer emitted.
 | `zones:active` | `{ objective, zones, final, moved }` — rotation (final = the last-30-s centre lock) | zones.js |
 | `zones:overtime` | `{ losing }` | zones.js |
 | `zones:end` | `{ winner, reason, counts }` (reason: knockout · time · comeback · retake · neutralised · overtime-cap) | zones.js |
-| `device:hit` | `{ attacker, kind, team, damage, obj, pos }` — enemy fire struck a device (kind: beacon · sprinkler · seeker · surf); the shooter's hit marker hangs on it (never for a ghost's shot) | deployables.js struck |
-| `device:down` | `{ kind, team, pos, by, how }` — a device destroyed: how 'shot' (0 hp; a Skitter Bomb pops, no blast) or 'crush' (the moving tower, or a moving block with nowhere to shove it) | deployables.js down / crush / _pushes |
+| `device:hit` | `{ attacker, kind, team, damage, obj, pos }` — enemy fire struck a device (kind: beacon · sprinkler · seeker · surf · [b5-subs] the kits' devices: glide · sentry · bobber …); the shooter's hit marker hangs on it (never for a ghost's shot) | deployables.js struck (kits call it from their own hurt), kits/glide.js, kits/bobber.js |
+| `device:down` | `{ kind, team, pos, by, how }` — a device destroyed, once per ending: how 'shot' (0 hp; a Skitter Bomb / a Glide Bomb pops, no blast) or 'crush' (the moving tower, or a moving block with nowhere to shove it); [b5-subs] also 'shell' (the Bazookarp's re-forming shell), 'lava', 'flip' (an era flip) — `G.deploy.crushIn(shape, how)` | deployables.js down / crushIn / _pushes; the kits for their own endings (shot down, era flip, lava sweep): kits/sentry.js, kits/bobber.js |
+| `sub:cantuse` | `{ actor, kind, reason? }` — a sub refused the throw / placement, ink kept; [b5-subs] `reason`: the kit's `blockedWhy` (the callout's second line, e.g. "Too close to their spawn") | weapons.js (the release) |
+| `sub:note` | `{ actor, kind, text }` — [b5-subs] a kit's short word to its owner in the "Can't use" slot, quieter (no ✕): the Scrap Sentry's "SENTRY DOWN" | kits/sentry.js |
+| `sentry:lock` | `{ obj, target, team, pos }` — [b5-subs] a Scrap Sentry starts its 0.4 s lock on a new target (the owner's; a ghost on its owner's `[3]`) | kits/sentry.js |
+| `sentry:fire` | `{ obj, owner, team, pos, dir, ghost? }` — [b5-subs] a Scrap Sentry round (the owner's: a real projectile, weaponId 'sentry'; `ghost`: a ghost's replayed burst, the look only) | kits/sentry.js |
+| `bobber:link` | `{ owner, n }` — [b5-subs] an owner's Chain Bobber tether list changed (n tethers now); the owner's screen | kits/bobber.js |
+| `bobber:trigger` | `{ actor, by, n, pos, team, ghost }` — [b5-subs] a Chain Bobber chain set off: its owner, who set it off (null: unknown), its size N, the first bobber; every screen (`ghost` on a replay) | kits/bobber.js |
+| `bobber:disarm` | `{ owner, by, pos, team }` — [b5-subs] enemy fire disarmed a Chain Bobber (it sags and pops, no blast) | kits/bobber.js |
+| `bomb:explode` (`kind: 'bobber'`) | `{ actor, pos, team, radius, kind }` — [b5-subs] one per bobber of a chain, at its hop (radius: the chain's R(N)) | kits/bobber.js |
+| `pipe:enter` | `{ actor, leg, k, to, eta }` — a capture (the owner), or the ride's `[0]` record (every other screen) | pipes.js |
+| `pipe:refuse` | `{ actor, end, why }` — why: oneway · shut · carp · special · cooldown · form (the owner's screen only) | pipes.js |
+| `pipe:exit-lit` / `pipe:chime` | `{ actor, end, team }` / `{ actor, end, pos }` — the suck is done, the exit lit in the rider's colour / 1.0 s before the pop (every screen, its own copy) | pipes.js |
+| `pipe:pop` / `pipe:land` | `{ actor, end, pos, dir, high }` / `{ actor, pos }` — out of the OUT mouth / touchdown (the cooldown starts) | pipes.js |
+| `pipe:abort` | `{ actor, why }` — why: splat (in the suck) · removed · reset · test | pipes.js |
+| `pipe:flow` | `{ leg, id, phase, dir, t }` — the tide: phase warn (T − 10) · close (T − 3) · flip (T) · open (T + 1); dir 'ab' UP, 'ba' DOWN (every screen, from its stage clock; the stage's Tide Gauges and the HUD follow it) | pipes.js |

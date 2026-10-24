@@ -1,0 +1,2 @@
+JOB-7 (caldera) @ 80b3d640 (the final head) — Mac mini b5-runner, 2026-10-24 07:22–07:42, exit 0. Short summary.
+- EVERYTHING FULL again: lava.js 59/59 ×3, lava-bots 7/7 ×2, Zone Control 7/7 ×2, Turf War 7/7, net-lava 13/13 (alone), lava-karp 10/10.

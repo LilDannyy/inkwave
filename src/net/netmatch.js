@@ -28,6 +28,7 @@ import { BotBrain } from '../game/bots.js';
 import { statusBits, NET_TRACKED, NET_POISONED } from '../game/statusFx.js';
 import { Boss } from '../boss/boss.js';
 import { sjNetEvent, sjNetFill } from '../game/jumpMarks.js';   // [b5-jumpui] remote super jumps: target, flight, clock
+import { issueLog } from '../core/issueLog.js'; // [b5-int4] report divergent result screens
 
 const TICK = 1 / 20;
 
@@ -47,6 +48,7 @@ const F = {
   tracked: 1048576, poisoned: 2097152,   // the owner's word on its status (game/statusFx.js: the tracked / poisoned looks;
                                           // two teams, so tracked = by the other one: the ring's colour and who gets lines)
   stage: 4194304,                         // [b5-stagehooks] a stage module holds this squidkid (a pipe ride: aquarium's F.pipe)
+  dash: 8388608,                          // [b5-sub-dash] mid Dash Pellet dash (29 m/s): never extrapolated (_pathAt)
 };
 // events forwarded from owners (actor-bearing payloads; vectors/actors are packed)
 const FORWARD = ['actor:jump', 'superjump', 'superjump:land', 'special:use', 'special:slam', 'weapon:dodge', 'weapon:fire', 'splatted', 'respawn'];
@@ -194,9 +196,11 @@ export class NetMatch {
   }
 
   // a ghost device (a remote player's sprinkler, curtain, waddle …) took a hit here: its owner's copy takes it
-  sendDevHit(owner, kind, id, dmg) {
+  sendDevHit(owner, kind, id, dmg, by = null) {
     if (!owner || !owner.remote || owner.owner === undefined) return;
-    this.s.tr?.sendTo(owner.owner, { k: 'dh', kind, id, d: r2(dmg) });
+    const m = { k: 'dh', kind, id, d: r2(dmg) };
+    if (by && by.nid !== undefined) m.a = by.nid;   // [b5-subs] who fired it (the owner's 'device:down'.by)
+    this.s.tr?.sendTo(owner.owner, m);
   }
 
   // hits land on the victim's owner right away (not on the playback timeline: health must be current)
@@ -234,6 +238,7 @@ export class NetMatch {
     const msg = { k: 't', ts: r3(now()), a };
     if (this.gen) msg.g = this.gen;
     if (this.out.length) { msg.e = this.out; this.out = []; }
+    if (!this.isHost && this.match?.karp) { const kh = G.objTargets?.takeHits(); if (kh) msg.kh = kh; }   // [b5-karp] shell hits ride the tick
     const boss = this.match?.boss;
     if (this.isHost && boss && boss.sim) { this.bossN = (this.bossN || 0) + 1; msg.B = boss.pack(this.bossN % 10 === 0); }
     if (this.isHost && this.match) {
@@ -260,10 +265,15 @@ export class NetMatch {
       case 'hit': this._hit(d); break;
       case 'dh': {   // a hit on one of our devices, made on another player's screen
         const K = d.kind === 'subs' ? G.subs : SUB_KITS[d.kind] || MAIN_KITS[d.kind] || KIT_GHOSTS[d.kind];
-        try { K?.netHurt?.(d.id, d.d); } catch (err) { console.warn('[inkwave] device hit', d.kind, err); }
+        try { K?.netHurt?.(d.id, d.d, d.a !== undefined ? this.byNid.get(d.a) || null : null); } catch (err) { console.warn('[inkwave] device hit', d.kind, err); }   // ([b5-subs] the attacker)
         break;
       }
       case 'bhit': if (this.isHost) this.match?.boss?.remoteHit(d); break;
+      // [b5-karp] Bazookarp: the host's discrete records (sent at once); a guest's claim / decline / rate / footing; a
+      // refused claim (to one guest)
+      case 'bk': if (from === this.s.hostId) this.match?.karp?.netEvent(d.e); break;
+      case 'kc': case 'kx': case 'kr': case 'kf': if (this.isHost) this.match?.karp?.wire.message?.(from, d); break;
+      case 'kd': if (from === this.s.hostId) this.match?.karp?.wire.message?.(from, d); break;
       case 'st': if (from === this.s.hostId) this._hostState(d); break;
       case 'res': if (from === this.s.hostId) this._result(d); break;
       case 'end': if (from === this.s.hostId) G.game?.netMatchEnd?.(); break;
@@ -317,6 +327,7 @@ export class NetMatch {
     // events → the sender's queue (played on its timeline)
     if (d.e) for (const e of d.e) p.events.push(e);
     if (d.c && from === this.s.hostId) this._hostClock(d.c);
+    if (d.kh && this.isHost && this.match?.karp) this.match.karp.netHits(d.kh);   // [b5-karp] a guest's shell hits (summed, filtered)
     // the boss: the host's snapshot, on the host's playback timeline
     const boss = this.match?.boss;
     if (d.B && from === this.s.hostId && boss && !boss.sim) {
@@ -354,9 +365,10 @@ export class NetMatch {
     if (s1) { copySample(t >= s1.t ? s1 : s0, S); return 1; }      // teleport between these two: hold, then snap
     const last = buf[buf.length - 1];
     if (t < last.t) { copySample(s0, S); return 3; }
-    // buffer ran dry: a short ballistic extrapolation along the last velocity, then hold
+    // buffer ran dry: a short ballistic extrapolation along the last velocity, then hold ([b5-sub-dash] past a dashing
+    // sample: hold at once — 0.18 s at 29 m/s is 5 m through whatever is ahead; the next sample carries it on)
     copySample(last, S);
-    const e = Math.min(t - last.t, 0.18);
+    const e = last.f & F.dash ? 0 : Math.min(t - last.t, 0.18);
     if (e > 0) {
       S.x += last.vx * e; S.z += last.vz * e;
       if (!(last.f & F.grounded)) { S.y += last.vy * e - 0.25 * PLAYER.gravity * e * e; S.vy = last.vy - 0.5 * PLAYER.gravity * e; }
@@ -369,6 +381,11 @@ export class NetMatch {
     const peer = this._peer(a.owner);
     const tr = peer.tr;
     if (!buf.length || tr === undefined) return;
+    // [karp-face] the host scores a remote Bazookarp carrier from the REAL samples it sent, as they play (prevTr < t ≤ tr,
+    // SPEC §3.4) — never from the drawn path below
+    const K = this.isHost && this.match?.karp;
+    if (K && K.holder === a) { const p0 = n.trK ?? -Infinity, ss = []; for (const s of buf) if (s.t > p0 && s.t <= tr) ss.push({ t: s.t, x: s.x, y: s.y, z: s.z, alive: !!(s.f & F.alive) }); n.trK = tr; if (ss.length) K.onSamples(a, ss); }
+    else n.trK = tr;
     // drop history older than what we might still need (last frame's moment must stay covered)
     while (buf.length > 2 && buf[1].t < tr - 0.25) buf.shift();
     const S = n.cur || (n.cur = blankSample());
@@ -563,7 +580,9 @@ export class NetMatch {
       case 'k': {
         const a = this.byNid.get(e[2]);
         const K = MAIN_KITS[e[3]] || SUB_KITS[e[3]] || KIT_GHOSTS[e[3]];
-        if (!a || !a.remote || !K || !K.ghost) break;
+        // [karp-face] a Carp Shot record from a peer that no longer owns its actor (a departed host's queued shot for a
+        // bot this client just adopted) is still played: its blast must judge this screen's own players (SPEC §7.6)
+        if (!a || !K || !K.ghost || (!a.remote && !(e[3] === 'karp' && from !== this.myId))) break;
         this.mute++;
         try { K.ghost(a, e[4]); } catch (err) { console.warn('[inkwave] kit ghost', e[3], err); } finally { this.mute--; }
         break;
@@ -571,6 +590,7 @@ export class NetMatch {
       case 'bm': this.match?.boss?.onMove(e[2]); break;
       case 'z': this.match?.zones?.netEvent(e[2]); break;
       case 'tw': this.match?.tower?.netEvent(e[2]); break;
+      case 'ks': this.match?.karp?.netEvent(e[2], true, from); break;   // [b5-karp] the host's snapshots (its timeline; [karp-face] its sender: their age)
       case 'pd': this.match?.pods?.netEvent(e[2]); break;
       case 'sm': this.match?.stage?.netEvent(e[2], e[3], from); break;   // [b5-stagehooks] a stage module's record
       case 'w': if (this.practice) G.game?.netWipe?.({ k: e[2], cx: e[3], cz: e[4], dur: e[5], reach: e[6] }); break;
@@ -775,17 +795,30 @@ export class NetMatch {
     if (!this.isHost) return;
     this._sendNow({ k: 'res', cov: result.coverage, win: result.winner, mode: result.mode, bo: result.boss,
       ...(result.mode === 'zones' ? { zc: result.counts, zp: result.penalty, zr: result.reason, zo: result.overtime ? 1 : 0, zl: result.log } : {}),
-      ...(result.mode === 'tower' ? { zc: result.counts, zr: result.reason, zo: result.overtime ? 1 : 0, tb: result.best, tl: result.len } : {}),
-      st: this.match.actors.map((a) => [a.nid, Math.round(a.stats.turf), a.stats.splats, a.stats.deaths, Math.round(a.stats.bossDmg || 0), a.stats.weakHits || 0, a.stats.assists || 0]) });
+      ...(result.mode === 'tower' || result.mode === 'bazookarp' ? { zc: result.counts, zr: result.reason, zo: result.overtime ? 1 : 0, tb: result.best, tl: result.len } : {}),   // [b5-karp]
+      ...(result.coin !== undefined ? { kco: result.coin } : {}),
+      st: this.match.actors.map((a) => [a.nid, Math.round(a.stats.turf), a.stats.splats, a.stats.deaths, Math.round(a.stats.bossDmg || 0), a.stats.weakHits || 0, a.stats.assists || 0, Math.round(a.stats.karpM || 0), a.stats.karpPops || 0]) });   // [b5-karp] karpM, karpPops
   }
   _result(d) {
     const m = this.match;
     if (!m || this.isHost) return;
-    for (const [nid, turf, splats, deaths, bossDmg, weakHits, assists] of d.st || []) { const a = this.byNid.get(nid); if (a) { a.stats.turf = turf; a.stats.splats = splats; a.stats.deaths = deaths; if (bossDmg !== undefined) { a.stats.bossDmg = bossDmg; a.stats.weakHits = weakHits; } if (assists !== undefined) a.stats.assists = assists; } }
+    if (m.result) {
+      const local = m.result, arraysDiffer = (a, b) => Array.isArray(a) && Array.isArray(b) && (a.length !== b.length || a.some((v, i) => typeof v === 'number' && typeof b[i] === 'number' ? Math.abs(v - b[i]) > 0.01 : v !== b[i]));
+      const localCounts = local.counts, hostCounts = d.zc;
+      const mismatch = local.winner !== d.win || (local.mode && local.mode !== d.mode) || arraysDiffer(local.coverage, d.cov) || arraysDiffer(localCounts, hostCounts) ||
+        arraysDiffer(local.penalty, d.zp) || arraysDiffer(local.best, d.tb) || (local.reason && d.zr && local.reason !== d.zr) || (local.len !== undefined && d.tl !== undefined && Math.abs(local.len - d.tl) > 0.01) ||
+        (local.overtime !== undefined && local.overtime !== !!d.zo) || (local.boss !== undefined && JSON.stringify(local.boss) !== JSON.stringify(d.bo));
+      if (mismatch) issueLog.append('online-result-mismatch', 'local and host result screens disagreed', {
+        local: { mode: local.mode || m.mode, winner: local.winner, coverage: local.coverage, counts: localCounts, reason: local.reason, boss: local.boss },
+        host: { mode: d.mode, winner: d.win, coverage: d.cov, counts: hostCounts, reason: d.zr, boss: d.bo },
+      });
+    }
+    for (const [nid, turf, splats, deaths, bossDmg, weakHits, assists, karpM, karpPops] of d.st || []) { const a = this.byNid.get(nid); if (a) { a.stats.turf = turf; a.stats.splats = splats; a.stats.deaths = deaths; if (bossDmg !== undefined) { a.stats.bossDmg = bossDmg; a.stats.weakHits = weakHits; } if (assists !== undefined) a.stats.assists = assists; if (karpM !== undefined) { a.stats.karpM = karpM; a.stats.karpPops = karpPops; } } }   // [b5-karp]
     if (d.mode !== 'boss') m.time = 0;   // (a boss win stops the clock where it was)
     m.result = d.mode === 'boss' ? { mode: 'boss', coverage: d.cov, winner: d.win, boss: d.bo }
       : d.mode === 'zones' ? { mode: 'zones', coverage: d.cov, winner: d.win, reason: d.zr, counts: d.zc, penalty: d.zp, overtime: !!d.zo, log: d.zl || [] }
         : d.mode === 'tower' ? { mode: 'tower', coverage: d.cov, winner: d.win, reason: d.zr, counts: d.zc, best: d.tb, len: d.tl, overtime: !!d.zo }
+        : d.mode === 'bazookarp' ? { mode: 'bazookarp', coverage: d.cov, winner: d.win, reason: d.zr, counts: d.zc, best: d.tb, len: d.tl, overtime: !!d.zo, ...(d.kco !== undefined ? { coin: d.kco } : {}) }   // [b5-karp]
         : { coverage: d.cov, winner: d.win };
     m.setState('judge');
   }
@@ -797,21 +830,40 @@ export class NetMatch {
   onLeave(id, hostChanged) {
     if (!this.match) return;
     const drop = mapNoBots(this.cfg.map);
+    // [karp-face] a host change, on every client, in this order (SPEC §7.6): 1. the departed host's queued RULE records
+    // only — 'tw' (Tower Command), 'z' (Zone Control), 'ks' (Bazookarp snapshots) — play now, in order, and leave its
+    // queue (every client got the same stream before the leave notice: the relay keeps order), so no screen disagrees
+    // about a phase or a plant in its last moments; everything else (paint, kit ghosts — a Carp Shot in the air —
+    // special ghosts, forwarded events) stays queued on its clock as before. 2. the new host stops being a follower
+    // BEFORE the leaver's squidkids are removed or adopted, so its rules engines handle them (a removed carrier →
+    // 'left'). 3. remove / adopt. 4. the engines take over (onHostChange).
+    if (hostChanged) {
+      const P = this.peers.get(id);
+      if (P && P.events.length) {
+        const keep = [];
+        for (const e of P.events) { if (e[1] === 'tw' || e[1] === 'z' || e[1] === 'ks') { try { this._play(id, e); } catch (err) { console.warn('[net] flush', e[1], err); } } else keep.push(e); }
+        P.events = keep;
+      }
+      if (this.isHost) { this.match.follower = false; this.clockT = 0; }
+    }
+    // [b5-subs] the leaver's kit devices went with their client: every screen ends its copies now, before re-owning
+    for (const a of this.byNid.values()) if (a.owner === id) for (const k in SUB_KITS) { try { SUB_KITS[k].dropOwner?.(a); } catch (err) { console.warn('[inkwave] dropOwner', k, err); } }
     for (const a of [...this.byNid.values()]) {
       if (a.owner !== id) continue;
       // (Practice: a player who leaves is gone — nobody plays on in their place; the host's bots move to the new host)
       if (drop || (this.practice && !a.isBot)) { this._remove(a); continue; }
       a.owner = this.s.hostId;
-      if (a.owner === this.myId) this._adopt(a);
+      if (a.owner === this.myId) this._adopt(a, this.peers.get(id)?.events);   // [karp-face] (its owner's queued records: KarpGun.adopt)
       else { a.net.buf.length = 0; a.net.handoff = true; }   // same squidkid, new sender: glide onto its new path
     }
-    if (hostChanged && this.isHost) { this.match.follower = false; this.clockT = 0; }
+    if (hostChanged) this.match.karp?.onHostChange(this.isHost);   // [b5-karp] the new host runs the rules; a carrying guest re-reports
     if (hostChanged) this.match.stage?.hostChanged(this.isHost);   // [b5-stagehooks]
     // the boss moves with the host: the new host adopts it from what it was showing; everyone else glides onto its path
     if (hostChanged && this.match.boss) { if (this.isHost) this.match.boss.adopt(); else this.match.boss.handoff(); }
   }
 
   _remove(a) {
+    for (const k in SUB_KITS) { try { SUB_KITS[k].dropOwner?.(a); } catch (err) { console.warn('[inkwave] dropOwner', k, err); } }   // [b5-subs]
     this.byNid.delete(a.nid);
     this._stopLoops(a);
     this.match.removeActor(a);
@@ -880,7 +932,7 @@ export class NetMatch {
     this.inkWait = 0;
   }
 
-  _adopt(a) {
+  _adopt(a, queued = null) {
     // continue from exactly where it was drawn — no pop
     a.remote = false;
     this._stopLoops(a);
@@ -896,6 +948,7 @@ export class NetMatch {
     else if (a.alive) { a.character.setVisible(true); a.character.root.visible = true; }
     a.net.err.set(0, 0, 0); a.net.errV?.set(0, 0, 0);   // a.pos is already where it was drawn (path + offset)
     G.deploy?.adopt(a);   // [b5-deploy] its devices (ghosts here till now) are ours: they can still be shot down and crushed
+    G.karpGun?.adopt?.(a, queued);   // [karp-face] its Carp Shots in the air are ours to land and blow (not one whose blast is still queued)
     this.match?.stage?.adopt(a);   // [b5-stagehooks] (a ride in progress becomes ours)
   }
 
@@ -947,6 +1000,7 @@ function packActor(a) {
   if (a.onEnemy) f |= F.enemy;
   { const sb = statusBits(a); if (sb & NET_TRACKED) f |= F.tracked; if (sb & NET_POISONED) f |= F.poisoned; }
   if (G.match?.stage?.netFlag(a)) f |= F.stage;   // [b5-stagehooks]
+  if (wr.dashT > 0) f |= F.dash;                   // [b5-sub-dash]
   // the visual position (the owner's step smoothing included) — that's what the owner sees
   const y = a.pos.y + (a.smoothY || 0);
   const n = a.climbing ? a.wallN : null;
@@ -977,6 +1031,9 @@ function hermite(a, b, t, o) {
   o.t = t;
   o.x = h00 * a.x + h10 * d * a.vx + h01 * b.x + h11 * d * b.vx;
   o.z = h00 * a.z + h10 * d * a.vz + h01 * b.z + h11 * d * b.vz;
+  // [b5-sub-dash] a dash is a straight line at 29 m/s that stops dead on a wall: a Hermite from a dashing sample to a
+  // stopped one bulges past the stop (up to ~0.1 m): straight between them instead
+  if ((a.f | b.f) & F.dash) { o.x = a.x + (b.x - a.x) * u; o.z = a.z + (b.z - a.z) * u; }
   // vertical: Hermite in the air, but never through a floor both ends are standing on (landing velocities jump)
   let y = h00 * a.y + h10 * d * a.vy + h01 * b.y + h11 * d * b.vy;
   if ((a.f & F.grounded) || (b.f & F.grounded)) y = Math.min(Math.max(a.y, b.y) + 0.02, Math.max(Math.min(a.y, b.y) - 0.02, y));
