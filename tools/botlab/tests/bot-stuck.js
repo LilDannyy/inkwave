@@ -22,6 +22,14 @@
 //        canal to the west, so the stuck hop is never allowed (the hop guards keep 3 m off the water). The eras play no
 //        part (every block there is in every era). A bot put there with a goal elsewhere is out within 6 s (it super jumps
 //        once pinned 3 s: bots.js); 3 weapons × 3 goals. (Before: none of the 9 moved in 15 s.)
+// lockpost (MAP=lockgate PAGE_ARGS='only=lockpost'; [b5-beta1, review 1]): JOB-17's 5.25 s Lockgate Turf War episode at
+//        (10.1, 0, 15.1), found — the nav's lane node (9.5, 0, 15.05) (one the grid's nudge filled in) stands 0.09 m off a
+//        0.32 m post 0.68 m tall, inside the body: the body ring nav.js tests round a node passes either side of it. A
+//        route west along the canal's edge walks into the post. A bot there heading west, south or home is out within 6 s
+//        (a super jump once pinned 3 s) — a bow or charger too, which draws as it walks: the pinned watch skipped every
+//        draw, the unstick's count restarts at every draw, and its shake carried the bot 1–1.4 m off and back, which
+//        restarted the watch — a bow stood there for good. 4 weapons × 3 goals. (Before: 4 of 12 never out in 10 s, the
+//        bow from every goal; after: 36 of 36 out by 4.6 s in three runs.)
 // karpspot (MAP=halyard MODE=bazookarp PAGE_ARGS='only=karpspot'): a Bazookarp breaker's refill spot by the shell is
 //        never the spot it ran dry at in the last 6 s (bots.js _refillBad: its puddle went off a ledge's lip, where it can't
 //        swim): ≥ 3 m from it, or none (the usual search) — 20 picks in a live match. Sent back there, a breaker hovered
@@ -189,6 +197,25 @@
     }
     const bad = rows.filter((r) => r.outAt === null || r.outAt > 6);
     R('pocket: a bot wedged in Bluestone\'s curb corner (5.82, 0, 46.37: JOB-8\'s 60.75 s freeze) is out within 6 s (3 weapons × 3 goals)', bad.length === 0, { bad, rows });
+  }
+  if (want('lockpost') && g.mapDef?.id === 'lockgate') {
+    const rows = [], home = L.spawnPads[bot.team];
+    for (const w of ['bow', 'charger', 'blaster', 'roller']) for (const [gx, gz] of [[0, 0], [-5, 15.1], [home.x, home.z]]) {
+      fresh(10.13, L.groundHeight(10.13, 15.1, 3) + 0.02, 15.1);
+      bot.setWeapon(w); b.reset(); b.setDifficulty('normal');
+      b._pickPaintGoal = function () { this.goalTimer = 3; this._pathTo(new V3(gx, L.groundHeight(gx, gz, 6), gz), 0.8); };
+      b.mode = 'paint'; b.goalTimer = 0;
+      let outAt = null, jumped = null;
+      for (let f = 0; f < 10 * 60 && outAt === null; f++) {
+        g.debug.step(1000 / 60);
+        if (bot.superJumpState && jumped === null) jumped = r2(f / 60);
+        if (jumped !== null || Math.hypot(bot.pos.x - 10.13, bot.pos.z - 15.1) > 2.5) outAt = r2(f / 60);
+      }
+      rows.push({ w, goal: [r2(gx), r2(gz)], outAt, jumped });
+      delete b._pickPaintGoal;
+    }
+    const bad = rows.filter((r) => r.outAt === null || r.outAt > 6);
+    R('lockpost: a bot by the post on Lockgate (10.1, 0, 15.1: JOB-17\'s 5.25 s episode — a nav lane node 0.09 m off it) is out within 6 s, drawing weapons too (4 weapons × 3 goals)', bad.length === 0, { bad, rows });
   }
   if (want('karpspot') && G.match?.karp) {
     // a live Bazookarp match: each time a breaker / grabber by the shell has a refill spot there, mark that spot as one it

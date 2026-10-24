@@ -689,7 +689,7 @@ export class BotBrain {
     this.thrEvT = 0; this.thrEvYaw = 0; this.thrEvNew = false; this.thrIn = 9; this.thrSide = 0; this.thrAcqT = 9; this.thrSignY = 0; this.thrSignP = 0;
     this.canRef = null; this.canSide = 0; this.canT = 0; this.flankSide = 0; this.blockT = 0; this.flankT = 0;
     this.navBack = null; this.navBackT = 0;   // off-graph recovery (_backOnNav)
-    this._stranded = false; this.strandAcc = 0; this._strandSeen = undefined; this._strandChk = 0; this._pinH = null;   // [b5-beta1] (the stranded watch)
+    this._stranded = false; this.strandAcc = 0; this._strandSeen = undefined; this._strandChk = 0; this._pinH = null; this._pinSeen = undefined;   // [b5-beta1] (the stranded watch)
   }
 
   update(dt) {
@@ -742,25 +742,34 @@ export class BotBrain {
       // [b5-beta1, review 1] latched for 1 s: one check that finds the hopping bot over the rim (a node there, under it) no
       // longer restarts the 1.5 s count — bot-stuck 'tank' had a spot out at 8.67 s, 1 run in 3
       if (s) this._strandSeen = this.t;
-      // [b5-beta1, review 1] …or pinned: asking to move along a route yet within 0.6 m of where it stood 3 s ago, its hops
+      // [b5-beta1, review 1] …or pinned: asking to move along a route yet within 1.2 m of where it stood 3 s ago, its hops
       // and replans spent — wedged where the nav says it can walk. Bluestone's curb corner by (5.8, 0, 46.4): its route
       // began past a 0.66 m curb, a crate on its other side, the canal behind it, so no stuck hop is allowed there (the
       // hop guards keep 3 m off the water) — a blaster stood there 60.75 s (JOB-8); out in ~4.5 s now
       // (asking to move: along a route, or with none — a route that won't plan from here; never while refilling with no
-      // route or in its ink, nor holding a spot on purpose, nor drawing a shot. The last 7 checks, all within 0.6 m)
+      // route or in its ink, nor holding a spot on purpose, nor standing to draw a shot. The last 7 checks, all within 1.2 m:
+      // the unstick's shake carries a wedged bot ~1 m off and back, and the 0.6 m this was at first restarted on it)
       const ph = this._pinH || (this._pinH = []);
       const free = a.alive && !a.climbing && !a.pipe && !a.carry && !a.specialActive && !G.match?.lava && !this.holdingOnPurpose() && !G.match?.tower?.riderList?.includes(a);
       const wr = a.weaponRunner, drawing = !!(wr && (wr.charging || wr.burstT > 0 || wr.streaming));   // (a draw / spin / stream in place: on purpose, as the harnesses judge it)
       // (never in a fight: a duel's footwork keeps it about a spot, and a pinned fighter's foe moves on soon — matches had
       // fighters jump out of 2–3 s pins by a wall; out of the fight, the watch takes it)
-      const trying = free && !drawing && this.mode !== 'fight' && (this.path ? this.mvMag > 0.2 && !(this.mode === 'refill' && a.submerged) : this.mode !== 'refill');
+      // ([b5-beta1, review 1] a draw counts only when it stands for it: a bow or charger walking its route as it draws and
+      // not getting anywhere is pinned too — on Lockgate by the post at (9.6, 0, 15.3) one drew, walked into the post, drew
+      // again, and stood there for good: the unstick's count restarts at every draw, and this watch skipped every draw.
+      // Never a refill's draw: its shots at the floor and its steps onto their puddles keep it about its spot on purpose)
+      const trying = free && this.mode !== 'fight' && (this.path ? this.mvMag > 0.2 && !(this.mode === 'refill' && (a.submerged || drawing)) : this.mode !== 'refill' && !drawing);
       ph.push(a.pos.x, a.pos.z, trying ? 1 : 0); if (ph.length > 21) ph.splice(0, 3);
       let pinned = free && ph.length >= 21, tries = 0;
-      for (let i = 0; pinned && i < ph.length; i += 3) { tries += ph[i + 2]; if (Math.hypot(ph[i] - a.pos.x, ph[i + 1] - a.pos.z) > 0.6) pinned = false; }
+      for (let i = 0; pinned && i < ph.length; i += 3) { tries += ph[i + 2]; if (Math.hypot(ph[i] - a.pos.x, ph[i + 1] - a.pos.z) > 1.2) pinned = false; }
       pinned = pinned && tries >= 7;   // (every check: a charger standing to paint lines draws between them — on purpose)
       if (pinned) STRAND_STATS.pinned = (STRAND_STATS.pinned || 0) + 1;
-      this._stranded = s || pinned || (this._strandSeen !== undefined && this.t - this._strandSeen < 1.0 && !a.climbing && !a.pipe && !a.carry && !G.match?.lava);
-      if (this._stranded) this._strandWhy = s ? (sn < 0 ? 'stranded' : 'dead end') : pinned ? 'pinned' : 'stranded';
+      // ([b5-beta1, review 1] latched for 2 s while within 2.5 m of where it was found: the unstick's shake carries the bot
+      // ~1–1.4 m off and back, and each trip restarted the 1.5 s count — a charger by Lockgate's post stood ~6.7 s)
+      if (pinned) { this._pinSeen = this.t; this._pinAt = [a.pos.x, a.pos.z]; }
+      const pinLatch = !pinned && free && this.mode !== 'fight' && this.mode !== 'refill' && this._pinSeen !== undefined && this.t - this._pinSeen < 2.0 && Math.hypot(a.pos.x - this._pinAt[0], a.pos.z - this._pinAt[1]) < 2.5;   // (not into a fight or a refill begun meanwhile)
+      this._stranded = s || pinned || pinLatch || (this._strandSeen !== undefined && this.t - this._strandSeen < 1.0 && !a.climbing && !a.pipe && !a.carry && !G.match?.lava);
+      if (this._stranded) this._strandWhy = s ? (sn < 0 ? 'stranded' : 'dead end') : pinned || pinLatch ? 'pinned' : 'stranded';
     }
     if (this._stranded && !a.superJumpState) {
       this.strandAcc = (this.strandAcc || 0) + dt;
@@ -768,8 +777,8 @@ export class BotBrain {
         let mate = null, md = Infinity;
         for (const o of G.actors) { if (o === a || o.team !== a.team || !o.alive || o.superJumpState) continue; const d = o.pos.distanceTo(a.pos); if (d > 6 && d < md) { md = d; mate = o; } }
         if (a.superJump(mate || G.level.spawnPads[a.team].clone())) {
-          STRAND_STATS.jumps++; STRAND_STATS.log.push([+G.time.toFixed(2), a.name, +a.pos.x.toFixed(2), +a.pos.y.toFixed(2), +a.pos.z.toFixed(2), this._strandWhy || 'stranded', this.mode]); if (STRAND_STATS.log.length > 20) STRAND_STATS.log.shift();
-          this.path = null; this.goalTimer = 0; this.strandAcc = 0; this._stranded = false; this._strandSeen = undefined; if (this._pinH) this._pinH.length = 0;
+          STRAND_STATS.jumps++; STRAND_STATS.log.push([+G.time.toFixed(2), a.name, +a.pos.x.toFixed(2), +a.pos.y.toFixed(2), +a.pos.z.toFixed(2), this._strandWhy || 'stranded', this.mode, a.weaponId]); if (STRAND_STATS.log.length > 20) STRAND_STATS.log.shift();
+          this.path = null; this.goalTimer = 0; this.strandAcc = 0; this._stranded = false; this._strandSeen = undefined; this._pinSeen = undefined; if (this._pinH) this._pinH.length = 0;
         }
       }
     } else this.strandAcc = 0;
