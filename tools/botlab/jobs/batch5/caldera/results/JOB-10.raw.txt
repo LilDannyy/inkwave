@@ -1,0 +1,147 @@
+JOB-10 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 13:13:16
+branch botlab-b5-caldera, ran at 6153c5f7, exit code 0, wall time 10min
+(a written-up JOB-10.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== lava-karp, boss-idle x2
+== boss-idle x8 (3 + 3 + 2)
+== net-lava alone
+== SUMMARY
+### boss-1
+RESULT 6/6
+### boss-10
+RESULT 6/6
+### boss-2
+RESULT 6/6
+### boss-3
+RESULT 6/6
+### boss-4
+RESULT 6/6
+### boss-5
+RESULT 6/6
+### boss-6
+RESULT 6/6
+### boss-7
+RESULT 6/6
+### boss-8
+RESULT 6/6
+### boss-9
+RESULT 6/6
+### karp
+RESULT 10/10
+### net-lava
+RESULT 13/13
+
+## last 15 lines of job.log
+RESULT 6/6
+### boss-5
+RESULT 6/6
+### boss-6
+RESULT 6/6
+### boss-7
+RESULT 6/6
+### boss-8
+RESULT 6/6
+### boss-9
+RESULT 6/6
+### karp
+RESULT 10/10
+### net-lava
+RESULT 13/13
+
+## boss-1.txt
+### boss-1
+RESULT 6/6
+console errors: none
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3,"idleAt":null,
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[63,57],"longestSpell_s":28,"at":[-9.8,4.1],"camps":0,"backOuts":0}
+
+## boss-10.txt
+### boss-10
+RESULT 6/6
+console errors: none
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":4,"idleAt":null,
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[97,23],"longestSpell_s":28,"at":[2.9,-5.3],"camps":1,"backOuts":0}
+
+## boss-2.txt
+### boss-2
+RESULT 6/6
+console errors: none
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":4,"idleAt":null,
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[84,36],"longestSpell_s":30,"at":[0.2,-16],"camps":0,"backOuts":1}
+
+## boss-3.txt
+### boss-3
+RESULT 6/6
+console errors: none
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":3,"idleAt":null,
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[60,60],"longestSpell_s":28,"at":[2.9,-20.5],"camps":1,"backOuts":0}
+
+## boss-4.txt
+### boss-4
+RESULT 6/6
+console errors: none
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":4,"idleAt":null,
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[33,87],"longestSpell_s":36,"at":[-1.9,24],"camps":0,"backOuts":0}
+
+## boss-5.txt
+### boss-5
+RESULT 6/6
+console errors: none
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":6,"idleAt":{"t":30,"pos":[-19.97,1.2,-24.6],"yaw":-4.46,"goal":[-9.75,2.75],"path":6,"pi":0,"stuckT":0,"turning":null,"wedge":{"x":-19.97,"z":-24.6,"tryT":4.97,"back":0},"detour":{"yaw":1.57,"until":42.38},"cross":{"t":33.07,"goal":"…","from":-1},"toL":15.4,"state":null,"stunned":false,"target":null,"wp":null},
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[77,43],"longestSpell_s":51,"at":[-14.6,-24.7],"camps":2,"backOuts":0}
+
+## boss-6.txt
+### boss-6
+RESULT 6/6
+console errors: none
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":8,"idleAt":{"t":16,"pos":[-0.01,1.2,-25.2],"yaw":-4.73,"goal":[-3.25,-27.25],"path":2,"pi":1,"stuckT":0,"turning":null,"wedge":{"x":0.02,"z":-25.2,"tryT":5.6,"back":0},"detour":null,"cross":null,"toL":15.9,"state":null,"stunned":false,"target":null,"wp":null},
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[69,51],"longestSpell_s":28,"at":[-0.3,-20.3],"camps":1,"backOuts":1}
+
+## boss-7.txt
+### boss-7
+RESULT 6/6
+console errors: none
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":7,"idleAt":{"t":71,"pos":[-2.17,1.2,24.21],"yaw":-13.25,"goal":[-2.25,-1.25],"path":null,"pi":1,"stuckT":0,"turning":null,"wedge":{"x":-2.17,"z":24.21,"tryT":3.08,"back":0},"detour":null,"cross":{"t":63.66,"goal":"…","from":1},"toL":16.7,"state":null,"stunned":false,"target":null,"wp":null},
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[16,104],"longestSpell_s":29,"at":[-0.2,18.6],"camps":2,"backOuts":1}
+
+## boss-8.txt
+### boss-8
+RESULT 6/6
+console errors: none
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":4,"idleAt":null,
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[35,85],"longestSpell_s":36,"at":[-2.4,7.8],"camps":0,"backOuts":0}
+
+## boss-9.txt
+### boss-9
+RESULT 6/6
+console errors: none
+PASS it never stands idle for long (outside a move)  {"maxIdle_s":2,"idleAt":null,
+PASS (information) seconds on each half (z < 0 / z ≥ 0) and the longest spell within 6 m of one spot  {"halves_s":[91,29],"longestSpell_s":25,"at":[9.9,-1.7],"camps":0,"backOuts":0}
+
+## karp.txt
+### karp
+RESULT 10/10
+console errors: none
+PASS K8 the carrier field never relies on a jump over the lava: none of its hop / gap edges crosses the lava where both ends stand (LAYOUT.bazookarp.hopVeto, karpVeto.js)  {"crossing":0,"eg":[],"keptHighOnlyWithAMaskedEnd":44,"fieldHops":18,"fieldGaps":193,"vetoes":560,"L":[58.104573058901344,57.98526404370724]}
+
+## netlava.txt
+### net-lava
+(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.
+PASS a room on Highmark Foundry (Turf War 1:30, 4 bots)  {"map":"caldera","duration":90,"mode":"turf"}
+PASS both screens run the lava on the same schedule (turf:90)  {"a":{"t":0.048,"y":-0.6,"phase":"low","stones":"00000000000000","host":true,"key":"turf:90"},"b":{"t":0.033,"y":-0.6,"phase":"low","stones":"00000000000000","host":false,"key":"turf:90"}}
+PASS the guest plants a Lurk Mine and a Hop Beacon on the shelf before the rise; the host sees them (ghosts)  {"dev":{"t":0.63,"mine":[300001],"beacon":[300002]},"ghosts0":[300001,300002]}
+PASS the level agrees on both screens every 0.5 s through a rise and a fall (± 0.1 m)  {"n":140,"worst":{"d":0.01050000000000001,"at":[59.498,0.2051,59.447,0.2156]}}
+PASS the guest left standing on the shelf splats by lava (its own screen judges it); the host's feed shows cause lava, at the rise's deadly moment (30 + 3.8 s ± 0.6)  {"lavaB":[3,"lava",33.85],"deaths":[[4,"shot",18.25],[2,"shot",19.47],[3,"lava",33.85],[4,"shot",39.6],[2,"shot",49.43],[1,"shot",55]]}
+PASS …its devices the lava covered are gone on both screens (the owner's sweep and its end records)  {"devAfter":{"host":[],"guest":[]}}
+PASS at the results screen the lava cells agree between the two screens at least as well as the same run's other cells do (splats across the waterline through a rise and a fall: the painter's stage time, field 15)  {"lava":{"n":76102,"differ":40,"ratio":0.99947,"inked":[3628,3622]},"other":{"n":368739,"differ":460,"ratio":0.99875,"inked":[57196,57194]},"painted":165,"diffWhere":{"n":40,"minY":-0.5
+PASS time-up at LOW (the final ebb); the same result on both screens  {"res":[1,1],"fin":{"y":-0.6,"phase":"low"}}
+PASS Practice runs its own loop (practice: rise at 20) between the stage's own levels  {"t":0.142,"y":-0.6,"phase":"low","stones":"00000000000000","host":true,"key":"practice"}
+PASS a late joiner at HIGH: its level and its stones agree with the host's (± 0.1 m) once its clock settles  {"host":{"t":42.374,"y":0.8,"phase":"high","stones":"11111111111111","host":true,"key":"practice"},"joiner":{"t":42.335,"y":0.8,"phase":"high","stones":"11111111111111","host":false,"key":"practice"},"skew":[0]}
+PASS …and its paint (the imported grid) equals the host's, lava cells and all; the live guest's lava cells equal the host's too (the host painted the Slump cliff across the waterline at LOW — burned by the rise — and at HIGH), and its other cells agree to a ratio ≥ 0.999  {"lavaCells":{"joiner":{"n":76102,"differ":0,"inked":[0,0]},"guest":{"n":76102,"differ":0,"inked":[0,0]}},"grid":{"join
+PASS a timed match: the host leaves mid-rise (35 s) — the new host's fall starts at 55 ± 0.4 s on its screen, and the stones turn deadly (the ledges dry) at 61.2 ± 0.4 s on both remaining screens  {"before":{"t":35.098,"y":0.1206,"phase":"rise","stones":"11111111111111","host":false,"key":"turf:90"},"fall":{"B":55.01,"C":55.01},"stonesDeadly":{"B":61.22,"C":61.22},"after":{"B":{"t":63.039,"y":
+PASS …and both remaining screens show the same result at time-up  {"res3":[0,0]}
+RESULT 13/13
+c0 console: none
+c1 console: none
+c2 console: none
