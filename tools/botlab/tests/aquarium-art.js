@@ -323,6 +323,7 @@
     const std = (cs) => { const l = cs.map(lum), m = l.reduce((a, b) => a + b, 0) / l.length; return +Math.sqrt(l.reduce((a, b) => a + (b - m) ** 2, 0) / l.length).toFixed(1); };
     const cv = (cs) => { const m = cs.map(lum).reduce((a, b) => a + b, 0) / cs.length; return +(std(cs) / Math.max(m, 1)).toFixed(3); };   // (relative: a face in shade has less contrast)
     const brains = m.actors.map((a) => a.bot); for (const a of m.actors) a.bot = null;   // (the bots stand still: nothing inks the faces read)
+    G.projectiles?.clear?.(); G.subs?.clear?.(); G.specials?.clear?.(); G.paint.clear?.();   // (review 10: nothing in flight inks the rock faces read)
     g.debug.freeze?.();
     // (a) Penguin Point: the rock terrace's plaza face and the upper rock's plaza face are rockwork — stones and crevices
     // along the face, a dark granite foot, a white snow lip (they were flat concrete), both halves

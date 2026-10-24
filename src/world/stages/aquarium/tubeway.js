@@ -46,7 +46,7 @@ export const PIPES = {
       pts: [[9.58, 0.8, -26.31], [7.32, 0.8, -27.13], [7.32, 7.5, -27.13], [-7.32, 7.5, -27.13],
             [-7.32, 3.2, -27.13], [-9.96, 3.2, -26.17]],    // [blockout] B 0.4 m further out: the west pylon's face
       ends: [{ nozzle: 'level' }, { nozzle: 'level' }],         //   overhangs the promenade's edge by 0.4 m (layout.js)
-      hide: [[0, 2.0], [25.4, 27.8]],                         // the end runs inside the pylons (the risers are glazed: drawn)
+      hide: [[0, 1.16], [26.21, 27.8]],                       // the end runs inside the pylons (the risers are glazed: drawn; the glass runs on into the back wall, review 10)
       look: { tint: 'clear', collars: 'brass' } },
     { id: 'express', way: 'one', speed: 24, bend: 2.7,        // the Express, across the wing over the Pump Hall roof
       names: ['FERRY PLAZA', 'PENGUIN POINT'],
