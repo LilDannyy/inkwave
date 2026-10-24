@@ -1,0 +1,159 @@
+JOB-11 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 19:42:49
+branch botlab-b5-caldera, ran at 6d012b1e, exit code 0, wall time 28min
+(a written-up JOB-11.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== check-maps, every caldera variant
+== audit: rules 14 21 22 25 38 42 45 46 / 44 / 47 a,c,d
+== audit: rule 47 b (two halves); probe-roof8
+== probe-hold8, probe-hold8w, probe-perch8
+== probe-steer8 HIGH / LOW, probe-steer8-local
+== lava-leap, lava-notch
+== SUMMARY
+### audit-44
+RESULT 37/37
+### audit-47acd
+RESULT 2/2
+### audit-47b1
+RESULT 1/2
+### audit-47b2
+RESULT 1/2
+### audit-rest
+RESULT 8/9
+### check-maps
+### hold8
+RESULT 1/2
+### hold8w
+RESULT 2/2
+### leap
+RESULT 3/3
+### notch
+RESULT 3/3
+### perch8
+RESULT 1/1
+### roof8
+RESULT 2/2
+### steer8-high
+RESULT 2/2
+### steer8-local
+RESULT 1/1
+### steer8-low
+RESULT 2/2
+
+## last 15 lines of job.log
+RESULT 2/2
+### leap
+RESULT 3/3
+### notch
+RESULT 3/3
+### perch8
+RESULT 1/1
+### roof8
+RESULT 2/2
+### steer8-high
+RESULT 2/2
+### steer8-local
+RESULT 1/1
+### steer8-low
+RESULT 2/2
+
+## audit-44.txt
+### audit-44
+RESULT 37/37
+console errors: none
+PASS rule 44: a plain running jump across the lava at LOW or HIGH saves at most 20 m against the dry way round, the largest under 15 m (the lead's option 1 and margin; the march takes any standable floor across the lava down to the lava, take-offs that drop onto a dry strip first, and run-ups of 2.6 / 1.5 / 0.8 m; every sample past a 0.35 m seam tried; a flight landing > 1 m off its line counted, 
+
+## audit-47acd.txt
+### audit-47acd
+RESULT 2/2
+console errors: none
+"total":{"touched":40032,"died":0,"flung":0,"perched":0,"held":1847,"rescued":1847,"rescueFar":0,"rescueMaxM":5.53,"relaunched":0}
+
+## audit-47b1.txt
+### audit-47b1
+FAIL rule 47: no roof top beside the lava slides a kid into it, holds it as a perch or flings it — (a) the hop-on probe, (b) every point of every top, still / drifting, idle / steering back, at LOW, HIGH, the rise's 30 / 60 / 90 % and the fall's 50 %, (c) Mitts leaps, running and swim jumps, walk-offs and hops during the rise onto every top that holds, (d) Mitts leaps onto the tall tops: 0 death
+RESULT 1/2
+console errors: none
+"total":{"touched":39074,"died":34,"flung":0,"perched":0,"held":3250,"rescued":3250,"rescueFar":0,"rescueMaxM":2.83,"relaunched":0}
+
+## audit-47b2.txt
+### audit-47b2
+FAIL rule 47: no roof top beside the lava slides a kid into it, holds it as a perch or flings it — (a) the hop-on probe, (b) every point of every top, still / drifting, idle / steering back, at LOW, HIGH, the rise's 30 / 60 / 90 % and the fall's 50 %, (c) Mitts leaps, running and swim jumps, walk-offs and hops during the rise onto every top that holds, (d) Mitts leaps onto the tall tops: 0 death
+RESULT 1/2
+console errors: none
+"total":{"touched":47446,"died":54,"flung":0,"perched":0,"held":7214,"rescued":7214,"rescueFar":0,"rescueMaxM":2.83,"relaunched":0}
+
+## audit-rest.txt
+### audit-rest
+FAIL rule 42: no view out of the arena shows void — 96 rays below the horizon from each pad, the 24 highest spots on its outer ring, and over each lip from the Spillway Bridge and the Horn Step (fix round 5), all meet the level, the lava or far scenery (env.sea is off: nothing under the backdrop)  {"viewpoints":12,"raysMissing":62,"of":1152,"perView":[0,0,0,0,0,0,11,11,20,20,0,0],"lipViews":{"br
+RESULT 8/9
+console errors: none
+
+## checkmaps.txt
+### check-maps
+caldera      1805 pieces  ok
+caldera.zones 1805 pieces  ok
+caldera.tower 1805 pieces  ok
+caldera.practice 1805 pieces  ok
+caldera.bazookarp 1867 pieces  ok
+caldera.boss 1674 pieces  ok
+caldera.attract 1805 pieces  ok
+caldera.karp 1805 pieces  ok
+
+## hold8.txt
+### hold8
+FAIL probe-hold8: no off-limits roof top in the lava holds a kid a player can put there (Mitts leap, swim jump, a walk / hop off higher floor, a hop during the rise)  {"schedule":{"warnAt":25,"riseStart":35,"highAt":45,"low":-0.6,"high":0.8},"atT":48,"A":[{"tag":"mould-stack","id":852,"at":[12,1.8,-18.4],"size":[1.4,1.8,1.4]},{"tag":"ladle-stand","id":853,"at":[14,2,-13.6],"size":[1.6,2,1.6]},{"ta
+RESULT 1/2
+console errors: none
+FAIL probe-hold8: no off-limits roof top in the lava holds a kid a player can put there (Mitts leap, swim jump, a walk / hop off higher floor, a hop during the rise)  {"schedule":{"warnAt":25,"riseStart":35,"highAt":45,"low":-0.6,"high":0.8},"atT":48,"A":[{"tag":"mould-stack","id":852,"at":[12,1.8,-18.4],"size":[1.4,1.8,1.4]},{"tag":"ladle-stand","id":853,"at":[14,2,-13.6],"size":[1.6,2,1.6]},{"ta
+PASS probe-hold8: a Mitts leap onto a tide board never ends in the lava with the stick idle  [["low",842,779,738,0],["low",1668,779,738,0],["high",842,779,738,0],["high",1668,779,738,0]]
+
+## hold8w.txt
+### hold8w
+RESULT 2/2
+console errors: none
+PASS probe-hold8: no off-limits roof top in the lava holds a kid a player can put there (Mitts leap, swim jump, a walk / hop off higher floor, a hop during the rise)  {"schedule":{"warnAt":25,"riseStart":35,"highAt":45,"low":-0.6,"high":0.8},"atT":48,"A":[{"tag":"mould-stack","id":852,"at":[12,1.8,-18.4],"size":[1.4,1.8,1.4]},{"tag":"ladle-stand","id":853,"at":[14,2,-13.6],"size":[1.6,2,1.6]},{"ta
+PASS probe-hold8: a Mitts leap onto a tide board never ends in the lava with the stick idle  [["low",842,779,738,0],["low",1668,779,738,0],["high",842,779,738,0],["high",1668,779,738,0]]
+
+## leap.txt
+### leap
+RESULT 3/3
+console errors: none
+
+## notch.txt
+### notch
+RESULT 3/3
+console errors: none
+
+## perch8.txt
+### perch8
+RESULT 1/1
+console errors: none
+PASS probe-perch8: no plain running jump at HIGH leaves a kid standing (held) on cover in the lava  {"tried":84,"perchedIdle":0,"rows":[{"on":"mould-stack","from":[9.5,1.2,-24.5],"dir":68,"after":"idle","landedOn":"mould-stack","alive":true,"end":[10.5,1.4,-20.5],"endOn":"coping","heldS":0.58,"onRoofS":0.6,"rose":0.4,"lava":0.8},{"on":"mould-stack","from":[9.5,1.2,-24.5],"dir":68,"after":"jump","l
+
+## roof8.txt
+### roof8
+RESULT 2/2
+console errors: none
+PASS probe-roof8: no roof top beside the lava (every point, still or drifting, stick idle) drops a kid into it; holds listed  {"times":{"low":10,"high":50,"r30":38.75,"r60":40.75,"r90":43.25,"f50":75},"levels":{"low":{"t":10,"y":-0.6,"roofBlocks":112,"sims":12116,"touched":11600,"died":164,"diedIdle":0,"diedIdleSlid":0,"held":0,"long":0,"blocks":[{"tag":"gauge-machine-house","id":711,"dyn":false,"
+PASS probe-roof8 (information): holds on roofs a kid can reach (≤ 2.6 m over the dry floor round it, or floor above it)  {"holdsReach":0}
+
+## steer8-high.txt
+### steer8-high
+RESULT 2/2
+console errors: none
+PASS probe-steer8: no running jump (straight or steered in the air, from any take-off) saves over 20 m  {"HD":16,"SF":[4,8,12],"STD":[45,90],"levels":{"high":{"nodes":1033,"skip":0,"stoppedAt":null,"cands":16528,"flights":192629,"crossings":2628,"steered":2308,"steeredMax":12.09,"straightMax":12.5,"staticSteeredMax":12.09,"over10":28,"over15":0,"over20":0,"max":12.5,"unmeasured":0,"top":[{"from":[
+PASS probe-steer8: …and the largest stays under 15 m (the margin)  {"max":12.5,"over15":0}
+
+## steer8-local.txt
+### steer8-local
+RESULT 1/1
+console errors: none
+PASS probe-steer8-local: the largest steered running jumps, searched finely round the seeds, stay under 15 m  {"flights":66118,"best":{"seed":[14.5,3.5,270],"at":[14.8,3.8],"hd":276,"ru":2.6,"steer":30,"sf":8,"lavaRun":3.18,"landed":[16.55,1.25,0.43],"on":"lava:race7~:0","gain":6.72},"perSeed":[{"seed":[14.5,3.5,270],"at":[14.8,3.8],"hd":276,"ru":2.6,"steer":30,"sf":8,"lavaRun":3.18,"landed":[16.5
+
+## steer8-low.txt
+### steer8-low
+RESULT 2/2
+console errors: none
+PASS probe-steer8: no running jump (straight or steered in the air, from any take-off) saves over 20 m  {"HD":16,"SF":[4,8,12],"STD":[45,90],"levels":{"low":{"nodes":1037,"skip":0,"stoppedAt":null,"cands":16592,"flights":189699,"crossings":1700,"steered":1546,"steeredMax":12.09,"straightMax":12.5,"staticSteeredMax":12.09,"over10":26,"over15":0,"over20":0,"max":12.5,"unmeasured":0,"top":[{"from":[-
+PASS probe-steer8: …and the largest stays under 15 m (the margin)  {"max":12.5,"over15":0}
