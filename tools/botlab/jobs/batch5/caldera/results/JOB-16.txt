@@ -7,3 +7,4 @@ JOB-16 (caldera) @ 458231a9 (fix round 9: code b083a41e, tests 35cee2be) — Mac
   - net-lava 12/13: the late joiner's imported paint differs from the host's in the lava cells (the host painted the Slump cliff across …);
   - boss on other stages, this code vs int4's f687b4c2: calamari 6/6 both; kelpline 5/6 both ('it roams': 12–15 m walked); treehills 4/6
     both ('home ground' 115 m² and 'it roams') — the same misses with the old boss code, so they predate this round.
+  - review 9's land9-rise probe gave NO result: it hit its WATCHDOG (the page never returned), so the land9 rise case is unmeasured.
