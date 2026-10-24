@@ -107,3 +107,59 @@ when the weekly usage resets) does exactly that list, one fix + one review, and 
 - **Performance: CLOSED (2026-10-17, the Mac mini's fixed-view probe, quality high, 3 runs per cell, load 2–4).**
   Aquarium is level with Halyard on draw calls (×0.93–1.03) and cpuRender (×0.93–0.98), day and dusk, and about
   18 % UNDER on triangles per view (2.7 M vs 3.3 M). No lettering-to-mural work is needed. `aquarium/results/JOB-5.txt`.
+
+## After review 7 (2026-10-23): the kiosks, and the sweep becomes a tool
+
+Review 6's list is closed. Review 7's sweep (a new tool: every tagged block clustered, 3–8 eye positions each, 530
+views) found the one family no sweep had walked: the kiosks. This round, binding:
+1. **Adopt the sweep as a repo tool first:** copy the reviewer's `scratchpad/aqrev7/tools/sweep.cjs` into
+   `tools/botlab/stage-sweep.cjs` (MAP=, TIME=, OUT=; sheets per cluster; a list of clusters with no eye-level view),
+   document it in tools/botlab/README.md, and run it on this stage before and after your changes; attach the sheets.
+   Every later stage review uses it.
+2. **The Ticket Hall booth's glazing buried 2 cm inside its block** (both TICKETS faces blank): a bug; bring the glazing
+   proud of the face, both halves.
+3. **The South Promenade ice-cream kiosk's three bare faces** (its back is the centrepiece at the head of the Penguin
+   Steps), **the other three kiosks' backs, the luggage scale's three faces**: dress as the review specifies (pilasters
+   and the speed lines on every face; the flavours board on the ice-cream back; shutters or framed posters on the
+   sides; the scale's dial, plate and brass trim), within 8.5 cm, nothing over the cornice, no collider.
+4. Re-shoot the review's named cameras, re-run aquarium-art.js (with a pixel read of the kiosk back and the booth
+   glazing that fails at de3bd111), pipes.js, one Turf War match; the cards only if a card view changed.
+Accepted and unchanged: triangles, the boss, camping (cooldown 3.5), the Great Tank bot bug (the beta fix round), the
+skylights' tile, the pavilion stair flanks.
+
+## After review 8 (2026-10-24): the last three faces
+
+Review 7's list is closed; the sweep tool is in the repo. Review 8 lists what is left; all of it this round, binding:
+1. **The Express OUT stop on Penguin Point** (a bug: its speed lines are drawn 0.3–0.6 m inside the rock terrace):
+   lift the lines over the stop's own floor and give both long faces the kiosk pass (skirting with a brass line,
+   corner pilasters, brass portholes or a framed ARRIVALS plate), as the review specifies; a pixel read in
+   aquarium-art.js that fails at a2f28b8d.
+2. **The Ticket Hall booth's render base** and **the Reef Window's short west run / the Service face** the review
+   names: the same language (skirting, pilasters, speed lines, a plate), within 8.5 cm, no collider.
+3. **aquarium-art.js section 8(c)** (the spawn decks' planters) is flaky: make it read where the ink cannot land, or
+   splat first; 3 runs clean.
+4. Nits: the dusk sheet titles; the three sweep cameras against a face (nudge them in the tool).
+Then the sweep before / after, the named cameras, pipes.js, one Turf War match. Nothing else is open on this stage.
+
+## After review 9 (2026-10-24): the riser shafts
+
+Review 8's list is closed. Review 9's sweep found the glazed riser shafts in the Shark Arch halls: empty white rooms
+behind 2.25 × 8.4 m of glass on the main lane (DESIGN §5 wanted them read as the Arch Line's risers). This round:
+1. **The four shafts**, as the review specifies: a batched prop type inside the void (tiled walls in the Fin Pavilion's
+   language with the hall's skirting and speed lines, a brass grille floor with a drain, a caged service ladder and
+   tube brackets on the back wall, the ARCH LINE · RISER plate facing the glass, caged bulkhead lamps glowing at
+   dusk), every part ≥ 0.15 m clear of the riser tube, no collider, one draw call for all four.
+2. **The minors:** the Kelp Balcony's inner metre (the shader bearing gate), the Reef Window's plain jambs, the IN stop
+   brought up to the OUT stop's standard, the sweep tool's near-face cameras.
+3. Proof as before: the sweep (day, dusk, TWIN=1), the review's cameras, aquarium-art.js with a pixel read of a shaft
+   wall that fails at 4df530c8, pipes.js, one Turf War match; cards only if a card view changed.
+Nothing else is open on this stage after this.
+
+## ACCEPTED (2026-10-24, the lead): Gulper Aquarium's art is finished
+
+Review 10: "nothing at eye level is a bare box any more"; its two one-line items (the riser glass ending in mid-air;
+the flaky Penguin Point check) were applied by the lead in ee073bb5 and proven: aquarium-art.js 60/60 three times,
+the shafts re-shot (the tube runs on into the wall; plate, ladder, brackets, lamps read). The stage ships without the
+BETA tag at the next integration. Still owned elsewhere: the Great Tank bot bug (fixed in beta fix round 1), the exit
+cooldown 3.5 s (in the beta), the pipes camping sample in the consolidated balance pass, its Bazookarp layout (the
+layouts phase).

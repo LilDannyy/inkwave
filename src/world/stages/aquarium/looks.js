@@ -838,7 +838,30 @@ export function buildExhibits(T, U, TOUCH) {
     { const g = new T.CylinderGeometry(30.66, 30.66, 0.05, n, 1, true, Math.PI / 2 - a1 * deg, (a1 - a0) * deg); const gi = g.toNonIndexed(), Pp = gi.attributes.position, arr = []; for (let i = 0; i < Pp.count; i += 3) for (const k of [0, 2, 1]) arr.push(Pp.getX(i + k), Pp.getY(i + k), Pp.getZ(i + k)); const g2 = new T.BufferGeometry(); g2.setAttribute('position', new T.Float32BufferAttribute(arr, 3)); g2.computeVertexNormals(); X.add(g2, X.M(0, REEF.lid - 0.06, 0), lin(T, '#fff1d6')); }
     X.ex = [0, REEF.lid, 0, 0];
   }
-  for (const it of reefPlan().items) reefPiece(T, X, it);
+  { const p0 = X.p.length;
+    for (const it of reefPlan().items) reefPiece(T, X, it);
+    // (fix round 8, LEAD-REVIEW 8: the window's ends are render jambs now, aquarium_reefjambs; rocks and corals planted near
+    // an end reached up to 0.3 m past it and stood out of the jamb into the Service Gate and beside the pylon. Each piece is
+    // pressed flat against its end: in the end chord's frame — layout.js's window blocks are radBox chords, n of them per
+    // run — a vertex past the chord's end plane is moved back onto it; and none reaches past r 32.28, inside the outer wall
+    // (r 32.3 → 32.55: a coral by the α −58 jamb showed through its corner)
+    const ends = [];
+    for (const [a0, a1] of REEF.runs) {
+      const n = a1 - a0 < 4 ? 1 : Math.round((a1 - a0) / 4), da = (a1 - a0) / n, hl = 32.5 * Math.sin((da / 2) * deg);
+      ends.push({ ac: a0 + da / 2, hl, side: 1, lo: a0 - 3, hi: a0 + da }, { ac: a1 - da / 2, hl, side: -1, lo: a1 - da, hi: a1 + 3 });
+    }
+    const P = X.p;
+    for (let i = p0; i < P.length; i += 3) {
+      const b = Math.atan2(P[i + 2], P[i]) / deg;
+      for (const e of ends) {
+        if (b < e.lo || b > e.hi) continue;
+        const tx = Math.sin(e.ac * deg), tz = -Math.cos(e.ac * deg), t = P[i] * tx + P[i + 2] * tz, lim = e.side * e.hl;   // (local x: toward lower bearings)
+        if (t * e.side > e.hl) { P[i] += (lim - t) * tx; P[i + 2] += (lim - t) * tz; }
+      }
+      const r = Math.hypot(P[i], P[i + 2]);
+      if (r > 32.28) { P[i] *= 32.28 / r; P[i + 2] *= 32.28 / r; }
+    }
+  }
   // the clownfish: two or three hovering in each anemone, circling it in the vertex shader (kind 3: aEx2 = the orbit's
   // centre, its rate, its phase), orange with two white bands
   { const rnd = mulberry(5151), orange = lin(T, '#e2742c'), white = lin(T, '#f4f1ea'), tailC = lin(T, '#d8682a');

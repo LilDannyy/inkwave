@@ -383,6 +383,213 @@ vec3 aqRenderFace(float h, float H, float aa, float big, float fine, out float r
 }
 `;
 
+// ---- fix round 6 (LEAD-REVIEW 6's list): the Feeding Step, the Kelp Ramps' parapets, the whale-tail benches, the trolley
+// stacks, the ice-cream carts' stripes — all on inkable cover, so all under the ink (their props: plates, corner guards,
+// pilasters, flukes, casters and push bars, within 8.5 cm of a face and below its walkable top)
+const R6_PARS = /* glsl */`
+// the Feeding Step's faces: the riser's language round its corners — white render over a black-granite skirting with a
+// brass line, three faience speed lines under the riser mural's faience wave at its height (side > 0.5: the riser keeps its
+// mural), a teak fascia over a brass nosing along the top edge; t along the face, y over the court
+vec3 aqFeedFace(float t, float y, float side, float aa, float big, float fine, out float rough, out float metal) {
+  vec3 c = vec3(0.84, 0.79, 0.70) * 0.86 * (1.0 + 0.05 * (big - 0.5) + 0.03 * (fine - 0.5));
+  float band = 0.0, grout = 0.0;
+  if (side > 0.5) {
+    float dl = min(abs(y - 0.62), min(abs(y - 0.7), abs(y - 0.78)));
+    band = aqFill(dl - 0.022, aa); grout = aqFill(abs(dl - 0.022) - 0.004, aa);
+    band = max(band, aqFill(abs(y - 0.974 - 0.033 * sin(t * 43.63)) - 0.015, aa));    // (the mural's wave: 14.4 cm a wave)
+  }
+  c = mix(c, vec3(0.33, 0.45, 0.39) * (0.96 + 0.05 * fine), band); c *= 1.0 - 0.22 * grout;
+  c = mix(c, vec3(0.045, 0.048, 0.052) * 1.5, aqFill(y - 0.088, aa));
+  float br = max(aqFill(abs(y - 0.094) - 0.006, aa), aqFill(abs(y - 1.07) - 0.008, aa));
+  vec3 TEAK = vec3(0.30, 0.20, 0.12) * (0.82 + 0.25 * fine) * (0.92 + 0.08 * sin(t * 9.0 + 2.0 * sin(t * 2.3)));
+  float board = aqFill(1.078 - y, aa);
+  c = mix(c, TEAK * (1.0 - 0.3 * aqFill(abs(y - 1.15) - 0.004, aa)), board);
+  c = mix(c, vec3(0.56, 0.38, 0.15) * (1.0 + 0.12 * fine), br);
+  rough = mix(mix(mix(0.85, 0.25, band), 0.55, board), 0.3, br); metal = 0.65 * br;
+  return c;
+}
+// the Feeding Step's top: the Feeding Deck's teak planks (staggered butt joints, dark caulk) inside a brass border, a brass
+// KEEP CLEAR wave between two rails across it toward the deck; p in the step's frame (x along it from its middle, y from
+// its front edge toward the deck), e metres in from its outline (the fascia's rounding over it: teak)
+vec3 aqFeedTop(vec2 p, float e, float aa, float fine, out float rough, out float metal) {
+  float k = floor(p.y / 0.145), f = fract(p.y / 0.145), off = 7.0 * aqH22(vec2(k, 2.0)).x;
+  float bj = fract((p.x + off) / 1.9);
+  vec3 TEAK = vec3(0.30, 0.20, 0.12) * (0.8 + 0.25 * aqH22(vec2(k, floor((p.x + off) / 1.9))).x) * (0.92 + 0.1 * aqVN(vec2(p.x * 3.0, k * 5.1)));
+  vec3 c = TEAK * (1.0 - 0.55 * aqFill(min(f, 1.0 - f) * 0.145 - 0.006, aa)) * (1.0 - 0.45 * aqFill(min(bj, 1.0 - bj) * 1.9 - 0.004, aa));
+  c = mix(c, vec3(0.30, 0.20, 0.12) * 0.95, aqFill(e - 0.14, aa));
+  float zb = 2.6 - p.y;
+  float wv = aqFill(abs(zb - 0.45 - 0.05 * sin(p.x * 25.13)) - 0.014, aa) + aqFill(abs(abs(zb - 0.45) - 0.12) - 0.01, aa);
+  float br = clamp(aqFill(abs(e - 0.17) - 0.016, aa) + wv * step(0.19, e), 0.0, 1.0);
+  c = mix(c, vec3(0.56, 0.38, 0.15) * (1.0 + 0.12 * fine), br);
+  rough = mix(0.62, 0.3, br); metal = 0.65 * br;
+  return c;
+}
+// the whale-tail bench (its bronze flukes at the ends: props): a back-to-back promenade bench — on its long faces the seat's
+// teak apron under a brass-nosed seat edge, the backrest's upright slats between brass rails, a teak cap, brass end posts;
+// on its ends a teak panel in a brass frame; t along the face from its middle, hl its half length, y over the floor
+vec3 aqWBench(float t, float hl, float y, float longF, float aa, float fine, out float rough, out float metal) {
+  vec3 TEAK = vec3(0.3, 0.2, 0.12), BR = vec3(0.56, 0.38, 0.15);
+  rough = 0.5; metal = 0.0;
+  if (y < 0.08) return vec3(0.045, 0.048, 0.052) * 1.4;
+  vec3 c; float br;
+  if (longF > 0.5) {
+    if (y < 0.44) { float sl = fract((y - 0.08) / 0.09); c = TEAK * (0.8 + 0.3 * aqVN(vec2(t * 2.0, floor(y / 0.09) * 3.1))) * (1.0 - 0.6 * aqFill(min(sl, 1.0 - sl) * 0.09 - 0.005, aa)); }
+    else { float sl = fract((t + 7.0) / 0.1); c = TEAK * (0.85 + 0.3 * aqVN(vec2(floor((t + 7.0) / 0.1) * 2.7, y * 2.0))) * (1.0 - 0.6 * aqFill(min(sl, 1.0 - sl) * 0.1 - 0.006, aa)); }
+    if (y > 1.11) c = TEAK * (0.85 + 0.2 * fine);
+    c *= 1.0 - 0.55 * aqFill(abs(y - 0.478) - 0.01, aa);
+    br = aqFill(abs(y - 0.455) - 0.016, aa) + aqFill(abs(y - 0.8) - 0.013, aa) + aqFill(abs(y - 1.095) - 0.015, aa) + step(hl - 0.08, abs(t));
+  } else {
+    c = TEAK * (0.85 + 0.25 * aqVN(vec2(t, y) * 4.0));
+    br = aqFill(abs(abs(t) - (hl - 0.06)) - 0.03, aa) + aqFill(abs(y - 1.095) - 0.015, aa) + aqFill(abs(y - 0.12) - 0.015, aa);
+  }
+  br = clamp(br, 0.0, 1.0);
+  c = mix(c, BR * (0.9 + 0.2 * fine), br); metal = 0.7 * br; rough = mix(0.6, 0.3, br);
+  return c;
+}
+// nested luggage trolleys seen from the side (the trolley stack; their casters and push bars: props): through upright
+// bars every 12 cm the shade inside and the luggage on the bottom deck, a thicker steel upright where each trolley ends
+// (nested 38 cm apart), steel deck and mid rails, a brass top rail; t along the face, hl its half length, y, H the top
+vec3 aqCage(float t, float hl, float y, float H, float longF, float aa, float fine, out float rough, out float metal) {
+  vec3 STEEL = vec3(0.25, 0.28, 0.3), BR = vec3(0.56, 0.38, 0.15);
+  vec3 c = vec3(0.035, 0.04, 0.045);
+  if (longF > 0.5 && y > 0.32 && y < 0.95) {
+    float u = (t + hl) / (2.0 * hl);
+    vec3 L = u < 0.36 ? vec3(0.32, 0.19, 0.1) : (u < 0.7 ? vec3(0.12, 0.23, 0.25) : vec3(0.4, 0.33, 0.21));
+    float top = u < 0.36 ? 0.78 : (u < 0.7 ? 0.62 : 0.9), gap = min(abs(u - 0.36), abs(u - 0.7)) * 2.0 * hl;
+    float inC = aqFill(y - top, aa) * (1.0 - aqFill(gap - 0.03, aa));
+    c = mix(c, L * (0.55 + 0.15 * fine) * (1.0 - 0.35 * aqFill(abs(y - top + 0.07) - 0.012, aa)), inC);
+  }
+  float bar = aqFill(abs(fract((t + hl) / 0.12 + 0.5) - 0.5) * 0.12 - 0.009, aa) * step(0.3, y) * step(y, H - 0.06);
+  float k = (t + hl - 0.05) / 0.38, up = aqFill(abs(fract(k + 0.5) - 0.5) * 0.38 - 0.022, aa) * step(-0.2, k);
+  float rail = aqFill(abs(y - 0.29) - 0.03, aa) + aqFill(abs(y - 0.8) - 0.012, aa) + aqFill(abs(y - (H - 0.09)) - 0.016, aa);
+  float brr = aqFill(abs(y - (H - 0.035)) - 0.022, aa);
+  c = mix(c, STEEL * (0.85 + 0.25 * fine), clamp(bar + up + rail, 0.0, 1.0));
+  c = mix(c, BR * (0.95 + 0.15 * fine), brr);
+  if (y < 0.24) c = mix(vec3(0.03, 0.032, 0.035), STEEL * 0.7, up);
+  float m = clamp(bar + up + rail + brr, 0.0, 1.0);
+  rough = mix(0.85, 0.35, m); metal = 0.6 * m;
+  return c;
+}
+// the Kelp Ramp's parapet: render in the stair flanks' language — a black-granite skirting with a brass line along its foot
+// (the court, the promenade or the ramp's rake), three faience speed lines along the rake under a smooth coping band and
+// its groove; d metres down from its sloping top, hb over its foot
+vec3 aqParapet(float d, float hb, float aa, float big, float fine, out float rough, out float metal) {
+  vec3 REN = vec3(0.84, 0.79, 0.70) * 0.86 * (1.0 + 0.05 * (big - 0.5) + 0.03 * (fine - 0.5));
+  vec3 c = mix(REN, REN * 1.07, aqFill(d - 0.09, aa));
+  c *= 1.0 - 0.4 * aqFill(abs(d - 0.1) - 0.008, aa);
+  float dl = min(abs(d - 0.26), min(abs(d - 0.34), abs(d - 0.42)));
+  float band = aqFill(dl - 0.022, aa), grout = aqFill(abs(dl - 0.022) - 0.004, aa);
+  c = mix(c, vec3(0.33, 0.45, 0.39) * (0.96 + 0.05 * fine), band); c *= 1.0 - 0.22 * grout;
+  c = mix(c, vec3(0.045, 0.048, 0.052) * 1.5, aqFill(hb - 0.15, aa));
+  float sk = aqFill(abs(hb - 0.157) - 0.008, aa);
+  c = mix(c, vec3(0.56, 0.38, 0.15), sk);
+  rough = mix(mix(0.85, 0.25, band), 0.3, sk); metal = 0.65 * sk;
+  return c;
+}
+`;
+
+const R7_PARS = /* glsl */`
+// ---- fix round 7 (LEAD-REVIEW 7): the Ticket Hall's luggage scale (inkable cover, so under the ink; its dial, kick plates
+// and maker's plate are props): a recessed riveted panel on every face, LUGGAGE · WEIGH HERE · MAX 25 KG stencilled on the
+// two long faces in a 5 × 7 stencil letter (rows top to bottom, bit 4 the left column: L U G A E W I H R M X 2 5 K)
+const int AQF[98] = int[98](16, 16, 16, 16, 16, 16, 31, 17, 17, 17, 17, 17, 17, 14, 14, 17, 16, 23, 17, 17, 15, 14, 17, 17, 31, 17, 17, 17, 31, 16, 16, 30, 16, 16, 31, 17, 17, 17, 21, 21, 21, 10, 14, 4, 4, 4, 4, 4, 14, 17, 17, 17, 31, 17, 17, 17, 30, 17, 17, 30, 20, 18, 17, 17, 27, 21, 21, 17, 17, 17, 17, 17, 10, 4, 10, 17, 17, 14, 17, 1, 2, 4, 8, 31, 31, 16, 30, 1, 1, 17, 14, 17, 18, 20, 24, 20, 18, 17);
+const int AQT[26] = int[26](0, 1, 2, 2, 3, 2, 4, 5, 4, 6, 2, 7, -1, 7, 4, 8, 4, 9, 3, 10, -1, 11, 12, -1, 13, 2);
+float aqGlyph(int g, int col, int row) { return g < 0 ? 0.0 : float((AQF[g * 7 + row] >> (4 - col)) & 1); }
+// one line of AQT (n letters from off), centred on u = 0, its foot at v = 0, cell s metres (a letter 5 s wide, 7 s tall)
+float aqStencil(int off, int n, vec2 p, float s) {
+  float Wc = float(n) * 6.0 - 1.0;
+  vec2 c = p / s + vec2(Wc * 0.5, 0.0);
+  if (c.x < 0.0 || c.x >= Wc || c.y < 0.0 || c.y >= 7.0) return 0.0;
+  int i = int(c.x / 6.0); float cx = c.x - float(i) * 6.0;
+  if (cx >= 5.0) return 0.0;
+  return aqGlyph(AQT[off + i], int(cx), 6 - int(c.y));
+}
+// a face of the scale: u along it from its middle (to the viewer's right), hl its half length, h over its foot (0 … 1.2),
+// longF on the two long faces; the painted body is the block's own colour
+vec3 aqScaleFace(float u, float hl, float h, float longF, vec3 body, float aa, float fine, out float rough, out float metal) {
+  vec3 c = body * (0.98 + 0.06 * fine);
+  float e = min(hl - abs(u), min(h - 0.1, 1.2 - h));                    // (in from the frame's outline: the kick plate under it)
+  float fr = 1.0 - aqFill(e - 0.09, aa);                                // (the raised frame: e < 0.09)
+  c *= mix(1.06, 0.86, fr);                                             // (the panel sits back in its frame)
+  c *= 1.0 - 0.5 * aqFill(abs(e - 0.095) - 0.006, aa) * step(0.0, e);   // (the shadow line at the recess)
+  c *= 1.0 + 0.22 * aqFill(abs(e - 0.083) - 0.004, aa);                 // (the frame's lit inner edge)
+  // rivets down the frame's middle, every 10 cm
+  float dv = abs(abs(u) - (hl - 0.045)), dvy = abs(fract((h - 0.145) / 0.101 + 0.5) - 0.5) * 0.101;
+  float dh = min(abs(h - 0.145), abs(h - 1.155)), dhx = abs(fract((u + hl) / 0.1 + 0.5) - 0.5) * 0.1;
+  float rv = min(length(vec2(dv, dvy)) + (h < 0.13 || h > 1.17 ? 9.0 : 0.0), length(vec2(dhx, dh)) + (abs(u) > hl - 0.03 ? 9.0 : 0.0));
+  c *= 1.0 + 0.4 * aqFill(rv - 0.009, aa) - 0.4 * aqFill(abs(rv - 0.013) - 0.003, aa);
+  float st = 0.0;
+  if (longF > 0.5) st = max(aqStencil(0, 7, vec2(u, h - 0.8), 0.018), max(aqStencil(7, 10, vec2(u, h - 0.66), 0.012), aqStencil(17, 9, vec2(u, h - 0.52), 0.012)));
+  c = mix(c, vec3(0.05, 0.05, 0.055), st * (0.86 + 0.14 * fine));
+  rough = mix(mix(0.5, 0.42, fr), 0.7, st); metal = 0.45 * (1.0 - st);
+  return c;
+}
+`;
+
+// ---- fix round 9 (LEAD-REVIEW 9): the Arch Line's riser shafts in the South (North) Gate's pylons (layout.js PY.void, x
+// ±(6.15 … 8.5) behind the hall's glass, z −28.25 … −26.0, floor 0 to the lid at 8.4: the pylon's plain render cells, an
+// empty white box behind 2.25 × 8.4 m of glass). Not inkable, behind glass: the faces themselves, no geometry (the parts in
+// the shaft — the ladder, the guide brackets, the plate, the lamps — are props.js / arch.js's aquarium_shafts)
+const R9_PARS = /* glsl */`
+// white glazed wall tile in the Fin Pavilion's glazed-block language (0.15 m squares, glazed white, a pillowed edge, 4 mm
+// grey joints, each tile's own glaze tone) over a black-granite skirting with a brass line (0 → 0.16, the hall's), the
+// hall's three faience speed lines carried on through the glass (2.62 / 2.76 / 2.90, and every 4 m up: the pylon's own,
+// its render cells' lines from y 0) and the review's three over the skirting (0.62 / 0.76 / 0.90); u along the face
+// (a joint at its corners), y over the floor
+vec3 aqShaftTile(float u, float y, float aa, out float rough, out float metal) {
+  vec2 g = vec2(u, y - 0.16) / 0.15, f = abs(fract(g) - 0.5);
+  float e = (0.5 - max(f.x, f.y)) * 0.15;                       // metres to the nearest joint
+  float jt = aqFill(e - 0.002, aa);
+  float tone = 0.95 + 0.07 * aqH22(floor(g) + 3.7).x;
+  vec3 c = vec3(0.83, 0.83, 0.79) * tone * (1.0 - 0.1 * smoothstep(0.016, 0.0, e));
+  c = mix(c, vec3(0.42, 0.42, 0.40), jt);
+  rough = mix(0.14, 0.85, jt);
+  float v = mod(y, 4.0), dl = min(min(abs(v - 2.62), abs(v - 2.76)), abs(v - 2.90));
+  if (y < 1.2) dl = min(dl, min(min(abs(y - 0.62), abs(y - 0.76)), abs(y - 0.90)));
+  float band = aqFill(dl - 0.03, aa), grout = aqFill(abs(dl - 0.03) - 0.004, aa);
+  c = mix(c, vec3(0.33, 0.45, 0.39), band); c *= 1.0 - 0.22 * grout;
+  rough = mix(rough, 0.22, band);
+  float sk = aqFill(y - 0.16, aa), br = aqFill(abs(y - 0.166) - 0.007, aa);
+  c = mix(c, vec3(0.045, 0.048, 0.052) * 1.5, sk); rough = mix(rough, 0.3, sk);
+  c = mix(c, vec3(0.56, 0.38, 0.15), br); rough = mix(rough, 0.3, br);
+  metal = 0.65 * br;
+  return c;
+}
+// the bulkhead lamps' light on the shaft's tile, floor and lid (arch.js aquarium_shafts: on both side walls toward the back
+// corner, x 7.95, at 2.4 and 7.6 m; a service light, on by day too: through gAqWin, a fifth of its dusk strength by day):
+// p = (|x|, y, z) in Alpha's frame
+float aqShaftLamps(vec3 p) {
+  float k = 0.0;
+  for (int i = 0; i < 4; i++) {
+    vec3 L = vec3(7.95, i < 2 ? 2.4 : 7.6, (i - (i / 2) * 2) == 0 ? -26.1 : -28.15);
+    float d = max(0.0, 1.0 - length(p - L) / 1.8);
+    k += d * d;
+  }
+  return min(k, 1.0);
+}
+// the shaft's floor: a brass grille plate in a brass frame (bars along the shaft, 5 cm apart, dark slots between them) with a
+// round drain toward the glass; p in Alpha's frame
+vec3 aqShaftFloor(vec2 p, float aa, out float rough, out float metal) {
+  float ax = abs(p.x), e = min(min(ax - 6.15, 8.5 - ax), min(p.y + 28.25, -26.0 - p.y));
+  vec3 BR = vec3(0.56, 0.38, 0.15), DK = vec3(0.018, 0.016, 0.014);
+  float fr = aqFill(e - 0.07, aa);
+  float sl = abs(fract((p.y + 26.0) / 0.05) - 0.5) * 0.05;     // metres to the middle of a bar's gap
+  float slot = aqFill(sl - 0.011, aa) * (1.0 - fr);                   // (2.2 cm slots, 2.8 cm bars)
+  vec3 c = mix(BR * (0.82 + 0.1 * aqH22(floor(vec2(ax * 3.0, (p.y + 26.0) / 0.05))).x), DK, slot);
+  c = mix(c, BR * 0.95, fr);
+  c *= 1.0 - 0.45 * aqFill(abs(e - 0.07) - 0.004, aa);
+  // the drain: a dark well under a brass grate of radial slots in a brass ring
+  vec2 d = vec2(ax - 6.72, p.y + 27.13); float r = length(d), a = atan(d.y, d.x);
+  float well = aqFill(r - 0.13, aa), ring = aqFill(abs(r - 0.15) - 0.022, aa);
+  float spoke = aqFill(abs(fract(a / 0.3927 + 0.5) - 0.5) * 0.3927 * r - 0.009, aa) * step(r, 0.13) + aqFill(r - 0.03, aa);
+  c = mix(c, mix(DK, BR * 0.9, spoke), well);
+  c = mix(c, BR, ring);
+  rough = mix(0.32, 0.9, slot * (1.0 - well) + well * (1.0 - spoke));
+  metal = 0.7 * (1.0 - max(slot * (1.0 - well), well * (1.0 - spoke)));
+  return c;
+}
+`;
+
 const GLSL_PARS = /* glsl */`
 uniform float uAqNight;
 uniform vec4 uAqRose;
@@ -529,7 +736,7 @@ vec3 aqStoneFace(float t, float h, float H, float cope, float aa, float big, flo
 vec3 aqPlanterFace(float t, float h, float H, float cope, float aa, float big, float fine, out float rough, out float metal) {
   return aqStoneFace(t, h, H, cope, aa, big, fine, vec3(0.70, 0.64, 0.52), 1.0, rough, metal);
 }
-` + R5_PARS;
+` + R5_PARS + R6_PARS + R7_PARS + R9_PARS;
 
 // ---- fix round 4: the GLSL for the Lookouts, the telescope bays and the planters, from geo.js's numbers (Alpha's frame)
 const f4 = (v) => (+v).toFixed(4);
@@ -566,7 +773,10 @@ const PLANTER_FACES = [
           // (fix round 5, the lead's nit: the spokes' steps blend into the bed — their risers are the bed's own planting at
           // its tone, not dark soil under a darker leaf: from above they read as one bed, not straight cuts across it)
           base = mix(aqBed(vec2(t + 3.1, y * 1.6), 1.0, 0.0, aa, 0.0, vec2(0.0)) * 1.45, vec3(0.63, 0.58, 0.47), aqFill(${f4(o.r - bevOct(o) - 0.04)} - m, aa));   // (brighter: a riser is lit less than a top)
-          gBaseRough = 0.9; gTexStr *= 0.1; gTexORM.b = 0.0;
+          gBaseRough = 0.9; gTexORM.b = 0.0;
+          // (fix round 6, LEAD-REVIEW 6's nit: the 9 cm steps still drew a straight dark line across the bed — the riser and
+          // the rounded edge over it lit as walls turned from the sun) the planting's own light: shaded as the bed is, up
+          if (m < ${f4(o.r - bevOct(o) - 0.06)}) aqRelief(vec3(0.0, 1.0, 0.0)); else gTexStr *= 0.1;
         }
       }
     }`),
@@ -585,7 +795,10 @@ const PLANTER_FACES = [
 const BEVELS = [
   ...PLANTERS.oct.map((o) => `{
       vec2 p = q - vec2(${f4(o.c[0])}, ${f4(o.c[1])}); float m = max(max(abs(p.x), abs(p.y)), max(abs(p.x + p.y), abs(p.x - p.y)) * 0.70711);
-      if (m < ${f4(o.r + 0.01)} && y > ${f4(o.top - 0.42)} && y < ${f4(o.top + 0.01)}) base = m > ${f4(o.r - bevOct(o) - 0.04)} ? STb : aqBed(vWPos.xz, 1.0, 0.0, max(fwidth(vWPos.x) + fwidth(vWPos.z), 0.004), 0.0, vec2(0.0)) * 1.2;   // (fix round 5: the steps' rounded edges in the bed's planting)
+      if (m < ${f4(o.r + 0.01)} && y > ${f4(o.top - 0.42)} && y < ${f4(o.top + 0.01)}) {
+        base = m > ${f4(o.r - bevOct(o) - 0.04)} ? STb : aqBed(vWPos.xz, 1.0, 0.0, max(fwidth(vWPos.x) + fwidth(vWPos.z), 0.004), 0.0, vec2(0.0)) * 1.2;   // (fix round 5: the steps' rounded edges in the bed's planting)
+        if (m < ${f4(o.r - bevOct(o) - 0.06)}) aqRelief(vec3(0.0, 1.0, 0.0));   // (fix round 6: and lit as the bed is, up)
+      }
     }`),
   ...PLANTERS.box.map((b) => `if (y > ${f4(b.top - 0.2)} && y < ${f4(b.top + 0.01)}) {
       vec2 sw = vec2(0.5 * q.x - ${CB} * (q.y + 32.5), ${CB} * q.x + 0.5 * (q.y + 32.5));
@@ -840,7 +1053,7 @@ const R5B_FACES = `{
       if (!r5 && y > 2.38 && y < 3.71) {
         vec2 pk = q - vec2(-25.0, 0.0); float bk = degrees(atan(pk.y, pk.x)); if (bk < 0.0) bk += 360.0;
         float rk = length(pk);
-        if (bk > 193.0 && bk < 257.0 && rk > 4.4 && rk < 7.35) {
+        if (bk > 182.0 && bk < 268.0 && rk > 4.4 && rk < 7.35) {   // (fix round 9: 193 … 257 missed the end faces' inner metre)
           float i = clamp(floor((bk - 195.0) / 15.0), 0.0, 3.0), am = radians(195.0 + 15.0 * (i + 0.5));
           vec2 dm = vec2(cos(am), sin(am)), pm = vec2(-dm.y, dm.x);
           float u = dot(pk, dm), v = dot(pk, pm), top = 3.6 + 0.1 * mod(i, 2.0);
@@ -931,7 +1144,7 @@ const R5B_BEVELS = `{
       vec3 TEAK = vec3(0.30, 0.20, 0.12) * (0.85 + 0.2 * fine);
       vec2 pk = q - vec2(-25.0, 0.0); float bk = degrees(atan(pk.y, pk.x)); if (bk < 0.0) bk += 360.0;
       vec2 dd = ${dirS(-158)}, pp = vec2(-dd.y, dd.x); float u = dot(q, dd) - 29.0, v = dot(q, pp);
-      if (y > 3.4 && y < 3.71 && bk > 193.0 && bk < 257.0 && length(pk) > 4.4 && length(pk) < 7.35) base = TEAK;                        // the Kelp Balcony
+      if (y > 3.4 && y < 3.71 && bk > 182.0 && bk < 268.0 && length(pk) > 4.4 && length(pk) < 7.35) base = TEAK;                        // the Kelp Balcony
       else if (y > 3.4 && y < 3.61 && abs(u) < 0.73 && abs(v) < 0.73) base = TEAK;                                                   // the deckchairs
       else if (y > 0.7 && y < 0.91 && q.x > 11.25 && q.x < 15.35 && q.y > -8.05 && q.y < -3.95) base = ${ST} * 1.1;                  // the helmet bed
       else if (y > 0.7 && y < 0.91 && q.x > 2.95 && q.x < 5.45 && q.y > -30.35 && q.y < -29.65) base = TEAK;                         // the shark bench
@@ -942,6 +1155,160 @@ const R5B_BEVELS = `{
         if (abs(abs(sw.y) - 13.0) < 0.2 && sw.x > 31.3 && sw.x < 39.7) base = TEAK;                                                  // the pavilion's flank walls' top edge
       }
     }`;
+
+// ---- fix round 6: the pieces (Alpha's frame; numbers from layout.js)
+const FSTEP = [-2.0, 2.0, -9.8, -7.2];                      // the Feeding Step (top 1.2; its riser, −z, carries mural 7)
+const WBENCH = [-2.5, 0.5, -58.6, -57.4];                   // the whale-tail bench (top 1.2)
+const TSTACK = [27.6, 28.8, -7.8, -5.8];                    // the trolley stack, blade frame (s0, s1, w0, w1; top 1.4)
+const CARTB = [-6.2, -4.8, -40.5, -39.0];                   // the ice-cream cart (top 1.4)
+// the Kelp Ramp's parapet round the W drum (Alpha's frame: layout.js's runs k 8 … 11 round EK turned 180° onto WK):
+// chords between bearings −30 − 15 i and −45 − 15 i at r 7.65, 0.3 wide, tops 0.9 over the ramp (2.5 → 3.3), each run
+// 0.25 m long at both ends (the last one not past the promenade): the notches at the joints are the pilasters' (props)
+const KP = [0, 1, 2, 3].map((i) => {
+  const b0 = -30 - 15 * i, d0 = DIRV(b0), d1 = DIRV(b0 - 15), r = 7.65;
+  const Q0 = [-25 + r * d0[0], r * d0[1]], Q1 = [-25 + r * d1[0], r * d1[1]], M = Math.hypot(Q1[0] - Q0[0], Q1[1] - Q0[1]);
+  return { Q0, v: [(Q1[0] - Q0[0]) / M, (Q1[1] - Q0[1]) / M], n: DIRV(b0 - 7.5), um: r * Math.cos((7.5 * Math.PI) / 180), M, f0: 0.25, f1: i === 3 ? 0 : 0.25,
+    t0: (2.4 * (8 + i)) / 12 + 0.9, sl: 0.2 / M };
+});
+const kpLoop = (body) => KP.map((k) => `if (!r6) {
+        vec2 kv = vec2(${f4(k.v[0])}, ${f4(k.v[1])}), kn = vec2(${f4(k.n[0])}, ${f4(k.n[1])});
+        float ks = dot(q - vec2(${f4(k.Q0[0])}, ${f4(k.Q0[1])}), kv), ku = dot(q - vec2(-25.0, 0.0), kn) - ${f4(k.um)};
+        float kt = ${f4(k.t0)} + ${f4(k.sl)} * clamp(ks, ${f4(-k.f0)}, ${f4(k.M + k.f1)});
+        bool kin = ks > ${f4(-k.f0 - 0.03)} && ks < ${f4(k.M + k.f1 + 0.03)} && abs(ku) < 0.19;
+        ${body(k)}
+      }`).join('\n      ');
+const R6_FACES = `{
+      float t6, hl6, r6r = 0.0, r6m = 0.0;
+      vec2 td6;
+      bool r6 = false;
+      float aa6 = max(fwidth(vWPos.x) + fwidth(vWPos.z) + fwidth(y), 0.003);
+      // the Feeding Step: its sides and the riser's skirting and fascia (the riser's mural stays: 0.1 … 1.06 untouched)
+      if (y < 1.21 && aqBoxFace(q, nq, ${v4(FSTEP)}, t6, hl6, td6)) {
+        float side = abs(nq.x) > 0.95 ? 1.0 : 0.0;
+        if (side > 0.5 || y < 0.1 || y > 1.06) {
+          base = aqFeedFace(t6, y, side, aa6, big, fine, r6r, r6m); gBaseRough = r6r; gTexORM.b = r6m; gTexStr *= 0.12;
+        }
+        r6 = true;
+      }
+      // the whale-tail bench
+      else if (y < 1.21 && aqBoxFace(q, nq, ${v4(WBENCH)}, t6, hl6, td6)) {
+        base = aqWBench(t6, hl6, y, step(1.0, hl6), aa6, fine, r6r, r6m); gBaseRough = r6r; gTexORM.b = r6m; gTexStr *= 0.1; r6 = true;
+      }
+      // the ice-cream cart: candy stripes round its skirt under the coral bands, a coral pinstripe under its brass lip
+      else if (y < 1.41 && aqBoxFace(q, nq, ${v4(CARTB)}, t6, hl6, td6)) {
+        vec3 CR = vec3(0.86, 0.78, 0.63) * (0.97 + 0.05 * fine), CO = vec3(0.58, 0.32, 0.25);
+        float st = step(0.5, fract(t6 / 0.18 + 0.25)) * aqFill(y - 0.39, aa6) * (1.0 - aqFill(y - 0.07, aa6));
+        vec3 c = mix(CR, CO, st);
+        c = mix(c, CO, aqFill(abs(y - 1.26) - 0.012, aa6));
+        c = mix(c, vec3(0.06, 0.06, 0.065), aqFill(y - 0.065, aa6));
+        base = c; gBaseRough = 0.55; gTexStr *= 0.15; r6 = true;
+      }
+      // the trolley stack: nested luggage trolleys
+      else if (y < 1.41 && q.x > 4.0 && q.x < 12.0 && q.y > -64.0 && q.y < -57.0) {
+        ${SW}
+        vec2 nb = vec2(0.5 * nq.x - ${CB} * nq.y, ${CB} * nq.x + 0.5 * nq.y);
+        if (aqBladeFace(sw, nb, ${v4(TSTACK)}, t6, hl6, td6)) {
+          base = aqCage(t6, hl6, y, 1.4, step(0.9, hl6), aa6, fine, r6r, r6m); gBaseRough = r6r; gTexORM.b = r6m; gTexStr *= 0.1; r6 = true;
+        }
+      }
+      // the Kelp Ramp's parapet: its court face (on the court, or the promenade past r 21), its ramp face, its ends
+      if (!r6 && y > -0.05 && y < 3.35 && q.y < -2.0 && q.y > -8.2 && q.x < -17.0 && q.x > -26.0) {
+        ${kpLoop((k) => `if (kin && y < kt + 0.02) {
+          bool outer = abs(ku - 0.15) < 0.03 && dot(nq, kn) > 0.95, inner = abs(ku + 0.15) < 0.03 && dot(nq, kn) < -0.95;
+          bool endF = abs(dot(nq, kv)) > 0.95 && (abs(ks + ${f4(k.f0)}) < 0.03 || abs(ks - ${f4(k.M + k.f1)}) < 0.03);
+          if (outer || inner || endF) {
+            float d = kt - y, fy = length(q) > 21.0 ? 2.4 : 0.0, hb = (inner || (endF && ku < 0.0)) ? 0.9 - d : y - fy;
+            base = aqParapet(d, hb, aa6, big, fine, r6r, r6m); gBaseRough = r6r; gTexORM.b = r6m; gTexStr *= 0.12; r6 = true;
+          }
+        }`)}
+      }
+    }`;
+const R6_TOPS = `{
+      // the Feeding Step's top
+      if (abs(y - 1.2) < 0.03 && q.x > -2.01 && q.x < 2.01 && q.y > -9.81 && q.y < -7.19) {
+        float e = min(min(q.x + 2.0, 2.0 - q.x), min(q.y + 9.8, -7.2 - q.y)), r6r, r6m;
+        base = aqFeedTop(vec2(q.x, q.y + 9.8), e, aa, fine, r6r, r6m); gBaseRough = r6r; gTexStr *= 0.1; gTexORM.b = r6m;
+      }
+      // the whale-tail bench's top: teak slats along it, brass end straps
+      else if (abs(y - 1.2) < 0.03 && q.x > -2.51 && q.x < 0.51 && q.y > -58.61 && q.y < -57.39) {
+        float sl = fract((q.y + 58.6) / 0.12), e = min(q.x + 2.5, 0.5 - q.x);
+        base = vec3(0.3, 0.2, 0.12) * (0.82 + 0.25 * aqVN(vec2(q.x * 2.0, floor((q.y + 58.6) / 0.12) * 3.0))) * (1.0 - 0.55 * aqFill(min(sl, 1.0 - sl) * 0.12 - 0.006, aa));
+        float br = aqFill(abs(e - 0.13) - 0.03, aa);
+        base = mix(base, BRASS, br); gBaseRough = mix(0.6, 0.3, br); gTexStr *= 0.1; gTexORM.b = 0.65 * br;
+      }
+      // the trolley stack's top: the top cage's steel mesh over the shade inside, its brass rails along the edges
+      else if (abs(y - 1.4) < 0.03 && q.x > 4.0 && q.x < 12.0 && q.y > -64.0 && q.y < -57.0) {
+        ${SW}
+        if (sw.x > 27.59 && sw.x < 28.81 && sw.y > -7.81 && sw.y < -5.79) {
+          float e = min(min(sw.x - 27.6, 28.8 - sw.x), min(sw.y + 7.8, -5.8 - sw.y));
+          float bar = aqFill(abs(fract((sw.y + 7.8) / 0.12 + 0.5) - 0.5) * 0.12 - 0.01, aa), slat = aqFill(abs(fract((sw.x - 27.6) / 0.3 + 0.5) - 0.5) * 0.3 - 0.012, aa);
+          vec3 c = mix(vec3(0.035, 0.04, 0.045), vec3(0.25, 0.28, 0.3) * (0.85 + 0.25 * fine), clamp(bar + slat, 0.0, 1.0));
+          float br = aqFill(abs(e - 0.1) - 0.03, aa);
+          base = mix(c, BRASS, br); gBaseRough = mix(0.8, 0.35, max(br, bar)); gTexStr *= 0.1; gTexORM.b = 0.6 * clamp(bar + slat + br, 0.0, 1.0);
+        }
+      }
+      // the Kelp Ramp's parapet's top: its smooth render coping
+      else if (y > 2.4 && y < 3.35 && q.y < -2.0 && q.y > -8.2 && q.x < -17.0 && q.x > -26.0) {
+        bool r6 = false;
+        ${kpLoop(() => `if (kin && abs(ku) < 0.16 && abs(y - kt) < 0.05) { base = vec3(0.84, 0.79, 0.70) * 0.86 * 1.07 * (0.97 + 0.05 * fine); gBaseRough = 0.7; gTexStr *= 0.12; r6 = true; }`)}
+      }
+    }`;
+const R6_BEVELS = `{
+      vec3 TEAK = vec3(0.30, 0.20, 0.12) * (0.85 + 0.2 * fine);
+      if (y > 1.04 && y < 1.21 && q.x > -2.05 && q.x < 2.05 && q.y > -9.85 && q.y < -7.15) base = TEAK;                         // the Feeding Step's fascia rounding over
+      else if (y > 1.08 && y < 1.21 && q.x > -2.55 && q.x < 0.55 && q.y > -58.65 && q.y < -57.35) base = TEAK;                  // the whale-tail bench's cap
+      else if (y > 1.25 && y < 1.41 && q.x > 4.0 && q.x < 12.0 && q.y > -64.0 && q.y < -57.0) {
+        ${SW}
+        if (sw.x > 27.55 && sw.x < 28.85 && sw.y > -7.85 && sw.y < -5.75) base = vec3(0.56, 0.38, 0.15);                         // the trolleys' brass top rails
+      }
+      else if (y > 2.3 && y < 3.35 && q.y < -2.0 && q.y > -8.2 && q.x < -17.0 && q.x > -26.0) {
+        bool r6 = false;
+        ${kpLoop(() => `if (kin && y > kt - 0.16) { base = vec3(0.84, 0.79, 0.70) * 0.86 * 1.07; r6 = true; }`)}
+      }
+    }`;
+
+// ---- fix round 7: the luggage scale's faces (Alpha's frame: layout.js B(2.6, 3.8, 1.2, 2.4, −40.85, −39.85))
+const SCALEB = [2.6, 3.8, -40.85, -39.85];
+const R7_FACES = `if (y > 1.19 && y < 2.41) {
+      float t7, hl7, r7r, r7m;
+      vec2 td7;
+      if (aqBoxFace(q, nq, ${v4(SCALEB)}, t7, hl7, td7)) {
+        float aa7 = max(fwidth(vWPos.x) + fwidth(vWPos.z) + fwidth(y), 0.002);
+        float u7 = abs(nq.y) > 0.95 ? t7 * sign(nq.y) : -t7 * sign(nq.x);    // (to the right of a player facing the face)
+        base = aqScaleFace(u7, hl7, y - 1.2, step(0.95, abs(nq.y)), base, aa7, fine, r7r, r7m); gBaseRough = r7r; gTexORM.b = r7m; gTexStr *= 0.12;
+      }
+    }`;
+
+// ---- fix round 9: the riser shafts' three inner walls (the back wall at |x| 8.5, the side walls at z −28.25 / −26.0, inside
+// the glass at |x| 6.15), their floor and the lid's underside (Alpha's frame; both shafts, both halves)
+const R9_FACES = `if (y < 8.42 && q.y > -28.28 && q.y < -25.97) {
+      float ax9 = abs(q.x), sx9 = sign(q.x);
+      if (ax9 > 6.16 && ax9 < 8.53) {
+        bool back9 = abs(ax9 - 8.5) < 0.03 && nq.x * sx9 < -0.95;
+        bool side9 = (abs(q.y + 28.25) < 0.03 && nq.y > 0.95) || (abs(q.y + 26.0) < 0.03 && nq.y < -0.95);
+        if (back9 || side9) {
+          float u9 = back9 ? q.y + 26.0 : 8.5 - ax9, r9r, r9m, aa9 = max(fwidth(u9) + fwidth(y), 0.002);
+          base = aqShaftTile(u9, y, aa9, r9r, r9m); gBaseRough = r9r; gTexORM.b = r9m; gTexStr *= 0.08;
+          gAqWin = vec3(0.55 * mix(0.5, 1.0, uAqNight) * aqShaftLamps(vec3(ax9, y, q.y)));
+        }
+      }
+    }`;
+const R9_TOPS = `if (abs(y) < 0.03 && q.y > -28.26 && q.y < -25.99 && abs(q.x) > 6.14 && abs(q.x) < 8.51) {
+      float r9r, r9m;
+      base = aqShaftFloor(q, aa, r9r, r9m); gBaseRough = r9r; gTexORM.b = r9m; gTexStr *= 0.08;
+      gAqWin = vec3(0.55 * mix(0.5, 1.0, uAqNight) * aqShaftLamps(vec3(abs(q.x), y, q.y)));
+    }`;
+const R9_LID = `{
+    vec2 q = vWPos.z > 0.0 ? -vWPos.xz : vWPos.xz;
+    float ax9 = abs(q.x);
+    if (abs(vWPos.y - 8.4) < 0.03 && q.y > -28.26 && q.y < -25.99 && ax9 > 6.14 && ax9 < 8.51) {
+      vec2 g = vec2(8.5 - ax9, q.y + 26.0) / 0.15, f = abs(fract(g) - 0.5);
+      float aa9 = max(fwidth(vWPos.x) + fwidth(vWPos.z), 0.002), e = (0.5 - max(f.x, f.y)) * 0.15, jt = aqFill(e - 0.002, aa9);
+      base = mix(vec3(0.83, 0.83, 0.79) * (0.95 + 0.07 * aqH22(floor(g) + 3.7).x), vec3(0.42, 0.42, 0.40), jt);
+      gBaseRough = mix(0.14, 0.85, jt); gTexORM.b = 0.0; gTexStr *= 0.08;
+      gAqWin = vec3(0.55 * mix(0.5, 1.0, uAqNight) * aqShaftLamps(vec3(ax9, vWPos.y, q.y)));
+    }
+  }`;
 
 const GLSL_BASE = /* glsl */`
   // ---- Gulper Aquarium: floor art under the ink (src/world/stages/aquarium/floorart.js)
@@ -1039,6 +1406,10 @@ const GLSL_BASE = /* glsl */`
     ${R5_TOPS}
     // -- fix round 5: the deckchair stack's top chair, the helmet's pebble bed, the shark bench's seat, the viewing steps' treads
     ${R5B_TOPS}
+    // -- fix round 6: the Feeding Step's top, the whale-tail bench's, the trolley stack's, the Kelp Ramp parapet's coping
+    ${R6_TOPS}
+    // -- fix round 9: the riser shafts' floors (a brass grille plate with a drain)
+    ${R9_TOPS}
     // -- KEEP CLEAR in front of every Tubeway mouth, on its own floor
     for (int i = 0; i < 16; i++) {
       if (i >= uAqEndN) break;
@@ -1107,6 +1478,15 @@ const GLSL_BASE = /* glsl */`
     // ---- fix round 5: the stairs' flanks, the Kelp Balconies, the deckchair stacks, the helmet bed, the shark bench, the
     // queue step and terrace, the viewing steps, the Fin Pavilion's flank walls by its stairs
     ${R5B_FACES}
+    // ---- fix round 6: the Feeding Step, the whale-tail bench, the ice-cream cart, the trolley stack, the Kelp Ramp's parapet
+    ${R6_FACES}
+    // ---- fix round 7: the luggage scale (a riveted panel each face, the stencil on its long faces)
+    ${R7_FACES}
+    // ---- fix round 9: the riser shafts' walls (white glazed tile, the skirting, the speed lines)
+    ${R9_FACES}
+  } else if (vWNorm.y < -0.9) {
+    // ---- fix round 9: the riser shafts' lid, seen from under (white glazed tile)
+    ${R9_LID}
   } else if (vWNorm.y > 0.0) {
     // ---- fix round 4: the rounded edges of the Lookouts', the bays' and the planters' tops (level.js's bevels)
     vec2 q = vWPos.z > 0.0 ? -vWPos.xz : vWPos.xz;
@@ -1120,6 +1500,7 @@ const GLSL_BASE = /* glsl */`
     // the dais's coping, the hall's render)
     ${R5_BEVELS}
     ${R5B_BEVELS}
+    ${R6_BEVELS}
   }
 `;
 
