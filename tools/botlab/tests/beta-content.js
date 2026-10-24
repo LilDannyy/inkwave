@@ -14,8 +14,8 @@
   const { MockNet } = await import('./src/net/mock.js');
   const net0 = netCtx.G.net;
   try {
-    R('config: Bluestone Junction, Gulper Aquarium and Highmark Foundry are beta; all are listed; Bazookarp is no longer WIP',
-      ['bluestone', 'aquarium', 'caldera'].every((id) => betaIds.includes(id) && mapListed(id) && listedMaps().some((m) => m.id === id)) && !WIP_MODES.includes('bazookarp'),
+    R('config: Bluestone Junction and Highmark Foundry are beta, Gulper Aquarium is finished (listed, no badge); all are listed; Bazookarp is no longer WIP',
+      ['bluestone', 'caldera'].every((id) => betaIds.includes(id)) && !betaIds.includes('aquarium') && ['bluestone', 'aquarium', 'caldera'].every((id) => mapListed(id) && listedMaps().some((m) => m.id === id)) && !WIP_MODES.includes('bazookarp'),
       { beta: betaIds, wipModes: WIP_MODES });
     const saltpan = MAPS.find((m) => m.id === 'saltpan'); saltpan.wip = true;
     const wipWorks = mapListed('saltpan') === SHOW_WIP; delete saltpan.wip;
