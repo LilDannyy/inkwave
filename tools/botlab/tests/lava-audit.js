@@ -780,7 +780,8 @@
   //      can hop onto from floor 0.4–1.7 m below, 16 sides × 3 offsets × 2 run-ups, idle or steering back; LOW and HIGH
   //   b  every point of every roof top beside the lava (review 8's probe-roof8): put down still, or drifting at 6.5 m/s in 8
   //      headings (a landing's momentum: a drop from above, a leap, a swim jump), the stick idle; or drifting along the top's
-  //      4 axes and steering back against the slide (on the top and in the air off it); at LOW, HIGH, the first rise's 30 /
+  //      4 axes and steering back against the slide (on the top and in the air off it; not on tops no kid reaches: over 2.6 m
+  //      above every dry floor within 6 m, review 8's own bar — the outer caldera walls); at LOW, HIGH, the first rise's 30 /
   //      60 / 90 % and the first fall's 50 %
   //   c  every way onto the tops that held a kid in b (review 8's probe-hold8 and probe-perch8): Sponge Mitts leaps (the
   //      kit's predictLeap aimed at the top from every dry nav node within 14 m), plain running jumps and swim jumps out of
@@ -908,9 +909,16 @@
             for (let s = e + 0.1; s <= e + 4.0 && !near; s += 0.3) if (lavaAt(b.center.x + dx * s, b.center.z + dz * s, top + 0.5)) near = true; }
           if (near) cands.push(b);
         }
-        const T = tally(); const perB = new Map();
+        const T = tally(); const perB = new Map(), unreach = [];
         for (const b of cands) {
           const ax = b.axes[0], az = b.axes[2], top0 = topOf(b);
+          // (a top no kid reaches — over 2.6 m above every dry floor within 6 m: the outer caldera walls — is put down on
+          // still or drifting like any (a drop from above), but no one steers there: no steer-back)
+          let fmax = -Infinity;
+          for (let k = 0; k < 16; k++) { const a = (k * Math.PI) / 8, dx = Math.cos(a), dz = Math.sin(a), e = ext(b, dx, dz);
+            for (let s2 = e + 0.3; s2 <= e + 6; s2 += 0.5) { const x = b.center.x + dx * s2, z = b.center.z + dz * s2, g2 = lvl.groundHeight(x, z, top0 + 3); if (g2 > -50 && !lavaAt(x, z, g2 + 0.05)) { const hb = hitBlock(x, z, g2 + 0.05); if (hb && !lvl.blocks[hb.block]?.roof) fmax = Math.max(fmax, g2); } } }
+          const reach = top0 - fmax <= 2.6;   // (review 8's probe-roof8: a top a kid can reach is ≤ 2.6 m over the dry floor round it)
+          if (!reach) unreach.push([b.tag || '#' + b.id, r2(top0), r2(fmax)]);
           const nu = Math.max(1, Math.min(4, Math.round((b.half.x * 2) / 0.3))), nv = Math.max(1, Math.min(4, Math.round((b.half.z * 2) / 0.3)));
           for (let iu = 0; iu < nu; iu++) for (let iv = 0; iv < nv; iv++) {
             const u = nu === 1 ? 0 : -b.half.x + 0.12 + (iu * (2 * b.half.x - 0.24)) / (nu - 1), v = nv === 1 ? 0 : -b.half.z + 0.12 + (iv * (2 * b.half.z - 0.24)) / (nv - 1);
@@ -918,7 +926,7 @@
             const hb = hitBlock(x, z, top0 + 1.0); if (!hb || hb.block !== b.id) continue;
             const modes = [['still', null, false]];
             for (let k = 0; k < 8; k++) modes.push(['drift', (k * Math.PI) / 4, false]);
-            for (let k = 0; k < 4; k++) modes.push(['back', (k * Math.PI) / 2 + Math.atan2(ax.z, ax.x), true]);   // (drifting along its axes, then steering back against the slide)
+            if (reach) for (let k = 0; k < 4; k++) modes.push(['back', (k * Math.PI) / 2 + Math.atan2(ax.z, ax.x), true]);   // (drifting along its axes, then steering back against the slide)
             for (const [mode, h, back] of modes) {
               reset(V(x, hb.y + 0.3, z), V(h === null ? 0 : 6.5 * Math.cos(h), 0, h === null ? 0 : 6.5 * Math.sin(h)));
               const m = watch(); let offF = 0, away = false, sx = 0, sz = 0;
@@ -938,7 +946,7 @@
             }
           }
         }
-        res[lvKey] = { t: times[lvKey], y: r2(LY), roofBlocks: cands.length, ...T, heldBy: [...perB].map(([k, p]) => [k, ...p]).slice(0, 16) };
+        res[lvKey] = { t: times[lvKey], y: r2(LY), roofBlocks: cands.length, unreachable: unreach.length, unreachEg: unreach.slice(0, 4), ...T, heldBy: [...perB].map(([k, p]) => [k, ...p]).slice(0, 16) };
       }
       out47.b = res;
     }
