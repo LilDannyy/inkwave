@@ -77,3 +77,29 @@ The art phase waits for the weekly usage reset (Friday 2026-10-23 06:00).
   ≤ 2.5 ms; the Bravo viewer's 2→3 and the sunset 3→1 jumps peak at 10–16 ms; 'first' 3/3 with no shader compiled
   during a jump. net-eras and the lagged run passed there too. One aside for the engine in general, not this stage:
   the first inking frame of any match is 160–260 ms (a paint-atlas first-use cost).
+
+## The art phase (2026-10-25): the place, in three eras
+
+The era engine is accepted. The reviewer's words on the engine pictures are the art phase's brief: "the shared city
+barely changes as the front passes" and "the 20 cm blocky dissolve still reads as a digital glitch". The art must make
+the FRONT REWRITE THE CITY at street level, not only the skyline. Binding:
+1. **Three looks of the same streets** (DESIGN.md §5 and its per-building table): every building face, kerb, lamp,
+   tram, sign, cart and mural has its 1880s, TODAY and 3000s version through the engine's era re-skins (surfaces,
+   murals with era masks, era props, tint, the backdrop sets, `eras.look[e].lamps`), so that a player standing anywhere
+   sees the era change around them. Prove it with the same camera in all three eras at eight places (the circus, the
+   knee, Swimston, the quay, Hoki Lane, the arcade, the forecourt, the Halo) and the sweep tool in each era.
+2. **The Halyard bar everywhere** (`tools/botlab/stage-sweep.cjs` in each era, day and dusk, TWIN=1): no bare box at
+   eye level in any era; every structure is something; signage, props, iron lace, bluestone kerbs, the station's
+   clocks and dome dressed per era; Flounders Street Station named on the drum in every era's lettering.
+3. **The jump's look**: the front's dissolve becomes the showpiece (the Practice clear-ink wave is the reference: a
+   clean sweeping edge with the Roman-numeral curtain, no 20 cm blocks), the holograms and wire pulses in the
+   highlight colours, the time-lapse sky; a jump picture sequence from Swimston and the knee at J − 10, J + 0, J + 1.5,
+   J + 3, done + 1, and the hero shot for the stage art (day and dusk cards) showing the three eras' identity.
+4. **The engine's art-phase list** (LEAD-NOTES "The era engine PASSED"): superJumpLanding in Practice's rewind; lamps
+   per era; Tartar ringing once in the intro fly-in; the sepia-flicker pixel check; the rule-22 accept text; every jump
+   picture re-shot.
+5. **Play geometry is frozen**: no collider or layout change (check-maps piece counts, climb-audit, cover-map,
+   spawn-mid, tower-check per era unchanged); dressing within 8.5 cm of faces, nothing on walkable tops; the bake
+   (nine passes: three keys × three eras) at the end, on the Mac mini or locally; performance against Halyard per era
+   with the fixed-view probe (calls and cpuRender level; triangles within +15 %).
+6. The stage stays BETA until the lead accepts the art.
