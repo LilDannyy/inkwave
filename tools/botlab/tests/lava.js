@@ -129,6 +129,8 @@
   // ================================================================================================ C: a rise and a fall
   // dummies: a bot on Organ L, one on Organ A, one on race1 once it is up; the local kid stays on the island
   const bots = g.match.actors.filter((a) => a.bot && a !== me);
+  // (fix round 9, to reproduce a case: PAGE_ARGS w1=<weapon> gives bots[1] — F8c's bot — that weapon for the whole run)
+  { const w1 = /w1=([^;&]+)/.exec(String(window.__pageArgs || ''))?.[1]; if (w1 && bots[1]) bots[1].setWeapon(w1); }
   let dsDeath = null; const dsOff = on('splatted', (e) => { if (e.victim === bots[2] && !dsDeath) dsDeath = { cause: e.cause, t: r3(Lv.clock.t), y: r3(Lv.y) }; });
   const evs = []; const evOff = ['lava:warn', 'lava:move', 'lava:rest', 'lava:rider', 'lava:hold', 'lava:set'].map((k) => on(k, (e) => evs.push([k, r3(Lv.clock.t), e.to || e.level || (e.dir ?? '') + '' || '', e.up ?? null])));
   const played = []; const play0 = __G.audio?.play?.bind(__G.audio);
@@ -552,6 +554,9 @@
     // stone 0.45–0.75 m under it (t 39.6 / 40.4), each stone node within 2.6 m of the dry floor sent off it (the stone step)
     // running in at ±40° at 5.5 m/s with its cool-down left by a refused press: up on the dry floor within 4 s, no death
     const k8c = [], k8cTr = [], fc = bots[1] || bots[0], FC = fc.bot;
+    // (a kit weapon's own state — the Sponge Mitts: charging a leap, mid-leap, stuck to a wall — when the case starts and on
+    // the way: a press mid-charge is swallowed, so a charge left from before would eat the stone step's hop)
+    const kitOf = (a) => { const k = a.weaponRunner?.kit; return k ? [k.charging ? 'C' : '', k.leaping ? 'L' : '', k.cling ? 'W' : '', k.hang ? 'H' : ''].join('') || '-' : null; };
     { const heads = nav.nodes.filter((q) => nav.valid[q.id] && M.kind[q.id] === 0 && q.y > 1.0 && q.y < 1.6);
       const headOf = (q) => { let best = null, bd = 2.6; for (const h of heads) { const d = Math.hypot(h.x - q.x, h.z - q.z); if (d < bd) { bd = d; best = h; } } return best; };
       for (const sid of ['race1', 'race5', 'race6', 'race7']) {
@@ -566,10 +571,10 @@
           // (fix round 9, review 9 issue 4: each case's trail — t, x, y, z, what it stands on, speed, vy, the roof slide's
           // hold, the bot's mode / escape / stone step / jump cool-down / jump pressed, the lava's level — kept for a case
           // not up or dead, with the state it started from)
-          const tr = [], st0 = { weapon: fc.weaponId, form: fc.form, carry: !!fc.carry, roofT: r3(fc.roofT || 0), roofHeld: r3(fc.roofHeld || 0), jumpBuffer: r3(fc.jumpBuffer || 0), coyote: r3(fc.coyote || 0), hardLand: r3(fc.hardLand || 0), status: Object.entries(fc.status || {}).filter(([, v]) => v > 0).map(([k]) => k), pos: [r3(fc.pos.x), r3(fc.pos.y), r3(fc.pos.z)] };
+          const tr = [], st0 = { weapon: fc.weaponId, form: fc.form, carry: !!fc.carry, roofT: r3(fc.roofT || 0), roofHeld: r3(fc.roofHeld || 0), jumpBuffer: r3(fc.jumpBuffer || 0), coyote: r3(fc.coyote || 0), hardLand: r3(fc.hardLand || 0), status: Object.entries(fc.status || {}).filter(([, v]) => v > 0).map(([k]) => k), pos: [r3(fc.pos.x), r3(fc.pos.y), r3(fc.pos.z)], kit: kitOf(fc) };
           for (let i = 0; i < 30 * 4 && !died && up === null; i++) {
             dbg.step(1000 / 30); const gb = fc.ground?.block >= 0 ? lvl.blocks[fc.ground.block] : null;
-            if (i % 3 === 0) tr.push([i, r3(fc.pos.x), r3(fc.pos.y), r3(fc.pos.z), fc.grounded ? (gb ? (gb.tag || (gb.lavaRider ? 'rider' : '#' + gb.id)) + (gb.roof ? '/R' : '') : '?') : 'air', r3(Math.hypot(fc.vel.x, fc.vel.z)), r3(fc.vel.y), fc.roofHeld > 0 ? 'H' : '', FC.mode, FC._lavaEsc ? 'E' : '', FC._stoneStep ? 'S' : '', r3(FC.jumpCd || 0), fc.intent.jump ? 'J' : '', r3(Lv.y)]);
+            if (i % 3 === 0) tr.push([i, r3(fc.pos.x), r3(fc.pos.y), r3(fc.pos.z), fc.grounded ? (gb ? (gb.tag || (gb.lavaRider ? 'rider' : '#' + gb.id)) + (gb.roof ? '/R' : '') : '?') : 'air', r3(Math.hypot(fc.vel.x, fc.vel.z)), r3(fc.vel.y), fc.roofHeld > 0 ? 'H' : '', FC.mode, FC._lavaEsc ? 'E' : '', FC._stoneStep ? 'S' : '', r3(FC.jumpCd || 0), fc.intent.jump ? 'J' : '', r3(Lv.y), kitOf(fc)]);
             if (fc.grounded && !gb?.lavaRider && fc.pos.y > 1.0) up = r3(Lv.clock.t - t0);
           }
           o8(); freezeBots();
