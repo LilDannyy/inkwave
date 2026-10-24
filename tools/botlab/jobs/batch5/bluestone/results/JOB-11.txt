@@ -1,0 +1,3 @@
+JOB-11 (bluestone) @ c134754d — Mac mini b5-runner, 2026-10-25 09:28–09:43, exit 0. Short summary.
+- Bravo's twins by day, every era: era 1 511 views of 155 clusters (22 with no eye-level view), era 2 523 of 157 (20), era 3 582 of 171 (6)
+  — the same counts as Alpha's; console 0 in all three. This time the pages came back: 15 overview pages (5 per era) under out/sweep/twin/.
