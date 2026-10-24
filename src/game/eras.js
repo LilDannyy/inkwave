@@ -1095,6 +1095,59 @@ export class StageEras {
     }
     return { y: best, roof };
   }
+  // the highest top under (x, z) at or below y among the blocks that stand at stage time t (an era piece by its group's
+  // flip at t, every other block as it is now): { y, roof, b } (y −Infinity: nothing — water)
+  _floorAtT(x, z, y, t, skipRoof = false) {
+    const L = this.W.level, ids = L.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, this._qbt || (this._qbt = []));
+    let best = -Infinity, roof = false, blk = null;
+    for (const id of ids) {
+      const b = L.blocks[id];
+      if (b.dynamic || (b.presence ? !this.present(b, t) : !b.solid)) continue;
+      if (skipRoof && b.roof) continue;
+      const top = this._topOf(b, x, z);
+      if (top !== null && top <= y && top > best) { best = top; roof = b.roof; blk = b; }
+    }
+    return { y: best, roof, b: blk };
+  }
+  // (the art phase's first commit: the final review's minor 1) a super jump launched onto an era piece that will be gone at
+  // touchdown — its group flips before the flight ends, and the floor left under the landing is water, or a roof with
+  // nothing walkable within 3.4 m below — lands where the rescue would put that kid instead: the nearest nav node (≤ 12 m)
+  // whose floor stands at touchdown and that is valid in the era the jump goes to (ground that stays; valid in the era in
+  // force as well first, the rescue's own order); none: the jumper's own pad. The owner's screen decides at launch (the
+  // registry's superJumpLanding: charge → flight), and the 'superjump' record carries the moved landing to every screen.
+  // Without it a teammate on a span or a garden tile in Practice's rewind was a landing into the river (the reviewer's
+  // probe: bridge-2, bridge-3, garden-11, touchdown 0.3 s after the flip, 3 of 3 splatted)
+  superJumpLanding(a, s) {
+    if (!this.W.groups.length || !G.nav) return;
+    const to = s.to, t0 = this.tNow, t1 = t0 + (s.dur || 1.5), tz = t1 + 0.4;   // (touchdown, and the landing's settle)
+    const here = this._floorAtT(to.x, to.z, to.y + 0.4, t0);
+    if (!here.b || !here.b.presence || here.y < to.y - 0.8) return;   // shared ground under the landing: it stays
+    if (this.present(here.b, t1) && this.present(here.b, tz)) return;   // its piece is still there at touchdown
+    const f = this._floorAtT(to.x, to.z, here.y - 0.05, tz);
+    let bad = f.y === -Infinity || f.y < PLAYER.waterY + 0.25;
+    if (!bad && f.roof) bad = this._floorAtT(to.x, to.z, f.y - 0.05, tz, true).y < f.y - 3.4;
+    if (!bad) return;   // (it drops onto ground that stands: the flight lands there, as a walker would fall)
+    const nav = G.nav, J = this.activeAt(t1), eTo = J ? J.to : this.eraInForce(tz), EV = this._eraValid(eTo), V0 = nav.valid;
+    const cand = [];
+    for (const n of nav.nodes) {
+      if (!EV[n.id]) continue;
+      const d2 = (n.x - to.x) ** 2 + (n.z - to.z) ** 2 + ((n.y - to.y) * 0.5) ** 2;
+      if (d2 < 144) cand.push([d2, n]);
+    }
+    cand.sort((p, q) => p[0] - q[0]);
+    const stands = (n) => { const fl = this._floorAtT(n.x, n.z, n.y + 0.3, tz); return fl.y > n.y - 0.25 && fl.y > PLAYER.waterY + 0.3; };
+    let best = null;
+    for (const ok of [(n) => V0[n.id], () => true]) {
+      for (const [, n] of cand) if (ok(n) && stands(n)) { best = n; break; }
+      if (best) break;
+    }
+    const from = [+to.x.toFixed(2), +to.y.toFixed(2), +to.z.toFixed(2)];
+    if (best) to.set(best.x, best.y, best.z);
+    else { const pad = G.level?.spawnPads?.[a.team]; if (pad) to.copy(pad); }
+    this.stats.sjRedirects = (this.stats.sjRedirects || 0) + 1;
+    this.stats.sjLog = this.stats.sjLog || [];
+    if (this.stats.sjLog.length < 40) this.stats.sjLog.push({ who: a.name, t: +t0.toFixed(2), tag: here.b.tag, from, to: [+to.x.toFixed(2), +to.y.toFixed(2), +to.z.toFixed(2)], pad: !best });
+  }
   // the nav's valid flags in era e (the union graph's per-era set; the era in force when there is none)
   _eraValid(e) { const nav = G.nav; return (e && nav.eraValid && nav.eraValid[e - 1]) || nav.valid; }
   // an own squidkid left over water, or on a roof with nothing walkable within 3.4 m below it, after a piece went from

@@ -12,6 +12,9 @@
 //         the nearest node), stats.eraShoves counts it
 // rescue  a kid on a piece that vanishes over water is rescued to a valid node, never splatted; a kid on each of Alpha's
 //         Iron Bridge spans and garden tiles in the rewind is rescued once, onto ground that stays (final review 2, issue 2)
+// sjland  (the art phase's first commit: the engine's final review, minor 1) a super jump launched onto a piece that is gone
+//         at touchdown over the river (Practice's rewind: bridge-2, bridge-3, garden-11, touchdown 0.3 s after the flip)
+//         lands where the rescue would put it, alive on dry ground; with the hook off (the control) the same jumps splat
 // device  a sprinkler on a vanishing piece is destroyed (the module's walk of G.subs.items, after S.crushIn); a Drip Curtain
 //         resting on a vanishing roof (no face: the Degrayling crates at jump 1, the goods wagon at jump 2) is popped at
 //         its flip, not left standing in the air, and one on the street beside the crates stays (final review, issue 1)
@@ -38,7 +41,7 @@
   const { SUBS, PLAYER } = await import('./src/config.js');
   const { SFX } = await import('./src/audio/audio.js');
   const { Hit } = await import('./src/game/physics.js');
-  const parts = (/only=([\w,]+)/.exec(String(window.__pageArgs || ''))?.[1] || 'first,sched,flip,fall,shove,rescue,device,zip,guard,fx,frames,sky,freeze,modes').split(',');
+  const parts = (/only=([\w,]+)/.exec(String(window.__pageArgs || ''))?.[1] || 'first,sched,flip,fall,shove,rescue,sjland,device,zip,guard,fx,frames,sky,freeze,modes').split(',');
   const dbg = g.debug;
   dbg.freeze();
   const calm = () => { for (const a of g.match.actors) { if (a.bot) a.bot.update = () => {}; if (a.intent) { a.intent.move?.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.jump = a.intent.sub = a.intent.special = false; } } };
@@ -273,6 +276,47 @@
     R('step 8: … and a kid left on a roof with nothing walkable within 3.4 m below it is rescued the same way (the roof branch)', E.stats.rescues === r1 + 1 && a.pos.y < ry - 3 && ghR > PLAYER.waterY + 0.3,
       { roofTop: ry, at: [+a.pos.x.toFixed(1), +a.pos.y.toFixed(2), +a.pos.z.toFixed(1)], floor: ghR });
     step(0.5);
+  }
+
+  // ------------------------------------------------------------------------------------------- sjland (the art phase's first commit)
+  if (parts.includes('sjland')) {
+    const { sjFlightDur } = await import('./src/game/jumpMarks.js');
+    const a = kid(), r2 = (v) => +v.toFixed(2);
+    const run = (key, hookOn) => {
+      const b = L.blocks.find((x) => x.eraG >= 0 && W.groups[x.eraG] && W.groups[x.eraG].key === key && x.axes[1].y > 0.9 && !x.rail);
+      if (!b) return { key, missing: true };
+      E.debugJump(3, { instant: true });
+      const Jr = E.debugJump(1, { inS: 3 }), F = flipAt(b, Jr), top = E._topOf(b, b.center.x, b.center.z);
+      if (!a.alive) { a.respawn?.(); }
+      calm();
+      // the jumper waits on dry ground 30 m off (the quay's south end): its flight time to the piece's top decides the launch
+      const home = new THREE.Vector3(-14, 0.05, -48), tgt = new THREE.Vector3(b.center.x, top, b.center.z);
+      const dur = sjFlightDur(home, tgt), launch = F + 0.3 - dur - 1 / 60;
+      tAt(launch - 0.2); calm(); if (!a.alive) { a.respawn?.(); calm(); }
+      put(a, home.x, home.y, home.z); step(0.2 - 1 / 60); calm();
+      const d0 = a.stats?.deaths ?? 0, n0 = E.stats.sjRedirects || 0, hook = E.superJumpLanding;
+      if (!hookOn) E.superJumpLanding = () => {};
+      const ok = a.superJump(tgt, { instant: true });
+      let land = null, splat = false;
+      for (let i = 0; i < Math.ceil((dur + 2.5) * 60); i++) {
+        dbg.step(1000 / 60); calm();
+        if (!a.alive) { splat = true; break; }
+        if (!land && !a.superJumpState) land = { t: r2(E.S.clock.t - F), at: [r2(a.pos.x), r2(a.pos.y), r2(a.pos.z)] };
+      }
+      E.superJumpLanding = hook; delete E.superJumpLanding;   // (the prototype's method again)
+      const gh = L.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.5);
+      const row = { key, hookOn, started: ok, flipAt: r2(F - Jr.at), touchdownAfterFlip: land ? land.t : null, land, splat, deaths: (a.stats?.deaths ?? 0) - d0, alive: a.alive,
+        dry: gh > PLAYER.waterY + 0.3, redirects: (E.stats.sjRedirects || 0) - n0, end: [r2(a.pos.x), r2(a.pos.y), r2(a.pos.z)] };
+      if (!a.alive) { a.respawn?.(); calm(); }
+      tAt(Jr.doneAt + 0.5);
+      return row;
+    };
+    const keys = ['bridge-2:a', 'bridge-3:a', 'garden-11:a'];
+    const off = keys.map((k) => run(k, false)), on = keys.map((k) => run(k, true));
+    E.debugJump(1, { instant: true });
+    R('art phase (the engine\'s final review, minor 1): a super jump launched onto bridge-2 / bridge-3 / garden-11 in Practice\'s rewind, touching down 0.3 s after the piece\'s flip, lands where the rescue would put it — alive on dry ground, one redirect each (the control with the hook off: the same jumps splat in the river)',
+      on.every((r) => r.started && !r.splat && r.alive && r.dry && r.redirects === 1) && off.filter((r) => r.splat).length >= 2,
+      { on, off: off.map((r) => ({ key: r.key, splat: r.splat, touchdownAfterFlip: r.touchdownAfterFlip, end: r.end })), log: (E.stats.sjLog || []).slice(-3) });
   }
 
   // ------------------------------------------------------------------------------------------- device
