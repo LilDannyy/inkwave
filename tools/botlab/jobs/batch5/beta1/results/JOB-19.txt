@@ -2,4 +2,4 @@ JOB-19 (beta1) @ 470fde1c (the final bots.js) — Mac mini b5-runner, 2026-10-24
 - bot-stuck 7/7 ×6 ('tank' passed all six), pocket 1/1.
 - 8 matches: every one ≤ 0.6 % stuck, no episode over 5 s.
 - karp-bots 42/42, 41/42 (H: the Big Burst disc from 18 m).
-- the lava-bots gate 7/7, 7/7, 5/7: run 3 had 1 escape death on the edges trial (Nori, mitts) + 1 fight death — the gate wants 0 escapes.
+- the lava-bots gate 7/7, 7/7, 5/7: run 3 had 1 escape death (Fizz, twins, edges, 39.2 s) + 1 fight death (Nori, mitts, edges, 35.1 s) — the gate wants 0 escapes.
