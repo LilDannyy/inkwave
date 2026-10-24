@@ -190,7 +190,13 @@ export class BossBrain {
           const wp = this.path[this.pi], tx = wp[0] - b.pos.x, tz = wp[1] - b.pos.z, tl = Math.hypot(tx, tz) || 1;
           let by = null, bd = 0.1;
           for (let k = 0; k < 16; k++) { const y = (k / 16) * Math.PI * 2, sy = Math.sin(y), cy = Math.cos(y), d = (sy * tx + cy * tz) / tl; if (d > bd && nav.turnOk(b.pos.x, b.pos.z, y) && nav.poseOk(b.pos.x + sy * 0.6, b.pos.z + cy * 0.6, y) && nav.poseOk(b.pos.x + sy * 1.5, b.pos.z + cy * 1.5, y)) { bd = d; by = y; } }
-          if (by !== null) { this._detour = { yaw: by, until: b.bt + 5 }; this.stuckT = 0; }
+          // [b5-caldera] fix round 8 (review 8: 13 s still at the causeway's south end): no heading that fits closes on the
+          // waypoint — then the one that fits with the most room 1.5 m on (wall + floor clearance), whichever way, for ≤ 2 s:
+          // out of the edge of its ground first (boss-foot.js: from (3.6, −24) on the causeway's edge it re-pathed to the same
+          // goal and backed out where no pose fitted behind it, 12 s)
+          let roomy = false;
+          if (by === null) { let bs = -Infinity; for (let k = 0; k < 16; k++) { const y = (k / 16) * Math.PI * 2, sy = Math.sin(y), cy = Math.cos(y); if (!nav.turnOk(b.pos.x, b.pos.z, y) || !nav.poseOk(b.pos.x + sy * 0.6, b.pos.z + cy * 0.6, y) || !nav.poseOk(b.pos.x + sy * 1.5, b.pos.z + cy * 1.5, y)) continue; const sc = nav.wallClear(b.pos.x + sy * 1.5, b.pos.z + cy * 1.5) + Math.min(nav.floorClear(b.pos.x + sy * 1.5, b.pos.z + cy * 1.5), 3) * 0.5; if (sc > bs) { bs = sc; by = y; } } roomy = by !== null; }
+          if (by !== null) { this._detour = { yaw: by, until: b.bt + (roomy ? 2 : 5) }; this.stuckT = 0; }
         }
         if (this.stuckT > 0.8) { this.stuckT = 0; this.goalT = 0; this.path = null; }
       }

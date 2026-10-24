@@ -962,16 +962,26 @@ cost, Highmark's numbers:
     head to stone, stone to stone) is listed in `def.steps`; `buildNav` throws if a link yields no edge pair at a pose it
     needs, and `lava-nav.js` rebuilds with the bounds shifted 0.25 m and 0.5 m to prove no climb depends on the grid's
     offset. (A)
-47. **No roof top slides a kid into the lava** (fix round 7, review 7: cover is a `roof` block and so is every rider
-    part; the slide took the nearest way off whatever lay past it). The engine side, in `actor.js` (`_roofExitDist` →
-    `_roofLandWet`, tagged [b5-caldera]): a way off whose landing a stage hazard takes (`G.match.stage.wet`, ahead 0) is
-    no way off — the fall from the way's exit at the slide's speed there (√(w² + 28 s)) and at a run's (6.5 m/s), the
-    floor under the footprint every 0.15 m (a seam the feet span is no gap), to 0.6 m past the fast landing; every way
-    refused → the kid is held where it is (no slide; it walks off by itself); on a stage with a hazard the slide owns
-    the move along the way it checked (nothing across it). Stages without a `wet` hook: unchanged. (A: lava-audit rule
-    47 — every flat roof block with lava within 3 m that a kid can hop onto, 16 sides × 3 offsets × 2 run-ups, idle or
-    steering back 2.5 s: 0 deaths at LOW and HIGH)
-
+47. **No roof top slides a kid into the lava, holds it as a perch, or flings it** (fix round 7, review 7: cover is a
+    `roof` block and so is every rider part; the slide took the nearest way off whatever lay past it. Fix round 8, review 8
+    and the lead's rule for cover standing in drowned ground). The engine side, in `actor.js` (tagged [b5-caldera]):
+    `_roofExitDist` → `_roofLandWet`: a way off whose landing a stage hazard takes is no way off. The fall from the way's
+    exit (the slide's height there, `ry`) at the slide's speed (√(w² + 28 s)) and at a run's (6.5 m/s): the earliest
+    landing is the steer-back arc (x = v·t − ½·20·t², never behind the exit, 30 m/s² down), the latest the fast arc
+    (6.5 m/s kept, 22 m/s²); every 0.15 m from one to 0.6 m past the other the floor under the footprint (a seam the feet
+    span is no gap; off-limits tops in the slide's own 0.6 m band left out) must be floor and dry now and 3 s on; a lip
+    over the fast arc (a face the body meets) refuses the way; on a hazard stage the wall rays start at the slide's height
+    there and also look at a 0.37 m lip. Every way refused → **held** 0.6 s where it stands (`_roofHold` /
+    `_roofHeldStep`: the slide's clock reset while held, so a re-check judges — and a later slide launches — at the slow
+    push 3 m/s, only toward a dry landing; re-checked every 0.25 s), then **rescued**: the stage hook `rescue(a)`
+    (stageMods.js; lava.js) places the kid on the nearest dry nav node within 6 m (static floor that stands, the lava not
+    there within 8 s, the body fitting; 12 m at most, counted), 1 s invulnerable, never splatted, never thrown; a teleport
+    (`netTp`) every screen snaps to; the HUD's personal line says NO FOOTING → rescued. On a stage with a hazard the slide
+    owns the move along the way it checked. `reset()` clears the slide (a spawn onto a roof kept the old slide's way,
+    unchecked). Stages without a `wet` hook: unchanged. (A: lava-audit rule 47 — (a) the hop-on probe; (b) every point of
+    every roof top beside the lava, still or drifting at 6.5 m/s, idle or steering back, at LOW, HIGH, the rise's 30 / 60
+    / 90 % and the fall's 50 %; (c) Mitts leaps, running and swim jumps, walk-offs and hops during the rise onto every top
+    that holds; (d) Mitts leaps onto the tall tops: 0 deaths, 0 flings, 0 perches, every rescue within 6 m)
 ---
 
 ## 6. Build plan (each step ends with a test that fails without it)
