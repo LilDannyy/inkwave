@@ -154,3 +154,12 @@ behind 2.25 × 8.4 m of glass on the main lane (DESIGN §5 wanted them read as t
 3. Proof as before: the sweep (day, dusk, TWIN=1), the review's cameras, aquarium-art.js with a pixel read of a shaft
    wall that fails at 4df530c8, pipes.js, one Turf War match; cards only if a card view changed.
 Nothing else is open on this stage after this.
+
+## ACCEPTED (2026-10-24, the lead): Gulper Aquarium's art is finished
+
+Review 10: "nothing at eye level is a bare box any more"; its two one-line items (the riser glass ending in mid-air;
+the flaky Penguin Point check) were applied by the lead in ee073bb5 and proven: aquarium-art.js 60/60 three times,
+the shafts re-shot (the tube runs on into the wall; plate, ladder, brackets, lamps read). The stage ships without the
+BETA tag at the next integration. Still owned elsewhere: the Great Tank bot bug (fixed in beta fix round 1), the exit
+cooldown 3.5 s (in the beta), the pipes camping sample in the consolidated balance pass, its Bazookarp layout (the
+layouts phase).
