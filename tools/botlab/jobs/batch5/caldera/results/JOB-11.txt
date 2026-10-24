@@ -1,0 +1,6 @@
+JOB-11 (caldera) @ 6d012b1e (fix round 8) — Mac mini b5-runner, 2026-10-24 19:14–19:42, exit 0. Short summary; details in JOB-11.raw.txt.
+- full: audit rule 44 37/37, rule 47 a/c/d 2/2, lava-leap 3/3, lava-notch 3/3, review 8's probes perch8 1/1, roof8 2/2, steer8 high / low / local,
+  hold8w 2/2; check-maps ok.
+- not full: rule 47 b (no roof top beside the lava slides a kid in, holds it as a perch or flings it — every point of every top) 1/2 in
+  both its parts (LOW / HIGH / rise 30 %, and rise 60 / 90 % / fall 50 %); the rest of the audit 8/9 (rule 42, 'no view shows void', again);
+  probe-hold8 1/2 (an off-limits roof top in the lava holds a kid a player can put there; the Mitts-leap variant hold8w passes).
