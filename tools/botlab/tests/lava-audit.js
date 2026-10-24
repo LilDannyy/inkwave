@@ -411,7 +411,7 @@
   const fineArg = /(^|[;&])fine=([0-9.]+),([0-9.]+)/.exec(PA), FG = fineArg ? Number(fineArg[2]) : 0.3, FD = fineArg ? Number(fineArg[3]) : 7.5;
   const SF = (/(^|[;&])sf=([0-9,]+)/.exec(PA)?.[2] || '8').split(',').map(Number);
   for (const level of ['low', 'high']) {
-    if (lvOnly && level !== lvOnly) { jumps[level] = { edgesChecked: 0, deep: 0, strip: 0, gaps: [], runCross: [], skill: [], carry: [], steer: [], seam: [], steerCands: 0, steerTried: 0, fine: {} }; continue; }
+    if (lvOnly && level !== lvOnly) { jumps[level] = { edgesChecked: 0, deep: 0, strip: 0, gaps: [], runCross: [], skill: [], carry: [], steer: [], seam: [], leap: [], steerCands: 0, steerTried: 0, fine: {} }; continue; }
     setT(level === 'low' ? 10 : 50);
     // edge nodes over lava, and in 16 directions the first floor across (a march in 0.1 m over the region's lava).
     // (fix round 6, review 6 issue 1 — the march looked in too few places: it took a far floor only within 1.3 m below the
@@ -599,6 +599,36 @@
         }
       }
     }
+    // (fix round 7, the lead after review 7: the Sponge Mitts' leap over the lava is skill movement like a swim jump — not
+    // off a roof top (actor.js / mitts.js: no charge there), and a bot's leap obeys its 2 s look-ahead. Listed, no gate.) From
+    // every edge candidate of the march, a leap from its edge along its heading at half and full charge, aim level, by the
+    // kit's own predictLeap (MITTS: the arc it draws as the preview ring): a crossing comes down on the ground, dry, past
+    // over 0.35 m with the whole footprint over lava; the gain as the march's
+    const leapX = [];
+    if (!steerOnly) {
+      const { MITTS } = await import('./src/game/kits/mitts.js');
+      // (leapVelocity reads only a bot's yaw / pitch / charge and the cling: a plain object — MITTS.K would register a
+      // runner the kit's tick then walks)
+      const kk = { botWant: -1, botYaw: 0, botPitch: 0, cling: false }, land = { kind: 'none', pos: V(0, 0, 0), normal: V(0, 1, 0), hitPt: V(0, 0, 0), block: -1, t: 0, n: 0 }, lv0 = V(0, 0, 0), st0 = V(0, 0, 0);
+      for (const c of cands) {
+        const yaw = Math.atan2(c.dx, c.dz), sx = c.x + c.dx * (c.edge - 0.35), sz = c.z + c.dz * (c.edge - 0.35), sy = lvl.groundHeight(sx, sz, c.y + 0.6);
+        if (!(sy > c.y - 0.35)) continue;
+        let best = null;
+        for (const ch of [0.5, 1]) {
+          kk.botWant = ch; kk.botYaw = yaw; kk.botPitch = 0; MITTS.leapVelocity(kid, kk, ch, lv0); kk.botWant = -1;
+          MITTS.predictLeap(st0.set(sx, sy, sz), lv0, land, null);
+          if (land.kind !== 'ground') continue;
+          const L = land.pos, gl = lvl.groundHeight(L.x, L.z, L.y + 0.3);
+          if (!(gl > Lv.y + K - 0.01) || Lv.covers(L.x, L.z, L.y)) continue;
+          const dx = L.x - sx, dz = L.z - sz, d = Math.hypot(dx, dz) || 1;
+          let run = 0, mx = 0; for (let q = 0.1; q < d; q += 0.1) { if (footLava(sx + (dx / d) * q, sz + (dz / d) * q, sy + 0.3)) { run += 0.1; mx = Math.max(mx, run); } else run = 0; }
+          if (mx <= 0.35) continue;
+          const gain = detour(c, { at3: [L.x, L.y, L.z] });
+          if (!best || (gain ?? 999) > (best.gain ?? -1)) best = { from: [r2(c.x), r2(c.y), r2(c.z)], dir: Math.round((Math.atan2(c.dz, c.dx) * 180) / Math.PI), how: 'leap@' + ch, gap: r2(mx), drop: r2(sy - L.y), landed: [r2(L.x), r2(L.z)], landedY: r2(L.y), on: land.block >= 0 ? (lvl.blocks[land.block]?.tag || '#' + land.block) : null, gain: gain === null ? null : r2(gain) };
+        }
+        if (best) leapX.push(best);
+      }
+    }
     // (fix round 6, review 6 issue 3: the Bazookarp carrier swims its own ink (SPEC S21, 9.44 m/s), so its swim jumps are
     // skill movement like everyone's. Every swim crossing saving > 10 m is tried again with the carrier's movement
     // (actor.carry set): the list the Bazookarp layout builder places the Pond, the weirs and the Gate against — karp-stages/)
@@ -611,7 +641,7 @@
     for (const x of skillX) delete x.c;
     if (sub0 && kid.subId !== sub0) kid.setSub?.(sub0);
     P.clear();
-    jumps[level] = { edgesChecked: cands.length, deep: cands.filter((c) => c.deep).length, strip: cands.filter((c) => c.strip).length, gaps, runCross: runX, skill: skillX, carry: carryX, steer: steerX, seam: seamX, steerCands, steerTried, fine };
+    jumps[level] = { edgesChecked: cands.length, deep: cands.filter((c) => c.deep).length, strip: cands.filter((c) => c.strip).length, gaps, runCross: runX, skill: skillX, carry: carryX, steer: steerX, seam: seamX, leap: leapX, steerCands, steerTried, fine };
   }
   // the places: crossings folded onto Alpha's half (the 180° turn) and grouped by the 3 m cell of their start
   const places = (L) => {
@@ -657,15 +687,20 @@
   // the lead after review 6: the Bazookarp carrier swims its own ink and makes swim jumps too — accepted as skill movement
   // in general; what a carrier may bypass is judged per stage by the Bazookarp checker's shortcut probes (#7d) when
   // Highmark's Bazookarp layout is built. Its dash jumps are out: it carries no sub)
-  R('rule 44 (information): the skill routes — swim jumps out of own ink and jumps + the Dash Pellet\'s air dash across the lava, accepted as skill movement (the lead\'s option 1); a Bazookarp carrier makes the swim jumps too (its own ink, SPEC S21) but no dash jumps (no sub): judged per stage by the Bazookarp checker #7d when Highmark\'s layout is built (the carrier list: below); how many save over 20 / 40 m against the dry way round (DESIGN §3.5)',
+  R('rule 44 (information): the skill routes — swim jumps out of own ink and jumps + the Dash Pellet\'s air dash across the lava (and the Mitts leap, below: the lead after review 7), accepted as skill movement (the lead\'s option 1); a Bazookarp carrier makes the swim jumps too (its own ink, SPEC S21) but no dash jumps (no sub): judged per stage by the Bazookarp checker #7d when Highmark\'s layout is built (the carrier list: below); how many save over 20 / 40 m against the dry way round (DESIGN §3.5)',
     true, { low: sum(jumps.low.skill), high: sum(jumps.high.skill) });
   for (const lv of ['low', 'high']) { const pl = places(over(jumps[lv].skill)); for (let q = 0; q * 12 < pl.length; q++) R(`rule 44 places saving > 20 m: ${lv} ${q}`, true, pl.slice(q * 12, (q + 1) * 12)); }
+  // (fix round 7, the lead after review 7: a Mitts leap over the lava is skill movement like a swim jump — never off a roof
+  // top (no charge there: actor.js / mitts.js, lava-leap.js A), and a bot's leap flies as it was planned with the 2 s
+  // look-ahead (bots.js: no air guard in a kit leap, lava-leap.js B))
+  R('rule 44 (information): Sponge Mitts leaps over the lava — skill movement like the swim jumps (the lead after review 7); never off a roof top; from every edge of the march at half and full charge, aim level, by the kit\'s predictLeap; how many save over 20 / 40 m (no gate)',
+    true, { low: sum(jumps.low.leap), high: sum(jumps.high.leap), topLow: top(jumps.low.leap, 8), topHigh: top(jumps.high.leap, 8) });
   R('rule 44 (information): the Bazookarp carrier\'s swim jumps — every swim crossing saving > 10 m tried again with the carrier\'s movement (actor.carry: speeds × 0.8, no sub); the list for the Bazookarp layout builder (karp-stages/, PAGE_ARGS full=1)',
     true, { low: sum(jumps.low.carry), high: sum(jumps.high.carry), topLow: top(jumps.low.carry, 8), topHigh: top(jumps.high.carry, 8) });
   // (the gap march's 0.35–4.4 m samples: in the gate above since fix round 4; here how many there are and what crossed them)
   R('rule 44 (information): the gap march\'s 0.35–4.4 m samples between standable floors over lava — each one tried (in the gates above)', true, { low: { n: jumps.low.gaps.length, run: jumps.low.runCross.filter((x) => x.gap < 4.4).length, skill: jumps.low.skill.filter((x) => x.gap < 4.4).length, eg: jumps.low.gaps.slice(0, 6) }, high: { n: jumps.high.gaps.length, run: jumps.high.runCross.filter((x) => x.gap < 4.4).length, skill: jumps.high.skill.filter((x) => x.gap < 4.4).length, eg: jumps.high.gaps.slice(0, 6) } });
   // (the whole lists, for DESIGN §3.5 and the Bazookarp layout: PAGE_ARGS full=1)
-  if (/(^|[;&])full=1/.test(String(window.__pageArgs || ''))) R('rule 44 (information): every crossing (LOW, HIGH)', true, { low: { run: jumps.low.runCross, steer: jumps.low.steer, skill: jumps.low.skill, carry: jumps.low.carry }, high: { run: jumps.high.runCross, steer: jumps.high.steer, skill: jumps.high.skill, carry: jumps.high.carry } });   // (PAGE_ARGS full=1)
+  if (/(^|[;&])full=1/.test(String(window.__pageArgs || ''))) R('rule 44 (information): every crossing (LOW, HIGH)', true, { low: { run: jumps.low.runCross, steer: jumps.low.steer, skill: jumps.low.skill, leap: jumps.low.leap, carry: jumps.low.carry }, high: { run: jumps.high.runCross, steer: jumps.high.steer, skill: jumps.high.skill, leap: jumps.high.leap, carry: jumps.high.carry } });   // (PAGE_ARGS full=1)
 
   } catch (e) { R('rule 44: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 

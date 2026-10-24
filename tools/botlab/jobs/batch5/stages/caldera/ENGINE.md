@@ -912,8 +912,9 @@ cost, Highmark's numbers:
 
 **Counts**
 30. ≤ 64 rider parts (dynamic blocks) in total, twins included (fix round 6: 40 → 64 for Organ L's crown — the lead's
-    "a lookout must not be a launch pad" after review 6; Treehills runs ~60, §1.3). Highmark: 60 (14 stones and race 3's
-    two boulders; 6 hex columns × 3 boxes; 2 stubs; 24 crown pipes). (C)
+    "a lookout must not be a launch pad" after review 6; Treehills runs ~60, §1.3). Highmark: 64, the cap (14 stones and
+    race 3's two boulders; 6 hex columns × 3 boxes; 2 stubs; 28 crown pipes — fix round 7 closed the north-east and
+    north-west edges, 14 a lookout). (C)
 31. ≤ 4 gauges, ≤ 4 cascades, ≤ 12 vents, twins included. (C)
 32. Props below HIGH inside the region use the kit's `paint`, `gloss`, `metal`, `wood` or `rubber` buckets (they get
     the stain). No foliage, cloth, flags, inflatables or custom materials there. (A: a render scan)
@@ -961,6 +962,15 @@ cost, Highmark's numbers:
     head to stone, stone to stone) is listed in `def.steps`; `buildNav` throws if a link yields no edge pair at a pose it
     needs, and `lava-nav.js` rebuilds with the bounds shifted 0.25 m and 0.5 m to prove no climb depends on the grid's
     offset. (A)
+47. **No roof top slides a kid into the lava** (fix round 7, review 7: cover is a `roof` block and so is every rider
+    part; the slide took the nearest way off whatever lay past it). The engine side, in `actor.js` (`_roofExitDist` →
+    `_roofLandWet`, tagged [b5-caldera]): a way off whose landing a stage hazard takes (`G.match.stage.wet`, ahead 0) is
+    no way off — the fall from the way's exit at the slide's speed there (√(w² + 28 s)) and at a run's (6.5 m/s), the
+    floor under the footprint every 0.15 m (a seam the feet span is no gap), to 0.6 m past the fast landing; every way
+    refused → the kid is held where it is (no slide; it walks off by itself); on a stage with a hazard the slide owns
+    the move along the way it checked (nothing across it). Stages without a `wet` hook: unchanged. (A: lava-audit rule
+    47 — every flat roof block with lava within 3 m that a kid can hop onto, 16 sides × 3 offsets × 2 run-ups, idle or
+    steering back 2.5 s: 0 deaths at LOW and HIGH)
 
 ---
 
