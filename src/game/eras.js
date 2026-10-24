@@ -81,6 +81,7 @@ export class EraWorld {
     this.frozen = auditFront();   // (the stage art: { from, to, front } or null)
     this.audit = this.frozen ? this.frozen.from : auditEra();
     this.mode = ctx.mode;
+    this.layout = ctx.layout;
     this.planGroups = eraGroups(eraPieces(ctx.layout));   // (r_g for the props, before the Level exists)
     const V4 = (a = 0, b = 0, c = 0, d = 0) => new THREE.Vector4(a, b, c, d);
     const tint = [1, 2, 3].map((e) => { const t = E.tint?.[e] || [1, 1, 1, 0]; return V4(t[0], t[1], t[2], t[3]); });
@@ -118,6 +119,9 @@ export class EraWorld {
     const t0 = now();
     this.level = level;
     level.geomAttrs = [{ name: 'aEra', size: 2, value: (b) => [b.presence || 7, b.eraR || 0] }];
+    // the stage's own level art (LAYOUT.levelArt / levelArtOf: Bluestone's facades, streets and cover per era, drawn under
+    // the ink by the fragment's era — stages/bluestone/levelart.js): its per-block attribute rides beside aEra
+    if (typeof this.layout?.levelArtOf === 'function') level.geomAttrs.push({ name: 'aArt', size: 2, value: this.layout.levelArtOf(this.layout) });
     level.eraCount = 3;
     const map = new Map();
     this.groups = []; this.eraIds = [];
@@ -238,7 +242,14 @@ export class EraWorld {
     return changed;
   }
 
-  levelMaterial({ grate }) { return eraLevelExt(this.uniforms, grate); }
+  levelMaterial({ grate }) {
+    const ext = eraLevelExt(this.uniforms, grate), fn = this.layout?.levelArt;
+    if (typeof fn !== 'function') return ext;
+    // (after the era chunks: the art reads the fragment's era, eraOneHot; night: the environment's factor, read live)
+    const night = { get value() { return G.env?.U?.uNight?.value || 0; }, set value(v) { /* the environment's */ } };
+    const art = fn({ grate, night, lamps: [1, 2, 3].map((e) => this.E.look?.[e]?.lamps || '#ffe0b8') });
+    return art ? [ext, art] : ext;
+  }
   levelFilter() { return (b) => !b.grate && !b.presence; }   // the main mesh: shared blocks only
 
   afterMeshes(o) {
@@ -414,10 +425,23 @@ export class EraWorld {
     return { ...(L.theme.all || {}), ...(L.theme[name] || {}) };
   }
   _sets(e) { const S = this.env?.stageSets; if (S) for (const k of [1, 2, 3]) if (S[k]) S[k].visible = k === e; }
+  // ENGINE rule 42 (the art phase): the lamps' light per era — eras.look[e].lamps on the decor's lamp glass (its bodies are
+  // the eras' own props on the same spots: a gas lamp, a street light, a light mast; the decor's iron body is hidden),
+  // blended from the old era's to the new one's through the time-lapse (k 0 … 1)
+  _lamps(e, from = e, k = 1) {
+    const d = G.game?.decor;
+    if (!d || !d.bulbMat || G.level !== this.level) return;
+    if (!this._lampHid || this._lampHid !== d) { d.group?.traverse?.((o) => { if (o.name === 'lamps:body') o.visible = false; }); this._lampHid = d; }
+    const L = this.E.look || {}, a = L[from]?.lamps || '#ffd9a0', b = L[e]?.lamps || '#ffd9a0';
+    d.bulbMat.emissive.set(a);
+    if (k > 0) d.bulbMat.emissive.lerp(_c.set(b), Math.min(1, k));
+    this.stats.lampEra = k >= 1 ? e : from;
+  }
   _envEra(e, apply = true) {
     if (this.envEra === e && !apply) return;
     const changed = this.envEra !== e;
     this.envEra = e;
+    this._lamps(e);
     this._sets(e);
     this.uniforms.uEraFar.value.w = 0;
     if (apply && changed && this.env?.setTheme && this.env.theme) { const t = now(); this.env.setTheme(this.env.theme); this.stats.setThemeMs = Math.round(now() - t); }
@@ -544,6 +568,7 @@ export class StageEras {
     if (!m.attract) W._syncTheme();
     this.chip = m.attract ? null : new EraHud(this);   // (not `hud`: R.hud is a registry hook name)
     if (W.frozen && !m.attract) this.freeze(W.frozen);
+    W._lamps(W.envEra);
     emit('era:set', { era: st, instant: true, why: 'start' });
   }
   get plan() { return this.over || this.sched; }
@@ -622,6 +647,12 @@ export class StageEras {
     const t = clockT > this._tHigh ? clockT : this._tHigh;
     this._tHigh = t;
     if (this._frz) { this._frozenView(); return; }
+    // (the art phase, DESIGN §3.5) Tartar rings once in the intro fly-in, as the camera sweeps past the dome toward the
+    // spawn: the sound every jump starts with, taught before the first one (the ring's look runs on the intro's own clock)
+    if (this.m.state === 'intro' && !this.m.attract && !this._introRung && this.m.stateT >= 0.7) {
+      this._introRung = true; this._ring(null, 'intro'); this._ringAt = undefined; this._introRingAt = this.m.stateT;
+      this.stats.introRing = 1;
+    }
     const list = this.jumps(t);
     // every group to its era at this moment (a pure function of the clock): the front flips each when it reaches r_g
     for (const g of W.groups) { const e = this.eraAt(g.rg, t, list); if (g.era !== e) this._flip(g, e, t); }
@@ -1211,7 +1242,8 @@ export class StageEras {
     if (phase === 'jump') this._timelapse(J, t); else if (this._envBase && !(J && t >= J.at)) this._envRestore();
     this._horizon(J, t);
     // FX
-    const ringK = this._ringAt !== undefined && t - this._ringAt < this._ringLen ? 1 - (t - this._ringAt) / this._ringLen : 0;
+    let ringK = this._ringAt !== undefined && t - this._ringAt < this._ringLen ? 1 - (t - this._ringAt) / this._ringLen : 0;
+    if (this._introRingAt !== undefined && this.m.state === 'intro') { const k = this.m.stateT - this._introRingAt; ringK = k >= 0 && k < 1.6 ? 1 - k / 1.6 : 0; }
     const pick = J && t >= J.at - 1 && t < J.at + 1.2 ? 1 : 0;
     const beam = J && t >= J.at - 1 && t < J.at + 0.6 ? Math.min(1, (t - (J.at - 1)) / 0.3) * (t > J.at + 0.3 ? 1 - (t - J.at - 0.3) / 0.3 : 1) : 0;
     const warnIn = J && phase === 'warn' ? Math.min(1, (t - J.warnAt) / 0.6) : 0;   // (the holograms and wires: up within 0.6 s of the warning)
@@ -1251,6 +1283,7 @@ export class StageEras {
     const el = (B.Tf.sunEl + (B.Tt.sunEl - B.Tf.sunEl) * s) * DEG, az = (B.Tf.sunAz + (B.Tt.sunAz - B.Tf.sunAz) * s + TL.sunSwing * bump) * DEG;
     U.uSunDir.value.set(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).normalize();
     U.uCloudParams.value.z = B.cloud * (1 + (TL.cloudRate - 1) * bump);
+    W._lamps(J.to, J.from, s);
     env._fitShadow?.();
   }
   // done + 0.7 s: the new era's look settles — the uniforms the time-lapse blended are set to the new theme exactly, the

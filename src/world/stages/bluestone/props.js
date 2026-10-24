@@ -11,11 +11,20 @@
 // Placements carry the era engine's tags (eras / eraGroup); the dressing is the union of every era (era.js), and the
 // engine switches the tagged looks at the front (their own merged meshes per era mask: docs/STAGE-MODS.md "Props").
 import { eraFilter } from './era.js';
+import { LAYOUT } from './layout.js';
+import { LAMPS } from './levelart.js';
+import { makeKit } from './kit.js';
+import { registerArch } from './arch.js';
+import { registerDress } from './dress.js';
 
 const BOT = -1.8;
 const RAILYARD = { top: 3.0 };   // (round C: no railyard embankment in play; the track / train looks keep its height)
 
 export function register(D, H) {
+  // the art phase: the kit (palette, lettering, mouldings), the buildings' dressing and the street's (arch.js, dress.js)
+  const KIT = makeKit(D, H);
+  registerArch(D, H, KIT);
+  registerDress(D, H, KIT);
   // a plain block of the railyard (centre pos, size [w, d], top): collider `roof`, a dark mass
   D.bluestone_berm = {
     build(B, o) {
@@ -223,30 +232,92 @@ export function register(D, H) {
 }
 
 const placements = [];
+const PI = Math.PI;
+const ERAS3 = [1, 2, 3];
 // (Commander Tartar is the era engine's: src/fx/eraFx.js builds him as parts it animates)
-// the landmark's and the hero buildings' blockout volumes (looks only)
-placements.push({ type: 'bluestone_dome', pos: [0, 0, 0], mirror: false });
-placements.push({ type: 'bluestone_clockrow', pos: [0, 0, -7.575] });
+// ---- the station (DESIGN.md §5.1): shared iron and stone, the dome / the drum's words / the clocks per era
+placements.push({ type: 'bluestone_station', pos: [0, 0, 0] });
+for (const e of ERAS3) placements.push({ type: 'bluestone_domeera', pos: [0, 0, 0], mirror: false, era: e, eras: String(e) });
+for (const e of ERAS3) placements.push({ type: 'bluestone_drumletters', pos: [0, 0, 0], era: e, eras: String(e) });
+for (const e of ERAS3) placements.push({ type: 'bluestone_clockfaces', pos: [0, 0, -7.575], era: e, eras: String(e) });
+placements.push({ type: 'bluestone_destplates', pos: [0, 0, 0] });
+// ---- the buildings: roof lines (shared), the words on them and the rooftops (per era)
+placements.push({ type: 'bluestone_cornices', pos: [0, 0, 0] });
 placements.push({ type: 'bluestone_turret', pos: [-12.75, 0, -19.75] });
+for (const e of ERAS3) placements.push({ type: 'bluestone_signs', pos: [0, 0, 0], era: e, eras: String(e) });
+for (const e of [2, 3]) placements.push({ type: 'bluestone_rooftops', pos: [0, 0, 0], era: e, eras: String(e) });
 for (const z of [-36.75, -31.25]) placements.push({ type: 'bluestone_grille', pos: [-30.75, 0, z], len: 3.5 });   // (the arcade's grilles onto Hoki Lane)
-// ---- the eras' looks (look-only placements; ENGINE.md §3.3): the tram at its stop on Swimston's west track over the
-//      layout's shared tram collider (collision only), the street lamps, today's towers and the 3000s' spires on the roofs
+placements.push({ type: 'bluestone_vault', pos: [0, 0, 0] });
+for (const e of ERAS3) placements.push({ type: 'bluestone_vault', pos: [0, 0, 0], era: e, eras: String(e) });
+placements.push({ type: 'bluestone_lace', pos: [0, 0, 0] });
+placements.push({ type: 'bluestone_plates', pos: [0, 0, 0] });
+for (const e of ERAS3) placements.push({ type: 'bluestone_hangsigns', pos: [0, 0, 0], era: e, eras: String(e) });
+placements.push({ type: 'bluestone_pods', pos: [0, 0, 0], eras: '3' });
+// ---- the street: the tram at its stop (the era-slot kit: one shared collider in the layout, three looks), the lamps on the
+//      shared spots (the decor's light at their heads), the lanes' wall lamps, the overhead wires
 const TRAM = { pos: [-22.9, 0, -31], rotY: 0 };
 placements.push({ type: 'bluestone_cabletram', ...TRAM, eras: '1' }, { type: 'bluestone_tram', ...TRAM, eras: '2' }, { type: 'bluestone_floattram', ...TRAM, eras: '3' });
-// (the lamps stand in the kerb planters: on Swimston's kerbs and under the balcony; no collider, nobody stands there)
-for (const [x, y, z, ry] of [[-25.3, 1.5, -44, 0], [-25.3, 1.5, -23, 0], [-15.3, 1.5, -26.5, Math.PI], [-13.7, 1.5, -14.4, Math.PI], [-8, 1.5, -16.1, Math.PI / 2]]) {
-  for (const [type, eras] of [['bluestone_gaslamp', '1'], ['bluestone_streetlight', '2'], ['bluestone_lightmast', '3']]) placements.push({ type, pos: [x, y, z], rotY: ry, eras });
+const LAMP_Y = [1.5, 1.5, 2.2, 1.5, 1.3, 1.2];   // the planters' tops the lamps stand in (levelart.js LAMPS)
+LAMPS.forEach(([x, z], i) => { for (const e of ERAS3) placements.push({ type: 'bluestone_lamp', pos: [x, LAMP_Y[i], z], rotY: x > 0 ? PI : 0, era: e, eras: String(e) }); });
+for (const [x, y, z, ry] of [[-36.5, 3.2, -45, PI / 2], [-36.5, 3.2, -37, PI / 2], [-36.5, 3.2, -31, PI / 2], [-36.5, 3.2, -21, PI / 2], [-12.0, 3.0, -22.5, PI], [-13.5, 3.0, -46.0, PI], [-30.0, 3.4, -12.0, PI], [-31.0, 3.0, -34.0, -PI / 2]]) {
+  for (const e of ERAS3) placements.push({ type: 'bluestone_walllamp', pos: [x, 0, z], rotY: ry, y, era: e, eras: String(e) });
 }
-// (the spawn → dome line, DESIGN §8.3: from the spawn deck the dome stands exactly behind the GPO, so nothing stands on
-//  the GPO's roof in any era — its tower and spire are on the tram shed beside the spawn deck — and the hotel's
-//  extension and spire rise straight behind its turret, west of the dome's rim; eras-look part 3 checks that the dome
-//  stays in sight from both spawns in every era)
+for (const e of [1, 2]) placements.push({ type: 'bluestone_wires', pos: [0, 0, 0], era: e, eras: String(e) });
+// ---- the railings: one per rail collider of the half list, its kind by its tag (an era rail keeps its piece's eras and group)
+const DEG = Math.PI / 180;
+function railOf(d) {
+  if (d.kind === 'box') {
+    const dx = d.max[0] - d.min[0], dz = d.max[2] - d.min[2], alongX = dx >= dz;
+    return { pos: [(d.min[0] + d.max[0]) / 2, d.min[1], (d.min[2] + d.max[2]) / 2], rotY: alongX ? 0 : -Math.PI / 2, len: alongX ? dx : dz, h: d.max[1] - d.min[1] };
+  }
+  if (d.kind === 'obox') {
+    const alongX = d.size[0] >= d.size[2], a = d.rotY * DEG;
+    return { pos: [d.center[0], d.center[1] - d.size[1] / 2, d.center[2]], rotY: alongX ? a : a - Math.PI / 2, len: alongX ? d.size[0] : d.size[2], h: d.size[1] };
+  }
+  return null;
+}
+for (const d of LAYOUT.half) {
+  if (!d.rail || d.tag === 'arcade-grille') continue;
+  const r = railOf(d);
+  if (!r) continue;
+  const g = d.eraGroup ? { eraGroup: d.eraGroup } : {};
+  if (d.tag === 'bridge-rail') {
+    placements.push({ type: 'bluestone_rail', ...r, kind: 'lattice', eras: '2', ...g }, { type: 'bluestone_rail', ...r, kind: 'glass', eras: '3', ...g });
+    continue;
+  }
+  const kind = d.tag === 'balustrade' ? 'lace' : d.tag === 'punt-rail' ? 'rope' : d.tag === 'deck-rail' ? (d.min && d.min[1] > 3 ? 'gallery' : 'timber') : /glass|halo/.test(d.tag) ? 'glass' : 'gallery';
+  placements.push({ type: 'bluestone_rail', ...r, kind, ...(d.eras ? { eras: d.eras } : {}), ...g });
+}
+// ---- the planting on the planters' tops (roof tops only: nobody stands there), per era; the Halo's and the garden's
+//      planters exist in the 3000s only (their own group)
+for (const d of LAYOUT.half) {
+  if (!/planter/.test(d.tag || '') || !d.roof) continue;
+  const top = d.kind === 'box' ? d.max[1] : d.center[1] + d.size[1] / 2;
+  const at = d.kind === 'box' ? { pos: [(d.min[0] + d.max[0]) / 2, top, (d.min[2] + d.max[2]) / 2], rotY: 0, w: d.max[0] - d.min[0], d: d.max[2] - d.min[2] } : { pos: [d.center[0], top, d.center[2]], rotY: d.rotY * DEG, w: d.size[0], d: d.size[2] };
+  const eras = d.eras ? [...d.eras].map(Number) : ERAS3;
+  for (const e of eras) placements.push({ type: 'bluestone_planting', ...at, era: e, eras: String(e), ...(d.eraGroup ? { eraGroup: d.eraGroup } : {}), seed: Math.round(at.pos[0] * 13 + at.pos[2] * 7) });
+}
+// ---- the small things on and round the cover (art phase, from the era-1 sweep): cast-iron bollards on the mooring blocks
+//      (roof tops), rowing eights on the Boathouse's racks (a roof top), hitching rings (1880s) / bike hoops (TODAY) on the
+//      bollard blocks' faces (within 4 cm)
+for (const d of LAYOUT.half) {
+  if (d.tag === 'mooring-post' && d.kind === 'box') placements.push({ type: 'bluestone_bollardcap', pos: [(d.min[0] + d.max[0]) / 2, d.max[1], (d.min[2] + d.max[2]) / 2] });
+  if (d.tag === 'mooring-post' && d.kind === 'obox') placements.push({ type: 'bluestone_bollardcap', pos: [d.center[0], d.center[1] + d.size[1] / 2, d.center[2]] });
+  if (d.tag === 'deck-racks') placements.push({ type: 'bluestone_shells', pos: [(d.min[0] + d.max[0]) / 2, d.max[1], (d.min[2] + d.max[2]) / 2], rotY: Math.PI / 2, len: d.max[0] - d.min[0] });
+  if (d.tag === 'bollards' && d.kind === 'box') {
+    const at = { pos: [(d.min[0] + d.max[0]) / 2, d.min[1], (d.min[2] + d.max[2]) / 2], w: d.max[0] - d.min[0], d: d.max[2] - d.min[2], h: d.max[1] - d.min[1], ...(d.notIn ? { notIn: d.notIn } : {}) };
+    placements.push({ type: 'bluestone_rings', ...at, eras: '1' }, { type: 'bluestone_hoops', ...at, eras: '2' });
+  }
+}
+// (the spawn → dome line, DESIGN §8.3: from the spawn deck the dome stands exactly behind the GPO, so nothing tall stands on
+//  the GPO's roof in any era — its tower and spire are on the tram shed beside the spawn deck — and the hotel's extension
+//  and spire rise straight behind its turret, west of the dome's rim; eras-look part 3 checks that the dome stays in sight
+//  from both spawns in every era)
 placements.push({ type: 'bluestone_glasstower', pos: [-29.5, 0, -7], size: [4.4, 6], y0: 9, top: 34, eras: '2' });
 placements.push({ type: 'bluestone_glasstower', pos: [-9, 0, -68], size: [3.2, 2.6], y0: 6, top: 27, eras: '2' });
 placements.push({ type: 'bluestone_glasstower', pos: [-13.3, 0, -21.7], size: [1.4, 1.2], y0: 9, top: 21, eras: '2' });
 placements.push({ type: 'bluestone_spire', pos: [-29.5, 0, -7], y0: 9, top: 26, r: 3, eras: '3' });
 placements.push({ type: 'bluestone_spire', pos: [-9, 0, -68], y0: 6, top: 18, r: 2.2, eras: '3' });
 placements.push({ type: 'bluestone_spire', pos: [-13.3, 0, -21.8], y0: 9, top: 29, r: 1.05, eras: '3' });
-placements.push({ type: 'bluestone_lightlattice', pos: [0, 0, 0], mirror: false, eras: '3' });
 export const BERM_MISS = [];
 export const PLACEMENTS = eraFilter(placements);

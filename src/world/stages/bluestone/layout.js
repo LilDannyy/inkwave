@@ -24,6 +24,7 @@ import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
 import { ERA, eraFilter } from './era.js';
 import { MURAL } from './murals.js';
+import { levelArt, makeArtOf, LAMPS } from './levelart.js';
 import { BOT, TIER_Y, coverRects, bars, junctionPatches, tierBoxes, symOutline, rectPoly } from './ground.js';
 
 // ------------------------------------------------------------------------------------------------ frames
@@ -546,7 +547,7 @@ const ERAS = {
   // top corner, where the flight runs out under its outer edge (the blockout as accepted: DESIGN §3.6 #3 gives the Halo's
   // smallest clearance as 3.8 m; the final review's issue 6 check measured this). Lever if the camera minds it: the
   // diagonal sides 0.2 m thick (underside 5.1), a collider change and a re-bake.
-  accept: { rule22: [{ group: 'halo-6', min: 3.65, why: 'the Halo 225° side over the balcony stair\'s top corner, 3.66 m: accepted blockout geometry, DESIGN §3.6 #3' }] },
+  accept: { rule22: [{ group: 'halo-6', min: 3.65, why: 'the Halo 225° side over the balcony stair\'s top corner, 3.75 m (check-maps\' measure): accepted blockout geometry, DESIGN §3.6 #3' }] },
 };
 
 // ------------------------------------------------------------------------------------------------ the whole union, then this build's era
@@ -570,7 +571,19 @@ const LAYOUT_BLUESTONE = {
   bazookarp: BAZOOKARP,
   eras: ERAS,
   era: ERA,   // (always 0: the union; the audit option ?era=n is the engine's, era.js)
-  decor: { lamps: [], palms: [], flags: [] },
+  // the shared lamp spots (DESIGN.md §5.7; ENGINE rule 42: their colour per era from eras.look[e].lamps, blended in the
+  // time-lapse): the lamp bodies are the eras' own (props.js: a gas lamp, a street light, a light mast on each spot); the
+  // decor's glass carries the light, and the level art pools it on the floors at dusk
+  decor: { lamps: LAMPS, palms: [], flags: [] },
+  // the level art (stages/bluestone/levelart.js): the three looks of the streets drawn under the ink, per block and per era
+  levelArt, levelArtOf: makeArtOf,
+  // the intro (DESIGN.md §5.8): high over Alpha's west wharf, looking east-north-east along the crossbar at the dome with
+  // Tartar under it (he rings once as the camera passes the clocks: the era engine), then back to the team's spawn deck
+  intro: { from: [-58, 16, -24], lookFrom: [0, 7, 0], toBack: 3.2 },
+  // the stage-select art (DESIGN.md §5.8): high over the south-east river corner, over the punt, the bridge site and the
+  // Boathouse to the dome and its clocks, Swimston running off to Bravo's chimney; rendered mid-jump (ERA_FROM / ERA_TO /
+  // FRONT, stageart.cjs): day 1 → 2 at r 30, dusk 2 → 3 at r 30
+  art: { from: [44, 26, -46], look: [0, 4, -6], fov: 56 },
 };
 
 export const LAYOUT = LAYOUT_BLUESTONE;
