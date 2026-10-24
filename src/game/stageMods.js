@@ -180,6 +180,7 @@ export class StageWorld {
 const R_HOOKS = ['update', 'lateUpdate', 'seek', 'dispose',
   // actors (this screen's own: the owner decides)
   'actorReset', 'ownsBody', 'damageGuard', 'canSuperJump', 'jumpAnchor', 'kill', 'fallCause', 'superJumpLanding', 'noPush', 'noShove',
+  'rescue',   // [b5-caldera]
   // online
   'netEvent', 'netSnapshot', 'netRestore', 'netFlag', 'carryRemote', 'adopt', 'hostChanged', 'splatTime',
   // paint
@@ -274,6 +275,9 @@ export class StageRun {
   superJumpLanding(a, s) { for (const R of this.h.superJumpLanding) R.superJumpLanding(a, s); }
   noPush(a) { for (const R of this.h.noPush) if (R.noPush(a)) return true; return false; }
   noShove(a) { for (const R of this.h.noShove) if (R.noShove(a)) return true; return false; }
+  // [b5-caldera] a kid held on an off-limits top whose every way off lands in a hazard (actor._roofHeldStep, 0.6 s): the
+  // module places it somewhere safe and returns true (the lava: the nearest dry node within 6 m); false: still held
+  rescue(a) { for (const R of this.h.rescue) if (R.rescue(a)) return true; return false; }
 
   // ---- online (netmatch.js)
   // A module record: anyone may send one (the host for host-run state, an owner for its own actor's state); every other

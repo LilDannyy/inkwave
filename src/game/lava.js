@@ -1035,6 +1035,42 @@ export class StageLava {
     this.stats.redirects = (this.stats.redirects || 0) + 1;
   }
   _stoneUpAt(R, t) { const st = lavaAt(t, this.sched, this.otAt, this.held); return stoneRel(R.r, t, this.sched, st) >= LAVA.kill; }
+  // (review 8, the lead's rule for cover standing in drowned ground) a kid held on an off-limits top whose every way off
+  // lands in the lava (actor._roofHeldStep: 0.6 s where it stands, so the player sees what happened) is RESCUED as the era
+  // engine rescues a kid over water: placed on the nearest dry node — static floor that stands, that the lava does not
+  // reach within 8 s, the body fitting — within RESCUE.r (6 m; none there: the nearest within 12 m, counted in
+  // stats.rescueFar), with a brief invulnerability (RESCUE.invuln), never splatted, never thrown. The owner's screen does it
+  // (a teleport: netTp, every screen snaps); its HUD's personal line says NO FOOTING → rescued (_mine)
+  rescue(a) {
+    const nav = G.nav, M = this.W.navMeta, L = G.level, Ph = G.physics;
+    if (!nav || !M || nav !== this.W.nav || !L || !a.alive) return false;
+    const t = this.clock.t, p = a.pos, squid = a.form === 'squid';
+    let best = -1, bd = RESCUE.far * RESCUE.far;
+    for (const n of nav.nodes) {
+      const d2 = (n.x - p.x) ** 2 + (n.z - p.z) ** 2;
+      if (d2 >= bd || !nav.valid[n.id] || M.kind[n.id] === 2) continue;
+      if (M.kind[n.id] === 1 && this.maxOver(t, t + 8) >= M.shutY[n.id]) continue;
+      if (this.covers(n.x, n.z, n.y, 8)) continue;
+      const g = L.groundHeight(n.x, n.z, n.y + 0.3);
+      if (!(Math.abs(g - n.y) < 0.3) || g <= PLAYER.waterY + 0.3) continue;
+      if (Ph && !Ph.bodyFits(_v.set(n.x, n.y + 0.02, n.z), PLAYER.radius, PLAYER.stepUp, PLAYER.height * 0.9, squid)) continue;
+      bd = d2; best = n.id;
+    }
+    if (best < 0) return false;
+    const n = nav.nodes[best], from = p.clone(), d = Math.sqrt(bd);
+    p.set(n.x, n.y + 0.05, n.z); a.vel.set(0, 0, 0); a.netTp = (a.netTp || 0) + 1;
+    a.invuln = Math.max(a.invuln || 0, RESCUE.invuln);
+    a.lavaRescueT = t;
+    const S = this.stats;
+    S.rescues = (S.rescues || 0) + 1;
+    if (d > RESCUE.r) S.rescueFar = (S.rescueFar || 0) + 1;
+    if ((S.rescueLog ||= []).length < 40) S.rescueLog.push({ t: +t.toFixed(2), bot: !!a.isBot, from: [+from.x.toFixed(2), +from.y.toFixed(2), +from.z.toFixed(2)], to: [+n.x.toFixed(2), +n.y.toFixed(2), +n.z.toFixed(2)], d: +d.toFixed(2), block: a.ground?.block ?? -1 });
+    if (!this.m.attract) try {
+      G.fx?.ring?.(_v.set(from.x, from.y + 0.08, from.z), UP, RESCUE.color, { radius: 1.2, life: 0.45 });
+      G.fx?.ring?.(_v.set(n.x, n.y + 0.08, n.z), UP, RESCUE.color, { radius: 1.6, life: 0.5 });
+    } catch (e) { /* optional */ }
+    return true;
+  }
   // a snap put someone's floor under the lava: shove them to the nearest node dry for 8 s
   _escapeShove() {
     const nav = G.nav, M = this.W.navMeta;
@@ -1609,6 +1645,8 @@ export class StageLava {
   _mine(a) {
     const M = this.W.navMeta, nav = G.nav;
     if (!M || !nav || nav !== this.W.nav) return null;
+    // (review 8) held on cover with no footing round it, then rescued: NO FOOTING → rescued, from the hold to 1.8 s after
+    if (a.roofHeld > 0 || (a.lavaRescueT !== undefined && this.clock.t - a.lavaRescueT >= 0 && this.clock.t - a.lavaRescueT < RESCUE.line)) return { text: 'NO FOOTING', m: 0, to: null, left: null, rescue: true };
     // (from the feet: _foot — dry ground never gets the line; a stone keeps it until it sinks)
     const f = this._foot(a), s = f.node, ex = s >= 0 ? M.exit[s] : -1;
     if (!f.kind) return null;
@@ -1660,6 +1698,9 @@ const LOOK_PROG = 1;   // s without headway toward the top before a busy claiman
 // off only once the aim had moved on, and the deck stayed the other team's
 const inkTrigger = (a) => { const wr = a.weaponRunner; return !(wr && wr.charging && (wr.charge || 0) >= 0.35); };
 const FOOT_DRY = Object.freeze({ kind: 0, node: -1 });
+// (review 8) the rescue off cover standing in drowned ground: within r m (else up to far), invulnerable invuln s, the HUD's
+// line shown line s from the hold's start to after the move
+const RESCUE = { r: 6, far: 12, invuln: 1.0, line: 1.8, color: new THREE.Color('#f4f1ea') };
 const SLOW_FIRE = new Set(['charger', 'splatling', 'spinner', 'bow', 'roller']);   // (an escaper of these lets go of the trigger)   // (StageLava._foot: dry ground, an Organ, airborne long enough)
 const BOULDER_GROW = 0.12;   // m of a stone's travel relative to the lava over which its boulder heaves up / sinks back
 // subs items the sweep ends (placed, stuck or running devices; not thrown subs in flight, clouds or mist)

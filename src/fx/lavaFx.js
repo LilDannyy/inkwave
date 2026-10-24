@@ -693,7 +693,8 @@ const CSS = `
   animation: lv-pulse .45s ease-in-out infinite alternate; }
 .lv-mine.is-on { display: flex; } .lv-mine.is-stone { background: rgba(40, 46, 60, .94); box-shadow: 0 0 0 3px #fff, 0 0 22px rgba(220, 230, 255, .5); }
 .lv-mine i { display: inline-block; font-style: normal; font-size: 1.4em; line-height: 1; }
-.lv-mine span { opacity: .85; }`;
+.lv-mine span { opacity: .85; }
+.lv-mine.is-rescue { background: rgba(48, 44, 40, .94); box-shadow: 0 0 0 3px #fff, 0 0 22px rgba(255, 240, 220, .45); animation: none; } .lv-mine.is-rescue i { display: none; }`;
 let cssOn = false;
 // the Hud fields holding each mode's objective HUD under the timer (fix round 2: Bazookarp's is hud.karpDock — the
 // finished HUD (karp-face, SPEC §6) exposes its column under the clock there; until then the chip keeps its Turf War spot)
@@ -739,9 +740,9 @@ export class LavaHud {
     // the local player's own line, its arrow toward the way out (relative to the camera's heading)
     const m = o.mine;
     if (m && a) {
-      this.mine.classList.add('is-on'); this.mine.classList.toggle('is-stone', m.text.includes('STONES'));
+      this.mine.classList.add('is-on'); this.mine.classList.toggle('is-stone', m.text.includes('STONES')); this.mine.classList.toggle('is-rescue', !!m.rescue);
       if (this.mText.textContent !== m.text) this.mText.textContent = m.text;
-      this.mDist.textContent = '→ ' + m.m + ' m';
+      this.mDist.textContent = m.rescue ? '→ rescued' : '→ ' + m.m + ' m';   // (review 8: NO FOOTING → rescued, no arrow)
       if (m.to && G.camera) {
         const c = G.camera, f = new THREE.Vector3(); c.getWorldDirection(f);
         const cy = Math.atan2(f.x, f.z), ty = Math.atan2(m.to[0] - a.pos.x, m.to[1] - a.pos.z);

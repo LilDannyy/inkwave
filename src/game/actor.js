@@ -23,6 +23,7 @@ const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _fwd = new THREE.Vect
 const DOWN = new THREE.Vector3(0, -1, 0);
 const TAU = Math.PI * 2;
 const _rxO = new THREE.Vector3(), _rxD = new THREE.Vector3(), _rxH = new Hit(), _rxA = new THREE.Vector3();   // [b5-int3] (_roofExitDist, _roofSlide)
+const _RX_W0 = [0.5, 1.1], _RX_WH = [0.37, 0.5, 1.1];   // [b5-caldera] (_roofExitDist's wall rays over the feet; a hazard stage's also at a lip over a step)
 const _ZERO_MOVE = Object.freeze(new THREE.Vector3());   // move input while planted after a dualies dodge roll
 
 // Local-player gamepad rumble (subtle, scaled by settings.rumble, no-op without a pad).
@@ -102,6 +103,7 @@ export class Actor {
     this.hardLand = 0;           // 0..1 recovery weight after a hard landing
     this.coyote = 0;
     this.jumpBuffer = 0;
+    this.roofT = 0; this.roofDir = null; this.roofHeld = this.roofHeldSum = 0;   // [b5-caldera] (a spawn / teleport onto a roof starts its own slide: a kept roofDir slid it the old way unchecked)
     this.fireBuffer = 0;
     this.kidT = 99;              // time since becoming a kid (emerge delay for the first shot)
     this.climbExit = 0;
@@ -697,13 +699,14 @@ export class Actor {
       // [b5-int3] that way, unless it doesn't get off within 8 m and another does — or, on a flat top, another gets off over
       // 0.3 m sooner (a row of off-limits tops a footprint apart: crossmarket's balconettes 0.75 m apart slid a kid off the
       // end of one onto the next and back, the way off their open front 0.3 m away)
-      this._rxHz = false;   // [b5-caldera] (set when a way off is refused for its landing: _roofLandWet)
+      this._rxHz = false; this.roofHeld = this.roofHeldSum = 0;   // [b5-caldera] (_rxHz: set when a way off is refused for its landing, _roofLandWet)
       const e0 = this._roofExitDist(this.roofDir.x, this.roofDir.z);
       if (e0 === Infinity) { if (this._roofExit(b, null, this.roofDir) === Infinity && this._rxHz) this._roofHold(); }   // [b5-caldera] (every way off lands in the lava)
       else if (n.y >= 0.995 && this._roofExit(b, null, _rxA) < e0 - 0.3) this.roofDir.copy(_rxA);
       this.roofHz = !!G.match?.stage?.h.wet.length;   // [b5-caldera] (a stage with a hazard: the slide owns the move, below)
     }
     const d = this.roofDir;
+    if (this.roofHeld > 0) { this._roofHeldStep(b, dt); return; }   // [b5-caldera] (held: _roofHeldStep)
     this.roofT = (this.roofT || 0) + dt;
     const moved = (this.pos.x - this.roofP.x) * d.x + (this.pos.z - this.roofP.z) * d.z;
     this.roofP.copy(this.pos);
@@ -713,11 +716,21 @@ export class Actor {
     const along = this.vel.x * d.x + this.vel.z * d.z;
     // [b5-caldera] on a stage with a hazard (the lava) the slide owns the move: along the way off it checked, at its speed or
     // a run's, nothing across it (a landing's drift or a steer across the slide threw kids off a cover's lava side onto a
-    // narrow coping and past it, review 7); held (no way off but into the lava), the kid walks as on any floor
+    // narrow coping and past it, review 7); held (no way off but into the lava): _roofHeldStep
     if (this.roofHz) { if (d.x || d.z) { const v = Math.max(want, Math.min(along, 6.5)); this.vel.x = d.x * v; this.vel.z = d.z * v; } }
     else if (along < want) { this.vel.x += d.x * (want - along); this.vel.z += d.z * (want - along); }
   }
-  _roofHold() { this.roofDir.set(0, 0, 0); this.vel.x = 0; this.vel.z = 0; }   // [b5-caldera] every way off lands in the lava: held where it is
+  // [b5-caldera] every way off lands in the lava: held where it is (review 8, the lead's rule: no perch, no fling). The slide's
+  // clock stays at its start while held (a re-check judges, and a slide launches, at the slow push 3 m/s); every 0.25 s the
+  // ways off are looked at again (one dry now: the slide starts along it), and after 0.6 s (the player sees what happened)
+  // the stage rescues the kid (G.match.stage.rescue: the nearest dry node within 6 m, a brief invulnerability; lava.js)
+  _roofHold() { this.roofDir.set(0, 0, 0); this.vel.x = 0; this.vel.z = 0; this.roofT = 1e-3; if (!(this.roofHeld > 0)) this.roofHeld = 1e-4; }
+  _roofHeldStep(b, dt) {
+    const h0 = this.roofHeld, s0 = this.roofHeldSum || 0, q = Math.floor((h0 + dt) / 0.25) > Math.floor(h0 / 0.25);
+    this.roofT = 1e-3; this.vel.x = 0; this.vel.z = 0; this.roofHeld += dt; this.roofHeldSum = s0 + dt;
+    if (q && this._roofExit(b, null, _rxA) < Infinity) { this.roofDir.copy(_rxA); this.roofHeld = 0; this.roofStall = 0; this.roofP.copy(this.pos); return; }
+    if (this.roofHeldSum >= 0.6 && (s0 < 0.6 || q) && G.match?.stage?.rescue(this)) { this.roofHeld = this.roofHeldSum = 0; this.roofT = 0; this.roofDir = null; }   // (0.6 s held in all on this top)
+  }
 
   // [b5-int3] how far along (dx, dz) a kid sliding from here gets off the roof it's on: the first 0.3 m step where no part
   // of its footprint is over an off-limits top (a drop — over 0.6 m down, or none — or a top that isn't off-limits for it)
@@ -726,7 +739,10 @@ export class Actor {
   _roofExitDist(dx, dz, maxD = 8) {
     const FOOT = PLAYER.footRadius;   // [b5-int3]
     const y = this.pos.y, O = _rxO, D = _rxD, H = _rxH, L = G.level;
-    const wall = (px, pz) => { D.set(dx, 0, dz); for (const h of [0.5, 1.1]) if (G.physics.raycast(O.set(px, y + h, pz), D, 0.3 + PLAYER.radius, H).hit && Math.abs(H.normal.y) < 0.5) return true; return false; };
+    // [b5-caldera] on a stage with a hazard, from the roof top under the feet there (ry: a chain of tops at 7.6–7.9 m walked a kid
+    // into a 0.4 m lip unseen from its start's height, which turned it over the outer wall) and from a lip the slide can't step
+    const hz = !!G.match?.stage?.h.wet.length, WH = hz ? _RX_WH : _RX_W0;
+    const wall = (px, pz) => { D.set(dx, 0, dz); for (const h of WH) if (G.physics.raycast(O.set(px, (hz ? ry : y) + h, pz), D, 0.3 + PLAYER.radius, H).hit && Math.abs(H.normal.y) < 0.5) return true; return false; };
     // (the feet over an off-limits top here: the centre and the footprint's four points — a kid's feet are held by any top
     // the footprint covers, so a gap narrower than it is no way off: crossmarket's row of balconettes 0.75 m apart sent a
     // kid sliding off one onto the next and back for 3 s)
@@ -737,11 +753,11 @@ export class Actor {
         const g = G.physics.raycast(O.set(px + ox, y + 0.3, pz + oz), D, 8, H);
         if (!g.hit || H.point.y < y - 0.6) continue;
         const gb = L.blocks[H.block];
-        if (gb && this.isRoofFor(gb)) return true;
+        if (gb && this.isRoofFor(gb)) { ry = H.point.y; return true; }   // [b5-caldera] ry
       }
       return false;
     };
-    let px = this.pos.x, pz = this.pos.z;
+    let px = this.pos.x, pz = this.pos.z, ry = y;   // [b5-caldera] (ry: the roof top last under the feet — the slide's height at its way off)
     for (let s = 0.3; s <= maxD + 1e-6; s += 0.3) {
       if (wall(px, pz)) return Infinity;
       px += dx * 0.3; pz += dz * 0.3;
@@ -751,7 +767,7 @@ export class Actor {
       // end caught it — back and forth for 3 s, dash-reach.js 1/24)
       let qx = px, qz = pz, clear = true;
       for (let j = 0; j < 2 && clear; j++) { if (wall(qx, qz)) break; qx += dx * 0.3; qz += dz * 0.3; if (over(qx, qz)) clear = false; }
-      if (clear) { if (!this._roofLandWet(px, pz, dx, dz, s)) return s; this._rxHz = true; return Infinity; }   // [b5-caldera] (a way off into the lava is none)
+      if (clear) { if (!this._roofLandWet(px, pz, dx, dz, s, ry)) return s; this._rxHz = true; return Infinity; }   // [b5-caldera] (a way off into the lava is none)
     }
     return Infinity;
   }
@@ -771,24 +787,50 @@ export class Actor {
     return best;
   }
   // [b5-caldera] would a kid sliding off this way come down where a stage hazard takes it (the lava: G.match.stage.wet)?
-  // From the way's exit (px, pz), s m along the slide, it falls at the slide's speed there (√(w² + 28 s): the push w now,
-  // 14 m/s² more) and at a run's (6.5): every 0.15 m the floor under its footprint (a seam the feet span is no gap); in the
-  // air the slow arc's height, from where that comes down the floor itself, until 0.6 m past where the fast arc lands. No
-  // hazard on the stage: false (review 7: cover beside the lava slid kids into it). lava-audit rule 47
-  _roofLandWet(px, pz, dx, dz, s) {
+  // From the way's exit (px, pz), s m along the slide, it leaves at the slide's speed there (v = √(w² + 28 s): the push w
+  // now, 14 m/s² more; held, w is the slow push 3) or at a run's (6.5). In the air (review 8) an idle kid brakes at
+  // PLAYER.airDecel (4 m/s²) and one steering back at airAccel (20): the earliest landing is the steer-back arc's (x = v·t −
+  // ½·20·t², never behind the exit; falling at 30 m/s², downhill off a pitched top), the latest the fast arc's (6.5 m/s
+  // kept, 22 m/s²; a face over that arc in the way — a lip the body meets — refuses the way: it would turn the kid). Every
+  // 0.15 m from the earliest landing to 0.6 m past the latest the floor under the footprint (a seam the feet span is no gap)
+  // must be floor and dry now and 3 s on (a rise: no slide onto floor about to drown). No hazard on the stage: false.
+  // lava-audit rule 47
+  _roofLandWet(px, pz, dx, dz, s, y0 = this.pos.y) {
     const S = G.match?.stage;
     if (!S || !S.h.wet.length) return false;
-    const L = G.level, F = PLAYER.footRadius, y0 = this.pos.y, w = Math.min(9, 3 + 14 * (this.roofT || 0));
-    const vLo = Math.min(9, Math.sqrt(w * w + 28 * s)), vHi = Math.max(vLo, 6.5);
-    const gh = (x, z) => L.groundHeight(x, z, y0 + 0.05);
-    const floor = (x, z) => Math.max(gh(x, z), gh(x + F, z), gh(x - F, z), gh(x, z + F), gh(x, z - F));
-    let lo = false, hiU = -1;
-    for (let u = 0.15; u <= 8; u += 0.15) {
-      const x = px + dx * u, z = pz + dz * u, f = floor(x, z), yl = y0 - 15 * (u / vLo) ** 2, yh = y0 - 11 * (u / vHi) ** 2;
-      if (!lo && f >= yl) lo = true;
-      if (S.wet(x, z, lo ? f : yl, 0)) return true;
-      if (hiU < 0 && f >= yh) hiU = u;
-      if (hiU >= 0 && u >= hiU + 0.6) return false;
+    const P = PLAYER, L = G.level, F = P.footRadius, w = Math.min(9, 3 + 14 * (this.roofT || 0)), n = this.groundN;
+    const vLo = Math.min(9, Math.sqrt(w * w + 28 * s)), vHi = Math.max(vLo, 6.5), vy0 = Math.min(0, (-vLo * (dx * n.x + dz * n.z)) / Math.max(0.35, n.y));
+    // (the floor under a footprint point, leaving out off-limits tops in the slide's own band — within 0.6 m below its top, as
+    // _roofExitDist's over() — : groundHeight and over()'s ray disagree near an edge, and a kid sliding off a vent hood's
+    // corner "landed" on the hood itself 0.15 m past its exit, the lava beyond never looked at)
+    const qb = (this._rlQ ||= []), gh = (x, z) => {
+      let best = -Infinity;
+      for (const id of L.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, qb)) {
+        const b = L.blocks[id], n = b.axes[1];
+        if (!b.solid || n.y < 0.5) continue;
+        const y = b.center.y + n.y * b.half.y - (n.x * (x - b.center.x - n.x * b.half.y) + n.z * (z - b.center.z - n.z * b.half.y)) / n.y;
+        if (y > y0 + 0.05 || y <= best || (y >= y0 - 0.6 && this.isRoofFor(b)) || !L.pointInBlock(b, _rxO.set(x, y - 0.01, z), 0.001)) continue;
+        best = y;
+      }
+      return best;
+    }, fl = (this._rlF ||= []);
+    const floor = (k) => { if (fl[k] === undefined) { const x = px + dx * k * 0.15, z = pz + dz * k * 0.15; fl[k] = Math.max(gh(x, z), gh(x + F, z), gh(x - F, z), gh(x, z + F), gh(x, z - F)); } return fl[k]; };
+    fl.length = 0;
+    let kE = -1, kF = -1;
+    for (let t = 1 / 60; t < 2 && kE < 0; t += 1 / 60) {   // (the earliest: steering back)
+      const k = Math.floor(Math.max(0, vLo * t - 0.5 * P.airAccel * t * t) / 0.15), y = y0 + vy0 * t - 15 * t * t;
+      if (y <= Math.max(floor(k), floor(k + 1))) kE = k;
+    }
+    const R = P.radius, top = (x, z) => L.groundHeight(x, z, y0 + 1.6);
+    for (let k = 1; k <= 80 && kF < 0; k++) {   // (the latest; a face over the arc in the way — a lip the body meets — is no way: it turns the kid)
+      const x = px + dx * k * 0.15, z = pz + dz * k * 0.15, y = y0 - 11 * ((k * 0.15) / vHi) ** 2;
+      if (Math.max(top(x, z), top(x - dz * R, z + dx * R), top(x + dz * R, z - dx * R)) > y + P.ledgeAssist) return true;
+      if (y <= floor(k)) kF = k;
+    }
+    if (kE < 0 || kF < 0) return true;
+    for (let k = Math.min(kE, kF), k1 = kF + 4; k <= k1; k++) {
+      const f = floor(k);
+      if (!(f > P.waterY) || S.wet(px + dx * k * 0.15, pz + dz * k * 0.15, f, 3)) return true;
     }
     return false;
   }

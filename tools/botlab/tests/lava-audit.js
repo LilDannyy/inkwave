@@ -22,8 +22,10 @@
 //            is ≥ HIGH + 0.3; open edges only at the lips (into a falls polygon)
 //   rule 46  the nav built with its grid shifted 0.25 m and 0.5 m (x, z): every step link still yields its edges, the
 //            Organ climb exists at both poses and the Race chain head → stones → head at HIGH
-//   rule 47  (fix round 7, review 7) no roof top beside the lava slides a kid into it: every flat roof block with lava within
-//            3 m that a kid can hop onto, from 16 sides, idle or steering back: 0 lava deaths at LOW and HIGH
+//   rule 47  (fix round 7, review 7; widened in fix round 8, review 8) no roof top beside the lava slides a kid into it,
+//            holds it as a perch or flings it: (a) the hop-on probe, (b) every point of every top, still or drifting, at LOW,
+//            HIGH and the rise's / fall's levels, (c) Mitts leaps, running and swim jumps, walk-offs and hops during the rise
+//            onto every top that holds, (d) Mitts leaps onto the tall tops; 0 deaths, 0 flings, 0 perches, rescues ≤ 6 m
 //   PAGE_ARGS rules=21,44: only those rules (to iterate); every rule without it
 (async () => {
   const g = window.__inkwave, out = [];
@@ -708,73 +710,386 @@
   // (fix round 7, review 7 issue 1 — the reviewer's probe-roofslide7b as a rule: cover on Highmark is a `roof` block, and so
   // is every lava rider part, and the roof slide took the nearest way off whatever lay past it: race 3's boulder dropped 42
   // of 50 landings into the lava at HIGH, Organ L's stub 30 of 64. actor._roofExit / _roofExitDist now refuse a way off whose
-  // landing the lava takes (_roofLandWet) and hold the kid when every way is refused; on a stage with a hazard the slide
-  // owns the move along the way it checked.) Every flat roof block (static, or a rider's part) with lava within 3 m of its
-  // footprint whose top a kid can hop onto from floor beside it (0.4–1.7 m up): run at it from 16 sides, 3 lateral offsets,
-  // 2 run-ups, hop on, then let go of the stick (idle) or push back the way it came (save) for 2.5 s. 0 lava deaths at LOW
-  // and HIGH; `held` = still on the roof at the end (no way off but into the lava: it walks off by itself)
+  // landing the lava takes (_roofLandWet); on a stage with a hazard the slide owns the move along the way it checked.)
+  // Fix round 8 (review 8: the hold made perches in the HIGH lava and flung held kids at 7–9 m/s; the landing march ignored
+  // air braking; the rule looked in too few places). The lead's rule: a kid on an off-limits top whose every way off is lava
+  // is held 0.6 s where it stands and RESCUED (lava.js rescue: the nearest dry node within 6 m, a brief invulnerability,
+  // never splatted, never thrown); a held kid is never flung (the slide's clock restarts while held). Every trial is
+  // watched for a DEATH after touching the top, a FLING (held, then off the top without the rescue and dead, or launched
+  // faster than the slow push: over 3.6 m/s), a PERCH (alive on an off-limits top 3 s after touching it) and the RESCUES
+  // (how far: ≤ 6 m). The gate: 0 deaths, 0 flings, 0 perches, no rescue over 6 m, in every part:
+  //   a  the hop-on probe (review 7's probe-roofslide7b, as before): every flat roof block with lava within 3 m that a kid
+  //      can hop onto from floor 0.4–1.7 m below, 16 sides × 3 offsets × 2 run-ups, idle or steering back; LOW and HIGH
+  //   b  every point of every roof top beside the lava (review 8's probe-roof8): put down still, or drifting at 6.5 m/s in 8
+  //      headings (a landing's momentum: a drop from above, a leap, a swim jump), the stick idle; or drifting along the top's
+  //      4 axes and steering back; at LOW, HIGH, the first rise's 30 / 60 / 90 % and the first fall's 50 %
+  //   c  every way onto the tops that held a kid in b (review 8's probe-hold8 and probe-perch8): Sponge Mitts leaps (the
+  //      kit's predictLeap aimed at the top from every dry nav node within 14 m), plain running jumps and swim jumps out of
+  //      own ink (from every dry node within 9.5 m, steered at the top in the air), a walk / hop off higher floor, and for
+  //      cover standing on floor that drowns a hop onto it every 0.05 s from 1.2 s before that floor turns deadly; then
+  //      idle until 3 s after touching it
+  //   d  Mitts leaps onto every tall top beside the lava (1.8–3.6 m over the dry floor round it: the Tide Boards, review 8
+  //      issue 2's 54 of 738 into the lava), stick idle, LOW and HIGH
+  //   PAGE_ARGS r47=a,b,c,d (the parts; all by default), r47lv=low,high,r30,r60,r90,f50 (b's levels)
   if (want('47')) try {
-    const kid = g.match.actors.find((a) => a.bot), it = kid.intent, dt = 1 / 60;
-    const res = {};
-    for (const level of ['low', 'high']) {
-      setT(level === 'low' ? 10 : 50);
-      const lavaAt = (x, z, y) => { const gh = lvl.groundHeight(x, z, y); return (gh === -Infinity || gh <= Lv.y + K - 0.01) && W.inRegion(x, z); };
-      const ext = (b, dx, dz) => Math.abs(b.half.x * (b.axes[0].x * dx + b.axes[0].z * dz)) + Math.abs(b.half.z * (b.axes[2].x * dx + b.axes[2].z * dz));
-      const cands = [];
-      for (const b of lvl.blocks) {
-        if (!b || !b.roof || !b.solid || b.axes[1].y < 0.99) continue;
-        const top = b.center.y + b.half.y;
-        if (top < Lv.y || b.half.x > 6 || b.half.z > 6) continue;   // (a big building is no hop-on)
-        let near = false;
-        for (let k = 0; k < 16 && !near; k++) { const a = (k * Math.PI) / 8, dx = Math.cos(a), dz = Math.sin(a), e = ext(b, dx, dz);
-          for (let s = e + 0.1; s <= e + 3.0 && !near; s += 0.3) if (lavaAt(b.center.x + dx * s, b.center.z + dz * s, top - 0.05)) near = true; }
-        if (near) cands.push(b);
+    const kid = g.match.actors.find((a) => a.bot && a !== g.match.local) || g.match.actors.find((a) => a.bot), it = kid.intent, dt = 1 / 60;
+    const PA = String(window.__pageArgs || ''), parts = (/r47=([^;&]+)/.exec(PA)?.[1] || 'a,b,c,d').split(',');
+    const LVS = (/r47lv=([^;&]+)/.exec(PA)?.[1] || 'low,high,r30,r60,r90,f50').split(',');
+    const { MITTS } = await import('./src/game/kits/mitts.js');
+    const { Hit } = await import('./src/game/physics.js');
+    const phys = __G.physics, DOWN = V(0, -1, 0), O3 = V(0, 0, 0), H3 = new Hit(), w0 = kid.weaponId, P8 = __G.paint;
+    const hitBlock = (x, z, y) => { const h = phys.raycast(O3.set(x, y, z), DOWN, 3, H3); return h.hit ? { y: H3.point.y, block: H3.block } : null; };
+    const ext = (b, dx, dz) => Math.abs(b.half.x * (b.axes[0].x * dx + b.axes[0].z * dz)) + Math.abs(b.half.z * (b.axes[2].x * dx + b.axes[2].z * dz));
+    const topOf = (b) => b.center.y + b.half.y * b.axes[1].y;
+    const lavaAt = (x, z, y) => { const gh = lvl.groundHeight(x, z, y); return (gh === -Infinity || gh <= Lv.y + K - 0.01) && W.inRegion(x, z); };
+    const reset = (pos, vel) => { kid.isBot = true; kid.carry = null; if (!kid.alive) kid.respawn(); kid.spawnAt(pos, 0); kid.invuln = 0; kid.hp = 100; kid.form = 'kid'; kid.ink = 100; kid.vel.copy(vel || V(0, 0, 0)); it.move.set(0, 0, 0); it.fire = it.jump = it.squid = it.sub = it.special = false; };
+    // the watch: each frame after kid.update
+    const watch = () => ({ touched: false, f0: -1, onRoof: false, held: false, prevHeld: false, tp: kid.netTp || 0, relaunch: 0, launchF: -1, launchV: 0, rescued: 0, rescueD: 0, died: false, block: -1 });
+    const look = (m, f) => {
+      const gb = kid.grounded && kid.ground.hit ? lvl.blocks[kid.ground.block] : null, onRoof = !!(gb && kid.isRoofFor(gb));
+      if (onRoof) { if (!m.touched) { m.touched = true; m.f0 = f; m.block = gb.id; } }
+      const h = kid.roofHeld > 0;
+      if (h) m.held = true;
+      if (m.prevHeld && !h) {
+        if ((kid.netTp || 0) !== m.tp) { m.rescued++; const RL = Lv.stats.rescueLog; m.rescueD = Math.max(m.rescueD, RL && RL.length ? RL[RL.length - 1].d : 99); }
+        else { m.relaunch++; m.launchF = f; }
       }
-      let trials = 0, landed = 0, died = 0, held = 0; const per = [], byMode = { idle: [0, 0], save: [0, 0] };
-      for (const b of cands) {
-        const top = b.center.y + b.half.y; let bl = 0, bd = 0, bh = 0; const eg = [];
-        for (let k = 0; k < 16; k++) {
-          const a = (k * Math.PI) / 8, dx = Math.cos(a), dz = Math.sin(a), e = ext(b, dx, dz), w = ext(b, -dz, dx);
-          for (const latF of [-0.6, 0, 0.6]) for (const ru of [0.6, 1.1]) {
-            const lat = latF * w, sx = b.center.x - dx * (e + 0.5 + ru) - dz * lat, sz = b.center.z - dz * (e + 0.5 + ru) + dx * lat;
-            const fy = lvl.groundHeight(sx, sz, top - 0.05);
-            if (!(fy > -50) || top - fy < 0.4 || top - fy > 1.7 || fy <= Lv.y + K + 0.05 || Lv.covers(sx, sz, fy)) continue;
-            const fy2 = lvl.groundHeight(sx + dx * ru, sz + dz * ru, top - 0.05); if (Math.abs(fy2 - fy) > 0.3) continue;   // (a level run-up)
-            for (const mode of ['idle', 'save']) {
-              kid.carry = null; kid.spawnAt(V(sx, fy + 0.05, sz), 0); kid.invuln = 0; kid.hp = 100; kid.vel.set(0, 0, 0); kid.form = 'kid';
-              it.move.set(0, 0, 0); it.jump = it.squid = it.fire = it.sub = it.special = false;
-              for (let i = 0; i < 4; i++) kid.update(dt);
-              if (!kid.grounded || !kid.alive) continue;
-              trials++;
-              let jumped = false, on = false, f0 = -1, offRoof = false; const trail = eg.length < 2 ? [] : null;
-              const x0 = kid.pos.x, z0 = kid.pos.z;
-              for (let f = 0; f < 260; f++) {
-                if (on) { const gb = kid.grounded && kid.ground.hit ? lvl.blocks[kid.ground.block] : null; if (gb && !gb.roof) offRoof = true; if (mode === 'idle' || offRoof) it.move.set(0, 0, 0); else { const hx = sx - kid.pos.x, hz = sz - kid.pos.z, hl = Math.hypot(hx, hz) || 1; it.move.set(hx / hl, 0, hz / hl); } if (trail && f % 3 === 0) trail.push([f - f0, r2(kid.pos.x), r2(kid.pos.y), r2(kid.pos.z), r2(Math.hypot(kid.vel.x, kid.vel.z)), kid.grounded ? (gb ? (gb.roof ? 'R' : 'F') : 'g') : 'a']); }
-                else if (jumped) { const hx = b.center.x - kid.pos.x, hz = b.center.z - kid.pos.z, hl = Math.hypot(hx, hz) || 1; it.move.set(hx / hl, 0, hz / hl); }
-                else it.move.set(dx, 0, dz);
-                const along = (kid.pos.x - x0) * dx + (kid.pos.z - z0) * dz;
-                it.jump = !jumped && along >= ru - 0.05; if (it.jump) jumped = true;
-                kid.update(dt);
-                if (!on && kid.grounded && kid.ground.hit && kid.ground.block === b.id) { on = true; f0 = f; }
-                if (!kid.alive) break;
-                if (on && f - f0 > 150) break;
-                if (!on && jumped && kid.grounded && f > 50) break;
+      if (m.launchF >= 0 && f === m.launchF + 1) m.launchV = Math.max(m.launchV, Math.hypot(kid.vel.x, kid.vel.z));
+      m.tp = kid.netTp || 0; m.prevHeld = h; m.onRoof = onRoof;
+      if (!kid.alive && m.touched) m.died = true;
+    };
+    const verdict = (m) => { m.flung = m.relaunch > 0 && (m.died || m.launchV > 3.6); m.perched = kid.alive && m.onRoof; return m; };
+    const tally = () => ({ trials: 0, touched: 0, died: 0, flung: 0, perched: 0, held: 0, rescued: 0, rescueFar: 0, rescueMaxM: 0, relaunched: 0, eg: [] });
+    const add = (T, m, info) => {
+      T.trials++; if (!m.touched) return;
+      T.touched++; if (m.held) T.held++; if (m.rescued) T.rescued++; if (m.relaunch) T.relaunched++;
+      T.rescueMaxM = Math.max(T.rescueMaxM, m.rescueD); if (m.rescueD > 6) T.rescueFar++;
+      const bad = m.died || m.flung || m.perched || m.rescueD > 6;
+      if (m.died) T.died++; if (m.flung) T.flung++; if (m.perched) T.perched++;
+      if (bad && T.eg.length < 6) T.eg.push({ ...info, block: lvl.blocks[m.block]?.tag || '#' + m.block, died: m.died, flung: m.flung, perched: m.perched, rescueD: r2(m.rescueD), launchV: r2(m.launchV), end: [r2(kid.pos.x), r2(kid.pos.y), r2(kid.pos.z)] });
+    };
+    const ok = (T) => !T.died && !T.flung && !T.perched && !T.rescueFar;
+    // the stage times: LOW / HIGH, the first rise's 30 / 60 / 90 %, the first fall's 50 %; the first rise's warning
+    const times = { low: 10, high: 50 };
+    { let prev = null, risen = false; for (let t = 0; t <= 170; t += 0.25) { setT(t); const e = (Lv.y - LO) / (H - LO);
+        if (prev !== null) { for (const [k, f] of [['r30', 0.3], ['r60', 0.6], ['r90', 0.9]]) if (times[k] === undefined && prev < f && e >= f) times[k] = t;
+          if (e >= 0.999) risen = true; if (risen && times.f50 === undefined && prev > 0.5 && e <= 0.5) times.f50 = t; }
+        prev = e; } }
+    const out47 = { times };
+    const holders = new Map();   // block id → the levels it held a kid at (b)
+
+    // ---- a: the hop-on probe
+    if (parts.includes('a')) {
+      const res = {};
+      for (const level of ['low', 'high']) {
+        setT(times[level]);
+        const cands = [];
+        for (const b of lvl.blocks) {
+          if (!b || !b.roof || !b.solid || b.axes[1].y < 0.99) continue;
+          const top = b.center.y + b.half.y;
+          if (top < Lv.y || b.half.x > 6 || b.half.z > 6) continue;   // (a big building is no hop-on)
+          let near = false;
+          for (let k = 0; k < 16 && !near; k++) { const a = (k * Math.PI) / 8, dx = Math.cos(a), dz = Math.sin(a), e = ext(b, dx, dz);
+            for (let s = e + 0.1; s <= e + 3.0 && !near; s += 0.3) if (lavaAt(b.center.x + dx * s, b.center.z + dz * s, top - 0.05)) near = true; }
+          if (near) cands.push(b);
+        }
+        const T = tally(), byMode = { idle: [0, 0], save: [0, 0] }; let reach = 0;
+        for (const b of cands) {
+          const top = b.center.y + b.half.y; let bl = 0;
+          for (let k = 0; k < 16; k++) {
+            const a = (k * Math.PI) / 8, dx = Math.cos(a), dz = Math.sin(a), e = ext(b, dx, dz), w = ext(b, -dz, dx);
+            for (const latF of [-0.6, 0, 0.6]) for (const ru of [0.6, 1.1]) {
+              const lat = latF * w, sx = b.center.x - dx * (e + 0.5 + ru) - dz * lat, sz = b.center.z - dz * (e + 0.5 + ru) + dx * lat;
+              const fy = lvl.groundHeight(sx, sz, top - 0.05);
+              if (!(fy > -50) || top - fy < 0.4 || top - fy > 1.7 || fy <= Lv.y + K + 0.05 || Lv.covers(sx, sz, fy)) continue;
+              const fy2 = lvl.groundHeight(sx + dx * ru, sz + dz * ru, top - 0.05); if (Math.abs(fy2 - fy) > 0.3) continue;   // (a level run-up)
+              for (const mode of ['idle', 'save']) {
+                reset(V(sx, fy + 0.05, sz));
+                for (let i = 0; i < 4; i++) kid.update(dt);
+                if (!kid.grounded || !kid.alive) continue;
+                let jumped = false, on = false; const m = watch(), x0 = kid.pos.x, z0 = kid.pos.z;
+                for (let f = 0; f < 260; f++) {
+                  if (on) { const gb = kid.grounded && kid.ground.hit ? lvl.blocks[kid.ground.block] : null; if ((gb && !gb.roof) || mode === 'idle') it.move.set(0, 0, 0); else { const hx = sx - kid.pos.x, hz = sz - kid.pos.z, hl = Math.hypot(hx, hz) || 1; it.move.set(hx / hl, 0, hz / hl); } }
+                  else if (jumped) { const hx = b.center.x - kid.pos.x, hz = b.center.z - kid.pos.z, hl = Math.hypot(hx, hz) || 1; it.move.set(hx / hl, 0, hz / hl); }
+                  else it.move.set(dx, 0, dz);
+                  const along = (kid.pos.x - x0) * dx + (kid.pos.z - z0) * dz;
+                  it.jump = !jumped && along >= ru - 0.05; if (it.jump) jumped = true;
+                  kid.update(dt); look(m, f);
+                  if (!on && kid.grounded && kid.ground.hit && kid.ground.block === b.id) on = true;
+                  if (!kid.alive) break;
+                  if (on && f - m.f0 > 180) break;
+                  if (!on && jumped && kid.grounded && f > 50) break;
+                }
+                if (!on) continue;
+                verdict(m); add(T, m, { part: 'a', level, from: [r2(sx), r2(fy), r2(sz)], heading: Math.round((a * 180) / Math.PI), mode, on: b.tag || '#' + b.id }); bl++;
+                byMode[mode][0]++; if (m.died) byMode[mode][1]++;
               }
-              if (!on) continue;
-              landed++; bl++; byMode[mode][0]++;
-              const gb = kid.grounded && kid.ground.hit ? lvl.blocks[kid.ground.block] : null;
-              if (kid.alive && gb && gb.roof) { held++; bh++; }
-              if (!kid.alive) { died++; bd++; byMode[mode][1]++; if (eg.length < 3) eg.push({ from: [r2(sx), r2(fy), r2(sz)], heading: Math.round(a * 180 / Math.PI), mode, death: [r2(kid.pos.x), r2(kid.pos.y), r2(kid.pos.z)], trail }); }
+            }
+          }
+          if (bl) reach++;
+        }
+        res[level] = { roofBlocksNearLava: cands.length, reachable: reach, byMode, ...T };
+      }
+      out47.a = res;
+    }
+
+    // ---- b: every point of every roof top beside the lava, still or drifting, idle or steering back
+    if (parts.includes('b')) {
+      const res = {};
+      for (const lvKey of LVS) {
+        if (times[lvKey] === undefined) { res[lvKey] = 'no time'; continue; }
+        setT(times[lvKey]);
+        const LY = Lv.y, cands = [];
+        for (const b of lvl.blocks) {
+          if (!b || !b.roof || !b.solid || b.axes[1].y < 0.5 || b.half.x > 8 || b.half.z > 8) continue;
+          const top = topOf(b);
+          if (top < LY + K) continue;
+          let near = false;
+          for (let k = 0; k < 16 && !near; k++) { const a = (k * Math.PI) / 8, dx = Math.cos(a), dz = Math.sin(a), e = ext(b, dx, dz);
+            for (let s = e + 0.1; s <= e + 4.0 && !near; s += 0.3) if (lavaAt(b.center.x + dx * s, b.center.z + dz * s, top + 0.5)) near = true; }
+          if (near) cands.push(b);
+        }
+        const T = tally(); const perB = new Map();
+        for (const b of cands) {
+          const ax = b.axes[0], az = b.axes[2], top0 = topOf(b);
+          const nu = Math.max(1, Math.min(4, Math.round((b.half.x * 2) / 0.3))), nv = Math.max(1, Math.min(4, Math.round((b.half.z * 2) / 0.3)));
+          for (let iu = 0; iu < nu; iu++) for (let iv = 0; iv < nv; iv++) {
+            const u = nu === 1 ? 0 : -b.half.x + 0.12 + (iu * (2 * b.half.x - 0.24)) / (nu - 1), v = nv === 1 ? 0 : -b.half.z + 0.12 + (iv * (2 * b.half.z - 0.24)) / (nv - 1);
+            const x = b.center.x + ax.x * u + az.x * v, z = b.center.z + ax.z * u + az.z * v;
+            const hb = hitBlock(x, z, top0 + 1.0); if (!hb || hb.block !== b.id) continue;
+            const modes = [['still', null, false]];
+            for (let k = 0; k < 8; k++) modes.push(['drift', (k * Math.PI) / 4, false]);
+            for (let k = 0; k < 4; k++) modes.push(['back', (k * Math.PI) / 2 + Math.atan2(ax.z, ax.x), true]);
+            for (const [mode, h, back] of modes) {
+              reset(V(x, hb.y + 0.3, z), V(h === null ? 0 : 6.5 * Math.cos(h), 0, h === null ? 0 : 6.5 * Math.sin(h)));
+              const m = watch(); let offF = 0, away = false;
+              for (let f = 0; f < 240; f++) {
+                // (steering back: against the drift while on the top it came down on and in the air off it; on other ground, idle)
+                if (m.touched && kid.grounded && !(kid.ground.hit && kid.ground.block === m.block)) away = true;
+                if (back && !away) it.move.set(-Math.cos(h), 0, -Math.sin(h)); else it.move.set(0, 0, 0);
+                kid.update(dt); look(m, f);
+                if (m.touched && !m.onRoof && kid.grounded) offF++; else if (m.onRoof) offF = 0;
+                if (!kid.alive || offF > 12 || (m.touched && f - m.f0 >= 180)) break;
+              }
+              if (m.touched) { verdict(m); if (m.held) { const s = holders.get(b.id) || new Set(); s.add(lvKey); holders.set(b.id, s); } }
+              add(T, m, { part: 'b', level: lvKey, at: [r2(x), r2(hb.y), r2(z)], mode, h: h === null ? null : Math.round((h * 180) / Math.PI) });
+              if (m.touched && (m.held || m.died)) { const k = b.tag || '#' + b.id, p = perB.get(k) || [0, 0, 0]; p[0]++; if (m.held) p[1]++; if (m.died) p[2]++; perB.set(k, p); }
             }
           }
         }
-        per.push({ tag: b.tag || '#' + b.id, dyn: !!b.dynamic, at: [r2(b.center.x), r2(top), r2(b.center.z)], size: [r2(b.half.x * 2), r2(b.half.y * 2), r2(b.half.z * 2)], landed: bl, died: bd, held: bh, eg });
+        res[lvKey] = { t: times[lvKey], y: r2(LY), roofBlocks: cands.length, ...T, heldBy: [...perB].map(([k, p]) => [k, ...p]).slice(0, 16) };
       }
-      res[level] = { roofBlocksNearLava: cands.length, reachable: per.filter((p) => p.landed > 0).length, trials, landed, died, held, byMode, killers: per.filter((p) => p.died > 0), holders: per.filter((p) => p.held > 0).map((p) => [p.tag, p.at, p.landed, p.held]) };
+      out47.b = res;
     }
-    kid.carry = null;
-    R('rule 47: no roof top beside the lava slides a kid into it — every flat roof block with lava within 3 m that a kid can hop onto (0.4–1.7 m up): 16 sides × 3 offsets × 2 run-ups, hop on, idle or steer back 2.5 s: 0 lava deaths at LOW and HIGH (fix round 7: actor._roofLandWet; review 7\'s probe-roofslide7b)',
-      res.low.landed > 1000 && res.high.landed > 1000 && !res.low.died && !res.high.died, res);
+
+    // ---- c: every way onto the tops that held a kid in b
+    if (parts.includes('c')) {
+      // (b not run: the tops that hold, found the cheap way — a kid put down still on the centre and four points round it,
+      // 0.75 s, at each of b's levels: any hold)
+      if (!parts.includes('b')) for (const lvKey of LVS) {
+        if (times[lvKey] === undefined) continue;
+        setT(times[lvKey]);
+        for (const b of lvl.blocks) {
+          if (!b || !b.roof || !b.solid || b.axes[1].y < 0.5 || b.half.x > 8 || b.half.z > 8) continue;
+          const top = topOf(b);
+          if (top < Lv.y + K) continue;
+          let near = false;
+          for (let k = 0; k < 16 && !near; k++) { const a = (k * Math.PI) / 8, dx = Math.cos(a), dz = Math.sin(a), e = ext(b, dx, dz);
+            for (let s2 = e + 0.1; s2 <= e + 4.0 && !near; s2 += 0.3) if (lavaAt(b.center.x + dx * s2, b.center.z + dz * s2, top + 0.5)) near = true; }
+          if (!near) continue;
+          for (const [u, v] of [[0, 0], [0.6, 0.6], [-0.6, 0.6], [0.6, -0.6], [-0.6, -0.6]]) {
+            const x = b.center.x + b.axes[0].x * u * b.half.x + b.axes[2].x * v * b.half.z, z = b.center.z + b.axes[0].z * u * b.half.x + b.axes[2].z * v * b.half.z;
+            const hb = hitBlock(x, z, top + 1.0); if (!hb || hb.block !== b.id) continue;
+            reset(V(x, hb.y + 0.3, z)); let h = false;
+            for (let f = 0; f < 45 && kid.alive; f++) { kid.update(dt); if (kid.roofHeld > 0) h = true; }
+            if (h) { const s2 = holders.get(b.id) || new Set(); s2.add(lvKey); holders.set(b.id, s2); break; }
+          }
+        }
+      }
+      const res = { holders: [...holders].map(([id, s]) => [lvl.blocks[id].tag || '#' + id, id, [...s]]) };
+      const land = { kind: 'none', pos: V(0, 0, 0), normal: V(0, 1, 0), hitPt: V(0, 0, 0), block: -1, t: 0, n: 0 }, vv = V(0, 0, 0);
+      const kk = { botWant: -1, botYaw: 0, botPitch: 0, cling: false };
+      const dryNode = (nd) => nav.valid[nd.id] && !Lv.covers(nd.x, nd.z, nd.y) && Math.abs(lvl.groundHeight(nd.x, nd.z, nd.y + 0.3) - nd.y) < 0.3;
+      // fly a leap with velocity v from `from`, then idle until 3 s after touching a roof
+      const flyLeap = (from, v) => {
+        reset(V(from.x, from.y + 0.05, from.z));
+        for (let i = 0; i < 2; i++) kid.update(dt);
+        const r = kid.weaponRunner, k3 = MITTS.K(r); k3.charging = false; k3.cling = false; k3.hang = false;
+        kid.pos.set(from.x, from.y, from.z); kid.vel.copy(v); kid.grounded = false; kid.coyote = 0; kid.jumpBuffer = 0;
+        k3.leaping = true; k3.leapT = 0; k3.slid = false; k3.leapV.set(v.x, 0, v.z); k3.leapH = Math.hypot(v.x, v.z); k3.trail = 0; k3.trailP.copy(kid.pos);
+        const m = watch(); let first = null;
+        for (let f = 0; f < 420; f++) { kid.update(dt); look(m, f); if (first === null && kid.grounded) first = kid.ground.block; if (!kid.alive) break; if (m.touched && f - m.f0 >= 180) break; if (!m.touched && first !== null && f > 240) break; }
+        return { m: verdict(m), first };
+      };
+      const levels = ['low', 'high'];
+      const T = { mitts: tally(), run: tally(), swim: tally(), walk: tally(), rise: tally() };
+      for (const level of levels) {
+        setT(times[level]);
+        for (const [id, s] of holders) {
+          if (!s.has(level) && !(level === 'high' && [...s].some((x) => x !== 'low'))) continue;
+          const b = lvl.blocks[id], top = topOf(b);
+          // Mitts leaps (up to 120 that the predictor lands on it)
+          kid.setWeapon('mitts');
+          let nL = 0;
+          for (const nd of nav.nodes) {
+            if (nL >= 120) break;
+            const dx = b.center.x - nd.x, dz = b.center.z - nd.z, d = Math.hypot(dx, dz);
+            if (d > 14 || d < 2 || nd.y < top - 2 || nd.y > top + 4 || !dryNode(nd)) continue;
+            const from = V(nd.x, nd.y, nd.z);
+            for (const dyaw of [0, 0.06, -0.06]) for (const c of [0.3, 0.45, 0.6, 0.75, 0.9, 1]) for (const pitch of [-0.2, 0, 0.2, 0.4]) {
+              if (nL >= 120) break;
+              kk.botWant = c; kk.botYaw = Math.atan2(dx, dz) + dyaw; kk.botPitch = pitch; MITTS.leapVelocity(kid, kk, c, vv); kk.botWant = -1;
+              MITTS.predictLeap(from, vv, land, null);
+              if (land.kind !== 'ground' || land.block !== b.id) continue;
+              nL++;
+              const { m } = flyLeap(from, vv.clone());
+              add(T.mitts, m, { part: 'c', how: 'mitts', level, on: b.tag || '#' + id, from: [r2(nd.x), r2(nd.y), r2(nd.z)], c, pitch });
+            }
+          }
+          kid.setWeapon(w0);
+          // plain running jumps and swim jumps out of own ink, steered at the top in the air (up to 60 each)
+          for (const how of ['run', 'swim']) {
+            let n = 0;
+            for (const nd of nav.nodes) {
+              if (n >= 60) break;
+              const ddx = b.center.x - nd.x, ddz = b.center.z - nd.z, d = Math.hypot(ddx, ddz);
+              if (d > 9.5 || d < 2 || nd.y < top - (how === 'swim' ? 1.2 : 0.9) || nd.y > top + 3 || !dryNode(nd)) continue;
+              const dx = ddx / d, dz = ddz / d;
+              let edge = null; for (let s = 0.1; s <= 3; s += 0.1) { if (lavaAt(nd.x + dx * s, nd.z + dz * s, nd.y + 1.3) || lvl.groundHeight(nd.x + dx * s, nd.z + dz * s, nd.y + 1.3) < nd.y - 0.3) { edge = s; break; } }
+              if (edge === null) continue;
+              for (const ru of [2.6, 1.5]) {
+                const sx = nd.x + dx * (edge - ru), sz = nd.z + dz * (edge - ru), sy = lvl.groundHeight(sx, sz, nd.y + 0.6);
+                if (!(Math.abs(sy - nd.y) < 0.35)) continue;
+                if (how === 'swim') { P8?.clear?.(); for (let s = -0.2; s <= ru - 0.2; s += 0.5) P8?.splat?.(V(sx + dx * s, sy + 0.05, sz + dz * s), 0.9, kid.team, { instant: true, seed: s }); }
+                reset(V(sx, sy + 0.05, sz));
+                for (let i = 0; i < 3; i++) kid.update(dt);
+                let jumped = false, jf = -1; const m = watch();
+                for (let f = 0; f < 420; f++) {
+                  const along = (kid.pos.x - nd.x) * dx + (kid.pos.z - nd.z) * dz;
+                  if (m.touched) it.move.set(0, 0, 0);
+                  else if (jumped && f - jf > 2) { const hx = b.center.x - kid.pos.x, hz = b.center.z - kid.pos.z, hl = Math.hypot(hx, hz); it.move.set(hl > 0.15 ? hx / hl : 0, 0, hl > 0.15 ? hz / hl : 0); } else it.move.set(dx, 0, dz);
+                  it.squid = how === 'swim' && !jumped;
+                  it.jump = !jumped && along >= edge - 0.35; if (it.jump) { jumped = true; jf = f; }
+                  kid.update(dt); look(m, f);
+                  if (!kid.alive) break;
+                  if (m.touched && f - m.f0 >= 180) break;
+                  if (!m.touched && jumped && f - jf > 120) break;
+                }
+                it.squid = false;
+                if (!m.touched) continue;
+                n++; verdict(m); add(T[how], m, { part: 'c', how, level, on: b.tag || '#' + id, from: [r2(nd.x), r2(nd.y), r2(nd.z)], ru });
+              }
+            }
+          }
+          P8?.clear?.();
+          // a walk / hop off higher dry floor (0.3–3.5 m over the top, within 4.5 m)
+          for (const nd of nav.nodes) {
+            const ddx = b.center.x - nd.x, ddz = b.center.z - nd.z, d = Math.hypot(ddx, ddz);
+            if (d > 4.5 || d < 0.8 || nd.y < top + 0.3 || nd.y > top + 3.5 || !dryNode(nd)) continue;
+            for (const hop of [false, true]) {
+              reset(V(nd.x, nd.y + 0.05, nd.z)); for (let i = 0; i < 2; i++) kid.update(dt);
+              let jumped = false; const y0 = kid.pos.y, m = watch();
+              for (let f = 0; f < 330; f++) {
+                const hx = b.center.x - kid.pos.x, hz = b.center.z - kid.pos.z, hl = Math.hypot(hx, hz);
+                if (m.touched) it.move.set(0, 0, 0); else it.move.set(hl > 0.2 ? hx / hl : 0, 0, hl > 0.2 ? hz / hl : 0);
+                it.jump = hop && !jumped && kid.grounded && lvl.groundHeight(kid.pos.x + (hx / (hl || 1)) * 0.5, kid.pos.z + (hz / (hl || 1)) * 0.5, y0 + 0.2) < y0 - 0.3; if (it.jump) jumped = true;
+                kid.update(dt); look(m, f);
+                if (!kid.alive || (m.touched && f - m.f0 >= 180)) break;
+              }
+              if (m.touched) { verdict(m); add(T.walk, m, { part: 'c', how: hop ? 'hop-off' : 'walk-off', level, on: b.tag || '#' + id, from: [r2(nd.x), r2(nd.y), r2(nd.z)] }); }
+            }
+          }
+        }
+      }
+      // cover standing on floor that drowns: a hop onto it from that floor every 0.05 s from 1.2 s before the floor turns deadly
+      const sched = []; for (let t = 0; t <= 120; t += 0.1) { Lv.debugT(t); sched.push([t, Lv.y]); }
+      for (const [id] of holders) {
+        const b = lvl.blocks[id], top = topOf(b), floor = top - b.half.y * 2;
+        if (floor > H + K) continue;   // (its floor never drowns)
+        let td = null; for (const [t, y] of sched) if (td === null && t > 20 && y + K > floor) td = t;
+        if (td === null) continue;
+        for (let t = td - 1.2; t <= td + 0.1; t += 0.05) for (let k = 0; k < 8; k++) {
+          const a = (k * Math.PI) / 4, ex = Math.max(b.half.x, b.half.z) + 1.05, sx = b.center.x + Math.cos(a) * ex, sz = b.center.z + Math.sin(a) * ex;
+          Lv.debugT(t);
+          const fy = lvl.groundHeight(sx, sz, top - 0.05);
+          if (!(Math.abs(fy - floor) < 0.3) || Lv.covers(sx, sz, fy)) continue;
+          reset(V(sx, fy + 0.05, sz)); for (let i = 0; i < 2; i++) kid.update(dt);
+          let jumped = false; const x0 = kid.pos.x, z0 = kid.pos.z, m = watch();
+          for (let f = 0; f < 60 * (td - t + 4); f++) {
+            if (f % 3 === 0) Lv.debugT(t + f / 60);
+            const hx = b.center.x - kid.pos.x, hz = b.center.z - kid.pos.z, hl = Math.hypot(hx, hz);
+            if (!m.touched && (!jumped || f < 40)) it.move.set(hl > 0.2 ? hx / hl : 0, 0, hl > 0.2 ? hz / hl : 0); else it.move.set(0, 0, 0);
+            it.jump = !jumped && Math.hypot(kid.pos.x - x0, kid.pos.z - z0) >= 0.5; if (it.jump) jumped = true;
+            kid.update(dt); look(m, f);
+            if (!kid.alive || (m.touched && f - m.f0 >= 180)) break;
+          }
+          if (m.touched) { verdict(m); add(T.rise, m, { part: 'c', how: 'rise-hop', on: b.tag || '#' + id, hopAt: r2(t), td: r2(td), from: [r2(sx), r2(fy), r2(sz)] }); }
+        }
+      }
+      setT(times.high);
+      Object.assign(res, T);
+      out47.c = res;
+    }
+
+    // ---- d: Mitts leaps onto every tall top beside the lava, stick idle
+    if (parts.includes('d')) {
+      const res = [];
+      const land = { kind: 'none', pos: V(0, 0, 0), normal: V(0, 1, 0), hitPt: V(0, 0, 0), block: -1, t: 0, n: 0 }, vv = V(0, 0, 0);
+      const kk = { botWant: -1, botYaw: 0, botPitch: 0, cling: false };
+      kid.setWeapon('mitts');
+      for (const level of ['low', 'high']) {
+        setT(times[level]);
+        const T = tally(); const blocks = [];
+        for (const b of lvl.blocks) {
+          if (!b || !b.roof || !b.solid || b.dynamic || b.axes[1].y < 0.99 || b.half.x > 4 || b.half.z > 4) continue;
+          const top = topOf(b);
+          let near = false, fmax = -Infinity, fmin = Infinity;
+          for (let k = 0; k < 16; k++) { const a = (k * Math.PI) / 8, dx = Math.cos(a), dz = Math.sin(a), e = ext(b, dx, dz);
+            for (let s = e + 0.3; s <= e + 3.0; s += 0.3) { const x = b.center.x + dx * s, z = b.center.z + dz * s; if (lavaAt(x, z, top + 0.5)) { near = true; continue; } const hb = hitBlock(x, z, top - 0.05); if (hb && !lvl.blocks[hb.block]?.roof) { fmax = Math.max(fmax, hb.y); fmin = Math.min(fmin, hb.y); } } }
+          if (!near || !(top - fmin >= 1.8 && top - fmax <= 3.6)) continue;   // (1.8 m over the floor at its foot, ≤ 3.6 over the highest round it)
+          blocks.push(b);
+        }
+        for (const b of blocks) {
+          const top = topOf(b); let n = 0, landed = 0, died = 0;
+          for (const nd of nav.nodes) {
+            if (n >= 800) break;
+            if (!nav.valid[nd.id] || Lv.covers(nd.x, nd.z, nd.y)) continue;
+            const dx = b.center.x - nd.x, dz = b.center.z - nd.z, d = Math.hypot(dx, dz);
+            if (d > 9 || d < 1.5 || nd.y > top) continue;
+            const from = V(nd.x, nd.y, nd.z);
+            for (const dyaw of [0, 0.1, -0.1]) for (const c of [0.3, 0.5, 0.7, 0.9]) for (const pitch of [0, 0.3, 0.6]) {
+              kk.botWant = c; kk.botYaw = Math.atan2(dx, dz) + dyaw; kk.botPitch = pitch; MITTS.leapVelocity(kid, kk, c, vv); kk.botWant = -1;
+              MITTS.predictLeap(from, vv, land, null);
+              if (land.kind !== 'ground' || land.block !== b.id) continue;
+              n++;
+              reset(V(from.x, from.y + 0.05, from.z)); for (let i = 0; i < 2; i++) kid.update(dt);
+              const k3 = MITTS.K(kid.weaponRunner); k3.charging = false; k3.cling = false; k3.hang = false;
+              kid.pos.copy(from); kid.vel.copy(vv); kid.grounded = false; kid.coyote = 0; kid.jumpBuffer = 0;
+              k3.leaping = true; k3.leapT = 0; k3.slid = false; k3.leapV.set(vv.x, 0, vv.z); k3.leapH = Math.hypot(vv.x, vv.z); k3.trail = 0; k3.trailP.copy(kid.pos);
+              const m = watch(); let first = null;
+              for (let f = 0; f < 420; f++) { kid.update(dt); look(m, f); if (first === null && kid.grounded) first = kid.ground.block; if (!kid.alive) break; if (m.touched && f - m.f0 >= 180) break; if (!m.touched && first !== null && f > 240) break; }
+              if (first !== b.id) continue;
+              landed++; verdict(m); if (m.died) died++;
+              add(T, m, { part: 'd', level, on: b.tag || '#' + b.id, from: [r2(nd.x), r2(nd.y), r2(nd.z)], c, pitch });
+            }
+          }
+          (T.blocks ||= []).push([b.tag || '#' + b.id, [r2(b.center.x), r2(top), r2(b.center.z)], n, landed, died]);
+        }
+        res.push({ level, ...T });
+      }
+      kid.setWeapon(w0);
+      out47.d = res;
+    }
+    kid.carry = null; kid.setWeapon(w0); setT(times.high);
+    const allT = [];
+    if (out47.a) allT.push(out47.a.low, out47.a.high);
+    if (out47.b) for (const v of Object.values(out47.b)) if (typeof v === 'object') allT.push(v);
+    if (out47.c) allT.push(out47.c.mitts, out47.c.run, out47.c.swim, out47.c.walk, out47.c.rise);
+    if (out47.d) allT.push(...out47.d);
+    const sumT = (k) => allT.reduce((s, x) => s + (x[k] || 0), 0);
+    out47.total = { touched: sumT('touched'), died: sumT('died'), flung: sumT('flung'), perched: sumT('perched'), held: sumT('held'), rescued: sumT('rescued'), rescueFar: sumT('rescueFar'), rescueMaxM: Math.max(0, ...allT.map((x) => x.rescueMaxM || 0)), relaunched: sumT('relaunched') };
+    R('rule 47: no roof top beside the lava slides a kid into it, holds it as a perch or flings it — (a) the hop-on probe, (b) every point of every top, still / drifting, idle / steering back, at LOW, HIGH, the rise\'s 30 / 60 / 90 % and the fall\'s 50 %, (c) Mitts leaps, running and swim jumps, walk-offs and hops during the rise onto every top that holds, (d) Mitts leaps onto the tall tops: 0 deaths, 0 flings, 0 perches, every rescue within 6 m (fix round 8: the lead\'s rescue; review 8\'s probe-roof8 / probe-hold8 / probe-perch8)',
+      allT.length > 0 && allT.every(ok) && (!out47.a || (out47.a.low.touched > 1000 && out47.a.high.touched > 1000)), out47);
   } catch (e) { R('rule 47: roof slides: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
   // ---------------------------------------------------------------------------------------------- rule 46: grid shift
