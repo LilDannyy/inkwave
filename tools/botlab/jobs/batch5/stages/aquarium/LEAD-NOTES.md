@@ -140,3 +140,17 @@ Review 7's list is closed; the sweep tool is in the repo. Review 8 lists what is
    splat first; 3 runs clean.
 4. Nits: the dusk sheet titles; the three sweep cameras against a face (nudge them in the tool).
 Then the sweep before / after, the named cameras, pipes.js, one Turf War match. Nothing else is open on this stage.
+
+## After review 9 (2026-10-24): the riser shafts
+
+Review 8's list is closed. Review 9's sweep found the glazed riser shafts in the Shark Arch halls: empty white rooms
+behind 2.25 × 8.4 m of glass on the main lane (DESIGN §5 wanted them read as the Arch Line's risers). This round:
+1. **The four shafts**, as the review specifies: a batched prop type inside the void (tiled walls in the Fin Pavilion's
+   language with the hall's skirting and speed lines, a brass grille floor with a drain, a caged service ladder and
+   tube brackets on the back wall, the ARCH LINE · RISER plate facing the glass, caged bulkhead lamps glowing at
+   dusk), every part ≥ 0.15 m clear of the riser tube, no collider, one draw call for all four.
+2. **The minors:** the Kelp Balcony's inner metre (the shader bearing gate), the Reef Window's plain jambs, the IN stop
+   brought up to the OUT stop's standard, the sweep tool's near-face cameras.
+3. Proof as before: the sweep (day, dusk, TWIN=1), the review's cameras, aquarium-art.js with a pixel read of a shaft
+   wall that fails at 4df530c8, pipes.js, one Turf War match; cards only if a card view changed.
+Nothing else is open on this stage after this.
