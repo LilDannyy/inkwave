@@ -156,3 +156,12 @@ The rescue holds on every top and every landing kind (held, rescued, never splat
    boss-check dropped to 4/6); prove boss-check on calamari, treehills and kelpline unchanged, caldera 5 in a row. Two
    side-view pictures re-shot with the kid in frame.
 After this round the lead accepts the engine; the art phase follows (rule 42 and the lavafall's side patch belong to it).
+
+## ACCEPTED (2026-10-25, the lead): Highmark Foundry's lava engine is finished
+
+Review 10 passed (head 0d94135c): every reachable top rescues and never flings, the cliff takes no ink, the rescue is
+measured from the kid, the HUD clears, F8c clean, the boss fallback gated. Three minors carried to the balance pass /
+the art phase: a 1-in-30 boss camp at the causeway's south end (probe-bosscamp10 ×30 on the Mac mini, then relocate
+after 2 camps or mark the spot noGo); a squid at 11.8 m/s overshooting a lava edge at LOW (cap swim speed within
+2.5 m of an edge in the bots' lava look-ahead); pushing on across the slide off the Tide Boards and the gauge house
+(listed, not gated). Rule 42 and the lavafall's side patch belong to the art phase. The stage stays BETA until its art.
