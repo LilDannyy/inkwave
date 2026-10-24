@@ -754,7 +754,9 @@ Colour is never the only signal: the arrows, the words, the pitch direction and 
   at r60 in rule 47 b), so the landing check needs dry floor within the steer-back's reach of the way off, behind and
   beside it (0 since). The middle Slump hornito moved 0.64 m south along the cliff (−157° → −155.8°): measured from the
   kid's own move its far corner was 6.35 m from the south head's node, over the rescue's 6 m (5.8 m now). A hold left
-  another way than the rescue (a super jump, a special) ends there: the HUD line no longer sticks on NO FOOTING.
+  another way than the rescue (a super jump, a special) ends there: the HUD line no longer sticks on NO FOOTING. With no
+  dry node within 6 m the rescue holds on (up to 2 s in all) for one: in the fall race 3's boulder stood 6.00–6.04 m from
+  both heads' nodes, and the shelf beside it is bare within a second.
 - **Jumps across the lava (rule 44) — decided by the lead after review 5: option 1; corrected after review 6.** **Swim
   jumps and jumps + the Dash Pellet's air dash over the lava are skill movement** (own ink at the take-off, a squid at
   speed or the sub spent, over open lava: the risk is the price) — listed, no gate. **The Bazookarp carrier swims its own

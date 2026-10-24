@@ -988,10 +988,12 @@ cost, Highmark's numbers:
     at the fall to the exit's floor (the outer walls' ends a Mitts leap reaches stand over a lava slot or beside the lake);
     **the hold ends wherever the slide does** (`_roofOff`: off the roof, a super jump, a special that owns the body), so the
     HUD line never sticks; the Slump cliff is never inkable (`calCliff`, `paint: false`; its rind is the level shader's band).
+    The rescue with no node within 6 m holds on (up to 2 s held in all, asked every 0.25 s) for one before the 12 m fallback
+    (a fall bares the floor beside the Race within a second: race 3's boulder stood 6.00–6.04 m from both heads' nodes).
     The audit's reach bar counts a hop (≤ 2.6 m over the dry floor within 6 m), a squid climb (an inkable face from dry floor)
     and a Mitts leap (the kit's predictor from a dry node); (e) squid climbs up every inkable face; a rescue is measured from
     the kid's own move across the ground (the engine's 6 m), gated on tops a kid reaches — off the outer walls no kid reaches
-    it is the engine's 12 m fallback, listed
+    it is the engine's 12 m fallback, listed; at the rise's and the fall's levels b's trials run the lava's clock, as in play
 ---
 
 ## 6. Build plan (each step ends with a test that fails without it)
