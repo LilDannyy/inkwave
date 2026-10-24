@@ -23,6 +23,10 @@
 // Window's short west run its speed lines and its open ends render jambs; this round's props within 8.5 cm of their blocks
 // and under their tops (pixel reads, both halves; they fail at a2f28b8d). Section 8 runs with the bots' brains off and its
 // planters' paint cleared before each read (8(c) failed once in two runs: Bravo's bots inked their deck's planter).
+// Fix round 9 (section 13, review 9's list): the Arch Line's riser shafts carry their plates, skirting and white glazed tile
+// (both shafts, both halves), their parts stand ≥ 0.15 m clear of the riser's glass and inside the shafts in the dressing's
+// existing buckets; the Kelp Balcony's end face is render to its drum end; the Express IN stop has the OUT stop's skirting
+// and portholes; the Reef Window's jambs a porthole into the reef (pixel reads, both halves; they fail at 4df530c8).
 //   MAP=aquarium MODE=turf PAGE=tools/botlab/tests/aquarium-art.js tools/botlab/run.sh tools/botlab/page.cjs
 (async () => {
   const out = []; const R = (name, ok, info) => out.push({ name, ok: !!ok, info });
@@ -808,6 +812,163 @@
       R('this round\'s props (the OUT stop\'s skirting, pilasters, speed lines, portholes and ARRIVALS plate; the booth base\'s skirting, pilasters, speed lines, ledges, grilles and plates; the Reef Window\'s jambs, pilasters, lines and plate) stand within 8.5 cm of their blocks and under their tops, both halves',
         nIt === 6 && st.n > 3000 && st.far <= 0.085 && st.over === 0, { placements: nIt, verts: st.n, farthest: +st.far.toFixed(3), at: st.atFar, perBlock: st.per, overTop: st.over, atOver: st.atOver });
     }
+    g.settings.fov = fov0;
+    m.actors.forEach((a, i) => { a.bot = brains[i]; });
+    G.paint.clear?.();
+  }
+  // 13. fix round 9 (LEAD-REVIEW 9, the list LEAD-NOTES "After review 9" binds): the Arch Line's riser shafts (empty white
+  // boxes behind 2.25 × 8.4 m of glass) carry their dressing — the navy ARCH LINE · RISER plate on the back wall facing the
+  // glass, the granite skirting under white glazed tile (cooler than the hall's render) — on both shafts, both halves; their
+  // parts (ladder, guide brackets, plate, lamps) stand ≥ 0.15 m clear of the riser's glass and inside the shafts, in the
+  // dressing's existing material buckets (no draw call added); the Kelp Balcony's end face is render at u 5.0 (plain teak at
+  // 4df530c8); the Express IN stop's long faces carry the OUT stop's skirting and portholes; the Reef Window's jambs a
+  // porthole into the reef; this round's props within 8.5 cm of their blocks and under their tops (they fail at 4df530c8)
+  {
+    const gl = G.renderer.getContext(), V = (a) => new G.camera.position.constructor(a[0], a[1], a[2]);
+    const DEG = Math.PI / 180;
+    const lum = (c) => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
+    const px = (p) => { const v = V(p).project(G.camera), w = gl.drawingBufferWidth, h = gl.drawingBufferHeight, a = new Uint8Array(4 * 9); gl.readPixels(Math.round((v.x + 1) / 2 * w) - 1, Math.round((v.y + 1) / 2 * h) - 1, 3, 3, gl.RGBA, gl.UNSIGNED_BYTE, a); const c = [0, 0, 0]; for (let i = 0; i < 9; i++) for (let k = 0; k < 3; k++) c[k] += a[i * 4 + k] / 9; return c.map(Math.round); };
+    const shot = (from, look, n = 24) => { G.paint.clear?.(); g.rig.cinematic(V(from), V(from), V(look), V(look), 99, () => {}); for (let i = 0; i < n; i++) g.debug.step(1000 / 60); };
+    const tw = (p, s) => [s * p[0], p[1], s * p[2]];
+    const med = (a) => { const b = [...a].sort((x, y) => x - y); return b[b.length >> 1]; };
+    const brains = m.actors.map((a) => a.bot); for (const a of m.actors) a.bot = null;
+    const fov0 = g.settings.fov; g.settings.fov = 70;
+    g.debug.freeze?.();
+    const hide = m.actors.map((a) => a.character.root.visible); for (const a of m.actors) a.character.root.visible = false;
+    // (a) the shafts, read with the glass in front of them hidden (the hall's glass, the riser's tube and collars: through
+    // them every value is lifted 40–100 by the glass's tint and the sun's reflection; the pictures show them with it): from
+    // the hall floor at 1.7 m, 2.6 m off the glass (the review's x9-shaft-0 / -3), the plate's median (12 points on its
+    // board) darker than the tile under it and blue; the granite skirting at 8 cm on the court-side wall by the glass darker
+    // than the tile over it (the render's own contact shadow there is 0.7–0.8 of it); from inside the glass line, a column
+    // across two tile joints on that wall (the joints' dips: the render has none)
+    const glassy = []; G.scene.traverse((o) => { if (['aq-glass', 'pipes:glass', 'pipes:glass-back', 'pipes:hardware'].includes(o.name)) glassy.push([o, o.visible]); });
+    for (const [o] of glassy) o.visible = false;
+    const shafts = [];
+    for (const s of [1, -1]) for (const sx of [1, -1]) {
+      const y0 = sx > 0 ? 2.3 : 1.4, xb = sx * 8.487;
+      shot(tw([sx * 2.6, 1.7, -27.1], s), tw([sx * 8.47, y0 + 0.4, -27.13], s));
+      const pv = []; for (const dz of [-0.4, -0.2, 0.2, 0.4]) for (const dy of [0.04, 0.17, 0.31]) pv.push(px(tw([xb, y0 + dy, -27.13 + dz], s)));
+      const tile = px(tw([xb, sx > 0 ? 2.185 : 1.285, -26.675], s));          // (a tile's middle under the plate)
+      const plate = { med: Math.round(med(pv.map(lum))), blue: Math.round(med(pv.map((c) => c[2] - c[0]))), tile: Math.round(lum(tile)) };
+      shot(tw([sx * 3.0, 1.3, -27.4], s), tw([sx * 6.8, 0.5, -26.2], s));
+      const skirt = Math.round(lum(px(tw([sx * 6.625, 0.08, -26.004], s)))), over = Math.round(lum(px(tw([sx * 6.625, 1.135, -26.004], s))));
+      shot(tw([sx * 6.3, 1.2, -27.3], s), tw([sx * 7.3, 1.12, -26.0], s));
+      const col = []; for (let y = 0.98; y <= 1.3; y += 0.01) col.push(lum(px(tw([sx * 7.225, y, -26.003], s))));
+      shafts.push({ s, shaft: sx > 0 ? 'east' : 'west', plate, skirt, over, joints: +(Math.min(...col) / med(col)).toFixed(2) });
+    }
+    for (const [o, v] of glassy) o.visible = v;
+    R('the riser shafts are dressed (read with the glass hidden): the ARCH LINE · RISER plate on each back wall (navy: darker than the tile under it, blue), the granite skirting under the tile, the tile\'s joints, both shafts, both halves',
+      shafts.length === 4 && glassy.length >= 2 && shafts.every((c) => c.plate.med < 0.5 * c.plate.tile && c.plate.blue > 5 && c.skirt < 0.5 * c.over && c.joints < 0.8), { glassHidden: glassy.map(([o]) => o.name), shafts });
+    // (b) the shafts' parts: a headless build of both placements — every vertex ≥ 1.03 m from the Arch Line's centreline
+    // (its glass r 0.88 + 0.15; the twin's for Bravo's), inside its shaft (x ±6.15 … ±8.5, z −28.25 … −26.0, 0 … 8.4), and
+    // in the material buckets the rest of the dressing already has (one draw call each: none added)
+    {
+      const { PropKit: PK } = await import('./src/world/props.js');
+      const { dressingFor: DF } = await import('./src/world/dressing.js');
+      const { PIPES, allLegs, centreline } = await import('./src/world/stages/aquarium/tubeway.js');
+      const kitA = new PK(null, { headless: true }), kitB = new PK(null, { headless: true });
+      let nIt = 0; for (const it of DF('aquarium')) { if (it.type === 'aquarium_shafts') { kitB.add(it.type, it); nIt++; } else kitA.add(it.type, it); }
+      const CL = [];
+      for (const L of allLegs(PIPES).filter((l) => l.id.startsWith('arch'))) {
+        const c = centreline(L, 0.05);
+        for (let i = 1; i < c.length; i++) { const a = c[i - 1], b = c[i], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]) / 0.02)); for (let k = 0; k <= n; k++) CL.push([a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n, a[2] + ((b[2] - a[2]) * k) / n]); }
+      }
+      const st = { n: 0, min: 9, atMin: null, under110: 0, out: 0, atOut: null };
+      const v3 = new G.camera.position.constructor();
+      for (const parts of kitB._buckets.values()) for (const p of parts) {
+        const P = p.g.attributes.position;
+        for (let i = 0; i < P.count; i++) {
+          v3.fromBufferAttribute(P, i).applyMatrix4(p.m); st.n++;
+          let d = 9; for (const q of CL) { const e = Math.hypot(v3.x - q[0], v3.y - q[1], v3.z - q[2]); if (e < d) d = e; }
+          if (d < st.min) { st.min = d; st.atMin = [+v3.x.toFixed(2), +v3.y.toFixed(2), +v3.z.toFixed(2)]; }
+          if (d < 1.1) st.under110++;
+          const ax = Math.abs(v3.x), az = v3.z * Math.sign(v3.z);   // (Bravo's twin: (x, z) → (−x, −z))
+          if (ax < 6.14 || ax > 8.51 || az < 25.99 || az > 28.26 || v3.y < -0.01 || v3.y > 8.41) { st.out++; st.atOut = [+v3.x.toFixed(2), +v3.y.toFixed(2), +v3.z.toFixed(2)]; }
+        }
+      }
+      // (and from the riser's brass collars, r 0.95: the Tubeway's hardware mesh, every vertex of it within the shafts)
+      const hwV = []; G.scene.traverse((o) => { if (o.name === 'pipes:hardware') { const P = o.geometry.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), z = P.getZ(i); if (Math.abs(x) > 6.0 && Math.abs(x) < 8.6 && Math.abs(z) > 25.9 && Math.abs(z) < 28.4) hwV.push([x, P.getY(i), z]); } } });
+      let minHw = 9;
+      for (const parts of kitB._buckets.values()) for (const p of parts) {
+        const P = p.g.attributes.position;
+        for (let i = 0; i < P.count; i++) { v3.fromBufferAttribute(P, i).applyMatrix4(p.m); for (const q of hwV) { const e = Math.hypot(v3.x - q[0], v3.y - q[1], v3.z - q[2]); if (e < minHw) minHw = e; } }
+      }
+      st.collarVerts = hwV.length; st.minToCollar = +minHw.toFixed(3);
+      const keysA = new Set(kitA._buckets.keys()), keysB = [...kitB._buckets.keys()];
+      R('the riser shafts\' parts (the caged ladder, the guide brackets, the plates, the caged lamps) stand ≥ 0.15 m clear of the riser\'s glass (≥ 1.03 m from its centreline) and inside their shafts, both halves, in the dressing\'s existing material buckets (no draw call added)',
+        nIt === 2 && st.n > 5000 && st.min >= 1.03 && st.out === 0 && keysB.every((k) => keysA.has(k)),
+        { placements: nIt, verts: st.n, minClear: +st.min.toFixed(3), at: st.atMin, vertsUnder110: st.under110, collarVerts: st.collarVerts, minToCollar: st.minToCollar, outside: st.out, atOut: st.atOut, buckets: keysB, newBuckets: keysB.filter((k) => !keysA.has(k)) });
+    }
+    // (c) the Kelp Balcony's open end (the W drum's bearing-255 end face, Alpha's frame: u along the segment's bearing 247.5
+    // from the drum's centre, v 0.9397): render at u 5.0 as at u 6.6 (the gate left u < 5.6 plain teak), at 2.9 m, both halves
+    const balc = [];
+    for (const s of [1, -1]) {
+      const am = 247.5 * DEG, dm = [Math.cos(am), Math.sin(am)], pm = [-dm[1], dm[0]];
+      const at = (u, y) => [-25 + u * dm[0] + 0.9417 * pm[0], y, u * dm[1] + 0.9417 * pm[1]];
+      shot(tw([-23.6, 4.1, -6.5], s), tw(at(5.8, 3.0), s));
+      const a = px(tw(at(5.0, 2.9), s)), b = px(tw(at(6.6, 2.9), s));
+      balc.push({ s, u50: a, u66: b, ratio: +(lum(a) / Math.max(1, lum(b))).toFixed(2) });
+    }
+    R('the Kelp Balcony\'s open end face is render at u 5.0 as at u 6.6 (its inner metre was plain dark teak: darker and red over blue), both halves', balc.every((c) => c.ratio > 0.8 && c.u50[2] >= c.u50[0]), balc);
+    // (d) the Express IN stop (the blade frame bl(22.75, 14.65): local x = w − 14.65, local z = −(s − 22.75); its long faces
+    // at local z ±1.75 from the plaza's floor): the granite skirting (0.08) darker than the render at 0.4, the porthole glass
+    // either side of the roundel (±1.42, 1.9) darker than the render at (±1.0, 1.9), both faces, both halves
+    const { W: Wb } = await import('./src/world/stages/aquarium/geo.js');
+    const blp = (lx, y, lz) => { const [x, z] = Wb(22.75 - lz, 14.65 + lx); return [x, y, z]; };
+    const stopIn = [];
+    // (the plaza face: the court face stands over the Pump Hall's bund, 1.2 m, behind the third sand filter 1.5 m off it)
+    for (const s of [1, -1]) for (const fz of [-1]) {
+      shot(tw(blp(0, 1.7, fz * 4.8), s), tw(blp(0, 1.4, fz * 1.75), s));
+      const f = (lx, y) => px(tw(blp(lx, y, fz * 1.753), s));
+      const ren = lum(f(0.95, 0.4)), sk = lum(f(0.95, 0.08)), pt = [-1.42, 1.42].map((x) => lum(px(tw(blp(x, 1.9, fz * 1.762), s)))), pr = [-1.0, 1.0].map((x) => lum(f(x, 1.9)));
+      stopIn.push({ s, face: fz > 0 ? 'court' : 'plaza', render: Math.round(ren), skirt: Math.round(sk), ports: pt.map(Math.round), beside: pr.map(Math.round) });
+    }
+    R('the Express IN stop\'s plaza face carries the OUT stop\'s kiosk pass: a granite skirting (darker than the render over it) and a porthole either side of the TUBEWAY roundel (darker than the render beside it), both halves',
+      stopIn.length === 2 && stopIn.every((c) => c.skirt < 0.6 * c.render && c.ports.every((p, i) => p < 0.6 * c.beside[i])), stopIn);
+    // (e) the Reef Window's jambs (the Service Gate's α −67 and −58, round 8's shots across the gate): a porthole into the
+    // reef at 1.6 m on the window side of the rib, its dark glass darker than the render over it at 2.5 m, both halves
+    const onChord = (ac, rm, lx, y, lz) => { const n = [Math.cos(ac * DEG), Math.sin(ac * DEG)], t = [Math.sin(ac * DEG), -Math.cos(ac * DEG)]; return [n[0] * (rm + lz) + t[0] * lx, y, n[1] * (rm + lz) + t[1] * lx]; };
+    const c67 = { ac: -68.5, rm: (30.5 + 32.5 * Math.cos(1.5 * DEG)) / 2, hl: 32.5 * Math.sin(1.5 * DEG) };
+    const da = 55.4 / 14, c58 = { ac: -58 + da / 2, rm: (30.5 + 32.5 * Math.cos((da / 2) * DEG)) / 2, hl: 32.5 * Math.sin((da / 2) * DEG) };
+    const pol = (a, r, y) => [r * Math.cos(a * DEG), y, r * Math.sin(a * DEG)];
+    const jambs = [];
+    for (const s of [1, -1]) {
+      const zc = (c) => ((30.43 - c.rm) + (32.55 - c.rm)) / 2 - 0.62;
+      const rd = (c, e) => { const g0 = px(tw(onChord(c.ac, c.rm, e * (c.hl + 0.039), 1.6, zc(c)), s)), r0 = px(tw(onChord(c.ac, c.rm, e * (c.hl + 0.031), 2.5, zc(c)), s)); return { glass: Math.round(lum(g0)), render: Math.round(lum(r0)) }; };
+      shot(tw(pol(-58.8, 31.5, 1.6), s), tw(pol(-66.6, 31.2, 1.8), s));
+      const j67 = rd(c67, -1);
+      shot(tw(pol(-66.2, 31.5, 1.6), s), tw(pol(-58.4, 31.2, 1.8), s));
+      const j58 = rd(c58, 1);
+      jambs.push({ s, j67, j58 });
+    }
+    R('the Reef Window\'s Service Gate jambs carry a brass-ringed porthole into the reef at 1.6 m (its dark glass darker than the render over it), both jambs, both halves',
+      jambs.every((c) => [c.j67, c.j58].every((j) => j.glass < 0.6 * j.render)), jambs);
+    // (f) this round's IN-stop parts within 8.5 cm in plan of the stop's block and under its top (a headless build, both halves)
+    {
+      const { PropKit: PK } = await import('./src/world/props.js');
+      const { dressingFor: DF } = await import('./src/world/dressing.js');
+      const { LAYOUT: LY } = await import('./src/world/stages/aquarium/layout.js');
+      const kit9 = new PK(null, { headless: true });
+      let nIt = 0; for (const it of DF('aquarium')) if (it.type === 'aquarium_stopinfaces') { kit9.add(it.type, it); nIt++; }
+      const d0 = LY.half.find((d) => d.tag === 'express-stop-in');
+      const mir = (d) => ({ ...d, center: [-d.center[0], d.center[1], -d.center[2]] });
+      const blocks = [d0, mir(d0)], topOf = (d) => d.center[1] + d.size[1] / 2;
+      const fp = (d, x, z) => { const a = d.rotY * DEG, c = Math.cos(a), sn = Math.sin(a), dx = x - d.center[0], dz = z - d.center[2], u = dx * c - dz * sn, v = dx * sn + dz * c; return Math.hypot(Math.max(Math.abs(u) - d.size[0] / 2, 0), Math.max(Math.abs(v) - d.size[2] / 2, 0)); };
+      const st = { n: 0, far: 0, atFar: null, over: 0 };
+      const v3 = new G.camera.position.constructor();
+      for (const parts of kit9._buckets.values()) for (const p of parts) {
+        const P = p.g.attributes.position;
+        for (let i = 0; i < P.count; i++) {
+          v3.fromBufferAttribute(P, i).applyMatrix4(p.m); st.n++;
+          const o = Math.min(...blocks.map((d) => fp(d, v3.x, v3.z)));
+          if (o > st.far) { st.far = o; st.atFar = [+v3.x.toFixed(2), +v3.y.toFixed(2), +v3.z.toFixed(2)]; }
+          if (v3.y > topOf(d0) + 0.002) st.over++;
+        }
+      }
+      R('this round\'s IN-stop parts (skirting, pilasters, speed lines, portholes) stand within 8.5 cm of the stop\'s block and under its top, both halves',
+        nIt === 2 && d0?.kind === 'obox' && st.n > 1000 && st.far <= 0.085 && st.over === 0, { placements: nIt, kind: d0?.kind, verts: st.n, farthest: +st.far.toFixed(3), at: st.atFar, overTop: st.over });
+    }
+    m.actors.forEach((a, i) => { a.character.root.visible = hide[i]; });
     g.settings.fov = fov0;
     m.actors.forEach((a, i) => { a.bot = brains[i]; });
     G.paint.clear?.();
