@@ -19,8 +19,9 @@ for v in views:
 items = []
 for c, vs in by.items():
     for v in vs[:k]:
-        p = os.path.join(d, 'shots', v['name'] + '.jpg')
-        if os.path.exists(p): items.append((v['name'], p))
+        for nm in (v['name'], v['name'] + '-B'):   # (TWIN=1 runs suffix the shots -B)
+            p = os.path.join(d, 'shots', nm + '.jpg')
+            if os.path.exists(p): items.append((nm, p)); break
 try: F = ImageFont.truetype('/System/Library/Fonts/Helvetica.ttc', 15)
 except Exception: F = ImageFont.load_default()
 tw, th = TW, TW * 9 // 16
