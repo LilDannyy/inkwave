@@ -1,0 +1,156 @@
+JOB-10 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 06:44:25
+branch botlab-b5-bluestone, ran at f6977873, exit code 0, wall time 14min
+(a written-up JOB-10.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-10 head f6977873
+# sweep e1-dusk load { 1.70 1.79 2.08 }
+HARNESS ERA=1: every game page loads with ?era=1
+# sweep e2-dusk load { 2.55 2.28 2.23 }
+HARNESS ERA=2: every game page loads with ?era=2
+# sweep e3-dusk load { 2.24 2.45 2.33 }
+HARNESS ERA=3: every game page loads with ?era=3
+### done
+
+## last 15 lines of job.log
+-rw-r--r--@  1 danielosling  staff  402600 Oct 25 06:34 sweep-e1-dusk-01.jpg
+-rw-r--r--@  1 danielosling  staff  361772 Oct 25 06:34 sweep-e1-dusk-02.jpg
+-rw-r--r--@  1 danielosling  staff  394226 Oct 25 06:34 sweep-e1-dusk-03.jpg
+-rw-r--r--@  1 danielosling  staff  165429 Oct 25 06:34 sweep-e1-dusk-04.jpg
+-rw-r--r--@  1 danielosling  staff  440101 Oct 25 06:39 sweep-e2-dusk-00.jpg
+-rw-r--r--@  1 danielosling  staff  428781 Oct 25 06:39 sweep-e2-dusk-01.jpg
+-rw-r--r--@  1 danielosling  staff  361523 Oct 25 06:39 sweep-e2-dusk-02.jpg
+-rw-r--r--@  1 danielosling  staff  401664 Oct 25 06:39 sweep-e2-dusk-03.jpg
+-rw-r--r--@  1 danielosling  staff  188337 Oct 25 06:39 sweep-e2-dusk-04.jpg
+-rw-r--r--@  1 danielosling  staff  513817 Oct 25 06:44 sweep-e3-dusk-00.jpg
+-rw-r--r--@  1 danielosling  staff  508624 Oct 25 06:44 sweep-e3-dusk-01.jpg
+-rw-r--r--@  1 danielosling  staff  462812 Oct 25 06:44 sweep-e3-dusk-02.jpg
+-rw-r--r--@  1 danielosling  staff  442011 Oct 25 06:44 sweep-e3-dusk-03.jpg
+-rw-r--r--@  1 danielosling  staff  393811 Oct 25 06:44 sweep-e3-dusk-04.jpg
+### done
+
+## clusters-e1-dusk.txt
+# stage-sweep {"map":"bluestone","time":"dusk","mode":"turf","quality":"high","fov":82,"lightSize":2048,"layoutHash":"22885","blocks":712,"nav":5952}
+# 511 views of 155 clusters shot; 22 cluster(s) with no eye-level view
+
+NO EYE-LEVEL VIEW (22):
+  drum.0  4 block(s)  box (-8.13, 8, -8.13) … (8.13, 10, 3.37)
+  dome.0  8 block(s)  box (-6.47, 10, -6.47) … (6.47, 14.4, 2.68)  hidden
+  lantern.0  1 block(s)  box (-1.75, 14.4, -1.75) … (1.75, 19, 1.75)  hidden
+  clock-beam.0  1 block(s)  box (-3.1, 5.3, -7.85) … (3.1, 6.6, -7.3)
+  hotel-turret.0  1 block(s)  box (-14, 9, -21) … (-11.5, 13, -18.5)  hidden
+  boat-stair-landing.0  1 block(s)  box (14.6, 5, -5) … (17.1, 5.4, -2.5)
+  river-stair-landing.0  1 block(s)  box (-5.4, 4.9, -20) … (-2.4, 5.3, -14.6)
+  halo.0  8 block(s)  box (-14.6, 4.9, -14.6) … (14.6, 5.4, 0)
+  halo-rail.0  16 block(s)  box (-14.12, 5.3, -14.72) … (14.72, 6.4, -0.02)  hidden
+  halo-rail.1  1 block(s)  box (14.6, 5.4, -2.45) … (14.72, 6.4, -0.02)  hidden
+  halo-rail.2  1 block(s)  box (-14.72, 5.4, -4.35) … (-14.6, 6.4, -0.02)  hidden
+  halo-planter.0  1 block(s)  box (4.73, 5.3, -14.09) … (6.29, 6.4, -12.52)
+  halo-planter.1  1 block(s)  box (-6.29, 5.3, -14.09) … (-4.73, 6.4, -12.52)
+  halo-planter.2  1 block(s)  box (-11.94, 5.3, -9.21) … (-10.26, 6.4, -7.52)
+  halo-planter.3  1 block(s)  box (12.37, 5.3, -2.63) … (13.74, 6.4, -1.27)
+  halo-planter.4  1 block(s)  box (10.3, 5.3, -8.64) … (11.98, 6.4, -6.96)
+  halo-planter.5  1 block(s)  box (-13.72, 5.3, -2.75) … (-12.35, 6.4, -1.38)
+  arcade-roof.0  1 block(s)  box (-31, 6, -42) … (-26, 6.3, -28)
+  cafe.0  2 block(s)  box (-13.6, 0, -27.6) … (-10.9, 1, -24.4)
+  bike-dock.0  1 block(s)  box (-11.8, 0, -48.6) … (-9.6, 1, -47.4)
+  bridge-lamp.0  1 block(s)  box (2, -0.2, -32.85) … (2.8, 1.2, -32.05)
+  chimney.0  1 block(s)  box (-30, 9, -74) … (-28, 24, -72)
+
+CLUSTERS:
+  concourse.0  4 block(s)  8 view(s)  000-concourse.0.jpg  box (-8.78, 0, -8.78) … (8.78, 1.3, 3.64)
+  terrace.0  3 block(s)  4 view(s)  001-terrace.0.jpg  box (-37, -0.7, -60) … (-6, 1, -50)
+  clock-steps.0  1 block(s)  4 view(s)  002-clock-steps.0.jpg  box (-3.5, -1.67, -12.56) … (3.5, 1.3, -8.2)
+  concourse-ramp.0  1 block(s)  5 view(s)  003-concourse-ramp.0.jpg  box (-11.2, -1.61, -11.2) … (-4.14, 1.2, -4.14)
+  column.0  2 block(s)  3 view(s)  004-column.0.jpg  box (6.99, 1.2, -3.73) … (8.16, 8, -2.55)
+  column.1  2 block(s)  3 view(s)  005-column.1.jpg  box (2.55, 1.2, -8.16) … (3.73, 8, -6.99)
+  column.2  2 block(s)  3 view(s)  006-column.2.jpg  box (-3.73, 1.2, -8.16) … (-2.55, 8, -6.99)
+  column.3  2 block(s)  3 view(s)  007-column.3.jpg  box (-8.16, 1.2, -3.73) … (-6.99, 8, -2.55)
+  ticket-booth.0  1 block(s)  3 view(s)  008-ticket-booth.0.jpg  box (2.51, 1.3, -5.48) … (5.48, 3.6, -2.51)
+  ticket-booth.1  1 block(s)  3 view(s)  009-ticket-booth.1.jpg  box (-5.48, 1.3, -5.48) … (-2.51, 3.6, -2.51)
+  ticket-booth.2  1 block(s)  3 view(s)  010-ticket-booth.2.jpg  box (-15.6, 1, -52.6) … (-14.4, 3.2, -51)
+  ring-bed.0  1 block(s)  3 view(s)  011-ring-bed.0.jpg  box (5.08, 0, -13.5) … (9.74, 0.7, -9.31)
+
+## clusters-e2-dusk.txt
+# stage-sweep {"map":"bluestone","time":"dusk","mode":"turf","quality":"high","fov":82,"lightSize":2048,"layoutHash":"22885","blocks":712,"nav":5952}
+# 523 views of 157 clusters shot; 20 cluster(s) with no eye-level view
+
+NO EYE-LEVEL VIEW (20):
+  drum.0  4 block(s)  box (-8.13, 8, -8.13) … (8.13, 10, 3.37)
+  dome.0  8 block(s)  box (-6.47, 10, -6.47) … (6.47, 14.4, 2.68)  hidden
+  lantern.0  1 block(s)  box (-1.75, 14.4, -1.75) … (1.75, 19, 1.75)  hidden
+  clock-beam.0  1 block(s)  box (-3.1, 5.3, -7.85) … (3.1, 6.6, -7.3)
+  hotel-turret.0  1 block(s)  box (-14, 9, -21) … (-11.5, 13, -18.5)  hidden
+  boat-stair-landing.0  1 block(s)  box (14.6, 5, -5) … (17.1, 5.4, -2.5)
+  river-stair-landing.0  1 block(s)  box (-5.4, 4.9, -20) … (-2.4, 5.3, -14.6)
+  halo.0  8 block(s)  box (-14.6, 4.9, -14.6) … (14.6, 5.4, 0)
+  halo-rail.0  16 block(s)  box (-14.12, 5.3, -14.72) … (14.72, 6.4, -0.02)  hidden
+  halo-rail.1  1 block(s)  box (14.6, 5.4, -2.45) … (14.72, 6.4, -0.02)  hidden
+  halo-rail.2  1 block(s)  box (-14.72, 5.4, -4.35) … (-14.6, 6.4, -0.02)  hidden
+  halo-planter.0  1 block(s)  box (4.73, 5.3, -14.09) … (6.29, 6.4, -12.52)
+  halo-planter.1  1 block(s)  box (-6.29, 5.3, -14.09) … (-4.73, 6.4, -12.52)
+  halo-planter.2  1 block(s)  box (-11.94, 5.3, -9.21) … (-10.26, 6.4, -7.52)
+  halo-planter.3  1 block(s)  box (12.37, 5.3, -2.63) … (13.74, 6.4, -1.27)
+  halo-planter.4  1 block(s)  box (10.3, 5.3, -8.64) … (11.98, 6.4, -6.96)
+  halo-planter.5  1 block(s)  box (-13.72, 5.3, -2.75) … (-12.35, 6.4, -1.38)
+  arcade-roof.0  1 block(s)  box (-31, 6, -42) … (-26, 6.3, -28)
+  bike-dock.0  1 block(s)  box (-11.8, 0, -48.6) … (-9.6, 1, -47.4)
+  chimney.0  1 block(s)  box (-30, 9, -74) … (-28, 24, -72)
+
+CLUSTERS:
+  concourse.0  4 block(s)  8 view(s)  000-concourse.0.jpg  box (-8.78, 0, -8.78) … (8.78, 1.3, 3.64)
+  terrace.0  3 block(s)  4 view(s)  001-terrace.0.jpg  box (-37, -0.7, -60) … (-6, 1, -50)
+  clock-steps.0  1 block(s)  4 view(s)  002-clock-steps.0.jpg  box (-3.5, -1.67, -12.56) … (3.5, 1.3, -8.2)
+  concourse-ramp.0  1 block(s)  5 view(s)  003-concourse-ramp.0.jpg  box (-11.2, -1.61, -11.2) … (-4.14, 1.2, -4.14)
+  column.0  2 block(s)  3 view(s)  004-column.0.jpg  box (6.99, 1.2, -3.73) … (8.16, 8, -2.55)
+  column.1  2 block(s)  3 view(s)  005-column.1.jpg  box (2.55, 1.2, -8.16) … (3.73, 8, -6.99)
+  column.2  2 block(s)  3 view(s)  006-column.2.jpg  box (-3.73, 1.2, -8.16) … (-2.55, 8, -6.99)
+  column.3  2 block(s)  3 view(s)  007-column.3.jpg  box (-8.16, 1.2, -3.73) … (-6.99, 8, -2.55)
+  ticket-booth.0  1 block(s)  3 view(s)  008-ticket-booth.0.jpg  box (2.51, 1.3, -5.48) … (5.48, 3.6, -2.51)
+  ticket-booth.1  1 block(s)  3 view(s)  009-ticket-booth.1.jpg  box (-5.48, 1.3, -5.48) … (-2.51, 3.6, -2.51)
+  ticket-booth.2  1 block(s)  3 view(s)  010-ticket-booth.2.jpg  box (-15.6, 1, -52.6) … (-14.4, 3.2, -51)
+  ring-bed.0  1 block(s)  3 view(s)  011-ring-bed.0.jpg  box (5.08, 0, -13.5) … (9.74, 0.7, -9.31)
+  ring-bed.1  1 block(s)  3 view(s)  012-ring-bed.1.jpg  box (-14.47, 0, -7.4) … (-10.75, 0.7, -2.79)
+  ring-bed-planter.0  1 block(s)  3 view(s)  013-ring-bed-planter.0.jpg  box (7.76, 0, -11.76) … (9.74, 1.3, -9.31)
+
+## clusters-e3-dusk.txt
+# stage-sweep {"map":"bluestone","time":"dusk","mode":"turf","quality":"high","fov":82,"lightSize":2048,"layoutHash":"22885","blocks":712,"nav":5952}
+# 582 views of 171 clusters shot; 6 cluster(s) with no eye-level view
+
+NO EYE-LEVEL VIEW (6):
+  drum.0  4 block(s)  box (-8.13, 8, -8.13) … (8.13, 10, 3.37)
+  dome.0  8 block(s)  box (-6.47, 10, -6.47) … (6.47, 14.4, 2.68)  hidden
+  lantern.0  1 block(s)  box (-1.75, 14.4, -1.75) … (1.75, 19, 1.75)  hidden
+  hotel-turret.0  1 block(s)  box (-14, 9, -21) … (-11.5, 13, -18.5)  hidden
+  arcade-roof.0  1 block(s)  box (-31, 6, -42) … (-26, 6.3, -28)
+  chimney.0  1 block(s)  box (-30, 9, -74) … (-28, 24, -72)
+
+CLUSTERS:
+  concourse.0  4 block(s)  8 view(s)  000-concourse.0.jpg  box (-8.78, 0, -8.78) … (8.78, 1.3, 3.64)
+  terrace.0  3 block(s)  4 view(s)  001-terrace.0.jpg  box (-37, -0.7, -60) … (-6, 1, -50)
+  clock-steps.0  1 block(s)  4 view(s)  002-clock-steps.0.jpg  box (-3.5, -1.67, -12.56) … (3.5, 1.3, -8.2)
+  concourse-ramp.0  1 block(s)  5 view(s)  003-concourse-ramp.0.jpg  box (-11.2, -1.61, -11.2) … (-4.14, 1.2, -4.14)
+  column.0  2 block(s)  3 view(s)  004-column.0.jpg  box (6.99, 1.2, -3.73) … (8.16, 8, -2.55)
+  column.1  2 block(s)  3 view(s)  005-column.1.jpg  box (2.55, 1.2, -8.16) … (3.73, 8, -6.99)
+  column.2  2 block(s)  3 view(s)  006-column.2.jpg  box (-3.73, 1.2, -8.16) … (-2.55, 8, -6.99)
+  column.3  2 block(s)  3 view(s)  007-column.3.jpg  box (-8.16, 1.2, -3.73) … (-6.99, 8, -2.55)
+  clock-beam.0  1 block(s)  3 view(s)  008-clock-beam.0.jpg  box (-3.1, 5.3, -7.85) … (3.1, 6.6, -7.3)
+  ticket-booth.0  1 block(s)  3 view(s)  009-ticket-booth.0.jpg  box (2.51, 1.3, -5.48) … (5.48, 3.6, -2.51)
+  ticket-booth.1  1 block(s)  3 view(s)  010-ticket-booth.1.jpg  box (-5.48, 1.3, -5.48) … (-2.51, 3.6, -2.51)
+  ticket-booth.2  1 block(s)  3 view(s)  011-ticket-booth.2.jpg  box (-15.6, 1, -52.6) … (-14.4, 3.2, -51)
+  ring-bed.0  1 block(s)  3 view(s)  012-ring-bed.0.jpg  box (5.08, 0, -13.5) … (9.74, 0.7, -9.31)
+  ring-bed.1  1 block(s)  3 view(s)  013-ring-bed.1.jpg  box (-14.47, 0, -7.4) … (-10.75, 0.7, -2.79)
+  ring-bed-planter.0  1 block(s)  3 view(s)  014-ring-bed-planter.0.jpg  box (7.76, 0, -11.76) … (9.74, 1.3, -9.31)
+  ring-bed-planter.1  1 block(s)  3 view(s)  015-ring-bed-planter.1.jpg  box (-14.47, 0, -4.43) … (-11.95, 1.3, -2.79)
+  cart.0  1 block(s)  3 view(s)  016-cart.0.jpg  box (4.96, 0, -15.54) … (7.44, 1.2, -13.66)
+  cart.1  1 block(s)  3 view(s)  017-cart.1.jpg  box (-23, 0, -25.1) … (-21.8, 1.2, -22.9)
+  bollards.0  1 block(s)  3 view(s)  018-bollards.0.jpg  box (9.8, 0, -6.6) … (11, 1.2, -5.4)
+  bollards.1  1 block(s)  3 view(s)  019-bollards.1.jpg  box (-20.4, 0, -27) … (-18.6, 1.2, -25.8)
+  bollards.2  1 block(s)  3 view(s)  020-bollards.2.jpg  box (-7.2, 0, -47.6) … (-6.2, 1, -46.4)
+  bollards.3  1 block(s)  3 view(s)  021-bollards.3.jpg  box (-7.4, 0, -27.8) … (-6.2, 1, -26.6)
+  bollards.4  1 block(s)  3 view(s)  022-bollards.4.jpg  box (-28.4, 1, -24.4) … (-27.2, 2, -23)
+  bollards.5  1 block(s)  3 view(s)  023-bollards.5.jpg  box (24.8, 0, -2.2) … (26, 1, -1)
+  phone-kiosk.0  1 block(s)  3 view(s)  024-phone-kiosk.0.jpg  box (17.13, 0, -3.73) … (18.33, 2.4, -2.53)
+  phone-kiosk.1  1 block(s)  3 view(s)  025-phone-kiosk.1.jpg  box (-17.7, 0, -13.4) … (-16.5, 2.4, -12.2)
+  poster-column.0  1 block(s)  3 view(s)  026-poster-column.0.jpg  box (-15.94, 0, -7.01) … (-14.54, 2.6, -5.61)
+  cab-shelter.0  2 block(s)  3 view(s)  027-cab-shelter.0.jpg  box (-16.5, 0, -15.5) … (-14, 3, -10.2)

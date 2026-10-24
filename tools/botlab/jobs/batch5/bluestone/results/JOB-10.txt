@@ -1,0 +1,4 @@
+JOB-10 (bluestone) @ f6977873 — Mac mini b5-runner, 2026-10-25 06:30–06:44, exit 0. Short summary.
+- the dusk eye-level sweep (quality high, fov 82), every era: era 1 511 views of 155 clusters (22 with no eye-level view), era 2 523 of 157
+  (20 without), era 3 582 of 171 (6 without; drum.0 is in every era's list). The 15 overview pages (5 per era, 165–514 KB) are pushed under
+  out/sweep/dusk/; the three clusters-*.txt heads are in JOB-10.raw.txt.
