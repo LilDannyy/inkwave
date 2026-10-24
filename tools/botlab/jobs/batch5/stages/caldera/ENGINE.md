@@ -982,6 +982,16 @@ cost, Highmark's numbers:
     every roof top beside the lava, still or drifting at 6.5 m/s, idle or steering back, at LOW, HIGH, the rise's 30 / 60
     / 90 % and the fall's 50 %; (c) Mitts leaps, running and swim jumps, walk-offs and hops during the rise onto every top
     that holds; (d) Mitts leaps onto the tall tops: 0 deaths, 0 flings, 0 perches, every rescue within 6 m)
+    Fix round 9 (review 9): **steering back off a tall top** — a kid lands behind or beside the way off (a face it meets
+    on the way down turns the steer along it) — `_roofLandWet` also needs dry floor (under the body's middle, a seam
+    ≤ 0.24 m bridged, now and 3 s on) at every point a body can stand within B + 0.35 m of the exit, B = ½·20·t² − 0.85·v·t
+    at the fall to the exit's floor (the outer walls' ends a Mitts leap reaches stand over a lava slot or beside the lake);
+    **the hold ends wherever the slide does** (`_roofOff`: off the roof, a super jump, a special that owns the body), so the
+    HUD line never sticks; the Slump cliff is never inkable (`calCliff`, `paint: false`; its rind is the level shader's band).
+    The audit's reach bar counts a hop (≤ 2.6 m over the dry floor within 6 m), a squid climb (an inkable face from dry floor)
+    and a Mitts leap (the kit's predictor from a dry node); (e) squid climbs up every inkable face; a rescue is measured from
+    the kid's own move across the ground (the engine's 6 m), gated on tops a kid reaches — off the outer walls no kid reaches
+    it is the engine's 12 m fallback, listed
 ---
 
 ## 6. Build plan (each step ends with a test that fails without it)

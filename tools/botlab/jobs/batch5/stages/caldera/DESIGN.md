@@ -376,7 +376,7 @@ Every bank and island face that meets the lava reaches down to **−1.1** (LOW �
 | Rim Head parapet | from P(31.5, −145.5) to P(36, −148.5) | 0.4 × 0.9 | 4.5 | roof | The edge over the Slump cliff: a vantage, not a drop route. |
 | Rim Head ground | spatter cone at (−29.5, −33.0): top r 1.2 at 4.5 (0.9 up), base r 3.2, eight radial ramp facets (craters `coneFacets`, ≤ 24°); hummock at (−28.5, −24.5): top r 0.8 at 4.2, base r 2.15; outcrops (roof) (−33.0, −38.0) 2.4 × 1.6 × 1.4, (−29.8, −40.8) 1.6 × 1.4 × 1.3, (−24.5, −29.0) 1.6 × 1.4 × 1.3; cairns (roof) (−26.0, −27.0), (−32.2, −27.5) 1.2 × 1.2 × 1.2 | — | — | mounds walkable; outcrops roof | Not a flat terrace: lava-rock mounds you climb and outcrops you hide behind. |
 | **Slump shelf** | `[P(27, SA0), P(31.5, SA0)]`, `arc(31.5, SA0 - 2.5, SA1 + 2.5)`, P(31.5, SA1), P(27, SA1), `arc(27, SA1 + 2.5, SA0 - 2.5)`, with SA0 = −145.5, SA1 = −176.5 | 4.5 m wide, about 16 m long, 71 m² | 0 | drowns, sides to −1.1 | **The flank that drowns.** At LOW the only way along this shore: a cliff-foot path between the two heads (hop 1.2 down and up). Hornitos (roof, 1.4 × 1.4 × 2.0) against the cliff at P(30.4, −152) (−26.84, −14.27) and P(30.4, −168) (−29.74, −6.32), leaving a 2.7 m path on their lake side. |
-| The Slump cliff | outside the arc r 31.5 from θ −145.5 to −176.5, and from P(31.5, −176.5) to P(30.5, 178) | 1.5 m thick | 7.0 | roof | Edge piece E3: the caldera wall comes down to the lake here. Its face is in the lava region (it carries the rind). |
+| The Slump cliff | outside the arc r 31.5 from θ −145.5 to −176.5, and from P(31.5, −176.5) to P(30.5, 178) | 1.5 m thick | 7.0 | roof, never inkable (fix round 9) | Edge piece E3: the caldera wall comes down to the lake here. Its face is in the lava region (it carries the rind). |
 | **South Slump head** | the Lakefront's west end (above) | tip face 3.8 m wide, square to the stone line | 1.2 | — | The Race's south landing; the shelf's south end (hop). |
 | **North Slump head** | `sp(S1, 0, -FACE)` (−25.29, −1.23), P(27, SA1) (−26.95, −1.65), P(31.5, SA1) (−31.44, −1.92), P(30.5, 178) (−30.48, 1.06), P(21, 178) (−20.99, 0.73), `sp(S1, 0, FACE)` (−21.70, 0.00) | 20 m² | 1.2 | sides to −1.1 | The Race's north landing; the shelf's north end; a hop up to the Ladle Road. |
 | **Ladle Road** | `arc(21, 157.5, 178)`, `arc(26, 178, 157.5)` | 5 m wide, 43 m² | 2.4 | sides to −1.1 | The rim's road of rough basalt from the north head to the horn tip; the West Bridge leaves it. Vent hood (roof) 1.4 × 1.4 × 1.4 at P(24, 177) (−23.97, 1.26). |
@@ -745,6 +745,16 @@ Colour is never the only signal: the arrows, the words, the pitch direction and 
   against the slide on tops a kid reaches), at LOW, HIGH, the rise's 30 / 60 / 90 % and the fall's 50 %, (c) Mitts leaps,
   running and swim jumps, walk-offs and hops during the rise onto every top that holds, (d) Mitts leaps onto every tall top
   (the Tide Boards: 0 of 738 at LOW and HIGH); **0 deaths, 0 flings, 0 perches, every rescue within 6 m**.
+  **Fix round 9 (review 9).** The Slump cliff's faces were inkable, so a squid climbed onto its 7.6–7.9 m off-limits tops,
+  and steering back there at HIGH and through the rise came down in the lava (review 9: 24 deaths in 1,015 climbs): the
+  cliff is **never inkable** now, as every other outer wall (`calCliff`; the high mark's rind is the level shader's band and
+  reads on it — `out/fix9/fix9-slump-cliff-rind-*`). The audit's reach bar now counts a squid climb and a **Sponge Mitts
+  leap** too, and a leap reaches the cliff's ends and three more outer-wall ends (#907, #943, #954 and twins: 3.1–3.4 m over
+  the Rim Head or the yard); steering back off them came down in a lava slot or beside the lake (18 deaths at HIGH and 18
+  at r60 in rule 47 b), so the landing check needs dry floor within the steer-back's reach of the way off, behind and
+  beside it (0 since). The middle Slump hornito moved 0.64 m south along the cliff (−157° → −155.8°): measured from the
+  kid's own move its far corner was 6.35 m from the south head's node, over the rescue's 6 m (5.8 m now). A hold left
+  another way than the rescue (a super jump, a special) ends there: the HUD line no longer sticks on NO FOOTING.
 - **Jumps across the lava (rule 44) — decided by the lead after review 5: option 1; corrected after review 6.** **Swim
   jumps and jumps + the Dash Pellet's air dash over the lava are skill movement** (own ink at the take-off, a squid at
   speed or the sub spent, over open lava: the risk is the price) — listed, no gate. **The Bazookarp carrier swims its own
