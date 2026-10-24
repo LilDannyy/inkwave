@@ -1,0 +1,14 @@
+== bluestone [zones]: winner Bravo (time) | final 57 vs 57 (penalty +20/+0) | OT no
+   ERAS shoves 0 rescues 0 flips 52 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 3, started in era 1, 2 jumps planned
+   ERAS 1>2 done @103.97s: 1/8 bots on new ground within 30 s (1 within 20 s), median - s | [13.55]
+   ERAS 2>3 done @203.97s: 5/8 bots on new ground within 30 s (3 within 20 s), median 23.76 s | [3.23,7.23,11.76,23.76,23.76]
+   stuck 0.4% (0.9% counting holds on purpose) | splats 85 (water 0) | specials 13 | super jumps 38 | turf 26.9/18.1 | sim 300s in 45s (wall 45s) | {"cpuSimMs":0.77}
+   stuck {"t":284.8,"name":"Juno","w":"shooter","mode":"fight","role":"stage","pos":[-11.1,0,-15.9],"path":false,"hold":false,"pod":"-","dur":1.25}
+   stuck {"t":106.8,"name":"Sprinkle","w":"bow","mode":"fight","role":"paint","pos":[-15.2,0,-5.2],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":107.8,"name":"Sprinkle","w":"bow","mode":"fight","role":"paint","pos":[-15.3,0,-5.2],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":150.5,"name":"Squiddo","w":"charger","mode":"refill","role":"watch","pos":[0.6,0.9,9.8],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":33.3,"name":"Squiddo","w":"charger","mode":"paint","role":"watch","pos":[-11.6,0,-7.6],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":64.8,"name":"Squiddo","w":"charger","mode":"fight","role":"watch","pos":[-20.2,0,3.9],"path":false,"hold":false,"pod":"-","dur":0.5}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"simT":300,"simMs":44971,"state":"finish","stuckPct":0.4,"stuckHoldPct":0.9,"splats":85,"water":0,"specials":13,"jumps":38,"cov":[26.9,18.1],"teamKD":[{"k":34,"d":51,"sp":2,"by":{"zipcaster":1,"slam":1}},{"k":51,"d":34,"sp":1,"by":{"stamp":1}}],"spUses":[{"barrage":4,"stamp":1},{"zipcaster":2,"slam":3,"sonar":3}],"spEnds":[{"barrage_mystery":{"time":2,"splat":1},"stamp":{"time":1},"barrage_waddle":{"splat":1}},{"zipcaster":{"time":2},"sonar":{"time":3}}],"zipcheer":{"zipUses":2,"zips":1,"zipHits":1,"zipSaved":24.482292727227623,"orbs":0,"lifted":0,"liftM":0,"cheers":0,"helped":0,"orbCharge":0,"gains":0,"gainPts":0,"splatHeld":0,"dmgHeld":0,"thrown":0},"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":53,"missed":0,"escapes":9,"evaded":5,"caught":4,"avoidedPath":2,"goalMoved":2,"guard":1,"backedOff":0,"r

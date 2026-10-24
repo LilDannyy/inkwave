@@ -1,0 +1,4 @@
+HARNESS ERA=1: every game page loads with ?era=1
+PASS spawn to mid  {"t0":{"m":72.4,"s":6.13,"straight":67},"t1":{"m":76.2,"s":6.46,"straight":67},"spawns":[[-18,-64.5],[18,64.5]],"mid":[0,0]}
+RESULT 1/1
+console errors: none

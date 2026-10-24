@@ -1,0 +1,4 @@
+HARNESS ERA=3: every game page loads with ?era=3
+PASS climb edges barred by a railing  {"climbs":144,"bad":[],"n":0}
+RESULT 1/1
+console errors: none
