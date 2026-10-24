@@ -718,6 +718,17 @@ Colour is never the only signal: the arrows, the words, the pitch direction and 
   4 and 2 the Slump shelf runs on (dry at LOW, drowned at HIGH); the lava region runs 0.5–0.6 m under the new banks
   (`RIM_LAKE`). Boss Battle keeps the island's old faces (`ISLAND_BOSS`: the lava holds LOW there; the boss's home ground
   818 m² as before). No leap gaps.
+- **No roof top slides a kid into the lava** (fix round 7, the lead after review 7; ENGINE rule 47). Cover on Highmark
+  is a `roof` block (layout.js `cover()`) and so is every rider part (the stub, race 3's boulder, the crown's pipes): you
+  can't stand on it, you slide off — and the slide took the nearest way off whatever lay past it, so a hop onto race 3's
+  boulder at HIGH ended in the lava 42 times in 50, onto Organ L's stub 30 in 64 (review 7's probe-roofslide7b: 460
+  deaths in 8,472 landings). **The engine refuses a way off whose landing the lava takes** (actor.js `_roofExitDist` →
+  `_roofLandWet`: the fall from the way's exit at the slide's speed and at a run's, the floor under the footprint every
+  0.15 m, to 0.6 m past the fast landing, against `G.match.stage.wet`), **holds the kid where it is when every way is
+  refused** (it walks off by itself; no jump from a roof, as ever), and on a stage with a hazard the slide owns the move
+  along the way it checked (a landing's drift or a steer across the slide had thrown kids off a narrow coping). Every
+  piece keeps its place: each has a safe side. lava-audit rule 47 (the probe as a rule): **0 deaths in 3,908 landings at
+  LOW and 4,572 at HIGH, 0 kids held**; the same rule on the old actor.js reads 176 / 284, as the review.
 - **Jumps across the lava (rule 44) — decided by the lead after review 5: option 1; corrected after review 6.** **Swim
   jumps and jumps + the Dash Pellet's air dash over the lava are skill movement** (own ink at the take-off, a squid at
   speed or the sub spent, over open lava: the risk is the price) — listed, no gate. **The Bazookarp carrier swims its own
@@ -726,12 +737,27 @@ Colour is never the only signal: the arrows, the words, the pitch direction and 
   as for everyone (its dash jumps are out anyway: it holds no sub); **what a carrier may bypass is judged per stage by the
   Bazookarp checker's shortcut probes (#7d) when Highmark's Bazookarp layout is built** — that layout must place the Pond,
   the weirs and the Gate so no carrier jump saves over 20 m on the carrier field or skips a weir, with rails where it must.
-  The carrier list for that builder: `jobs/batch5/karp-stages/caldera-carrier-crossings.json` (lava-audit's carrier row:
-  every swim crossing saving > 10 m tried again with actor.carry set — LOW 72, 50 over 20 m, the most 51.6 m; HIGH 85, 42
-  over 20 m, the most 37.1 m). The carrier *field* still holds no hop or gap edge over the lava (LAYOUT.bazookarp.hopVeto,
+  The carrier list for that builder: `jobs/batch5/karp-stages/caldera-carrier-crossings.json` — **a lower bound** that the
+  checker's #7d must extend by probing Highmark's Bazookarp layout itself (review 7). Fix round 7 merged into it review 6's
+  probe-carry44 over review 6's and review 7's candidate sets with lava-audit's carrier row (every swim crossing saving
+  > 10 m tried again with actor.carry set), at the fix-round-7 geometry: **LOW 133 crossings, 87 over 20 m, the most
+  55.9 m; HIGH 144, 87 over 20 m, the most 40.6 m** (the audit's row alone: 75 / 53 / 55.9 and 79 / 46 / 37.1). The carrier *field* still holds no hop or gap edge over the lava (LAYOUT.bazookarp.hopVeto,
   `karpVeto.js`, 201 pairs; lava-karp.js K8). **Plain running jumps are judged by the 20 m skill-route bar: no running jump
   may save more than 20 m against the dry way round, and the largest stays under 15 m** (lava-audit's gate, the margin in
   it since fix round 6). Bots never take any of them (the nav has no links over the lava).
+  **Air steering (fix round 7, review 7):** the gate's running jumps include those off rider tops flown with the stick
+  turned 0 / ±45 / ±90° eight frames after the jump — every rider-top node (the Organs, the stones), 16 headings,
+  whatever lies past the edge, and the Organ tops finer (every 0.3 m within 0.9 m of the rim, every 7.5°, run-ups 0.8 /
+  1.5 / 2.6 m, as the reviewer's probe-crown7c); a steered crossing has over 0.35 m with the whole footprint (0.24 m) over
+  lava. **The Sponge Mitts' leap (the lead after review 7): a leap over the lava is skill movement like a swim jump** (it
+  flies 4.5–13 m on flat ground, more from height), listed in rule 44's information, no gate — **but never off a roof
+  top** (actor.js asks no kit jump on a roof and mitts.js starts no charge there: the roof gate holds for the kit; a leap
+  off the stub would clear the crown) and **a bot's leap flies as it was planned**: its landing passed the 2 s look-ahead
+  at the release (mitts `landingOk` / `botReleaseOk`), and bots.js holds the stick along a kit leap and never steers it
+  with the air guard (review 7: the guard's pick bent a leap off the causeway 0.33 m short into the lava). Proof:
+  lava-leap.js (A: fire + jump on the stub or the boulder starts no charge and no jump, on the lookout's top it does; B: a
+  bot's leap over 13 m of lava with an enemy behind it holds its stick along the leap and lands 0.38 m from the plan; both
+  fail on the old code). A carrier makes no leap (no leap while carrying, actor.js).
 - **The lookout is no launch pad** (fix round 6, the lead after review 6). The corrected march found Organ L's HIGH top,
   3.45 m over the Race and the causeway, launching plain running jumps onto race 1 (saving up to 38.6 m) and the causeway
   (up to 22.9 m). A parapet low enough to see over is cleared by that jump (its peak is 1.35 m and the column's drop does
@@ -743,7 +769,24 @@ Colour is never the only signal: the arrows, the words, the pitch direction and 
   shoot between the pipes. Rule 25 measures the crown as a screen (≥ 60 % open, no gap a kid fits, pipes ≤ 0.3 m and
   ≥ 2.0 m), its cover without it. The rider parts grow 36 → 60 (ENGINE R30's cap 40 → 64; Treehills runs ~60 dynamic
   blocks).
-- **Rule 44 at fix round 6's final geometry** (lava-audit.js, `full=1`). **The march** (corrected after review 6): every
+  **Fix round 7 (review 7, air steering):** a kid steers in the air, and the march flew straight. A jump out through the
+  open north half of the north-east edge, the stick turned 45° eight frames up, swung round the crown's end and came down
+  on the causeway over 0.6–2.7 m of lava: **16.9 m saved** (lava-audit's steered march at fix round 6's crown: 26 over
+  15 m). The review's one pipe a quarter of the way from the north flat on each edge still left 0.45 m by the corner:
+  turned 10 frames up, 16.1 m. So **the north-east and north-west edges are crowned whole**, like the others (4 pipes an
+  edge, 0.51 m clear): the crown runs from the north-west corner round the lake side to the north-east corner, **only the
+  north flat is open** (the climb from B, and the walk down onto B). 14 pipes a lookout, 64 rider parts (R30's cap, all
+  used); **65 % open**, widest gap 0.52 m (rule 25). Off Organ L's HIGH top **no steered running jump crosses the lava**
+  (0 / ±45 / ±90° after 6, 8 or 10 frames) and four straight ones do, **the most 3.3 m**; at LOW (2.3 m) 17 straight, the
+  most 6.9 m, and 4 steered, 3.8 m. Pictures:
+  `out/fix7/fix7-*`. The flights
+  that still read 17–18 m in review 7's center-line probe land on the island, the socket collar, the coping or the organ
+  stump beside the cluster, over lava only where the notch's 0.15–0.2 m seams pass under them: a kid walks the same way
+  (off the north flat onto B, 3.1 m, then off B's island side, ~4 m: probe-dropnotch, 20 of 24 headings alive at HIGH,
+  the 4 dead ones off B's lake side); their "gain" is the nav's missing drop links. The audit lists them as seam flights
+  (no gate).
+- **Rule 44 at fix round 7's final geometry** (lava-audit.js, `full=1`; the table and the list below are fix round 6's,
+  the fix-round-7 numbers follow them). **The march** (corrected after review 6): every
   nav node standing at the lava's edge now, 16 headings, 0.1 m steps out to 11 m; the far floor is **any** standable floor
   across the lava down to the lava itself (it took only floors within 1.3 m below the take-off before), a take-off may drop
   onto a lower dry strip (≤ 3 m) before the lava, and each jump is tried from **2.6, 1.5 and 0.8 m** behind the edge; every
@@ -769,6 +812,22 @@ Colour is never the only signal: the arrows, the words, the pitch direction and 
   2.3 m copings down onto the Casting Floor (12.4–13.6 m), the horn's 2.6 m coping onto the Casting Floor's (12.3 m), the
   causeway onto the Lakefront's coping (12.1 m), the island's south-west coping onto the pier's (12.1 m). Every crossing:
   `out/fix6/rule44-crossings.json`.
+
+  **Fix round 7** (the crown's north-east and north-west edges closed; air steering; leaps; `out/fix7/rule44-crossings.json`):
+
+  | | LOW | HIGH |
+  |---|---|---|
+  | **plain running jumps, straight** | 1,101 — over 5 / 10 / 15 m: 341 / 38 / 0, **the most 13.55 m** | 1,437 — 381 / 44 / 0, **the most 14.74 m** |
+  | **running jumps off rider tops, steered** (0 / ±45 / ±90°) | 6 — **the most 3.84 m** (Organ L) | 312 — 19 / 4 / 0, **the most 14.15 m** (race 7; **none off Organ L**) |
+  | seam flights (listed: drops past the notch) | 978, the most 8.9 m | 1,290, the most 18.2 m |
+  | swim jumps, swim / run + air dash (listed) | 1,081 — 354 over 20 m, 170 over 40, the most 56.5 m | 1,957 — 412, 16, the most 41.2 m |
+  | **Mitts leaps** (listed; half / full charge, aim level) | 2,201 — 702 over 20 m, 230 over 40, the most 57.9 m | 2,693 — 441, 6, the most 43.3 m |
+  | the carrier's swim jumps (the audit's row) | 75 — 53 over 20 m, the most 55.9 m | 79 — 46, the most 37.1 m |
+
+  The gate (straight + steered running jumps): **no running jump saves over 20 m, the largest 14.74 m** — new at HIGH:
+  off Organ B's top toward L, the kid meets the closed north-east crown and drops onto the island's coping past the
+  0.2 m seams (14.74 m by the straight march's centre-line count; it is a seam flight: the walk is B → island, ~4 m).
+  With the stick turned at 6 / 8 / 10 frames (PAGE_ARGS `sf=6,8,10`) the steered largest stays 14.15 m.
 - **The options the lead chose from** (fix round 4's, with its numbers): 1. *Accept swim / dash jumps over the lava as
   skill movement* and judge plain running jumps by the 20 m skill-route bar (chosen; the margin at the East Pool corner);
   2. *make the lava unjumpable* (every corner's gap past a running jump with its drop at ~2,000 corner samples, or solid
