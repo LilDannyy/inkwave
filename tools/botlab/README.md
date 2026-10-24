@@ -79,8 +79,8 @@ Stages:
   review runs. Every tagged block of Alpha's half (centre z ≤ `ZMAX`, default 0.3; `SKIP=` the tags left out, default the
   floors and rails) is clustered with its own tag's blocks under 1 m away; each cluster gets 3–8 views from 1.7 m over a
   walkable nav node 1–8 m off, one per bearing sector, line of sight checked and not against a face (of nine rays across
-  the frame's middle, fewer than three meet another piece's wall within 1.2 m and fewer than four one nearer than 0.8 × the
-  target: review 8's cameras at a face) (DEFAULT_SETTINGS, fov 70, bots off, actors, HUD and paint cleared). `OUT` gets `views.json`, `shots/`, `sheets/<nnn>-<tag>.<k>.jpg` (one contact sheet per
+  the middle of the frame the view shoots, fewer than three meet another piece's wall within 1.5 m, fewer than four one
+  nearer than 0.8 × the target, and the centre ray none nearer than half of it: reviews 8 and 9's cameras at a face) (DEFAULT_SETTINGS, fov 70, bots off, actors, HUD and paint cleared). `OUT` gets `views.json`, `shots/`, `sheets/<nnn>-<tag>.<k>.jpg` (one contact sheet per
   cluster, each view labelled with its eye position, under 290 KB) and `clusters.txt` (every cluster, the ones with NO
   EYE-LEVEL VIEW listed first: overhead pieces, or something nobody can walk up to). Before / after a change:
   `VIEWS=<before>/views.json BEFORE=<before>` re-shoots the same cameras and pairs each before shot over its after shot,

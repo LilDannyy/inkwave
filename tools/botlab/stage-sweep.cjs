@@ -7,9 +7,12 @@
 // '(untagged)') is grouped with the same tag's blocks less than 1 m from it into a cluster. Round each cluster 3–8 eye
 // positions are picked, one per bearing sector (one per ~6 m of its outline): 1.7 m over a walkable nav node 1–8 m from
 // the cluster (nearest 3.2 m wins), 2.5 m under its foot to 3.2 m over its top, with a clear line of sight to it, and not
-// against a face (review 8: sea-coping.0.1, drum-glass.1.5 and pipe-glass.4.2 looked at another piece's wall): of nine rays
-// across the frame's middle (±20° of yaw, ±12° of pitch) fewer than three meet a wall of another block within 1.2 m, and
-// fewer than four one nearer than 0.8 × the target's distance (a wall: a face steeper than 45°; floors don't count).
+// against a face (reviews 8 and 9: sea-coping.0.1, drum-glass.1.5, pipe-glass.4.2, then drum-glass.0.2, drum-glass.1.4,
+// pipe-glass.3.1, pump-housing.0.0 and whale-bench.0.2 looked at another piece's wall): of nine rays across the middle of
+// the frame the view shoots (toward its look point; ±20° of yaw, ±12° of pitch) fewer than three meet a wall of another
+// block within 1.5 m, fewer than four one nearer than 0.8 × the target's distance, and the centre ray none nearer than
+// 0.5 × it; nor may six of the nine meet another piece's opaque wall within 1 m past the target while none meets the piece
+// (a big cluster's nearest point can be its box's corner in open air) (a wall: a face steeper than 45°; floors don't count).
 // Clusters with no such position (overhead pieces, things nobody walks past) are listed as NO EYE-LEVEL VIEW.
 // OUT gets:
 //   views.json     the cameras (VIEWS=<a views.json> shoots those instead of generating: before / after, same cameras)
@@ -149,16 +152,28 @@ app.on('browser-window-created', (_, win) => {
             if (!ph.los(E, Q)) continue;
             // (not against a face, review 8: another piece's wall across a third of the frame's middle within 1.2 m — sea-coping.0.1
             // stood 0.5 m beside the Express stop, drum-glass.1.5 1.0 m behind the pump housing — or across four ninths of it
-            // nearer than the target — pipe-glass.4.2 looked over the grand stair's nosing into the Lookout's balustrade)
-            { const yaw = Math.atan2(T.z - E.z, T.x - E.x), pit = Math.atan2(T.y - E.y, Math.hypot(T.x - E.x, T.z - E.z)), far = 0.8 * ql;
-              let n12 = 0, nT = 0;
+            // nearer than the target — pipe-glass.4.2 looked over the grand stair's nosing into the Lookout's balustrade.
+            // Review 9: five views still framed a near face — drum-glass.0.2, drum-glass.1.4, pipe-glass.3.1, pump-housing.0.0,
+            // whale-bench.0.2 — because the rays were cast toward the cluster's nearest point while a small cluster's view looks
+            // at its middle, and 1.2 m let a wall at 1.3 m through. The nine rays now cross the frame the view really shoots
+            // (toward its look point), a wall counts within 1.5 m, and the centre ray may not meet another piece's wall nearer
+            // than half the target's distance. And the frame's middle must show the piece: a big cluster's nearest point can lie
+            // in open air at its box's corner — drum-glass.0.2 and .1.4 looked past the drum's curve into the deep Kelp stop's
+            // face 3 m off — so an eye whose nine rays meet nothing of the piece, six or more of them another piece's opaque
+            // wall within 1 m past the target, is dropped too)
+            { const LP = Math.max(ex, ez) > 7 ? T : Q.set(cx, ty, cz), lx = LP.x - E.x, ly = LP.y - E.y, lz = LP.z - E.z;
+              const yaw = Math.atan2(lz, lx), pit = Math.atan2(ly, Math.hypot(lx, lz)), far = 0.8 * ql;
+              let n15 = 0, nT = 0, cen = false, nHit = 0, nOther = 0;
               for (const dw of [-0.35, 0, 0.35]) for (const dp of [-0.21, 0, 0.21]) {
-                const a = yaw + dw, p = pit + dp, h = ray(E, Math.cos(p) * Math.cos(a), Math.sin(p), Math.cos(p) * Math.sin(a), Math.max(1.2, far));
+                const a = yaw + dw, p = pit + dp, h = ray(E, Math.cos(p) * Math.cos(a), Math.sin(p), Math.cos(p) * Math.sin(a), Math.max(1.5, ql + 1.0));
+                if (h.hit && c.ids.has(h.block)) nHit++;
                 if (!h.hit || c.ids.has(h.block) || Math.abs(h.normal.y) >= 0.7) continue;
-                if (h.dist <= 1.2) n12++;
+                if (!L.blocks[h.block]?.hidden) nOther++;
+                if (h.dist <= 1.5) n15++;
                 if (h.dist < far) nT++;
+                if (dw === 0 && dp === 0 && h.dist < 0.5 * ql) cen = true;
               }
-              if (n12 >= 3 || nT >= 4) continue; }
+              if (n15 >= 3 || nT >= 4 || cen || (nHit === 0 && nOther >= 6)) continue; }
             cand.push({ n, d, brg: Math.atan2(n.z - cz, n.x - cx), t: [tx, ty, tz] });
           }
           const picked = [];
