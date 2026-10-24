@@ -31,20 +31,23 @@ export const RACE_BOULDER = { x: 0.85, z: 0, w: 1.0, d: 1.0, y0: 0, y1: 1.0, ink
 // and one a kid can't clear hides the lake from the lookout. So the lava-facing rim carries a crown of basalt pipes —
 // the Organ Pipes' own motif, hexagonal, 2.0–2.2 m tall (over the 1.8 m a kid reaches), 0.26 m across, with clear gaps
 // of ≤ 0.6 m (a kid is 0.76 m across, a squid too): nobody passes or climbs it, and you see and shoot between them
-// (~63 % open). The crown runs from the middle of the north-west edge round the west corner, the south-west, south
-// (the stub fills its middle) and south-east edges and the east corner to the middle of the north-east edge (a crown
-// ending 0.86 m up that edge let a jump slip past its end onto the causeway: 19.4 m); the north flat (the climb from
-// B) and the north halves of the edges beside it stay open. Pipes are rider parts: un-inked (no squid climbs them),
-// roofs; 12 per lookout (lavaCore LAVA.maxParts 40 → 64: 60 parts, what Treehills runs)
+// (~60 % open). The crown runs from the north-west corner round the west corner, the south-west, south (the stub fills
+// its middle) and south-east edges and the east corner to the north-east corner (fix round 6 stopped at the middles of
+// the north-west and north-east edges; fix round 7 closed them, below); the north flat (the climb from B) stays open.
+// Pipes are rider parts: un-inked (no squid climbs them), roofs; 14 per lookout (lavaCore LAVA.maxParts 64: all 64 used)
 export const CROWN = (() => {
   const R0 = 2.5, IN = 0.16, PW = 0.26, D = Math.PI / 180, Li = R0 - (IN * 2) / Math.sqrt(3);
   const Ci = (a) => [Li * Math.cos(a * D), Li * Math.sin(a * D)];
-  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], lerp = (a, b, f) => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+  const lerp = (a, b, f) => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
   // (each pipe square to the rim it stands on: its collider turned along that edge — a corner pipe along the bisector)
   const pts = [], add = (q, a, b) => { const yaw = Math.atan2(-(b[1] - a[1]), b[0] - a[0]); const o = pts.find((p) => Math.hypot(p[0] - q[0], p[1] - q[1]) < 0.05); if (o) o[2] = (o[2] + yaw) / 2 + (Math.abs(o[2] - yaw) > Math.PI ? Math.PI : 0); else pts.push([q[0], q[1], yaw]); };
-  const half = (a, b) => { const m = mid(a, b); add(m, a, b); add(lerp(m, b, 0.5), a, b); };      // a half edge: its middle, one between
   const full = (a, b, inner = 2) => { add(a, a, b); for (let k = 1; k <= inner; k++) add(lerp(a, b, k / (inner + 1)), a, b); add(b, a, b); };
-  half(Ci(120), Ci(180)); full(Ci(180), Ci(240)); full(Ci(240), Ci(300), 0); full(Ci(300), Ci(0)); half(Ci(60), Ci(0));
+  // (fix round 7, review 7: the north-west and north-east edges were crowned only on their lake halves; a jump out through
+  // an open half, steered 45° in the air, swung round the crown's end onto the causeway — 16.9 m saved. One more pipe a
+  // quarter of the way from the north flat left 0.45 m by the corner: steered 10 frames up, 16.1 m. Both edges are now
+  // crowned whole, as the others — 4 pipes, 0.51 m clear — with the same 14 pipes; only the north flat, the climb from B,
+  // is open)
+  full(Ci(120), Ci(180)); full(Ci(180), Ci(240)); full(Ci(240), Ci(300), 0); full(Ci(300), Ci(0)); full(Ci(60), Ci(0));
   const H = [2.0, 2.2, 2.1];   // (organ-pipe heights in turn: all over a kid's 1.8 m reach, under rule 22's 2.2 m sky)
   return pts.map((q, i) => ({ x: Math.round(q[0] * 1000) / 1000, z: Math.round(q[1] * 1000) / 1000, w: PW, d: PW, yaw: Math.round((q[2] * 180) / Math.PI * 10) / 10, y0: 0, y1: H[i % 3], ink: false, pipe: true }));
 })();

@@ -243,8 +243,11 @@
       let crown = null;
       if (pipes.length) {
         const ang = (q) => Math.atan2(q.cz - r.z, q.cx - r.x), ord = [...pipes].sort((a, b) => ((ang(a) - ang(pipes[0]) + 4 * Math.PI) % (2 * Math.PI)) - ((ang(b) - ang(pipes[0]) + 4 * Math.PI) % (2 * Math.PI)));
-        // (walk the pipes in order round the column from the crown's open end: the largest angular step is the open side)
-        let gapAt = 0, big = -1; for (let i = 0; i < ord.length; i++) { const a0 = ang(ord[i]), a1 = ang(ord[(i + 1) % ord.length]); const da = ((a1 - a0) + 4 * Math.PI) % (2 * Math.PI); if (da > big) { big = da; gapAt = i; } }
+        // (walk the pipes in order round the column from the crown's open end: the largest angular step is the open side —
+        // fix round 7: of equal steps (the north flat and the south flat are both a 60° step since the north-east and
+        // north-west edges are crowned whole) the one the stub does not stand in)
+        const stubIn = (p, q) => { const mx = (p.cx + q.cx) / 2, mz = (p.cz + q.cz) / 2, ix = r.x - mx, iz = r.z - mz, il = Math.hypot(ix, iz) || 1; return !!(solidAny(mx, top + 0.5, mz) || solidAny(mx + (ix / il) * 0.3, top + 0.5, mz + (iz / il) * 0.3)); };
+        let gapAt = 0, big = -1; for (let i = 0; i < ord.length; i++) { const a0 = ang(ord[i]), a1 = ang(ord[(i + 1) % ord.length]); const da = ((a1 - a0) + 4 * Math.PI) % (2 * Math.PI); if (da > big + 1e-3 || (da > big - 1e-3 && !stubIn(ord[i], ord[(i + 1) % ord.length]))) { big = Math.max(big, da); gapAt = i; } }
         const seq = [...ord.slice(gapAt + 1), ...ord.slice(0, gapAt + 1)];
         let len = 0, openLen = 0, maxRun = 0, run = 0, n = 0;   // (openness: along the pipes' line, the stub's stretch left out)
         for (const hy of [0.5, 1.0, 1.5]) { run = 0;
@@ -400,7 +403,15 @@
     if (sub0 && kid.subId !== sub0) kid.setSub?.(sub0);
     P.clear();
   }
+  // (PAGE_ARGS r44=steer: only the steered rider-top march, to iterate on the crown; the gate then reads only that)
+  // (PAGE_ARGS lv=high: one level; fine=0.15,3.75: the Organ-top pass's grid (m) and heading step (°); sf=6,8,10: the frames
+  // after the jump the stick turns at — a finer look than the gate's 0.3 m, 7.5°, 8 frames)
+  const steerOnly = /(^|[;&])r44=steer/.test(String(window.__pageArgs || ''));
+  const PA = String(window.__pageArgs || ''), lvOnly = /(^|[;&])lv=(low|high)/.exec(PA)?.[2];
+  const fineArg = /(^|[;&])fine=([0-9.]+),([0-9.]+)/.exec(PA), FG = fineArg ? Number(fineArg[2]) : 0.3, FD = fineArg ? Number(fineArg[3]) : 7.5;
+  const SF = (/(^|[;&])sf=([0-9,]+)/.exec(PA)?.[2] || '8').split(',').map(Number);
   for (const level of ['low', 'high']) {
+    if (lvOnly && level !== lvOnly) { jumps[level] = { edgesChecked: 0, deep: 0, strip: 0, gaps: [], runCross: [], skill: [], carry: [], steer: [], seam: [], steerCands: 0, steerTried: 0, fine: {} }; continue; }
     setT(level === 'low' ? 10 : 50);
     // edge nodes over lava, and in 16 directions the first floor across (a march in 0.1 m over the region's lava).
     // (fix round 6, review 6 issue 1 — the march looked in too few places: it took a far floor only within 1.3 m below the
@@ -443,7 +454,13 @@
     // 'off'; its gain is always measured from where it landed). `carry`: the Bazookarp carrier's movement (actor.carry set:
     // every speed × 0.8, no sub)
     const RUNUPS = [2.6, 1.5, 0.8];
-    const tryJump = (c, swim, pressF = null, runup = 2.6, carry = false) => {
+    // (fix round 7) `steer`: the stick turned by that angle 8 frames after the jump (air steering); `lavaRun`: the longest
+    // stretch of the flight where the kid's whole footprint (centre and 0.24 m round it) is over lava (a seam its feet span
+    // is no gap); `crossed2` (rider-top take-offs, c.own): such a stretch over 0.35 m, down alive past it on floor the lava
+    // does not cover, not on its own rider
+    const FOOT = PLAYER.footRadius;
+    const footLava = (x, z, y) => lavaAt(x, z, y) && lavaAt(x + FOOT, z, y) && lavaAt(x - FOOT, z, y) && lavaAt(x, z + FOOT, y) && lavaAt(x, z - FOOT, y);
+    const tryJump = (c, swim, pressF = null, runup = 2.6, carry = false, steer = 0, sfr = 8) => {
       const sx = c.x + c.dx * (c.edge - runup), sz = c.z + c.dz * (c.edge - runup), sy = lvl.groundHeight(sx, sz, c.y + 0.6);
       if (!(sy > c.y - 0.35)) return null;   // (the run-up does not fit on the take-off's top)
       if (swim) { P.clear(); for (let s = -0.2; s <= runup - 0.2; s += 0.5) P.splat(V(sx + c.dx * s, sy + 0.05, sz + c.dz * s), 0.9, kid.team, { instant: true, seed: s }); }
@@ -454,9 +471,11 @@
       if (carry) kid.carry = { since: 0, sp: null, kick: null };
       it.move.set(0, 0, 0); it.jump = it.squid = it.fire = it.sub = it.special = false;
       for (let i = 0; i < 3; i++) kid.update(dt);
-      let jumped = false, jf = -1, over = false;
+      let jumped = false, jf = -1, over = false, run = 0, maxRun = 0, cRun = 0, cMax = 0, px = 0, pz = 0;
+      const sdx = c.dx * Math.cos(steer) - c.dz * Math.sin(steer), sdz = c.dx * Math.sin(steer) + c.dz * Math.cos(steer);
       for (let f = 0; f < 200; f++) {
-        it.move.set(c.dx, 0, c.dz); it.squid = swim && (pressF == null || jf < 0 || f - jf < pressF);
+        if (steer && jf >= 0 && f - jf >= sfr) it.move.set(sdx, 0, sdz); else it.move.set(c.dx, 0, c.dz);
+        it.squid = swim && (pressF == null || jf < 0 || f - jf < pressF);
         const along = (kid.pos.x - c.x) * c.dx + (kid.pos.z - c.z) * c.dz;
         it.jump = !jumped && along >= c.edge - 0.35;
         if (it.jump) { jumped = true; jf = f; }
@@ -464,6 +483,9 @@
         kid.update(dt);
         if (!kid.alive) { kid.carry = null; return { died: true, along: r2((kid.pos.x - c.x) * c.dx + (kid.pos.z - c.z) * c.dz) }; }
         if (jumped && !kid.grounded && !over && lavaAt(kid.pos.x, kid.pos.z, kid.pos.y)) over = true;
+        if (jumped && !kid.grounded && footLava(kid.pos.x, kid.pos.z, kid.pos.y)) { run += Math.hypot(kid.pos.x - px, kid.pos.z - pz); maxRun = Math.max(maxRun, run); } else run = 0;
+        if (jumped && !kid.grounded && lavaAt(kid.pos.x, kid.pos.z, kid.pos.y)) { cRun += Math.hypot(kid.pos.x - px, kid.pos.z - pz); cMax = Math.max(cMax, cRun); } else cRun = 0;
+        px = kid.pos.x; pz = kid.pos.z;
         if (jumped && f - jf > 4 && kid.grounded) break;
       }
       kid.carry = null;
@@ -471,7 +493,8 @@
       const gb = kid.ground && lvl.blocks[kid.ground.block];
       const gl = lvl.groundHeight(kid.pos.x, kid.pos.z, kid.pos.y + 0.3);
       const side = Math.abs((kid.pos.x - c.x) * c.dz - (kid.pos.z - c.z) * c.dx);   // (off the line it was aimed along)
-      return { crossed: kid.alive && kid.grounded && over && along > c.lava0 + 0.3 && gl > Lv.y + K - 0.01 && !Lv.covers(kid.pos.x, kid.pos.z, kid.pos.y),
+      const dry = kid.alive && kid.grounded && gl > Lv.y + K - 0.01 && !Lv.covers(kid.pos.x, kid.pos.z, kid.pos.y);
+      return { crossed: dry && over && along > c.lava0 + 0.3, crossed2: !!c.own && dry && maxRun > 0.35 && !(gb && c.own.has(gb.id)), seam: !!c.own && dry && maxRun <= 0.35 && cMax > 0.35 && !(gb && c.own.has(gb.id)), lavaRun: r2(maxRun), centreRun: r2(cMax),
         off: side > 1.0, side: r2(side), along: r2(along), y: r2(kid.pos.y), alive: kid.alive, at: [r2(kid.pos.x), r2(kid.pos.z)], at3: [kid.pos.x, kid.pos.y, kid.pos.z], on: gb ? (gb.tag || (gb.dynamic ? 'rider' : '#' + gb.id)) : null };
     };
     // the nav detour each of them saves ("gain": the nav walk from the take-off node to the node where it came down,
@@ -481,7 +504,7 @@
     // (the dash jumps physically: the real Dash Pellet, an air dash pressed on the rise, at the apex and on the fall — 8 /
     // 18 / 30 frames after the jump — from a running jump and from a swim jump out of own ink; the farthest first)
     const dashTries = [[true, 30], [true, 18], [false, 30], [false, 18], [true, 8], [false, 8]];
-    for (const c of cands) {
+    for (const c of steerOnly ? [] : cands) {
       const row = { from: [r2(c.x), r2(c.y), r2(c.z)], dir: Math.round((Math.atan2(c.dz, c.dx) * 180) / Math.PI), gap: r2(c.gap), drop: r2(c.y - c.gy), strip: c.strip || undefined, edgeAt: [r2(c.x + c.dx * c.edge), r2(c.z + c.dz * c.edge)], farAt: [r2(c.x + c.dx * c.far), r2(c.z + c.dz * c.far)] };
       let done = false, fit = null;
       for (const ru of RUNUPS) {
@@ -495,6 +518,87 @@
       if (sw && sw.crossed) { skillX.push({ ...row, how: 'swim', runup: fit, off: sw.off, side: sw.side, landed: sw.at, landedY: sw.y, on: sw.on, gain: r2(detour(c, sw)), c }); continue; }
       for (const [s2, f] of dashTries) { const r = tryJump(c, s2, f, fit); if (r && r.crossed) { skillX.push({ ...row, how: (s2 ? 'swim+dash@' : 'run+dash@') + f, runup: fit, off: r.off, side: r.side, landed: r.at, landedY: r.y, on: r.on, gain: r2(detour(c, r)) }); break; } }
     }
+    // (fix round 7, review 7 issue 2 — the march flew every jump straight, and a kid steers in the air: off Organ L's HIGH top
+    // a jump out through the crown's open north-east half, steered 45° right 8 frames up, came down on the causeway saving
+    // 16.5 m.) From every rider-top node (the Organs, the stones) whose top ends within 3 m along a heading, whatever lies
+    // past it: the first run-up of 2.6 / 1.5 / 0.8 m that fits, the stick turned 0 / ±45 / ±90° 8 frames after the jump; a
+    // crossing is `crossed2` (over 0.35 m with the whole footprint over lava, down alive past it, not on its own rider); per
+    // node and heading the steer that saves the most counts. In the gate with the straight running jumps
+    const STEERS = [0, Math.PI / 4, -Math.PI / 4, Math.PI / 2, -Math.PI / 2];
+    const steerX = [], seamX = []; let steerTried = 0, steerCands = 0;
+    // one take-off, one run-up: every steer (and steer frame) → the crossing that saves the most, and the most-saving "seam
+    // flight" (over lava only where the feet would span it: the notch's 0.15–0.2 m seams round the Organs — listed, no gate);
+    // null when the run-up does not fit
+    const steerTry = (c, ru, gainOf, row) => {
+      let best = null, seam = null, fits = false;
+      for (const st of STEERS) for (const sf of st ? SF : [8]) {
+        const q = tryJump(c, false, null, ru, false, st, sf);
+        if (!q) return null;
+        fits = true; steerTried++;
+        if (!q.crossed2 && !q.seam) continue;
+        const gain = gainOf(q), x = { ...row, how: 'run+steer' + Math.round((st * 180) / Math.PI) + (SF.length > 1 && st ? '@' + sf : ''), gap: q.lavaRun, lavaRun: q.lavaRun, centreRun: q.centreRun, drop: r2(c.y - q.y), landed: q.at, landedY: q.y, on: q.on, gain: gain === null ? null : r2(gain) };
+        if (q.crossed2) { if (!best || (gain ?? 999) > (best.gain ?? -1)) best = x; }
+        else if (!seam || (gain ?? 999) > (seam.gain ?? -1)) seam = x;
+      }
+      return fits ? { best, seam } : null;
+    };
+    for (const nd of nav.nodes) {
+      if (!nav.valid[nd.id] || M.kind[nd.id] !== 2 || M.pose[nd.id] !== (level === 'high' ? 1 : 0)) continue;
+      const gh0 = lvl.groundHeight(nd.x, nd.z, nd.y + 0.3); if (!(Math.abs(gh0 - nd.y) < 0.3)) continue;
+      const RR = Lv.riders.find((q) => q.r === W.riders[M.rider[nd.id]]), own = new Set((RR?.blocks || []).map((b) => b && b.id));
+      for (let k = 0; k < 16; k++) {
+        const a = (k * Math.PI) / 8, dx = Math.cos(a), dz = Math.sin(a);
+        let edge = null;
+        for (let s2 = 0.1; s2 <= 3.0; s2 += 0.1) { const x = nd.x + dx * s2, z = nd.z + dz * s2; if (lavaAt(x, z, nd.y) || ghAt(x, z, nd.y) < nd.y - 0.3) { edge = s2; break; } }
+        if (edge === null) continue;
+        const c = { id: nd.id, x: nd.x, y: nd.y, z: nd.z, dx, dz, edge, lava0: edge, own, rider: RR?.r?.id };
+        steerCands++;
+        for (const ru of RUNUPS) {
+          const t = steerTry(c, ru, (q) => detour(c, q), { from: [r2(c.x), r2(c.y), r2(c.z)], rider: c.rider, dir: Math.round((a * 180) / Math.PI), runup: ru });
+          if (!t) continue;
+          if (t.best) steerX.push(t.best);
+          if (t.seam) seamX.push(t.seam);
+          break;
+        }
+      }
+    }
+    // (and the Organ tops finer, as the reviewer's probe-crown7c: the lookout is the launch pad. Every point of a 0.3 m grid
+    // 0.25–1.15 m in from the rim, not in a part, every 7.5° that leaves the top within 1.2 m; run-ups 0.8 / 1.5 / 2.6 m —
+    // the first at which any steer crosses — the five steers, the most saved; the gain from the top's nav node nearest the
+    // point (on the top). Organ L's HIGH top at fix round 6's geometry: 16.9 m, as review 7's 16.5 / 16.9)
+    const fine = { points: 0, grid: FG, deg: FD, steerFrames: SF };
+    {
+      const hp2 = V(0, 0, 0), qb2 = [], NG = Math.round(2.7 / FG);
+      for (const RR of Lv.riders) {
+        const r = RR.r; if (r.kind !== 'float') continue;
+        const top = RR.top, own = new Set(RR.blocks.map((b) => b && b.id));
+        const inPart = (x0, z0) => { for (let k = 0; k < 9; k++) { const a2 = (k * Math.PI) / 4, rr = k === 8 ? 0 : 0.42, x = x0 + Math.cos(a2) * rr, z = z0 + Math.sin(a2) * rr;
+          for (const y of [top + 0.3, top + 0.9]) { hp2.set(x, y, z); for (const id of lvl.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, qb2)) { const b = lvl.blocks[id]; if (b.solid && b.dynamic && own.has(b.id) && b.center.y > top && lvl.pointInBlock(b, hp2, 0.001)) return true; } } } return false; };
+        for (let ix = -NG; ix <= NG; ix++) for (let iz = -NG; iz <= NG; iz++) {
+          const wx = r.x + ix * FG, wz = r.z + iz * FG;
+          if (!C.inRider(r, wx, wz, -0.25) || C.inRider(r, wx, wz, -1.15)) continue;
+          if (Math.abs(lvl.groundHeight(wx, wz, top + 0.3) - top) > 0.05 || inPart(wx, wz)) continue;
+          const m0 = nav.nearest(V(wx, top, wz), 0.6, true); if (m0 < 0 || Math.abs(nav.nodes[m0].y - top) > 0.3) continue;
+          const n0 = nav.nodes[m0]; fine.points++;
+          for (let k = 0; k < Math.round(360 / FD); k++) {
+            const a = (k * FD * Math.PI) / 180, dx = Math.cos(a), dz = Math.sin(a);
+            let ex = null; for (let s2 = 0.05; s2 <= 1.3; s2 += 0.05) if (!C.inRider(r, wx + dx * s2, wz + dz * s2)) { ex = s2; break; }
+            if (ex === null) continue;
+            const c = { id: m0, x: wx, y: top, z: wz, dx, dz, edge: 0.35, lava0: 0.35, own, rider: r.id };
+            let seam = null;
+            for (const ru of [0.8, 1.5, 2.6]) {
+              const sx = wx - dx * ru, sz = wz - dz * ru;
+              if (!C.inRider(r, sx, sz, -0.2) || Math.abs(lvl.groundHeight(sx, sz, top + 0.3) - top) > 0.05 || inPart(sx, sz)) continue;
+              const t = steerTry(c, ru + 0.35, (q) => detour({ id: m0, x: n0.x, z: n0.z }, q), { from: [r2(wx), r2(top), r2(wz)], rider: r.id, fine: true, dir: Math.round((a * 180) / Math.PI), runup: ru });
+              if (!t) continue;
+              if (t.seam && (!seam || (t.seam.gain ?? 999) > (seam.gain ?? -1))) seam = t.seam;
+              if (t.best) { steerX.push(t.best); break; }
+            }
+            if (seam) seamX.push(seam);
+          }
+        }
+      }
+    }
     // (fix round 6, review 6 issue 3: the Bazookarp carrier swims its own ink (SPEC S21, 9.44 m/s), so its swim jumps are
     // skill movement like everyone's. Every swim crossing saving > 10 m is tried again with the carrier's movement
     // (actor.carry set): the list the Bazookarp layout builder places the Pond, the weirs and the Gate against — karp-stages/)
@@ -507,7 +611,7 @@
     for (const x of skillX) delete x.c;
     if (sub0 && kid.subId !== sub0) kid.setSub?.(sub0);
     P.clear();
-    jumps[level] = { edgesChecked: cands.length, deep: cands.filter((c) => c.deep).length, strip: cands.filter((c) => c.strip).length, gaps, runCross: runX, skill: skillX, carry: carryX };
+    jumps[level] = { edgesChecked: cands.length, deep: cands.filter((c) => c.deep).length, strip: cands.filter((c) => c.strip).length, gaps, runCross: runX, skill: skillX, carry: carryX, steer: steerX, seam: seamX, steerCands, steerTried, fine };
   }
   // the places: crossings folded onto Alpha's half (the 180° turn) and grouped by the 3 m cell of their start
   const places = (L) => {
@@ -529,12 +633,25 @@
   // skill-route bar, the largest under 15 m. Fix round 6, the lead after review 6: the gate stands on the corrected march
   // (any floor below, dry strips, 2.6 / 1.5 / 0.8 m run-ups); the 15 m margin is part of the gate; a crossing whose gain
   // could not be measured fails it)
-  const allRun = [...jumps.low.runCross, ...jumps.high.runCross];
+  const allRun = [...jumps.low.runCross, ...jumps.high.runCross, ...jumps.low.steer, ...jumps.high.steer];   // (fix round 7: and the steered jumps off rider tops)
   const runMax = allRun.reduce((m, x) => Math.max(m, x.gain ?? 0), 0);
   R('rule 44: a plain running jump across the lava at LOW or HIGH saves at most 20 m against the dry way round, the largest under 15 m (the lead\'s option 1 and margin; the march takes any standable floor across the lava down to the lava, take-offs that drop onto a dry strip first, and run-ups of 2.6 / 1.5 / 0.8 m; every sample past a 0.35 m seam tried; a flight landing > 1 m off its line counted, flagged off; gains from where it landed)',
     allRun.every((x) => x.gain !== null && x.gain <= 20) && runMax < 15,
-    { largestM: r2(runMax), margin: 'under 15 m', marginMet: runMax < 15, low: { ...sum(jumps.low.runCross), edges: jumps.low.edgesChecked, deepEdges: jumps.low.deep, stripEdges: jumps.low.strip, places: places(jumps.low.runCross).length }, high: { ...sum(jumps.high.runCross), edges: jumps.high.edgesChecked, deepEdges: jumps.high.deep, stripEdges: jumps.high.strip, places: places(jumps.high.runCross).length } });
+    { largestM: r2(runMax), margin: 'under 15 m', marginMet: runMax < 15, steeredMax: { low: r2(jumps.low.steer.reduce((m, x) => Math.max(m, x.gain ?? 0), 0)), high: r2(jumps.high.steer.reduce((m, x) => Math.max(m, x.gain ?? 0), 0)) }, low: { ...sum(jumps.low.runCross), edges: jumps.low.edgesChecked, deepEdges: jumps.low.deep, stripEdges: jumps.low.strip, places: places(jumps.low.runCross).length }, high: { ...sum(jumps.high.runCross), edges: jumps.high.edgesChecked, deepEdges: jumps.high.deep, stripEdges: jumps.high.strip, places: places(jumps.high.runCross).length } });
   for (const lv of ['low', 'high']) { const pl = places(jumps[lv].runCross); for (let q = 0; q * 12 < pl.length; q++) R(`rule 44 running-jump places: ${lv} ${q}`, true, pl.slice(q * 12, (q + 1) * 12)); R(`rule 44 running jumps, the largest gains: ${lv}`, true, top(jumps[lv].runCross, 15)); }
+  // (fix round 7: the steered running jumps off rider tops, in the gate above)
+  R('rule 44 (information): running jumps off rider tops steered in the air (0 / ±45 / ±90° after 8 frames; a crossing has over 0.35 m with the whole footprint over lava) — in the gate above', true,
+    { low: { ...sum(jumps.low.steer), headings: jumps.low.steerCands, flights: jumps.low.steerTried, fine: jumps.low.fine, byRider: [...new Set(jumps.low.steer.map((x) => x.rider))].map((id) => [id, jumps.low.steer.filter((x) => x.rider === id).reduce((m, x) => Math.max(m, x.gain ?? 0), 0)]) },
+      high: { ...sum(jumps.high.steer), headings: jumps.high.steerCands, flights: jumps.high.steerTried, fine: jumps.high.fine, byRider: [...new Set(jumps.high.steer.map((x) => x.rider))].map((id) => [id, jumps.high.steer.filter((x) => x.rider === id).reduce((m, x) => Math.max(m, x.gain ?? 0), 0)]) },
+      topLow: top(jumps.low.steer, 12), topHigh: top(jumps.high.steer, 15) });
+  // (the flights off rider tops that pass over lava only where a kid's feet would span it — the 0.15–0.2 m seams of the
+  // notch round the Organs, crossed at a slant — and come down on the island: drops off the column past the notch, not
+  // crossings of the lava. Their "gain" is the climb down the Organs the nav takes (it has no 3.45 m drop link); review 7
+  // discounted them by hand ("only 0.4–0.8 m of lava"). Listed, no gate)
+  R('rule 44 (information): seam flights off rider tops — over lava only where the feet span it (the centre over lava > 0.35 m, the footprint ≤ 0.35 m): drops past the notch, no gate', true,
+    { low: { n: jumps.low.seam.length, maxGain: r2(jumps.low.seam.reduce((m, x) => Math.max(m, x.gain ?? 0), 0)), maxCentreRun: r2(jumps.low.seam.reduce((m, x) => Math.max(m, x.centreRun ?? 0), 0)) },
+      high: { n: jumps.high.seam.length, maxGain: r2(jumps.high.seam.reduce((m, x) => Math.max(m, x.gain ?? 0), 0)), maxCentreRun: r2(jumps.high.seam.reduce((m, x) => Math.max(m, x.centreRun ?? 0), 0)), on: [...new Set(jumps.high.seam.map((x) => x.on))] },
+      topHigh: [...jumps.high.seam].sort((a, b) => (b.gain ?? -1) - (a.gain ?? -1)).slice(0, 6) });
   const over = (L) => L.filter((x) => !(x.gain <= 20));
   // (fix round 5, option 1: swim and dash jumps over the lava are accepted skill movement — listed, no gate. Fix round 6,
   // the lead after review 6: the Bazookarp carrier swims its own ink and makes swim jumps too — accepted as skill movement
@@ -548,7 +665,7 @@
   // (the gap march's 0.35–4.4 m samples: in the gate above since fix round 4; here how many there are and what crossed them)
   R('rule 44 (information): the gap march\'s 0.35–4.4 m samples between standable floors over lava — each one tried (in the gates above)', true, { low: { n: jumps.low.gaps.length, run: jumps.low.runCross.filter((x) => x.gap < 4.4).length, skill: jumps.low.skill.filter((x) => x.gap < 4.4).length, eg: jumps.low.gaps.slice(0, 6) }, high: { n: jumps.high.gaps.length, run: jumps.high.runCross.filter((x) => x.gap < 4.4).length, skill: jumps.high.skill.filter((x) => x.gap < 4.4).length, eg: jumps.high.gaps.slice(0, 6) } });
   // (the whole lists, for DESIGN §3.5 and the Bazookarp layout: PAGE_ARGS full=1)
-  if (/(^|[;&])full=1/.test(String(window.__pageArgs || ''))) R('rule 44 (information): every crossing (LOW, HIGH)', true, { low: { run: jumps.low.runCross, skill: jumps.low.skill, carry: jumps.low.carry }, high: { run: jumps.high.runCross, skill: jumps.high.skill, carry: jumps.high.carry } });   // (PAGE_ARGS full=1)
+  if (/(^|[;&])full=1/.test(String(window.__pageArgs || ''))) R('rule 44 (information): every crossing (LOW, HIGH)', true, { low: { run: jumps.low.runCross, steer: jumps.low.steer, skill: jumps.low.skill, carry: jumps.low.carry }, high: { run: jumps.high.runCross, steer: jumps.high.steer, skill: jumps.high.skill, carry: jumps.high.carry } });   // (PAGE_ARGS full=1)
 
   } catch (e) { R('rule 44: the check itself threw', false, { error: String(e && e.stack || e).slice(0, 400) }); }
 
