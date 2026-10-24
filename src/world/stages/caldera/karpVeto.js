@@ -79,6 +79,10 @@ export const KARP_VETO = [
   [22.5, 2.4, -5.5, 22.5, 1.4, -2.5], [-14.5, 1.4, -3.5, -14.5, 1.3, -0.5], [-26.5, 1.4, -2.5, -23.5, 1.25, -2.5],
   [-14.5, 1.3, -0.5, -14.5, 1.4, -3.5], [-23.5, 1.25, -4.5, -25.5, 0.2, -2.5], [-23.5, 1.25, -2.5, -26.5, 1.4, -2.5],
   [-22.5, 1.25, -2.5, -25.5, 0.2, -2.5], [-10.5, 3.5, -8.5, -11.5, 2.3, -11.25], [-9.5, 3.5, -8.5, -8.5, 2.3, -11.25],
+  // (fix round 7: the crown closed Organ L's north-east and north-west edges, so its top's nodes moved — gaps down off L
+  // and B onto the socket collar and the coping across the notch: lava-karp K8's new crossings, pasted)
+  [-10.5, 2.3, -12.5, -12.5, 1.4, -11.5], [-9.5, 2.3, -11.5, -12.5, 1.4, -11.5], [-9.5, 1.8, -9.5, -7.5, 1.2, -10.5],
+  [-8.25, 2.3, -11.5, -8.25, 1.4, -8.5],
 ];
 
 // (fix round 5) the hop / gap edges a carrying kid does not make (Bazookarp checker #16, PHYS=1: stepped through actor.update
