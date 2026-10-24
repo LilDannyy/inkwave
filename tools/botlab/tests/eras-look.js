@@ -324,6 +324,8 @@
     const want = [1, 2, 3].map((e) => (W.E.look?.[e]?.lamps || '').toLowerCase());
     R('art phase (d): the lamps\' light per era (eras.look[e].lamps on the decor glass, ENGINE rule 42), the decor\'s iron bodies hidden (the eras\' own lamps stand on the spots)',
       lamp.join() === want.join() && body.length > 0 && body.every((v) => !v) && (L.layout.decor?.lamps?.length || 0) === 6, { lamp, want, bodies: body, spots: L.layout.decor?.lamps?.length });
+    // (e) Tartar rang once in this page's own intro fly-in (DESIGN §3.5: the sound taught before the first jump)
+    R('art phase (e): Tartar rings once in the intro fly-in (the page\'s own match intro: stats.introRing, one ring counted by the effects)', E.stats.introRing === 1, { introRing: E.stats.introRing ?? 0, rings: W.fx?.stats?.rings, state: g.match.state });
     E.debugJump(1, { instant: true }); step(0.1);
   }
   return out;
