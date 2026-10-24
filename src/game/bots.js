@@ -1250,7 +1250,12 @@ export class BotBrain {
     // [b5-caldera] fix round 3: a route's own hop is flown at the node it was made for (as a player commits to a jump): a
     // goal picked again mid-air turned a hop off the Casting Floor round toward the next goal and dropped it into the lake
     if (this._hopPath && this._hopTo && !a.grounded && !gOff && !this._climbAim) { const n = this._hopTo, dx = n.x - a.pos.x, dz = n.z - a.pos.z, d = Math.hypot(dx, dz); if (d > 0.3) it.move.set(dx / d, 0, dz / d); }
-    if (!a.grounded && !gNear && !a.climbing && !gOff && !this._hopPath && !a.superJumpState && (this._arcWet(a, a.vel.x, a.vel.z) || this._flightWet(a, it.move))) {   // (fix round 3: a climb's own hop too, while not on the wall — a squid climb up the Ladle Road's face let go and flew off the Horn Step into the arm)   // [b5-caldera] fix round 3: _flightWet (air control keeps pulling it the brain's way: a twins hop drifted 1.3 m off the edge at 3 m/s while the ballistic arc still read the floor it left)
+    // [b5-caldera] fix round 7: a kit leap (the Mitts) flies as it was planned — its landing passed the 2 s look-ahead at the
+    // release (mitts landingOk / botReleaseOk) — so the stick holds along it and the air guard never steers it (the guard's
+    // pick bent a leap off the causeway 0.33 m short into the lava: lava-bots edges, review 7)
+    const kLeap = !a.grounded && !!a.weaponRunner.kit?.leaping;
+    if (kLeap) { const v = Math.hypot(a.vel.x, a.vel.z); if (v > 0.05) it.move.set(a.vel.x / v, 0, a.vel.z / v); }
+    if (!a.grounded && !kLeap && !gNear && !a.climbing && !gOff && !this._hopPath && !a.superJumpState && (this._arcWet(a, a.vel.x, a.vel.z) || this._flightWet(a, it.move))) {   // (fix round 3: a climb's own hop too, while not on the wall — a squid climb up the Ladle Road's face let go and flew off the Horn Step into the arm)   // [b5-caldera] fix round 3: _flightWet (air control keeps pulling it the brain's way: a twins hop drifted 1.3 m off the edge at 3 m/s while the ballistic arc still read the floor it left)
       const bx = (this._lastFoot?.x ?? a.pos.x) - a.pos.x, bz = (this._lastFoot?.z ?? a.pos.z) - a.pos.z, bl = Math.hypot(bx, bz);
       // [b5-caldera] fix round 6: the way back is flown in the model first, then no steer, then the 8 headings — the first
       // that comes down dry is kept 0.1 s (a Mitts bot letting go of a wall, its last foot a Race stone, steered "back" at

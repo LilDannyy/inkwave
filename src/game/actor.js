@@ -349,13 +349,13 @@ export class Actor {
     if (this.jumpBuffer > 0 && !isSquid && !this._spWeapon && !this.carry && this.weaponRunner.tryDodge(intent)) this.jumpBuffer = 0;   // [b5-karp] (no roll while carrying)
     // kit weapons (kits/*.js) may take the jump press instead: MAIN_KITS[kind].jump(runner, intent) → true swallows it
     // (Sponge Mitts: fire + jump charges a leap; jump lets go of a wall)
-    if (this.jumpBuffer > 0 && !isSquid && !dashing && !this.carry && MAIN_KITS[this.weapon.kind]?.jump?.(this.weaponRunner, intent)) this.jumpBuffer = 0;   // [b5-karp] (no Mitts leap while carrying)
+    const onRoof = this.grounded && this.ground.hit && this.ground.block >= 0 && this.isRoofFor(G.level.blocks[this.ground.block]);   // [b5-karp] isRoofFor
+    if (this.jumpBuffer > 0 && !isSquid && !dashing && !this.carry && !onRoof && MAIN_KITS[this.weapon.kind]?.jump?.(this.weaponRunner, intent)) this.jumpBuffer = 0;   // [b5-karp] (no Mitts leap while carrying) [b5-caldera] (nor off a roof: the roof gate below holds for a kit's jump too)
     if (inkMul !== 1) this.ink *= inkMul;
 
     // ---- jump (buffered, with coyote time). An off-limits top (a roof) is no ground to jump from: you slide off it, and
     // no coyote jump carries off its edge either (perches, railings and swim-jumps are ground as usual)
     // ([b5-sub-dash] none during a dash, and no coyote jump off a dash: it never gains height)
-    const onRoof = this.grounded && this.ground.hit && this.ground.block >= 0 && this.isRoofFor(G.level.blocks[this.ground.block]);   // [b5-karp] isRoofFor
     this.coyote = this.grounded && !onRoof ? P.coyoteTime : onRoof || (dashing && !this.grounded) ? 0 : this.coyote - dt;
     let jumped = false;
     if (this.jumpBuffer > 0 && ((this.grounded && !onRoof) || this.coyote > 0) && !this.climbing && !dashing) {
