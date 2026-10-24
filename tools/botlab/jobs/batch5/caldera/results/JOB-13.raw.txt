@@ -1,0 +1,105 @@
+JOB-13 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 20:25:30
+branch botlab-b5-caldera, ran at b6996b52, exit code 0, wall time 16min
+(a written-up JOB-13.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== rule 44, rule 47 a/c/d, rule 47 b (1)
+== rule 47 b (2)
+== SUMMARY
+### audit-44
+RESULT 37/37
+## rule 44 PASS: largest 14.74 m, steered largest 13.13 m (low 13.13, high 13.13); flights (every take-off, cands/flights/fine) low [16048,190788,6993] high [15056,178790,6993]
+##   {"from":[-8.2,1.4,-22.5],"dir":62,"runup":2.6,"how":"run+steer15@12","any":true,"lavaRun":0.9,"landed":[-4.94,-19.99],"on":"causeway","gain":13.13}
+##   {"from":[-8.2,1.4,-22.5],"dir":62,"runup":2.6,"how":"run+steer15@12","any":true,"lavaRun":0.9,"landed":[-4.94,-19.99],"on":"causeway","gain":13.13}
+##   {"from":[-8.2,1.4,-22.5],"dir":17,"runup":2.6,"how":"run+steer30@8","any":true,"lavaRun":2.58,"landed":[-4.89,-19.94],"on":"causeway","gain":13.06}
+##   {"from":[-8.2,1.4,-22.5],"dir":17,"runup":2.6,"how":"run+steer30@8","any":true,"lavaRun":2.58,"landed":[-4.89,-19.94],"on":"causeway","gain":13.06}
+### audit-47acd
+RESULT 2/2
+## rule 47 PASS: total {"touched":40032,"died":0,"flung":0,"perched":0,"held":1847,"rescued":1847,"rescueFar":0,"rescueMaxM":5.53,"relaunched":0}
+##   a low: trials 4336, touched 4336, died 0, flung 0, perched 0, held 0, rescued 0, rescueFar 0, rescueMaxM 0
+##   a high: trials 5000, touched 5000, died 0, flung 0, perched 0, held 0, rescued 0, rescueFar 0, rescueMaxM 0
+##   c holders: mould-stack ladle-stand slump-hornito slump-hornito caldera-wall caldera-wall caldera-wall caldera-wall mould-stack ladle-stand slump-hornito slump-hornito caldera-wall caldera-wall caldera-wall caldera-wall lava:race3:1 lava:race3~:1
+##   c mitts: trials 1200, touched 1083, died 0, flung 0, perched 0, held 839, rescued 839, rescueFar 0, rescueMaxM 5.53
+##   c run: trials 128, touched 128, died 0, flung 0, perched 0, held 128, rescued 128, rescueFar 0, rescueMaxM 5.53
+##   c swim: trials 310, touched 310, died 0, flung 0, perched 0, held 254, rescued 254, rescueFar 0, rescueMaxM 5.53
+##   c walk: trials 0, touched 0, died 0, flung 0, perched 0, held 0, rescued 0, rescueFar 0, rescueMaxM 0
+##   c rise: trials 616, touched 616, died 0, flung 0, perched 0, held 616, rescued 616, rescueFar 0, rescueMaxM 5.53
+##   d low: trials 14147, touched 14147, died 0, flung 0, perched 0, held 5, rescued 5, rescueFar 0, rescueMaxM 5.53
+##     tall tops: gauge-machine-house 711/805 landed, 0 died; terrace-parapet 448/520 landed, 0 died; terrace-parapet 369/422 landed, 0 died; terrace-parapet 441/473 landed, 0 died; terrace-parapet 415/485 landed, 0 died; terrace-parapet 493/525 landed, 0 died; ladle-parapet 133/177 landed, 0 died; ladle-parapet 162/191 landed, 
+##   d high: trials 14412, touched 14412, died 0, flung 0, perched 0, held 5, rescued 5, rescueFar 0, rescueMaxM 5.53
+##     tall tops: gauge-machine-house 711/805 landed, 0 died; terrace-parapet 294/312 landed, 0 died; terrace-parapet 356/400 landed, 0 died; terrace-parapet 438/470 landed, 0 died; terrace-parapet 415/485 landed, 0 died; terrace-parapet 493/525 landed, 0 died; ladle-parapet 76/115 landed, 0 died; ladle-parapet 134/158 landed, 0
+### audit-47b1
+RESULT 2/2
+## rule 47 PASS: total {"touched":37140,"died":0,"flung":0,"perched":0,"held":2932,"rescued":2932,"rescueFar":0,"rescueMaxM":2.83,"relaunched":0}
+##   b low: trials 11636, touched 11184, died 0, flung 0, perched 0, held 0, rescued 0, rescueFar 0, rescueMaxM 0, unreachable tops 10
+##   b high: trials 15534, touched 14772, died 0, flung 0, perched 0, held 1998, rescued 1998, rescueFar 0, rescueMaxM 2.83, unreachable tops 28
+##   b r30: trials 11636, touched 11184, died 0, flung 0, perched 0, held 934, rescued 934, rescueFar 0, rescueMaxM 2.83, unreachable tops 10
+### audit-47b2
+RESULT 2/2
+## rule 47 PASS: total {"touched":44164,"died":0,"flung":0,"perched":0,"held":6260,"rescued":6260,"rescueFar":0,"rescueMaxM":2.83,"relaunched":0}
+##   b r60: trials 15534, touched 14772, died 0, flung 0, perched 0, held 2206, rescued 2206, rescueFar 0, rescueMaxM 2.83, unreachable tops 28
+##   b r90: trials 15534, touched 14772, died 0, flung 0, perched 0, held 1998, rescued 1998, rescueFar 0, rescueMaxM 2.83, unreachable tops 28
+##   b f50: trials 15534, touched 14620, died 0, flung 0, perched 0, held 2056, rescued 2056, rescueFar 0, rescueMaxM 2.83, unreachable tops 28
+
+## last 15 lines of job.log
+##     tall tops: gauge-machine-house 711/805 landed, 0 died; terrace-parapet 448/520 landed, 0 died; terrace-parapet 369/422 landed, 0 died; terrace-parapet 441/473 landed, 0 died; terrace-parapet 415/485 landed, 0 died; terrace-parapet 493/525 landed, 0 died; ladle-parapet 133/177 landed, 0 died; 
+##   d high: trials 14412, touched 14412, died 0, flung 0, perched 0, held 5, rescued 5, rescueFar 0, rescueMaxM 5.53
+##     tall tops: gauge-machine-house 711/805 landed, 0 died; terrace-parapet 294/312 landed, 0 died; terrace-parapet 356/400 landed, 0 died; terrace-parapet 438/470 landed, 0 died; terrace-parapet 415/485 landed, 0 died; terrace-parapet 493/525 landed, 0 died; ladle-parapet 76/115 landed, 0 died; l
+### audit-47b1
+RESULT 2/2
+## rule 47 PASS: total {"touched":37140,"died":0,"flung":0,"perched":0,"held":2932,"rescued":2932,"rescueFar":0,"rescueMaxM":2.83,"relaunched":0}
+##   b low: trials 11636, touched 11184, died 0, flung 0, perched 0, held 0, rescued 0, rescueFar 0, rescueMaxM 0, unreachable tops 10
+##   b high: trials 15534, touched 14772, died 0, flung 0, perched 0, held 1998, rescued 1998, rescueFar 0, rescueMaxM 2.83, unreachable tops 28
+##   b r30: trials 11636, touched 11184, died 0, flung 0, perched 0, held 934, rescued 934, rescueFar 0, rescueMaxM 2.83, unreachable tops 10
+### audit-47b2
+RESULT 2/2
+## rule 47 PASS: total {"touched":44164,"died":0,"flung":0,"perched":0,"held":6260,"rescued":6260,"rescueFar":0,"rescueMaxM":2.83,"relaunched":0}
+##   b r60: trials 15534, touched 14772, died 0, flung 0, perched 0, held 2206, rescued 2206, rescueFar 0, rescueMaxM 2.83, unreachable tops 28
+##   b r90: trials 15534, touched 14772, died 0, flung 0, perched 0, held 1998, rescued 1998, rescueFar 0, rescueMaxM 2.83, unreachable tops 28
+##   b f50: trials 15534, touched 14620, died 0, flung 0, perched 0, held 2056, rescued 2056, rescueFar 0, rescueMaxM 2.83, unreachable tops 28
+
+## audit-44.txt
+### audit-44
+RESULT 37/37
+console errors: none
+## rule 44 PASS: largest 14.74 m, steered largest 13.13 m (low 13.13, high 13.13); flights (every take-off, cands/flights/fine) low [16048,190788,6993] high [15056,178790,6993]
+##   {"from":[-8.2,1.4,-22.5],"dir":62,"runup":2.6,"how":"run+steer15@12","any":true,"lavaRun":0.9,"landed":[-4.94,-19.99],"on":"causeway","gain":13.13}
+##   {"from":[-8.2,1.4,-22.5],"dir":62,"runup":2.6,"how":"run+steer15@12","any":true,"lavaRun":0.9,"landed":[-4.94,-19.99],"on":"causeway","gain":13.13}
+##   {"from":[-8.2,1.4,-22.5],"dir":17,"runup":2.6,"how":"run+steer30@8","any":true,"lavaRun":2.58,"landed":[-4.89,-19.94],"on":"causeway","gain":13.06}
+##   {"from":[-8.2,1.4,-22.5],"dir":17,"runup":2.6,"how":"run+steer30@8","any":true,"lavaRun":2.58,"landed":[-4.89,-19.94],"on":"causeway","gain":13.06}
+
+## audit-47acd.txt
+### audit-47acd
+RESULT 2/2
+console errors: none
+## rule 47 PASS: total {"touched":40032,"died":0,"flung":0,"perched":0,"held":1847,"rescued":1847,"rescueFar":0,"rescueMaxM":5.53,"relaunched":0}
+##   a low: trials 4336, touched 4336, died 0, flung 0, perched 0, held 0, rescued 0, rescueFar 0, rescueMaxM 0
+##   a high: trials 5000, touched 5000, died 0, flung 0, perched 0, held 0, rescued 0, rescueFar 0, rescueMaxM 0
+##   c holders: mould-stack ladle-stand slump-hornito slump-hornito caldera-wall caldera-wall caldera-wall caldera-wall mould-stack ladle-stand slump-hornito slump-hornito caldera-wall caldera-wall caldera-wall caldera-wall lava:race3:1 lava:race3~:1
+##   c mitts: trials 1200, touched 1083, died 0, flung 0, perched 0, held 839, rescued 839, rescueFar 0, rescueMaxM 5.53
+##   c run: trials 128, touched 128, died 0, flung 0, perched 0, held 128, rescued 128, rescueFar 0, rescueMaxM 5.53
+##   c swim: trials 310, touched 310, died 0, flung 0, perched 0, held 254, rescued 254, rescueFar 0, rescueMaxM 5.53
+##   c walk: trials 0, touched 0, died 0, flung 0, perched 0, held 0, rescued 0, rescueFar 0, rescueMaxM 0
+##   c rise: trials 616, touched 616, died 0, flung 0, perched 0, held 616, rescued 616, rescueFar 0, rescueMaxM 5.53
+##   d low: trials 14147, touched 14147, died 0, flung 0, perched 0, held 5, rescued 5, rescueFar 0, rescueMaxM 5.53
+##     tall tops: gauge-machine-house 711/805 landed, 0 died; terrace-parapet 448/520 landed, 0 died; terrace-parapet 369/422 landed, 0 died; terrace-parapet 441/473 landed, 0 died; terrace-parapet 415/485 landed, 0 died; terrace-parapet 493/525 landed, 0 died; ladle-parapet 133/177 landed, 0 died; ladle-parapet 162/191 landed, 
+##   d high: trials 14412, touched 14412, died 0, flung 0, perched 0, held 5, rescued 5, rescueFar 0, rescueMaxM 5.53
+##     tall tops: gauge-machine-house 711/805 landed, 0 died; terrace-parapet 294/312 landed, 0 died; terrace-parapet 356/400 landed, 0 died; terrace-parapet 438/470 landed, 0 died; terrace-parapet 415/485 landed, 0 died; terrace-parapet 493/525 landed, 0 died; ladle-parapet 76/115 landed, 0 died; ladle-parapet 134/158 landed, 0
+
+## audit-47b1.txt
+### audit-47b1
+RESULT 2/2
+console errors: none
+## rule 47 PASS: total {"touched":37140,"died":0,"flung":0,"perched":0,"held":2932,"rescued":2932,"rescueFar":0,"rescueMaxM":2.83,"relaunched":0}
+##   b low: trials 11636, touched 11184, died 0, flung 0, perched 0, held 0, rescued 0, rescueFar 0, rescueMaxM 0, unreachable tops 10
+##   b high: trials 15534, touched 14772, died 0, flung 0, perched 0, held 1998, rescued 1998, rescueFar 0, rescueMaxM 2.83, unreachable tops 28
+##   b r30: trials 11636, touched 11184, died 0, flung 0, perched 0, held 934, rescued 934, rescueFar 0, rescueMaxM 2.83, unreachable tops 10
+
+## audit-47b2.txt
+### audit-47b2
+RESULT 2/2
+console errors: none
+## rule 47 PASS: total {"touched":44164,"died":0,"flung":0,"perched":0,"held":6260,"rescued":6260,"rescueFar":0,"rescueMaxM":2.83,"relaunched":0}
+##   b r60: trials 15534, touched 14772, died 0, flung 0, perched 0, held 2206, rescued 2206, rescueFar 0, rescueMaxM 2.83, unreachable tops 28
+##   b r90: trials 15534, touched 14772, died 0, flung 0, perched 0, held 1998, rescued 1998, rescueFar 0, rescueMaxM 2.83, unreachable tops 28
+##   b f50: trials 15534, touched 14620, died 0, flung 0, perched 0, held 2056, rescued 2056, rescueFar 0, rescueMaxM 2.83, unreachable tops 28
