@@ -388,7 +388,15 @@ const FBASE = /* glsl */`
                 float glassA = bsRect(q, vec2(-hw + 0.04, 0.12), vec2(hw - 0.04, gf - 0.3), pw);
                 vec3 pearl = mix(bsC(0.84, 0.86, 0.9), bsC(0.96, 0.95, 0.92), smoothstep(0.0, gf, y)) * (0.92 + 0.08 * vnoise(q * 3.0));
                 base = mix(base, bsC(0.92, 0.92, 0.9), body);
-                base = mix(base, pearl, glassA);
+                // behind the pearl glass: the shop's own light shelves and plants as soft shapes (counters, a planter, displays)
+                float shelfL = step(0.82, fract(y * 1.6)) * step(0.2, y) * step(y, gf - 0.5);
+                float pot = bsAA(length(vec2(q.x - hw * 0.45 * sign(sin(bi * 2.1 + 1.0)), y - 0.55) * vec2(1.0, 1.4)) - 0.32, pw);
+                float disp = bsRect(q, vec2(-hw * 0.35, 0.12), vec2(hw * 0.1, 0.95), pw);
+                vec3 inside = mix(pearl, pearl * 0.8, disp * 0.6);
+                inside = mix(inside, bsC(0.5, 0.62, 0.42), pot * 0.55);
+                inside = mix(inside, WG, shelfL * 0.5);
+                base = mix(base, inside, glassA);
+                gBsGlow += glassA * shelfL * WG * 0.4;
                 if (glassA > 0.5) { gBaseRough = 0.14; gTexStr = 0.0; }
                 float seam = max(bsAA(abs(abs(q.x) - hw + 0.02) - 0.012, pw), bsAA(abs(y - gf + 0.3) - 0.012, pw)) * body;
                 base = mix(base, WG, seam);
