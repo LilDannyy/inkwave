@@ -47,8 +47,11 @@ const white = (o = {}) => ({ color: K.white, pattern: PATTERN.render, roof: true
 const calWall = () => ({ color: K.wall, pattern: PATTERN.concrete, roof: true, tag: 'caldera-wall' });
 // (the caldera walls round the dry floors are collision-only here and drawn by props.js — caldera_walls — so they cost
 // the lightmap nothing: the art pass replaces them with the backdrop's cliffs. The Slump's cliff stays a level block: it
-// stands in the lava region and carries the high-mark rind)
+// stands in the lava region and carries the high-mark rind — the level shader's band, not paint)
 const calWallHidden = () => ({ ...calWall(), hidden: true, paint: false });
+// (fix round 9, review 9 issue 1: the Slump's cliff is never inkable either, as every other outer wall — its faces were, and
+// a squid climbed onto its 7.6–7.9 m off-limits tops: against the map standard)
+const calCliff = () => ({ ...calWall(), paint: false });
 
 // ============================================================================================================ floors
 // the curved floors (geo.js outlines), filled by ground.js. Alpha's half unless `single`. Floors with nothing open
@@ -82,7 +85,7 @@ const BOXES = [
 const ALL0 = [];
 for (const f of [...FLOORS, ...BOXES]) { ALL0.push(f); if (!f.single) ALL0.push({ ...f, poly: rotPoly(f.poly), twin: f }); }
 const floorAt = (x, z) => ALL0.some((f) => !f.wall && inPoly(f.poly, x, z));
-const EDGE_WALLS = G.EDGES.map((e) => ({ e, w: walls(e.pts, { t: e.t, top: e.top, y0: e.y0, ext0: e.ext0, ext1: e.ext1, mk: e.cliff ? calWall : calWallHidden }, floorAt) }));
+const EDGE_WALLS = G.EDGES.map((e) => ({ e, w: walls(e.pts, { t: e.t, top: e.top, y0: e.y0, ext0: e.ext0, ext1: e.ext1, mk: e.cliff ? calCliff : calWallHidden }, floorAt) }));
 const hallMk = () => white({ tag: 'casting-hall', hidden: true, paint: false });   // (props.js draws the hall)
 const HALL_W = [walls(G.HALL_LINE, { t: 4.0, top: 12.0, y0: 0, ext0: 0.3, ext1: 0.3, mk: hallMk }, floorAt)];
 const WALL_FEET = [...EDGE_WALLS.flatMap((x) => x.w.feet), ...HALL_W.flatMap((w) => w.feet)];
@@ -413,8 +416,10 @@ add(armBox(10.15, 8.2, 0.3, 2.6, 3.6, 4.5, cover(K.basaltDk, { tag: 'gauge-post-
 add(armBox(-2.4, 9.4, 1.2, 1.2, 2.4, 3.6, cover(K.basaltDk, { tag: 'cairn' })));
 
 // ---------------------------------------------------------------------------------------- the Slump and Alpha's tail
-// the Slump shelf: two hornitos against the cliff (1.3 m: cover from the island and the heads), each leaving ≥ 2.6 m
-for (const a of [-157.0, -167.0]) { const r = G.SHO(a) - 0.75, [x, z] = P(r, a); add(O(x, z, 1.4, 1.4, 0, 1.3, -a, cover(K.scoria, { tag: 'slump-hornito' }))); }
+// the Slump shelf: two hornitos against the cliff (1.3 m: cover from the island and the heads), each leaving ≥ 2.6 m.
+// (fix round 9, review 9 issue 2: the middle one 0.64 m south along the cliff, −157° → −155.8°: at HIGH a kid held on it is
+// rescued to the south head's node (∓23.5, 1.1, ∓15.5), and from its far corner that was 6.35 m — over the rescue's 6 m)
+for (const a of [-155.8, -167.0]) { const r = G.SHO(a) - 0.75, [x, z] = P(r, a); add(O(x, z, 1.4, 1.4, 0, 1.3, -a, cover(K.scoria, { tag: 'slump-hornito' }))); }
 // the north Slump head: a mooring bollard back from both Races' landings
 { const [x, z] = P(26.6, 178.5); add(O(x, z, 1.0, 1.2, 1.2, 2.3, -178.5, cover(K.ironDk, { tag: 'race-bollard' }))); }
 // the Race kerbs (the lava fix round 5, the lead's decision after review 5 — ENGINE rule 21: every gap beside a rider is a

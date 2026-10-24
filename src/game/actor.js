@@ -293,6 +293,7 @@ export class Actor {
     this.aimDir.set(Math.sin(this.aimYaw) * cp, Math.sin(this.aimPitch), Math.cos(this.aimYaw) * cp);
 
     // ---- super jump / specials in progress own the body
+    if ((this.roofT || this.roofHeld) && (this.superJumpState || this.specialActive?.body || this.specialActive?.pin || this.specialActive?.hang > 0)) this._roofOff();   // [b5-caldera] (review 9: the hold ends)
     if (this.superJumpState) { this._updateSuperJump(dt); this._finishFrame(dt); return; }
     const spx = this.specialActive;
     if (spx && spx.body) { if (wr.dashT > 0) wr.endDash();   // [b5-sub-dash] a body phase ends a dash (never paused, then resumed)
@@ -592,7 +593,7 @@ export class Actor {
     }
     // off-limits tops (roofs, crane tops …): nobody can stand there — you slide off
     const rb = wasGrounded && this.ground.hit && this.ground.block >= 0 ? G.level.blocks[this.ground.block] : null;
-    if (rb && this.isRoofFor(rb)) this._roofSlide(rb, dt); else if (this.roofT) { this.roofT = 0; this.roofDir = null; }   // [b5-karp] isRoofFor
+    if (rb && this.isRoofFor(rb)) this._roofSlide(rb, dt); else if (this.roofT || this.roofHeld) this._roofOff();   // [b5-karp] isRoofFor [b5-caldera] _roofOff
     // balancing on a railing: the feet settle onto its line (unless you're stepping off it)
     if (rb && rb.rail && !isSquid) this._railCentre(rb, dt);
     if (wasGrounded) {
@@ -725,6 +726,9 @@ export class Actor {
   // ways off are looked at again (one dry now: the slide starts along it), and after 0.6 s (the player sees what happened)
   // the stage rescues the kid (G.match.stage.rescue: the nearest dry node within 6 m, a brief invulnerability; lava.js)
   _roofHold() { this.roofDir.set(0, 0, 0); this.vel.x = 0; this.vel.z = 0; this.roofT = 1e-3; if (!(this.roofHeld > 0)) this.roofHeld = 1e-4; }
+  // (review 9) the slide and its hold end together wherever they end — off the roof, a super jump, a special that owns the
+  // body: a hold left any other way than the rescue kept roofHeld, and the HUD's line stuck on NO FOOTING → rescued
+  _roofOff() { this.roofT = 0; this.roofDir = null; this.roofHeld = this.roofHeldSum = 0; }
   _roofHeldStep(b, dt) {
     const h0 = this.roofHeld, s0 = this.roofHeldSum || 0, q = Math.floor((h0 + dt) / 0.25) > Math.floor(h0 / 0.25);
     this.roofT = 1e-3; this.vel.x = 0; this.vel.z = 0; this.roofHeld += dt; this.roofHeldSum = s0 + dt;
@@ -831,6 +835,23 @@ export class Actor {
     for (let k = Math.min(kE, kF), k1 = kF + 4; k <= k1; k++) {
       const f = floor(k);
       if (!(f > P.waterY) || S.wet(px + dx * k * 0.15, pz + dz * k * 0.15, f, 3)) return true;
+    }
+    // [b5-caldera] (review 9) off a tall top a kid steering back comes down behind the way off, or beside it — a face it meets
+    // on the way down turns the steer along it, and it lands with the speed it steered back at: B = ½·20·t² − v·t past the
+    // exit (t its fall to the exit's floor; v 0.85 × the slide's: the push's ramp and a frame's step leave it slower, and B is
+    // a difference of two large numbers), and 0.35 m more to stop. Every point within that of the exit that a body can stand
+    // at must be over dry floor (under the body's middle, a seam ≤ 0.24 m bridged; now and 3 s on): the outer walls' ends a
+    // Mitts leap reaches stand over a lava slot or beside the lake, and a kid steering back off them came down in it
+    const yF = floor(0);
+    let tL = 0; for (let t = 1 / 60; t < 2 && yF > -Infinity; t += 1 / 60) if (y0 + vy0 * t - 15 * t * t <= yF) { tL = t; break; }
+    const B = 0.5 * P.airAccel * tL * tL - 0.85 * vLo * tL;
+    if (B > 0.05) {
+      const dry = (x, z) => { const f = Math.max(gh(x, z), gh(x + 0.12, z), gh(x - 0.12, z), gh(x, z + 0.12), gh(x, z - 0.12)); return f > P.waterY && !S.wet(x, z, f, 3); };
+      if (!dry(px, pz)) return true;
+      for (let r = 0.15, rr = B + 0.35; r <= rr + 1e-6; r += 0.15) for (let i = 0, na = Math.max(8, Math.ceil((2 * Math.PI * r) / 0.3)); i < na; i++) {
+        const a = (i / na) * 2 * Math.PI, x = px + Math.cos(a) * r, z = pz + Math.sin(a) * r;
+        if (!L.pointInside(_rxO.set(x, yF + 0.6, z), 0) && !dry(x, z)) return true;   // (inside a wall: no body there)
+      }
     }
     return false;
   }
