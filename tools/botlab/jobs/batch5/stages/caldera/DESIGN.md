@@ -729,6 +729,22 @@ Colour is never the only signal: the arrows, the words, the pitch direction and 
   along the way it checked (a landing's drift or a steer across the slide had thrown kids off a narrow coping). Every
   piece keeps its place: each has a safe side. lava-audit rule 47 (the probe as a rule): **0 deaths in 3,908 landings at
   LOW and 4,572 at HIGH, 0 kids held**; the same rule on the old actor.js reads 176 / 284, as the review.
+  **Fix round 8 (review 8; the lead's rule for cover standing in drowned ground: rescue, never perch, never fling).** The
+  hold made perches of the cover the HIGH lava stands round (the Slump hornitos, the mould stack, the ladle stands: a
+  running jump, a swim jump, a Mitts leap or a hop as the shelf drowned left a kid on them for the whole HIGH) and the
+  re-check every 0.25 s flung held kids off at 7–9 m/s; the landing march ignored air braking (a Tide Board slid 54 of 738
+  Mitts landings into the lava). Now: **a kid on an off-limits top whose every way off lands in the lava is held 0.6 s
+  where it stands, then rescued** — placed on the nearest dry nav node within 6 m (static floor that stands, the lava not
+  there within 8 s; 2.8–5.5 m in the audit), 1 s invulnerable, never splatted, never thrown, with the rescue's rings, and
+  the HUD's personal line reads **NO FOOTING → rescued** (pictures `out/fix8/fix8-*`). While held the slide's clock
+  stays at its start, so a later way off (re-checked every 0.25 s) launches at the slow push 3 m/s. The landing check flies
+  the steer-back arc (x = v·t − ½·20·t²) for the earliest landing and the fast arc for the latest, and needs dry floor
+  from one to 0.6 m past the other, now and 3 s on; a lip over the arc refuses a way; the floor near the exit leaves out
+  the slide's own top; the wall look starts at the slide's height there. **Rule 47 is widened into the gate**: (a) the
+  hop-on probe, (b) every point of every roof top beside the lava put down still or drifting (idle, or steering back
+  against the slide on tops a kid reaches), at LOW, HIGH, the rise's 30 / 60 / 90 % and the fall's 50 %, (c) Mitts leaps,
+  running and swim jumps, walk-offs and hops during the rise onto every top that holds, (d) Mitts leaps onto every tall top
+  (the Tide Boards: 0 of 738 at LOW and HIGH); **0 deaths, 0 flings, 0 perches, every rescue within 6 m**.
 - **Jumps across the lava (rule 44) — decided by the lead after review 5: option 1; corrected after review 6.** **Swim
   jumps and jumps + the Dash Pellet's air dash over the lava are skill movement** (own ink at the take-off, a squid at
   speed or the sub spent, over open lava: the risk is the price) — listed, no gate. **The Bazookarp carrier swims its own
@@ -828,6 +844,17 @@ Colour is never the only signal: the arrows, the words, the pitch direction and 
   off Organ B's top toward L, the kid meets the closed north-east crown and drops onto the island's coping past the
   0.2 m seams (14.74 m by the straight march's centre-line count; it is a seam flight: the walk is B → island, ~4 m).
   With the stick turned at 6 / 8 / 10 frames (PAGE_ARGS `sf=6,8,10`) the steered largest stays 14.15 m.
+  **Fix round 8 (the lead after review 8: rule 44's margin).** The steered march runs off **every take-off** too (every
+  valid static nav node within 3.5 m of lava, 16 headings, the stick turned 0 / ±45 / ±90° at 4, 8 and 12 frames) and
+  round the 4 most-saving a finer look (±0.3 m, ±9° in 3°, the stick ±15 … ±90° in 15°); the gate adds **every steered
+  running jump under 14 m**. Two places broke it: the island's coping past the stump by the second Race's landing was a
+  dead end 18.7 m round on foot (review 8's 14.96 m onto race 7) — **the stump moved 0.6 m toward the deck and 0.1 m
+  slimmer**, a 1.2 m walk now opens past it to the pier (10.4 m round; that jump saves 6.7 m); and the finer look found
+  a jump north off the **Ladle Road's corner by the second Race**, steered 45–60° left, onto race 7 saving 16.3 m —
+  **a 1.0 m parapet (cover) along that corner** (its west face and the first 1.6 m of its north face; not in Boss
+  Battle). At HIGH the steered largest is now **13.13 m** (off the Lakefront by the Tide Board onto the causeway, steered
+  15° at 12 frames), the straight largest still B's 14.74 m seam flight; review 8's probe-steer8 reads 12.5 m at either
+  level, its fine search 6.72 m.
 - **The options the lead chose from** (fix round 4's, with its numbers): 1. *Accept swim / dash jumps over the lava as
   skill movement* and judge plain running jumps by the 20 m skill-route bar (chosen; the margin at the East Pool corner);
   2. *make the lava unjumpable* (every corner's gap past a running jump with its drop at ~2,000 corner samples, or solid
