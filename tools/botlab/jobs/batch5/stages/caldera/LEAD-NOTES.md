@@ -139,3 +139,20 @@ Review 7's list is met as worded; the new roof hold has two faults the probes ou
    5 in a row.
 Then lava-bots once, lava.js twice, 2 Zone Control matches, check-maps every variant, net-lava on the Mac mini at the
 final head.
+
+## After review 9 (2026-10-25): the rescue passes; five small items, then this engine is done
+
+The rescue holds on every top and every landing kind (held, rescued, never splatted, never flung). This round, binding:
+1. **The Slump cliff faces become non-inkable** (`paint: false` on the E_cliff `calWall`, as every other outer wall):
+   a 7.6 m roof a squid can climb onto is against the map standard. Check the high-mark rind still reads on them (it
+   is a shader band, not paint), and re-run rule 47 b with the reach bar corrected so climbable tops are included;
+   0 deaths idle and steering back on every reachable top, at LOW, HIGH and through the rise.
+2. **Rule 47 measures the rescue from the kid's own position** before and after (not the capped log), gated at ≤ 6 m;
+   the middle hornitos get a node within 6 m or move 0.2 m.
+3. **`roofHeld` is cleared wherever the hold ends** (a super jump, a body-owning special, the off-roof branch), so the
+   HUD line never sticks; the reviewer's probe-held9 A joins lava.js.
+4. **F8c records the trail** when a case is not up; lava.js 3 runs clean (or the in-suite state traced).
+5. **The boss's roomiest-heading fallback is gated on `layout.boss.roamAfter`** (it ran on every boss stage: Treehills'
+   boss-check dropped to 4/6); prove boss-check on calamari, treehills and kelpline unchanged, caldera 5 in a row. Two
+   side-view pictures re-shot with the kid in frame.
+After this round the lead accepts the engine; the art phase follows (rule 42 and the lavafall's side patch belong to it).
