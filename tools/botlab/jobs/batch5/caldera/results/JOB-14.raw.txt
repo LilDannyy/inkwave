@@ -1,0 +1,70 @@
+JOB-14 raw results — automatic, by the Mac mini's b5-runner, 2026-10-24 20:32:20
+branch botlab-b5-caldera, ran at ae885c9d, exit code 0, wall time 5min
+(a written-up JOB-14.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== lava.js x3
+== boss-check x3
+== SUMMARY
+### boss-6
+RESULT 6/6
+### boss-7
+RESULT 6/6
+### boss-8
+RESULT 6/6
+### lavajs-3
+RESULT 59/59
+RESULT 59/59
+FAIL F8b no route hop from a stone at a column across the lava: asked now with the climb's hop flag left set (A), asked 5 s before (B), asked now while escaping (C), asked now with a stale guardOff from a frozen brain (D) — 4 stones each: not made (no hop in its first 0.3 s), no death in 2 s  {"cases":[["A","race1",4475,9.1,0.733,null],["A","race2",4477,11,null,null],["A","race3",4485,11,1.633,n
+RESULT 58/59
+
+## last 15 lines of job.log
+### boss-8
+RESULT 6/6
+console errors: none
+"maxIdle_s":4
+### lavajs-3
+RESULT 59/59
+console errors: none
+"n":76,"died":0,"notUp":0 "slowest":1.267 ### lavajs-4
+RESULT 59/59
+console errors: none
+"n":76,"died":0,"notUp":0 "slowest":1.267 ### lavajs-5
+FAIL F8b no route hop from a stone at a column across the lava: asked now with the climb's hop flag left set (A), asked 5 s before (B), asked now while escaping (C), asked now with a stale guardOff from a frozen brain (D) — 4 stones each: not made (no hop in its first 0.3 s), no death in 2 s  {"ca
+RESULT 58/59
+console errors: none
+"n":76,"died":0,"notUp":0 "slowest":1.267 
+## boss-6.txt
+### boss-6
+RESULT 6/6
+console errors: none
+"maxIdle_s":4
+
+## boss-7.txt
+### boss-7
+RESULT 6/6
+console errors: none
+"maxIdle_s":6
+
+## boss-8.txt
+### boss-8
+RESULT 6/6
+console errors: none
+"maxIdle_s":4
+
+## lavajs-3.txt
+### lavajs-3
+RESULT 59/59
+console errors: none
+"n":76,"died":0,"notUp":0 "slowest":1.267 
+## lavajs-4.txt
+### lavajs-4
+RESULT 59/59
+console errors: none
+"n":76,"died":0,"notUp":0 "slowest":1.267 
+## lavajs-5.txt
+### lavajs-5
+FAIL F8b no route hop from a stone at a column across the lava: asked now with the climb's hop flag left set (A), asked 5 s before (B), asked now while escaping (C), asked now with a stale guardOff from a frozen brain (D) — 4 stones each: not made (no hop in its first 0.3 s), no death in 2 s  {"cases":[["A","race1",4475,9.1,0.733,null],["A","race2",4477,11,null,null],["A","race3",4485,11,1.633,n
+RESULT 58/59
+console errors: none
+"n":76,"died":0,"notUp":0 "slowest":1.267 
