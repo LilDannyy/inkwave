@@ -1,0 +1,2 @@
+JOB-17 (caldera) @ 72d1b348 — Mac mini b5-runner, 2026-10-25 00:26–00:30, exit 0. Short summary.
+- lava.js 60/60, 60/60, 59/60: G9 and F8c passed all three; run 6's miss is F10 (the lookout claim).
