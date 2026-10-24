@@ -1039,8 +1039,8 @@ export class StageLava {
   // (review 8, the lead's rule for cover standing in drowned ground) a kid held on an off-limits top whose every way off
   // lands in the lava (actor._roofHeldStep: 0.6 s where it stands, so the player sees what happened) is RESCUED as the era
   // engine rescues a kid over water: placed on the nearest dry node — static floor that stands, that the lava does not
-  // reach within 8 s, the body fitting — within RESCUE.r (6 m; none there: the nearest within 12 m, counted in
-  // stats.rescueFar), with a brief invulnerability (RESCUE.invuln), never splatted, never thrown. The owner's screen does it
+  // reach within 8 s, the body fitting — within RESCUE.r (6 m; none there: held on up to RESCUE.wait s for one, then the
+  // nearest within 12 m, counted in stats.rescueFar), with a brief invulnerability (RESCUE.invuln), never splatted, never thrown. The owner's screen does it
   // (a teleport: netTp, every screen snaps); its HUD's personal line says NO FOOTING → rescued (_mine)
   rescue(a) {
     const nav = G.nav, M = this.W.navMeta, L = G.level, Ph = G.physics;
