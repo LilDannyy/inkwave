@@ -248,7 +248,7 @@ export class KarpField {
   }
   // the hop and gap edges (§3.2 step 1): moves a carrier's real jump makes that nav.js has no edge for
   _extraEdges(push) {
-    const nav = this.nav, ok = this.ok, H = K.hop, Gp = K.gap, L = this.level;
+    const nav = this.nav, ok = this.ok, H = K.hop, Gp = K.gap, L = this.level, R = this.R;
     // [b5-karp-ref] A carrier can swim-jump from inkable floor. The node-pair reach includes the two rim-cell offsets
     // (0.95 m each) and the measured 0.3 m probe margin; only layouts that opt in add these longer edges.
     const swimGap = !!R.def.carrierField?.swimJump;
