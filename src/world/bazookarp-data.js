@@ -38,7 +38,7 @@ export const BAZOOKARP_DEFS = {
   lockgate: {
     // The Pond sits on the centre of the humpback bridge (3.3 m); its Bazookarp plaza widens the approaches.
     start: [0, 3.3, 0],
-    weirs: [{ at: [-2.2, 0, 26], yaw: 0 }],             // the weigh-house yard, at 45–55% while leaving a full final push
+    weirs: [{ at: [-2.2, 0, 24], yaw: 0 }],             // the weigh-house yard, at the middle-side end of the dry dock
     gate: { at: [2, 0, 51.5], yaw: 0 },                 // in front of Bravo's spawn (12.4 m from the pad)
     freeZones: [
       { poly: [[-12, 58], [4, 58], [4, 70], [-12, 70]], y0: 2.0, y1: 3.2, signs: [[-11.6, 58.4, 180], [3.6, 58.4, 180]] },   // the spawn deck

@@ -269,6 +269,11 @@ const LOCKGATE = {
     // to fight round it on both sides (the user's "WIDER"); the props' lockgate_bridge takes the same half-width
     ...wideBridge(BRIDGE_T),
 
+    // Bazookarp's Pond is a genuine centre plaza, not a marker perched on the bridge's narrow crown. The paved
+    // 15 m square keeps the objective ring walkable over the canal; the existing humpback approaches meet its north
+    // and south edges. This is deliberately a Bazookarp-only rework of the crossing.
+    B(-7.5, 7.5, 3.15, 3.3, -7.5, 7.5, { tag: 'karp-pond-plaza', color: LG.quay, pattern: PATTERN.pavers, onlyIn: 'bazookarp' }),
+
     // ================= Alpha's ground on the mid side of the cut: centre columns under the towpath, the west land (the
     // cottage garden, the old chamfer corner behind it now yard up to the dock), the east yard
     ...cols,
