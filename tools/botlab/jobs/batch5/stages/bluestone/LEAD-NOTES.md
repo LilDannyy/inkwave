@@ -129,3 +129,11 @@ re-measures.
   `onBeforeCompile` materials; the far clip by `length(vW.xz)`), the env root (the time-lapse sky and clouds, the env
   map rebuild, exposure), the water, the shadow map size, GTAO or post passes touching era meshes, the holograms /
   curtain / wire-bead FX kept alive outside a jump, full-screen quads. Find the 15 ms before touching the level.
+- **JOB-19's attribution (supersedes JOB-18's reading):** an empty scene costs ~15 ms on BOTH stages, so the whole gap is
+  in what is drawn. Bluestone's level with a plain material costs ~19 ms over empty against Halyard's ~10: Bluestone
+  draws FIVE level meshes (level + era1 / era3 / era4 / era6) where Halyard draws one, so **check whether the inactive
+  eras' meshes are drawn every frame** (they should be hidden or culled outside a jump: `visible = false` on the sets
+  not in the current era, and out of the shadow and GTAO passes). The real level material adds ~11 ms more on top
+  (the era chunks per fragment: make the era one-hot / mural-mask / front work cheap or skipped when no jump runs).
+  GTAO −5 ms; shadows, EraFx and transparents ≤ 2–4 ms each. Bloom OFF makes Bluestone SLOWER (53–62 ms): find why (a
+  fallback path drawing twice?).
