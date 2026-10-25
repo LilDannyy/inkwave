@@ -261,3 +261,9 @@ carried items had no decision. Decisions:
 3. **Shipping:** after this round the stage is merged into new-stages, packaged and hosted **with its BETA tag kept**
    (DECISIONS #33), whatever is left unfinished in 2b / 2c; the acceptance review (the Opus reviewer with the sweep tool,
    review 4) runs after the week's reset of 2026-10-30 and decides the tag. The budget rule of 2026-10-25 19:00 is why.
+- **JOB-28 (fix round 3's suite; `results/JOB-28.txt`):** art-tests, eras-look 22/22 with the new real-jump test, first ×2
+  with nothing compiled, bake, stage-audit, net-eras + lagged pass; GPU gate (C) ×0.88–0.94. **One REAL regression:** frames
+  run 2, the sunset-theme jump 3 → 1, a 451.2 ms frame at J + 4.8 s with 449.1 ms inside RENDER (not the unmeasured stall) —
+  the round's applyLights / cloud bake landing in a real jump's render, or a program variant compiled on first use. Sent to
+  the builder: nothing the round added may cost a frame over 50 ms in a real jump; cloud bakes precomputed per era at load
+  or sliced; every light-path program variant precompiled; the cause found by the frame split; JOB-29 frames ×3 both themes.
