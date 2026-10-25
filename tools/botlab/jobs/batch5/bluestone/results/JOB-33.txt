@@ -1,0 +1,3 @@
+JOB-33 (bluestone, fix round 3) @ 83bea627 — Mac mini b5-runner, 2026-10-25 22:47–22:49, exit 0. Short summary.
+- with Chromium's GPU shader disk cache OFF (every page cold): eras-jump frames 4/4 ×3 (no frame over 50 ms in the real-schedule jump or
+  either side jump), settle-diag 4/4, first 1/1. Nothing over 50 ms anywhere, cold.
