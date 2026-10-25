@@ -288,3 +288,17 @@ carried items had no decision. Decisions:
   only warm, and the cold proof is owed before acceptance (review 4, after the reset).
 - **JOB-33 (GPU shader disk cache OFF, every page cold):** frames 4/4 ×3, settle-diag 4/4, first 1/1, no frame over 50 ms in
   any jump. With JOB-32 that is 8 clean frames runs in a row at the newest head: **the settle spike is closed, cold and warm.**
+
+## Shipped as PUBLIC BETA (the lead, 2026-10-25 23:30) — new-stages c0864291 (stage head 883e42fc)
+
+Fix round 3 done by the builder (report fcaf63e4): a real jump applies the new era's lights (blended done → done + 0.7 s;
+a late joiner matches to 0.03/255; the 3000s dusk 'mid' 48 against 115 before), the five cover pieces dressed
+(`bluestone_coverdress`, no colliders), 29 pseudo-letterings replaced by 45 real words in the atlas; JOB-32 / JOB-33 clean
+cold and warm; check-maps / audits unchanged. I looked at the real-vs-instant sheet, the cover pieces in three eras and the
+words up close: they read. Merged into new-stages with the BETA tag kept (DECISIONS #33); **review 4 (the Opus reviewer,
+the sweep tool, acceptance) runs after the reset of 2026-10-30** and decides the tag. The builder's unfinished list goes to
+`jobs/batch5/beta2/BRIEF.md`: the ~400 ms unmeasured settle stall (pre-existing, both codes), the load-time warm-up
+(~0.9 s GPU + gl.finish per Bluestone load and once per time of day in the menu backdrop — unmeasured; first-frames-cold),
+the runs not repeated at the final code (net-eras + lagged, GPU gate by C, perf6, eras-world / hud / modes → JOB-34), the
+eras-look (h) flake under load, the main jump's own front frame 49–52 ms on a loaded Mac, the 3000s shop names softer than
+TODAY's, the 45-word grid full, the net-eras 2-cell flip-window divergence, bots slow onto jump 1's new ground.
