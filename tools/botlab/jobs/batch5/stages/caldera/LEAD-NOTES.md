@@ -244,3 +244,25 @@ pale cube (stone pieces want a dressed face or a cap); `pair-gauge` (after) keep
 rise sheet I cannot see the team ink at thumbnail size — the reviewer measures it; `decal-11` wants a closer look. The
 independent review (the sweep tool in every set, the tests, the ink measured, the bar) now decides; its JSON goes to
 `LEAD-REVIEW-ART.json` and `LEAD-REVIEWS-ALL.json`, and Antigravity's next round answers that JSON.
+
+## Independent art review 1 (the Opus reviewer, 2026-10-26 00:30) — head 58295cc4: REDO; its JSON is binding
+
+`LEAD-REVIEW-ART.json` (committed ef58fcc5, `review:caldera-art#1`; sheets in `out/review1/`). The engine side holds
+(geometry frozen, every audit as the blockout, rule 42 now passing, tests, matches, GPU ×0.94, ink leads, nothing new on
+the network). The art does not reach the bar, and the reviewer's own eye-level sweeps (day LOW, dusk HIGH, 509 views each,
+every page looked at) say why: 621 of 812 eye-level pieces in Alpha's half have no dressing; the mid now reads worse than
+the blockout. Blockers: (1) a 2.2 m copper column and four pier collars at the centre of the Pour Floor that cannot be
+touched — players and shots pass through, the Tower starts inside it, it blocks the centre kept for the Pond → nothing
+visual below 7 m at mid except inside the four real piers and the tie girders; (2) the Organ Pipes' dressing reuses
+props.js's names, so it overwrites the old dressing and lands at the world origin, built twice round the gauge column —
+the pipes are still bare and their step links do not read; (3) the bare boxes, named view by view in the JSON. Majors:
+~22,600 points of decoration standing loose on walkable floors (players walk through them; the spawn gallery's arches and
+posts are the first thing a player sees), 24 harbour lamps misplaced (over the Slump's lava, on the flooding Casting
+Floor, on the Tide Boards and cairns); floating brick buildings past the rim, a field of black squares on the Surge
+Office wall, a view into a void; the backdrop flat and the cards dark (day 89 vs Halyard 118.5; dusk 51 vs 91, HIGH a
+purple murk); and the report's before / after pairs used DIFFERENT cameras on each side — with the same cameras the art
+is not darker than the blockout at all — and decal-09 / 11 show no decal, decal-10 is cut off. Minor: tangerine at HIGH
+by day is the closest ink call (8.7 % vs Halyard's 7.4 %, ink still leads); F10 flaked once under load.
+**The lead's note on his own eye reviews 1–3:** they judged the builder's chosen pictures and its mismatched pairs; the
+sweep pages are the test, and the reviewer's same-camera measurements supersede mine. From here Antigravity's rounds
+answer the JSON, and every claim comes with the sweep's own view (sweep id + camera), not a hand-picked frame.
