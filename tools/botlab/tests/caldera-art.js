@@ -160,5 +160,44 @@
   const usedPatterns = new Set(L.blocks.map(b => b.pattern));
   R('stage surfaces (tuff 70, basalt 71, glaze 72) carry the stage', [SURF.tuff, SURF.basalt, SURF.glaze].every(s => usedPatterns.has(s)), { SURF, used: Array.from(usedPatterns) });
 
+  // 6. Coplanar lids and covered paintable faces (Review 2 probe)
+  const coverParts = [];
+  for (const it of dressingFor('caldera')) {
+    if ((it.onlyIn && it.onlyIn !== 'turf') || it.notIn === 'turf') continue;
+    const k = new PropKit(null, { headless: true }); k.add(it.type, it);
+    for (const ps of k._buckets.values()) for (const p of ps) {
+      p.g.computeBoundingBox(); const inv = p.m.clone().invert(); const bb = p.g.boundingBox.clone();
+      const wb = bb.clone().applyMatrix4(p.m); coverParts.push({ type: it.type, inv, bb, wb });
+    }
+  }
+  const cv = new THREE.Vector3(), cw = new THREE.Vector3();
+  const cInside = (pt) => {
+    for (const q of coverParts) {
+      if (!q.wb.containsPoint(pt)) continue;
+      cw.copy(pt).applyMatrix4(q.inv);
+      if (q.bb.containsPoint(cw)) return q.type;
+    }
+    return null;
+  };
+  const cS = 0.3; const cTot = { floorA: 0, floorCov: 0, floorFight: 0, wallA: 0, wallCov: 0, wallFight: 0 };
+  const cByTag = {};
+  for (const f of L.faces) {
+    if (!f.paintable) continue; const b = L.blocks[f.block]; if (b.lavaRider != null) continue;
+    const c = f.origin.clone().addScaledVector(f.u, f.su / 2).addScaledVector(f.v, f.sv / 2); if (c.z > 0.3) continue;
+    const nu = Math.max(1, Math.round(f.su / cS)), nv = Math.max(1, Math.round(f.sv / cS)); const a = (f.su * f.sv) / (nu * nv);
+    const floor = f.n.y > 0.7; const t = b.tag || '(untagged)';
+    const r = cByTag[t] || (cByTag[t] = { floorCov: 0, floorFight: 0, wallCov: 0, wallFight: 0 });
+    for (let i = 0; i < nu; i++) for (let j = 0; j < nv; j++) {
+      cv.copy(f.origin).addScaledVector(f.u, (i + 0.5) * f.su / nu).addScaledVector(f.v, (j + 0.5) * f.sv / nv);
+      const po = cv.clone().addScaledVector(f.n, 0.008), pi = cv.clone().addScaledVector(f.n, -0.008);
+      const k = floor ? 'floor' : 'wall'; cTot[k + 'A'] += a;
+      const o = cInside(po); if (o) { r[k + 'Cov'] += a; cTot[k + 'Cov'] += a; continue; }
+      const ii = cInside(pi); if (ii) { r[k + 'Fight'] += a; cTot[k + 'Fight'] += a; }
+    }
+  }
+  const rd = (x) => +x.toFixed(1);
+  R('0 m² paintable floor coplanar with dressing (no z-fighting lids)', cTot.floorFight < 0.5, { floorFight: rd(cTot.floorFight), floorCov: rd(cTot.floorCov) });
+  R('paintable wall area covered by dressing listed and justified', cTot.wallFight < 10 && cTot.wallCov < 600, { wallFight: rd(cTot.wallFight), wallCov: rd(cTot.wallCov) });
+
   return out;
 })();

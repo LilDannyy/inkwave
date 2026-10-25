@@ -112,33 +112,24 @@ export function register(D, H) {
         idx++;
         const y0 = cy - h / 2;
         B.push(s * cx, y0, s * cz, (ry * PI) / 180 + (s < 0 ? PI : 0));
-        // 1. Basalt masonry foundation / plinth course at base (y = 0 to 1.4, within 4 cm of face)
-        B.box('paint', K.basaltDk, w + 0.04, 1.4, d + 0.04, 0, 0.7, 0, { r: 0.02 });
-        B.box(NS('paint'), '#2c2e33', w + 0.04, 0.12, d + 0.05, 0, 1.46, 0);
-        B.box(NS('paint'), K.basaltLt, w + 0.05, 0.08, d + 0.06, 0, 1.52, 0);
+        // 1. Basalt masonry foundation / plinth course at base (narrow skirting 0.35m high)
+        B.box('paint', K.basaltDk, w + 0.04, 0.35, d + 0.04, 0, 0.175, 0, { r: 0.02 });
+        B.box(NS('paint'), '#2c2e33', w + 0.04, 0.06, d + 0.05, 0, 0.38, 0);
 
-        // 2. Main wall body in warm dark industrial brick
-        B.box('paint', K.brick, w, h - 1.5, d, 0, 1.5 + (h - 1.5) / 2, 0, { r: 0.02 });
-
-        // Horizontal brick relief courses visible from eye level
-        for (let by = 2.2; by < h; by += 0.8) {
-          B.box(NS('paint'), '#5c2d20', w + 0.02, 0.05, d + 0.03, 0, by, 0);
-        }
-
-        // 3. Structural vertical iron pilasters at wall ends
+        // 2. Structural vertical iron pilasters at wall ends (stopping 5 cm below top)
         for (const sx of [-w / 2 + 0.12, w / 2 - 0.12]) {
-          B.box('metal', K.greenDk, 0.18, h, d + 0.04, sx, h / 2, 0, { r: 0.02 });
+          B.box('metal', K.greenDk, 0.18, h - 0.1, d + 0.04, sx, (h - 0.1) / 2, 0, { r: 0.02 });
         }
 
         // Downpipe along wall corner
         B.cyl(NS('metal'), K.ironLt, 0.025, h - 0.2, w / 2 - 0.25, (h - 0.2) / 2, (d / 2) + 0.02, { seg: 6 });
 
-        // 4. Belt course girder at 60% of wall height
+        // 3. Belt course girder at 60% of wall height
         if (h > 3.0) {
-          B.box(NS('metal'), K.ironDk, w + 0.04, 0.12, d + 0.04, 0, h * 0.6, 0);
+          B.box(NS('metal'), K.ironDk, w + 0.04, 0.1, d + 0.04, 0, h * 0.6, 0);
         }
 
-        // 5. Clerestory window openings with warm furnace interior glow
+        // 4. Clerestory window openings with warm furnace interior glow
         const winW = Math.min(w * 0.72, 1.8);
         if (h > 4.5 && winW > 0.8) {
           const winY = h * 0.7;
@@ -151,9 +142,9 @@ export function register(D, H) {
           }
         }
 
-        // 6. Coping along roofline (low walls within 6 cm of top; tall walls get upper storey roofs)
+        // 5. Coping / cornice: on low walls, exterior fascia strip stopping 3 cm below top; on tall walls, upper roof
         if (y0 + h <= 6.5) {
-          B.box('paint', K.verd, w + 0.04, 0.06, d + 0.04, 0, h + 0.03, 0);
+          B.box('paint', K.verd, w + 0.04, 0.06, d + 0.04, 0, h - 0.05, 0);
         } else {
           B.box('paint', K.verd, w + 0.06, 0.22, d + 0.06, 0, h + 0.11, 0);
           B.box(NS('metal'), K.ironDk, w + 0.06, 0.08, 0.04, 0, h + 0.22, (d / 2) + 0.02);
@@ -346,7 +337,7 @@ export function register(D, H) {
       B.cyl('metal', K.greenDk, 0.18, 0.8, 0, 0.4, 0, { r2: 0.12, seg: 10 });
       B.cyl('metal', K.green, 0.08, 2.6, 0, 1.7, 0, { seg: 8 });
       B.box('metal', K.green, 0.3, 0.08, 0.3, 0, 3.0, 0);
-      B.cyl(NS('glow'), K.cream, 0.16, 0.3, 0, 3.2, 0, { seg: 8, glow: 1.3 });
+      B.cyl(NS('glow'), '#fceec8', 0.09, 0.22, 0, 3.2, 0, { seg: 8, glow: 0.85 });
       B.lathe('metal', K.green, [[0, 0.15], [0.26, 0]], 0, 3.35, 0, { seg: 8 });
     },
   };

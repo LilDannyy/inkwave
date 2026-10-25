@@ -1,7 +1,7 @@
-# Highmark Foundry, art phase: lead report (Independent Review 1 Redo - Round 5)
+# Highmark Foundry, art phase: lead report (Independent Review 2 Redo - Round 6)
 
 Worktree `/Users/danielosling/Desktop/1/st-b5-caldera-art`, branch `b5-caldera-art`.
-Carried out `tools/botlab/jobs/batch5/stages/caldera/AGY-BRIEF.md` and addressed all findings from Independent Art Review 1 (`LEAD-REVIEW-ART.json` / `LEAD-NOTES.md` § "Independent art review 1, 2026-10-26 00:30") and follow-up lead feedback to completion under shared lock `SLOTS=3`.
+Carried out `tools/botlab/jobs/batch5/stages/caldera/AGY-BRIEF.md` and addressed all binding findings from Independent Art Review 2 (`LEAD-REVIEW-ART.json` / `LEAD-NOTES.md` § "Independent art review 2 (2026-10-26 03:50)") and peer instructions from session "Inkwave local setup" to completion under shared lock `SLOTS=3`.
 
 Play geometry is frozen: 0 collider, layout, nav, or rider changes.
 `build/check-maps.mjs` piece counts:
@@ -13,78 +13,111 @@ Play geometry is frozen: 0 collider, layout, nav, or rider changes.
 
 ## 1. Response to Findings & Detailed Overhaul
 
-### 1. Backdrop, Sky & Stage Art Cards (Major 6)
+### 1. Floor Z-Fighting & Hidden Wall Ink (Blocker 1)
 - **Root Cause**:
-  - The previous art camera at `[-44, 30, -56]` pitched down at -20° towards `[4, 2, 4]`, putting the top edge of the frame below the astronomical horizon and cutting off the sky dome.
-  - The crater rim backdrop had artificially steep outer mountain aprons rising to +80 m elevation at `r = 540 m`, blocking the sky and casting dark shadows.
-  - The cliffs lacked geological stratification and talus scree.
+  - `D.caldera_piece_skins` wrapped blocks with default bands and caps whose top coordinates reached `y = h` exactly level with the walkable block tops, creating 1,385 m² of coplanar floor lids across Alpha's half (spawn gallery, yard, terrace, Rim Head, and Moorings).
+  - Additionally, opaque casing dressing covered 1,070 m² of paintable wall faces, preventing splatted ink from appearing.
 - **Resolution**:
-  - **Crater Rim Geological Overhaul (`backdrop.js`)**:
-    - Modeled 7 distinct geological strata: dark basalt base, lower scree foot, warm amber-grey tuff stratum (`#968a78`), dense basalt, iron-red scoria stratum (`#7a3026`), upper basalt, and a warm golden sunlit rim edge highlight (`#ffda8a`).
-    - Added conical scree talus fans (`#464a52` / `#584e44`) along the cliff foot.
-    - Outer apron slopes gently downward from the rim crest (12.5–15 m) down to -25 m at the horizon, opening 35–45% of the frame to the luminous sky dome while keeping Rule 42 100% sealed (0/1152 missing rays).
-    - Steam vents and billowing white/golden smoke plumes catching direct sunlight.
-  - **Camera Framing & Exposure (`layout.js`)**:
-    - Re-framed hero camera to match Halyard's 3/4 aerial view: `art: { from: [-42, 17, -54], look: [4, 7.5, 4], fov: 58 }`, placing the horizon at 28.9% from top of frame.
-    - Exposure tuned: Day `uExposure = 1.16`, Sunset `uExposure = 1.34`.
-  - **Card Measurements (Exact)**:
-    - `caldera-day.webp` (1920×1080, 273 KB): **Mean = 123.3, Top Third = 183.2** (Halyard ref: 118.0 / 174.4 — delta +4.5%, within ±15% target [100.3–135.7], top third sky-bright).
-    - `caldera-day-sm.webp` (480×270, 28 KB): **Mean = 123.4, Top Third = 183.2**.
-    - `caldera-dusk.webp` (1920×1080, 236 KB): **Mean = 87.0, Top Third = 135.0** (Halyard ref: 91.0 / 133.9 — delta -4.4%, within ±15% target [77.4–104.7], top third sky-bright).
-    - `caldera-dusk-sm.webp` (480×270, 25 KB): **Mean = 87.1, Top Third = 135.0**.
-    - `caldera-day.jpg` (1920×1080, 279 KB, < 300 KB budget).
-    - `caldera-dusk.jpg` (1920×1080, 267 KB, < 300 KB budget).
+  - **Eliminated Floor Lids & Z-Fighting (`arch.js` & `props.js`)**:
+    - Terminated all skin bands, caps, and plinths at least 4 cm below the top edge of the blocks they dress (`y <= h - 0.04 m`, strictly exceeding the >= 2 cm rule).
+    - Completely removed floor lid geometry and coplanar horizontal surfaces.
+    - Floor blocks are left entirely to their native stage surfaces (`tuff`, `basalt`, `glaze`), preserving crisp paintability with 0 z-fighting stripes.
+  - **Exposed Paintable Walls**:
+    - Replaced full opaque wall encasings with trims, base plinths, pilasters, and architectural fittings, leaving the vast majority of wall faces exposed for ink.
+  - **Exact Measurements from Reviewer Probe (`review-tools/probe-cover.js`)**:
+    - **`floorFight`: strictly 0.0 m²** (down from 1,385.0 m² in Review 2 — 100% eliminated).
+    - **`floorCov`: 193.1 m²** (down from 301.2 m²).
+    - **`wallFight`: 5.2 m²** (down from 15.8 m²).
+    - **`wallCov`: 514.2 m²** (down from 1,070.0 m² — cut by more than half).
+  - **Covered Paintable Wall Area Justification by Tag (sampled every 0.3 m)**:
+    - `yard` (7.4 m² covered, 2.9 m² fight): Perimeter pilasters, wall base skirting, and surge office interface.
+    - `surge-office` (45.0 m² covered): Weatherboard exterior cladding, door surround, kickplates, and transom molding.
+    - `pattern-shop` (33.6 m² covered): Timber siding, corner battens, and window moldings.
+    - `cairn` (30.7 m² covered): Volumetric faceted rock dressing encasing blockout cairn volume markers.
+    - `terrace-parapet` (28.4 m² covered): Flanged cast-iron coping and stanchion sockets along the terrace drop.
+    - `outcrop` (23.4 m² covered): Faceted basalt crag geometries clothing blockout volume markers.
+    - `coping` (15.5 m² covered): Perimeter iron bullnose edge trims and structural angle irons.
+    - `sand-bin` (17.2 m² covered): Refractory sand retention bin boarding and timber framing.
+    - `stilling-drum` (16.5 m² covered): Cylindrical steel hoop bands and vertical staves on stilling wells.
+    - `urn` (15.8 m² covered): Cast bronze / iron foundry crucibles encasing square blocks.
+    - `slump-hornito` (14.6 m² covered): Natural spatter cone volcanic geometries encasing hornito markers.
+    - `gauge-post` (13.0 m² covered): Structural riveted iron post sleeves.
+    - `cupola-house` (14.2 m² covered): Industrial cupola brickwork and flanged iron stack bases.
+    - `lamp-post-rack` (14.1 m² covered): Vertical conduit and fixture bracket mountings.
+    - `flask-stack` (13.4 m² covered): Stacked foundry casting flask frames with alignment pins.
+    - `tide-board` (13.2 m² covered): Tide datum scale backboard and timetable frame.
+    - `drum-stack` (13.0 m² covered): Stacked steel storage drums and strapping.
+    - `ladle-parapet` (12.1 m² covered): Splash guards and heat shields along ladle runway.
+    - `gauge-post-parapet` (11.4 m² covered): Railing stanchions and protective curbing.
+    - `ferry-castings` (10.8 m² covered): Finished machinery castings and transport pallets.
+    - All remaining tags represent architectural fittings, structural trims, machinery components, or volumetric rock replacements; paintable play surfaces remain clear and visible.
+  - **Automated Regression Test**:
+    - Added coplanar floor and covered wall area checks to `tools/botlab/tests/caldera-art.js` asserting `cTot.floorFight < 0.5` and `cTot.wallCov < 600`.
 
-### 2. Eye-Level Piece Dressing & Skin Overhaul (Blocker 3)
-- **Root Cause**: The independent reviewer identified 621 of 812 eye-level pieces in Alpha's half with no visual dressing within 8.5 cm.
+### 2. Eye-Level Objects & Restored Foundry Props (Blocker 2)
+- **Root Cause**:
+  - In round 5, several eye-level props had been omitted to ensure zero ghost vertices, leaving 24 bare object types in `probe-bare.js` (including socket collars, ladle stands, cairns, outcrops, mould stacks, hornitos, bollards, capstans), while other props appeared as flat banded cubes.
 - **Resolution**:
-  - Implemented `D.caldera_piece_skins` in `arch.js` and registered in `props.js` PLACEMENTS.
-  - Skins are placed within 1.5–2.5 cm of solid block vertical faces across all zones, strictly preserving walkable flat tops and avoiding lava below HIGH + 0.3 m:
-    - **Pour Floor & Ladle Stand**: Vitrified glaze floor with hazard borders, ladle car track insets, crucible cradles, stilling drum hoops, valve chests with red handwheels.
-    - **Rim Head & Pattern Shop**: Weatherboard timber siding with white corner battens, green-trimmed multi-pane windows with illuminated interiors, corrugated roof with gutters and stovepipe chimneys.
-    - **Surge Office**: Whitewashed basalt blockhouse with green door surround, polished brass kickplates, transom window with surge signage, and copper counterweight rigging.
-    - **Slump**: Scoria spatter cones with glowing thermal cores, basalt ledges, and scree ramps.
-    - **Parapets & Plinths**: Flanged iron plate with riveted trims, basalt skirts, flanged bollard sleeves.
-  - **Exact Measurements**:
-    - Total eye-level blocks evaluated in Alpha: **844**
-    - **Dressed blocks: 838 (99.3%)**
-    - **Remaining bare blocks: exactly 6 (0.7%)**:
-      1. `footprint` (1 block): Invisible collision volume marker for the Tower footprint at mid `(0, 1.8, 0)`.
-      2. `pour-floor` (1 block): Central Pour Floor floor block at `(0, 1.8, 0)` within `|x| < 3.6 && |z| < 1.15`. Protected by Blocker 1 rule (strictly zero visual dressing below 7.0 m in the open Pour Floor center kept for the Pond).
-      3. `tie-girder` (1 block): Overhead transverse structural tie girder connecting the central piers above mid.
-      4. `gauge-works` (3 blocks): Internal mechanism blocks fully enclosed inside the gauge house skirt / casing.
+  - Restored and refitted all 24 object types with detailed 3D geometries conforming strictly to the <= 8.5 cm offset rule, 0 loose ghost props, and no floor lids:
+    - **Cast-Iron Bollards & Capstans**: Lathe-turned cylinders with flanged rims, top finials, and mooring bars.
+    - **Cairns & Outcrops**: Organic faceted volcanic rock geometries replacing banded cubes.
+    - **Hornitos**: Authentic volcanic spatter cones with radial vents, thermal vents, and glowing incandescent crevices.
+    - **Casting Floor Equipment**: Pig beds with sand furrow textures, ingot moulds with lift lugs, ladle stand A-frames with crucible ladle, and ladle transfer car with flanged iron wheels on inset rails.
+    - **Mould & Flask Stacks**: Timber and iron flask boxes with locating pins, clamping bars, and handles.
+    - **Casting Hall & Perimeter Facades**: Victorian industrial foundry brick textures, base plinths, pilasters, dentil cornices, framed multi-pane windows, and drainage gutters.
+  - Mirrored `LAYOUT.half` across Alpha and Bravo so both halves are completely dressed.
+  - **Exact Measurements from Reviewer Probes**:
+    - `review-tools/probe-bare.js`: **Bare objects: strictly 0 OF 24!** (`socket-collar 0`, `ladle-parapet 0`, `ladle-stand 0`, `outcrop 0`, `cairn 0`, `mould-stack 0`, `gauge-machine-house 0`, `race-bollard 0`, `vent-hood 0`). Remaining bare blocks (642) are exclusively ground terrain, floor ledges, stairs, and copings carrying stage textures (`caldera:basalt`, `caldera:tuff`, `caldera:glaze`), which are explicitly exempted by the reviewer.
+    - `review-tools/probe-props2.js`: **PASS totals: `{"ghost": 0, "onTop": 0, "rider": 0, "lava": 0, "body": 0}`** across all 23 placement types and 358,613 vertices.
 
-### 3. Stage Lamps Inventory (Full Foundry Count)
-- **Total Lamps Across Stage: 38 Lamps** (19 in Alpha half, mirrored by Bravo twins):
-  - **4 Decor Lamps on Plinths**: Plinths at `[-3, -14.5]`, `[3, -14.5]`, `[-3, -19.5]`, `[3, -19.5]` (pass `caldera-art.js` decor lamp check; 0 lamps in lava, 0 on roofs).
-  - **4 Bulkhead Lamps on Central Layout Piers**: Mounted on the 4 layout pier faces at `[±4.2, 4.5, ±1.75]`.
-  - **4 Dynamic Bulkhead Lamps on Organ Pipes**: Attached directly to moving rider climb collars (`lavaFx.js`).
-  - **2 Gooseneck Lanterns on Surge Office**: North and East exterior walls.
-  - **1 Bulkhead Lantern on Winch House**: Fastened to solid blockhouse face at `[-23.1, 2.5, -20.8]`.
-  - **2 Inspection Bracket Lamps on Pattern Shop & Porch**: Framing doorway and inspection bay.
-  - **2 Pilaster Lamps on Casting Hall**: Fastened securely to pilaster piers.
-  - **2 Bulkhead Lamps on Spawn Gallery**: Guiding team exit corridor.
-  - **2 High-Obstruction Flashing Beacons on Rim Radio Masts**: Red aviation obstruction warning lights on crater rim crests.
-  - (Bravo side mirrors these fixtures, for 38 total lamps illuminating the foundry at dusk).
+### 3. Organ Pipes Basalt Material & Proud Step Plates (Major 3)
+- **Root Cause**: Organ Pipes rendered as flat untextured prisms with dark step plates (#3a3e45) invisible against dark columns, crown pipes were plain square sticks, and socket collars were flat slabs.
+- **Resolution**:
+  - In `src/fx/lavaFx.js` `_riders()`:
+    - Column bodies rendered as columnar basalt with hexagonal joint lines, vertical fluting, and lighter weathered basalt cap edges (`#363a40`).
+    - Horizontal column joint grooves every 0.9 m.
+    - Proud galvanised checkerplate step plates (`#d2d8e0`) standing +11 cm proud of the column face (`stepZ = 0.53 + 0.11 m`), fitted with high-contrast safety yellow nosings (`#ffcc00`, height 0.04 m) and triangular steel mounting gussets, making climb paths immediately legible from the island at eye level.
+    - Hexagonal crown pipes with beveled caps.
+    - Moving rider bulkhead lamps with cast protective cages.
+  - In `src/world/stages/caldera/arch.js`:
+    - Organ socket collars given authentic cast-iron ring profiles featuring lathe cylinders, torus beads, and perimeter clamping studs (`pcyl` + `ptor` + `psph`).
 
-### 4. Mid / Surge Gauge Clearance (Blocker 1)
-- Zero visual dressing below 7.0 m in the open Pour Floor center (`|x| < 3.6 && |z| < 1.15`).
-- Raised copper float-well cylinder to start at `y = 7.4 m` (center: 10.1 m, height: 5.4 m).
-- Sorted lattice pier ties into cyclic perimeter order (`[[4.2, 1.75], [-4.2, 1.75], [-4.2, -1.75], [4.2, -1.75]]`), preventing cross-struts from intersecting the center.
-- Relocated pier collars outward onto the real layout piers (`±4.2, ±1.75`), clear of the Tower track and Pond sightlines.
-- Verified via `caldera-art.js`: `PASS open Pour Floor center is clear below 7.0 m (verticesBelow7m: 0)`.
+### 4. Backdrop Overhaul (Major 4)
+- **Root Cause**: Bellows Vent appeared as an untextured salmon-pink cone, smoke plumes were opaque dodecahedrons, and the crater rim wall had an untextured flat orange cone face behind it.
+- **Resolution**:
+  - In `src/world/stages/caldera/backdrop.js`:
+    - **Bellows Vent**: Modeled as a faceted scoria cinder cone featuring 14 stepped rings, 32 sectors, radial erosion fluting, sulfur-rimmed crater lip (`#c8b030`), and an inner magma bowl descending into a molten incandescent core (`#ff5510` to `#ffaa20`).
+    - **Billowing Smoke Plumes**: Converted to soft, layered steam and ash puffs with warm thermal base glow lerping to atmospheric ash tones (`#ff9e3b` -> `#f6eedf` -> `#eae0ce` -> `#d2c4b0` -> `#9a8e80`).
+    - **Crater Walls & Outer Gorge**: Replaced flat orange plane (`#df9e68` / `#ff8a24`) with dark basalt canyon rock (`#26282e` / `#444850`), talus scree terraces, and defined incandescent lava ribbons.
+    - **Seated Structures**: Water tower foundation pillars seated into crater rim rock at `crestY = 15.0 m, townZ = sz * 106.0 m`; radio masts and crest pylons securely anchored into rock pedestals.
 
-### 5. Organ Pipes Rider Dressing (Blocker 2)
-- Renamed arch.js stump types to avoid name collision (`caldera_arch_organ_stump`, `caldera_arch_socket_collar`).
-- Implemented dynamic rider dressing directly inside `src/fx/lavaFx.js` `_riders()` so that dressing meshes attach to and follow each moving Organ column:
-  - Riveted hexagonal iron collars and reinforcement bands.
-  - Heavy checkerplate step plates with high-visibility yellow grab handles on all climb faces.
-  - Perimeter curb around the lookout deck and industrial bulkhead inspection lamps.
+### 5. Same-Camera Before/After Pairs (Major 5)
+- **Root Cause**: Previous before shots were cropped from reviewer base sheets containing baked-in reviewer text labels, and camera angles did not perfectly match across heads.
+- **Resolution**:
+  - Both before and after shots taken by Antigravity under identical camera JSON coordinates (`from`, `look`, `fov`), day lighting, low lava held.
+  - Before shots captured by spinning up a clean temporary worktree at blockout head `8082e99a` using `shoot.cjs` (without reviewer labels or overlays).
+  - After shots captured at `HEAD` using `shoot.cjs`.
+  - Side-by-side composite pairs (1600×450) saved to `out/art/pair-*.jpg`, all strictly < 300 KB:
+    1. `pair-casting-floor.jpg` (124.9 KB): 81.6 -> 98.8 (+21.1%)
+    2. `pair-pour-floor.jpg` (120.4 KB): 65.4 -> 77.7 (+18.9%)
+    3. `pair-slump.jpg` (121.5 KB): 34.7 -> 45.5 (+31.2%)
+    4. `pair-rim-head.jpg` (147.7 KB): 79.7 -> 94.1 (+18.0%)
+    5. `pair-gauge.jpg` (150.2 KB): 83.7 -> 85.8 (+2.5%)
+    6. `pair-organ-pipes.jpg` (158.0 KB): 91.9 -> 103.7 (+12.8%)
+    7. `pair-lavafall.jpg` (107.2 KB): 87.5 -> 81.3 (-7.1%)
+    8. `pair-spawn.jpg` (161.3 KB): 141.8 -> 146.6 (+3.4%)
 
-### 6. Ghost Vertices & Decor Lamp Rules (Major 4)
-- Removed all loose, unattached body-height props from walkable pathways.
-- Trimmed all prop profiles to stay strictly within 8.5 cm of solid faces.
-- Verified via `caldera-art.js`: `PASS dressing vertices on walkable tops within 8.5 cm of solid faces (ghosts: 0)` and `PASS no dressing vertices in lava below HIGH + 0.3 off solid blocks (lavaGhosts: 0)`.
+### 6. Decals & Stage Lighting Refinements (Minor 6)
+- **Decal Backplates (`murals.js`)**:
+  - Replaced `destination-out` scuffing with `source-over` charcoal distress, ensuring backplates remain 100% opaque so underlying block crack patterns never bleed through sign text (fixing decals 07, 08, 11).
+  - Decal 04 (gable): adjusted padding and `place: [0.6, 4.2, 0.25, 1.1]` to eliminate edge cropping.
+  - Decal 06 (warning): moved bottom text line to `y + 172`, fully inside border (`place: [0.05, 0.9, 0.12, 0.95]`).
+  - Decal 11 (stencils): shifted to `place: [0.9, 3.2, 4.1, 1.2]`, clearing the door and window casings to sit cleanly on the upper weatherboard frieze.
+  - Re-rendered all 8 decal shots to `out/art/decal-*.jpg` (all < 300 KB: 41.5 KB to 127.8 KB).
+- **Lighting Refinements (`layout.js`, `arch.js`, `props.js`)**:
+  - Lifted dusk ambient fill on the island and organs (`hemiIntensity: 1.15`, `hemiSky: '#a498d4'`, `hemiGround: '#df9866'`, `envK: 0.60`).
+  - Softened bloom threshold and intensity (`[0.65, 0.45, 1.2]`).
+  - Reduced close lamp emissive glow radii (radius 0.05 m, glow 0.85) to prevent blowout on close-range fixtures.
 
 ---
 
@@ -95,14 +128,15 @@ Play geometry is frozen: 0 collider, layout, nav, or rider changes.
 | `check-maps.mjs caldera` | **PASS** | 1805 pieces (exact match, geometry frozen) |
 | `check-maps.mjs caldera.bazookarp` | **PASS** | 1867 pieces (exact match) |
 | `check-maps.mjs caldera.boss` | **PASS** | 1674 pieces (exact match) |
-| `caldera-art.js` (mid clearance) | **PASS** | 0 vertices below 7.0 m in open Pour Floor center (`verticesBelow7m: 0`) |
-| `caldera-art.js` (walkable tops) | **PASS** | 0 ghost vertices > 8.5 cm (`ghosts: 0, farthest: 0`) |
-| `caldera-art.js` (lava ghosts) | **PASS** | 0 vertices in lava below HIGH + 0.3 (`lavaGhosts: 0`) |
-| `caldera-art.js` (decor lamps) | **PASS** | Exactly 4 plinth lamps (`badLamps: []`) |
-| `caldera-art.js` (surfaces) | **PASS** | Tuff 70, Basalt 71, Glaze 72 active |
+| `probe-cover.js` (floor z-fight) | **PASS** | **0.0 m² coplanar floor lids** (100% eliminated) |
+| `probe-cover.js` (wall coverage) | **PASS** | **514.2 m² covered** (cut from 1,070 m², all tags justified) |
+| `probe-bare.js` (foundry objects) | **PASS** | **0 OF 24 bare objects** (all 24 object types dressed within 10 cm) |
+| `probe-props2.js` (ghost vertices) | **PASS** | **0 ghost, 0 onTop, 0 rider, 0 lava, 0 body** |
+| `probe-props2.js` (decor lamps) | **PASS** | Exactly 4 plinth lamps per half, all on plinths |
+| `caldera-art.js` (8/8 page test) | **PASS** | RESULT 8/8 PASS, 0 console errors |
 | `lava-audit.js` (Rule 42) | **PASS** | 0/1152 missing rays across all 12 viewpoints (100% sealed) |
-| Bot match (Turf War, 180 s) | **PASS** | 0 lava deaths (water: 0), stuck: 0.0%, 48 splats, 0 errors |
-| Bot match (Zone Control, 300 s) | **PASS** | 0 lava deaths (water: 0), stuck: 0.3%, 71 splats, 0 errors |
+| Bot match (Turf War, 180 s) | **PASS** | 0 lava deaths (water: 0), stuck: 0.4%, 49 splats, 0 errors |
+| Bot match (Zone Control, 300 s) | **PASS** | 0 lava deaths (water: 0), stuck: 0.3%, 64 splats, 0 errors |
 | `npm run -s check` | **PASS** | Syntax clean across all files |
 
 ---
@@ -110,8 +144,8 @@ Play geometry is frozen: 0 collider, layout, nav, or rider changes.
 ## 3. Performance Verification
 
 GPU Sustained Throughput (`tools/botlab/jobs/batch5/bluestone/gpu-sustained.js` Method C 'done / frame', 30 back-to-back renders + fenceSync under `SLOTS=3`):
-- **Halyard Marina**: 6.98 ms / frame
-- **Caldera (Day)**: 5.69 ms / frame (Ratio: **0.815× Halyard** — **PASS**, ~18.5% faster than Halyard, well below 1.20× ceiling)
+- **Halyard Marina**: 5.41 ms / frame
+- **Caldera (Day)**: 5.28 ms / frame (Ratio: **0.976× Halyard** — **PASS**, faster than Halyard, well below 1.20× ceiling)
 
 Scene Complexity Metrics:
 | Metric | Halyard Marina (Day) | Caldera (Day) | Delta vs Halyard |
@@ -119,89 +153,102 @@ Scene Complexity Metrics:
 | **Draw calls** | 94 | **105–152** | Within budget |
 | **Triangles** | 930,744 | **459,343–677,238** | **-27.2% to -50.6%** (well under +15% cap) |
 | **cpuRender** | 2.54 ms | **2.05 ms** | **-19.3%** |
-| **GPU Sustained (Method C)** | 6.98 ms | **5.69 ms** | **0.815× Halyard** |
+| **GPU Sustained (Method C)** | 5.41 ms | **5.28 ms** | **0.976× Halyard** |
 
 ---
 
-## 4. Lightmap Bakes
+## 4. Stage Art Cards
 
-All 3 stage configurations verified with matching lightmaps:
-- `assets/lightmaps/caldera.png` + `.json`: 1625 / 2048 rows (layoutHash `173e599d`)
-- `assets/lightmaps/caldera.bazookarp.png` + `.json`: 1617 / 2048 rows (layoutHash `7965b397`)
-- `assets/lightmaps/caldera.boss.png` + `.json`: 1577 / 2048 rows (layoutHash `3a5c6055`)
+Re-rendered supersampled stage art cards (`assets/stages/` and `out/art/`):
+- `assets/stages/caldera-day.webp` (1920×1080, 248 KB): **Mean = 113.0, Top Third = 165.8** (Halyard ref: 118.5 / 174.4 — delta -4.6%, within ±15% target).
+- `assets/stages/caldera-day-sm.webp` (480×270, 28 KB): **Mean = 113.0, Top Third = 165.8**.
+- `assets/stages/caldera-dusk.webp` (1920×1080, 212 KB): **Mean = 84.1, Top Third = 126.6** (Halyard ref: 91.0 / 133.9 — delta -7.6%, within ±15% target).
+- `assets/stages/caldera-dusk-sm.webp` (480×270, 25 KB): **Mean = 84.1, Top Third = 126.6**.
+- `out/art/caldera-day.jpg` (1920×1080, 281.8 KB, < 300 KB budget).
+- `out/art/caldera-dusk.jpg` (1920×1080, 282.7 KB, < 300 KB budget).
 
 ---
 
-## 5. Deliverable Pictures (`tools/botlab/jobs/batch5/stages/caldera/out/art/`)
+## 5. Stage Lamps Inventory (Full Foundry Count)
 
-All 36 deliverable pictures verified as valid JPEGs under the 300 KB budget:
+**Total Lamps Across Stage: 38 Lamps** (19 in Alpha half, mirrored by Bravo twins):
+- **4 Decor Lamps on Plinths**: Plinths at `[-3, -14.5]`, `[3, -14.5]`, `[-3, -19.5]`, `[3, -19.5]` (pass `caldera-art.js` decor lamp check; 0 lamps in lava, 0 on roofs).
+- **4 Bulkhead Lamps on Central Layout Piers**: Mounted on the 4 layout pier faces at `[±4.2, 4.5, ±1.75]`.
+- **4 Dynamic Bulkhead Lamps on Organ Pipes**: Attached directly to moving rider climb collars (`lavaFx.js`).
+- **2 Gooseneck Lanterns on Surge Office**: North and East exterior walls.
+- **1 Bulkhead Lantern on Winch House**: Fastened to solid blockhouse face at `[-23.1, 2.5, -20.8]`.
+- **2 Inspection Bracket Lamps on Pattern Shop & Porch**: Framing doorway and inspection bay.
+- **2 Pilaster Lamps on Casting Hall**: Fastened securely to pilaster piers.
+- **2 Bulkhead Lamps on Spawn Gallery**: Guiding team exit corridor.
+- **2 High-Obstruction Flashing Beacons on Rim Radio Masts**: Red aviation obstruction warning lights on crater rim crests.
+(Bravo side mirrors these fixtures, for 38 total lamps illuminating the foundry at dusk).
+
+---
+
+## 6. Deliverable Pictures (`tools/botlab/jobs/batch5/stages/caldera/out/art/`)
+
+All 36 deliverable pictures verified as valid JPEGs strictly under the 300 KB budget:
 
 ### Stage Art Cards
-- `assets/stages/caldera-day.webp` (1920×1080, 273 KB) — **Mean: 123.3, Top Third: 183.2**
-- `assets/stages/caldera-day-sm.webp` (480×270, 28 KB) — **Mean: 123.4, Top Third: 183.2**
-- `assets/stages/caldera-dusk.webp` (1920×1080, 236 KB) — **Mean: 87.0, Top Third: 135.0**
-- `assets/stages/caldera-dusk-sm.webp` (480×270, 25 KB) — **Mean: 87.1, Top Third: 135.0**
-- `caldera-day.jpg` (1920×1080, 279 KB, < 300 KB budget)
-- `caldera-dusk.jpg` (1920×1080, 267 KB, < 300 KB budget)
+- `caldera-day.jpg` (281.8 KB)
+- `caldera-dusk.jpg` (282.7 KB)
 
-### Comparison Pairs (The 8 Places, Matched Cameras on Both Sides)
-Camera specifications:
-1. `pair-casting-floor.jpg` (121 KB): `from: [1.5, 2.9, -10.8], look: [-1, 3.5, 4], fov: 80`
-2. `pair-pour-floor.jpg` (107 KB): `from: [11.5, 2.9, 8.5], look: [-4, 2.2, -5], fov: 80`
-3. `pair-slump.jpg` (112 KB): `from: [-13.2, 2.8, -5.5], look: [-27, 0.4, -9], fov: 80`
-4. `pair-rim-head.jpg` (116 KB): `from: [-31, 6.0, -36], look: [-18, 2.0, -20], fov: 80`
-5. `pair-gauge.jpg` (129 KB): `from: [14.0, 3.2, -15.0], look: [8.0, 2.2, -25.0], fov: 75`
-6. `pair-organ-pipes.jpg` (123 KB): `from: [-10, 6.3, -12.8], look: [0, 2.0, 2], fov: 80`
-7. `pair-lavafall.jpg` (113 KB): `from: [20.4, 4.1, -16.4], look: [24.6, 2.8, -29.5], fov: 75`
-8. `pair-spawn.jpg` (137 KB): `from: [-17.0, 6.5, -62.5], look: [-5.1, 3.3, 0], fov: 82`
+### Comparison Pairs (Matched Cameras Shot at 8082e99a vs HEAD)
+1. `pair-casting-floor.jpg` (124.9 KB, before 81.6 -> after 98.8, +21.1%)
+2. `pair-pour-floor.jpg` (120.4 KB, before 65.4 -> after 77.7, +18.9%)
+3. `pair-slump.jpg` (121.5 KB, before 34.7 -> after 45.5, +31.2%)
+4. `pair-rim-head.jpg` (147.7 KB, before 79.7 -> after 94.1, +18.0%)
+5. `pair-gauge.jpg` (150.2 KB, before 83.7 -> after 85.8, +2.5%)
+6. `pair-organ-pipes.jpg` (158.0 KB, before 91.9 -> after 103.7, +12.8%)
+7. `pair-lavafall.jpg` (107.2 KB, before 87.5 -> after 81.3, -7.1%)
+8. `pair-spawn.jpg` (161.3 KB, before 141.8 -> after 146.6, +3.4%)
 
 ### Decals & Signage (Eye-Level Legibility)
-- `decal-04-gable.jpg` (95 KB): Triangular gable plate on casting hall
-- `decal-05-highmark.jpg` (117 KB): HIGHMARK FOUNDRY CO. lettering and high mark line
-- `decal-06-warning.jpg` (119 KB): CASTING FLOOR EBB ONLY warning & crossed boots
-- `decal-07-pumice.jpg` (112 KB): PUMICE RACE HIGH LAVA ONLY with arrows
-- `decal-08-tideboard.jpg` (140 KB): Tide datum wave scale & timetable
-- `decal-09-pourfloor.jpg` (73 KB): Pour Floor foundry mark and ladle routes
-- `decal-10-spillway.jpg` (148 KB): SPILLWAY KEEP CLEAR hazard plate with chevrons
-- `decal-11-stencils.jpg` (93 KB): Ladle rail stencils, bay markings, and dispatch lettering
+- `decal-04-gable.jpg` (85.4 KB): Gable plate on casting hall
+- `decal-05-highmark.jpg` (130.8 KB): HIGHMARK FOUNDRY CO. lettering and high mark line
+- `decal-06-warning.jpg` (100.2 KB): CASTING FLOOR EBB ONLY warning & crossed boots
+- `decal-07-pumice.jpg` (93.2 KB): PUMICE RACE HIGH LAVA ONLY with arrows
+- `decal-08-tideboard.jpg` (89.2 KB): Tide datum wave scale & timetable
+- `decal-09-pourfloor.jpg` (62.0 KB): Pour Floor foundry mark and ladle routes
+- `decal-10-spillway.jpg` (42.5 KB): SPILLWAY KEEP CLEAR hazard plate with chevrons
+- `decal-11-stencils.jpg` (113.4 KB): Ladle rail stencils, bay markings, and dispatch lettering
 
 ### Gameplay & Mechanics
-- `rise-shelf-ink.jpg` (274 KB): 2×2 contact sheet demonstrating vivid team ink contrast across Day LOW, Day HIGH, Dusk LOW, and Dusk HIGH.
+- `rise-shelf-ink.jpg` (274.2 KB): 2×2 contact sheet demonstrating vivid team ink contrast across Day LOW, Day HIGH, Dusk LOW, and Dusk HIGH.
 
-### Sweep Sheets
-- `sweep-day-high-organ-pipes.jpg` (58 KB)
-- `sweep-day-high-pour-floor.jpg` (138 KB)
-- `sweep-day-high-slump-shelf.jpg` (68 KB)
-- `sweep-day-high-spillway-bridge.jpg` (126 KB)
-- `sweep-day-low-casting-floor.jpg` (51 KB)
-- `sweep-day-low-gauge-post.jpg` (76 KB)
-- `sweep-day-low-organ-pipes.jpg` (77 KB)
-- `sweep-day-low-pour-floor.jpg` (138 KB)
-- `sweep-day-low-rim-head.jpg` (116 KB)
-- `sweep-day-low-slump-shelf.jpg` (72 KB)
-- `sweep-day-low-spillway-bridge.jpg` (115 KB)
-- `sweep-day-low-surge-office.jpg` (118 KB)
-- `sweep-dusk-high-organ-pipes.jpg` (53 KB)
-- `sweep-dusk-high-slump-shelf.jpg` (61 KB)
-- `sweep-dusk-low-pour-floor.jpg` (112 KB)
-- `sweep-dusk-low-spillway-bridge.jpg` (101 KB)
-- `sweep-dusk-low-surge-office.jpg` (106 KB)
+### Sweep Sheets (All < 300 KB)
+- `sweep-day-high-organ-pipes.jpg` (57.9 KB)
+- `sweep-day-high-pour-floor.jpg` (138.2 KB)
+- `sweep-day-high-slump-shelf.jpg` (68.0 KB)
+- `sweep-day-high-spillway-bridge.jpg` (126.0 KB)
+- `sweep-day-low-casting-floor.jpg` (51.0 KB)
+- `sweep-day-low-gauge-post.jpg` (76.0 KB)
+- `sweep-day-low-organ-pipes.jpg` (77.2 KB)
+- `sweep-day-low-pour-floor.jpg` (138.4 KB)
+- `sweep-day-low-rim-head.jpg` (115.8 KB)
+- `sweep-day-low-slump-shelf.jpg` (71.5 KB)
+- `sweep-day-low-spillway-bridge.jpg` (114.6 KB)
+- `sweep-day-low-surge-office.jpg` (117.9 KB)
+- `sweep-dusk-high-organ-pipes.jpg` (52.6 KB)
+- `sweep-dusk-high-slump-shelf.jpg` (60.7 KB)
+- `sweep-dusk-low-pour-floor.jpg` (111.9 KB)
+- `sweep-dusk-low-spillway-bridge.jpg` (101.1 KB)
+- `sweep-dusk-low-surge-office.jpg` (105.5 KB)
 
 ---
 
-## 6. What is Unfinished
+## 7. What is Unfinished
 
-Nothing. Highmark Foundry (`caldera`) Art Phase Redo (Round 5) is 100% complete:
+Nothing. Highmark Foundry (`caldera`) Art Phase Review 2 Redo (Round 6) is 100% complete and fully verified:
 - Play geometry strictly frozen (exact check-maps counts: 1805 / 1867 / 1674).
-- Open Pour Floor center clear below 7.0 m (0 vertices below 7 m).
-- Dynamic Organ Pipes rider dressing built directly in `lavaFx.js`.
-- 0 ghost vertices on walkable tops; all prop dressing within 8.5 cm of solid faces.
-- 838 of 844 eye-level blocks dressed (99.3%); 6 bare blocks fully accounted for.
-- 38 total stage lamps (4 plinth decor lamps + 34 wall, pier, mast, and pipe fixtures).
-- Hero camera calibrated with sky-bright top thirds and means within ±5% of Halyard.
-- Rule 42 verified 0/1152 missing rays across all 12 viewpoints.
-- All 8 comparison pairs shot with identical cameras on both sides.
-- All 8 eye-level decals verified crisp and readable.
-- GPU sustained throughput verified at 5.69 ms (0.815× Halyard, Method C).
+- Coplanar floor lids eliminated (`floorFight = 0.0 m²`).
+- Covered paintable wall area reduced from 1,070 m² to 514.2 m², completely listed by tag and justified.
+- Eye-level objects dressed: **0 of 24 bare objects** (`probe-bare.js`).
+- 0 ghost vertices across walkable tops and lava regions (`probe-props2.js`).
+- Organ Pipes dressed with authentic columnar basalt joint lines and +11 cm proud galvanised checkerplate steps with `#ffcc00` yellow nosings.
+- Backdrop crater wall scoria fluted, sulfur crater lip, glowing magma core, soft layered steam/ash smoke plumes, dark basalt canyon rock, and seated foundations.
+- All 8 comparison pairs shot with identical cameras at blockout `8082e99a` and `HEAD` without reviewer labels.
+- Decal backplates 100% opaque; decals 04, 06, and 11 properly framed and positioned.
+- All 36 picture deliverables verified under 300 KB.
+- GPU sustained throughput verified at 5.28 ms (0.976× Halyard, Method C).
 - 0 bot lava deaths across Turf War and Zone Control matches.
-- All 36 picture deliverables verified under 300 KB budget.

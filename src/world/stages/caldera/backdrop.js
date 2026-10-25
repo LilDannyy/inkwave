@@ -99,7 +99,10 @@ export function buildBackdrop(kit, data = {}) {
       const inSpillBravo = aDeg > 104 && aDeg < 140;
       const isScar = (aDeg > -175 && aDeg < -145) || (aDeg > 5 && aDeg < 35);
 
-      const rIn = getRimR(aDeg, rad);
+      // Craggy faceted rockwork displacement: columnar jointing & radial noise
+      const rockNoise = fbm(Math.cos(rad) * 3.2, Math.sin(rad) * 3.2, 3) * 4.2;
+      const facetNoise = Math.sin(si * 12) * 1.5;
+      const rIn = getRimR(aDeg, rad) + rockNoise + facetNoise;
       const rOut = rIn + wallThick;
 
       // Crest height: lowered to keep sky open, higher at north/south heads
@@ -108,7 +111,7 @@ export function buildBackdrop(kit, data = {}) {
         crestY = 4.8 + (rnd() - 0.5) * 1.2; // Spillway drop
       }
 
-      // 7 strata height tiers
+      // 7 strata height tiers with rich distinct rockwork coloring
       const tiers = [
         { y: -32.0, col: K.basaltBase },                        // Sub-crater base (seals Rule 42)
         { y: -2.0,  col: isScar ? K.scar1977 : K.basaltDk },    // Foot above scree
@@ -206,8 +209,9 @@ export function buildBackdrop(kit, data = {}) {
           const lx = p0[0] + dx * (0.5 + (t - 0.5) * spread) + nx * d;
           const lz = p0[1] + dz * (0.5 + (t - 0.5) * spread) + nz * d;
           gPos.push(lx, y, lz);
-          const isLava = t > 0.22 && t < 0.78 && di > 0 && di < 8;
-          const c = isLava ? (t > 0.38 && t < 0.62 ? K.gold : K.orange) : K.canyonLit;
+          const isCore = t > 0.42 && t < 0.58 && di > 0 && di < 8;
+          const isCrust = t > 0.32 && t < 0.68 && di > 0 && di < 8;
+          const c = isCore ? K.gold : (isCrust ? K.orange : (di < 3 ? K.basalt : K.basaltDk));
           gCols.push(c.r, c.g, c.b);
         }
       }
@@ -271,7 +275,7 @@ export function buildBackdrop(kit, data = {}) {
       if (inSpillA || inSpillB) {
         const inTrough = (inSpillA && Math.abs(aDeg - (-57.5)) < 11) || (inSpillB && Math.abs(aDeg - 122.5) < 11);
         if (inTrough) return K.gold;
-        return K.canyonLit;
+        return K.basaltDk;
       }
       if (y > 8.0) return K.scoriaStrata;
       if (y > 0.0) return K.basalt;
@@ -323,27 +327,108 @@ export function buildBackdrop(kit, data = {}) {
   // 3. THE BELLOWS VENT (Active Cinder Cone at 230, 0, 150) & VOLCANIC SMOKE PLUMES
   // =========================================================================================================
   {
-    const vx = 230, vz = 150, vy = -25, vh = 125;
-    const coneG = new THREE.ConeGeometry(85, vh, 24, 6, true);
-    coneG.translate(vx, vy + vh / 2, vz);
-    addGeo(out.plain, coneG, K.scoriaRed);
+    const vx = 230, vz = 150, vy = -25, vh = 130;
+    const nRings = 14, nSec = 32;
+    const ventPos = [], ventCols = [], ventIdx = [];
 
-    // Glowing summit crater
-    const craterG = new THREE.CylinderGeometry(16, 9, 8, 16);
-    craterG.translate(vx, vy + vh - 2, vz);
-    addGeo(out.static, craterG, K.lavaGlow);
+    // Outer flanks: from y = vy (r ~ 92 m) up to summit rim (r ~ 18 m at y = vy + vh)
+    for (let ri = 0; ri <= nRings; ri++) {
+      const u = ri / nRings;
+      const y = vy + u * vh;
+      const baseR = 92.0 * (1.0 - u * 0.81);
+
+      let c;
+      if (u < 0.2) c = K.basaltBase.clone().lerp(K.basaltDk, u * 5);
+      else if (u < 0.45) c = K.basaltDk.clone().lerp(K.scoriaStrata, (u - 0.2) / 0.25);
+      else if (u < 0.75) c = K.scoriaStrata.clone().lerp(K.scoriaRed, (u - 0.45) / 0.3);
+      else if (u < 0.92) c = K.scoriaRed.clone().lerp(K.screeWarm, (u - 0.75) / 0.17);
+      else c = K.sulfur.clone().lerp(K.rimLit, (u - 0.92) / 0.08);
+
+      for (let si = 0; si < nSec; si++) {
+        const a = (si / nSec) * Math.PI * 2;
+        const fluting = Math.sin(si * 4) * 2.2 + Math.cos(si * 7) * 1.4;
+        const r = Math.max(12.0, baseR + fluting * (1.0 - u * 0.4));
+        const px = vx + r * Math.cos(a);
+        const pz = vz + r * Math.sin(a);
+        ventPos.push(px, y, pz);
+
+        const noiseCol = Math.sin(si * 5 + ri * 3) * 0.05;
+        ventCols.push(
+          Math.min(1, Math.max(0, c.r + noiseCol)),
+          Math.min(1, Math.max(0, c.g + noiseCol)),
+          Math.min(1, Math.max(0, c.b + noiseCol))
+        );
+      }
+    }
+
+    for (let ri = 0; ri < nRings; ri++) {
+      for (let si = 0; si < nSec; si++) {
+        const nextS = (si + 1) % nSec;
+        const i00 = ri * nSec + si, i01 = ri * nSec + nextS;
+        const i10 = (ri + 1) * nSec + si, i11 = (ri + 1) * nSec + nextS;
+        ventIdx.push(i00, i01, i10, i01, i11, i10);
+      }
+    }
+
+    // Inner crater bowl: descending from summit lip into glowing molten throat
+    const throatRings = 4;
+    const topOffset = (nRings + 1) * nSec;
+    const rimY = vy + vh;
+    for (let tri = 0; tri <= throatRings; tri++) {
+      const tu = tri / throatRings;
+      const ty = rimY - tu * 14.0;
+      const tr = 17.5 * (1.0 - tu * 0.55);
+      let tc;
+      if (tu < 0.3) tc = K.scoriaStrata.clone().lerp(K.basaltDk, tu / 0.3);
+      else if (tu < 0.7) tc = K.basaltDk.clone().lerp(K.orange, (tu - 0.3) / 0.4);
+      else tc = K.orange.clone().lerp(K.gold, (tu - 0.7) / 0.3);
+
+      for (let si = 0; si < nSec; si++) {
+        const a = (si / nSec) * Math.PI * 2;
+        const px = vx + tr * Math.cos(a);
+        const pz = vz + tr * Math.sin(a);
+        ventPos.push(px, ty, pz);
+        ventCols.push(tc.r, tc.g, tc.b);
+      }
+    }
+
+    for (let tri = 0; tri < throatRings; tri++) {
+      for (let si = 0; si < nSec; si++) {
+        const nextS = (si + 1) % nSec;
+        const i00 = topOffset + tri * nSec + si, i01 = topOffset + tri * nSec + nextS;
+        const i10 = topOffset + (tri + 1) * nSec + si, i11 = topOffset + (tri + 1) * nSec + nextS;
+        ventIdx.push(i00, i10, i01, i01, i10, i11);
+      }
+    }
+
+    const ventGeo = new THREE.BufferGeometry();
+    ventGeo.setAttribute('position', new THREE.Float32BufferAttribute(ventPos, 3));
+    ventGeo.setAttribute('color', new THREE.Float32BufferAttribute(ventCols, 3));
+    ventGeo.setIndex(ventIdx);
+    ventGeo.computeVertexNormals();
+    out.plain.push(ventGeo);
+
+    // Glowing incandescent throat bottom disc
+    const coreG = new THREE.CylinderGeometry(8.0, 5.0, 3.0, 16);
+    coreG.translate(vx, rimY - 14.0, vz);
+    addGeo(out.static, coreG, K.gold);
 
     // Drifting volcanic smoke & steam plumes catching bright sun
-    for (let p = 0; p < 11; p++) {
-      const u = p / 11;
-      const px = vx - u * 95.0 + (rnd() - 0.5) * 16.0;
-      const py = vy + vh + 8.0 + u * 52.0;
-      const pz = vz - u * 38.0 + (rnd() - 0.5) * 16.0;
-      const ps = 14.0 + u * 28.0;
+    // Soft layered puffs with warm glowing base transitioning to diffuse ash
+    for (let p = 0; p < 18; p++) {
+      const u = p / 18;
+      const px = vx - u * 110.0 + (rnd() - 0.5) * 18.0;
+      const py = vy + vh + 4.0 + u * 65.0;
+      const pz = vz - u * 42.0 + (rnd() - 0.5) * 18.0;
+      const ps = 10.0 + u * 32.0;
 
-      const puffG = new THREE.DodecahedronGeometry(ps, 1);
+      const puffG = new THREE.IcosahedronGeometry(ps, 1);
       puffG.translate(px, py, pz);
-      const pCol = u < 0.2 ? K.orange.clone().lerp(K.steamWarm, u * 5) : (u < 0.6 ? K.steamWarm : K.steam);
+      let pCol;
+      if (u < 0.15) pCol = K.orange.clone().lerp(K.steamWarm, u / 0.15);
+      else if (u < 0.45) pCol = K.steamWarm.clone().lerp(K.steam, (u - 0.15) / 0.3);
+      else if (u < 0.75) pCol = K.steam.clone().lerp(K.tuffLt, (u - 0.45) / 0.3);
+      else pCol = K.tuffLt.clone().lerp(K.scree, (u - 0.75) / 0.25);
       addGeo(out.plain, puffG, pCol);
     }
 
@@ -351,8 +436,8 @@ export function buildBackdrop(kit, data = {}) {
     for (const [fx, fz] of [[-65, -85], [75, 60], [-80, 45], [55, -95]]) {
       for (let s = 0; s < 4; s++) {
         const u = s / 4;
-        const puff = new THREE.DodecahedronGeometry(4.5 + u * 6.5, 1);
-        puff.translate(fx + (rnd() - 0.5) * 6, 12.0 + u * 15.0, fz + (rnd() - 0.5) * 6);
+        const puff = new THREE.IcosahedronGeometry(4.0 + u * 5.5, 1);
+        puff.translate(fx + (rnd() - 0.5) * 5, 12.0 + u * 14.0, fz + (rnd() - 0.5) * 5);
         addGeo(out.plain, puff, K.steam);
       }
     }
@@ -408,21 +493,25 @@ export function buildBackdrop(kit, data = {}) {
   // =========================================================================================================
   {
     for (const sz of [-1, 1]) {
-      const townZ = sz * 98.0;
-      const fndG = new THREE.BoxGeometry(24, 8, 14);
-      fndG.translate(0, 4.0, townZ);
+      const townZ = sz * 106.0;
+      const crestY = 15.0; // Rim crest elevation
+      // Solid masonry foundation embedded directly into rim rock (top at crestY + 1.5, base down to crestY - 4.5)
+      const fndG = new THREE.BoxGeometry(20, 6.0, 10);
+      fndG.translate(0, crestY - 1.5, townZ);
       addGeo(out.static, fndG, K.basaltDk);
 
-      const wtG = new THREE.CylinderGeometry(4.0, 4.0, 6.0, 12);
-      wtG.translate(8.0 * -sz, 17.0, townZ);
+      // Water tower seated firmly on foundation
+      const wtG = new THREE.CylinderGeometry(3.6, 3.6, 5.5, 12);
+      wtG.translate(6.5 * -sz, crestY + 5.5, townZ);
       addGeo(out.static, wtG, C('#4a6058'));
-      const wtLegs = new THREE.CylinderGeometry(0.5, 0.5, 10.0, 6);
-      wtLegs.translate(8.0 * -sz, 9.0, townZ);
+      const wtLegs = new THREE.CylinderGeometry(0.4, 0.4, 3.0, 6);
+      wtLegs.translate(6.5 * -sz, crestY + 2.0, townZ);
       addGeo(out.static, wtLegs, C(K.iron));
 
-      const mastH = 26.0;
-      const mastG = new THREE.CylinderGeometry(0.3, 1.2, mastH, 4);
-      mastG.translate(-8.0 * -sz, 8.0 + mastH / 2, townZ);
+      // Radio transmission mast seated firmly on foundation
+      const mastH = 22.0;
+      const mastG = new THREE.CylinderGeometry(0.25, 0.9, mastH, 4);
+      mastG.translate(-6.5 * -sz, crestY + 1.5 + mastH / 2, townZ);
       addGeo(out.static, mastG, C(K.iron));
     }
   }
@@ -435,15 +524,16 @@ export function buildBackdrop(kit, data = {}) {
     const rx = 82.0, rz = 108.0;
     for (const a of pylonAngles) {
       const rad = a * D_;
-      let pr = (1.0 / Math.sqrt((Math.cos(rad) / rx) ** 2 + (Math.sin(rad) / rz) ** 2)) + 4.0;
-      if ((a > -145 && a < -115) || (a > 35 && a < 65)) pr = Math.max(pr, 100.0);
+      let pr = (1.0 / Math.sqrt((Math.cos(rad) / rx) ** 2 + (Math.sin(rad) / rz) ** 2)) + 3.0;
+      if ((a > -145 && a < -115) || (a > 35 && a < 65)) pr = Math.max(pr, 98.0);
       const px = pr * Math.cos(rad);
       const pz = pr * Math.sin(rad);
-      const pylonG = new THREE.BoxGeometry(1.6, 15.0, 1.6);
-      pylonG.translate(px, 17.0, pz);
+      const crestH = 12.5 + 2.5 * Math.cos(a * 2 * D_);
+      const pylonG = new THREE.BoxGeometry(1.4, 14.0, 1.4);
+      pylonG.translate(px, crestH + 7.0, pz);
       addGeo(out.static, pylonG, C(K.iron));
-      const crossG = new THREE.BoxGeometry(7.0, 0.6, 0.8);
-      crossG.translate(px, 23.0, pz);
+      const crossG = new THREE.BoxGeometry(5.5, 0.5, 0.6);
+      crossG.translate(px, crestH + 12.0, pz);
       addGeo(out.static, crossG, C(K.iron));
     }
   }

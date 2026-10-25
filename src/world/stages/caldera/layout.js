@@ -537,9 +537,9 @@ const LAYOUT_CALDERA = {
       },
       sunset: {
         sunIntensity: 5.4, skySun: 4.4,
-        hemiIntensity: 0.95, hemiSky: '#9a82d0', hemiGround: '#d48858', envK: 0.55,
-        zenith: '#262d6e', skyMid: '#7c5ba4', horizon: '#ffa262',
-        grade: { uExposure: 1.34, uSat: 1.08, uContrast: 1.05, bloom: [0.45, 0.55, 1.8] },
+        hemiIntensity: 1.15, hemiSky: '#a498d4', hemiGround: '#df9866', envK: 0.60,
+        zenith: '#282f6e', skyMid: '#8265a8', horizon: '#ffa668',
+        grade: { uExposure: 1.34, uSat: 1.06, uContrast: 1.05, bloom: [0.65, 0.45, 1.2] },
       },
     },
   },

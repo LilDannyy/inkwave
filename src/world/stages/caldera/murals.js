@@ -37,13 +37,15 @@ export function drawMurals(g, R, kit) {
   const WHITE = '#f1ede4', CREAM = '#efe8d4', GREEN = '#2f5a48', IRON = '#26292d', IRON_LT = '#4a4e54';
   const RUST = '#8b3a2b', ASH = '#d8d4cb', CHARCOAL = '#1a1c1e';
 
-  // Seeded wear/weathering helper
+  // Seeded wear/weathering helper (uses source-over so sign backplates remain 100% opaque,
+  // preventing underlying stage surface crack lines from bleeding through)
   let seed = 42;
   const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-  function wear(x, y, w, h, n = 40, maxR = 6) {
-    g.save(); g.globalCompositeOperation = 'destination-out';
+  function wear(x, y, w, h, n = 30, maxR = 5) {
+    g.save(); g.globalCompositeOperation = 'source-over';
+    g.fillStyle = CHARCOAL;
     for (let i = 0; i < n; i++) {
-      g.globalAlpha = 0.2 + rnd() * 0.4;
+      g.globalAlpha = 0.06 + rnd() * 0.12;
       g.beginPath();
       g.ellipse(x + rnd() * w, y + rnd() * h, 1 + rnd() * maxR, 1 + rnd() * maxR * 0.5, rnd() * 3, 0, Math.PI * 2);
       g.fill();
@@ -52,7 +54,7 @@ export function drawMurals(g, R, kit) {
   }
 
   // -------------------------------------------------------------------------------------------------
-  // 4: HIGHMARK FOUNDRY gable plate (680 × 160 px, 5.0 × 1.2 m)
+  // 4: HIGHMARK FOUNDRY gable plate (680 × 160 px, 4.4 × 1.1 m)
   // -------------------------------------------------------------------------------------------------
   {
     const x = X0 + 8, y = Y0 + 8, w = 680, h = 150;
@@ -65,13 +67,13 @@ export function drawMurals(g, R, kit) {
       g.beginPath(); g.arc(rx, ry, 5, 0, Math.PI * 2); g.fill();
     }
     g.textAlign = 'center'; g.textBaseline = 'middle';
-    fit(g, 'HIGHMARK FOUNDRY', w - 60, 48, fontB);
+    fit(g, 'HIGHMARK FOUNDRY', w - 120, 42, fontB);
     g.fillStyle = CREAM; g.fillText('HIGHMARK FOUNDRY', x + w / 2, y + 54);
-    g.font = font(22); g.fillStyle = ASH;
+    g.font = font(20); g.fillStyle = ASH;
     g.fillText('BELLOWS CALDERA  ·  EST. 1931', x + w / 2, y + 104);
-    wear(x, y, w, h, 25);
+    wear(x, y, w, h, 20);
     g.restore();
-    out.push({ id: MURAL.gable, x, y, w, h, place: [0.3, 5.0, 0.2, 1.2], fx: [0.8, 1] });
+    out.push({ id: MURAL.gable, x, y, w, h, place: [0.6, 4.2, 0.25, 1.1], fx: [0.8, 1] });
   }
 
   // -------------------------------------------------------------------------------------------------
@@ -100,21 +102,21 @@ export function drawMurals(g, R, kit) {
     g.fillStyle = '#1c1e22'; rr(g, x, y, w, h, 12); g.fill();
     g.strokeStyle = '#d48834'; g.lineWidth = 6; rr(g, x + 6, y + 6, w - 12, h - 12, 8); g.stroke();
     g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.fillStyle = '#e8a042'; g.font = fontB(32);
-    g.fillText('CASTING FLOOR', x + w / 2, y + 46);
-    g.font = fontB(24); g.fillStyle = WHITE;
-    g.fillText('EBB ONLY  ·  FLOODS AT SURGE', x + w / 2, y + 92);
+    g.fillStyle = '#e8a042'; g.font = fontB(30);
+    g.fillText('CASTING FLOOR', x + w / 2, y + 38);
+    g.font = fontB(22); g.fillStyle = WHITE;
+    g.fillText('EBB ONLY  ·  FLOODS AT SURGE', x + w / 2, y + 76);
     // Crossed boots symbol
     g.strokeStyle = '#c8202a'; g.lineWidth = 5;
     g.beginPath();
-    g.moveTo(x + w / 2 - 25, y + 140); g.lineTo(x + w / 2 + 25, y + 190);
-    g.moveTo(x + w / 2 + 25, y + 140); g.lineTo(x + w / 2 - 25, y + 190);
+    g.moveTo(x + w / 2 - 20, y + 102); g.lineTo(x + w / 2 + 20, y + 142);
+    g.moveTo(x + w / 2 + 20, y + 102); g.lineTo(x + w / 2 - 20, y + 142);
     g.stroke();
     g.font = font(18); g.fillStyle = ASH;
-    g.fillText('SLUMP PATH: DANGER OF SURGE', x + w / 2, y + 208);
-    wear(x, y, w, h, 30);
+    g.fillText('SLUMP PATH: DANGER OF SURGE', x + w / 2, y + 172);
+    wear(x, y, w, h, 20);
     g.restore();
-    out.push({ id: MURAL.warning, x, y, w, h, place: [0.05, 0.9, 0.1, 0.9], fx: [0.8, 1] });
+    out.push({ id: MURAL.warning, x, y, w, h, place: [0.05, 0.9, 0.12, 0.95], fx: [0.8, 1] });
   }
 
   // -------------------------------------------------------------------------------------------------
@@ -248,7 +250,7 @@ export function drawMurals(g, R, kit) {
     g.fillText('DISPATCH — INKOPOLIS MUNICIPAL CASTINGS', x + 24, y + 224);
     wear(x, y, w, h, 20);
     g.restore();
-    out.push({ id: MURAL.stencils, x, y, w, h, place: [1.9, 3.2, 2.6, 1.2], fx: [0.85, 1] });
+    out.push({ id: MURAL.stencils, x, y, w, h, place: [0.9, 3.2, 4.1, 1.2], fx: [0.85, 1] });
   }
 
   return out;
