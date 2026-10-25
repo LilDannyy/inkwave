@@ -611,9 +611,33 @@ export class EraWorld {
     this.envEra = save;
     for (const [k, rt] of EM) if (!all.has(k)) { EM.delete(k); rt.dispose(); }
     if (env.envMapFor) for (const [k, T] of all) if (!EM.has(k)) { const ct = this._cloudTex(T); if (ct) { EM.set(k, env.envMapFor(T, ct)); n++; } }
+    if (n) this._warmLooks(all);
     // (the bakes' GPU work finished here, at load, so none of it is still queued when the intro or a jump draws)
     if (n) { try { env.renderer?.getContext?.().finish(); } catch (e) { /* (a headless page) */ } this.stats.cloudBakes = (this.stats.cloudBakes || 0) + n; this.stats.cloudWarmMs = Math.round(now() - t); }
     return n;
+  }
+  // every state a jump's settle can put the frame in, drawn once now (one real frame per era: its lights, grade, sky light
+  // colours, env map and cached clouds, the sky's cross-fade on), so nothing the settle shows is first drawn — and none of
+  // its pipeline states first built by the GPU — inside a match; then the era in force put back
+  _warmLooks(all) {
+    const env = this.env, U = env?.U, sc = env?.scene;
+    if (!env?.applyLights || !U?.uCloudMix || !G.game?.R?.render) return;
+    const save = { em: env.envMap, se: sc.environment, ct: U.uCloudTex.value, ct2: U.uCloudTex2.value, mix: U.uCloudMix.value, grade: env.grade };
+    const cur = env._stageTheme(env.theme);
+    try {
+      for (const [k, T] of all) {
+        env.applyLights(T);
+        const ct = this._cloudTex(T), em = this._envCache?.get(k);
+        if (em) env.useEnvMap(em);
+        if (ct) { U.uCloudTex2.value = ct; U.uCloudMix.value = 0.5; }
+        try { G.game.R.render(); } catch (e) { /* (a headless page) */ }
+      }
+    } finally {
+      env.applyLights(cur);
+      env.grade = save.grade; env.envMap = save.em; sc.environment = save.se;
+      U.uCloudTex.value = save.ct; U.uCloudTex2.value = save.ct2; U.uCloudMix.value = save.mix;
+      this.stats.looksWarmed = (this.stats.looksWarmed || 0) + all.size;
+    }
   }
   // a look's clouds: the environment's own bake if it is that look's, else the cache's (null if not baked)
   _cloudTex(T) {
