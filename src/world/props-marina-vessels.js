@@ -2762,7 +2762,7 @@ export const HALYARD_VESSELS = [
   // ---- the ferry (hull side + end, saloon side; the mirror copies dress the far side and end)
   { type: 'ferry_hull', pos: [0, 0, 0], notIn: 'tower' },
   { type: 'ferry_hull', pos: [0, 0, 0], linkspan: true, onlyIn: 'tower' },   // Tower Command: floats against both ends
-  { type: 'ferry_cabin', pos: [0, 0, 0] },
+  { type: 'ferry_cabin', pos: [0, 0, 0], notIn: 'bazookarp' },   // open the car-deck Pond sightlines
   { type: 'ferry_bridge', pos: [0, 3.8, 0], mirror: false, notIn: ['tower', 'bazookarp'] },   // [karp-face] (its wheelhouse block isn't built there: the Pond is on the cabin roof — the dressing and funnel stood inside the Roe Shell)
   // cover pieces from docs/HALYARD.md (Alpha half; mirrored)
   { type: 'ferry_locker', pos: [11.75, 1.3, 2.15], notIn: 'tower' },
@@ -2775,7 +2775,7 @@ export const HALYARD_VESSELS = [
   { type: 'tug_access', pos: [0, 0, 0], onlyIn: 'zones' },
   { type: 'tug_access', pos: [0, 0, 0], stairOnly: true, onlyIn: 'tower' },     // Tower Command: the bow ramp's handrails
   // ---- ramp dressing: ferry sun-deck stair (stringers + handrails) and the tug ramp's scaffold guardrails
-  { type: 'ferry_stair', pos: [0, 0, 0], notIn: 'tower' },
+  { type: 'ferry_stair', pos: [0, 0, 0], notIn: ['tower', 'bazookarp'] },
   { type: 'ferry_stair', pos: [0, 0, 0], zIn: -1.45, onlyIn: 'tower' },          // Tower Command: the narrowed stair
   { type: 'tug_ramp_rails', pos: [0, 0, 0], notIn: 'zones' },
   { type: 'tug_ramp_rails', pos: [0, 0, 0], z0: -7.55, z1: -13.45, onlyIn: 'zones' },

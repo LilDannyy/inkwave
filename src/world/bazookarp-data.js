@@ -26,9 +26,9 @@ export const BAZOOKARP_DEFS = {
     // The ferry's car deck is the central, open fight space. Bazookarp clears the cabin so the Pond has a walkable ring.
     start: [0, 1.3, 0],
     weirs: [{ at: [-1.5, 0, 27.5], yaw: 0 }],          // the Long Pier / boatyard junction (§9.3)
-    gate: { at: [0, 0, 54.2], yaw: 0 },                 // in front of Bravo's spawn (12.4 m from the pad)
+    gate: { at: [0, 0, 53.8], yaw: 0 },                 // in front of Bravo's spawn (12.2 m from the pad)
     freeZones: [
-      { poly: [[-9.5, 60], [9.5, 60], [9.5, 72], [-9.5, 72]], y0: 2.0, y1: 4.6, signs: [[-8.1, 65.9, 90], [8.1, 65.9, 270], [-3, 62.5, 0], [3, 62.5, 180]] },   // whole spawn terrace plus its signed side entrances
+      { poly: [[-8.5, 62.5], [8.5, 62.5], [8.5, 69.4], [-8.5, 69.4]], y0: 2.0, y1: 4.6, signs: [[-9.7, 65.9, 90], [9.7, 65.9, 270], [-4.8, 61.5, 0], [4.8, 61.5, 180]] },   // deck free zone; entrance signs stand outside it
     ],
     hopVeto: [
       [-15.5, 2.9, -18.5, -17.5, 0.7, -17.5], [-15.5, 2.9, -17.5, -17.5, 0.7, -17.5], [-14.5, 2.9, -17.5, -17.5, 0.7, -17.5],

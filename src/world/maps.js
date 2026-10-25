@@ -55,8 +55,8 @@ export const HALYARD = {
     B(-16, 16, 1.1, 1.3, -5, 5, { tag: 'ferry-deck', color: M.carDeck, pattern: PATTERN.nonslip, mural: [{ n: [0, 1, 0], id: 4 }] }),
     // Bazookarp's Pond needs an honest fight ring on the ferry's open car deck. These broad side aprons turn its
     // narrow vehicle deck into the public loading apron around the centre; only this mode gets the extra float-deck.
-    B(-10, 10, 1.1, 1.3, -10, -5, { tag: 'car-deck-apron', color: M.ferryDeck, pattern: PATTERN.nonslip, onlyIn: 'bazookarp' }),
-    B(-10, 10, 1.1, 1.3, 5, 10, { tag: 'car-deck-apron', color: M.ferryDeck, pattern: PATTERN.nonslip, onlyIn: 'bazookarp' }),
+    B(-12, 12, 1.1, 1.3, -12, -5, { tag: 'car-deck-apron', color: M.ferryDeck, pattern: PATTERN.nonslip, onlyIn: 'bazookarp' }),
+    B(-12, 12, 1.1, 1.3, 5, 12, { tag: 'car-deck-apron', color: M.ferryDeck, pattern: PATTERN.nonslip, onlyIn: 'bazookarp' }),
     // cabin (its roof is the sun deck) + wheelhouse on top
     B(-6.5, 6.5, 1.3, 3.8, -2.9, 2.9, { tag: 'ferry-cabin', color: M.cabin, pattern: PATTERN.hullpaint, mural: [{ n: [1, 0, 0], id: 6 }, { n: [-1, 0, 0], id: 6 }, { n: [0, 0, 1], id: 5 }, { n: [0, 0, -1], id: 5 }], notIn: 'bazookarp' }),
     B(-1.5, 1.5, 3.8, 5.2, -1.6, 1.6, { tag: 'ferry-wheelhouse', roof: true, color: M.cabin, pattern: PATTERN.hullpaint, notIn: ['tower', 'bazookarp'] }),   // [b5-karp] (the Pond on the cabin roof)
@@ -70,6 +70,9 @@ export const HALYARD = {
     B(-8.5, 8.5, 0, 2.2, hq(-45.4), hq(-38.5), { tag: 'spawn-terrace-body', color: M.render, pattern: PATTERN.render }),
     B(-8.5, 8.5, 2.2, 2.4, hq(-45.4), hq(-38.5), { tag: 'spawn-terrace', color: M.spawn, pattern: PATTERN.spawn }),
     R([0, 0, hq(-32.4)], [0, 2.4, hq(-38.5)], 6, { tag: 'grand-stair', color: M.stone, pattern: PATTERN.stonestep }),
+    // The Gate apron has two staggered cargo stacks for cover on the otherwise exposed clubhouse quay.
+    B(-4.5, -2.2, 0, 1.35, -50.5, -49.5, { tag: 'gate-crate-cover', color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
+    B(2.2, 4.5, 0, 1.35, -50.5, -49.5, { tag: 'gate-crate-cover', color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
     B(-8.5, -4.6, 2.4, 3.15, hq(-39.1), hq(-38.5), { tag: 'parapet', color: M.clubhouse, pattern: PATTERN.render }),
     B(4.6, 8.5, 2.4, 3.15, hq(-39.1), hq(-38.5), { tag: 'parapet', color: M.clubhouse, pattern: PATTERN.render }),
     // quay corners: boathouse (left) and a harbour-office kiosk (right) — cover + landmarks, out of the lanes
@@ -147,6 +150,8 @@ export const HALYARD = {
     R([19.0, 0, -29.95], [19.0, 2.6, -24.0], 2.2, { tag: 'tug-bow-ramp', color: M.wood, pattern: PATTERN.rampboard, onlyIn: 'tower' }),
     // plank from the boatyard onto the ferry's end deck
     R([19.7, 0, -3.6], [15.85, 1.3, -3.6], 2.0, { tag: 'ferry-plank', thin: true, thickness: 0.2, color: M.wood, pattern: PATTERN.planks }),
+    // Bazookarp gets a second, visible ferry landing to the Long Pier so the central push has a true alternate route.
+    R([-19.7, 0, -3.6], [-15.85, 1.3, -3.6], 2.0, { tag: 'ferry-plank', thin: true, thickness: 0.2, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
 
     // ================= ferry details (mirrored to the far side)
     // bulwarks along the long sides, open at the gangway
