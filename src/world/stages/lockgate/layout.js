@@ -219,7 +219,7 @@ const LOCKGATE = {
   art: { from: [-24, 14, -12], look: [8, 0, 4], fov: 66 },
   single: [
     // A centred single-build plaza avoids a mirrored copy z-fighting over the Pond.
-    B(-7.5, 7.5, 3.15, 3.3, -7.5, 7.5, { tag: 'karp-pond-plaza', color: LG.quay, pattern: PATTERN.pavers, onlyIn: 'bazookarp' }),
+    B(-7.5, 7.5, 3.3, 3.45, -7.5, 7.5, { tag: 'karp-pond-plaza', color: LG.quay, pattern: PATTERN.pavers, onlyIn: 'bazookarp' }),
   ],
   half: [
     // ================= canal: towpath quay, lock E (both sides; lock W is its twin), basins, drained chamber, boats
