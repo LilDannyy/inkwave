@@ -253,7 +253,7 @@ vec3 bsShopWall(vec2 uv, float kind, float seed, int E, float y1, bool back) {
     float pot = step(v, 0.42) * bsAA(abs(fract(u / 1.1) - 0.5) - 0.18, 0.02);
     c = mix(c, mix(bsC(0.3, 0.46, 0.26), bsC(0.85, 0.85, 0.82), step(v, 0.2)), pot);
     float r = floor((v - 0.45) / 0.55), ly = (v - 0.45) - r * 0.55;
-    float hull = step(0.0, r) * step(r, 2.0) * bsAA(abs(ly - 0.2) - 0.08 * (1.0 - pow(abs(fract(u / 9.0) * 2.0 - 1.0), 6.0)), 0.01);
+    float hull = step(0.0, r) * step(r, 2.0) * bsAA(abs(ly - 0.24) - 0.12 * (1.0 - pow(abs(fract(u / 9.0) * 2.0 - 1.0), 6.0)), 0.01);
     c = mix(c, bsGoodC(7.0, bsH(vec2(r, seed)), E), hull);
     c = mix(c, bsC(0.5, 0.38, 0.26), bsAA(abs(ly - 0.06) - 0.025, 0.01) * step(0.0, r) * step(r, 2.0) * step(0.85, fract(u / 1.5)));
     float oar = bsAA(abs(fract(u / 2.3) - 0.5) - 0.012, 0.01) * step(v, 2.0);
