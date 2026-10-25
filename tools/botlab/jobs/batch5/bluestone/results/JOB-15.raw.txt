@@ -1,0 +1,52 @@
+JOB-15 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 13:56:03
+branch botlab-b5-bluestone, ran at 272f53a3, exit code 0, wall time 9min
+(a written-up JOB-15.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-15 head 272f53a3 load { 2.22 2.56 2.59 }
+== gpu halyard1 halyard e0 day: "views":[38.81,22.44,23.26,26.35,19.5,21.39,19.75,22.46] "avg":{"gpu":24.25,"calls":172.5,"tris":3093964}  
+== gpu halyard1 halyard e0 dusk: "views":[40.71,24.68,22.55,25.59,17.58,22.49,20.43,20.74] "avg":{"gpu":24.35,"calls":167.13,"tris":3073374}  
+== gpu before1 bluestone e1 day: "views":[42.76,44.1,42.12,42.92,42.61,43.55,44.27,44.41] "avg":{"gpu":43.34,"calls":113.88,"tris":950907}  
+== gpu before1 bluestone e2 day: "views":[43.64,45.36,44.74,45.18,43,43.59,45.48,42.43] "avg":{"gpu":44.18,"calls":114.38,"tris":912477}  
+== gpu before1 bluestone e3 day: "views":[45.29,45.58,43.65,45.85,48.03,42.57,46.85,44.8] "avg":{"gpu":45.33,"calls":106,"tris":966617}  
+== gpu before1 bluestone e1 dusk: "views":[46.87,44.2,48.03,48.48,50.43,49.14,46.2,45.43] "avg":{"gpu":47.35,"calls":110.25,"tris":950281}  
+== gpu before1 bluestone e2 dusk: "views":[46.26,48.9,47.74,48.97,46.28,47.36,49.86,46.91] "avg":{"gpu":47.78,"calls":113.63,"tris":911585}  
+== gpu before1 bluestone e3 dusk: "views":[43.97,48.56,46.94,49.29,50.49,44.23,48.27,47.54] "avg":{"gpu":47.41,"calls":114.75,"tris":985338}  
+== gpu after1 bluestone e1 day: "views":[45.5,43.19,43.26,44.6,42.51,44.62,45.45,44.88] "avg":{"gpu":44.25,"calls":119.13,"tris":993699}  
+== gpu after1 bluestone e2 day: "views":[44.49,46.85,44.94,46.3,44.24,44.49,45.47,45.26] "avg":{"gpu":45.25,"calls":112.25,"tris":940171}  
+== gpu after1 bluestone e3 day: "views":[47.01,45.51,46.5,49.02,45.37,45.7,46.4,43.92] "avg":{"gpu":46.18,"calls":116,"tris":1008549}  
+== gpu after1 bluestone e1 dusk: "views":[43.56,47.35,44,46.65,47.01,45.92,46.93,43.55] "avg":{"gpu":45.62,"calls":109,"tris":982467}  
+== gpu after1 bluestone e2 dusk: "views":[43.51,46.9,46.75,49.13,46.24,46.72,48.48,46.37] "avg":{"gpu":46.76,"calls":111.13,"tris":949761}  
+== gpu after1 bluestone e3 dusk: "views":[45.43,49.17,46.79,49.52,49.35,46.71,47.91,47.78] "avg":{"gpu":47.83,"calls":118.38,"tris":1022694}  
+== gpu halyard2 halyard e0 day: "views":[38.12,39.34,37.3,24.4,22.62,23.09,22.01,18.55] "avg":{"gpu":28.18,"calls":160.63,"tris":3076921}  
+== gpu halyard2 halyard e0 dusk: "views":[37.57,39.79,36.52,25.8,17.3,20.32,20.79,24.12] "avg":{"gpu":27.78,"calls":168.63,"tris":3076276}  
+== gpu before2 bluestone e1 day: "views":[45.8,41.78,41.87,43.79,44.04,43.93,42.45,42.77] "avg":{"gpu":43.3,"calls":107.63,"tris":947141}  
+== gpu before2 bluestone e2 day: "views":[44.38,44.18,43.42,46.64,44.08,43.89,45.17,44.64] "avg":{"gpu":44.55,"calls":115.13,"tris":918342}  
+== gpu before2 bluestone e3 day: "views":[47.76,44.8,44.78,46.53,43.51,45.33,45.41,45.44] "avg":{"gpu":45.45,"calls":107.13,"tris":963542}  
+== gpu before2 bluestone e1 dusk: "views":[46.16,44.84,47.1,46.95,44.94,45.8,47.62,47.41] "avg":{"gpu":46.35,"calls":112.63,"tris":954748}  
+== gpu before2 bluestone e2 dusk: "views":[48.54,46.01,45.85,48.29,47.55,47,46.32,43.76] "avg":{"gpu":46.66,"calls":117,"tris":914787}  
+== gpu before2 bluestone e3 dusk: "views":[46.2,48.19,45.78,47.95,45.94,45.16,47.53,46.26] "avg":{"gpu":46.63,"calls":105.88,"tris":971723}  
+== gpu after2 bluestone e1 day: "views":[41.32,43.65,42.25,43.26,45.2,42.75,44.35,46.34] "avg":{"gpu":43.64,"calls":110,"tris":981003}  
+== gpu after2 bluestone e2 day: "views":[45.38,46.13,46.55,46.28,43.53,44.71,44.74,45.05] "avg":{"gpu":45.3,"calls":109.88,"tris":935121}  
+== gpu after2 bluestone e3 day: "views":[42.92,48.3,45.89,47.09,44.28,44.31,45.44,42.77] "avg":{"gpu":45.13,"calls":108.25,"tris":998460}  
+== gpu after2 bluestone e1 dusk: "views":[47.05,45.74,44.74,48.05,45.82,47.21,47.42,48.33] "avg":{"gpu":46.79,"calls":115.25,"tris":995017}  
+== gpu after2 bluestone e2 dusk: "views":[46.1,48.34,45.78,49.43,46.41,46.05,49.49,43.99] "avg":{"gpu":46.95,"calls":116.5,"tris":947034}  
+== gpu after2 bluestone e3 dusk: "views":[48.18,46.84,47.13,48.52,46.66,46.95,47.65,47.79] "avg":{"gpu":47.47,"calls":112.13,"tris":1002226}  
+### done
+
+## last 15 lines of job.log
+== gpu halyard2 halyard e0 dusk: "views":[37.57,39.79,36.52,25.8,17.3,20.32,20.79,24.12] "avg":{"gpu":27.78,"calls":168.63,"tris":3076276}  
+== gpu before2 bluestone e1 day: "views":[45.8,41.78,41.87,43.79,44.04,43.93,42.45,42.77] "avg":{"gpu":43.3,"calls":107.63,"tris":947141}  
+== gpu before2 bluestone e2 day: "views":[44.38,44.18,43.42,46.64,44.08,43.89,45.17,44.64] "avg":{"gpu":44.55,"calls":115.13,"tris":918342}  
+== gpu before2 bluestone e3 day: "views":[47.76,44.8,44.78,46.53,43.51,45.33,45.41,45.44] "avg":{"gpu":45.45,"calls":107.13,"tris":963542}  
+== gpu before2 bluestone e1 dusk: "views":[46.16,44.84,47.1,46.95,44.94,45.8,47.62,47.41] "avg":{"gpu":46.35,"calls":112.63,"tris":954748}  
+== gpu before2 bluestone e2 dusk: "views":[48.54,46.01,45.85,48.29,47.55,47,46.32,43.76] "avg":{"gpu":46.66,"calls":117,"tris":914787}  
+== gpu before2 bluestone e3 dusk: "views":[46.2,48.19,45.78,47.95,45.94,45.16,47.53,46.26] "avg":{"gpu":46.63,"calls":105.88,"tris":971723}  
+== gpu after2 bluestone e1 day: "views":[41.32,43.65,42.25,43.26,45.2,42.75,44.35,46.34] "avg":{"gpu":43.64,"calls":110,"tris":981003}  
+== gpu after2 bluestone e2 day: "views":[45.38,46.13,46.55,46.28,43.53,44.71,44.74,45.05] "avg":{"gpu":45.3,"calls":109.88,"tris":935121}  
+== gpu after2 bluestone e3 day: "views":[42.92,48.3,45.89,47.09,44.28,44.31,45.44,42.77] "avg":{"gpu":45.13,"calls":108.25,"tris":998460}  
+== gpu after2 bluestone e1 dusk: "views":[47.05,45.74,44.74,48.05,45.82,47.21,47.42,48.33] "avg":{"gpu":46.79,"calls":115.25,"tris":995017}  
+== gpu after2 bluestone e2 dusk: "views":[46.1,48.34,45.78,49.43,46.41,46.05,49.49,43.99] "avg":{"gpu":46.95,"calls":116.5,"tris":947034}  
+== gpu after2 bluestone e3 dusk: "views":[48.18,46.84,47.13,48.52,46.66,46.95,47.65,47.79] "avg":{"gpu":47.47,"calls":112.13,"tris":1002226}  
+head: illegal line count -- 0
+### done
