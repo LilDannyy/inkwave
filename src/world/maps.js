@@ -73,7 +73,7 @@ export const HALYARD = {
     // 2.3 m quay-side returns stop a jump from the spawn deck dropping straight into the Gate ring; the grand stair and both
     // side stairs remain the three visible entrances to the lower apron.
     B(-6.3, -3.2, 2.4, 4.8, -hq(-38.4), -hq(-38.7), { tag: 'karp-spawn-parapet', roof: true, color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
-    B(8, 12.5, 0, 5.2, 58, 66, { tag: 'karp-quay-return', roof: true, color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
+    B(-12.5, -8, 0, 5.2, 58, 66, { tag: 'karp-quay-return', roof: true, color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
     B(3.2, 6.3, 2.4, 4.8, -hq(-38.4), -hq(-38.7), { tag: 'karp-spawn-parapet', roof: true, color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
     R([0, 0, hq(-32.4)], [0, 2.4, hq(-38.5)], 6, { tag: 'grand-stair', color: M.stone, pattern: PATTERN.stonestep }),
     // Side flights turn the tall spawn-deck edge into two safe, readable exits for the Bazookarp Gate apron.
