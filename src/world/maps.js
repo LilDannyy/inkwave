@@ -70,6 +70,9 @@ export const HALYARD = {
     B(-8.5, 8.5, 0, 2.2, hq(-45.4), hq(-38.5), { tag: 'spawn-terrace-body', color: M.render, pattern: PATTERN.render }),
     B(-8.5, 8.5, 2.2, 2.4, hq(-45.4), hq(-38.5), { tag: 'spawn-terrace', color: M.spawn, pattern: PATTERN.spawn }),
     R([0, 0, hq(-32.4)], [0, 2.4, hq(-38.5)], 6, { tag: 'grand-stair', color: M.stone, pattern: PATTERN.stonestep }),
+    // Side flights turn the tall spawn-deck edge into two safe, readable exits for the Bazookarp Gate apron.
+    R([-7.4, 0, hq(-32.4)], [-7.4, 2.4, hq(-38.5)], 2.2, { tag: 'spawn-side-stair', color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
+    R([7.4, 0, hq(-32.4)], [7.4, 2.4, hq(-38.5)], 2.2, { tag: 'spawn-side-stair', color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
     // The Gate apron has two staggered cargo stacks for cover on the otherwise exposed clubhouse quay.
     B(-4.5, -2.2, 0, 1.35, -50.5, -49.5, { tag: 'gate-crate-cover', color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
     B(2.2, 4.5, 0, 1.35, -50.5, -49.5, { tag: 'gate-crate-cover', color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),

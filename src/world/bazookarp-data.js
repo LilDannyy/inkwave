@@ -28,7 +28,7 @@ export const BAZOOKARP_DEFS = {
     weirs: [{ at: [-1.5, 0, 27.5], yaw: 0 }],          // the Long Pier / boatyard junction (§9.3)
     gate: { at: [0, 0, 53.8], yaw: 0 },                 // in front of Bravo's spawn (12.2 m from the pad)
     freeZones: [
-      { poly: [[-8.5, 62.5], [8.5, 62.5], [8.5, 69.4], [-8.5, 69.4]], y0: 2.0, y1: 4.6, signs: [[-9.7, 65.9, 90], [9.7, 65.9, 270], [-4.8, 61.5, 0], [4.8, 61.5, 180]] },   // deck free zone; entrance signs stand outside it
+      { poly: [[-8.5, 62.5], [8.5, 62.5], [8.5, 69.4], [-8.5, 69.4]], y0: 2.0, y1: 4.6, signs: [[-9.7, 65.9, 90], [9.7, 65.9, 270], [-4.8, 61.5, 0], [4.8, 61.5, 180], [-8.9, 62.5, 90], [8.9, 62.5, 270]] },   // deck free zone; entrance signs stand outside it
     ],
     hopVeto: [
       [-15.5, 2.9, -18.5, -17.5, 0.7, -17.5], [-15.5, 2.9, -17.5, -17.5, 0.7, -17.5], [-14.5, 2.9, -17.5, -17.5, 0.7, -17.5],
