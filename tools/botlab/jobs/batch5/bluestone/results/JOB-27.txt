@@ -1,0 +1,8 @@
+JOB-27 (bluestone, art review 3) @ bfb4b6b1 (fix round 2's head) — Mac mini b5-runner, 2026-10-25 19:03–19:41, exit 0. Short summary.
+- the GPU gate, method C (30 renders + a fence, ms per frame, mean of 2 rounds): Bluestone e1 6.16 / 6.56, e2 6.36 / 6.58, e3 6.47 / 6.92
+  (day / dusk), Halyard 7.12 / 7.27 — ×0.86–0.95: MET in every era, day and dusk.
+- full: art-tests.sh, eras-jump frames 4/4 ×2 and first 1/1, eras-bake 3/3, stage-audit turf / zones / tower × e1–e3 and boss e2 (the lightmap
+  applied, 10 of 10), net-eras lagged; check-maps: Bluestone clean.
+- net-eras 13/14: the guest's Iron Bridge splats around a flip leave 2 cells of 368 different on the two screens (the same 2 in each of the 6 tries) (as beta1 JOB-7 once saw;
+  beta1 JOB-9 then passed it 3/3).
+- perf6 vs Halyard: calls ×0.81–1.01, triangles ×0.40–0.46, cpuRender ×0.77–0.83.
