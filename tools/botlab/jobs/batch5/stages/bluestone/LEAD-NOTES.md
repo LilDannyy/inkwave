@@ -267,3 +267,10 @@ carried items had no decision. Decisions:
   the round's applyLights / cloud bake landing in a real jump's render, or a program variant compiled on first use. Sent to
   the builder: nothing the round added may cost a frame over 50 ms in a real jump; cloud bakes precomputed per era at load
   or sliced; every light-path program variant precompiled; the cause found by the frame split; JOB-29 frames ×3 both themes.
+- **JOB-30 (fix round 3, after the builder's cloud fix):** the spike is NOT cleared: frames 4/4, 4/4, 2/4; run 3's Bravo-viewer
+  jump 2 → 3 had a 387.1 ms frame at J + 4.83 s, 385.9 ms inside RENDER (JOB-28: 451 ms at J + 4.8 s, sunset 3 → 1). Two of five
+  runs since fix round 3. J + 4.8 s is the env event: the lead's reading is a program-cache-key change at applyLights /
+  _envFinal (a light added / removed, a shadow or fog or toneMapping toggle, a new scene.environment texture object, a define
+  flipped) recompiling every material in the next render. Builder told: diagnose with renderer.info.programs / textures before
+  and after the event, make the event change uniform values and in-place textures only (per-era env maps and cloud bakes made
+  at load), prove with JOB-31 frames ×3 in both side jumps, no frame over 50 ms from the round's code.
