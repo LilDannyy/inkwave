@@ -2,7 +2,9 @@
 # kind: tests
 # after: JOB-29
 # push: tools/botlab/jobs/batch5/bluestone/out/sweep/fix3/dusk/*.jpg
-# Bluestone fix round 3 (the art builder), JOB-30: the eye-level sweep (tools/botlab/stage-sweep.cjs) in every era by dusk at
+# Bluestone fix round 3 (the art builder), JOB-30: FIRST the coordinator's check of the cloud fix (JOB-28's 451 ms frame:
+# every era's clouds now baked at load, no bake in or after a jump) — eras-jump 'frames' x3 (the real-schedule jump and the
+# Bravo / sunset-theme jumps), 'first' x2, 'sky', eras-look (i) — then the eye-level sweep (tools/botlab/stage-sweep.cjs) in every era by dusk at
 # fix round 3's head (the real jump's lights, the five cover pieces dressed, real words up close): one overview page per 35
 # clusters under out/sweep/fix3/dusk/; then the art-relevant tests once more at this head (eras-look with (i), eras-jump
 # first / frames / sky, world-build, stage-audit turf e1-e3: the lightmap still applied).
@@ -12,6 +14,9 @@ A=tools/botlab/jobs/batch5/bluestone
 R=tools/botlab/run.sh
 mkdir -p "$O" "$JOB_OUT/t"
 echo "### bluestone JOB-30 head ${JOB_SHA:-?} load $(sysctl -n vm.loadavg)"
+pg0() { local n=$1; shift; env "$@" WATCHDOG=900000 $R tools/botlab/page.cjs > "$JOB_OUT/t/$n.log" 2>&1; echo "== $n: $(grep -E '^RESULT|^WATCHDOG|HARNESS ERR' "$JOB_OUT/t/$n.log" | tr '\n' ' ') $(grep -c '^FAIL' "$JOB_OUT/t/$n.log") FAIL"; grep -E '^FAIL' "$JOB_OUT/t/$n.log" | cut -c1-1500; }
+for k in 1 2 3; do pg0 frames-$k MAP=bluestone PAGE=tools/botlab/tests/eras-jump.js PAGE_ARGS='only=frames'; grep -oE '"worst":\[\[[^]]*\],\[[^]]*\]' "$JOB_OUT/t/frames-$k.log" | head -3 | sed "s/^/# frames-$k worst (main | bravo | theme) /"; grep -oE '"eraUpdateMaxMs":[0-9.]+' "$JOB_OUT/t/frames-$k.log" | tr '\n' ' ' | sed "s/^/# frames-$k /"; echo; done
+for k in 1 2; do pg0 first-$k MAP=bluestone PAGE=tools/botlab/tests/eras-jump.js PAGE_ARGS='only=first'; done
 SKIP='street,street-base,kerb,carriageway,carriageway-base,circus,terrace-base,prow-place-base,gpo-terrace-base,spawn-deck-base,arcade-floor-base,boathouse-base,rail'
 for e in 1 2 3; do
   n="e$e-dusk"
