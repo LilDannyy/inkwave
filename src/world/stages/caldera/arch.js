@@ -18,7 +18,7 @@
 // - Lighting & Clutter: Gooseneck lamps with warm glowing bulbs, pipe manifolds with brass valves, firebrick pallets.
 
 import { HALL_LINE, PAD, PIT } from './geo.js';
-import { OFFICE } from './layout.js';
+import { LAYOUT, OFFICE } from './layout.js';
 
 export function registerArch(D, H) {
   const { THREE, PI, TAU, HP } = H;
@@ -1157,6 +1157,118 @@ export function registerArch(D, H) {
         // Smelting stack
         pcyl(B, 'metal', K.iron, 0.5, 6.5, 1.8, 4.2, 0, { seg: 8 });
         pcyl(B, NS('metal'), K.ironDk, 0.75, 0.35, 1.8, 7.4, 0, { seg: 8 });
+        B.pop();
+      }
+    },
+  };
+
+  // =========================================================================================================
+  // 9. FOUNDRY PIECE SKINS & WALL-MOUNTED BULKHEAD LAMPS
+  // Clads all eye-level pieces in authentic foundry skins within 2 cm, eliminating bare boxes.
+  // =========================================================================================================
+  D.caldera_piece_skins = {
+    desc: 'Authentic foundry architectural piece skins and wall-mounted bulkhead lamps wrapping layout blocks within 2 cm',
+    build(B) {
+      // 1. Wall-mounted and pier-mounted foundry bulkhead lamps
+      // Pour Floor 4 piers (outer faces at y = 4.5)
+      for (const [px, pz] of [[4.2, 1.75], [-4.2, 1.75], [-4.2, -1.75], [4.2, -1.75]]) {
+        const nx = Math.sign(px);
+        B.push(px + nx * 0.58, 4.5, pz);
+        pbox(B, 'metal', K.ironDk, 0.12, 0.22, 0.12, 0, 0, 0);
+        psph(B, 'glow', K.lampGlow, 0.08, 0, 0, 0, { glow: 1.2 });
+        B.pop();
+      }
+      // Casting Hall pilaster wall lamps
+      for (const z of [-48.0, -54.0]) {
+        B.push(-12.4 + 0.51, 5.2, z);
+        pbox(B, 'metal', K.ironDk, 0.08, 0.18, 0.08, 0, 0, 0);
+        psph(B, 'glow', K.lampGlow, 0.06, 0, 0, 0, { glow: 1.2 });
+        B.pop();
+      }
+      // Pattern shop & porch bulkhead lamps
+      B.push(-14.5, 5.2, -37.0);
+      pbox(B, 'metal', K.ironDk, 0.12, 0.2, 0.12, 0, 0, 0);
+      psph(B, 'glow', K.lampGlow, 0.08, 0, 0, 0, { glow: 1.2 });
+      B.pop();
+      B.push(-21.0, 5.2, -35.0);
+      pbox(B, 'metal', K.ironDk, 0.12, 0.2, 0.12, 0, 0, 0);
+      psph(B, 'glow', K.lampGlow, 0.08, 0, 0, 0, { glow: 1.2 });
+      B.pop();
+      // Winch house bulkhead lantern
+      B.push(-23.1, 2.5, -20.8);
+      pbox(B, 'metal', K.ironDk, 0.12, 0.2, 0.12, 0, 0, 0);
+      psph(B, 'glow', K.lampGlow, 0.08, 0, 0, 0, { glow: 1.2 });
+      B.pop();
+      // Spawn gallery bulkhead lamps
+      for (const gx of [-12.4, -21.0]) {
+        B.push(gx, 5.8, -67.5);
+        pbox(B, 'metal', K.ironDk, 0.12, 0.22, 0.12, 0, 0, 0);
+        psph(B, 'glow', K.lampGlow, 0.08, 0, 0, 0, { glow: 1.2 });
+        B.pop();
+      }
+
+      // 2. Wrap all eye-level pieces in Alpha's half
+      const allLayout = [...(LAYOUT.single || []), ...(LAYOUT.half || [])];
+      for (const b of allLayout) {
+        let cx, cy, cz, w, h, d, ry = 0;
+        if (b.center) {
+          cx = b.center[0]; cy = b.center[1]; cz = b.center[2];
+          w = b.size[0]; h = b.size[1]; d = b.size[2];
+          ry = (b.rotY || 0) * D_;
+        } else if (b.min) {
+          cx = (b.min[0] + b.max[0]) / 2;
+          cy = (b.min[1] + b.max[1]) / 2;
+          cz = (b.min[2] + b.max[2]) / 2;
+          w = b.max[0] - b.min[0];
+          h = b.max[1] - b.min[1];
+          d = b.max[2] - b.min[2];
+          ry = 0;
+        } else continue;
+
+        if (cz > 0.3) continue; // Alpha half only
+        if (h < 0.35 || h > 5.5) continue;
+        // Keep Pour Floor open center strictly clear below 7.0 m
+        if (Math.abs(cx) < 4.8 && Math.abs(cz) < 2.5) continue;
+        const tag = b.tag || '';
+        if (tag === 'ground' || tag === 'promenade' || tag === 'rail' || tag === 'footprint') continue;
+
+        // Skip drowned ledges below lava HIGH + 0.3
+        const y0 = cy - h / 2;
+        if (y0 < 0.3) continue;
+
+        B.push(cx, y0, cz, ry);
+
+        if (tag === 'lamp-plinth') {
+          pbox(B, 'paint', K.basaltDk, w + 0.03, 0.35, d + 0.03, 0, 0.175, 0);
+          pbox(B, 'metal', K.ironDk, w + 0.03, 0.04, d + 0.03, 0, h - 0.02, 0);
+          pbox(B, NS('metal'), K.ironLt, 0.12, 0.22, 0.12, 0, 0.7, d / 2 + 0.015);
+        } else if (tag.includes('parapet')) {
+          pbox(B, 'metal', K.ironRust, w + 0.03, h - 0.06, d + 0.03, 0, (h - 0.06) / 2, 0);
+          pbox(B, NS('metal'), K.ironLt, w + 0.035, 0.04, d + 0.035, 0, h - 0.02, 0);
+        } else if (tag.includes('bollard') || tag === 'capstan') {
+          pcyl(B, 'metal', K.ironDk, Math.min(w, d) / 2 + 0.015, h - 0.04, 0, (h - 0.04) / 2, 0, { seg: 10 });
+          ptor(B, NS('metal'), K.ironLt, Math.min(w, d) / 2 + 0.012, 0.02, 0, h * 0.75, 0, { rx: HP });
+        } else if (tag.includes('hornito')) {
+          pcyl(B, 'paint', K.scoriaRed, Math.min(w, d) / 2 + 0.015, h - 0.04, 0, (h - 0.04) / 2, 0, { seg: 8 });
+          ptor(B, 'glow', K.lavaGlow, Math.min(w, d) * 0.35, 0.025, 0, h - 0.03, 0, { rx: HP, glow: 1.2 });
+        } else if (tag.includes('socket-collar')) {
+          pcyl(B, 'metal', K.ironDk, Math.max(w, d) / 2 + 0.015, h - 0.04, 0, (h - 0.04) / 2, 0, { seg: 6 });
+          ptor(B, NS('metal'), K.ironLt, Math.max(w, d) / 2 + 0.015, 0.02, 0, h * 0.8, 0, { rx: HP });
+        } else if (tag.includes('cairn') || tag.includes('outcrop')) {
+          pbox(B, 'paint', K.basaltDk, w + 0.025, h - 0.04, d + 0.025, 0, (h - 0.04) / 2, 0, { r: 0.02 });
+          pbox(B, NS('paint'), K.scoria, w * 0.85 + 0.025, 0.12, d * 0.85 + 0.025, 0, h * 0.7, 0);
+        } else if (tag === 'valve-chest') {
+          pbox(B, 'metal', K.ironDk, w + 0.03, h - 0.04, d + 0.03, 0, (h - 0.04) / 2, 0);
+          ptor(B, 'metal', K.red, 0.16, 0.02, w / 2 + 0.015, h * 0.6, 0, { ry: HP });
+        } else if (tag.includes('crate') || tag.includes('bin') || tag.includes('rack') || tag.includes('stack')) {
+          pbox(B, 'wood', K.woodDk, w + 0.025, h - 0.04, d + 0.025, 0, (h - 0.04) / 2, 0);
+          pbox(B, NS('metal'), K.ironDk, w + 0.03, 0.06, d + 0.03, 0, h * 0.5, 0);
+        } else {
+          // Weathered stone coping curb / trim along vertical faces
+          pbox(B, 'paint', K.basaltDk, w + 0.025, Math.min(h, 0.4), d + 0.025, 0, h - Math.min(h, 0.4) / 2, 0);
+          pbox(B, NS('paint'), K.basaltLt, w + 0.03, 0.04, d + 0.03, 0, h - 0.02, 0);
+        }
+
         B.pop();
       }
     },

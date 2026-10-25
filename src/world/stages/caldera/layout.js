@@ -522,7 +522,7 @@ const LAYOUT_CALDERA = {
   spawnPads: [[G.PAD[0], 4.8, G.PAD[1]], [-G.PAD[0], 4.8, -G.PAD[1]]],
   spawnBarrier: 4.2,
   intro: { from: [40, 26, -40], lookFrom: [0, 8, 0], toBack: 3.2 },
-  art: { from: [-44, 30, -56], look: [4, 2, 4], fov: 56 },
+  art: { from: [-42, 17, -54], look: [4, 7.5, 4], fov: 58 },
   env: {
     backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, gulls: false, buoys: false,
     sea: false,                 // ENGINE H22: no sea mesh (the backdrop draws the far ocean far below); the death plane stays
@@ -533,13 +533,13 @@ const LAYOUT_CALDERA = {
         zenith: '#2475e2', skyMid: '#68b2f8', horizon: '#ebf4fc',
         sunIntensity: 4.4, skySun: 3.5,
         hemiIntensity: 0.70, hemiSky: '#c8e2ff', hemiGround: '#d8bca0', hemiGroundK: 2.3, envK: 0.54,
-        grade: { uExposure: 1.24, uSat: 1.06, uContrast: 1.04 },
+        grade: { uExposure: 1.16, uSat: 1.06, uContrast: 1.04 },
       },
       sunset: {
-        sunIntensity: 5.2, skySun: 4.2,
-        hemiIntensity: 0.90, hemiSky: '#7e90e6', hemiGround: '#c8926e', envK: 0.55,
-        zenith: '#222d75', skyMid: '#655cb0', horizon: '#ffad75',
-        grade: { uExposure: 1.22, uSat: 1.08, uContrast: 1.05, bloom: [0.45, 0.55, 1.8] },
+        sunIntensity: 5.4, skySun: 4.4,
+        hemiIntensity: 0.95, hemiSky: '#9a82d0', hemiGround: '#d48858', envK: 0.55,
+        zenith: '#262d6e', skyMid: '#7c5ba4', horizon: '#ffa262',
+        grade: { uExposure: 1.34, uSat: 1.08, uContrast: 1.05, bloom: [0.45, 0.55, 1.8] },
       },
     },
   },

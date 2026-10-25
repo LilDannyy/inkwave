@@ -581,6 +581,7 @@ export const PLACEMENTS = [
   { type: 'caldera_rim_head_dressing', pos: [0, 0, 0] },
   { type: 'caldera_yard_cover_dressing', pos: [0, 0, 0] },
   { type: 'caldera_horizon_dressing', pos: [0, 0, 0], mirror: false },
+  { type: 'caldera_piece_skins', pos: [0, 0, 0] },
 
   // Flank & Slump (skins wrapping layout blocks within 2 cm)
   { type: 'caldera_winch_house', pos: [-23.116, 1.2, -19.743], rotY: 139.5 * D_ },
