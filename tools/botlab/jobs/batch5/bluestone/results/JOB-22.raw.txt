@@ -1,0 +1,105 @@
+JOB-22 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 17:38:22
+branch botlab-b5-bluestone, ran at d68d1c1f, exit code 0, wall time 14min
+(a written-up JOB-22.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-22 (fix round 2) head d68d1c1f load { 2.02 2.27 2.54 }
+== sus head halyard e0 day r1: "A":25.52,"B":25.14,"Bwall":11.69,"Cissue":0.96,"Cdone":7.34 
+== sus head bluestone e1 day r1: "A":40.45,"B":40.4,"Bwall":9.59,"Cissue":0.81,"Cdone":6.18 
+== sus base bluestone e1 day r1: "A":42.18,"B":43.07,"Bwall":10.05,"Cissue":0.85,"Cdone":7.05 
+== sus head bluestone e2 day r1: "A":40.81,"B":40.83,"Bwall":9.94,"Cissue":0.84,"Cdone":6.46 
+== sus base bluestone e2 day r1: "A":44.92,"B":44.42,"Bwall":10.44,"Cissue":0.86,"Cdone":7.08 
+== sus head bluestone e3 day r1: "A":41.99,"B":41.63,"Bwall":10.02,"Cissue":0.9,"Cdone":6.61 
+== sus base bluestone e3 day r1: "A":48.21,"B":47.9,"Bwall":10.95,"Cissue":0.87,"Cdone":7.43 
+== sus head halyard e0 dusk r1: "A":24.93,"B":28.2,"Bwall":11.62,"Cissue":0.97,"Cdone":7.3 
+== sus head bluestone e1 dusk r1: "A":42.04,"B":42.26,"Bwall":10.01,"Cissue":0.85,"Cdone":6.66 
+== sus base bluestone e1 dusk r1: "A":45.9,"B":45.03,"Bwall":10.64,"Cissue":0.88,"Cdone":7.54 
+== sus head bluestone e2 dusk r1: "A":42.28,"B":42.73,"Bwall":10.08,"Cissue":0.84,"Cdone":6.75 
+== sus base bluestone e2 dusk r1: "A":46.6,"B":45.94,"Bwall":10.68,"Cissue":0.85,"Cdone":7.38 
+== sus head bluestone e3 dusk r1: "A":44.39,"B":43.59,"Bwall":10.11,"Cissue":0.91,"Cdone":6.86 
+== sus base bluestone e3 dusk r1: "A":46.94,"B":47.13,"Bwall":11.01,"Cissue":0.83,"Cdone":7.56 
+== sus head halyard e0 day r2: "A":25.47,"B":26.98,"Bwall":11.77,"Cissue":1.01,"Cdone":7.36 
+== sus head bluestone e1 day r2: "A":41.14,"B":39.8,"Bwall":9.65,"Cissue":0.88,"Cdone":6.38 
+== sus base bluestone e1 day r2: "A":42.98,"B":44.43,"Bwall":10.43,"Cissue":0.81,"Cdone":6.88 
+== sus head bluestone e2 day r2: "A":42.88,"B":42.03,"Bwall":9.86,"Cissue":0.86,"Cdone":6.27 
+== sus base bluestone e2 day r2: "A":44.06,"B":44.34,"Bwall":10.63,"Cissue":0.85,"Cdone":7.3 
+== sus head bluestone e3 day r2: "A":42.9,"B":43.49,"Bwall":10.08,"Cissue":0.87,"Cdone":6.51 
+== sus base bluestone e3 day r2: "A":46.53,"B":45.81,"Bwall":10.57,"Cissue":0.87,"Cdone":7.24 
+== sus head halyard e0 dusk r2: "A":26.61,"B":27.58,"Bwall":11.63,"Cissue":0.95,"Cdone":7.36 
+== sus head bluestone e1 dusk r2: "A":42.94,"B":42.61,"Bwall":10.12,"Cissue":0.79,"Cdone":6.55 
+== sus base bluestone e1 dusk r2: "A":46.13,"B":44.68,"Bwall":10.29,"Cissue":0.92,"Cdone":7.15 
+== sus head bluestone e2 dusk r2: "A":43.38,"B":42.65,"Bwall":10.15,"Cissue":0.83,"Cdone":6.72 
+== sus base bluestone e2 dusk r2: "A":46.66,"B":45.37,"Bwall":10.79,"Cissue":0.9,"Cdone":7.5 
+== sus head bluestone e3 dusk r2: "A":44.33,"B":43.78,"Bwall":10.54,"Cissue":0.8,"Cdone":7.01 
+== sus base bluestone e3 dusk r2: "A":47.14,"B":46.22,"Bwall":10.96,"Cissue":0.9,"Cdone":7.59 
+== ab bluestone e2 day: "base":34.73,"delta":{"propsplain":-1.08,"noeraprops":-0.16,"backplain":-1.03,"noback":-1.45,"nosea":-1.17,"nosky":-1.47,"nodecor":-1.22,"noerafx":-0.9,"notransp":-0.81,"shadowheld":-0.61,"nolevel":-0.94,"empty":-20.37} 
+== ab halyard e0 day: "base":27.14,"delta":{"propsplain":-1.63,"backplain":-3.53,"noback":-2.6,"nosea":7.93,"nosky":-2.39,"nodecor":-1.25,"notransp":-2.9,"shadowheld":-3.71,"nolevel":-1.22,"empty":-12.86} 
+### done
+
+## last 15 lines of job.log
+  base bluestone e2  day  A  44.49 (x1.75) | C   7.19 (x0.98) issue 0.85
+  base bluestone e2  dusk A  46.63 (x1.81) | C   7.44 (x1.02) issue 0.88
+  base bluestone e3  day  A  47.37 (x1.86) | C   7.33 (x1.00) issue 0.87
+  base bluestone e3  dusk A  47.04 (x1.83) | C   7.57 (x1.03) issue 0.86
+  head bluestone e1  day  A  40.80 (x1.60) | C   6.28 (x0.85) issue 0.84
+  head bluestone e1  dusk A  42.49 (x1.65) | C   6.61 (x0.90) issue 0.82
+  head bluestone e2  day  A  41.84 (x1.64) | C   6.37 (x0.87) issue 0.85
+  head bluestone e2  dusk A  42.83 (x1.66) | C   6.73 (x0.92) issue 0.83
+  head bluestone e3  day  A  42.45 (x1.66) | C   6.56 (x0.89) issue 0.89
+  head bluestone e3  dusk A  44.36 (x1.72) | C   6.94 (x0.95) issue 0.85
+  head halyard       day  A  25.49 (x1.00) | C   7.35 (x1.00) issue 0.98
+  head halyard       dusk A  25.77 (x1.00) | C   7.33 (x1.00) issue 0.96
+== ab bluestone e2 day: "base":34.73,"delta":{"propsplain":-1.08,"noeraprops":-0.16,"backplain":-1.03,"noback":-1.45,"nosea":-1.17,"nosky":-1.47,"nodecor":-1.22,"noerafx":-0.9,"notransp":-0.81,"shadowheld":-0.61,"nolevel":-0.94,"empty":-20.37} 
+== ab halyard e0 day: "base":27.14,"delta":{"propsplain":-1.63,"backplain":-3.53,"noback":-2.6,"nosea":7.93,"nosky":-2.39,"nodecor":-1.25,"notransp":-2.9,"shadowheld":-3.71,"nolevel":-1.22,"empty":-12.86} 
+### done
+
+## ab-plain.txt
+== ab bluestone e2 day: "base":34.73,"delta":{"propsplain":-1.08,"noeraprops":-0.16,"backplain":-1.03,"noback":-1.45,"nosea":-1.17,"nosky":-1.47,"nodecor":-1.22,"noerafx":-0.9,"notransp":-0.81,"shadowheld":-0.61,"nolevel":-0.94,"empty":-20.37} 
+== ab halyard e0 day: "base":27.14,"delta":{"propsplain":-1.63,"backplain":-3.53,"noback":-2.6,"nosea":7.93,"nosky":-2.39,"nodecor":-1.25,"notransp":-2.9,"shadowheld":-3.71,"nolevel":-1.22,"empty":-12.86} 
+
+## sus-summary.txt
+medians of the rounds (mean of the 2): A = the gate timer ms | C = GPU throughput ms per frame (Cissue) | ÷ halyard
+  base bluestone e1  day  A  42.58 (x1.67) | C   6.96 (x0.95) issue 0.83
+  base bluestone e1  dusk A  46.02 (x1.79) | C   7.35 (x1.00) issue 0.90
+  base bluestone e2  day  A  44.49 (x1.75) | C   7.19 (x0.98) issue 0.85
+  base bluestone e2  dusk A  46.63 (x1.81) | C   7.44 (x1.02) issue 0.88
+  base bluestone e3  day  A  47.37 (x1.86) | C   7.33 (x1.00) issue 0.87
+  base bluestone e3  dusk A  47.04 (x1.83) | C   7.57 (x1.03) issue 0.86
+  head bluestone e1  day  A  40.80 (x1.60) | C   6.28 (x0.85) issue 0.84
+  head bluestone e1  dusk A  42.49 (x1.65) | C   6.61 (x0.90) issue 0.82
+  head bluestone e2  day  A  41.84 (x1.64) | C   6.37 (x0.87) issue 0.85
+  head bluestone e2  dusk A  42.83 (x1.66) | C   6.73 (x0.92) issue 0.83
+  head bluestone e3  day  A  42.45 (x1.66) | C   6.56 (x0.89) issue 0.89
+  head bluestone e3  dusk A  44.36 (x1.72) | C   6.94 (x0.95) issue 0.85
+  head halyard       day  A  25.49 (x1.00) | C   7.35 (x1.00) issue 0.98
+  head halyard       dusk A  25.77 (x1.00) | C   7.33 (x1.00) issue 0.96
+
+## sus.txt
+== sus head halyard e0 day r1: "A":25.52,"B":25.14,"Bwall":11.69,"Cissue":0.96,"Cdone":7.34 
+== sus head bluestone e1 day r1: "A":40.45,"B":40.4,"Bwall":9.59,"Cissue":0.81,"Cdone":6.18 
+== sus base bluestone e1 day r1: "A":42.18,"B":43.07,"Bwall":10.05,"Cissue":0.85,"Cdone":7.05 
+== sus head bluestone e2 day r1: "A":40.81,"B":40.83,"Bwall":9.94,"Cissue":0.84,"Cdone":6.46 
+== sus base bluestone e2 day r1: "A":44.92,"B":44.42,"Bwall":10.44,"Cissue":0.86,"Cdone":7.08 
+== sus head bluestone e3 day r1: "A":41.99,"B":41.63,"Bwall":10.02,"Cissue":0.9,"Cdone":6.61 
+== sus base bluestone e3 day r1: "A":48.21,"B":47.9,"Bwall":10.95,"Cissue":0.87,"Cdone":7.43 
+== sus head halyard e0 dusk r1: "A":24.93,"B":28.2,"Bwall":11.62,"Cissue":0.97,"Cdone":7.3 
+== sus head bluestone e1 dusk r1: "A":42.04,"B":42.26,"Bwall":10.01,"Cissue":0.85,"Cdone":6.66 
+== sus base bluestone e1 dusk r1: "A":45.9,"B":45.03,"Bwall":10.64,"Cissue":0.88,"Cdone":7.54 
+== sus head bluestone e2 dusk r1: "A":42.28,"B":42.73,"Bwall":10.08,"Cissue":0.84,"Cdone":6.75 
+== sus base bluestone e2 dusk r1: "A":46.6,"B":45.94,"Bwall":10.68,"Cissue":0.85,"Cdone":7.38 
+== sus head bluestone e3 dusk r1: "A":44.39,"B":43.59,"Bwall":10.11,"Cissue":0.91,"Cdone":6.86 
+== sus base bluestone e3 dusk r1: "A":46.94,"B":47.13,"Bwall":11.01,"Cissue":0.83,"Cdone":7.56 
+== sus head halyard e0 day r2: "A":25.47,"B":26.98,"Bwall":11.77,"Cissue":1.01,"Cdone":7.36 
+== sus head bluestone e1 day r2: "A":41.14,"B":39.8,"Bwall":9.65,"Cissue":0.88,"Cdone":6.38 
+== sus base bluestone e1 day r2: "A":42.98,"B":44.43,"Bwall":10.43,"Cissue":0.81,"Cdone":6.88 
+== sus head bluestone e2 day r2: "A":42.88,"B":42.03,"Bwall":9.86,"Cissue":0.86,"Cdone":6.27 
+== sus base bluestone e2 day r2: "A":44.06,"B":44.34,"Bwall":10.63,"Cissue":0.85,"Cdone":7.3 
+== sus head bluestone e3 day r2: "A":42.9,"B":43.49,"Bwall":10.08,"Cissue":0.87,"Cdone":6.51 
+== sus base bluestone e3 day r2: "A":46.53,"B":45.81,"Bwall":10.57,"Cissue":0.87,"Cdone":7.24 
+== sus head halyard e0 dusk r2: "A":26.61,"B":27.58,"Bwall":11.63,"Cissue":0.95,"Cdone":7.36 
+== sus head bluestone e1 dusk r2: "A":42.94,"B":42.61,"Bwall":10.12,"Cissue":0.79,"Cdone":6.55 
+== sus base bluestone e1 dusk r2: "A":46.13,"B":44.68,"Bwall":10.29,"Cissue":0.92,"Cdone":7.15 
+== sus head bluestone e2 dusk r2: "A":43.38,"B":42.65,"Bwall":10.15,"Cissue":0.83,"Cdone":6.72 
+== sus base bluestone e2 dusk r2: "A":46.66,"B":45.37,"Bwall":10.79,"Cissue":0.9,"Cdone":7.5 
+== sus head bluestone e3 dusk r2: "A":44.33,"B":43.78,"Bwall":10.54,"Cissue":0.8,"Cdone":7.01 
+== sus base bluestone e3 dusk r2: "A":47.14,"B":46.22,"Bwall":10.96,"Cissue":0.9,"Cdone":7.59 

@@ -14,3 +14,8 @@ the mean of the 8 per run; 1600×900, pixel ratio 1; a fresh profile, one Electr
   SETS="bluestone:2" TIMES=dusk ROUNDS=3 BASE=<sha> bash tools/botlab/jobs/batch5/bluestone/gpu-time.sh   (+ that commit, before / after)
 It writes gpu-runs.txt and gpu.txt (medians, each row ÷ Halyard at the same time of day) into $JOB_OUT, so they come back in the raw file.
 Compare numbers only within one job (the machine's state moves them: a run overlapping another job read Halyard at 41 ms, not 24).
+
+CORRECTION (2026-10-25, after JOB-22): the timer query this measurement uses does NOT give the GPU's real time per frame on this
+Mac. JOB-22 timed the same views by throughput (30 renders back to back, a fence after the last): Bluestone 6.3–7.6 ms, Halyard
+7.3 ms — Bluestone at ×0.85–1.03 Halyard, not ×1.5–1.9. The numbers above (and gpu-time.sh's) are the timer's; read them only
+as a same-method comparison, never as the gate's evidence.

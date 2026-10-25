@@ -13,6 +13,8 @@
 # per view 20 warm-up frames, then 24 frames each wrapped in an EXT_disjoint_timer_query_webgl2 TIME_ELAPSED query round
 # the game's render (the GPU's own time, gl.finish after each) — the view's number is the median of the 24; a run's 'gpu'
 # is the mean of its eight views. shoot.cjs's window: 1600×900, pixel ratio 1, offscreen; ERA=n boots the page with ?era=n.
+# CAUTION (JOB-22, 2026-10-25): on this Mac (M4, WebGL on Metal) the timer query reads ~6x the real GPU time per frame and
+# exaggerates Bluestone vs Halyard (timer x1.6-1.9, throughput x0.85-1.03). Use gpu-sustained.js (render 30x, a fence) for the gate.
 # A fresh profile (BOTLAB_OUT inside $JOB_OUT, SLOTS=1) and ONE Electron at a time; the runner runs one job at a time, so
 # the machine is otherwise quiet (the 1-min load average is printed first). Compare numbers only within one job.
 set -u
