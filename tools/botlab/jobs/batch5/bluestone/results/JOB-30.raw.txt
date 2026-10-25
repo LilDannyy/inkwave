@@ -1,0 +1,75 @@
+JOB-30 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 22:25:02
+branch botlab-b5-bluestone, ran at bd33835d, exit code 0, wall time 18min
+(a written-up JOB-30.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-30 head bd33835d load { 2.43 2.46 2.65 }
+== frames-1: RESULT 4/4  0 FAIL
+# frames-1 worst (main | bravo | theme) "worst":[[33.6,1.47,"jump",0,0.1,3.5],[14.6,1.7,"jump",0,0,0]
+# frames-1 worst (main | bravo | theme) "worst":[[13.4,0.02,3.5,5.5,4.4,0,0,0],[10,3.97,1,1.5,7.5,0,0,2]
+# frames-1 worst (main | bravo | theme) "worst":[[18.5,4.28,0,18,0.5,0,0,0],[12.6,3.97,1.1,1.2,10.3,0,0,2]
+# frames-1 "eraUpdateMaxMs":2.5 "eraUpdateMaxMs":3.5 "eraUpdateMaxMs":1.2 "eraUpdateMaxMs":3.5 "eraUpdateMaxMs":1.2 
+== frames-2: RESULT 4/4  0 FAIL
+# frames-2 worst (main | bravo | theme) "worst":[[34.6,1.47,"jump",0,0,2.9],[19.4,1.73,"jump",0,0,0]
+# frames-2 worst (main | bravo | theme) "worst":[[11.4,0.02,2.1,4.8,4.5,0,0,1],[10,3.97,0.9,1.6,7.5,0,0,2]
+# frames-2 worst (main | bravo | theme) "worst":[[13.2,3.97,1,1.7,10.5,0,0,2],[12.3,4.28,0,11.1,1.2,0,0,0]
+# frames-2 "eraUpdateMaxMs":2.5 "eraUpdateMaxMs":2.2 "eraUpdateMaxMs":1.2 "eraUpdateMaxMs":2.2 "eraUpdateMaxMs":1.2 
+== frames-3: RESULT 2/4  2 FAIL
+FAIL step 8: no frame over 50 ms during a jump (each simulated and rendered frame from J − 0.5 to done + 1.5, performance.now())  {"baselineNoJump":{"max":6.6,"p95":4.1},"baselineInking":[[239.8,123],[6.9,212],[5.2,131],[4.9,81]],"frames":358,"worst":[[416.7,0.95,"jump",0,0.1,1.6],[403.2,4.6,"idle",0,0.1,1.2],[11,1.15,"jump",0,1.9,4.5],[9.3,3.97,"idle",0,1.6,0]],"baseMs":[91,0,0],"compileMs":242
+FAIL step 8 (review fix 1, timing): … and no frame of those two jumps passes 50 ms  {"worst":[["bravo",[[387.1,4.83,0,385.9,1.2,0,0,0],[13.9,0.02,3.7,4.6,5.6,0,0,1],[10.9,3.97,1.2,2.3,7.4,0,0,2]]],["theme",[[379.5,4.8,0,375.5,4,0,0,0],[13.8,3.97,1.2,1.8,10.8,0,0,2],[10.6,4.28,0,9.8,0.8,0,0,0]]]],"baselineNoJumpMax":6.6}
+# frames-3 worst (main | bravo | theme) "worst":[[416.7,0.95,"jump",0,0.1,1.6],[403.2,4.6,"idle",0,0.1,1.2]
+# frames-3 worst (main | bravo | theme) "worst":[[387.1,4.83,0,385.9,1.2,0,0,0],[13.9,0.02,3.7,4.6,5.6,0,0,1]
+# frames-3 worst (main | bravo | theme) "worst":[[379.5,4.8,0,375.5,4,0,0,0],[13.8,3.97,1.2,1.8,10.8,0,0,2]
+# frames-3 "eraUpdateMaxMs":2.1 "eraUpdateMaxMs":3.7 "eraUpdateMaxMs":1.2 "eraUpdateMaxMs":3.7 "eraUpdateMaxMs":1.2 
+== first-1: RESULT 1/1  0 FAIL
+== first-2: RESULT 1/1  0 FAIL
+# sweep e1-dusk load { 3.33 2.84 2.78 }
+HARNESS ERA=1: every game page loads with ?era=1
+# sweep e2-dusk load { 3.34 2.88 2.78 }
+HARNESS ERA=2: every game page loads with ?era=2
+# sweep e3-dusk load { 2.27 2.55 2.64 }
+HARNESS ERA=3: every game page loads with ?era=3
+== eras-jump-sky: RESULT 7/7  0 FAIL
+== eras-look-i: RESULT 2/2  0 FAIL
+# look-i "realDonePlus4_5":{"2":{"median":45.5,"over200":1.68,"cobaltHue":0.54},"3":{"median":48,"over200":5.92,"cobaltHue":0}},"debugJump":{"2":{"median":45.6,"over200":1.68,"cobaltHue":0.54},"3":{"median":48,"over200":5.92,"co
+== stage-audit turf e1: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit turf e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit turf e3: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+# check-maps bluestone#1  568 pieces  (strips over 25 m: 0)
+# check-maps bluestone#2  590 pieces  (strips over 25 m: 0)
+# check-maps bluestone#3  700 pieces  (strips over 25 m: 0)
+# check-maps bluestone    712 pieces  ok
+# check-maps bluestone.tower#1 562 pieces  (strips over 25 m: 12)
+# check-maps bluestone.tower#2 584 pieces  (strips over 25 m: 12)
+# check-maps bluestone.tower#3 694 pieces  (strips over 25 m: 12)
+# check-maps bluestone.tower 706 pieces  ok
+# check-maps bluestone.zones#1 568 pieces  (strips over 25 m: 0)
+# check-maps bluestone.zones#2 590 pieces  (strips over 25 m: 0)
+# check-maps bluestone.zones#3 700 pieces  (strips over 25 m: 0)
+# check-maps bluestone.zones 712 pieces  ok
+# check-maps bluestone.bazookarp#1 618 pieces  (strips over 25 m: 0)
+# check-maps bluestone.bazookarp#2 640 pieces  (strips over 25 m: 0)
+# check-maps bluestone.bazookarp#3 750 pieces  (strips over 25 m: 0)
+# check-maps bluestone.bazookarp 762 pieces  ok
+# check-maps bluestone.boss#1 566 pieces  (strips over 25 m: 0)
+# check-maps bluestone.boss#2 588 pieces  (strips over 25 m: 0)
+# check-maps bluestone.boss#3 698 pieces  (strips over 25 m: 0)
+# check-maps bluestone.boss 710 pieces  ok
+### done
+
+## last 15 lines of job.log
+# check-maps bluestone.tower#3 694 pieces  (strips over 25 m: 12)
+# check-maps bluestone.tower 706 pieces  ok
+# check-maps bluestone.zones#1 568 pieces  (strips over 25 m: 0)
+# check-maps bluestone.zones#2 590 pieces  (strips over 25 m: 0)
+# check-maps bluestone.zones#3 700 pieces  (strips over 25 m: 0)
+# check-maps bluestone.zones 712 pieces  ok
+# check-maps bluestone.bazookarp#1 618 pieces  (strips over 25 m: 0)
+# check-maps bluestone.bazookarp#2 640 pieces  (strips over 25 m: 0)
+# check-maps bluestone.bazookarp#3 750 pieces  (strips over 25 m: 0)
+# check-maps bluestone.bazookarp 762 pieces  ok
+# check-maps bluestone.boss#1 566 pieces  (strips over 25 m: 0)
+# check-maps bluestone.boss#2 588 pieces  (strips over 25 m: 0)
+# check-maps bluestone.boss#3 698 pieces  (strips over 25 m: 0)
+# check-maps bluestone.boss 710 pieces  ok
+### done
