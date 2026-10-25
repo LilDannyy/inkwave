@@ -211,3 +211,8 @@ Bluestone ×6.7); every GPU number in JOB-15 and JOB-18–21 is void, as an abso
   the beta round 2 brief as a named item with the hypotheses to test there: a texture or lightmap first bound in the new
   era and uploaded inside the draw (warm every era's textures at load as the programs are), a GC pause (the jump's
   allocations), the lightmap swap. The reviewer notes it, does not fail on it.
+- **JOB-26 (method C, confirming; `results/JOB-26.txt`):** e2 as built 6.18 ms day / 6.62 dusk = ×0.88 / ×0.93 Halyard
+  (7.05 / 7.14); the round's static programs + prepass are worth ~1.0 ms (7.25 / 7.55 without them). Bloom costs 0.8–0.9 ms on
+  both stages, so the "bloom-off slower" anomaly was the timer's and is CLOSED. idle.js explains the timer: it reads 17–18 ms
+  back to back but 7.8–8.5 ms with an idle gap before each frame — it counts the wait behind the previous frame. Nothing more
+  to do on GPU time in this stage.
