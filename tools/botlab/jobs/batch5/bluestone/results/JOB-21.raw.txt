@@ -1,0 +1,135 @@
+JOB-21 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 17:16:30
+branch botlab-b5-bluestone, ran at 37ef9f31, exit code 0, wall time 14min
+(a written-up JOB-21.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-21 (fix round 2) head 37ef9f31 load { 1.01 1.67 1.94 }
+### gpu-time at 37ef9f31 load { 1.09 1.67 1.94 } | sets [halyard:0 bluestone:1 bluestone:2 bluestone:3] times [day dusk] rounds 2 base 2310eed9
+== ab bluestone e2 day: "base":41.21,"delta":{"live":2.41,"noprepass":-0.05,"nolamps":-1.47,"nolampsF":-0.78,"lod25":-0.77,"lod40":-1.33,"nofine":-0.57,"nomural":-0.82,"artrt":-1.3,"plain":-9.01} 
+== ab bluestone e2 dusk: "base":42.68,"delta":{"live":2.27,"noprepass":0.7,"nolamps":-1.9,"nolampsF":0.88,"lod25":-0.05,"lod40":-0.76,"nofine":-0.05,"nomural":0.52,"artrt":-0.96,"plain":-9.91} 
+== ab halyard e0 day: "base":29.95,"delta":{"plain":-5.56,"nolamps":-5.87} 
+== ab halyard e0 dusk: "base":28.81,"delta":{"plain":-5.52,"nolamps":0.34} 
+== first-1: RESULT 1/1  0 FAIL
+== first-2: RESULT 1/1  0 FAIL
+== frames-1: RESULT 3/4  1 FAIL
+FAIL step 8: no frame over 50 ms during a jump (each simulated and rendered frame from J − 0.5 to done + 1.5, performance.now())  {"baselineNoJump":{"max":6.2,"p95":4.5},"baselineInking":[[165.7,217],[9.4,218],[4.9,220],[4.7,82]],"frames":358,"worst":[[379.5,0.85,"jump",0,0.1,2.5],[10.4,1.15,"jump",0,1.7,0],[8.5,3.97,"idle",0,1.3,0],[7.8,-0.08,"warn",0,0.1,0]],"baseMs":[91,0,0],"compileMs":233,"
+# frames-1 jump worst "worst":[[379.5,0.85,"jump",0,0.1,2.5],[10.4,1.15,"jump",0,1.7,0]
+== frames-2: RESULT 4/4  0 FAIL
+# frames-2 jump worst "worst":[[11.8,5,"idle",0,0,0],[9.3,4.37,"idle",0,0,3.7]
+### done
+
+## last 15 lines of job.log
+  head bluestone e3    dusk  45.09 ms [45.04, 45.13] | 122.69 | 1041823 | ×1.64
+  head halyard         day   26.20 ms [28.07, 24.33] | 168.19 | 3076942 | -
+  head halyard         dusk  27.48 ms [26.36, 28.61] | 170.94 | 3083863 | -
+== ab bluestone e2 day: "base":41.21,"delta":{"live":2.41,"noprepass":-0.05,"nolamps":-1.47,"nolampsF":-0.78,"lod25":-0.77,"lod40":-1.33,"nofine":-0.57,"nomural":-0.82,"artrt":-1.3,"plain":-9.01} 
+== ab bluestone e2 dusk: "base":42.68,"delta":{"live":2.27,"noprepass":0.7,"nolamps":-1.9,"nolampsF":0.88,"lod25":-0.05,"lod40":-0.76,"nofine":-0.05,"nomural":0.52,"artrt":-0.96,"plain":-9.91} 
+== ab halyard e0 day: "base":29.95,"delta":{"plain":-5.56,"nolamps":-5.87} 
+== ab halyard e0 dusk: "base":28.81,"delta":{"plain":-5.52,"nolamps":0.34} 
+== first-1: RESULT 1/1  0 FAIL
+== first-2: RESULT 1/1  0 FAIL
+== frames-1: RESULT 3/4  1 FAIL
+FAIL step 8: no frame over 50 ms during a jump (each simulated and rendered frame from J − 0.5 to done + 1.5, performance.now())  {"baselineNoJump":{"max":6.2,"p95":4.5},"baselineInking":[[165.7,217],[9.4,218],[4.9,220],[4.7,82]],"frames":358,"worst":[[379.5,0.85,"jump",0,0.1,2.5],[10.4,1.15,"jump
+# frames-1 jump worst "worst":[[379.5,0.85,"jump",0,0.1,2.5],[10.4,1.15,"jump",0,1.7,0]
+== frames-2: RESULT 4/4  0 FAIL
+# frames-2 jump worst "worst":[[11.8,5,"idle",0,0,0],[9.3,4.37,"idle",0,0,3.7]
+### done
+
+## ab.txt
+== ab bluestone e2 day: "base":41.21,"delta":{"live":2.41,"noprepass":-0.05,"nolamps":-1.47,"nolampsF":-0.78,"lod25":-0.77,"lod40":-1.33,"nofine":-0.57,"nomural":-0.82,"artrt":-1.3,"plain":-9.01} 
+== ab bluestone e2 dusk: "base":42.68,"delta":{"live":2.27,"noprepass":0.7,"nolamps":-1.9,"nolampsF":0.88,"lod25":-0.05,"lod40":-0.76,"nofine":-0.05,"nomural":0.52,"artrt":-0.96,"plain":-9.91} 
+== ab halyard e0 day: "base":29.95,"delta":{"plain":-5.56,"nolamps":-5.87} 
+== ab halyard e0 dusk: "base":28.81,"delta":{"plain":-5.52,"nolamps":0.34} 
+
+## gpu-runs.txt
+== gpu head halyard e0 day r1: "views":[38.44,37.71,38.59,22.29,21.08,23.55,19.08,23.85] "avg":{"gpu":28.07,"calls":168.63,"tris":3079666}  
+== gpu base bluestone e1 day r1: "views":[44.31,43,42.23,43.87,45.3,44.08,45.25,44.77] "avg":{"gpu":44.1,"calls":111.38,"tris":989713}  
+== gpu head bluestone e1 day r1: "views":[40.98,39.61,40.41,39.94,40.54,39.98,38.88,41.75] "avg":{"gpu":40.26,"calls":118.38,"tris":1015008}  
+== gpu base bluestone e2 day r1: "views":[43.64,43.36,43.51,45.68,43.53,44.55,44.15,45.68] "avg":{"gpu":44.26,"calls":113.25,"tris":944384}  
+== gpu head bluestone e2 day r1: "views":[40.63,41.64,40.89,40.52,41.85,40.55,40.13,41.6] "avg":{"gpu":40.98,"calls":123,"tris":976219}  
+== gpu base bluestone e3 day r1: "views":[47.18,44.76,45.02,46.41,43.71,43.57,45.13,44.86] "avg":{"gpu":45.08,"calls":118,"tris":1019296}  
+== gpu head bluestone e3 day r1: "views":[44.14,43.48,42.73,42.57,42.04,42.75,42.72,42.49] "avg":{"gpu":42.86,"calls":122,"tris":1039151}  
+== gpu head halyard e0 dusk r1: "views":[38.14,36.87,21.11,21.2,21.57,22.16,23.82,26.03] "avg":{"gpu":26.36,"calls":170.75,"tris":3078798}  
+== gpu base bluestone e1 dusk r1: "views":[46.73,44.67,44.62,47.33,46.12,47.58,47.79,47.36] "avg":{"gpu":46.53,"calls":119,"tris":1001775}  
+== gpu head bluestone e1 dusk r1: "views":[41.38,42.12,41.54,43.31,42.94,43.33,42.46,43.23] "avg":{"gpu":42.54,"calls":117.13,"tris":1006826}  
+== gpu base bluestone e2 dusk r1: "views":[43.75,44.14,45.55,47.25,45.83,45.4,44.32,41.12] "avg":{"gpu":44.67,"calls":117.75,"tris":954205}  
+== gpu head bluestone e2 dusk r1: "views":[42.86,43.85,40.6,43.24,43.04,41.47,44.39,42.08] "avg":{"gpu":42.69,"calls":119.75,"tris":969325}  
+== gpu base bluestone e3 dusk r1: "views":[45.51,47.69,45.52,48.1,46.91,46.75,49.27,48.47] "avg":{"gpu":47.28,"calls":111.25,"tris":998895}  
+== gpu head bluestone e3 dusk r1: "views":[44.04,46.03,45.1,45.58,43.66,44.49,46.13,45.31] "avg":{"gpu":45.04,"calls":121.75,"tris":1045609}  
+== gpu head halyard e0 day r2: "views":[23.38,22.39,39.05,22.46,19.36,22,21.27,24.72] "avg":{"gpu":24.33,"calls":167.75,"tris":3074218}  
+== gpu base bluestone e1 day r2: "views":[41.42,43.43,42.61,48.39,42.78,44.04,46.08,43.92] "avg":{"gpu":44.08,"calls":111.25,"tris":984510}  
+== gpu head bluestone e1 day r2: "views":[38.28,39.73,40.13,41.16,40.78,41.12,44.39,41.77] "avg":{"gpu":40.92,"calls":123.5,"tris":1025845}  
+== gpu base bluestone e2 day r2: "views":[45.31,43.66,45.09,45.6,43.11,42.71,45.71,44.72] "avg":{"gpu":44.49,"calls":112.88,"tris":938757}  
+== gpu head bluestone e2 day r2: "views":[40.71,41.28,40.98,41.57,41.5,41.13,40.46,41.17] "avg":{"gpu":41.1,"calls":117.38,"tris":966769}  
+== gpu base bluestone e3 day r2: "views":[44.36,46.78,44.56,46.65,45.45,42.64,46.41,44.56] "avg":{"gpu":45.18,"calls":114.63,"tris":1006831}  
+== gpu head bluestone e3 day r2: "views":[39.97,44.03,41.25,43.55,41.88,41.4,44.43,42.92] "avg":{"gpu":42.43,"calls":115.25,"tris":1022313}  
+== gpu head halyard e0 dusk r2: "views":[39.41,23.67,38.82,36.68,21.86,22.18,25.04,21.24] "avg":{"gpu":28.61,"calls":171.13,"tris":3088928}  
+== gpu base bluestone e1 dusk r2: "views":[46.74,47.26,46.68,46.67,46.2,46.43,45.97,46.44] "avg":{"gpu":46.55,"calls":112.13,"tris":992179}  
+== gpu head bluestone e1 dusk r2: "views":[42.25,42.22,42.49,41.48,42.5,43.21,41.45,42.73] "avg":{"gpu":42.29,"calls":120.88,"tris":1017124}  
+== gpu base bluestone e2 dusk r2: "views":[43.96,44.07,47.74,49.46,44.77,44.9,45.82,46.07] "avg":{"gpu":45.85,"calls":114.13,"tris":948556}  
+== gpu head bluestone e2 dusk r2: "views":[42.97,44.69,44.14,44.58,44.33,43.28,42.7,42.64] "avg":{"gpu":43.67,"calls":116.13,"tris":964936}  
+== gpu base bluestone e3 dusk r2: "views":[45.25,50.95,45.54,49.25,47.7,47.74,48.9,44.64] "avg":{"gpu":47.5,"calls":108.63,"tris":996726}  
+== gpu head bluestone e3 dusk r2: "views":[45.43,46.04,46.54,44.89,44.12,44.24,45.41,44.35] "avg":{"gpu":45.13,"calls":123.63,"tris":1038037}  
+
+## gpu-time.txt
+### gpu-time at 37ef9f31 load { 1.09 1.67 1.94 } | sets [halyard:0 bluestone:1 bluestone:2 bluestone:3] times [day dusk] rounds 2 base 2310eed9
+== gpu head halyard e0 day r1: "views":[38.44,37.71,38.59,22.29,21.08,23.55,19.08,23.85] "avg":{"gpu":28.07,"calls":168.63,"tris":3079666}  
+== gpu base bluestone e1 day r1: "views":[44.31,43,42.23,43.87,45.3,44.08,45.25,44.77] "avg":{"gpu":44.1,"calls":111.38,"tris":989713}  
+== gpu head bluestone e1 day r1: "views":[40.98,39.61,40.41,39.94,40.54,39.98,38.88,41.75] "avg":{"gpu":40.26,"calls":118.38,"tris":1015008}  
+== gpu base bluestone e2 day r1: "views":[43.64,43.36,43.51,45.68,43.53,44.55,44.15,45.68] "avg":{"gpu":44.26,"calls":113.25,"tris":944384}  
+== gpu head bluestone e2 day r1: "views":[40.63,41.64,40.89,40.52,41.85,40.55,40.13,41.6] "avg":{"gpu":40.98,"calls":123,"tris":976219}  
+== gpu base bluestone e3 day r1: "views":[47.18,44.76,45.02,46.41,43.71,43.57,45.13,44.86] "avg":{"gpu":45.08,"calls":118,"tris":1019296}  
+== gpu head bluestone e3 day r1: "views":[44.14,43.48,42.73,42.57,42.04,42.75,42.72,42.49] "avg":{"gpu":42.86,"calls":122,"tris":1039151}  
+== gpu head halyard e0 dusk r1: "views":[38.14,36.87,21.11,21.2,21.57,22.16,23.82,26.03] "avg":{"gpu":26.36,"calls":170.75,"tris":3078798}  
+== gpu base bluestone e1 dusk r1: "views":[46.73,44.67,44.62,47.33,46.12,47.58,47.79,47.36] "avg":{"gpu":46.53,"calls":119,"tris":1001775}  
+== gpu head bluestone e1 dusk r1: "views":[41.38,42.12,41.54,43.31,42.94,43.33,42.46,43.23] "avg":{"gpu":42.54,"calls":117.13,"tris":1006826}  
+== gpu base bluestone e2 dusk r1: "views":[43.75,44.14,45.55,47.25,45.83,45.4,44.32,41.12] "avg":{"gpu":44.67,"calls":117.75,"tris":954205}  
+== gpu head bluestone e2 dusk r1: "views":[42.86,43.85,40.6,43.24,43.04,41.47,44.39,42.08] "avg":{"gpu":42.69,"calls":119.75,"tris":969325}  
+== gpu base bluestone e3 dusk r1: "views":[45.51,47.69,45.52,48.1,46.91,46.75,49.27,48.47] "avg":{"gpu":47.28,"calls":111.25,"tris":998895}  
+== gpu head bluestone e3 dusk r1: "views":[44.04,46.03,45.1,45.58,43.66,44.49,46.13,45.31] "avg":{"gpu":45.04,"calls":121.75,"tris":1045609}  
+== gpu head halyard e0 day r2: "views":[23.38,22.39,39.05,22.46,19.36,22,21.27,24.72] "avg":{"gpu":24.33,"calls":167.75,"tris":3074218}  
+== gpu base bluestone e1 day r2: "views":[41.42,43.43,42.61,48.39,42.78,44.04,46.08,43.92] "avg":{"gpu":44.08,"calls":111.25,"tris":984510}  
+== gpu head bluestone e1 day r2: "views":[38.28,39.73,40.13,41.16,40.78,41.12,44.39,41.77] "avg":{"gpu":40.92,"calls":123.5,"tris":1025845}  
+== gpu base bluestone e2 day r2: "views":[45.31,43.66,45.09,45.6,43.11,42.71,45.71,44.72] "avg":{"gpu":44.49,"calls":112.88,"tris":938757}  
+== gpu head bluestone e2 day r2: "views":[40.71,41.28,40.98,41.57,41.5,41.13,40.46,41.17] "avg":{"gpu":41.1,"calls":117.38,"tris":966769}  
+== gpu base bluestone e3 day r2: "views":[44.36,46.78,44.56,46.65,45.45,42.64,46.41,44.56] "avg":{"gpu":45.18,"calls":114.63,"tris":1006831}  
+== gpu head bluestone e3 day r2: "views":[39.97,44.03,41.25,43.55,41.88,41.4,44.43,42.92] "avg":{"gpu":42.43,"calls":115.25,"tris":1022313}  
+== gpu head halyard e0 dusk r2: "views":[39.41,23.67,38.82,36.68,21.86,22.18,25.04,21.24] "avg":{"gpu":28.61,"calls":171.13,"tris":3088928}  
+== gpu base bluestone e1 dusk r2: "views":[46.74,47.26,46.68,46.67,46.2,46.43,45.97,46.44] "avg":{"gpu":46.55,"calls":112.13,"tris":992179}  
+== gpu head bluestone e1 dusk r2: "views":[42.25,42.22,42.49,41.48,42.5,43.21,41.45,42.73] "avg":{"gpu":42.29,"calls":120.88,"tris":1017124}  
+== gpu base bluestone e2 dusk r2: "views":[43.96,44.07,47.74,49.46,44.77,44.9,45.82,46.07] "avg":{"gpu":45.85,"calls":114.13,"tris":948556}  
+== gpu head bluestone e2 dusk r2: "views":[42.97,44.69,44.14,44.58,44.33,43.28,42.7,42.64] "avg":{"gpu":43.67,"calls":116.13,"tris":964936}  
+== gpu base bluestone e3 dusk r2: "views":[45.25,50.95,45.54,49.25,47.7,47.74,48.9,44.64] "avg":{"gpu":47.5,"calls":108.63,"tris":996726}  
+== gpu head bluestone e3 dusk r2: "views":[45.43,46.04,46.54,44.89,44.12,44.24,45.41,44.35] "avg":{"gpu":45.13,"calls":123.63,"tris":1038037}  
+GPU ms per frame (median of the runs; [each run]) | draw calls | triangles | ÷ halyard (same time of day)
+  base bluestone e1    day   44.09 ms [44.1, 44.08] | 111.315 | 987111.5 | ×1.68
+  base bluestone e1    dusk  46.54 ms [46.53, 46.55] | 115.565 | 996977 | ×1.69
+  base bluestone e2    day   44.38 ms [44.26, 44.49] | 113.065 | 941570.5 | ×1.69
+  base bluestone e2    dusk  45.26 ms [44.67, 45.85] | 115.94 | 951380.5 | ×1.65
+  base bluestone e3    day   45.13 ms [45.08, 45.18] | 116.315 | 1013063.5 | ×1.72
+  base bluestone e3    dusk  47.39 ms [47.28, 47.5] | 109.94 | 997810.5 | ×1.72
+  head bluestone e1    day   40.59 ms [40.26, 40.92] | 120.94 | 1020426.5 | ×1.55
+  head bluestone e1    dusk  42.41 ms [42.54, 42.29] | 119.005 | 1011975 | ×1.54
+  head bluestone e2    day   41.04 ms [40.98, 41.1] | 120.19 | 971494 | ×1.57
+  head bluestone e2    dusk  43.18 ms [42.69, 43.67] | 117.94 | 967130.5 | ×1.57
+  head bluestone e3    day   42.64 ms [42.86, 42.43] | 118.625 | 1030732 | ×1.63
+  head bluestone e3    dusk  45.09 ms [45.04, 45.13] | 122.69 | 1041823 | ×1.64
+  head halyard         day   26.20 ms [28.07, 24.33] | 168.19 | 3076942 | -
+  head halyard         dusk  27.48 ms [26.36, 28.61] | 170.94 | 3083863 | -
+
+## gpu.txt
+GPU ms per frame (median of the runs; [each run]) | draw calls | triangles | ÷ halyard (same time of day)
+  base bluestone e1    day   44.09 ms [44.1, 44.08] | 111.315 | 987111.5 | ×1.68
+  base bluestone e1    dusk  46.54 ms [46.53, 46.55] | 115.565 | 996977 | ×1.69
+  base bluestone e2    day   44.38 ms [44.26, 44.49] | 113.065 | 941570.5 | ×1.69
+  base bluestone e2    dusk  45.26 ms [44.67, 45.85] | 115.94 | 951380.5 | ×1.65
+  base bluestone e3    day   45.13 ms [45.08, 45.18] | 116.315 | 1013063.5 | ×1.72
+  base bluestone e3    dusk  47.39 ms [47.28, 47.5] | 109.94 | 997810.5 | ×1.72
+  head bluestone e1    day   40.59 ms [40.26, 40.92] | 120.94 | 1020426.5 | ×1.55
+  head bluestone e1    dusk  42.41 ms [42.54, 42.29] | 119.005 | 1011975 | ×1.54
+  head bluestone e2    day   41.04 ms [40.98, 41.1] | 120.19 | 971494 | ×1.57
+  head bluestone e2    dusk  43.18 ms [42.69, 43.67] | 117.94 | 967130.5 | ×1.57
+  head bluestone e3    day   42.64 ms [42.86, 42.43] | 118.625 | 1030732 | ×1.63
+  head bluestone e3    dusk  45.09 ms [45.04, 45.13] | 122.69 | 1041823 | ×1.64
+  head halyard         day   26.20 ms [28.07, 24.33] | 168.19 | 3076942 | -
+  head halyard         dusk  27.48 ms [26.36, 28.61] | 170.94 | 3083863 | -
