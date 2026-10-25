@@ -332,17 +332,20 @@ export function registerArch(D, H) {
       // 4 Foundation Pier Collars on the real layout piers (px = +-4.2, pz = +-1.75, width 1.2x1.2, y = 1.8 to 7.0)
       for (const [px, pz] of piers) {
         const sx = Math.sign(px), sz = Math.sign(pz);
-        // Cast-iron plinth collar at pier base (y = 1.8 to 2.5) — offset outward, 0 in open mid (|x|<3.6 && |z|<1.15)
-        pbox(B, 'metal', K.ironDk, 1.22, 0.7, 1.22, px + sx * 0.02, 2.15, pz + sz * 0.02);
-        pbox(B, NS('metal'), K.ironLt, 1.24, 0.08, 1.24, px + sx * 0.02, 2.46, pz + sz * 0.02);
+        // Collars offset slightly outward so they stand 4 cm proud on outer faces and stop 2 cm before inner faces (0 m² coplanar, 0 in mid)
+        const colW = 1.22, colD = 1.22;
+        const colX = px + sx * 0.03, colZ = pz + sz * 0.03;
+        // Cast-iron plinth collar at pier base (y = 1.8 to 2.5)
+        pbox(B, 'metal', K.ironDk, colW, 0.7, colD, colX, 2.15, colZ);
+        pbox(B, NS('metal'), K.ironLt, colW + 0.02, 0.08, colD + 0.02, colX, 2.46, colZ);
         // Corner angle irons running up the four corners of the pier
-        for (const cx of [-0.56, 0.58]) {
-          for (const cz of [-0.56, 0.58]) {
-            pbox(B, NS('metal'), K.iron, 0.06, 4.4, 0.06, px + sx * cx, 4.6, pz + sz * cz);
+        for (const cx of [-0.54, 0.56]) {
+          for (const cz of [-0.54, 0.56]) {
+            pbox(B, NS('metal'), K.iron, 0.05, 4.4, 0.05, px + sx * cx, 4.6, pz + sz * cz);
           }
         }
         // Capital collar below tie girders / pier top (y = 6.6 to 7.0)
-        pbox(B, 'metal', K.ironDk, 1.24, 0.4, 1.24, px + sx * 0.02, 6.8, pz + sz * 0.02);
+        pbox(B, 'metal', K.ironDk, colW, 0.4, colD, colX, 6.8, colZ);
       }
 
       // Tie girder trim (y = 6.0 to 6.9, z = +-1.75)
@@ -1298,12 +1301,18 @@ export function registerArch(D, H) {
           // Faceted basalt rock courses wrapping side faces, stopping 4 cm below top
           pbox(B, 'paint', K.basaltDk, w + 0.03, h - 0.08, d + 0.03, 0, (h - 0.08) / 2, 0, { r: 0.03 });
           pbox(B, NS('paint'), K.scoria, w * 0.85 + 0.03, 0.16, d * 0.85 + 0.03, 0, h * 0.65, 0);
-        } else if (tag.includes('gauge-machine-house') || tag.includes('weighbridge') || tag.includes('firebrick-store')) {
+        } else if (tag.includes('gauge-machine-house') || tag.includes('firebrick-store')) {
           // Machine house / brick store pilasters, hatch, bevel gear casing
           for (const sx of [-w / 2 + 0.1, w / 2 - 0.1]) {
             pbox(B, 'metal', K.greenDk, 0.18, h - 0.06, d + 0.03, sx, (h - 0.06) / 2, 0);
           }
           pbox(B, 'metal', K.ironDk, Math.min(w * 0.6, 1.2), Math.min(h * 0.6, 1.4), 0.05, 0, h * 0.5, d / 2 + 0.02);
+        } else if (tag.includes('weighbridge')) {
+          // Weighbridge pit dial scale casing on south face facing open ramp (clear of north yard wall)
+          pbox(B, 'metal', K.ironDk, 1.2, 1.4, 0.06, 0, h * 0.5, -d / 2 + 0.04);
+          pbox(B, 'metal', K.greenDk, 0.18, h - 0.06, 0.06, -w / 2 + 0.2, (h - 0.06) / 2, -d / 2 + 0.04);
+          pbox(B, 'metal', K.greenDk, 0.18, h - 0.06, 0.06, w / 2 - 0.2, (h - 0.06) / 2, -d / 2 + 0.04);
+          ptor(B, NS('metal'), K.brass, 0.35, 0.03, 0, h * 0.65, -d / 2 + 0.08, { rx: HP });
         } else if (tag.includes('race-bollard') || tag.includes('bollard') || tag.includes('capstan') || tag.includes('slag-pot') || tag.includes('urn')) {
           // Cast-iron bollard / capstan / pot lathe profile
           pcyl(B, 'metal', K.ironDk, Math.min(w, d) / 2 + 0.02, h - 0.06, 0, (h - 0.06) / 2, 0, { seg: 12 });
@@ -1323,8 +1332,10 @@ export function registerArch(D, H) {
           pbox(B, 'metal', K.ironDk, w + 0.03, h - 0.06, d + 0.03, 0, (h - 0.06) / 2, 0);
           ptor(B, 'metal', K.red, 0.16, 0.02, w / 2 + 0.015, h * 0.6, 0, { ry: HP });
         } else if (tag.includes('crate') || tag.includes('bin') || tag.includes('rack') || tag.includes('stack') || tag.includes('drain')) {
-          pbox(B, 'wood', K.woodDk, w + 0.025, h - 0.06, d + 0.025, 0, (h - 0.06) / 2, 0);
-          pbox(B, NS('metal'), K.ironDk, w + 0.03, 0.05, d + 0.03, 0, h * 0.5, 0);
+          const dw = ry !== 0 ? w - 0.02 : w + 0.02;
+          const dd = ry !== 0 ? d - 0.02 : d + 0.02;
+          pbox(B, 'wood', K.woodDk, dw, h - 0.06, dd, 0, (h - 0.06) / 2, 0);
+          pbox(B, NS('metal'), K.ironDk, dw + 0.01, 0.05, dd + 0.01, 0, h * 0.5, 0);
         } else if (tag.includes('hornito')) {
           pcyl(B, 'paint', K.scoriaRed, Math.min(w, d) / 2 + 0.02, h - 0.06, 0, (h - 0.06) / 2, 0, { seg: 8 });
           ptor(B, 'glow', K.lavaGlow, Math.min(w, d) * 0.32, 0.02, 0, h - 0.05, 0, { rx: HP, glow: 1.0 });

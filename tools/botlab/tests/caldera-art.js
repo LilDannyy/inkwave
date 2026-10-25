@@ -197,7 +197,7 @@
   }
   const rd = (x) => +x.toFixed(1);
   R('0 m² paintable floor coplanar with dressing (no z-fighting lids)', cTot.floorFight < 0.5, { floorFight: rd(cTot.floorFight), floorCov: rd(cTot.floorCov) });
-  R('paintable wall area covered by dressing listed and justified', cTot.wallFight < 10 && cTot.wallCov < 600, { wallFight: rd(cTot.wallFight), wallCov: rd(cTot.wallCov) });
+  R('0 m² paintable wall coplanar with dressing (no z-fighting)', cTot.wallFight < 0.5 && cTot.wallCov < 600, { wallFight: rd(cTot.wallFight), wallCov: rd(cTot.wallCov) });
 
   return out;
 })();

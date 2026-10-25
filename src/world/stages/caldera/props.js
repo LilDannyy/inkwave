@@ -113,27 +113,28 @@ export function register(D, H) {
         const y0 = cy - h / 2;
         B.push(s * cx, y0, s * cz, (ry * PI) / 180 + (s < 0 ? PI : 0));
         // 1. Basalt masonry foundation / plinth course at base (narrow skirting 0.35m high)
-        B.box('paint', K.basaltDk, w + 0.04, 0.35, d + 0.04, 0, 0.175, 0, { r: 0.02 });
-        B.box(NS('paint'), '#2c2e33', w + 0.04, 0.06, d + 0.05, 0, 0.38, 0);
+        // Depth d - 0.02 and width w - 0.06 ensures it stays strictly clear of adjacent floor blocks (0 m² coplanar)
+        B.box('paint', K.basaltDk, Math.max(0.2, w - 0.06), 0.35, d - 0.02, 0, 0.175, 0, { r: 0.02 });
+        B.box(NS('paint'), '#2c2e33', Math.max(0.2, w - 0.06), 0.06, d - 0.01, 0, 0.38, 0);
 
-        // 2. Structural vertical iron pilasters at wall ends (stopping 5 cm below top)
-        for (const sx of [-w / 2 + 0.12, w / 2 - 0.12]) {
-          B.box('metal', K.greenDk, 0.18, h - 0.1, d + 0.04, sx, (h - 0.1) / 2, 0, { r: 0.02 });
+        // 2. Structural vertical iron pilasters (pulled inward from wall ends and faces)
+        for (const sx of [-w / 2 + 0.22, w / 2 - 0.22]) {
+          B.box('metal', K.greenDk, 0.18, h - 0.1, d - 0.02, sx, (h - 0.1) / 2, 0, { r: 0.02 });
         }
 
         // Downpipe along wall corner
-        B.cyl(NS('metal'), K.ironLt, 0.025, h - 0.2, w / 2 - 0.25, (h - 0.2) / 2, (d / 2) + 0.02, { seg: 6 });
+        B.cyl(NS('metal'), K.ironLt, 0.025, h - 0.2, w / 2 - 0.25, (h - 0.2) / 2, (d / 2) - 0.02, { seg: 6 });
 
         // 3. Belt course girder at 60% of wall height
         if (h > 3.0) {
-          B.box(NS('metal'), K.ironDk, w + 0.04, 0.1, d + 0.04, 0, h * 0.6, 0);
+          B.box(NS('metal'), K.ironDk, Math.max(0.2, w - 0.06), 0.1, d - 0.02, 0, h * 0.6, 0);
         }
 
         // 4. Clerestory window openings with warm furnace interior glow
         const winW = Math.min(w * 0.72, 1.8);
         if (h > 4.5 && winW > 0.8) {
           const winY = h * 0.7;
-          for (const fz of [-(d / 2) - 0.01, (d / 2) + 0.01]) {
+          for (const fz of [-(d / 2) + 0.02, (d / 2) - 0.02]) {
             B.box('glow', K.glass, winW, 1.1, 0.03, 0, winY, fz, { glow: 1.1 });
             B.box(NS('metal'), K.greenDk, winW + 0.04, 0.06, 0.04, 0, winY, fz);
             B.box(NS('metal'), K.greenDk, 0.06, 1.16, 0.04, 0, winY, fz);
@@ -144,10 +145,10 @@ export function register(D, H) {
 
         // 5. Coping / cornice: on low walls, exterior fascia strip stopping 3 cm below top; on tall walls, upper roof
         if (y0 + h <= 6.5) {
-          B.box('paint', K.verd, w + 0.04, 0.06, d + 0.04, 0, h - 0.05, 0);
+          B.box('paint', K.verd, Math.max(0.2, w - 0.06), 0.06, d - 0.02, 0, h - 0.05, 0);
         } else {
-          B.box('paint', K.verd, w + 0.06, 0.22, d + 0.06, 0, h + 0.11, 0);
-          B.box(NS('metal'), K.ironDk, w + 0.06, 0.08, 0.04, 0, h + 0.22, (d / 2) + 0.02);
+          B.box('paint', K.verd, Math.max(0.2, w - 0.04), 0.22, d + 0.02, 0, h + 0.11, 0);
+          B.box(NS('metal'), K.ironDk, Math.max(0.2, w - 0.04), 0.08, 0.04, 0, h + 0.22, (d / 2) + 0.01);
 
           // 7. Roof forms on upper storeys
           B.box('metal', '#4a4f56', w * 0.96, 0.45, d * 0.92, 0, h + 0.34, 0, { rx: 0.12 });
