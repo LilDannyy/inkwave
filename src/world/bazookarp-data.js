@@ -27,7 +27,7 @@ export const BAZOOKARP_DEFS = {
     start: [0, 1.3, 0],
     carrierField: { swimJump: [[[-24, -36], [-17, -36], [-17, -25], [-24, -25]], [[-12, -20], [-7, -20], [-7, -10], [-12, -10]]] },   // [b5-karp-ref] inked boat/canal crossings, mirrored by the Carp Field
     weirs: [{ at: [-1.5, 0, 27.5], yaw: 0 }],          // the Long Pier / boatyard junction (§9.3)
-    gate: { at: [8, 0, 56.2], yaw: 0 },                 // in front of Bravo's spawn, centered on the landing lane
+    gate: { at: [0, 0, 53.5], yaw: 0 },                 // in front of Bravo's spawn, centered on the landing lane
     freeZones: [
       { poly: [[-10, 62], [10, 62], [10, 69.4], [-10, 69.4]], y0: 2.0, y1: 4.6, signs: [[-11.2, 65.9, 90], [11.2, 65.9, 270], [-4.8, 61.5, 0], [4.8, 61.5, 180], [-10.9, 62.5, 90], [10.9, 62.5, 270]] },   // deck free zone; entrance signs stand outside it
       { poly: [[-24, 11], [-11, 11], [-11, 26], [-24, 26]], y0: 2.2, y1: 4.5, signs: [[-17.5, 13, 0]] },
