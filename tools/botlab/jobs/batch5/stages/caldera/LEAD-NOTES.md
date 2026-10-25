@@ -302,3 +302,18 @@ aqua-cherry dusk HIGH 8.2 % vs 7.4 %. Round 6 is gated on the probes' numbers; t
 - **Round 6b (d78eec00): residuals closed, confirmed by the lead's probe run** — floorFight 0, wallFight 0, floorCov 189 (under
   solid footprints per the builder: surge office 50, castWall 33.9, winch house, collars, plinths), wallCov 481.9 (cladding,
   geology, trims). **Independent review 3 launched** (same reviewer, same method; `review:caldera-art#3`, `out/review3/`).
+
+## Independent art review 3 (2026-10-26 ~08:00) — head d78eec00: REDO (f4b327cb, `review:caldera-art#3`)
+
+Fixed and confirmed: 0 m² flicker, clean ink on the walkable floors, mid clear, no loose props, honest pairs, cards at
+Halyard's brightness, the Organ step plates read; every hard limit holds (geometry byte-identical, audits, lava.js 60/60,
+lava-karp 10/10, bake, matches, GPU ×0.95, ink loudest). **Blocker:** the "restored" prop types are coded but NOT PLACED
+(13 absent from the placement list) — the objects are still generic shells round cubes; the two placed spatter cones hide
+inside their hornito boxes. **Majors:** the shells cover the signs (decals 08, 10 boxed; 05 cut; 7 of 8 decal pictures show
+no decal); ~206 m² of reachable inkable wall hidden at 85–100 % (floors: 289 m² unreachable, 7 m² reachable — accepted);
+the backdrop and Organ columns still basic shapes. Probe-cover2 (reachable / unreachable split) and wallink-pre.js added to
+`review-tools/` (48556ac8). The bare count no longer measures the bar (any wrapper counts as dressing): the pictures do.
+**Round 7's gate is mechanical and the lead runs it:** probe-props2 per-type lines (every restored type present),
+probe-cover2 reachable wall ≈ 0 except blocks listed for `paint:false`, the eight decal pictures each showing the sign, the
+four sweep sets looked at. Next independent pass after 2026-10-30. Antigravity's reports have claimed unplaced work three
+times (cards, pairs, props): nothing it says counts until a probe or a picture shows it.
