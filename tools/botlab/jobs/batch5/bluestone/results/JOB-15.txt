@@ -5,3 +5,12 @@ JOB-15 (bluestone) @ 272f53a3 — Mac mini b5-runner, 2026-10-25 13:47–13:56, 
   about a third of its triangles (0.91–1.02 M vs 3.08 M) and two thirds of its draw calls (106–119 vs 161–173). Halyard's per-view spread
   is 17–41 ms; Bluestone's is flat at 41–50 ms in every view — the cost is everywhere, not in one view (a full-screen / per-pixel cost,
   not geometry). At ~45 ms that is about 22 fps of GPU time on this Mac mini at 1600×900.
+
+HOW TO ASK FOR IT AGAIN (the Mac mini helper, 2026-10-25): tools/botlab/jobs/batch5/bluestone/gpu-time.sh runs this measurement as a
+reusable step; its header says exactly how it is measured (gpu-views.js unchanged: DEFAULT_SETTINGS, fov 75, actors hidden, sim frozen,
+perf6's 8 views, 20 warm-up + 24 timed frames per view with EXT_disjoint_timer_query_webgl2 round the game's render, the median per view,
+the mean of the 8 per run; 1600×900, pixel ratio 1; a fresh profile, one Electron at a time). A JOB needs one line, e.g.:
+  bash tools/botlab/jobs/batch5/bluestone/gpu-time.sh                         (halyard + eras 1/2/3, day + dusk, 2 rounds)
+  SETS="bluestone:2" TIMES=dusk ROUNDS=3 BASE=<sha> bash tools/botlab/jobs/batch5/bluestone/gpu-time.sh   (+ that commit, before / after)
+It writes gpu-runs.txt and gpu.txt (medians, each row ÷ Halyard at the same time of day) into $JOB_OUT, so they come back in the raw file.
+Compare numbers only within one job (the machine's state moves them: a run overlapping another job read Halyard at 41 ms, not 24).
