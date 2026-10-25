@@ -25,7 +25,7 @@ export const BAZOOKARP_DEFS = {
   halyard: {
     // The ferry's car deck is the central, open fight space. Bazookarp clears the cabin so the Pond has a walkable ring.
     start: [0, 1.3, 0],
-    carrierField: { swimJump: true },   // [b5-karp-ref] carrier-only jumps from inkable decks/water edges, measured by checker #16
+    carrierField: { swimJump: [[[-24, -36], [-17, -36], [-17, -25], [-24, -25]], [[-12, -20], [-7, -20], [-7, -10], [-12, -10]]] },   // [b5-karp-ref] inked boat/canal crossings, mirrored by the Carp Field
     weirs: [{ at: [-1.5, 0, 27.5], yaw: 0 }],          // the Long Pier / boatyard junction (§9.3)
     gate: { at: [5.5, 0, 55], yaw: 0 },                 // in front of Bravo's spawn, centered on the landing lane
     freeZones: [
@@ -41,7 +41,7 @@ export const BAZOOKARP_DEFS = {
   lockgate: {
     // The Pond sits on the centre of the humpback bridge (3.3 m); its Bazookarp plaza widens the approaches.
     start: [0, 3.45, 0],
-    carrierField: { swimJump: true },   // [b5-karp-ref] carrier-only jumps from inkable towpaths and decks, measured by checker #16
+    carrierField: { swimJump: [[[-23, -18], [-15, -18], [-15, -8], [-23, -8]]] },   // [b5-karp-ref] inked boat/canal crossing, mirrored by the Carp Field
     weirs: [{ at: [-2.2, 0, 24], yaw: 0 }],             // the weigh-house yard, at the middle-side end of the dry dock
     gate: { at: [2, 0, 51.5], yaw: 0 },                 // in front of Bravo's spawn (12.4 m from the pad)
     freeZones: [

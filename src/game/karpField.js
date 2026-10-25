@@ -251,12 +251,13 @@ export class KarpField {
     const nav = this.nav, ok = this.ok, H = K.hop, Gp = K.gap, L = this.level, R = this.R;
     // [b5-karp-ref] A carrier can swim-jump from inkable floor. The node-pair reach includes the two rim-cell offsets
     // (0.95 m each) and the measured 0.3 m probe margin; only layouts that opt in add these longer edges.
-    const swimGap = !!R.def.carrierField?.swimJump;
+    const swimRegions = R.def.carrierField?.swimJump || null;
+    const swimGap = !!swimRegions;
     const swimReach = [[-3.4, 12.6], [-2.2, 11.9], [-1.2, 11.2], [-0.6, 10.7], [0, 10.2], [0.6, 9.6], [0.9, 9.1], [1.2, 8.6], [1.5, 8.4], [1.8, 7.8], [2.0, 7.7], [2.1, 7.2], [2.25, 7.2]];
     const nodes = nav.nodes, nx = nav.nx, nz = nav.nz, NN = nodes.length;
     const swimMax = (dy) => { if (dy < swimReach[0][0]) return 0; if (dy === swimReach[0][0]) return swimReach[0][1]; for (let k = 1; k < swimReach.length; k++) if (dy <= swimReach[k][0]) { const [y0, x0] = swimReach[k - 1], [y1, x1] = swimReach[k]; return x0 + ((x1 - x0) * (dy - y0)) / (y1 - y0); } return 0; };
     const inkFloor = new Uint8Array(NN).fill(255);
-    const takesInk = (id) => { if (!swimGap) return false; if (inkFloor[id] !== 255) return inkFloor[id] === 1; const n = nodes[id]; const h = this.physics.raycast(_a.set(n.x, n.y + 0.3, n.z), _d.set(0, -1, 0), 0.7, this._hit || (this._hit = new Hit()), false); const f = h.hit && h.face >= 0 ? L.faces[h.face] : null; inkFloor[id] = f && f.atlas && f.grid >= 0 && h.normal.y > 0.5 ? 1 : 0; return inkFloor[id] === 1; };
+    const takesInk = (id) => { if (!swimGap) return false; const n = nodes[id]; if (!swimRegions.some((poly) => inPoly(poly, n.x, n.z) || inPoly(poly, -n.x, -n.z))) return false; if (inkFloor[id] !== 255) return inkFloor[id] === 1; const h = this.physics.raycast(_a.set(n.x, n.y + 0.3, n.z), _d.set(0, -1, 0), 0.7, this._hit || (this._hit = new Hit()), false); const f = h.hit && h.face >= 0 ? L.faces[h.face] : null; inkFloor[id] = f && f.atlas && f.grid >= 0 && h.normal.y > 0.5 ? 1 : 0; return inkFloor[id] === 1; };
     const scanFlat = swimGap ? swimReach[0][1] : Gp.flatMax;
     let hops = 0, gaps = 0;
     // every cell's node heights in one flat table (the floor tests below run a few hundred thousand times at load)
