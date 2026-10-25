@@ -1,0 +1,8 @@
+JOB-19 (bluestone, review 2) @ bf4a14fb — Mac mini b5-runner, 2026-10-25 15:29–15:39, exit 0. Short summary (ms of GPU per frame, 2 rounds).
+- base: Bluestone 41–48 (e1–e3 day, e2 dusk), Halyard 28–36.
+- an EMPTY scene: both ~14–16 ms (the fixed cost of the frame: the post chain etc.) — so the gap is all in what's drawn.
+- the level with a PLAIN material: Bluestone 32.9–34.8 (−10 to −12 ms from its base), Halyard 23–27 (−4 to −8): Bluestone's level material
+  costs ~11 ms, AND even plain its level costs ~19 ms over the empty scene against Halyard's ~10 — Bluestone draws 5 level meshes (level,
+  level:era1 / era3 / era4 / era6) to Halyard's 1: worth checking that the other eras' meshes aren't drawn (and overdrawn) every frame.
+- the rest: GTAO off −5 ms on Bluestone (Halyard noisy, −0 to −10); the shadow map held −0 to −2 on Bluestone (−7 to −10 on Halyard); EraFx
+  off ~0; transparent meshes off −1 to −4 (Halyard −7 to −14). Bloom OFF makes Bluestone SLOWER, 52.9–62.3 ms (Halyard drops to 20–24).
