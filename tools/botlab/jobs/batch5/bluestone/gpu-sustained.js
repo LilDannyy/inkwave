@@ -9,6 +9,12 @@
   for (const a of g.match.actors) { a.bot = null; a.character.root.visible = false; a.character.setVisible?.(false); } G.projectiles.clear();
   g.debug.freeze();
   const Rr = g.R, Rn = G.renderer, gl = Rn.getContext(), ext = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+  // PRE_ARGS: 'nobloom' / 'nogtao' — that pass off for the whole run (the bloom-off anomaly: is it real GPU work?)
+  const args = String(window.__preArgs || '');
+  if (/nobloom/.test(args) && Rr.bloom) Rr.bloom.enabled = false;
+  if (/nogtao/.test(args) && Rr.gtao) Rr.gtao.enabled = false;
+  if (/plain/.test(args)) { const plain = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.8 }); G.scene.traverse((o) => { if (o.isMesh && /^level/.test(o.name || '')) o.material = plain; }); if (G.eraWorld) G.eraWorld._levelProgram = () => {}; }
+  if (/half/.test(args)) { Rr.renderer?.setPixelRatio?.(0.5); }
   const L = G.level, lay = L.layout || {}, B = L.bounds, sp = lay.spawnPads || [[0, 2, B.minZ + 4], [0, 2, B.maxZ - 4]];
   const V = (a) => new THREE.Vector3(a[0], a[1], a[2]);
   const views = [];
@@ -54,5 +60,5 @@
   }
   Rr.render = rend0;
   const mean = (a) => +(a.reduce((s, x) => s + x, 0) / a.length).toFixed(2);
-  return { map: g.mapDef?.id, era: G.eraWorld?.era ?? 0, time: G.env?.theme, A: mean(A), B: mean(Bq), Bwall: mean(Bw), Cissue: mean(Ci), Cdone: mean(Cd), views: { A: A.map((x) => +x.toFixed(1)), B: Bq.map((x) => +x.toFixed(1)), Cdone: Cd.map((x) => +x.toFixed(1)) } };
+  return { map: g.mapDef?.id, era: G.eraWorld?.era ?? 0, time: G.env?.theme, args, A: mean(A), B: mean(Bq), Bwall: mean(Bw), Cissue: mean(Ci), Cdone: mean(Cd), views: { A: A.map((x) => +x.toFixed(1)), B: Bq.map((x) => +x.toFixed(1)), Cdone: Cd.map((x) => +x.toFixed(1)) } };
 })()
