@@ -1,0 +1,100 @@
+JOB-34 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 23:31:04
+branch botlab-b5-bluestone, ran at 3b506e3c, exit code 0, wall time 27min
+(a written-up JOB-34.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-34 on new-stages 6fbfaeb6 (pinned) load { 2.23 2.30 2.33 }
+== net-eras: RESULT 14/14  0 FAIL
+== net-eras lagged: RESULT 8/8  0 FAIL
+== eras-world-12: RESULT 12/12  0 FAIL
+== eras-world-34: RESULT 7/7  0 FAIL
+== eras-world-5: RESULT 3/3  0 FAIL
+== eras-hud: RESULT 12/12  0 FAIL
+== eras-modes: RESULT 6/6  0 FAIL
+== first-frames-cold: RESULT 5/6
+== bluestone [turf, world bluestone]: load 2976 ms | 422 frames (251 intro, 171 play) | worst intro 17.4 ms @4167 | worst play 10.7 ms @4394 | over 100 ms: 0 | worst gap between frames 169.7 ms @4394 (over 100: 1)
+FAIL bluestone first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":17.4,"worstPlay":10.7,"over":0,"worstGap":169.7,"gaps":1,"loadMs":2976}
+PASS bluestone no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+== halyard [turf, world halyard]: load 2349 ms | 433 frames (252 intro, 181 play) | worst intro 16.4 ms @0 | worst play 15.1 ms @4569 | over 100 ms: 0 | worst gap between frames 14.9 ms @2187 (over 100: 0)
+PASS halyard no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+### done load { 4.36 3.50 3.18 }
+
+## last 15 lines of job.log
+  day  e2: calls 230 / 247 x0.93 | tris 1369172 / 3329102 x0.41 | cpuRender ms 6.37 / 8.07 x0.79
+  day  e3: calls 236 / 247 x0.96 | tris 1512664 / 3329102 x0.45 | cpuRender ms 6.64 / 8.07 x0.82
+  dusk e1: calls 236 / 269 x0.88 | tris 1509614 / 3338029 x0.45 | cpuRender ms 6.16 / 8.83 x0.70
+  dusk e2: calls 232 / 269 x0.86 | tris 1417518 / 3338029 x0.42 | cpuRender ms 6.45 / 8.83 x0.73
+  dusk e3: calls 226 / 269 x0.84 | tris 1490439 / 3338029 x0.45 | cpuRender ms 6.75 / 8.83 x0.76
+method C (the gate): GPU throughput ms per frame, mean of 2 rounds | / halyard (same time of day)
+  bluestone e1   day  C 6.11 (x0.87) issue 0.88
+  bluestone e1   dusk C 6.46 (x0.89) issue 0.85
+  bluestone e2   day  C 6.19 (x0.88) issue 0.86
+  bluestone e2   dusk C 6.46 (x0.89) issue 0.85
+  bluestone e3   day  C 6.43 (x0.92) issue 0.85
+  bluestone e3   dusk C 6.83 (x0.94) issue 0.88
+  halyard        day  C 7.02 (x1.00) issue 1.10
+  halyard        dusk C 7.23 (x1.00) issue 1.05
+### done load { 4.36 3.50 3.18 }
+
+## ffcold.txt
+== bluestone [turf, world bluestone]: load 2976 ms | 422 frames (251 intro, 171 play) | worst intro 17.4 ms @4167 | worst play 10.7 ms @4394 | over 100 ms: 0 | worst gap between frames 169.7 ms @4394 (over 100: 1)
+   frame @4394 ms [playing] 10.7 ms (after a 169.7 ms gap) | programs +0 textures +0 geometries +1 | {"sim":2.9,"render":3.9,"hudUpdate":2.3,"hud":2.4}
+   between frames @4224 ms: 181 ms in longtask animation frame (block 0 ms, render 12 ms): no script over 15 ms
+   first frames: 16.2 ms (programs +0, textures +0) {"render":2.9,"hudUpdate":10.8,"hud":11.6} · 6.5 ms (programs +0, textures +0) {"render":3.6} · 5.8 ms (programs +0, textures +0) {"render":3.6}
+   lineup shooter/sticky/barrage_burst mitts/burst/barrage_seeker brolly/shaker/barrage_mist blaster/seeker/bubbler spinner/waddle/sonar charger/torpedo/strike bow/tracer/zooka roller/boomerang/wail | warm 636 ms | forced: punch held (fists seen 2), flood on
+FAIL bluestone first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":17.4,"worstPlay":10.7,"over":0,"worstGap":169.7,"gaps":1,"loadMs":2976}
+PASS bluestone no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS bluestone no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+console errors: none
+== halyard [turf, world halyard]: load 2349 ms | 433 frames (252 intro, 181 play) | worst intro 16.4 ms @0 | worst play 15.1 ms @4569 | over 100 ms: 0 | worst gap between frames 14.9 ms @2187 (over 100: 0)
+   first frames: 16.4 ms (programs +0, textures +0) {"render":2.2,"hudUpdate":11.9,"hud":12.4} · 5.5 ms (programs +0, textures +0) {"render":3.1} · 4.4 ms (programs +0, textures +0) {"render":2.4}
+   lineup spinner/sentry/booyah mitts/bobber/zipcaster bow/dash/crab roller/bomb/surf brush/sticky/drainbow blade/burst/barrage_waddle mitts/shaker/barrage_mystery bucket/seeker/slam | warm 122 ms | forced: punch held (fists seen 4), flood on
+PASS halyard first frames under 100 ms, and no gap between them over 100 ms  {"worstIntro":16.4,"worstPlay":15.1,"over":0,"worstGap":14.9,"gaps":0,"loadMs":2349}
+PASS halyard no shader program compiled in the first frames (a Mitts punch and a flood forced at the first frame of play)  {"programs":0,"inFrames":0,"punched":true,"flood":true,"first":[]}
+PASS halyard no shader program compiled in 20 s more of play, every special charged (first use of every kit, sub and special in the lineup)  {"programs":0,"frameErrors":0,"first":[]}
+console errors: none
+RESULT 5/6
+
+## gate-c.txt
+method C (the gate): GPU throughput ms per frame, mean of 2 rounds | / halyard (same time of day)
+  bluestone e1   day  C 6.11 (x0.87) issue 0.88
+  bluestone e1   dusk C 6.46 (x0.89) issue 0.85
+  bluestone e2   day  C 6.19 (x0.88) issue 0.86
+  bluestone e2   dusk C 6.46 (x0.89) issue 0.85
+  bluestone e3   day  C 6.43 (x0.92) issue 0.85
+  bluestone e3   dusk C 6.83 (x0.94) issue 0.88
+  halyard        day  C 7.02 (x1.00) issue 1.10
+  halyard        dusk C 7.23 (x1.00) issue 1.05
+
+## menu.txt
+MENU bluestone day: api up 6211 ms | {"apiAtPage":3830,"warmAt":3830,"bootFrames":41,"bootWorst":[[3047.1,1016.6],[1363.8,866.6],[2013.8,633.3]],"mode":"menu","map":"bluestone","theme":"day","frames":901,"over50":2,"over100":0,"worst":[[6430.3,100],[6513.6,66.7],[6646.9,49.9],[3913.8,16.8],[5130.4,16.8]],"p95":16.7,"eras":{"warmed":true,"clouds":2,"stats":{"navMs":457,"mergeMs":8.4,"navBuilds":[14
+MENU bluestone dusk: api up 6811 ms | {"apiAtPage":4496,"warmAt":4496,"bootFrames":38,"bootWorst":[[3779.5,1016.6],[1363,866.7],[2762.9,733.3]],"mode":"menu","map":"bluestone","theme":"sunset","frames":904,"over50":2,"over100":0,"worst":[[7129.4,100],[7212.7,66.7],[4712.9,16.8],[5679.5,16.8],[6262.8,16.8]],"p95":16.7,"eras":{"warmed":true,"clouds":3,"stats":{"navMs":450,"mergeMs":9,"navBuilds":[14
+MENU halyard day: api up 5410 ms | {"apiAtPage":3072,"bootFrames":45,"bootWorst":[[2205,950],[1155.1,616.7],[521.7,366.6]],"mode":"menu","map":"halyard","theme":"golden","frames":902,"over50":2,"over100":0,"worst":[[5671.5,99.9],[5754.9,66.7],[3471.7,16.8],[3805,16.8],[3871.7,16.8]],"p95":16.7,"eras":null}
+MENU halyard dusk: api up 5325 ms | {"apiAtPage":2979,"bootFrames":44,"bootWorst":[[2129.4,833.4],[1179.4,633.4],[529.4,383.3]],"mode":"menu","map":"halyard","theme":"sunset","frames":901,"over50":2,"over100":0,"worst":[[5579.2,100],[5645.8,66.6],[5795.8,49.9],[3546,16.8],[3729.3,16.8]],"p95":16.8,"eras":null}
+
+## perf.txt
+perf6 medians of 3 runs; each Bluestone era / Halyard
+  day  e1: calls 235 / 247 x0.95 | tris 1506336 / 3329102 x0.45 | cpuRender ms 6.10 / 8.07 x0.76
+  day  e2: calls 230 / 247 x0.93 | tris 1369172 / 3329102 x0.41 | cpuRender ms 6.37 / 8.07 x0.79
+  day  e3: calls 236 / 247 x0.96 | tris 1512664 / 3329102 x0.45 | cpuRender ms 6.64 / 8.07 x0.82
+  dusk e1: calls 236 / 269 x0.88 | tris 1509614 / 3338029 x0.45 | cpuRender ms 6.16 / 8.83 x0.70
+  dusk e2: calls 232 / 269 x0.86 | tris 1417518 / 3338029 x0.42 | cpuRender ms 6.45 / 8.83 x0.73
+  dusk e3: calls 226 / 269 x0.84 | tris 1490439 / 3338029 x0.45 | cpuRender ms 6.75 / 8.83 x0.76
+
+## sus.txt
+== sus halyard e0 day r1: "Cissue":1.16,"Cdone":6.95 
+== sus bluestone e1 day r1: "Cissue":0.91,"Cdone":6.14 
+== sus bluestone e2 day r1: "Cissue":0.84,"Cdone":6.17 
+== sus bluestone e3 day r1: "Cissue":0.83,"Cdone":6.52 
+== sus halyard e0 dusk r1: "Cissue":1.01,"Cdone":7.09 
+== sus bluestone e1 dusk r1: "Cissue":0.86,"Cdone":6.54 
+== sus bluestone e2 dusk r1: "Cissue":0.82,"Cdone":6.4 
+== sus bluestone e3 dusk r1: "Cissue":0.84,"Cdone":6.84 
+== sus halyard e0 day r2: "Cissue":1.05,"Cdone":7.09 
+== sus bluestone e1 day r2: "Cissue":0.84,"Cdone":6.07 
+== sus bluestone e2 day r2: "Cissue":0.88,"Cdone":6.2 
+== sus bluestone e3 day r2: "Cissue":0.88,"Cdone":6.35 
+== sus halyard e0 dusk r2: "Cissue":1.09,"Cdone":7.37 
+== sus bluestone e1 dusk r2: "Cissue":0.84,"Cdone":6.38 
+== sus bluestone e2 dusk r2: "Cissue":0.88,"Cdone":6.51 
+== sus bluestone e3 dusk r2: "Cissue":0.91,"Cdone":6.82 
