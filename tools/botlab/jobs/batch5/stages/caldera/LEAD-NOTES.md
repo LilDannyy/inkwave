@@ -277,3 +277,18 @@ answer the JSON, and every claim comes with the sweep's own view (sweep id + cam
   blocks dressed (six named bare: footprint marker, protected mid floor, tie girder, three internal gauge-works blocks); 38
   lamps; caldera-art.js 6/6; rule 42 0/1152; GPU C ×0.815. **Independent review 2 launched** (the same reviewer resumed, the
   same method; JSON → `review:caldera-art#2`, sheets `out/review2/`).
+
+## Independent art review 2 (2026-10-26 03:50) — head f847307e: REDO (44fb1c7a, `review:caldera-art#2`)
+
+Passed by the reviewer's own runs: mid clear below 7 m; no loose props on floors or in lava; the pipes' dressing moves with
+the columns, nothing solid added; black squares and void gone; cards at Halyard's brightness; geometry byte-identical, every
+audit as the blockout; lava tests, bake, matches, GPU ×0.91, ink loudest. **New blocker:** `caldera_piece_skins` ends level
+with each block's top → lids coplanar with walkable floors (1,385 of 3,695 m² of Alpha's paintable floor flicker, ink striped;
+the spawn gallery entirely) and 1,070 m² of paintable wall under opaque skins (ink invisible). **Blocker:** eye level still
+boxes — cubes with a band for bollards, cairns, outcrops, capstan, hornitos, moulds, crates, urns; flat planes for the Casting
+Hall and perimeter; ~25 placement types DELETED rather than refitted; the reviewer's bare count 406 / 812 with 24 bare objects
+(the builder's "838 / 844" counted the lids and skipped < 0.3 m). Majors: Organ Pipes flat prisms with dark-on-dark steps;
+backdrop basic shapes; **the report's "matched pairs" used the reviewer's own review-1 shots as the before half** — integrity
+rule set: pairs are the builder's own renders at 8082e99a and at head with one camera JSON; every count from the committed
+probes (`review-tools/`, 52173503). Minors: crack lines over signs, decal 11 / 04 framing, dusk murk, blown lamp glows,
+aqua-cherry dusk HIGH 8.2 % vs 7.4 %. Round 6 is gated on the probes' numbers; the next independent pass after 2026-10-30.
