@@ -895,9 +895,11 @@ const FBASE = /* glsl */`
           }
         }
       } else if (prm == 3) {
-        // a stone horse trough: granite, the water in the 1880s, flowers TODAY, a light planter in the 3000s
-        base = bsC(0.5, 0.5, 0.48) * (0.9 + 0.15 * vnoise(q * 3.0));
-        if (wall) { base = mix(base, base * 1.2, bsAA(abs(fy - h + 0.06) - 0.06, pw)); base = mix(base, bsC(0.3, 0.3, 0.3), bsRect(fu, vec2(fsz.x * 0.3, h * 0.3), vec2(fsz.x * 0.7, h * 0.6), pw) * 0.3); }
+        // a stone horse trough: granite, the water in the 1880s, flowers TODAY, a light planter in the 3000s (fix round 1:
+        // its sides the 3000s' pearl family too — they stayed granite grey boxes)
+        base = E == 2 ? bsC(0.9, 0.9, 0.88) * (0.95 + 0.06 * vnoise(q * 3.0)) : bsC(0.5, 0.5, 0.48) * (0.9 + 0.15 * vnoise(q * 3.0));
+        if (E == 2 && wall) { float fl3 = 0.5 + 0.5 * cos(fu.x / 0.12 * 6.2832); base *= 0.93 + 0.07 * fl3 * step(0.22, fy); float ls3 = bsAA(abs(fy - 0.1) - 0.012, pw) + bsAA(abs(fy - h + 0.14) - 0.012, pw); base = mix(base, WG, clamp(ls3, 0.0, 1.0)); gBsGlow += clamp(ls3, 0.0, 1.0) * WG * 1.1; base = mix(base, bsC(0.2, 0.22, 0.24), bsAA(fy - 0.08, pw)); }
+        if (wall && E < 2) { base = mix(base, base * 1.2, bsAA(abs(fy - h + 0.06) - 0.06, pw)); base = mix(base, bsC(0.3, 0.3, 0.3), bsRect(fu, vec2(fsz.x * 0.3, h * 0.3), vec2(fsz.x * 0.7, h * 0.6), pw) * 0.3); }
         if (top) {
           float e2 = min(min(fu.x, fsz.x - fu.x), min(fu.y, fsz.y - fu.y));
           float inner = step(0.12, e2);
@@ -964,9 +966,19 @@ const FBASE = /* glsl */`
           if (top) base = bsC(0.55, 0.52, 0.48) * (0.9 + 0.15 * vnoise(P.xz * 6.0));
         }
       } else if (prm == 11) {
-        // the coal bin (a museum exhibit TODAY): riveted iron, coal heaped in the top
+        // the coal bin (a museum exhibit TODAY): riveted iron, coal heaped in the top; (fix round 1) in the 3000s the
+        // float-tram dock keeps it in a pearl vitrine — the iron bin seen through a glass band, a lit label
         base = bsC(0.22, 0.22, 0.22) * (0.85 + 0.25 * vnoise(q * 6.0));
         if (wall) base *= 1.0 - 0.3 * bsAA(abs(fract(fu.x / 0.3) - 0.5) * 0.3 - 0.01, pw);
+        if (E == 2 && wall) {
+          float band = step(0.35, fy) * step(fy, h - 0.25);
+          base = mix(bsC(0.9, 0.9, 0.88), mix(base * 1.4, bsC(0.55, 0.6, 0.66), 0.25), band);
+          gBaseRough = mix(gBaseRough, 0.1, band);
+          float ls4 = bsAA(abs(fy - 0.35) - 0.012, pw) + bsAA(abs(fy - h + 0.25) - 0.012, pw);
+          base = mix(base, WG, clamp(ls4, 0.0, 1.0)); gBsGlow += clamp(ls4, 0.0, 1.0) * WG;
+          float lab = bsRect(fu, vec2(fsz.x * 0.25, 0.12), vec2(fsz.x * 0.75, 0.28), pw);
+          base = mix(base, bsC(0.2, 0.24, 0.3), lab); base = mix(base, WG, lab * bsText(fu, vec2(fsz.x * 0.5, 0.2), 0.07, fsz.x * 0.4, 205.0, pw)); gBsGlow += lab * WG * 0.3;
+        }
         if (top) base = bsC(0.06, 0.06, 0.065) * (0.6 + 0.9 * vnoise(P.xz * 20.0));
       } else if (prm == 12) {
         // the buffer stop: timber beam on iron, the red disc and the white bar on its face
