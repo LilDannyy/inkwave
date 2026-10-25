@@ -1493,8 +1493,9 @@ const FMURAL = /* glsl */`
       vec4 m3 = texture2D(uMural, muv3);
       float line = smoothstep(0.45, 0.9, m3.a);
       float flow = 0.35 + 0.65 * smoothstep(0.25, 1.0, sin((mx * 9.0 - my * 2.0) * 6.2832 - uEraT * 0.5) * 0.5 + 0.5);
-      mc = vec4(m3.rgb, m3.a);
-      gBsGlow += line * flow * m3.rgb * 1.6;
+      float mk = eraHasF(uMurEra[mi], eraBitHere());   // (the mural's era mask still governs: eras.murals 7 = '23')
+      mc = vec4(m3.rgb, m3.a * mk);
+      gBsGlow += line * flow * m3.rgb * 1.6 * mk;
     }`;
 
 // ------------------------------------------------------------------------------------------------ GLSL: the light
