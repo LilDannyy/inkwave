@@ -1,0 +1,7 @@
+JOB-17 (bluestone) @ b41ff37a — Mac mini b5-runner, 2026-10-25 14:18–14:25, exit 0. Short summary.
+- eras-jump 'frames' ×3 at this head and ×3 at 7ac4bf62, alternating: 4/4 all six (JOB-16's 422 ms idle frame did not recur).
+- GPU time per frame (gpu-time.sh, by day, 2 rounds; medians recomputed with the even-count fix — the mean of the two runs, see below):
+  this head e1 44.3 / e2 45.5 / e3 46.1 ms; 7ac4bf62 e1 44.5 / e2 45.4 / e3 45.3 ms — no change between them; Halyard 29.1 ms (its two runs
+  32.6 and 25.5), so Bluestone ×1.52–1.59 here (JOB-15: ×1.7–1.9 against a steadier Halyard at 24–28 ms).
+- gpu-time.sh fixed in this commit: with an even number of runs its 'median' took the higher of the middle two (the table this job printed
+  says Halyard 32.58 and ×1.36–1.42); it now takes their mean.

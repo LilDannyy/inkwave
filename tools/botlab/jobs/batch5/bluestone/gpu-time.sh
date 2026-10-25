@@ -40,7 +40,7 @@ node -e '
 const L = require("fs").readFileSync(process.argv[1], "utf8").split("\n"), R = {};
 for (const l of L) { const m = /^== gpu (\S+) (\S+) e(\d) (\S+) r\d+: .*"avg":\{"gpu":([\d.]+),"calls":([\d.]+),"tris":(\d+)\}/.exec(l); if (!m) continue;
   const k = [m[1], m[2], m[3], m[4]].join("|"); (R[k] = R[k] || []).push({ gpu: +m[5], calls: +m[6], tris: +m[7] }); }
-const med = (a) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+const med = (a) => { const s = [...a].sort((x, y) => x - y), n = s.length; return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2; };   // (an even count: the mean of the middle two)
 const row = (k) => { const a = R[k]; return a && { gpu: med(a.map((x) => x.gpu)), calls: med(a.map((x) => x.calls)), tris: med(a.map((x) => x.tris)), runs: a.map((x) => x.gpu).join(", ") }; };
 console.log("GPU ms per frame (median of the runs; [each run]) | draw calls | triangles | ÷ halyard (same time of day)");
 for (const k of Object.keys(R).sort()) { const [tag, map, e, T] = k.split("|"), o = row(k), h = row(["head", "halyard", "0", T].join("|"));
