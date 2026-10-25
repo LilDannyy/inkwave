@@ -347,6 +347,42 @@ export function register(D, H) {
       }
     },
   };
+  // (fix round 2, review 2 issue 5) the drum's ceiling over the circus, seen from the floor in every era: it was one flat
+  // tan plane with a sky-coloured seam between the drum's OCT pieces. An octagonal plate just under the drum (y 7.98-8.0,
+  // inset 5 cm from its faces) closes the seam; under it, within 8 cm, coffers: eight radial ribs and two octagonal rings,
+  // bosses at the crossings, a moulded rim and a rose round Tartar's own. Per era: the 1880s coffered timber with gilt
+  // bosses, TODAY cream coffers with a gold rim, the 3000s white coffers with light seams. No collider
+  D.bluestone_drumceiling = {
+    build(B, o) {
+      const e = o.era || 1, PIq = Math.PI / 8, R = 8.75, A = R * Math.cos(PIq);
+      const plate = e === 1 ? '#5a3c29' : e === 2 ? '#e3d8bd' : '#eff1f2', rib = e === 1 ? '#76503a' : e === 2 ? '#d3c4a0' : '#f7f8f8';
+      const boss = e === 1 ? '#c9a356' : e === 2 ? '#c9a356' : '#f4e9c8', pm = e === 1 ? 'wood' : 'gloss', bm = e === 3 ? 'glow' : 'metal';
+      // the plate: an octagon (an 8-sided cylinder turned so its faces lie along the drum's)
+      B.add(pm, KIT.cylGeo(R, R, 0.02, 8), plate, 0, 7.99, 0, { ry: PIq });
+      // the rim: a moulding round the plate's edge, 6 cm deep
+      for (let k = 0; k < 8; k++) {
+        const a = (k + 0.5) * Math.PI / 4, cx = Math.sin(a) * (A - 0.12), cz = Math.cos(a) * (A - 0.12), L = 2 * A * Math.tan(PIq);
+        B.box(bm === 'glow' ? 'gloss' : 'metal', e === 1 ? '#8a6a32' : e === 2 ? '#c9a356' : '#f7f8f8', L - 0.1, 0.06, 0.18, cx, 7.95, cz, { ry: a });
+        if (e === 3) B.box('glow', '#f4e9c8', L - 0.3, 0.02, 0.03, Math.sin(a) * (A - 0.25), 7.925, Math.cos(a) * (A - 0.25), { ry: a, glow: 1.1 });
+      }
+      // the coffers: radial ribs (along the octagon's corners) and two rings
+      for (let k = 0; k < 8; k++) {
+        const a = k * Math.PI / 4, L = R - 0.9;
+        B.box(pm, rib, 0.16, 0.06, L, Math.sin(a) * (0.6 + L / 2), 7.95, Math.cos(a) * (0.6 + L / 2), { ry: a });
+        if (e === 3) B.box('glow', '#f4e9c8', 0.03, 0.015, L - 0.2, Math.sin(a) * (0.6 + L / 2), 7.918, Math.cos(a) * (0.6 + L / 2), { ry: a, glow: 1.0 });
+      }
+      for (const rr of [3.1, 5.9]) for (let k = 0; k < 8; k++) {
+        const a = (k + 0.5) * Math.PI / 4, ap = rr * Math.cos(PIq), L = 2 * ap * Math.tan(PIq);
+        B.box(pm, rib, L, 0.06, 0.16, Math.sin(a) * ap, 7.95, Math.cos(a) * ap, { ry: a });
+        if (e === 3) B.box('glow', '#f4e9c8', L - 0.2, 0.015, 0.03, Math.sin(a) * ap, 7.918, Math.cos(a) * ap, { ry: a, glow: 1.0 });
+        const ca = k * Math.PI / 4;   // the bosses where the ribs cross the rings
+        if (e !== 3) B.add(bm, sphG(0.18, 12, 6, Math.PI / 2), boss, Math.sin(ca) * rr, 7.99, Math.cos(ca) * rr, { rx: Math.PI, sy: 0.42 });   // (to y 7.914)
+      }
+      // the rose round Tartar's (a moulded disc and a ring)
+      B.cyl(e === 3 ? 'gloss' : 'metal', e === 1 ? '#8a6a32' : e === 2 ? '#c9a356' : '#f7f8f8', 0.62, 0.04, 0, 7.96, 0, { seg: 24 });
+      B.add(e === 3 ? 'glow' : 'metal', torG(0.62, 0.035, 6, 28), e === 3 ? '#f4e9c8' : '#c9a356', 0, 7.94, 0, { rx: Math.PI / 2 });
+    },
+  };
   // the street lamps on the shared lamp spots: a gas lamp (the 1880s), a street light (today), a light mast (the 3000s)
   D.bluestone_gaslamp = {
     build(B) {
@@ -414,6 +450,7 @@ const ERAS3 = [1, 2, 3];
 // ---- the station (DESIGN.md §5.1): shared iron and stone, the dome / the drum's words / the clocks per era
 placements.push({ type: 'bluestone_station', pos: [0, 0, 0] });
 for (const e of ERAS3) placements.push({ type: 'bluestone_domeera', pos: [0, 0, 0], mirror: false, era: e, eras: String(e) });
+for (const e of ERAS3) placements.push({ type: 'bluestone_drumceiling', pos: [0, 0, 0], mirror: false, era: e, eras: String(e) });   // (fix round 2)
 for (const e of ERAS3) placements.push({ type: 'bluestone_drumletters', pos: [0, 0, 0], era: e, eras: String(e) });
 for (const e of ERAS3) placements.push({ type: 'bluestone_clockfaces', pos: [0, 0, -7.575], era: e, eras: String(e) });
 placements.push({ type: 'bluestone_destplates', pos: [0, 0, 0] });
