@@ -1,0 +1,8 @@
+JOB-21 (bluestone, fix round 2) @ 37ef9f31 (the first cut 2d4f7a6b vs BASE 2310eed9) — Mac mini b5-runner, 2026-10-25 17:02–17:16, exit 0. Short summary.
+- GPU (gpu-time.sh, 2 rounds, medians): the head e1 / e2 / e3 40.6 / 41.0 / 42.6 ms by day, 42.4 / 43.2 / 45.1 at dusk; the base 44.1 / 44.4 / 45.1
+  and 46.5 / 45.3 / 47.4 — the cut saves 2.1–4.1 ms (about 3.5 on average). Halyard 26.2 day / 27.5 dusk, so the head is ×1.54–1.64 (the
+  base ×1.65–1.72); the gate (≤ 1.2×, ~31–33 ms) is still ~8–12 ms away.
+- gpu-ab at the head (e2): the plain level material −9.0 day / −9.9 dusk is still the big lever; 'live' (programs kept live) +2.3 / +2.4 —
+  the cut's static programs pay; the prepass now ~0; lamps −1.5 / −1.9; LOD 40 m −1.3 / −0.8; the art render target −1.3 / −1.0; the rest
+  under 1 ms. Halyard plain −5.6.
+- eras-jump first 1/1 ×2; frames 4/4 and 3/4 (one FAIL, 'no frame over 50 ms during a jump': the worst frame is in its log).
