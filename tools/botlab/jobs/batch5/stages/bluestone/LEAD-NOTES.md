@@ -103,3 +103,17 @@ the FRONT REWRITE THE CITY at street level, not only the skyline. Binding:
    (nine passes: three keys × three eras) at the end, on the Mac mini or locally; performance against Halyard per era
    with the fixed-view probe (calls and cpuRender level; triangles within +15 %).
 6. The stage stays BETA until the lead accepts the art.
+
+## Added 2026-10-25 (the lead, during the art phase): GPU time is a gate
+
+The Mac mini's bluestone JOB-15 (`results/JOB-15.txt` on botlab-b5-bluestone, head 272f53a3) measures Bluestone's GPU
+time at 43–48 ms per frame in every era and every one of its 8 fixed views, against Halyard's 24–28 ms: 1.7–1.9×, at a
+third of Halyard's triangles, flat across views, so the cost is per-pixel / full-screen, not geometry. The perf6
+CPU / calls / triangles probe cannot see it. **Gate for this phase: GPU time within 1.2× Halyard in every era, by the
+Mac mini's method (JOB-15's timer), day and dusk.** Suspects, in order: the level shader's era chunks (the per-fragment
+era one-hot, mural masks, the front, the per-era AO channel sample: are they compiled into every stage's program or
+only Bluestone's, and are they cheap when no jump runs?), the paint atlas of the union world (density, size), GTAO
+settings or era meshes left in the GTAO pass, the hologram / curtain / time-lapse materials drawn full-screen outside
+a jump, the backdrop sets all drawn at once, the water. Measure each by elimination (toggle one, re-time), fix the
+cause, and record the before / after per era in the report. The art builder does this before the cards; the reviewer
+re-measures.
