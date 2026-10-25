@@ -1,0 +1,3 @@
+JOB-13 (bluestone) @ 7cd2bdb3 (art fix round 1) — Mac mini b5-runner, 2026-10-25 13:15–13:30, exit 0. Short summary.
+- the day eye-level sweep at the round's head, every era: era 1 511 views of 155 clusters (22 with no eye-level view), era 2 523 of 157 (20),
+  era 3 582 of 171 (6) — the same counts as JOB-9; console 0. 15 overview pages (5 per era) pushed under out/sweep/fix1/day/.
