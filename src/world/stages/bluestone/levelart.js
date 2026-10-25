@@ -277,6 +277,18 @@ vec3 bsShopWall(vec2 uv, float kind, float seed, int E, float y1, bool back) {
     mc = mix(mc, E == 2 ? bsC(0.95, 0.88, 0.7) : bsC(0.3, 0.42, 0.6), bsAA(abs(v - 1.45 - 0.12 * sin(u * 4.0)) - 0.012, 0.006));
     return mix(c, mc, map);
   }
+  if (kind > 10.5) {
+    // the cable tramway's engine hall: brick walls, the great winding wheels (iron rims and spokes) and their shafts
+    c = E == 0 ? bsC(0.42, 0.26, 0.2) : bsC(0.6, 0.5, 0.42);
+    vec2 wc = vec2(mod(u, 4.2) - 2.1, v - 2.2);
+    float rr = length(wc), ang = atan(wc.y, wc.x);
+    float rim = bsAA(abs(rr - 1.55) - 0.1, 0.02), hub = bsAA(rr - 0.22, 0.02);
+    float spoke = bsAA(abs(fract(ang / 6.2832 * 8.0 + 0.5) - 0.5) * rr * 0.785 - 0.045, 0.02) * step(rr, 1.5);
+    vec3 iron = E == 0 ? bsC(0.16, 0.17, 0.17) : bsC(0.3, 0.38, 0.32);
+    c = mix(c, iron, clamp(rim + hub + spoke, 0.0, 1.0));
+    c = mix(c, iron * 1.3, bsAA(abs(v - 0.5) - 0.12, 0.02));   // the bed plate
+    return c;
+  }
   if (kind > 9.5) {
     // an office: a desk under the window, charts of the river and timetables pinned up, a lamp
     float desk = step(0.7, v) * step(v, 0.78) + step(v, 0.7) * step(0.85, fract(u / 1.2)) * 0.9;
@@ -704,13 +716,18 @@ const FBASE = /* glsl */`
               float brace = bsAA(abs(p.y - c.y + 0.3 - p.x * 0.8) - 0.05, pw) * step(abs(p.x), hh.x);
               if (E == 0) fill = mix(fill, fill * 0.7, brace);
             } else {
-              fill = E == 2 ? mix(bsC(0.84, 0.86, 0.9), WG, 0.25) : bsGlass(p, c.y - hh.y, c.y + hh.y, 1.0);
+              // (fix round 1: the engine hall behind the glass — its winding wheels and the iron of the cable plant, a room
+              //  lit by its own light — not a flat orange pane at dusk)
+              vec3 Ve = bsViewIn();
+              float fe = 0.05 + 0.75 * pow(1.0 - Ve.z, 4.0);
+              vec3 eroom = E == 2 ? vec3(0.0) : bsRoom(p, Ve, vec4(hh.x + 0.4, plinth, gf + 1.6, 5.0), 11.0, float(bi), E);
+              fill = E == 2 ? mix(bsC(0.84, 0.86, 0.9), WG, 0.25) : mix(eroom * 0.14, bsGlass(p, c.y - hh.y, c.y + hh.y, 1.0), fe);
               float bars = max(bsAA(abs(fract(p.x / 0.45) - 0.5) * 0.45 - 0.02, pw), bsAA(abs(fract(p.y / 0.5) - 0.5) * 0.5 - 0.02, pw));
-              if (E < 2) fill = mix(fill, bsC(0.24, 0.27, 0.26), bars);
+              if (E < 2) { fill = mix(fill, bsC(0.24, 0.27, 0.26), bars); gBsRoom += inside * (1.0 - bars) * eroom * (1.0 - fe) * (E == 0 ? 0.7 : 0.9); }
             }
             base = mix(base, fill, inside);
             if (inside > 0.5) { gBaseRough = vari == 1 && E == 0 ? 0.8 : 0.12; gTexStr = vari == 1 && E == 0 ? gTexStr : 0.0; }
-            gBsLit += inside * (E == 0 ? bsC(1.0, 0.62, 0.3) * (vari == 1 ? 0.0 : 0.55) : (E == 1 ? bsC(1.0, 0.86, 0.66) * 0.7 : bsC(0.95, 0.94, 1.0) * 0.7));
+            gBsLit += inside * (E == 2 ? bsC(0.95, 0.94, 1.0) * 0.7 : (vari == 1 && E == 1 ? bsC(1.0, 0.86, 0.66) * 0.7 : vec3(0.0)));
           }
           // the lettering band over the front (the props carry the raised words; here the band they sit on)
           if (front && fb == 4) {
