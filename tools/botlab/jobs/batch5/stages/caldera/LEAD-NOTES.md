@@ -299,3 +299,6 @@ aqua-cherry dusk HIGH 8.2 % vs 7.4 %. Round 6 is gated on the probes' numbers; t
   the builder); probe-props2 all zero, eight lamps on the causeway plinths. Cards day 113.0 / 165.8, dusk 84.1 / 126.6 (builder's
   numbers). Sent back for two residuals (wallFight → 0; per-tag justification of covered areas under the rule "ink must show
   wherever a kid can stand"); then independent review 3 runs — before the reset, the round being at the gate.
+- **Round 6b (d78eec00): residuals closed, confirmed by the lead's probe run** — floorFight 0, wallFight 0, floorCov 189 (under
+  solid footprints per the builder: surge office 50, castWall 33.9, winch house, collars, plinths), wallCov 481.9 (cladding,
+  geology, trims). **Independent review 3 launched** (same reviewer, same method; `review:caldera-art#3`, `out/review3/`).
