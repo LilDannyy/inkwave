@@ -12,6 +12,9 @@
 //         the nearest node), stats.eraShoves counts it
 // rescue  a kid on a piece that vanishes over water is rescued to a valid node, never splatted; a kid on each of Alpha's
 //         Iron Bridge spans and garden tiles in the rewind is rescued once, onto ground that stays (final review 2, issue 2)
+// sjland  (the art phase's first commit: the engine's final review, minor 1) a super jump launched onto a piece that is gone
+//         at touchdown over the river (Practice's rewind: bridge-2, bridge-3, garden-11, touchdown 0.3 s after the flip)
+//         lands where the rescue would put it, alive on dry ground; with the hook off (the control) the same jumps splat
 // device  a sprinkler on a vanishing piece is destroyed (the module's walk of G.subs.items, after S.crushIn); a Drip Curtain
 //         resting on a vanishing roof (no face: the Degrayling crates at jump 1, the goods wagon at jump 2) is popped at
 //         its flip, not left standing in the air, and one on the street beside the crates stays (final review, issue 1)
@@ -22,7 +25,8 @@
 //         sounds (era_bell, era_ring, era_kiosk, era_pickup, era_swell, era_front, era_pop)
 // frames  no frame over 50 ms during a jump (performance.now() round each simulated, rendered frame)
 // sky     12c: the time-lapse from J to done (the sun swings, the clouds race, exposure and the grade held) and the new
-//         era's look settling at done (the env map rebuilt once)
+//         era's look settling at done (the env map rebuilt once); (fix round 3) run at dusk, where the eras' lights differ:
+//         from done the new era's lights and grade come in, and at done + 1.2 every value equals the new era's theme
 // freeze  T3, the split-time stage art (final review 2, issue 5): StageEras.freeze / ?erafrom=1&erato=2&front=30 (run it
 //         with PAGEQ= too: the page then loads frozen) holds every group in its era at the front, the looks and the curtain
 // modes   a Boss Battle starts in era 2 and never jumps; Practice starts in era 1 and cycles 1 → 2 → 3 → 1
@@ -38,7 +42,7 @@
   const { SUBS, PLAYER } = await import('./src/config.js');
   const { SFX } = await import('./src/audio/audio.js');
   const { Hit } = await import('./src/game/physics.js');
-  const parts = (/only=([\w,]+)/.exec(String(window.__pageArgs || ''))?.[1] || 'first,sched,flip,fall,shove,rescue,device,zip,guard,fx,frames,sky,freeze,modes').split(',');
+  const parts = (/only=([\w,]+)/.exec(String(window.__pageArgs || ''))?.[1] || 'first,sched,flip,fall,shove,rescue,sjland,device,zip,guard,fx,frames,sky,freeze,modes').split(',');
   const dbg = g.debug;
   dbg.freeze();
   const calm = () => { for (const a of g.match.actors) { if (a.bot) a.bot.update = () => {}; if (a.intent) { a.intent.move?.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.jump = a.intent.sub = a.intent.special = false; } } };
@@ -275,6 +279,47 @@
     step(0.5);
   }
 
+  // ------------------------------------------------------------------------------------------- sjland (the art phase's first commit)
+  if (parts.includes('sjland')) {
+    const { sjFlightDur } = await import('./src/game/jumpMarks.js');
+    const a = kid(), r2 = (v) => +v.toFixed(2);
+    const run = (key, hookOn) => {
+      const b = L.blocks.find((x) => x.eraG >= 0 && W.groups[x.eraG] && W.groups[x.eraG].key === key && x.axes[1].y > 0.9 && !x.rail);
+      if (!b) return { key, missing: true };
+      E.debugJump(3, { instant: true });
+      const Jr = E.debugJump(1, { inS: 3 }), F = flipAt(b, Jr), top = E._topOf(b, b.center.x, b.center.z);
+      if (!a.alive) { a.respawn?.(); }
+      calm();
+      // the jumper waits on dry ground 30 m off (the quay's south end): its flight time to the piece's top decides the launch
+      const home = new THREE.Vector3(-14, 0.05, -48), tgt = new THREE.Vector3(b.center.x, top, b.center.z);
+      const dur = sjFlightDur(home, tgt), launch = F + 0.3 - dur - 1 / 60;
+      tAt(launch - 0.2); calm(); if (!a.alive) { a.respawn?.(); calm(); }
+      put(a, home.x, home.y, home.z); step(0.2 - 1 / 60); calm();
+      const d0 = a.stats?.deaths ?? 0, n0 = E.stats.sjRedirects || 0, hook = E.superJumpLanding;
+      if (!hookOn) E.superJumpLanding = () => {};
+      const ok = a.superJump(tgt, { instant: true });
+      let land = null, splat = false;
+      for (let i = 0; i < Math.ceil((dur + 2.5) * 60); i++) {
+        dbg.step(1000 / 60); calm();
+        if (!a.alive) { splat = true; break; }
+        if (!land && !a.superJumpState) land = { t: r2(E.S.clock.t - F), at: [r2(a.pos.x), r2(a.pos.y), r2(a.pos.z)] };
+      }
+      E.superJumpLanding = hook; delete E.superJumpLanding;   // (the prototype's method again)
+      const gh = L.groundHeight(a.pos.x, a.pos.z, a.pos.y + 0.5);
+      const row = { key, hookOn, started: ok, flipAt: r2(F - Jr.at), touchdownAfterFlip: land ? land.t : null, land, splat, deaths: (a.stats?.deaths ?? 0) - d0, alive: a.alive,
+        dry: gh > PLAYER.waterY + 0.3, redirects: (E.stats.sjRedirects || 0) - n0, end: [r2(a.pos.x), r2(a.pos.y), r2(a.pos.z)] };
+      if (!a.alive) { a.respawn?.(); calm(); }
+      tAt(Jr.doneAt + 0.5);
+      return row;
+    };
+    const keys = ['bridge-2:a', 'bridge-3:a', 'garden-11:a'];
+    const off = keys.map((k) => run(k, false)), on = keys.map((k) => run(k, true));
+    E.debugJump(1, { instant: true });
+    R('art phase (the engine\'s final review, minor 1): a super jump launched onto bridge-2 / bridge-3 / garden-11 in Practice\'s rewind, touching down 0.3 s after the piece\'s flip, lands where the rescue would put it — alive on dry ground, one redirect each (the control with the hook off: the same jumps splat in the river)',
+      on.every((r) => r.started && !r.splat && r.alive && r.dry && r.redirects === 1) && off.filter((r) => r.splat).length >= 2,
+      { on, off: off.map((r) => ({ key: r.key, splat: r.splat, touchdownAfterFlip: r.touchdownAfterFlip, end: r.end })), log: (E.stats.sjLog || []).slice(-3) });
+  }
+
   // ------------------------------------------------------------------------------------------- device
   if (parts.includes('device')) {
     E.debugJump(3, { instant: true });
@@ -388,7 +433,11 @@
     tAt(J.at - 9.6);
     const fx = W.fx, warn = { phase: E.phase, holo: !!fx.holo && fx.holo.every((m) => m.visible), holoPieces: fx.stats.holoPieces, beads: !!fx.beads?.visible, bells: fx.phones.some((p) => p.sp.visible), shake: Math.abs(fx.tartar.rotation.z) + Math.abs(fx.tartar.rotation.x) > 0 };
     tAt(J.at - 0.5);
-    const pick = { hand: +fx.tHand.position.y.toFixed(2), beam: fx.beam.visible };
+    // (fix round 1: the receiver is the cradle telephone's handset — lifted clear of its cradle forks (≥ 0.12 m up) and
+    //  never into the drum's ceiling at y 8: its vertices' box at the pickup)
+    fx.tartar.updateMatrixWorld(true);
+    const hb = new THREE.Box3().setFromObject(fx.tHand, true), hb0y = fx.tHand.position.y;
+    const pick = { hand: +hb0y.toFixed(2), top: +hb.max.y.toFixed(2), bottom: +hb.min.y.toFixed(2), beam: fx.beam.visible };
     // frames: from J − 1 to done + 1.5
     const ft = [], top = []; let curt = null, um = 0;
     const upd = E.update.bind(E); E.update = (dt, t) => { const a0 = performance.now(); upd(dt, t); um = performance.now() - a0; };
@@ -402,8 +451,8 @@
     ft.sort((a, b) => a - b);
     const need = ['era_bell', 'era_ring', 'era_kiosk', 'era_pickup', 'era_swell', 'era_front:loop', 'era_pop'];
     if (parts.includes('fx')) {
-      R('step 8: the warning shows what comes (white-gold holograms of every appearing block, the wire beads, the kiosks\' bells, Tartar shaking); the pickup lifts his receiver and drops the beam; the curtain rides the front',
-        pre.phase === 'prebell' && warn.phase === 'warn' && warn.holo && warn.holoPieces === 24 && warn.holoPieces === E._info(J).appear.length && warn.beads && warn.bells && warn.shake && pick.hand > 0.3 && pick.beam && curt && curt.visible && Math.abs(curt.scale - curt.front) < 1.5,
+      R('step 8: the warning shows what comes (white-gold holograms of every appearing block, the wire beads, the kiosks\' bells, Tartar shaking); the pickup lifts his receiver (≥ 0.12 m, clear of the cradle, under the drum\'s ceiling at 8 m) and drops the beam; the curtain rides the front',
+        pre.phase === 'prebell' && warn.phase === 'warn' && warn.holo && warn.holoPieces === 24 && warn.holoPieces === E._info(J).appear.length && warn.beads && warn.bells && warn.shake && pick.hand >= 0.12 && pick.top < 8.0 && pick.beam && curt && curt.visible && Math.abs(curt.scale - curt.front) < 1.5,
         { pre, warn, pick, curt });
       R('step 8: the sounds are synthesized in code (src/audio/sfx-eras.js) and play in order: the pre-bell, Tartar\'s rings and the kiosks, the pickup, the swell, the front\'s loop, the pops',
         need.every((n) => played.includes(n)) && need.filter((n) => !n.endsWith(':loop')).every((n) => SFX[n] && (SFX[n].build || SFX[n].loop)), { played: [...new Set(played)].filter((n) => n.startsWith('era_')) });
@@ -466,28 +515,47 @@
 
   // ------------------------------------------------------------------------------------------- sky (12c: the time-lapse)
   // from J to done the sun swings (up to timelapse.sunSwing°) and the clouds race (× cloudRate), the sky blending to the new
-  // era's look; exposure and the grade are never touched; at done + 0.7 the new era's look settles and the env map is
-  // rebuilt once (the scene's environment is a new PMREM texture)
+  // era's look; exposure and the grade are held from J to done (fix round 3: only to done — review 3's major was that a real
+  // jump never applied the new era's lights, and this check held the grade to done + 1.2, locking that in); from done the
+  // new era's lights and grade come in, and at done + 0.7 the look settles: every light, grade and sky value equals the new
+  // era's theme (compared by value: setTheme makes a new grade object each call) and the env map is rebuilt once. Run at
+  // dusk, where the eras' lights and grades differ (by day the 1880s and TODAY share them)
   if (parts.includes('sky')) {
-    E.debugJump(1, { instant: true }); step(0.3);
-    const env = __G.env, U = env.U, Rn = __G.renderer, TL = W.E.timelapse;
+    const env = __G.env, U = env.U, Rn = __G.renderer, TL = W.E.timelapse, th0 = env.theme;
+    env.setTheme('sunset');
+    E.debugJump(2, { instant: true }); step(0.1); E.debugJump(1, { instant: true }); step(0.3);
     const sun0 = U.uSunDir.value.clone(), cloud0 = U.uCloudParams.value.z, exp0 = Rn.toneMappingExposure, grade0 = env.grade, envMap0 = __G.scene.environment, hz0 = U.uHorizon.value.getHexString();
+    const lit = () => ({ sun: +env.sun.intensity.toFixed(4), sunC: env.sun.color.getHexString(), hemi: +env.hemi.intensity.toFixed(4), hemiC: env.hemi.color.getHexString(), envK: +env.scene.environmentIntensity.toFixed(4), exposure: env.grade?.uExposure });
+    const lit0 = lit();
     const J = E.debugJump(2, { inS: 0.05 });
     const rows = [];
-    let maxAng = 0, maxCloud = cloud0, exposureKept = true, gradeKept = true;
+    let maxAng = 0, maxCloud = cloud0, exposureKept = true, gradeKept = true, lightsKept = true, after = null;
     while (E.S.clock.t < J.doneAt + 1.2) {
       step(1 / 15);
       const ang = Math.acos(Math.max(-1, Math.min(1, U.uSunDir.value.dot(sun0)))) * 180 / Math.PI;
       if (E.phase === 'jump') { maxAng = Math.max(maxAng, ang); maxCloud = Math.max(maxCloud, U.uCloudParams.value.z); }
       if (Rn.toneMappingExposure !== exp0) exposureKept = false;
-      if (env.grade !== grade0) gradeKept = false;
+      if (E.phase === 'jump' && env.grade !== grade0) gradeKept = false;
+      if (E.phase === 'jump' && JSON.stringify(lit()) !== JSON.stringify(lit0)) lightsKept = false;
+      if (!after && E.S.clock.t >= J.doneAt + 0.3 && E.S.clock.t < J.doneAt + 0.6) after = { t: +(E.S.clock.t - J.doneAt).toFixed(2), ...lit() };
       if (rows.length < 12 && Math.round((E.S.clock.t - J.at) * 15) % 8 === 0) rows.push([+(E.S.clock.t - J.at).toFixed(2), E.phase, +ang.toFixed(1), +(U.uCloudParams.value.z / Math.max(1e-6, cloud0)).toFixed(1)]);
     }
     const sunEnd = Math.acos(Math.max(-1, Math.min(1, U.uSunDir.value.dot(sun0)))) * 180 / Math.PI, envMap1 = __G.scene.environment;
-    R('12c: the time-lapse from J to done — the sun swings (≥ 30° at its widest), the clouds race (≥ 5×), exposure and the grade held; at done the new era\'s look settles (the sun back within 5°, the clouds at their rate) and the env map is rebuilt once',
-      maxAng >= 30 && maxCloud >= cloud0 * 5 && exposureKept && gradeKept && sunEnd < 5 && Math.abs(U.uCloudParams.value.z - cloud0) < 1e-6 && envMap1 && envMap1 !== envMap0 && W.stats.envFinalMs !== undefined,
-      { timelapse: TL, maxSunAngle: +maxAng.toFixed(1), maxCloudRate: +(maxCloud / Math.max(1e-6, cloud0)).toFixed(1), exposureKept, gradeKept, sunEnd: +sunEnd.toFixed(1), horizon: [hz0, U.uHorizon.value.getHexString()], envMapNew: envMap1 !== envMap0, envFinalMs: W.stats.envFinalMs, rows });
-    E.debugJump(1, { instant: true });
+    // the new era's theme (eras.look[2] over the sunset), by value
+    const T = env._stageTheme(env.theme), lin = (h, k = 1) => new THREE.Color(h).multiplyScalar(k), near = (a, b) => Math.abs(a - b) < 1e-4;
+    const cnear = (c, h, k) => { const w = lin(h, k); return near(c.r, w.r) && near(c.g, w.g) && near(c.b, w.b); };
+    const gv = (gr) => JSON.stringify(['uExposure', 'uSat', 'uVib', 'uContrast', 'uLift', 'uVignette', 'uShadowTint', 'uHighTint', 'bloom'].map((k) => gr?.[k] ?? null));
+    const want = { envEra: W.envEra === 2, sun: near(env.sun.intensity, T.sunIntensity) && cnear(env.sun.color, T.sunColor), hemi: near(env.hemi.intensity, T.hemiIntensity) && cnear(env.hemi.color, T.hemiSky) && cnear(env.hemi.groundColor, T.hemiGround, T.hemiGroundK ?? 1),
+      envK: near(env.scene.environmentIntensity, T.envK ?? 0.66), grade: gv(env.grade) === gv(T.grade), sunLight: cnear(U.uSunLight.value, T.sunColor, (T.skySun ?? T.sunIntensity) / Math.PI),
+      sky: cnear(U.uGround.value, T.ground) && cnear(U.uHorizonGlow.value, T.horizonGlow, T.horizonGlowK) && cnear(U.uGlowColor.value, T.glowColor) && cnear(U.uSunDisk.value, T.sunDisk, T.sunDiskK) && cnear(U.uCloudLit.value, T.cloudLit, T.cloudLitK) && cnear(U.uCloudShade.value, T.cloudShade) && near(U.uNight.value, T.night) };
+    const changed = lit0.exposure !== T.grade?.uExposure && !near(lit0.sun, T.sunIntensity);   // (the two eras' dusk lights do differ)
+    const mid = after && after.exposure > Math.min(lit0.exposure, T.grade.uExposure) && after.exposure < Math.max(lit0.exposure, T.grade.uExposure);
+    R('12c: the time-lapse from J to done — the sun swings (≥ 30° at its widest), the clouds race (≥ 5×), exposure, the grade and the world\'s lights held to done; at done the new era\'s look settles (the sun back within 5°, the clouds at their rate) and the env map is rebuilt once',
+      maxAng >= 30 && maxCloud >= cloud0 * 5 && exposureKept && gradeKept && lightsKept && sunEnd < 5 && Math.abs(U.uCloudParams.value.z - cloud0) < 1e-6 && envMap1 && envMap1 !== envMap0 && W.stats.envFinalMs !== undefined,
+      { theme: env.theme, timelapse: TL, maxSunAngle: +maxAng.toFixed(1), maxCloudRate: +(maxCloud / Math.max(1e-6, cloud0)).toFixed(1), exposureKept, gradeKept, lightsKept, sunEnd: +sunEnd.toFixed(1), horizon: [hz0, U.uHorizon.value.getHexString()], envMapNew: envMap1 !== envMap0, envFinalMs: W.stats.envFinalMs, rows });
+    R('12c (fix round 3): … and from done the new era\'s lights come in — blended (at done + 0.3–0.6 the exposure lies between the two eras\'), then at done + 1.2 the sun, the hemisphere, the sky IBL, the sky / sea sun, the grade (by value) and the sky\'s light colours equal the new era\'s theme',
+      changed && mid && Object.values(want).every(Boolean), { before: lit0, mid: after, at: lit(), want, theme: { sun: T.sunIntensity, hemi: T.hemiIntensity, envK: T.envK, exposure: T.grade?.uExposure } });
+    env.setTheme(th0); E.debugJump(2, { instant: true }); step(0.1); E.debugJump(1, { instant: true }); step(0.1);
   }
 
   // ------------------------------------------------------------------------------------------- modes (last: new matches)

@@ -79,6 +79,20 @@
   const apart = (a, b) => !a || !b || a[1] <= b[0] + 0.5 || b[1] <= a[0] + 0.5;
   const pct = (b) => b && +((((b[0] + b[1]) / 2 - host.getBoundingClientRect().top) / Hh) * 100).toFixed(1);
   const settle = () => new Promise((r) => setTimeout(r, 450));
+  // (fix round 1: the band is placed in the frame after what it clears changed — the HUD's update, so a stepped test steps
+  //  a frame — and moves by a 0.18 s CSS transition: measure after a step, the transition's time and two animation frames
+  //  with every box unchanged (eras-hud failed a different layout check in each of two loaded runs))
+  const raf2 = () => new Promise((r) => { let done = false; const t = setTimeout(() => { if (!done) { done = true; r(); } }, 250); requestAnimationFrame(() => requestAnimationFrame(() => { if (!done) { done = true; clearTimeout(t); r(); } })); });
+  const boxesKey = () => [...document.querySelectorAll('.er-calls, .er-call, .iw-call, .iw-bn, .er-chip')].map((e) => { const r = e.getBoundingClientRect(); return `${r.top.toFixed(1)},${r.height.toFixed(1)}`; }).join('|');
+  // (an era callout lives 2.4 s: the whole wait stays near the old 450 ms — a task for the observers, a frame, the
+  //  transition's 0.18 s, then boxes unchanged across two animation frames)
+  //  (and a second frame: a gameplay callout's box can still grow after its first layout — EraHud now watches the size of
+  //  what it clears and re-places the band in the next frame)
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  //  The band's 0.18 s move is a CSS transition on wall time, which a frozen, stepped page may not advance (the two loaded
+  //  runs measured it 83 % and 91 % of the way): the layout checks read it with the transition off — its settled place —
+  //  as the chip's colour check above does
+  const placed = async () => { const bandEl = document.querySelector('.er-calls'); if (bandEl) bandEl.style.transition = 'none'; await sleep(0); step(1 / 60); await sleep(200); step(1 / 60); await sleep(120); let k = ''; for (let i = 0; i < 6; i++) { await raf2(); const k2 = boxesKey(); if (k2 === k) break; k = k2; } };
   const J2 = E.debugJump(3, { inS: 0.2 });
   tAt(J2.at + 0.05); await settle();
   const bigBox = { era: boxOf('.er-call.is-big'), chip: chipBox(), text: document.querySelector('.er-call.is-big')?.textContent, top: document.querySelector('.er-calls')?.style.top };
@@ -95,16 +109,17 @@
     const okLook = look.length >= 4 && look.every((l) => l.inHud && l.anim === 'er-call' && (near(hex(l.color), [0xf4, 0xe9, 0xc8]) || near(hex(l.color), [0xff, 0xf6, 0xdc])))
       && look.every((l) => { const rb = hex(l.ribbon); return rb && rb[0] < 70 && rb[1] < 60 && rb[2] < 50 && team.every((t) => far(rb, t)) && team.every((t) => far(hex(l.color), t)); });
     // an era callout alone sits in the HUD's callout slot (27 %), or just under the chip where the chip reaches into it
-    E.debugJump(1, { inS: 10.05 }); step(0.2); await settle();
+    E.debugJump(1, { inS: 10.05 }); step(0.2); await placed();
     const alone = boxOf('.er-call'), cb = chipBox(), aloneOk = !!alone && apart(alone, cb) && (Math.abs(pct(alone) - 27) < 0.6 || alone[0] - cb[1] < Hh * 0.012 + 2);
     const bigOk = !!bigBox.era && apart(bigBox.era, bigBox.chip);
     tAt(E.next ? E.next.at + W.doneOff + 0.5 : E.S.clock.t);
     co('SPLATTED!', 'a gameplay callout', false);
     const game = document.querySelector('.iw-call');
-    E.debugJump(2, { inS: 10.05 }); step(0.2); step(1 / 60); await settle();   // the warning: "TIME JUMP" (1880s → TODAY)
+    E.debugJump(2, { inS: 10.05 }); step(0.2); step(1 / 60); await placed();   // the warning: "TIME JUMP" (1880s → TODAY)
     const kept = !!game && game.isConnected && !!document.querySelector('.er-call');
     const both = { era: boxOf('.er-call'), game: boxOf('.iw-call'), chip: chipBox() };
-    const bothOk = !!both.era && !!both.game && apart(both.era, both.game) && apart(both.era, both.chip) && both.era[0] >= both.game[1];
+    const gapPx = Hh * 0.012;   // (the band's own margin under what it clears: EraHud._place)
+    const bothOk = !!both.era && !!both.game && apart(both.era, both.game) && apart(both.era, both.chip) && both.era[0] >= both.game[1] + gapPx - 1;
     R('step 9 (review fix 5): the era callouts are the module\'s own (white-gold text on a dark band, like the chip; not the HUD\'s team-ink ribbon, not routed through HUD._callout); alone one sits in the HUD\'s callout slot, clear of the chip (the big era banner too); with a gameplay callout on screen it leaves it there and moves below it, covering neither it nor the chip',
       okLook && kept && aloneOk && bigOk && bothOk && hudCalls.filter((t) => t !== 'SPLATTED!').length === 0,
       { look, team, kept, hudCalls, hostH: Math.round(Hh), big: { pct: pct(bigBox.era), era: bigBox.era?.map(Math.round), chip: bigBox.chip.map(Math.round), text: bigBox.text, top: bigBox.top }, alone: { pct: pct(alone), box: alone && alone.map(Math.round), chip: chipBox().map(Math.round) }, both: { eraPct: pct(both.era), gamePct: pct(both.game), era: both.era?.map(Math.round), game: both.game?.map(Math.round), chip: both.chip.map(Math.round) } });
@@ -118,13 +133,13 @@
     tAt(Jp.doneAt + 2.6);
     const places = C.stats.places - p0, said = calls.length - s0, frames = Math.round((Jp.doneAt + 2.6 - (Jp.at - 10.05)) * 60);
     for (let i = 0; i < 40 && document.querySelector('.iw-call'); i++) await new Promise((r) => setTimeout(r, 150));   // (the earlier gameplay callouts gone)
-    E.debugJump(E.era === 3 ? 1 : E.era + 1, { inS: 10.05 }); step(0.2); await settle();
+    E.debugJump(E.era === 3 ? 1 : E.era + 1, { inS: 10.05 }); step(0.2); await placed();
     const before = boxOf('.er-call'), gameBefore = !!document.querySelector('.iw-call');
     co('SPLATTED AGAIN!', 'a gameplay callout after the era\'s', false);
-    await new Promise((r) => setTimeout(r, 0)); step(2 / 60); await settle();
+    await new Promise((r) => setTimeout(r, 0)); step(2 / 60); await placed();
     const after2 = { era: boxOf('.er-call'), game: boxOf('.iw-call') };
     R('step 9 (review 2, issue 3): the era band is laid out only when a callout is said or what it must clear changes (not every frame): a whole jump with its callouts lays it out a handful of times; a gameplay callout arriving after an era callout still pushes the band below it',
-      said >= 3 && places <= 10 && !gameBefore && !!before && !!after2.era && !!after2.game && apart(after2.era, after2.game) && after2.era[0] >= after2.game[1] - 0.5 && after2.era[0] > before[0] + 2,
+      said >= 3 && places <= 10 && !gameBefore && !!before && !!after2.era && !!after2.game && apart(after2.era, after2.game) && after2.era[0] >= after2.game[1] + Hh * 0.012 - 1 && after2.era[0] > before[0] + 2,
       { frames, said, places, gameBefore, before: before && before.map(Math.round), after: { era: after2.era?.map(Math.round), game: after2.game?.map(Math.round) } });
     tAt(E.next ? E.next.at + W.doneOff + 0.5 : E.S.clock.t);
     // the HUD's banners too: in a 3:00 Turf War "1 minute left!" comes at the very moment jump 2 starts (the "3000s"
@@ -132,7 +147,7 @@
     for (let i = 0; i < 40 && document.querySelector('.er-call, .iw-call'); i++) await new Promise((r) => setTimeout(r, 150));
     __G.hud.banner('one_minute');
     E._say('3000s', 'TIME JUMP', true);
-    await settle(); step(2 / 60); await settle();
+    await settle(); step(2 / 60); await placed();
     const bnEl = document.querySelector('.iw-banners .iw-bn'), bl = bnEl && bnEl.parentElement.getBoundingClientRect();
     const bn = bnEl ? [bl.top + bnEl.offsetTop - bnEl.offsetHeight / 2, bl.top + bnEl.offsetTop + bnEl.offsetHeight / 2] : null, eb = boxOf('.er-call');
     R('step 9 (HUD): the HUD\'s banners too — "1 minute left!" and the 3000s banner together (a 3:00 Turf War\'s jump 2): the era band sits below the HUD\'s banner, covering neither it nor the chip',

@@ -1,443 +1,1130 @@
-# Bluestone Junction — engine phase, second half, after the final review 2's fix round 2 (LEAD-REPORT)
+# Bluestone Junction — the art phase: the place, in three eras (LEAD-REPORT, after fix round 3)
 
-Branch `b5-stage-bluestone`, worktree `st-b5-bluestone`. This round answers the independent final review 2
-(`LEAD-REVIEW.json`, verdict **redo** on one narrow point — the online clock — and six minors) of the second half at
-09f67e9e. Round 1's report is `git show 09f67e9e:tools/botlab/jobs/batch5/stages/bluestone/LEAD-REPORT.md`; the second
-half's own is at 7468a1b8, the first half's at d99607dd. Everything below the issue list is the report brought up to
-date (§1–§7).
+Branch `b5-stage-bluestone`, worktree `st-b5-bluestone`. Earlier reports are in git history: the engine phase at `12a57cc7`, the
+art phase's first at `f2e8c182`, fix round 1 at `8188097a`, fix round 2 at `cbdf1b0e`. Review 3 (`LEAD-REVIEW.json`,
+`review:bluestone#9`, at `866e11ec`) said **redo**: one major, three minors. The lead's scope and order for this round are in
+LEAD-NOTES "After review 3": (a) the major first, (b) the five cover pieces, (c) real words. This report covers fix round 3
+first; fix round 2, fix round 1 and the art phase follow, as they were written. The stage stays **BETA** (`config.js` keeps
+`beta: true`).
 
-How it ran: everything on this Mac, one Electron of mine at a time under the shared SLOTS=3 lock, at load averages of
-10–290 (most runs at 10–40: quieter than round 1). The task says the Mac mini is unavailable; COMMON.md in the worktree
-(uncommitted, the lead's, dated 10-16) says it is back. I followed the task: nothing pushed, nothing sent; JOB-6.sh (for
-the record) now also carries this round's clock test and GPU probe (§7). The task also said a previous fixer of this
-round had been cut off with uncommitted edits on top of 8768f720: the worktree held none (head 09f67e9e, clean but for
-the lead's COMMON.md), so there was nothing to recover; this round starts from 09f67e9e.
+**Summary of fix round 3.**
+- **(a) The major is fixed.** A real jump now applies the new era's lights: the sky's light colours blend through the
+  time-lapse, the world's lights and the grade blend in from done to done + 0.7 s, and from then on every value equals what a
+  seek (a late joiner) gets.
+  - eras-look (i), new, compares every light, grade, sky, fog, star and lamp value with a debugJump's: equal.
+  - With the done pulse over, the frame after a real jump equals the seek's (mean 0.03/255).
+  - The 3000s dusk reads 48.1 after a real jump and 48.0 by debugJump; the reviewed code read 115.
+  - The review's real-vs-instant pair, re-shot with its own tool, now matches: 'mid' at 1600 × 900 reads 48 / 52 at dusk,
+    and the 3000s' share of the lower frame above 200/255 is 5.1–6.9 %. The review's real match had 13–27 %.
+- **The settle changes only uniform values and texture references.** JOB-28 caught one 451 ms frame that this round caused,
+  from cloud bake steps that ran after a jump with no pre-bell. Every era's clouds and env map are now built once at load and
+  swapped in by reference, and every state the settle can show is drawn once at load.
+- **The ~400 ms frames that remain are not resolved.** JOB-30 and JOB-31 each had one run in three or four with several such
+  frames. Some fall at the side jumps' settle, but others fall where this round runs nothing (the warning at J − 0.42,
+  mid-jump). Reviews before this round saw the same kind of frame (JOB-25: 421.7 ms at J + 0.93). JOB-32 and JOB-33, below,
+  test whether they are this round's: they are not this round's — JOB-32 found one (429.5 ms) in the reviewed code and none in five runs at the head, and JOB-33 found none in three runs at the final code with the GPU shader disk cache off.
+- **(b) The five cover pieces are dressed** in the 1880s and TODAY: the fountain, the horse trough, the ash bin, the coal bin
+  and the mooring blocks.
+- **(c) Real words up close.** The level art's pseudo-lettering function is gone. All 29 of its uses now show real words from
+  the mural atlas (45 words) or a plain panel.
+- **Constraints held.** Play geometry is untouched (check-maps identical in every variant and era). The lightmap still
+  applies ("not stale"). The GPU gate by method C is met (×0.88–0.94). net-eras passes 14/14, lagged 8/8.
 
-Logs: `tools/botlab/jobs/batch5/bluestone/local-logs/fr2/` (`summary.txt` lists every run with its start load and
-result). Pictures: `tools/botlab/jobs/batch5/stages/bluestone/out/engine/fr2-*.jpg` (all looked at).
+## Fix round 3 (2026-10-25): review 3's REDO, issue by issue
 
-## 0. The final review 2's issues
+Pictures are in `out/fix3/`, plus the day sweep pages in `bluestone/out/sweep/fix3/day/` and the dusk ones in `…/dusk/`. I
+looked at all of them.
 
-### Issue 1 (major) — a follower's match timer stepped backwards on a laggy connection; the final countdown could fire a second twice. **Fixed.**
-- **Cause, as the review said:** round 1's `_hostClock` moved a follower's `m.time` halfway to the host's (trip added
-  back) past a 0.05 s band, in both directions. The trip's jitter alone crossed the band, so the clock stepped *up*
-  several times a minute; across a whole second the HUD showed it again and, inside the last 10 s, `match.js` re-fired
-  `match:count` (`c !== lastCount`).
-- **Fix (`src/net/netmatch.js` `_hostClock`, `src/game/match.js`, 71254eaf; [b5-eras]):** the match clock only ever runs
-  on.
-  - Behind the host: a step halfway forward, as before (a step forward never re-shows a second).
-  - A little ahead (≤ 1.5 s: the jitter, a stall on this screen, a stalled host): no step back. `_hostClock` sets
-    `match.clockSlew` to the error and `match.js` gives it back by running the countdown slow, at `1 − min(0.5, 0.1 +
-    err)` (0.9× for a tiny error, 0.5× for 0.4 s and more), recomputed on every tick.
-  - Only a resync of more than 1.5 s ahead (a long host stall) steps it back.
-  - `match.js`: `match:count` fires only for a second below the last one, so even a resync never repeats a number.
-  - Found on the way: once the host's clock runs out (overtime holds it at 0), the trip taken off pushed a follower's
-    clock below 0 (Zone Control / Tower Command overtime; the HUD clamps it and the stage clock ignores a clock at 0, so
-    it was harmless, but wrong). The correction now stops when the host's time is 0 (0a848ffd).
-- **The test (`tools/botlab/tests/net-clock.cjs`, new, the review's probe made a test):** two clients, a 1:30 Turf War on
-  Halyard at `netlag=150&netjitter=50`. Each screen logs, every frame, its match clock with the wall clock, each count and
-  each change of the HUD timer's text. On the guest, right after its 6, a host tick saying it is 0.3 s ahead is injected
-  (the review's case, made certain). Four checks: the guest's clock never goes up between frames; the HUD's second never
-  goes up; 10 … 1 once each, in order, on both screens; the guest within 0.15 s (median) and 0.25 s (p90) of the host
-  at the same wall time.
+Scratch tools and jobs, in `tools/botlab/jobs/batch5/bluestone/`:
+- `fx3-shots.cjs`: the review's `rv3-shots.cjs` with the shot size and the real shots' offsets as options;
+- `aj.sh`;
+- JOB-28, JOB-29, JOB-30.
 
-  | Run | Result | Steps up | HUD / countdown | Guest vs host (median / p90 / max) |
+### Review issue 1 (major) — a real jump never applied the new era's lights
+
+**Cause, as the review found.** At done + 0.7 s the 'env' event ran `_envEra(J.to, false)` and then `_envFinal`.
+`_envFinal` set only the sky colours, haze, sun direction, fog and env map. Only `setTheme` set the rest, and it ran only
+through debugJump or a seek. So a match kept the 1880s' values for all of these through both jumps:
+- sun;
+- sky / sea sun (`uSunLight`);
+- hemisphere;
+- `scene.environmentIntensity`;
+- grade;
+- the sky's ground, glows, sun disk and cloud colours;
+- night and stars;
+- clouds.
+
+Worse, once the room had jumped, a seek to the era it already showed skipped `setTheme`.
+
+**Fix** (`5f48f231`, `118eff1f`):
+- **`Environment.applyLights(T, F, k, part)`** (shared `src/world/environment.js`, `[b5-bluestone]`). Factored out of
+  `setTheme`, which now calls it and sets exactly the values it set before.
+  - It sets: sun colour and intensity, `uSunLight`, the hemisphere sky / ground / intensity, `environmentIntensity`, the
+    grade, `uGround`, `uHorizonGlow`, `uGlowColor`, `uGlowParams`, `uSunDisk`, `uCloudLit`, `uCloudShade`, `uNight`, the
+    stars, and the lighthouse beam.
+  - With F and k < 1 it blends from theme F's values (linear-space colours, a blended grade object). `part` is 'sky' or
+    'world'.
+  - Halyard is unaffected: its frame before and after the change differs by a mean of 0.03–0.05/255 per cell, less than two
+    runs of the same tree (3.5–4.1).
+- **The era engine** (`src/game/eras.js`):
+  - **J → done:** the time-lapse blends the sky's part with the sky colours. The world's lights and the grade are held as
+    they always were, so ink stays as readable.
+  - **done → done + 0.7 s:** `_lightsIn` blends the world's part (sun, sky / sea sun, hemisphere, sky IBL, grade with
+    exposure, tints and bloom) from the old era to the new one, so nothing pops.
+  - **done + 0.7 s:** `_envFinal` sets everything `setTheme` would, exactly: sky, haze, sun direction, cloud parameters,
+    sun radius, sea colours and sea sun, sea ambient, `env.applyLights(T)`, fog, clouds and env map. A late joiner's seek
+    and the room's jump therefore give the same look. The FX lighting follows on both paths.
+- **The clouds** (`118eff1f`). A look's clouds are a ray-marched bake: about 0.45 s of GPU on an M4, and 0.5–1.1 s on this
+  loaded Mac.
+  - `EraWorld._warmClouds` bakes every era's clouds for the match's time of day once, at load (`StageWorld.warm`, behind
+    the faded screen), using `env.cloudBakeInto(T, rt)`.
+  - The GPU is drained there (`gl.finish`), so none of that work is still queued when the intro or a jump draws.
+  - The cache holds one 2048 × 640 half-float target per look, two as a rule. If the time of day is switched later (tests,
+    tools), the cache is re-baked on the next frame.
+  - In a jump the sky only cross-fades to the cached texture through the time-lapse (`uCloudTex2` / `uCloudMix`: a second
+    sample behind a uniform branch, nothing extra at rest). The texture pointer is swapped at the settle.
+  - So no cloud bake runs from the pre-bell until after the jump. A look that is not cached keeps its old clouds and counts
+    `stats.cloudMiss`; the tests assert 0.
+  - The env map works the same way (`a20c9748`). Each era's PMREM is built at load with that era's sky and cached clouds
+    (`env.envMapFor`), and the settle swaps it in by reference (`env.useEnvMap`): no PMREM pass and no new render target at
+    the settle. `envMiss` counts a fallback; the diagnosis asserts 0.
+  - `_warmLooks` (`956c4038`) then renders one real frame per era with that era's lights, grade, env map and clouds, and the
+    cross-fade branch on, and puts the era in force back. Nothing the settle can show is first drawn inside a match.
+- **The frames at the settle, step by step.**
+  - **JOB-28** (frames run 2, the sunset 3 → 1 jump started by debugJump with no pre-bell): 451.2 ms at J + 4.8, 449.1 ms in
+    render. A per-frame GPU probe (`probe/theme-gpu.js`, a fence after every frame) found the cause: the round's first cloud
+    scheme baked in tiles in the pre-bell, and a jump with no pre-bell finished the bake after the settle, one step per
+    frame, at 5–40 ms of GPU each. One tile, sized by its first row's cost, ran into the costly rows just over the horizon
+    (36–41 ms). Fixed by baking every look at load (`118eff1f`).
+  - **JOB-30** (run 3 of 3): Bravo 2 → 3, 387.1 ms at J + 4.83 (render 385.9); sunset 3 → 1, 379.5 ms at J + 4.8; the main
+    jump 416.7 at J + 0.95 and 403.2 at J + 4.6. I instrumented a real side jump (`settle-diag.js`, per frame: GL
+    `compileShader` / `linkProgram`, `renderer.info` programs / textures / geometries, PMREM passes, render ms). At the
+    settle nothing compiles or links a shader and the program and texture counts do not change. The settle did run one PMREM
+    pass and one `texImage2D` (a new PMREM target) and pointed `scene.environment` at a new texture. Now it does neither
+    (`a20c9748`): the Mac mini's settle-diag in JOB-31 shows no PMREM pass and no allocation, `envMiss` 0.
+  - **JOB-31** (frames ×4): runs 2–4 are clean in all three jumps. Run 1, the job's first page, had four frames: Bravo 407.5
+    at J + 4.85 (render 405.2), sunset 411.2 at J + 4.87, and the main jump 415.2 at J − 0.42 (in the warning, where this round
+    runs nothing) and 347.7 at J + 2.67.
+  - The coordinator read this as a cold GPU shader cache (a variant first used at the settle, compiled by the GPU process and
+    cached on disk afterwards). Locally, with `--disable-gpu-shader-disk-cache` on the Electron command line (`run.sh`
+    passes it through), every page cold:
+    - settle-diag shows no frame over 21 ms from J + 4.62 to 4.9 in either side jump, with or without the reference swap;
+    - frames: Bravo 14.8 / 15.1 ms, sunset 18.4 / 20.3 ms.
+    - I could not reproduce the spike. I added the warm anyway (`_warmLooks`, above).
+  - JOB-32 (the reviewed code's src against the head, alternating, cache on) and JOB-33 (the head with the cache off) are the
+    Mac mini's verdict: JOB-32's head ran 5 of 5 clean, while its reviewed-code src had a 429.5 ms frame in the main jump (base-4, J + 2.8). JOB-33 ran 3 of 3 clean with the cache off, at the final code.
+- **Tests:**
+  - **eras-jump 'sky', corrected.** It now runs at dusk, where the eras' lights differ (by day the 1880s and TODAY share
+    them). It holds the grade and the world's lights from J to done only, then asserts:
+    - at done + 0.3–0.6 the exposure lies between the two eras';
+    - at done + 1.2 the sun, hemisphere, sky IBL, `uSunLight`, grade and sky light colours equal the new era's theme,
+      compared by value.
+  - **eras-look part 5 (i), new** (alone: `PAGE_ARGS=only=6`). A match started at dusk runs both jumps on its own clock,
+    with no debugJump. It asserts:
+    - at done + 2, every light, grade, sky, fog, star and lamp value equals a debugJump's to that era;
+    - the exposure blends from done to done + 0.7;
+    - no cloud bake runs from 39 s played to done + 2 of jump 2, and the sky is on the cache's texture;
+    - the 'mid' camera's lower frame is ≥ 34 in the page's own frame at done + 2 and done + 4.5, and within 2/255 of the
+      debugJump's;
+    - the 3000s' share above 200 is ≤ 7 % and its Cobalt-hue share ≤ 5 %;
+    - with the pulse over, the frame equals a seek's at the same `uTime` (mean ≤ 1/255).
+  - **Both checks fail on the reviewed code** (9012ec65, a scratch worktree, same tests) and pass at the head. On the
+    reviewed code:
+    - (i): the real jump keeps sun 3.5 / hemi 2.1 / env 1.2 / exposure 1.2 in TODAY and the 3000s; the 3000s' lower-frame
+      median is 115.2 with 16.0 % above 200; the real-vs-seek frame mean is 51.4/255.
+    - 'sky': nothing reaches the new era's values.
+- **Measured** (eras-look (i), this Mac):
+
+  | dusk | sun · hemi · env · exposure | 'mid' median (done + 4.5) | share > 200 | Cobalt-hue |
   |---|---|---|---|---|
-  | fixed, no injection (load ~15) | **4/4** | 0 in 5,410 frames | 91 seconds shown, none twice; 10 … 1 | 0.014 / 0.041 / 0.224 s |
-  | fixed, with the injection | **4/4** | 0 in 5,394 frames (the injected tick: 5.996 → 5.996, slew 0.3 s) | 10 … 1 | 0.019 / 0.056 / 0.229 s |
-  | fixed + the overtime guard, with the injection | **4/4** | 0 in 5,384 frames | 10 … 1 | 0.021 / 0.073 / 0.476 s |
-  | fixed, clean link, with the injection | **4/4** | 0 in 5,444 frames | 10 … 1 | 0.012 / 0.045 / 0.202 s |
-  | **the code before**, no injection | 2/4 | 24 (up to 0.25 s) | **0:19 → 0:20** | 0.025 / 0.114 / 1.33 s |
-  | **the code before**, with the injection | 2/4 | 15 | **10 9 8 7 6 7 6 5 4 3 2 1** | 0.021 / 0.047 / 0.22 s |
-- **Re-run** (all after the fix and the guard, loads 9–25): **net-eras 14/14** (flip skew max 0.03 s; the stage clocks
-  at the same wall time median 0.04 s, p90 0.08 s); **net-eras lagged 8/8** — its first clean lagged run (flip skew max
-  0.029 s; clocks median 0.024 s, p90 0.041 s, max 0.106 s; the review's: 7/8, p90 0.257 s through a 1 s host stall);
-  net-turf 9/9, net-stageclock 3/3, net-stagemods 10/10, net-practice 29/29.
+  | TODAY, real jump | 3.9 · 2.2 · 0.75 · 1.08 | 42.8 | 1.75 % | 0.98 % |
+  | TODAY, debugJump | 3.9 · 2.2 · 0.75 · 1.08 | 42.9 | 1.74 % | 0.99 % |
+  | 3000s, real jump | 3.2 · 0.8 · 0.3 · 1.0 | 48.1 | 6.05 % | 0 % |
+  | 3000s, debugJump | 3.2 · 0.8 · 0.3 · 1.0 | 48.0 | 6.05 % | 0 % |
+  | 3000s, real jump, reviewed code | 3.5 · 2.1 · 1.2 · 1.2 (the 1880s') | 114.6 | 15.95 % | 0.1 % |
 
-### Issue 2 (minor) — Practice's rewind rescued a kid onto pieces that vanished a moment later (hops across the river). **Fixed.**
-- **Cause, as the review said:** `_rescue` took the nearest node valid in the era *in force* (until done, the era before)
-  whose floor stood now — a span or tile the front had not reached yet.
-- **Fix (`StageEras._rescue` / `_shove`, 9919c37f):** `_flip` passes the group's new era. The rescue takes the nearest node
-  within 10 m whose floor stands now and that is **valid both in the era in force and in the new era** — ground no flip
-  of this jump takes away; failing that, one valid in the new era with the body fitting now; failing that, the old rule.
-  Candidates are tested nearest first, so the ground probe runs on a handful of nodes (it ran on every node closer than
-  the best so far). `_shove`'s nav fallback takes nodes of the new era too (ground that stays first).
-- **Proof (`tests/eras-jump.js` 'rescue', the review's probe as a check):** a kid on each of Alpha's 9 Iron Bridge spans
-  and floating-garden tiles, put there 0.12 s before its flip in the rewind: **9/9 rescued once**, alive, on dry land, on
-  a node valid in era 1 (rescue part 4/4 with shove and the roof branch). **The rule before** (negative control, the same
-  test): 3/9 once, 6 rescued 2–4 times (garden-11: four hops, −28.5 → −33.5).
+  Exposure through jump 2's settle: 1.08 at done, 1.039 at done + 0.35, 1.0 at done + 0.75.
+- **The review's real-vs-instant pair, re-shot.** Same method (`art3/afterjump`, `ajmetric.py`), with the 'mid' camera added
+  at 1600 × 900 (shoot.cjs's size). Picture: `out/fix3/major-dusk-real-vs-instant.jpg`.
+  - Column 1 is the review's real 3000s match, washed lilac-white. Columns 2–3 are the 3000s after a real jump and after a
+    debugJump: the same picture. Columns 4–5 are TODAY, with its pink clouds and glow now in a match.
+  - Dusk, after a real jump:
+    - 'mid' reads TODAY 48 (instant 49) and the 3000s 52 (51); the acceptance is ≥ 40.
+    - The 3000s' share above 200/255 is circus 5.3, knee 6.9, mid 5.8, quay 5.1, Swimston 6.6 % (≤ 7 %; the review's real
+      match had 13.4–26.8 %).
+    - Medians, real / instant: circus 71 / 71, knee 60 / 60, quay 48 / 48, Swimston 81 / 81.
+  - TODAY's quay reads 55 / 51 because an FX puff passes in front of the camera, not because of the light; I looked.
+  - By day, real and instant were equal before and still are. Table: `out/fix3/major-ajmetric.txt`.
+  - The review's Swimston "instant" shot had caught the previous camera's frame; `fx3-shots.cjs` takes a throwaway frame
+    first.
+- **Online.** Nothing new crosses the wire: each screen derives its lights from the era it shows, and the cloud cache is per
+  screen. JOB-28: net-eras 14/14 (the ruled 2-cell Iron Bridge divergence did not show; not chased) and lagged 8/8. The seek
+  path and the jump path give the same look, so a late joiner matches the room.
+- **GPU gate, method C** (JOB-28, 2 rounds, day / dusk):
 
-### Issue 3 (minor) — the chip's "TIME JUMP!" was white-gold on white-gold for the whole jump. **Fixed.**
-- **Fix (`src/fx/eraFx.js` CSS, 0a1c57fa):** under `.er-chip.is-jump` the label is `#2a2418` at full opacity, the unlit era
-  names and dots dark brown, the bar a dark track with a dark fill.
-- **Proof:** `tests/eras-hud.js` (new check): at J + 0.3 the label's colour against the chip's settled background is
-  **12.71 : 1** (≥ 4.5), opacity 1, the bar 12.71 : 1 — 12/12 twice. The CSS before: **1 : 1**, opacity 0.9 (fails). The
-  check reads the chip with its 0.2 s background transition off (a stepped test does not wait for wall-clock
-  transitions; the first try read the dark chip mid-transition).
-- **Pictures** (looked at): `fr2-jump1-knee-J+1.5.jpg` (the jump 1 frame with the HUD: the chip under the clock reads
-  "1880s · TODAY · 3000s ━━ TIME JUMP!" dark on cream, the big "TODAY" banner below) and `fr2-chip-J+1.5.jpg` (the chip
-  cropped, 2×).
+  | | day (ms) | dusk (ms) |
+  |---|---|---|
+  | e1 | 6.19 | 6.42 |
+  | e2 | 6.29 | 6.71 |
+  | e3 | 6.56 | 6.81 |
+  | Halyard | 7.00 | 7.27 |
 
-### Issue 4 (minor) — frame budget unproven; render spikes recur at the same moments; the rewind's era update reached 21 ms. **The spikes traced to the test's set-up and the minimap's swap at done; the module's own work under 8.4 ms everywhere; the quiet-machine run still owed (JOB-6, for the record).**
-- **The Mac mini:** not used (the task). JOB-6.sh now also runs net-clock lagged and the GPU probe.
-- **What the review asked for, run here** (`tools/botlab/jobs/batch5/bluestone/probe-gpu.js`, `probe-gpu.log` at load
-  30–75, `probe-gpu2.log` at ~8): every rendered frame of jump 1 and of the kept world's 3 → 1 at sunset, timed on the
-  wall clock with `gl.finish()` after it (CPU + GPU, synchronous) and with a GPU timer query, as is and with the curtain
-  hidden, the holograms hidden, the env rebuild skipped.
-  - **The GPU timer is not usable here:** ANGLE / Metal on a GPU shared with other Electrons reports more than the
-    finished wall time (no-jump baseline: 2.8–3.7 ms median finished, 17.5 ms "GPU"), and back-to-back PMREM rebuilds read
-    13.6, 23.5, 32.2, 40.8, 49.4 ms — a counter, not a cost. The finished wall time is the measure below.
-  - **The PMREM rebuild at done + 0.7 is cheap:** `env._rebuildEnvMap()` alone, finished, 0.3–0.7 ms; the next frame
-    3.1–4.9 ms. Frames from done + 0.6 to done + 0.9: ≤ 10.8 ms in every run (one 17.2 ms frame once, 12 ms of it era
-    update; 0.5–0.8 ms in the 3 → 1 runs).
-  - **Synchronised, the curtain and the holograms cost nothing visible:** frames J + 1.0 … 1.6 ≤ 8.1 ms as is (probe-gpu2:
-    ≤ 6.8 ms in all four variants). Spikes over 40 ms in the first probe landed at different moments in each variant,
-    each with one suspect removed. (A 300–530 ms frame at J ± 0.03 in all four 3 → 1 variants follows the probe's own
-    switch of the time of day in mid-page, which a match never does.)
-- **The recurring spikes, traced** (`probe-spike.js`, `local-logs/fr2/probe-spike-*.log`: 'frames' set-up replayed, each
-  draw call timed):
-  - Each spike is **one draw call blocked for 50–580 ms — on any object** (a plastic prop, a kid's cloth or eyes, ink, the
-    level), with **no program compiled and no texture or geometry uploaded** in the frame, and no flip in it. The
-    callouts off, or the HUD hidden, leave them (6 runs).
-  - They come from the **set-up**: it rebuilds the minimap's era bases (~0.1 s of 2D raster each: the Bravo side flip,
-    the time-of-day change) and the jump started in the same breath, with no warning; the jump's draws then queue behind
-    the GPU process's backlog. As is, 3 of 4 runs spiked (Bravo 2 → 3: 19–80 ms at J + 0.25–0.45, the review's J + 0.35;
-    3 → 1: 22–62 ms at J + 1.0–1.45, the review's J + 1.37–1.5). **With 1 s of play and 1.5 s of wall time between
-    set-up and jump, 4 of 4 runs had no frame over 11.2 ms.** In a match the bases are rebuilt while it loads ('modes'
-    holds that) and every jump comes after a 20 s pre-bell, so 'frames' now waits like that (4d704933): its two jumps
-    3/3 (worst 13.8–32.3 ms; era update ≤ 8.0 ms).
-  - **What remains — the frames after done:** jump 1's own check (unchanged) passed in 2 of 3 runs (worst 35.2 / 19.9 ms);
-    the third had three frames of 121–196 ms at done + 0.17–0.36 (era update ≤ 0.1 ms in them), like the review's three
-    after done. With the minimap's era work switched off (no base swap at done, no ping) the done + 0.2 … 0.6 window was
-    2.3–3.2 ms in 4 of 4 runs, against 2.2–11.2 ms with it (elsewhere in those runs the machine's own spikes still came:
-    343 ms once at J + 1.43). The minimap's cached swap (`minimap.js setBase`, the
-    stagehooks package's file) sets `version = −1`, which forces a full-canvas ink redraw (a 588 × 1120 `putImageData`)
-    in the same frame as the new base; banding it like the ordinary ink updates is the lever — a one-line change in a
-    shared file, for the integrator or the quiet-machine run to decide. I did not change it.
-- **The era update (the module's whole per-frame work):** 'first' on a fresh page (cd15a047 prints its five costliest
-  frames): the warning frame 8.3 ms (callout 3.0, ring 2.5, sound 2.6), J 4.8 ms, nothing else over 2.4 ms; 'frames'
-  ≤ 8.0 ms; the probes' 3 → 1 runs ≤ 5.2 ms. The review's 21.2 ms did not repeat in 13 measured rewinds (max 8.0 ms); the rescue's
-  ground probe now runs on a handful of nodes (issue 2).
-- **Programs:** 149 → 149 through the first jump ('first'); 0 compiled in any spike frame.
+  ×0.88–0.94: met. The cross-fade sample is behind a uniform branch.
 
-### Issue 5 (minor) — STAGE-MODS.md said the frozen-front stage-art switch existed; it did not. **Built.**
-- **Fix (`src/game/eras.js` `auditFront` / `StageEras.freeze`, `tools/botlab/offscreen-boot.cjs`; 99cea4d9, 26960f05):**
-  - `?erafrom=a&erato=b&front=r` starts the match in era a and holds it mid-jump: every group with r_g ≤ r in era b, the
-    rest in era a (solidity and paint cells as that era's), the shader's front at r (`uEra` = a, b, r), both eras' meshes
-    up, the curtain and the holograms at r. Each frame re-applies it and runs nothing else (no event, flip or jump); a
-    clock snap re-freezes; `debugJump` lets it go. `StageEras.freeze({ from, to, front })` does the same from a script.
-  - **From the pictures:** the first shots caught two groups inside the 0.3 s dissolve band as pixel towers; a still now
-    holds the dissolve width at 0.01 m, each piece whole on its side of the front.
-  - The sky stays era a's (no time-lapse: the art's light is its time of day's).
-  - The harness: `ERA_FROM=a ERA_TO=b FRONT=r` is `PAGEQ='erafrom=a&erato=b&front=r'` (a `HARNESS` line says so); not all
-    three, a = b, a bad number, or with `ERA` / a `PAGEQ` era stops it at boot.
-  - docs/STAGE-MODS.md T3 and tools/botlab/README.md say how.
-- **Proof:** `tests/eras-jump.js` 'freeze': 38 groups inside r 30 in era 2, 14 outside in era 1, all solid as their era;
-  `uEra` (1, 2, 30); the curtain at r 30; 5 s of clock and a clock snap change nothing (0 flips); `debugJump` lets it go —
-  2/2 by the call, 2/2 twice with `ERA_FROM=1 ERA_TO=2 FRONT=30` (the page loaded frozen). `ERA_FROM=1 ERA_TO=1` and `ERA=2`
-  with `ERA_FROM` stop at boot.
-- **Pictures** (stageart.cjs, the layout's `art` camera, looked at): `fr2-stageart-day-1to2-r30.jpg` (DESIGN §5.8's day
-  art: the brass-footed curtain ring at r 30 round the dome, the boardwalk and the bridge inside) and
-  `fr2-stageart-dusk-2to3-r30.jpg` (the dusk art: the Halo, the light masts and the stairs inside the pearl ring, the
-  holograms of the floating garden still outside it). Blockout geometry: the art phase dresses it and picks the final
-  framing (`STAGES=bluestone ERA_FROM=1 ERA_TO=2 FRONT=30 … stageart.cjs` keeps the day picture, `2 → 3` the dusk one).
+### Review issue 3 (minor) — five 1880s / TODAY cover pieces were plain boxes
 
-### Issue 6 (minor) — the end-of-match beat (DESIGN §3.10) is neither built nor listed. **Listed for the art phase (§6), with what it needs.**
-- Not built; the lead's to keep or cut (it touches no play and can be cut with no other change, DESIGN says). What it
-  needs, so the art phase can cost it: a hook at the whistle while the results camera still shows the stage (`match:state`
-  'finish' → 'judge'; the stage clock stops at 'finish', so the beat runs on its own 2 s timeline); a fourth look, the
-  dead future (the sea at the rooftops: the water's height is environment.js's, shared, and a dead-sky theme overlay); an
-  *inward* rewind wave (the shader's front runs outward only: an inward front needs the side test flipped); Tartar's two
-  lines ("…So that is how it ends." / "Returning to the Professor.") through the module's own callouts. Today the
-  Professor's lore reaches a player only in the pickup lines and the blurb.
+**Fix** (`e639ef2d`). A new era prop, `dress.js` `bluestone_coverdress`, placed by `props.js` on every fountain, trough,
+bins, coal-bin and bollards block of both halves:
+- no collider;
+- everything within 8.5 cm of the faces (mouldings 2.5–6 cm proud; spout and cup bowl 8.2 cm);
+- nothing standing on the walkable tops (a lip's top is 1.25 cm over the top, at its edge);
+- ≤ 5 materials per era mask.
 
-### Issue 7 (minor) — bots rarely take jump 1's new routes. **Left to the balance pass, as the review says; the cause measured.**
-- **Why jump 1 and not jump 2:** the fresh ×2 weight multiplies a paint goal's score, but a bot's paint goal is the best of
-  **28 random draws** from `nav.validIds` within 38 m (`bots.js _pickPaintGoal`). Jump 1 makes **150 of 4,958** valid
-  nodes fresh (3.0 %): a 28-draw sample holds even one of them 58 % of the time, and it must then win on paint and
-  distance. Jump 2 makes 952 of 5,844 fresh (16 %): 99 %. That matches the review's numbers (jump 1: 2–3 of 8 within 30 s;
-  jump 2: 7–8 of 8) better than the weight does (`probe-gpu.log`, its first row).
-- **The lever for the balance pass:** draw a few of the 28 from the fresh nodes for the 30 s after done (a registry hook
-  beside `goalWeight`, one small [b5-eras] line in `_pickPaintGoal`), or the review's goal bias toward `J.vanish`'s
-  footprints. Not changed here: bots.js is the bots package's, and the review carries it to the lead's consolidated pass.
+The level art draws the surfaces. Per piece:
+- **Drinking fountain** (1880s, TODAY):
+  - a moulded basin lip, a string course, and a chamfered plinth course;
+  - on two faces, a bronze lion's head with its spout over a cup bowl on an iron bracket;
+  - on the other two, a PUBLIC FOUNTAIN 1886 plaque (1880s) or a push-button tap plate marked PUSH (TODAY);
+  - level art: a fluted pedestal, a sunk panel, and water standing about 5 cm down inside the bronze rim (the basin's inner
+    wall in shade, ripples).
+- **Horse trough:**
+  - 1880s: a rolled iron lip with ball corners, riveted iron hoops, a band under the lip, and a raised J. KNOX & CO ·
+    FOUNDERS 1884 maker's plate;
+  - TODAY: an oak capping and a CITY GARDENS planter plate.
+- **Hoki Lane ash bin** (1880s): upright timber slats and lid boards (level art), two iron bands, corner angle irons, a timber
+  lid rim, and a ST JAMES / PARISH stencil.
+- **Coal bin** (1880s, TODAY):
+  - riveted iron plates with rust at the foot (level art);
+  - a lid line, hinge knuckles, and a hasp and padlock;
+  - 1880s: the coalman's chalk tally (12 CWT); TODAY: the museum's COAL BIN C.1890 · TRAMWAY MUSEUM label.
+- **Mooring blocks** (1880s): a dressed bluestone cap and a chamfered base course (props); pick-tooled bluestone with a rust
+  streak under each iron ring (level art). The old "V.R." pseudo-lettering is removed.
 
-### Found while testing
-- **The overtime clock** (issue 1's last bullet): a follower's clock went below 0 in overtime since round 1's trip
-  compensation. Guarded (`time > 0`, 0a848ffd).
-- **eras-bots' live era-3 check** failed once in four runs (4 of 8 bots on era-3 ground, so the median over the bots is
-  "never"); the other three: 8/8, medians 6.1, 7.7 and 11.6 s, the Halo 13.8–31.5 bot-s. Bot variance (issue 7's
-  measure); no code this round touches bot goals.
-- **eras-bots' pre-position control** failed once: the control bot went round by the GPO terrace as it should and walked
-  through the opened lane 5.6 s after reaching the quay, on its next errand. The check now takes the lane only on the way
-  (49a38128); 5/5 and 1/1 since.
-- **eras-hud's two layout checks from review 2** (review fix 5's and review 2 issue 3's) each failed once in five runs
-  (the first at load ~100–290, the other in the old CSS's control run): the era band was measured during its own 0.18 s
-  `top` transition, overlapping the gameplay callout. Unchanged code; reported, not loosened.
+**Pictures**, taken from the review's own sweep cameras (`art3/sweep/sw-e1-*/views.json`):
+- `out/fix3/cover-before-after-day.jpg`: the review's shot over this round's, 1880s and TODAY;
+- `out/fix3/cover-eras-day.jpg`, `cover-eras-dusk.jpg`: every era;
+- `out/fix3/cover-zoom-e1.jpg`: close-ups.
 
-## 1. What was built (the second half), against the user's words
-The user: "a full map effect plays that simulates going forward to the current time, which changes how the map looks
-and opens up new routes … 3000s … adds new areas"; Tartar "an old telephone".
+The 3000s versions are fix round 2's and unchanged.
 
-**Bots (H16, H16b; `eras.js`, `match.cjs`, `tower-match.cjs`, `tests/eras-bots.js`).**
-- **The danger layer** (first half) runs from the warning to done, with a control run (`E.noDanger`): four bots whose
-  every paint goal is on the Halo stand on it when the rewind is warned; with the layer none is on it at its flip, without
-  it all four are.
-- **Replans at done** are counted. A route over a vanished piece is dropped; a street route is kept.
-- **Fresh nodes ×2** as paint goals for 30 s after done; each bot's time to first stand on new ground is recorded per
-  done (`botReport().visits`). Why it rarely bites at jump 1: issue 7.
-- **H16b, pre-position: built, but it only waits when waiting pays.** From J − 8 (looked at again until J − 0.5), a
-  paint-mode bot within 14 m of a gate that opens takes the coming era's route through it and waits 3–6 m short of the
-  gate, outside the danger layer, until the gate's own flip — only when the route through the gate gets there no later
-  than the detour, give or take 1.5 s.
-- **Perches: no new code.** The Halo's and the balconies' nodes are valid in their eras and chargers already score high
-  ground (`clamp(y, 0, 5) × 1.6`).
-- **Statistics** (`StageEras.stats.bots`, `botReport()`, the `ERAS` lines): at each flip, own squidkids on a vanishing top
-  and inside an appearing piece (with who and how); bot-seconds inside an appearing box before its flip (4 Hz); splats
-  no weapon dealt within 4 m of a block that flipped in the last 2 s; replans and pre-positions; the era a match started
-  in, and whether it was held.
+### Review issue 2 (minor) — the pseudo-lettering read as placeholder blocks up close
 
-**Fair (this round).** A squidkid left over the river is rescued once, onto ground no flip of the jump takes away
-(issue 2); a shove's last resort takes a node of the new era.
+**Fix** (`529866e6`). `bsText` is removed; all 29 of its uses are replaced.
+- **The words.** `levelart.js` `WORDS` / `WORD_GRID` holds 45 words. `murals.js` draws them into the mural atlas's stage
+  region, in free space at (1040, 624): cells of 200 × 42 px, alpha coverage, serif for the 1880s and sans for TODAY and the
+  3000s.
+- **The shader.** `bsWord` samples a word at an explicit level of detail.
+- **The colour per era:** gilt with a shadow, or paint, in the 1880s; paint TODAY; light on dark smart glass in the 3000s.
 
-**Online (H11; `tests/net-eras.cjs`, `tests/net-clock.cjs`, docs/NET.md).** Nothing new on the wire from the eras; the
-host's clock tick carries its clock as at the relay, and a follower's match clock only ever runs on (issue 1).
-- **A follower's clock snapping forward across a done still fires that done once** (`era:done { snapped: true }`): the
-  fresh weight, the pulse, the opened floor, the callout if ≤ 2 s old. A late join and a test seek do not.
-- net-eras covers, with two clients and a third for the late join: the flip skew and the two stage clocks; solid flags
-  and the nav era after each done; a sprinkler and a Drip Curtain on a vanishing piece; the Iron Bridge's cells through
-  its guard window; the results; a host change between the jumps; Practice's clock; a late joiner in era 3; the rewind on
-  all three screens; and the lagged run. net-clock: the match clock under lag in any mode.
-- Bluestone is a stage under construction, so the room lists it only with `?wipstages` (`URLQ=wipstages`).
+Where the words now are:
+- **Arcade and Swimston fascias, by trade:**
 
-**Every mode (`tests/eras-modes.js`, tower-check).**
-- **Zone Control:** each zone's cells are identical (the same ids, all live) before and after each jump on the real
-  5:00 schedule.
-- **Overtime:** 40 s of stage clock past regulation with no event and no flip.
-- **Boss Battle:** in era 2, with no event in 60 s. BossNav's ring is 352 m²; an era-3 BossNav built for the record walls
-  the circus, so a change of `fixed` fails the test.
-- **Practice's rewind:** a kid on the floating garden is rescued to the quay once; a kid on the Halo drops alive to the
-  circus.
-- **The menu backdrop (attract):** a jump every 40 s through the rewind, with no chip, callout or era sound.
-- **tower-check in every era** (round 1, `ERA=1/2/3` and `PAGEQ='era=3'`, each printing the era it ran in): 73.99 m both
-  sides, 0 holes, clearance clean, both rides a knockout; the review re-ran it clean in each era.
+  | 1880s | TODAY and the 3000s |
+  |---|---|
+  | CHOCOLATIER | CHOCOLATIER |
+  | TOYS & GAMES | TOYS |
+  | HAIRDRESSER | BARBER |
+  | COFFEE PALACE | CAFE |
+  | BOOKSELLER | BOOKS |
+  | FLORIST | FLORIST |
+  | OUTFITTER | CLOTHING |
 
-**Bazookarp (H21, 12b; the karp module is not merged).** On the era side:
-- `StageEras.karpStates()` returns `[{ key: 1…3, nodeOk(id) }]`, forwarded as `G.match.stage.karpStates()`.
-- `restMask(era)`: a node valid in the era in force and every later one. `danger(pos, 0)` covers the drop spot.
-- `LAYOUT.bazookarp.statesAdvance = true`. The karp engine switches its field on `era:done`.
-- `tests/eras-karp.js` part A drives a stand-in built and fed exactly as karpField builds and feeds its own (5/5); part B
-  runs on the real KarpField once a bazookarp match builds `match.karp` (SKIP here; never run).
-- **Integration:** `karp-anyValid.patch` (round 1's issue 8; still not on b5-karp-bots).
+  The arcade's upper-wall name panels TODAY carry the same trades.
+- **The hotel:** PUBLIC BAR, DINING ROOM, SALOON, then BAR, BISTRO, HOTEL.
+- **Ticket booths:**
+  - 1880s: BOOKING OFFICE on the concourse booth, TICKETS on the forecourt booth;
+  - TODAY: TOP UP over a TICKETS screen;
+  - 3000s: a TRAVEL light panel, and the route in light with its stops and TRAVEL on the glass.
+- **Hut fascias:** CABMEN'S REST / CAFE, NEWSAGENT / NEWS, CABLE TRAMS / TRAM STOP, FERRY OFFICE / FERRY, BOAT HIRE.
+- **Kiosks and boards:**
+  - the arcade kiosk: NEWS;
+  - the 3000s news kiosk: a ticker of NEWS / LIVE MUSIC / MARKET;
+  - the 3000s tram shelter: TRAM STOP over a route in light;
+  - the ferryman's box: FERRY under its route.
+- **Small pieces:** RECYCLE (TODAY's bin), ESPRESSO (the cart), CAFE / ESPRESSO (the chalkboard), CABLE TRAMS (the grip
+  car), CAFE (the chimney's band).
+- **Posters:** the hoardings' GRAND OPENING 1889. Every poster headline is real: AUCTION, THEATRE ROYAL, TO LET, GREAT SALE,
+  CIRCUS, then LIVE MUSIC, FESTIVAL, MARKET. The small print is ruled lines.
+- **Plain panels instead of letters:** the crates' 'this way up' arrows, the goods wagon's number plate, the deck's plaque,
+  the statue's tablet, the 3000s vitrine's label line.
+- **`bsText` kept nowhere:** every place it drew is within a few metres of a walkable point.
 
-**The EraFx dressing (12c).**
-- **Pre-bell (J − 20):** one distant ring (`era_bell`) that also shows: Tartar's single shake, the kiosks' bells. The clock
-  rows count down (centre hands gold), the chip shows "TODAY in 20".
-- **The warning:** the holograms are up within 0.6 s; the wire beads run along faint drawn wires out from the dome.
-- **The jump:** the chip turns white-gold with "TIME JUMP!" dark on it (issue 3).
-- **Done:** the new pieces pulse white-gold (the level shader); the opened floor is outlined and pulses with them, and
-  the minimap pings what changed.
-- **Mural era masks:** `stages/bluestone/murals.js` draws 4 (the hour ring), 6 (the café mural, eras 2–3), 7 (Hoki Lane's
-  street art, eras 2–3), 8 (the tram stop markings, era 2), 9 (the ghost sign, era 1), 11 (the 3000s' light seams, era 3).
-  The front paints each in or out as it passes.
-- **`eras.colors` on every highlight;** the warning's film tint is derived from `colors.vanish`'s hue.
-- **The time-lapse** is tested (the sun swings, the clouds race, exposure and the grade held); the env map is rebuilt
-  once at done + 0.7.
-- **The frozen front for the stage art** (issue 5): `?erafrom=a&erato=b&front=r` / `ERA_FROM` `ERA_TO` `FRONT`.
+**Pictures:**
+- `out/fix3/words-close-day.jpg`, `words-close-dusk.jpg`: the arcade's Swimston front, inside the arcade, the concourse booth,
+  the forecourt booth and the hotel bar, in every era;
+- `out/fix3/words-sweep-kiosk-bins-cart-posters.jpg`, `words-sweep-crates-huts-kiosks.jpg`: the review's sweep cameras;
+- `out/fix3/words-zoom-3000s-arcade.jpg`.
 
-**The bake (T1).** `bake.cjs bluestone`: states 1, 2, 3, one RGB PNG (committed); stage-audit with `PAGEQ='era=1/2/3'`
-says "lightmap applied" 3/3 in each; eras-bake 3/3. No collider changed this round, so the bake stands.
+The 3000s names first read pale-on-pale by day; they are now light on dark smart glass.
 
-**Performance** (engine phase, Halyard measured on the same machine at the same time; on high): draw calls 268–339 against
-Halyard's 330 / 400, triangles 0.64–0.87 M against 3.37–3.52 M, cpuRender 4.0–6.9 ms; load 7,186 / 7,550 ms against
-Halyard's 8,778 / 8,005 ms (the review, alternated). Quiet-machine frame times: issue 4.
+### The round's checks
+- **Frozen geometry, before (9012ec65) and after (the head).**
+  - check-maps is identical: bluestone 712 (568 / 590 / 700), .tower 706 (562 / 584 / 694), .zones 712 (568 / 590 / 700),
+    .bazookarp 762 (618 / 640 / 750), .boss 710 (566 / 588 / 698). All "ok", the strips over 25 m as before.
+  - No collider was added, and no layout or nav input changed.
+  - Before (JOB-27, the same source as 9012ec65) and after (JOB-28 at the major, and locally at the head 849a4c76):
 
-## 2. Decisions where the request left a gap
-1. **H16b waits only when waiting pays** (arrival through the gate no later than the detour + 1.5 s), and it walks at the
-   gate's own flip, not at done.
-2. **Perches:** no new weight (risk 16).
-3. **"Every bot … within 20 s (median)"** is the median over the bots; a bot that never reaches new ground counts as never.
-4. **The pre-bell shows its ring** (Tartar's shake, the kiosks' bells) as well as playing it.
-5. **Holograms at full strength 0.6 s into the warning.**
-6. **Wires drawn under the pulses** (FX); the real overhead wires are the art pass's.
-7. **The era band clears the HUD's banners.**
-8. **A snapped done fires its event** (and lights the opened floor).
-9. **Murals on the Z's faces** (DESIGN §5.4 updated); 5 and 10 left to the art pass.
-10. **The bake is committed** (one key); the art phase re-bakes all keys.
-11. **`statesAdvance: true`** in the Bazookarp data.
-12. **A device on a vanishing piece ends as the subs SPEC's "crushed"** (`[2, gid, 2]`, the crunch).
-13. **The rule-22 check's "route"** is a walkable top ≥ 2 m across both ways; the one Halo clearance under 4.0 m (3.66 m)
-    is accepted in the layout's data and printed on every run.
-14. **Rule 23 applies to overhead decks**, with ≤ 2.05 m open runs counted as drop gaps.
-15. **The opened floor at done is outlined, not filled solid.**
-16. **The clock compensation is in netmatch, for every mode** (the match clock), not in the era module only.
-17. **(This round) The clock runs slow to give time back, never back:** at 0.9× for a hair, down to 0.5× for 0.4 s or
-    more (a timer second lasting up to 2 s for about a second, after a host stall); only a resync over 1.5 s steps back;
-    the countdown never repeats a number even then.
-18. **(This round) A rescue prefers ground valid before and after the jump** over the nearest node of the new era alone
-    (a node of the new era can still stand inside a piece the front has yet to take).
-19. **(This round) The frozen front is a still:** pieces whole on their side (no mid-dissolve), the sky the earlier era's,
-    the curtain and holograms shown; the clock never moves it.
-20. **(This round) The end-of-match beat (§3.10) is not built;** it is on the art phase's list for the lead to keep or cut.
-21. **(This round) Bots' jump-1 lever not pulled:** the cause is measured (issue 7), the change is the bots package's and
-    the balance pass's.
+    | check | e1 | e2 | e3 |
+    |---|---|---|---|
+    | climb-audit (climbs, barred) | 144, 0 | 144, 0 | 144, 0 |
+    | cover-map floor cells | 5006 | 5166 | 5688 |
+    | cover-map within 5 m | 99.6 % | 99.6 % | 99.5 % |
+    | cover-map largest open circle | 7 m | 7 m | 7 m |
+    | spawn-mid | passes | passes | passes |
+    | tower-check | 73.99 m, no holes, clearance clean | same | same |
+- **The bake.** No level face changed. stage-audit for turf / zones / tower in e1–e3 and boss in e2 all report "lightmap
+  applied (baked for this build, not stale)" (JOB-28); JOB-30 repeats turf e1–e3 at the head.
+- **JOB-28** (Mac mini, c40bb27b, the major): everything in art-tests passed:
+
+  | test | result |
+  |---|---|
+  | eras-static | 23/23 |
+  | eras-world | 12/12, 7/7, 3/3 |
+  | eras-look | 22/22 |
+  | eras-jump first | 1/1 |
+  | eras-jump a / b / c / d / e | 8/8, 7/7, 3/3, 4/4, 7/7 |
+  | eras-hud | 12/12 |
+  | eras-modes | 6/6 |
+  | stage-mods | 36/36 |
+  | world-build, both stages | 5/5 |
+
+  Also: (i) alone 2/2 ×2; first 1/1 ×2; eras-bake 3/3; stage-audit 10/10; net-eras 14/14; lagged 8/8; GPU gate by C met.
+  Frames: run 1 4/4, run 2 2/4 — the 451 ms frame above, plus the old unmeasured stall (437.9 ms at J + 2.45, its parts
+  1.4 ms).
+- **JOB-29** (Mac mini, f03f8511: (b), (c), and the major with the tiled bake, before the cache): the day sweep in every era;
+  eras-look 22/22, first 1/1, world-build 5/5. Frames 4/4; the worst frames were the main jump 31.9 ms at J + 1.47, Bravo
+  11.2, theme 13.1.
+- **JOB-30** (Mac mini, bd33835d, the cloud cache):
+  - frames 4/4, 4/4, 2/4 (run 3 above). The worst frames of the clean runs: main jump 33.6 / 34.6, Bravo 13.4 / 11.4, sunset
+    18.5 / 13.2.
+  - first 1/1 ×2, sky 7/7, eras-look (i) 2/2. With the pulse over, after the real jump TODAY reads 45.5 (debugJump 45.6) and
+    the 3000s 48 (48), share above 200 5.92 %.
+  - the dusk sweep in every era (pages looked at, recompressed under 300 KB);
+  - stage-audit turf e1–e3 "not stale"; check-maps unchanged.
+- **JOB-31** (Mac mini, 1b86e9ed, env maps by reference):
+  - frames 2/4, 4/4, 4/4, 4/4. The worst frames of runs 2–4: main jump 31.3 / 31.9 / 36.3, Bravo 11.6 / 12.2 / 13.5, sunset
+    14.4 / 13.9 / 12.8. Run 1 is described above.
+  - settle-diag 4/4; first 1/1 ×2; sky; eras-look.
+- **JOB-32** (Mac mini, de8e927e — env maps by reference, before the warm; frames ×5 at the head alternating with ×5 at the
+  reviewed code's src 9012ec65, GPU shader cache on). The worst frame per run:
+
+  | | main jump | Bravo 2 → 3 | sunset 3 → 1 |
+  |---|---|---|---|
+  | head (5 runs, all 4/4) | 35.7 / 36.3 / 33.0 / 33.4 / 35.3 | 11.9 / 12.1 / 14.1 / 15.9 / 13.0 | 14.3 / 14.2 / 14.1 / 12.9 / 14.3 |
+  | reviewed code (5 runs) | 33.7 / 32.4 / 33.1 / **429.5** (J + 2.8) / 32.3 | 14.7 / 14.0 / 10.9 / 11.0 / 13.8 | 13.1 / 13.0 / 12.7 / 13.7 / 16.5 |
+
+  The ~400 ms frame happens without this round.
+- **JOB-33** (Mac mini, 83bea627: the final code with the warm). The flag `--disable-gpu-shader-disk-cache` was on the
+  Electron command line of every page (`run.sh` passes it through), so every page was cold.
+  - frames 4/4 ×3. The worst frame per run: main jump 36.8 / 35.1 / 33.9 ms (its own front frame at J + 1.5, as before the
+    round), Bravo 2 → 3 10.1 / 9.6 / 11.3, sunset 3 → 1 15.0 / 15.7 / 14.0.
+  - settle-diag 4/4 cold: no compile or link, no PMREM pass with the reference swap, `envMiss` 0, worst frame ≤ 17.4 ms.
+  - first 1/1 cold.
+- **Local, this Mac** (one Electron at a time, load 6–20):
+  - at the cache commit: eras-look (i) 2/2, first 1/1, sky / freeze / modes 7/7; frames 4/4 (main jump 38.7 ms at J + 1.45,
+    Bravo 14.0, theme 19.4);
+  - after (c): eras-static 23/23, world-build 5/5 on both stages, stage-mods 36/36.
+  - eras-look (h) failed once at load 11–12: the see-through window with and without the prepass differed by max 22/255 at
+    a few pixels (mean 0.000). The immediate re-run passed (part 5 10/10), and JOB-28 and JOB-29 passed 22/22.
+
+### Commits and files
+**Code:**
+- `5f48f231`: the lights and the tests;
+- `118eff1f`: the cloud cache;
+- `a20c9748`: env maps by reference;
+- `956c4038`: the settle states warmed at load;
+- `e639ef2d`: (b);
+- `529866e6`: (c).
+
+**Scratch:** `25d959ac`, `111a6140`, `c40bb27b`, `ee4a5c6e`, `08d9a1f8`, `994ff5c7`, `1b86e9ed`, the JOB-32 and JOB-33
+scripts, and this report.
+
+**Shared files:**
+- `src/world/environment.js`, `[b5-bluestone]`: `applyLights` (out of `setTheme`, the same values), `blendGrade`,
+  `cloudBakeInto`, `envMapFor`, `useEnvMap`, `_withSky`, `_makeCloudRT`, `_cloudPrimaryT` recorded in `_bakeClouds`, and the
+  `uCloudTex2` / `uCloudMix` uniforms with the sky's gated second sample.
+- `src/game/eras.js`.
+- Otherwise the stage's own folder (`dress.js`, `props.js`, `levelart.js`, `murals.js`) and `eras-jump.js` / `eras-look.js`.
+
+### Decisions where the brief left a gap
+- **When the light comes in.** The sky's light colours blend with the time-lapse. The world's lights and the grade blend from
+  done to done + 0.7 s: the engine always held them through the front so ink stays as readable, and the review asked for
+  that blend.
+- **Clouds and env maps built at load, not sliced** (the coordinator's first option). It costs about 0.45 s of GPU per
+  look's clouds (two as a rule) plus three PMREM passes, behind the faded screen. That adds about 40 MB of GPU memory, on
+  Bluestone only: two 2048 × 640 half-float cloud targets and three 768 × 1024 env maps.
+- **The words.** Each shop's name is its trade, in the order of the rooms behind its glass; the 1880s names use the trades'
+  own words of the time. The city is never named: TODAY's bin says RECYCLE, the 1880s bin a parish.
+
+unfinished:
+- **The ~400 ms "bad run" frames are not explained.** They predate this round (JOB-25: 421.7 ms at J + 0.93; JOB-32: 429.5 ms
+  in the reviewed code). With earlier versions of this round they also fell at the side jumps' settle (JOB-28, JOB-30, JOB-31
+  run 1). At the final code, eight Mac mini runs (JOB-32 head ×5, JOB-33 ×3, the cache off) had no frame over 50 ms in any
+  jump. Eight runs cannot prove the settle never stalls. The cause is still unknown (LEAD-NOTES has it as a beta round 2 item).
+- **The new load-time work is unmeasured.** At a Bluestone match's load, or when the time of day changes, the round adds:
+  - two cloud bakes (~0.45 s of GPU each on an M4);
+  - three PMREM passes and three warm frames;
+  - a `gl.finish`.
+
+  That happens behind the faded screen, and also once per time of day in the menu backdrop's idle warm, where it can pause
+  the menu for about a second. I did not run `first-frames.cjs`, so the intro's first frames after it are unmeasured. GPU
+  memory grows by about 40 MB on Bluestone.
+- **Not re-run at the final code:** net-eras and lagged (last run at the major, JOB-28: 14/14, 8/8; nothing new crosses the
+  wire), the GPU gate by method C (last at the major, JOB-28: ×0.88–0.94; the caches add no per-frame work at rest), perf6,
+  and eras-world / eras-hud / eras-modes (last in JOB-28).
+- **eras-look (h) failed once locally** at load 11–12, after (c): the see-through window's edge, max 22/255 at a few pixels.
+  It passed on the re-run and in JOB-28, JOB-29 and JOB-31 (22/22). It reads as a load-dependent flake; I did not confirm
+  that.
+- **The main jump's own front frame** is 31–37 ms on the Mac mini and 38–52 ms on this loaded Mac. It predates the round
+  and sits near the 50 ms bound locally.
+- **The 3000s' shop names read through semi-transparent smart glass;** they are legible, but softer than TODAY's painted ones.
+- **The words** are 45 fixed cells. A new trade or sign needs a cell, and the grid is full (5 × 9 in the free space).
+
+## Fix round 2 (2026-10-25): the second independent review's REDO, issue by issue
+
+Pictures: `out/fix2/` (all looked at), the stage cards `out/fix2/cards/`, the eye-level sweeps at this round's head
+`bluestone/out/sweep/fix2/{day,dusk}/` (Mac mini JOB-23 / JOB-24; all 30 pages looked at). Probes and jobs (scratch, in
+`tools/botlab/jobs/batch5/bluestone/`): `gpu-ab.js`, `gpu-sustained.js`, `idcheck.js`, `idle.js`, `gshoot.cjs`; JOB-20 … JOB-26.
+
+### Review issue 1 (blocker) — the GPU gate
+**What the timer was.** I attributed the gap first with the gate's own timer (JOB-20: `gpu-ab.js`, one page per config,
+every variant measured beside the base): the level's material was the one big lever (a plain material −9.6 to −13 ms on
+Bluestone, −1.3 to −3.9 on Halyard), every part of it 1–3 ms and none dominant; the art per style −0.5 to −1.7 each (a
+'skip:N' row runs the same program but skips style N's branch for its fragments: shader work, the same fragments). The
+first cut (below) saved 2–4 ms by that timer (JOB-21: ×1.54–1.64 Halyard after, ×1.65–1.72 before). Its readings then
+stopped making physical sense — 'off' switches that made frames SLOWER (bloom off +6 to +12 ms on Bluestone, GTAO off and
+the sea hidden slower on Halyard), an empty scene at 15 ms, attribution rows that never added up — so I timed the same
+`R.render` three ways (JOB-22, quiet Mac mini, perf6's eight views, 2 rounds, this head and review 2's src):
+
+| GPU ms per frame | A: the gate's timer (a query per frame, gl.finish after each) | C: 30 renders back to back + a fence (the GPU's throughput) |
+|---|---|---|
+| Halyard day / dusk | 25.5 / 25.8 | 7.35 / 7.33 |
+| Bluestone e1 day / dusk | 40.8 / 42.5 (×1.60 / ×1.65) | **6.28 / 6.61 (×0.85 / ×0.90)** |
+| Bluestone e2 day / dusk | 41.8 / 42.8 (×1.64 / ×1.66) | **6.37 / 6.73 (×0.87 / ×0.92)** |
+| Bluestone e3 day / dusk | 42.5 / 44.4 (×1.66 / ×1.72) | **6.56 / 6.94 (×0.89 / ×0.95)** |
+| review 2's src e1 / e2 / e3, day | 42.6 / 44.5 / 47.4 | 6.96 / 7.19 / 7.33 (×0.95 / ×0.98 / ×1.00) |
+| review 2's src e1 / e2 / e3, dusk | 46.0 / 46.6 / 47.0 | 7.35 / 7.44 / 7.57 (×1.00 / ×1.02 / ×1.03) |
+
+C is a wall-clock measure that cannot be out by more than the CPU's issue time (0.8–1.0 ms a frame on both stages): 30
+frames that each "cost 44 ms" by the timer finish in 0.2 s. Locally three more tests point the same way: the timer round
+the render alone with no sim step (A2) reads Bluestone ×1.03 Halyard where A reads ×1.32; an idle gap of 4–16 ms before
+each timed frame halves the timer's reading on both stages (it counts queueing behind earlier GPU work, not the frame's
+own execution: `idle.js`); and **bloom off reads +11.5 ms by the timer but −0.5 to −1.4 ms by C** — the bloom-off "anomaly"
+the review asked me to find is the timer's, not a double draw (no extra pass exists: the composer skips the disabled pass).
+The lead ruled (LEAD-NOTES "The GPU gate, corrected"): **the gate's method is C; by it the gate is met at the head
+(×0.85–0.95) and was met at review 2's src (×0.95–1.03); issue 1 is closed; no further GPU work this round**; the first cut
+stays if it changes no picture and the prepass shows no fault.
+
+**JOB-26** (Mac mini at `35381026`, this round's code; 2 rounds; e2 and Halyard; ms per frame):
+
+| | C, the GPU's throughput: day / dusk | ÷ Halyard | A, the old timer: day / dusk | A2, the timer round the render alone |
+|---|---|---|---|---|
+| Halyard as is | 7.05 / 7.14 | ×1.00 | 26.9 / 27.5 | 17.1 / 17.6 |
+| Bluestone e2 as built | **6.18 / 6.62** | **×0.88 / ×0.93** | 41.3 / 42.5 (×1.53 / ×1.55) | 16.9 / 18.5 (×0.99 / ×1.05) |
+| … the full program at rest, no prepass (the level as before the cut) | 7.25 / 7.55 | ×1.03 / ×1.06 | 46.0 / 48.6 | 20.4 / 21.1 |
+| … no prepass (static programs only) | 6.47 / 7.00 | ×0.92 / ×0.98 | 42.2 / 44.7 | 18.2 / 19.7 |
+| … bloom off | 5.45 / 5.73 (−0.7 / −0.9) | ×0.77 / ×0.80 | **56.6 / 58.6 (+15 / +16)** | 18.4 / 19.4 |
+| Halyard bloom off | 6.17 / 6.18 (−0.9 / −1.0) | ×0.87 | 28.9 / 29.8 (+2.0 / +2.3) | 16.1 / 16.5 |
+
+So by the GPU's own throughput the cut saves 1.07 ms by day and 0.93 at dusk on e2 (15 % / 12 % of the frame's real GPU time): the
+static programs ~0.8 / 0.55, the prepass 0.3 / 0.4. Bloom off makes the frame cheaper on both stages by C and dearer by
+the timer — the "anomaly" is the timer's. The timer round the render alone (A2) puts Bluestone at ×0.99–1.05 Halyard; with
+a CPU-side gap of 8–16 ms before each timed frame the timer reads 7.8–8.5 ms on both stages instead of 17–18 (`idle.js`):
+it counts waiting behind earlier GPU work.
+
+**The first cut** (`2d4f7a6b`, `dbe15f36`, `d5077600`) — what it does and its proof:
+- **Static level programs at rest** (`eras.js` `_staticMat` / `_levelProgram`; `eraFx.js` and `levelart.js` under
+  `ERA_STATIC` / `ERA_NOW`): while no front, warning, done pulse or frozen still is on, the level meshes draw with a program
+  per era in which the era is a compile-time constant — no per-fragment era, front band, flicker, pulse or cut, and the
+  level art folds to that era's code alone; the full program from the warning to the pulse's end. All four programs are
+  compiled at load (`_precompile` renders a frame with each: 12 programs, 0.4–3.4 s at load on this loaded Mac); eras-jump
+  'first' finds no program compiled from J − 20 to done + 1.5 (Mac mini JOB-21 1/1 ×2; JOB-25 1/1 ×2).
+- **A depth prepass** at rest: per level mesh a twin sharing its position / aEra buffers, colour off, drawn first, polygon
+  offset, absent pieces collapsed, out of the shadow and GTAO passes, the see-through window round the local player left
+  out with a margin (the twins set its feet height themselves, `dbe15f36`: with last frame's height a few pixels of the
+  window could lag — the check below caught it, max 21/255).
+- **The generic level shader** (`levelMaterial.js`, 4 lines tagged `[b5-bluestone]`, the only shared file this round): on
+  the texlib path the 4-octave noise and the fine noise are computed only where they are read (murals, Halyard's drain) and
+  the coping's stone only where the coping shows. The same picture on every stage.
+- **No hex anti-tiling on Bluestone's level** (`LAYOUT.levelTexlib.hex = false`: render, asphalt and rubber take the grid
+  mode's per-tile flips; its own material's uniforms only; `W._hexOff` keeps what was there).
+- **Proof that no picture changed:** eras-look part 5 **(h)** (new): at rest every prepass twin shows exactly with its level
+  mesh and the level draws with its era's static program; in the warning, the jump and the done pulse no twin shows and
+  the program is the full one; with and without the prepass the frame is identical at five places in every era (max 0) and
+  through the see-through window round the local player standing behind the Swimston cart (max 0–2/255; the window open:
+  mean change 9.5–11.3/255) — locally 8/8 in part 5. The static program against the full one at rest: max 0–1/255 (three
+  cameras × three eras). `idcheck.js`: the generic shader patched back to its original code gives the same frame (max 0–1/255
+  at four places in every era; two identical renders 0–2); hex on against off: mean 0–0.9/255, the noise placed
+  differently, no repeat at eye level (`out/fix2/gpu-hex-on-left-off-right-e2.jpg`, looked at).
+- Not pursued after the lead's ruling: one program per art style, a baked art atlas, LOD by distance, the lamp loops (their
+  rows by the old timer are in JOB-20 / JOB-21).
+
+### Review issue 2 (major) — the 1880s and TODAY dusks were murk
+- **Fix** (`4f34e405`, layout.js `ERAS.look`): the hues kept, the fill raised. **1880s** sunset: hemi 0.62 → **2.1**, env
+  0.44 → **1.2**, a lighter lilac-grey ground bounce (#b8a8b8), the violet fill a little less saturated (#8a84b8), key 3.0 →
+  **3.5**, exposure **1.2** and a softer shadow tint. **TODAY** sunset: hemi 0.6 → **2.2** with a less saturated blue-lilac
+  fill (#8c8cb8; at env 1.1 the pink-violet sky's reflections made the streets Grape-like, so env stays **0.75**), ground
+  bounce #b8a4b0, exposure **1.08**.
+- **Measured** (the review's method: the median of the lower two thirds of the frame, Rec.601; no ink):
+
+  | at dusk | shoot.cjs 'mid' (1600 × 900) | the knee | Hoki Lane | the quay | Swimston |
+  |---|---|---|---|---|---|
+  | 1880s before → after | 15.9 → **43.5** | 12.7 → 53.2 | 7.4 → 36.0 | 20.0 → 54.3 | 22.2 → 63.3 |
+  | TODAY before → after | 22.7 → **47.7** | 13.0 → 45.0 | 12.2 → 36.1 | 21.2 → 47.1 | 39.0 → 69.2 |
+  | 3000s before → after | 45.2 → **49.9** | 48.9 → 60.1 | 24.8 → 29.0 | 41.3 → 47.8 | 72.2 → 81.1 |
+
+  (Halyard's 'mid' at dusk: 49.) The ink stays the loudest (the review's ink pairs at the final head): the non-ink
+  Tangerine-like background at dusk **2.3 / 3.5 / 0.1 %** (Halyard 30.9 %); Grape-like 6.5 / 10.3 / 0.2 % (Halyard 16.0 %);
+  background as saturated as the ink ≤ 0.4 % (one 3000s Hoki view with under 2,000 low-chroma 'Grape' pixels reads 33 % —
+  an artefact of a near-empty ink mask; the other 3000s views 0 %); every team ink against its ground ΔE 67.8–111.5.
+- **Check added:** eras-look part 5 **(g)**: from the 'mid' camera at dusk the lower frame's median ≥ 34/255 in the page's own
+  frame in every era (it reads ~4 lower than shoot.cjs's 1600 × 900 shot of a match started at dusk: 40.0 / 42.7 / 48.4 at
+  this head; the reviewed look 13.7 / 19.6 / 43.0 fails it — run at that look before committing) and the 3000s' Cobalt-hue
+  share ≤ 5 %.
+- **Pictures:** `out/fix2/issue2-dusk-before-after.jpg` (the mid preset, the knee, Hoki Lane and the quay: the 1880s and
+  TODAY before / after, the 3000s after) — the concourse, the booths, cover faces, kerbs and setts read under the violet
+  sky; the dusk sweep (JOB-24): cover faces, not silhouettes, in every era. One thing the dusk sweep shows: on the Boathouse
+  deck looking west (deck-rail.0) the low sun's glint on the planks is bright in the 1880s (the key light raised to 3.5).
+
+### Review issue 3 (major) — the trams were blank slabs
+- **Fix** (`a85f6179`, props.js; era props only, the 2.6 × 6 × 3.2 m collider covered as before):
+  - **TODAY** (DESIGN §5.2): a low-floor tram, white and graphite, a thin yellow band; graphite skirts over the bogies; the
+    glazing from 1.25 to 2.6 m in separate panes in black frames with the lit saloon behind (a ceiling strip, seat backs,
+    passengers' heads, a grab pole, the sky in the upper glass); two pairs of doors per side, their leaves glazed, yellow
+    edges where they meet and at the jambs, a door button; at each end a raked windscreen with the driver and his desk
+    behind it under the lit destination blind **11 FLOUNDERS ST**, the fleet number **6012** on the dash, headlights;
+    air-conditioning pods and a single-arm pantograph on the roof. Era 2's buckets only.
+  - **3000s** (DESIGN §2.10): a pearl lower body hovering over the light-rail plinth on a sheet of light (the gap glows:
+    nothing is seen through the cover), a rounded clear-glass capsule (era 3's glass bucket) over a lit saloon — a pearl
+    frame of ribs and posts, moss-green seats on pearl bases, standing passengers, a ceiling of light — with an opaque
+    partition along its middle (a decision: the tram is cover, and see-through cover would show players behind it), a
+    pearl roof with white-gold seams, FLOUNDERS ST in light along its flanks.
+- **Pictures:** `out/fix2/issue3-trams-e123.jpg` (the side, the end and the west kerb in every era, day and dusk); the
+  sweeps' tram rows (tram.0 in e2 / e3, day and dusk).
+
+### Review issue 4 (major) — the stage-select cards showed a blockout backdrop
+- **Fix** (`29705647`, `0ffc37c6`): **the backdrop dressed** (backdrop.js): the land the far city stands on with a stone
+  promenade and an avenue of trees along every quay, parks with trees, streets between the blocks (every era: the
+  constant); the 1880s terraces under pitched roofs in slate or red tile (the card looks down on them: no bare grey tops);
+  **wharf sheds** along the river banks east and west in the 1880s and mid-rise apartments with roof gardens on the same
+  banks TODAY; the tall ships with a pointed bow, a raked stern, a white strake, a bowsprit and **sails set**; the paddle
+  steamer with a bow and a rubbing strake. **Today's office towers** (props.js `bluestone_glasstower`): blue-grey curtain
+  walls between mullions every ~1 m, floor bands, offices lit behind the glass in an irregular pattern (pale by day, lit at
+  dusk), the Customs House's with a **stepped gold crown**, a lit band and a mast — the "near-black box" on the dusk card
+  was this tower at dusk (a raycast on the card's camera: an era-2 prop at (−27.3, 13–18, −7.4)). **The Customs House's
+  3000s vertical farm** (`bluestone_farmtower`, DESIGN §5.2's green-glass louvres and planting) instead of a spire: a pearl
+  frame round a green-glass core, louvres across every face, planting over every slab, white-gold seams, a ring of light
+  on its roof; the sky-bridge now leaves from its north face.
+- **Re-rendered** with stageart.cjs (ERA_FROM=1 ERA_TO=2 FRONT=30 by day, ERA_FROM=2 ERA_TO=3 FRONT=30 at dusk, SS 2),
+  installed as `assets/stages/bluestone-{day,dusk}[-sm].webp`. **Pictures:** `out/fix2/cards/card-{day,dusk}.jpg`,
+  `cards-vs-halyard.jpg` (looked at beside Halyard's at the same size): the top third is a city on land now — roofs, trees,
+  quays, sheds, a tall ship under sail by day; at dusk lit terraces and towers and today's gold-crowned tower. It is not
+  Halyard's painted skyline across open water (the camera looks down into a city), but nothing reads as blockout.
+
+### Review issue 5 (minor) — the drum's ceiling over mid
+- **Fix** (`f351342c`, props.js `bluestone_drumceiling`, a centre prop, era buckets, no collider): an octagonal plate just
+  under the drum (y 7.98–8.0, inset 5 cm from its faces) closes the sky-coloured seam between the drum's OCT pieces; under
+  it, within 8.5 cm, coffers — eight radial ribs and two octagonal rings, bosses at the crossings, a moulded rim and a rose
+  round Tartar's: the 1880s coffered timber with gilt bosses, TODAY cream coffers with a gold rim, the 3000s white coffers
+  with light seams.
+- **Pictures:** `out/fix2/issue5-drum-ceiling-e123.jpg` (the review's Ccircusw camera and one straight up under Tartar, every
+  era, day and dusk): no seam, the coffers per era.
+
+### Review issue 6 (minor) — the 3000s violet dusk tinted the city into Cobalt's hue
+- **Fix** (`4f34e405`): the 3000s sunset's fill and sky middle a neutral lilac-grey (#a29eb6 / #8a84b0), a warm white key
+  (#fff2e2), env 0.3 with the fill at 0.8, a softer shadow tint (0.95, 0.96, 1.05), the era tint white-gold (1.0, 0.99, 0.97
+  instead of a blue cast), and the 3000s paving a warm pale stone (levelart GROUND, era 3) — the Cobalt ink stood on a
+  blue-grey ground of nearly its own hue.
+- **Measured** (the review's ink pairs, the 3000s at dusk): Cobalt-hue background **14.8 % → 0.8 %**; Cobalt against the
+  ground it covers **ΔE 51.7 → 68.9** (target ≥ 65; Halyard 87.6); eras-look (g) holds the Cobalt share.
+- **Picture:** `out/fix2/issue6-cobalt-e3-dusk-before-after.jpg`.
+
+### Review issue 7 (minor) — the 3000s furniture, the statue plinth, the pieces that never changed
+- **Fix** (`1779f17c`; the tops of all these pieces are walkable, so everything is level art or within 8.5 cm of a face):
+  - the **hover cart**: a canopy in sage and cream stripes over a display of goods (muted: the ink stays loudest), the body
+    riding on a gap of light (a dark recess over a white-gold strip at its foot), its goods in crates on top;
+  - the **café pods**: a glass band onto the lit counter (cups, the machine), a light ring at the brim and a **parasol of
+    light** on top (eight ribs of light from the centre and their glow);
+  - the **recycling pods**: a **sorting lid** in three colours with marks of light and the same three as bands down the faces;
+  - the **statue plinth** as a monument in every era (no figure: its top is walkable): a base course, a cornice of two
+    mouldings, a **bronze relief per era** in a moulded frame — the lord mayor in his chain and top hat, a tram conductor
+    with his cap and ticket machine, the time traveller holding a light — its inscription, and a **wreath** against its
+    circus face per era (`bluestone_wreath`, within 8 cm: laurel, flowers and a ribbon; white flowers round a ring of light);
+  - the **drinking fountain** a fountain of light in the 3000s (arcs of light up a pearl drum, rings running out across the
+    bowl; granite in the 1880s and TODAY: a heritage fountain);
+  - the **buffer stop** a buffer of light in the 3000s (a ring and a bar of light on pearl);
+  - the **wharf decks' timber rails** (the Customs dock's, the Boathouse deck's) per era: timber (1880s), painted steel
+    (TODAY, a new `steel` rail kind), glass (3000s).
+- **Pictures:** `out/fix2/issue7-furniture-e123-{day,dusk}.jpg` (cart, café, bins, fountain, statue, buffer, rails in every
+  era); the day sweep's e3 pages (cart.0 / 1, bins.0, cafe.0, fountain.0, statue-plinth.0, buffer.0, customs-dock.0,
+  dock-stair.0, deck-rail.0) and e1 / e2 (the timber and steel rails). Left as they were: the bike dock and the benches
+  (the pearl family with moss seats), the mooring posts (bluestone with iron bollards in every era).
+
+### Review issue 8 (minor) — carried: the end-of-match beat, the timetabled tram, bots on jump 1's new ground
+Not built: outside this round's brief (dressing, shaders and the engine's art-phase items). LEAD-NOTES records no decision
+on DESIGN §3.10 or the tram's timetable; both remain the lead's to build or cut. The bots' fresh-ground lever
+(`_pickPaintGoal` from `E.fresh` for 30 s after done) is the balance pass's; no balance set was run this round.
+
+### The round's tests
+- **Local** (this Mac, one Electron at a time, load 7–35): eras-look 19/19, then part 5 8/8 with (h); eras-static 23/23;
+  check-maps (bluestone 712, per era 568 / 590 / 700, as before); eras-jump guard/fx 3/3, sky/freeze/modes 6/6, frames 4/4
+  (the jump frame 48 ms at J + 1.47 at load 7), 'first' 0/1 once at load 10–18 (no program compiled; the warning frame's era
+  update 12.8 ms over its 10 ms bound — the callout's DOM 5.3, audio 3.8, the ring 3.6: the CPU-load failure fix round 1 also
+  saw once); world-build bluestone 5/5 and halyard 5/5; eras-world part 5 3/3.
+- **Mac mini:** JOB-20 / JOB-21 (attribution by the old timer; JOB-21 also eras-jump first 1/1 ×2 and frames 4/4 + 3/4),
+  JOB-22 (the timer against throughput), JOB-23 (the day sweep: 511 / 523 / 582 views of 155 / 157 / 171 clusters, console 0;
+  15 pages looked at), JOB-24 (the dusk sweep: the same counts, console 0; 15 pages looked at), JOB-25 (the suite, the bake,
+  online, perf6: below), JOB-26 (the cut by throughput: issue 1).
+- **JOB-25** (Mac mini at `413d5a09`, this round's code incl. `dbe15f36`; load 2.7): the whole suite — eras-static 23/23,
+  eras-world 12/12, 7/7, 3/3, **eras-look 20/20** (with (g) and (h)), eras-jump first 1/1, a 8/8, b 7/7, c 3/3, d (frames)
+  4/4, e 6/6, eras-hud 12/12, eras-modes 6/6, stage-mods 36/36, world-build halyard 5/5 and bluestone 5/5, climb-audit /
+  cover-map / spawn-mid 1/1 in every era, tower-check 73.99 m, no holes, clearance clean in every era; check-maps unchanged
+  (bluestone 712, per era 568 / 590 / 700); eras-jump 'frames' three more runs 4/4, 4/4 and **3/4** (one frame of 421.7 ms at
+  J + 0.93 with the era update 0.1 ms and the render 1.4 ms: the stall sits outside both, the same unmeasured kind as JOB-16's
+  422 ms and JOB-21's 379.5 ms; the jump frame itself 33–36 ms) and 'first' 1/1; **eras-bake 3/3**, stage-audit turf / zones /
+  tower in eras 1–3 and boss in era 2 all "lightmap applied (baked for this build, not stale)"; **net-eras 14/14, lagged 8/8**;
+  **perf6** against Halyard (3 runs, medians): calls ×0.84 / ×0.86 / ×0.95 by day and ×0.93 / ×0.83 / ×0.85 at dusk,
+  triangles ×0.39–0.45, cpuRender ×0.81 / ×0.83 / ×0.86 and ×0.73 / ×0.76 / ×0.76.
+- **Online / bots:** nothing new crosses the wire (the trams, ceilings, wreaths, rails and looks are era props and level art
+  keyed by the era every screen derives; the static programs and the prepass are per screen); no nav input changed.
+
+### The round's commits and files
+**Code:** `4f34e405` (the dusks, eras-look (g)), `2d4f7a6b` (the GPU cut), `a85f6179` (the trams), `f351342c` (the drum's
+ceiling), `29705647` (the backdrop, the towers, the farm), `1779f17c` (the furniture, the monument, fountain, buffer, rails),
+`0ffc37c6` (the cards), `dbe15f36` (the prepass's feet height, eras-look (h)), `d5077600` (`_hexOff`).
+**Scratch:** JOB-20 … JOB-26 and the probes, `fc4f5227` (the cards' pictures), `fd514118` and `c6a310f8` (the pictures), this
+report. **Shared files:** `src/world/levelMaterial.js` (4 lines tagged `[b5-bluestone]`, the same picture: big / fine / the
+coping's stone computed only where read); the rest is the stage's own folder, its module (`src/game/eras.js`,
+`src/fx/eraFx.js`), `tools/botlab/tests/eras-look.js` and `assets/stages/bluestone-*`. Program keys on Bluestone: the level's
+full program `inkwave-level-v8-eras-bsart`, at rest `…-bsart-static1` / `-static2` / `-static3`.
+
+## Fix round 1 (2026-10-25): the independent review's REDO, issue by issue
+
+(As answered then. Its GPU-time paragraphs (issue 7, § 6) use the timer query that fix round 2 showed does not measure
+the GPU's time: see fix round 2, issue 1, for the corrected numbers.)
+
+The review (`LEAD-REVIEW.json`, at `f2e8c182`) found the street-level rewrite real but the stage's heart and its 3000s
+new ground below the bar: Tartar still the blockout box, the 3000s' glass opaque slabs, blank hero buildings and
+structures, the per-era dusk looks never applied, the hotel and Hoki Lane barely changing, the warning's flicker
+invisible, two flaky tests. Every fix is dressing, shader or the engine's art-phase code; **no collider or layout
+change** (check-maps piece counts identical: 712 / 706 / 712 / 762 / 710, per era 568 / 590 / 700; the lightmaps still
+apply, not stale). Pictures: `out/fix1/` (sheets `out/fix1/sheets/`, the eight places `out/fix1/places/`), all looked at.
+
+### Review issue 1 (major) — the 3000s' glass is opaque; the Halo's underside a bare slab
+- **Fix** (`dec4ac74`): `dress.js` `kind: 'glass'` rails (the Halo, the three glass stairs, the Iron Bridge in the 3000s)
+  are now clear panels in a new **'glass' era bucket** (`eras.js _glassMat`: ~22 % pale tint, a fresnel edge to ~70 %,
+  `depthWrite: false`, double-sided, no shadow, out of the GTAO override pass) between **slim pearl posts every ~1.5 m**,
+  under a pearl handrail with the **white-gold light rail** on top and a pearl foot with a light line. Era 3's prop
+  materials: gloss, glow, metal, rubber, glass = 5 (rule 40 holds: eras-look step 7). The decks' **undersides**
+  (level art DECK, faces with normal −y): the Halo and the 3000s' landings as **pearl coffers with white-gold seams** and
+  a soft light in each coffer; the timber decks' undersides show joists.
+- **Proof:** `sheets/issue1-glass-{day,dusk}.jpg` (the review's cameras haloeye, halounder, bridge, halotop in every era:
+  the bridge, the stairs and the Halo seen through their rails; the coffered underside from the balcony landing);
+  eras-look 18/18 (step 7 lists `props:glass@e4`).
+
+### Review issue 2 (major) — Commander Tartar is still the blockout box
+- **Fix** (`71297b01`, `df8489ee`): `props.js` `D.bluestone_tartar` rebuilt as a **cream-and-brass cradle telephone**,
+  the same three parts EraFx animates: **body** — a tapered rounded body (a superellipse loft) on a moulded base with a
+  brass band and a shoulder bead, on each face (Alpha's and Bravo's) a brass bezel, a cream number plate and a **finger
+  stop**; the **two-forked cradle** on top; the **curly cord** from the mouthpiece down his end; **two domed brass bells
+  with a striker** under him (the face players on the circus floor see); the **coiled cord he hangs by** from a brass
+  rose on the drum's ceiling (y 8; the drum is solid from 8 to 10, so DESIGN's 7 m to the crown is out of sight).
+  **dial** — on each face a brass finger wheel with **ten finger holes** and their numbers, the warm-lit centre card
+  (still the warmest light under the dome), spinning about (0, 6.6) as before. **handset** — an earpiece and a
+  mouthpiece cup on a curved grip, resting in the forks. The pickup animation fits the new model: the handset lifts
+  0.16 m off its forks and tilts 0.18 rad about its own middle (it rose 0.45 m about the pivot into the ceiling).
+  7 draw calls (was 6).
+- **Proof:** `sheets/issue2-tartar-{day,dusk}.jpg` (the review's tartarside / tartar cameras and a close-up, every era);
+  `sheets/issue2-tartar-ring-pickup-dial.jpg`, `issue2-tartar-pickup.jpg` (J − 15 ringing, J − 0.6 the receiver up,
+  J + 0.2 dialling); eras-jump 'fx' now also checks the receiver lifts ≥ 0.12 m and its vertices stay under the ceiling
+  (0.15 m, top 7.97 m): 3/3; eras-look (e) the intro ring 1/1.
+
+### Review issue 3 (major) — hero buildings and the 3000s' new pieces read as blank panels and boxes
+- **Fix** (`6d016212`, `ffd9dd73`, `5d6ae632`, `234383a8`): **rooms behind the glass** — the level art traces the view
+  ray into a box room behind each pane (interior mapping: back wall, side walls receding, floor, ceiling, lit by their
+  own light, brighter at dusk — `gBsRoom`, not the flat cream add):
+  - **(a) the shopfronts**, every era: each shop a trade — the arcade's run in order **a chocolatier** (boxes with gold
+    ribbons), **a toy shop** (blocks and teddies), **a barber** (white tiles, a long mirror over bottles, two red barber's
+    chairs), a café, books and papers, a florist, a clothier; TODAY a **glazed door with a brass push plate** and a kick
+    plate and the sky's reflection by the view angle (lighter up top); the 3000s the same rooms seen **through pearl glass
+    at about half** under each shop's light sign; the 1880s gas-lit behind the small panes.
+  - **(b) the 3000s Boathouse — the Tide Pavilion:** clear glazing between white mullions every ~1.2 m on a pearl sill,
+    a light seam at the eaves, inside one room the face's length: the **rowing eights racked** along a timber wall with
+    oars, planting in pots along the floor.
+  - **(c) the floating garden's 2.6 m piece is a glasshouse:** `levelArtOf` gives `garden-planter` blocks over 2 m tall
+    their own style (the piece, its tag and its collider unchanged): a pearl frame, glazing bars every 0.6 m and a
+    transom, benches of potted plants and hanging greenery inside, a white-gold light along the eaves and the roof's
+    ridge, the roof glazed over the plants (its planting bed on top removed).
+  - **(d) the 3000s' small structures each with their function:** the **ferryman's box** — on each face the river's
+    route in light (the line and its four stops) over the timetable; the **news kiosk** — hologram headlines scrolling in
+    light; the **tram shelter** — its seat with a moss top under the timetable screen; the **cab shelters** — a wide
+    window onto their bench, route map and light. And in the 1880s and TODAY too, rooms behind every small structure's
+    window (the shelters' benches, the news kiosk's papers on shelves, the ferry office's charts, the boat shed's boats)
+    and behind the **ticket booths' windows** (the booking clerk's office) — they were flat lit panes at dusk (the
+    builder's own open item, "the forecourt booth"); the 1880s boathouse's **boat doors** drawn as doors (boards, a
+    ledge-and-brace Z, strap hinges, matte and solid).
+  - **From this round's sweeps** (JOB-13 by day, JOB-14 at dusk, every era, all 30 pages looked at — `bluestone/out/
+    sweep/fix1/{day,dusk}/`): rooms behind the **civic arches** (the GPO's public hall, the hotel's bar, the boiler
+    house) and the **engine hall** behind the Engine House's great arches (the winding wheels), in the 3000s seen through
+    pearl glass at about half — they were flat cream / orange panes at dusk or blank pale arches; the 3000s' **horse
+    troughs** joined the pearl family (they stayed granite boxes) and the tram museum's **coal bin** stands in a pearl
+    vitrine (a black box at eye level). `f1896455`, `4616da47`, `616c3480`, `97cc76f4`, `4b5e2fc6`; the trace runs only
+    where a pane shows it (`f2972104`).
+- **Proof:** `sheets/issue3-shops-{day,dusk}.jpg` (the review's arcadeshops, the arcade's Swimston front, boathouseE3,
+  glasshouse cameras in every era), `issue3-struct-{day,dusk}.jpg` (ferry box, news kiosk, tram shelter, cab shelter),
+  `issue3-huts-rooms.jpg`, `issue3-booth-room.jpg`, `issue3-sweepfix-*.jpg`, `issue3-sweep-fixes-trough-coalbin.jpg`;
+  the sweeps (JOB-13 / JOB-14): the same view and cluster counts as JOB-9 / JOB-10 (511 / 523 / 582 views of 155 / 157 /
+  171 clusters), console 0; the 30 pages looked at — what they showed is the list above (taken before those fixes).
+
+### Review issue 4 (major) — the per-era dusk looks never apply
+- **Cause, as the review found:** `eras.look[1].theme.dusk` — the environment asks for the theme's name, `sunset`
+  (config.js bluestone `times: { dusk: 'sunset' }`), and `sun:` is not a THEMES key; era 3's sky in `all` washed the
+  sunset.
+- **Fix** (`f122b1ba`): `layout.js` `ERAS.look` keyed by theme names with real THEMES keys. **1880s** `sunset`: a violet
+  twilight (zenith #3f3766, horizon #a996c2, lilac-grey clouds, a pale warm key `sunColor` #ffe6c8 at 3.0 instead of the
+  base #ffac4c at 4.6, a violet sky fill, warm-neutral highlights); its haze in `all`, its warm horizon by `day`.
+  **TODAY** `sunset`: a pink-violet sunset (horizon #f4a0b4, pink glow and clouds, key #ffd4bc at 3.9). **3000s**: its
+  bright sky moved to `day`; `sunset` a cool violet dusk (zenith #3a3080, lilac horizon #ccc0ec, key #efe8ff, a clear
+  haze).
+- **Measured** (`sheets/issue4-dusk-ink-*.jpg`, the review's ink cameras, the lemon-grape palette so no Tangerine is on
+  screen; share of Tangerine-like pixels — hue 10–45°, saturation ≥ 0.5, value ≥ 0.3 — the same metric on the review's
+  pictures and on Halyard's):
+
+  | at dusk | e1 before → after | e2 before → after | e3 before → after |
+  |---|---|---|---|
+  | Swimston | 20.3 → **6.8 %** | 22.8 → **4.0 %** | 12.8 → **0.1 %** |
+  | the knee | 19.6 → **9.5 %** | 16.0 → **3.3 %** | 9.9 → **0.2 %** |
+  | Hoki Lane | 13.4 → **5.0 %** | 11.2 → **2.5 %** | 5.9 → **0.0 %** |
+  | the circus | 4.9 → **0 %** | 0.2 → **0 %** | 2.6 → **0 %** |
+
+  (after: the final head `0aeea997`; before: the reviewer's own pictures re-measured with this metric — the review's
+  21.9 % for Swimston e1 is the same picture by its own threshold)
+
+  Halyard at dusk, the same metric: 30.4–40.6 %. The hotel wall at the knee at e1 dusk against Tangerine ink: before
+  (29°, 0.85, 0.58) vs ink (29°, 0.93, 0.62) — the same colour; after (29°, **0.56, 0.47**) vs ink (25°, 0.98, 0.61).
+  What is left in the 1880s is warm material (brick, timber, gas-lit windows), DESIGN §5's sepia from materials.
+- **Check added:** eras-look part 5 **(f)**: every `eras.look` key is a theme name or a THEMES key (the old data fails it:
+  `1.dusk`, `1.dusk.sun`), and at dusk the three skies differ (the same camera up at the sky: mean change e1↔e2 10.1,
+  e2↔e3 11.9, e1↔e3 11.4 /255, threshold 6) with the 1880s' zenith in force: PASS.
+- `sheets/issue4-dusk-before-after.jpg` (the quay and Hoki Lane at dusk, the reviewed head and now), `places-*-dusk`.
+
+### Review issue 5 (minor) — upper storeys barely change 1880s → TODAY; Hoki Lane barely changes TODAY → 3000s
+- **Fix** (`460b305c`, `0f2ad377`): the **Young & Jackfish** repainted per era in the level art, not only tinted: the
+  1880s a **bluestone ashlar ground storey under grey-ochre render**; TODAY **cream render with ochre dressings** (string
+  course, cornice, window surrounds, quoins) and **gold lettering on green fascias** with a gilt bead; the 3000s pale
+  pearl. TODAY's **beer-garden umbrellas** (cream and maroon, `dress.js` `bluestone_umbrella`) stand in the balcony's two
+  roof-top planters, the canopies' rims 2.65 m over the balcony floor. **Hoki Lane's street art in the 3000s** turned
+  to slow-moving light (DESIGN §5.1): `murals.js` draws the 3000s version from the pieces before their chalk wear (an edge
+  filter on a blurred copy: the shapes' outlines in white-gold over a faint pale ghost, 480 px under the mural in the
+  atlas); the level art samples it in era 3 (still under mural 7's era mask) and runs the light slowly along the lines.
+- **Proof:** `sheets/issue5-hotel-hoki-{day,dusk}.jpg` (the quay, the hotel from the circus, the viaduct wall, every
+  era), `issue5-hoki-light.jpg`; eras-look 12c (mural masks) PASS with Hoki's era-3 change 26.4/255 (was the same mural).
+
+### Review issue 6 (minor) — the warning's sepia flicker does not read
+- **Fix** (`5bd102f2`): what is about to vanish (level pieces and era props alike) goes to **sepia rising with the warning
+  to full at its peak** (warnK 1 in the last 3 s), under a **projector's flicker** — the whole piece ±20–25 % at 9 Hz
+  (`eraFlick`) — with a little grain. The 1880s' **paper on shared walls** (the arcade's hoardings, the bills on the
+  viaduct, in the lane and on the poster column) flickers with them in jump 1's warning (it too is rewritten).
+- **Check raised:** eras-look (b) — ≥ **8/255** over the vanishing pieces' own pixels (was ≥ 1.5 over a box: 2.45
+  measured): **8.62** (frames 7.4–8.6), red/blue toward the film tone, the street beside them 0; and the hoardings
+  ≥ 4/255: **6.25**. `sheets/issue6-flicker.jpg` (before the warning, three warning frames).
+
+### Review issue 7 (minor) — frame budget and HUD layout unproven; eras-hud flaky
+- **The Mac mini at this round's head (JOB-12, `7ac4bf62`, quiet: load 2.3):** eras-jump 'frames' **4/4 ×3** — the jump's
+  worst frame 34.3 / 33.9 / 32.4 ms (J + 1.5), the Bravo 2 → 3 and sunset 3 → 1 jumps' worst 12–13 ms, nothing after
+  done over 13 ms (the review's 0.5 s post-done stalls do not repeat on a quiet machine; locally under load 7–100 I saw
+  the same kind once, 427 ms in the render at J + 4.32, with a no-jump baseline max of 254 ms on the same page); 'first'
+  1/1 ×3 (no program compiled from J − 20 to done + 1.5); the GPU probe 9/9. Locally at the final head 'first' failed
+  once at load 34 (the warning frame's update 28 ms, 17 of it the callout's DOM; no program compiled) and passed on the
+  re-run (7.2 ms).
+- **The Mac mini at the final head (JOB-16, `a42cdc70`, load 2.0):** 'first' 1/1 ×2, 'frames' 4/4 ×2 (the jump's worst
+  frame 41.8 / 37.1 ms — JOB-12 had 32–34) and then **3/4 once** inside the art-tests run (the check that failed is not in
+  the returned lines). The whole suite otherwise full: eras-static 23/23, eras-world 12/12, 7/7, 3/3, **eras-look 18/18**,
+  eras-jump a / b / c / e 8/8, 7/7, 3/3, 6/6, eras-hud 12/12, eras-modes 6/6, stage-mods 36/36, world-build 5/5 ×2,
+  climb-audit / cover-map / spawn-mid 1/1 and tower-check clean per era, check-maps unchanged, eras-bake 3/3, stage-audit
+  turf e1–e3 "lightmap applied (not stale)". **JOB-17** (`b41ff37a`, the final code): 'frames'
+  4/4 ×3 at the head and 4/4 ×3 at JOB-12's src (`7ac4bf62`), alternating — the jump frame's worst **30.3 / 31.7 / 37.7 ms
+  at the head against 13.1 / 17.1 / 31.6 at JOB-12's src**: the round's later shader work (the rooms behind the huts,
+  booths, civic arches and engine hall) costs the jump frame ~5–15 ms; still under the 50 ms limit in 8 of the 9 runs at
+  the final code, one 3/4 unexplained. The static views' GPU time is unchanged by it (gpu-time.sh, the same job: head
+  44.5 / 46.0 / 46.1 ms against 44.6 / 45.7 / 45.7, eras 1 / 2 / 3; Halyard 25.5–32.6 in that job: ×1.36–1.42).
+- **eras-hud** (`ca80d0b6`): the cause was the test — the era band's 0.18 s move is a CSS transition on wall time, which
+  the frozen, stepped page does not always advance: the two failing runs measured it 83 % and 91 % of the way (291, 298
+  for a settled 307). The layout checks now read it with the transition off after two stepped frames and boxes
+  unchanged across two animation frames, and assert the band's own margin (1.2 % of the HUD) under what it clears.
+  EraHud also watches the size of what it clears (a ResizeObserver per new child) and re-places in the next frame.
+  Locally 12/12 ×3 at load 6–7 (2 of 3 failed before the transition fix); Mac mini 12/12 ×3.
+- **perf6 against Halyard (Mac mini JOB-12, fresh default profile, 3 runs, medians):** calls ×0.77–0.95, triangles
+  ×0.36–0.38, cpuRender ×0.77–0.87, every era, day and dusk (the review's local ×1.05–1.17 at dusk was the loaded Mac).
+- **GPU time — a finding the brief's measure does not cover** (JOB-15, Mac mini; `gpu-views.js`: the GPU's own time per
+  frame by timer query, median of 24 frames at perf6's eight views, the default settings, high quality): **this round
+  adds ≤ 2 %** (the reviewed head's src → this round's, ×2 each: day e1 43.3 → 43.6–44.3 ms, e2 44.2–44.6 → 45.3, e3
+  45.3–45.5 → 45.1–46.2; dusk e1 46.4–47.4 → 45.6–46.8, e2 46.7–47.8 → 46.8–47.0, e3 46.6–47.4 → 47.5–47.8). But
+  **Bluestone's frames cost ×1.6–1.9 Halyard's GPU time** there (Halyard 24.3–28.2 ms) and ×1.45 locally (32 vs 22 ms,
+  the same session) — fewer calls and a third of the triangles, so it is fragment cost. A local A/B with the level art
+  switched off: 32.0–32.4 → 26.5–26.8 ms, so **the level-art shader is ~5.5 ms (~17 %) of a Bluestone frame**; without
+  it the stage is ~×1.2 Halyard. Hiding parts of the scene in turn (`gpu-attr.js`, locally, the same page): Bluestone
+  37–40 ms → **20.4 ms with the level meshes hidden** (props −2, backdrop −2, sky / water −3); Halyard 21.5–23.6 → 21.3
+  with its level hidden. So **Bluestone's level material costs ~17–19 ms of GPU a frame where Halyard's costs ~1–2**:
+  of it the art chunk ~4.5–5.5 ms and the era re-skin (`eras.remap`) ~1.6 ms (local A/Bs: 34.4 → 32.8 without the
+  remap → 28.3 without the art too); ~10 ms is not yet attributed (the era extension's other work, the stage's own
+  surface slots, the level's shadow / GTAO passes). This
+  predates the round (the engine and art phases' level material); the review's perf probe (calls, triangles, CPU
+  render time) could not see it. Levers, not pulled: profile the era chunk (its texlib re-skin, the per-fragment era
+  bit) and the stage's own surface slots; a quality-scaled art chunk (the rooms and the finer patterns off on low);
+  early-outs by distance. **The lead decides whether the bar covers GPU time — I would profile it before the stage
+  leaves BETA.**
+
+### Review issue 8 (minor) — carried: the end-of-match beat, the timetabled tram, bots on jump 1's new ground
+Not built in this round, by the brief ("dressing, shaders and the engine's art-phase items only"): §3.10's beat is the
+lead's to keep or cut (to be recorded in LEAD-NOTES), the tram's timetable is DESIGN's "if the budget allows", and the
+bots' fresh-ground goal is the balance pass's lever. Measured this round (local, Turf War 3:00 / Zone Control 5:00 at
+dusk): jump 1's new ground 4/8 and 2/8 bots within 30 s, jump 2's 8/8 (median 6.4 s) and 4/8; both ERAS lines clean
+(shoves 0, rescues 0, 52 flips, 0 on a vanishing top or inside an appearing piece, 0 splats by a jump), console 0.
+
+### The round's other changes
+- The stage-select **cards re-rendered** at this art (`4a112ad4`, again at the final head `0aeea997`): day = jump 1 (TODAY inside the curtain with the
+  hotel's umbrellas and Tartar the telephone), dusk = jump 2 under TODAY's pink-violet sunset with the 3000s inside.
+- New files: `tools/botlab/jobs/batch5/bluestone/gpu-views.js`, `gpu-attr.js` (scratch probes), JOB-12 … JOB-17; the
+  Mac mini helper added `gpu-time.sh` (JOB-15's measure as a reusable job step).
+
+## 0. The merge (first)
+- `git merge new-stages` at `1150bf38`: no conflicts (the beta, the beta fixes, Gulper Aquarium's finished art with
+  `tools/botlab/stage-sweep.cjs`, Highmark's engine). After it: check-maps `bluestone`, `.tower`, `.zones`,
+  `.bazookarp`, `.boss` ok in eras 1–3 (712 / 706 / 712 / 762 / 710 pieces; #1 568, #2 590, #3 700); eras-world parts
+  1–2 12/12, 3–4 7/7. The lead's uncommitted COMMON.md edit (the Mac mini is back) was identical to new-stages' and came
+  in with the merge.
+- new-stages moved by two commits during the round (Highmark's re-bake `8082e99a`, beta-content.js `c3e7f7f3`):
+  merged again at `66cfe6ed`, no conflicts.
+
+## 1. What I built, item by item against the brief and the user's words
+
+### Item 4a first (LEAD-NOTES: "the art phase's first commit"): superJumpLanding — `b9c6208f`
+`StageEras.superJumpLanding(a, s)` (the registry's charge → flight hook): if the era piece under the landing is absent
+at touchdown and the floor then left is water or a bare roof, the landing moves to the nearest node (≤ 12 m) whose floor
+stands at touchdown and that is valid in the era the jump goes to (valid in the era in force as well first — the
+rescue's own order); none: the jumper's pad. `_floorAtT` reads the floor among the blocks standing at stage time t.
+`tests/eras-jump.js 'sjland'` runs the reviewer's probe (Practice rewind; bridge-2, bridge-3, garden-11; touchdown 0.3 s
+after the flip): with the hook 3/3 alive on the punt, one redirect each; the control with the hook off 3/3 splat.
+
+### Item 1 — three looks of the same streets ("old trams and buildings and design" → today → "super futuristic")
+**The level art** (`src/world/stages/bluestone/levelart.js`, new, 1,205 lines; `LAYOUT.levelArt` / `levelArtOf`).
+Every block carries `aArt = (style, ±(param + 1))` through the era engine's `level.geomAttrs` (the sign is the half:
+Bravo's twins are drawn in Alpha's frame). The era module splices the art's fragment chunk **between** its own two
+halves: the era bit (`eraOneHot`: shared surfaces by their side of the front, era pieces by their own era) and the
+re-skins first, then the art paints the bare surface, then the era's tint, the warning's sepia flicker, the done pulse
+and the front's cut act on what it painted. Everything is under the ink; no geometry, collider or paint cell changes.
+- **Buildings** (DESIGN §5.1; 13 entries in `BLDS`: family, bays, storeys, wall top, plinth, street fronts): a bluestone
+  plinth course, string courses and a cornice line in every era; per era —
+  - the **1880s**: timber shopfronts (panelled stall risers, small panes in slender bars, gilt-lettered fascias on
+    green / maroon / navy), sash windows in four lights lit by gas at dusk, the GPO's rusticated ground floor with
+    arched windows and keystones, the Royal Arcade **under construction** (its Swimston front in timber hoardings with
+    bill posters and the GRAND OPENING 1889 banner, its upper walls raw brick in a scaffold of poles and ledgers, its
+    floor boards and builders' dust), the viaduct's arches as **stables with boarded doors** and bills pasted on its
+    piers, the Boathouse's green-and-cream rowing shed with boat doors;
+  - **TODAY**: plate glass in slim dark frames with goods on shelves, tiled stall risers, painted fascias with sign
+    panels, the hotel repainted cream and ochre, the arcade's mosaic floor (black and white diamonds, a red border, brass
+    stars), blind arcading with the shops' name panels, tags and gig posters in the lanes, the Boathouse café's windows;
+  - the **3000s**: pearl glass shopfronts with their interiors (light shelves, a display, planting), white-gold light
+    seams at the string courses, cornices and corners, the Customs House's farm wall and storey seams, **living walls**
+    (planting modules in pearl frames) on the piers, the columns, the arcade and the lanes, the Boathouse as a glass
+    pavilion (fix round 1: until then a flat white wall with a faint grid — now clear glazing between mullions with the
+    rowing club's room inside).
+- **Cover** (every cover block: crates, bins, bollard blocks, troughs, benches, planters, ring beds, carts, the fountain,
+  the statue plinth, the café tables, the museum's coal bin and buffer stop, mooring posts, the bike dock): each its own
+  material and trim per era — ash barrels / green wheelie bins / white recycling pods; a granite mounting block with
+  hitching rings / a slatted bench with bike hoops / a pearl bench with a moss seat; a costermonger's barrow of produce /
+  an espresso cart / a hover cart; a horse trough with water / planted / a light planter; flower beds in cast-iron
+  edging / grasses and lilies / white flowers round a light line; the 3000s' street furniture one pearl family (shadow
+  gap, light at the foot, fluted faces, an engraved roundel, a moss or oak seat).
+- **Small structures**: phone kiosks (unchanged in every era: Tartar's), ticket booths (timber / glass with a lit info
+  screen / smart glass with the timetable in light), the poster column (theatre bills / gig posters / light adverts),
+  the cab shelters, news kiosk, tram shelter, ferry office, boat shed and ferryman's box (timber huts with fascias,
+  windows and doors per era), the goods wagon (V.R. timber / the heritage siding's red), the 1880s produce stacks, the grip
+  car, the arcade's kiosk and flower stall (stacked bricks and lime sacks → a newsagent and buckets of flowers → a pearl
+  kiosk and a plant stall).
+- **Streets**: bluestone kerbstones and gutters along Swimston's carriageway, dish drains down Hoki and Degrayling Lanes,
+  the **tram tracks per era** on both lines (cable slot rails → grooved rails with lane lines and a yellow no-standing
+  line → a pale light-rail guideway with a white-gold line), a zebra crossing TODAY, light lines in the 3000s; mural 10
+  (the forecourt's turntable ring and the depot tracks) and mural 5 (the concourse's inlaid dial) as floor art.
+- **The station**: the columns' sandstone pedestals (moulded, panelled), the iron shafts fluted green (1880s) / cream and
+  gold (TODAY) / white with living walls and lit flutes (3000s), the drum's render and lettering band per era, the clock
+  beam.
+- **Light**: windows lit at dusk (gas-warm / warm white / pearl), the 3000s' seams on their own brighter accumulator, lamp
+  pools on the floors under the six lamp spots in each era's lamp colour.
+
+**The dressing** (`kit.js`, `arch.js`, `dress.js` new; `props.js` placements; ≤ 5 materials per era mask, rule 40 —
+eras-look 7: `metal`, `wood`, `gloss`, `glow`, `rubber`; era 3 since fix round 1: `gloss`, `glow`, `metal`, `rubber`, `glass`):
+**Commander Tartar** (fix round 1: the cream-and-brass cradle telephone, above), the station's iron (capitals, the eight iron arches under the
+drum, the drum's cornice and pilasters), the **dome per era** (fresh copper with gilt ribs / weathered verdigris / white
+under the lattice of light to 22 m), **FLOUNDERS STREET STATION on the drum in every era's lettering** (gilt / gold lit at
+dusk / letters of light), the **clock row per era** (timber cases with Roman numerals / lit opal dials / rings of light)
+with the destination plates (INKOPOLIS, THE CAPE, SALTWATER, NORTH QUAY, KELP HILL), cornices with dentils and coped
+parapets on every building, the GPO's balustrade and **its clock on the parapet under the dome's line** (DESIGN §8.3),
+the hotel's pediment (1868) and urns, the buildings' words per era (POST OFFICE / GPO · SHOPS / THE G.P.O. GARDENS;
+YOUNG & JACKFISH, HOTEL, SKY HOTEL; OPENING 1889 / ROYAL ARCADE; H.M. CUSTOMS · BONDED / CUSTOMS HOUSE · GALLERY ·
+LOFTS / FARM 03 · VERTICAL FARM; CABLE TRAMWAY ENGINE HOUSE 1885 / TRAM MUSEUM · DEPOT / FLOAT-TRAM DOCK; ROWING CLUB /
+BOATHOUSE CAFE / TIDE PAVILION), the rooftops per era (the arcade's ROYAL ARCADE frame and catenary gantries and a big
+screen TODAY; the planted pergola of light, the maglev tube, the Customs House's sky-bridge and farm, the chimney's beam
+in the 3000s; DESIGN §5.2's towers and spires kept), the arcade's iron-and-glass vault (half glazed under builders'
+planks in the 1880s) and the **striker clock with its two fish-folk giants** over the north mouth, the Young &
+Jackfish's iron lace (frieze and post brackets), enamel street plates (SWIMSTON ST, CUSTOMS LANE, HOKI LANE, DEGRAYLING
+LANE, FLOUNDERS ST, PROW PLACE, THE QUAY), the kiosks' TELEPHONE plates and domes, hanging shop signs per era (carved
+emblems / lit blade signs / light panels), **lamps per era** on the six shared spots (a fluted gas lamp with a square
+lantern / a heritage street light / a white light mast with a ring of light), wall lamps in the lanes per era, a railing
+for every rail collider by kind (iron lace, gallery rail, timber, rope, the Iron Bridge's lattice TODAY and glass in the
+3000s, glass on the Halo and the stairs — fix round 1: clear panels between pearl posts; they were opaque slabs), the 1880s' telephone wires on roof poles and TODAY's tram catenary on span
+wires with rosettes, planting per era on every roof-top planter, the 3000s' floating café pods over Degrayling Lane and
+drones over Swimston, cast-iron bollards on the mooring blocks, rowing eights on the Boathouse's racks.
+
+**The backdrop** (`backdrop.js`): one city mesh per era with the far scenery's own facade shader (HZ_CITY: window rows by
+day, lit windows at dusk) plus one plain set (≤ 2 draw calls a set; the cap is 6); the 1880s' terraces, cathedral, shot
+tower, exhibition dome, gasometers, smoking chimneys, tall ships and a paddle steamer; TODAY's glass towers, the gold
+crown, the shot tower's cone, the lattice spire, stadium lights and an observation wheel; the 3000s' arcologies with
+hanging gardens and sky-bridges, the bells over the shot tower and the dome, floating gardens, the sea wall across the
+river's mouths, the orbital ring's arc and the storm bank. The city now stands on land (north and south of the river,
+banks east and west, quay walls; nothing in the channel) — before, the boxes floated in the water (seen on the first
+stage card). Fix round 2: the land dressed (stone promenades with avenues of trees along the quays, parks, streets), pitched
+roofs on the 1880s terraces, wharf sheds (1880s) and apartments (TODAY) on the river banks, the tall ships under sail.
+
+**Surfaces** (`surfaces.js`, the three reserved slots): `bluestone` basalt pitchers (225 × 112 mm, vesicles, polished
+crowns, gritty joints — the constant), `granite` road setts (the 1880s carriageways; eras.remap keeps asphalt / pavers),
+`sandstone` coursed ashlar with a drafted margin and batting (on walls; flags on tops), tinted by each block's colour so
+the Customs House, the engine house and the viaduct read as bluestone ashlar.
+
+**Proof (item 1).** The same camera in all three eras at the eight places, day and dusk (`out/art/places-*`, sheets
+`sheet-places-{a,b}-{day,dusk}.jpg`); `tests/eras-look.js` part 5 (a): at four places the facades render differently in
+every era (mean change between eras 12.6–88.8/255); the sweep in each era (below).
+
+### Item 2 — the Halyard bar everywhere (the sweep in each era, day and dusk)
+- Run on this Mac first (eras 1, 2, 3 by day, `scratchpad` overviews) — what they showed was fixed: the Customs House
+  had shopfronts (now civic arches only), the 1880s stairs had TODAY's yellow nosings (iron / stone treads now), flat
+  ring beds (flower beds), a purple fountain (granite), the arcade's kiosk and flower stall undressed, the ferry office
+  bare above its windows (a fascia and a door), the rowing racks bare (eights), the 3000s' cover were bare white boxes
+  (the pearl family), green blotches for gardens (living-wall modules), 28 grid lines drawn inverted (see §6).
+- The final sweeps on the Mac mini (JOB-9 by day, JOB-10 at dusk, eras 1–3; 511 / 523 / 582 views of 155 / 157 / 171
+  clusters; the clusters with no eye-level view are the overhead or absent pieces: the drum, the dome, the lantern, the
+  clock beam, the turret, the arcade's roof, the chimney, and the pieces absent in that era) came back as 30 overview
+  pages (`tools/botlab/jobs/batch5/bluestone/out/sweep/{day,dusk}/`, each cluster's first view, 35 per page). Fixed from
+  them: the rowing eights stood upright like bottles; the 3000s' ticket booths and arcade kiosk were blank white (smart
+  glass with the timetable in light). Bravo's twins: JOB-11 (§4).
+- Signage, iron lace, bluestone kerbs, the station's clocks and dome per era, FLOUNDERS STREET STATION on the drum in
+  every era's lettering: item 1's list.
+
+### Item 3 — the jump's look
+- **The clean sweeping edge** (`eraFx.js`): the 20 cm block dissolve is gone. During a live jump an era piece of either
+  era stays up and each fragment takes its era from its own side of the front — level pieces, era props and their
+  shadows (the depth material discards by the front too) — so one line rewrites shared facades, era pieces and props
+  together, with the Roman-numeral curtain riding it. A frozen still keeps each piece whole on its group's side (the
+  engine's stage-art rule). Proof: eras-look part 5 (c): points on the Degrayling crates' top, the front held through
+  their middle: drawn exactly beyond the front (2.1 % off, all on the line's pixels).
+- The holograms, the wire beads, the time-lapse sky: the engine's, unchanged; the **wire pulses now run along real
+  wires** (Tartar's wires: `levelart.js` WIRES — from the drum to the parapets and roof poles: up Swimston, Prow Place and
+  Hoki Lane, the quay, the punt crossing, the knee's river walk; `eras.pulses` follow them; black wire in the 1880s and
+  TODAY, a light filament in the 3000s).
+- Pictures: `out/art/jump{1,2}-{swimston,knee}-{J-10,J+0,J+1.5,J+3,done+1}-day.jpg` and their sheets; the stage-art
+  cards (`out/art/card-day-1to2-r30.jpg`, `card-dusk-2to3-r30.jpg`; installed as `assets/stages/bluestone-{day,dusk}
+  [-sm].webp`; re-rendered at fix round 2, `out/fix2/cards/`): day is jump 1 frozen at r 30 (TODAY inside the curtain, the 1880s outside), dusk jump 2 (the 3000s
+  inside — the Halo, the white dome under its lattice, the glass stairs — TODAY outside).
+
+### Item 4 — the engine's art-phase list
+1. superJumpLanding: above.
+2. **Lamps per era** (ENGINE rule 42): `decor.lamps` holds six spots per half (DESIGN §5.7's spots were drawn for the X —
+   four stand in the river or on a walkable deck on the Z — so each now stands in a roof-top planter where the street
+   needs light); the era module sets the decor glass's light from `eras.look[e].lamps` and blends it through the
+   time-lapse; the decor's iron bodies are hidden (each era's own lamp props stand on the spots, built round the decor's
+   light). eras-look part 5 (d).
+3. **Tartar rings once in the intro fly-in** (DESIGN §3.5): at 0.7 s into the intro (the ring's look runs on the intro's
+   own clock; `stats.introRing`). eras-look part 5 (e).
+4. **The sepia flicker pixel check**: first strengthened to 45 % film tone (2.45/255 — the review: still unreadable);
+   fix round 1: full sepia at the warning's peak under a ±20–25 % projector flicker, the 1880s' paper on shared walls
+   flickering too; eras-look (b) ≥ 8/255 over the vanishing pieces' pixels: 8.62, the hoardings 6.25, the street 0.
+5. **Rule 22's accept text** reads the measured 3.75 m.
+6. **Every jump picture re-shot** with `eras-shots2.cjs` (`out/engine/`, the current HUD): §4.
+
+### Item 5 — play geometry frozen; the bake; performance
+- **No collider, no layout geometry change.** check-maps every variant in every era: the same piece counts as after the
+  merge (712 / 706 / 712 / 762 / 710; per era 568 / 590 / 700 …); the union nav graph identical before and after the art
+  (5,952 nodes, per-era valid 4,808 / 4,958 / 5,844, 36,602 edges); cover-map floorCells 5,006 / 5,166 / 5,688, within
+  5 m 99.6 / 99.6 / 99.5 %, largest open circle 7 m (DESIGN §8.8's numbers); spawn → mid 6.13 / 6.46 s every era;
+  climb-audit 144 climbs, 0 barred, every era (the union graph's: since the engine, `?era=n` no longer filters the
+  layout, so the blockout's 130 / 130 / 144 is the union's 144 in each); tower-check 73.99 / 73.99 m, no holes,
+  clearance clean, both rides a knockout, every era. Dressing on faces stays within 8.5 cm; nothing on a walkable top
+  (lamps and planting stand on roof-top planters, poles on roof tops; overhead pieces ≥ 2.6 m over a route).
+- **The nine-pass bake** (Mac mini JOB-7: `bluestone`, `bluestone.tower`, `bluestone.boss`, era 1/2/3 into R/G/B): the
+  three PNGs came back **byte-identical** to the committed ones (the art adds no collider; the layout hashes 22885,
+  506dab2b, d472b6af unchanged), so assets/lightmaps is unchanged; stage-audit with the bakes: turf / zones / tower ×
+  eras 1–3 and boss era 2 all full ("lightmap applied").
+- **Performance against Halyard per era** (the reviewer's fixed-view probe perf6.js, a fresh default profile, day and
+  dusk, 3 runs alternating; medians, Bluestone ÷ Halyard). At fix round 1's head (Mac mini JOB-12, `7ac4bf62`):
+
+  | | calls | triangles | cpuRender |
+  |---|---|---|---|
+  | day e1 / e2 / e3 | ×0.77 / ×0.81 / ×0.79 | ×0.37 / ×0.36 / ×0.37 | ×0.77 / ×0.81 / ×0.86 |
+  | dusk e1 / e2 / e3 | ×0.93 / ×0.95 / ×0.86 | ×0.37 / ×0.37 / ×0.38 | ×0.83 / ×0.85 / ×0.87 |
+
+  (Halyard: 245–267 calls, 3.27–3.33 M triangles, 8.12–8.19 ms; the art phase's JOB-8 measured calls ×0.83–0.90,
+  cpuRender ×0.79–0.84. Fix round 2, JOB-25: calls ×0.83–0.95, triangles ×0.39–0.45, cpuRender ×0.73–0.86.) The GPU's own frame time: fix round 1's JOB-15 (§ fix round 1, issue 7). eras-jump 'frames' on
+  the Mac mini ×3 at this head: the jump frame's 32–34 ms is the worst, nothing over 13 ms after done.
+
+## 2. Decisions where the brief left a gap (for the lead)
+1. **The art lives mostly in the level shader** (under the ink, per block and per era), not in props: it is the only way
+   every face changes at street level along the front's line without a collider, a draw call or a triangle per face.
+   Props carry what must stand off a face (signs, lamps, wires, iron, the dome).
+2. **The level art goes between the era chunk's two halves** (`eraLevelExt(U, grate, art)`), so the era tint, the
+   flicker, the done pulse and the cut act on painted facades (they were overwritten when the art ran after them).
+3. **The clean edge for era pieces is per fragment during a live jump**; collision still flips per group at r_g (the
+   visual and the collider differ by at most half a group, ≤ 4 m, ≤ 0.16 s at 25 m/s — the 0.3 s dissolve's own window).
+   A frozen still keeps the per-group rule.
+4. **The sepia flicker strengthened** to 45 % film tone and a ±7 % brightness flicker (it was invisible on warm pieces).
+5. **Lamp spots moved onto the Z** (DESIGN §5.7's were the X's): six roof-top planters per half.
+6. **Murals 5 and 10 are floor art** in the shader, not atlas murals (no layout field added; the eras.murals entries
+   stay).
+7. **Tartar's wires**: five per half from the drum, anchored on parapets and roof poles at ≥ 4.5 m over routes; the
+   pulses follow them in every era (a light filament in the 3000s).
+8. **The backdrop city stands on land**: the river runs east–west through the arena's corners; land north and south,
+   banks east and west.
+9. **The stage cards** are installed (`assets/stages/bluestone-*.webp`, as the other stages'); the stage keeps its BETA
+   badge. Fix round 1 re-rendered both.
+10. (fix round 1) **Rooms behind windows by interior mapping in the level shader** — no geometry, no draw call, a room
+   per pane that moves with the view; the trades are assigned in order along the arcade (a chocolatier, a toy shop, a
+   barber, a café, books, a florist, a clothier), elsewhere by a hash.
+11. (fix round 1) **The glass rails get their own transparent era bucket** ('glass', built by the era module): era 3's
+   props now use gloss, glow, metal, rubber and glass (5); no other era uses glass.
+12. (fix round 1) **Tartar hangs by a short coiled cord from the drum's ceiling** (y 8: the drum is solid 8–10, so
+   DESIGN's 7 m cord to the crown cannot be seen); his bells hang under him (the face the circus floor sees), the cord
+   he hangs by is set behind the handset so the pickup clears it; the pickup lifts the handset 0.16 m (not 0.45).
+13. (fix round 1) **The floating garden's 2.6 m piece is drawn as a glasshouse** without changing its tag or collider:
+   `levelArtOf` picks `garden-planter` blocks taller than 2 m; its planting bed on top is removed.
+14. (fix round 1) **The dusk palette per era** (DESIGN §5.6 / §5.7 gave the 1880s' colours; TODAY's pink-violet and the
+   3000s' violet dusk are mine, with pale key lights so no era paints the facades orange).
+
+15. (fix round 2) **The dusk palette's fill per era**: the hues of fix round 1 kept, the hemisphere fill and environment
+   raised and a per-era exposure (1880s 1.2, TODAY 1.08) until the 'mid' preset reads ≥ 40/255 like Halyard's; TODAY's env
+   held at 0.75 (more mirrored the pink-violet sky into the streets as Grape-like purple). The 3000s dusk neutral lilac-grey
+   with a warm white key, a white-gold era tint and warm pale paving (Cobalt contrast).
+16. (fix round 2) **The dusk check's threshold in eras-look (g) is 34 in the page's own frame** (1512 × 945, the theme switched
+   in place), which reads ~4 under shoot.cjs's 1600 × 900 shot of a match started at dusk (the review's ≥ 40 acceptance is
+   measured there: 43.5 / 47.7 / 49.9).
+17. (fix round 2) **The float-tram's glass hides an opaque partition**: it is cover; clear glass all through would show
+   players behind it (the collider blocks shots and ink either way).
+18. (fix round 2) **The 3000s furniture and the statue plinth stay level art** (their tops are walkable: no canopy, parasol
+   or statue may stand on them; the wreath is the one prop, within 8 cm of a face). The plinth is a monument with a relief
+   per era, not a statue.
+19. (fix round 2) **The wharf decks' timber rails change per era** (timber / painted steel / glass: a new `steel` kind), and
+   the Customs House's 3000s rooftop is DESIGN §5.2's vertical farm instead of a spire (the sky-bridge re-anchored to it).
+20. (fix round 2) **The GPU cut**: static level programs per era at rest (four level programs compiled at load), a depth
+   prepass at rest, the shared level shader's noise / coping computed only where read (`levelMaterial.js`, the same
+   picture), no hex anti-tiling on Bluestone's level. The gate is measured by throughput (the lead's ruling).
 
 ## 3. Online and bots
-- **Online:** no records were added. The era state is a pure function of the host's stage clock.
-  - **The clock:** the host's tick carries its clock as at the relay; each follower adds back its own half of the trip,
-    steps forward when behind and runs slow when ahead (issue 1); no correction once the host's clock has run out.
-  - **Splats:** field 15 (the painter's time) from J − 1 to done + 1; every screen judges the guard at that time.
-  - **Own actors:** each screen shoves, rescues and pops its own squidkids and devices; a device's end record is
-    `[2, gid, 2]`; a Zipline on a gone piece ends on every screen at its own flip.
-  - **Followers:** a follower snaps to the host's clock (`seek('clock')`); a snap past a done fires that done.
-  - **Late joiner:** applies the host's era on its first tick (`seek('late')`). **Host change:** the new host's clock runs on.
+- **Online:** nothing new crosses the wire. The art is a pure function of the era state each screen already derives from
+  the shared stage clock (the level shader's era bit, the era props' buckets, the backdrop sets, the lamps' colour);
+  superJumpLanding runs on the jumper's own screen at launch and the existing 'superjump' record carries the moved
+  landing to every screen (as the lava's does). No record, no field added; docs/NET.md unchanged.
+- **Bots:** no nav input changed (the union graph is identical); the bots' danger layer, pre-positioning and fresh-ground
+  goals are the engine's. Matches: §4.
 
-  docs/NET.md says so.
-- **Bots** (local, this round; 3:00 Turf Wars at this round's code):
-
-| Match | Result | Stuck | Era shoves | Splats by a jump | New ground within 30 s (median) |
-|---|---|---|---|---|---|
-| Turf War 3:00 #1 | 25.2 / 43.8 % | 0 % | 0 | 0 | jump 1: 3/8 (–); jump 2: 8/8 (3.2 s) |
-| Turf War 3:00 #2 | 28.3 / 36.6 % | 0 % | 0 | 0 | jump 1: 1/8 (–); jump 2: 8/8 (9.9 s) |
-
-  - At every flip of both: 0 bots on a vanishing top, 0 inside an appearing piece, 0 bot-s in an appearing box before its
-    flip; 0 rescues. eras-bots (four runs): era-3 new ground 8/8 (medians 6.1, 7.7, 11.6 s) in three, 4/8 in one; the
-    Halo 0–31.5 bot-s; jump 1's new ground 2–6 of 8 (issue 7).
-
-## 4. Tests (local, at this round's code; `local-logs/fr2/`)
-
-| Test | Result |
-|---|---|
-| net-clock (new) | lagged 4/4 ×3 (no step up in 5,384–5,410 frames; median 0.014–0.021 s), clean link 4/4; the code before 2/4 ×2 |
-| eras-jump A (sched, flip, fall, shove, rescue, device, zip, guard) | **15/15** (new: the rewind chain, 9/9 spots rescued once); the rescue rule before: 2/3 |
-| eras-jump B (fx, frames, sky, freeze, modes) | 11/12 before the settle (the Bravo / kept-world timing: 368 / 538 ms, the set-up's backlog: issue 4) |
-| eras-jump 'frames', settled | 4/4, 4/4, 3/4 (the miss: jump 1's three frames after done, 121–196 ms; issue 4) |
-| eras-jump 'first' | **1/1** (load 11): programs 149 → 149, the warning frame 8.3 ms |
-| eras-jump 'freeze' (new) | 2/2 by the call; 2/2 ×2 with `ERA_FROM=1 ERA_TO=2 FRONT=30` |
-| harness `ERA_FROM=1 ERA_TO=1 …`, `ERA=2` with `ERA_FROM` | stop at boot with their HARNESS line |
-| eras-hud | **12/12** ×2 (new: the jump chip's contrast 12.71 : 1); the CSS before 11/12, 10/12 (1 : 1); a first run 10/12 (the check read the chip mid-transition — fixed in the check — and a review-2 layout check) |
-| eras-world | **19/19** (part 4's nav ×3 timing passed) |
-| eras-modes | 6/6 |
-| eras-bots | 4/5, 5/5, 4/5, 5/5 (the misses: the live era-3 median once, the pre-position control once — §0 "Found while testing"); prepos 1/1 after its fix |
-| eras-look | 12/12 |
-| eras-karp | 5/5 (B: SKIP) |
-| eras-bake | 3/3 |
-| eras-static | 23/23 |
-| net-eras | **14/14**; lagged **8/8** |
-| stageart `ERA_FROM=1 ERA_TO=2 FRONT=30` / `2 → 3` | the day and dusk pictures (issue 5) |
-
-Regressions (`local-logs/fr2/`):
-
-| Test | Result |
-|---|---|
-| stage-mods | 36/36 |
-| net-stagemods | 10/10 |
-| net-stageclock | 3/3 |
-| net-turf | 9/9 |
-| net-practice (CLIENTS=2 Q0=autopilot Q1=autopilot APP_CSP=1) | 29/29 |
-
-check-maps and tower-check were not re-run: no layout, collider or era data changed this round (eras-static, which runs
-check-maps' era rules in Node, 23/23).
-
-**Pictures** (`out/engine/`, all looked at): this round's `fr2-jump1-knee-J+1.5`, `fr2-chip-J+1.5`,
-`fr2-stageart-day-1to2-r30`, `fr2-stageart-dusk-2to3-r30`; round 1's `fr1-*` and the second half's set are unchanged
-(the chip in `jump1-knee-J+1.5`, `jump-swimston-J+3` and the others taken before this round shows the old ghost label;
-`zones-warn-callouts.jpg` predates 268c007c, as the review notes — stale, not re-shot).
+## 4. Tests, pictures, balance
+**Fix round 2:** § fix round 2, "The round's tests" (local, and the Mac mini's JOB-20 … JOB-26: the suite, the sweeps by
+day and at dusk, the bake and audits, online, perf6, the GPU by throughput). Earlier rounds below.
+**Local (this Mac, shared, one Electron at a time; `local-logs/art/`):** eras-static 23/23; eras-world 12/12, 7/7, 3/3
+(part 5: the other stages build with no era world); eras-look 16/16 (with part 5 (a)–(d)), then part 5 again with (e) the intro ring: 5/5; eras-jump first 1/1, sched/flip/fall/shove 8/8, rescue/sjland/device/zip 7/7, guard/fx 3/3,
+frames 4/4, sky/freeze/modes 6/6; eras-hud 12/12; eras-modes 6/6; stage-mods 36/36; world-build halyard 5/5, bluestone
+5/5; check-maps every stage (only Halyard's old 25.7° ramp, as before) and every Bluestone variant in every era ok;
+climb-audit / cover-map / spawn-mid 1/1 each in every era; tower-check clean in every era.
+**Bot matches (local, at the art's head; `local-logs/art/match-*.txt`), the ERAS lines clean in both:**
+- Turf War 3:00: `ERAS shoves 0 rescues 0 flips 52 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an
+  appearing box before its flip 0 bot-s | splats by a jump 0 | era 3, started in era 1, 2 jumps`; stuck 0 %, no episode
+  over 5 s; turf 34.4 / 22.8 %; new ground within 30 s: jump 1 2/8, jump 2 5/8 (median 9.9 s).
+- Zone Control 5:00: the same ERAS line (shoves 0, rescues 0, 52 flips, 0 on a vanishing top or in an appearing piece,
+  0 splats by a jump); stuck 0.4 % (0.9 % with holds on purpose), no episode over 5 s; Bravo on time, 57 – 57 (penalty);
+  new ground within 30 s: jump 1 1/8, jump 2 5/8 (the engine's issue 7, the balance pass's lever).
+**Mac mini:** JOB-7 (the bake, stage-audit per mode and era: all full; lightmaps.js 3/4 — Highmark's worlds unlit at that
+head, since fixed by the second merge with its re-bake), JOB-8 (perf, above), JOB-9 / JOB-10 (the sweeps), JOB-11
+(Bravo's twins by day in eras 1–3: the same view and cluster counts as Alpha's, console 0, 15 pages under `out/sweep/twin/`).
+**Pictures (all JPEG < 300 KB except the Mac mini's sweep pages ≤ 1 MB):** `stages/bluestone/out/art/` — places
+(8 × 3 eras × day/dusk) and their four sheets, the jump sequences (2 jumps × 2 views × 5 moments) and their sheets, the
+two cards; `bluestone/out/sweep/{day,dusk}/` (30 pages); `stages/bluestone/out/engine/` — 35 pictures re-shot with eras-shots2.cjs at the art's head (the run's last section, the lightmap probe, throws on a duplicate `const S` in that old probe and the harness ends on its watchdog after every picture is written; not fixed: scratch).
+Looked at: every places sheet, both jump sheets, both cards, the engine's pulses picture, the sweep pages e1 day 1–5,
+e2 day 1 and 3, e3 day 1 and 3, e1 dusk 1, e3 dusk 2, the twins' e2 day 3 (and the three local day sweeps' full
+overviews before the fixes). Not looked at one by one: the other 18 Mac mini pages and 14 twin pages.
+**Fix round 1:** on the Mac mini at `7ac4bf62` (JOB-12): eras-jump first 1/1 ×3, frames 4/4 ×3, the GPU probe 9/9,
+eras-hud 12/12 ×3, the whole art-tests.sh suite (eras-static 23/23, eras-world 12/12, 7/7, 3/3, eras-jump a–e 8/8, 7/7,
+3/3, 4/4, 6/6, eras-hud 12/12, eras-modes 6/6, stage-mods 36/36, world-build 5/5 ×2, climb-audit / cover-map / spawn-mid
+per era 1/1, tower-check clean per era), eras-bake 3/3, stage-audit turf e1–e3 "lightmap applied (not stale)";
+eras-look 17/18 there — 12c, the mural masks, fixed in `0f2ad377` and 18/18 locally at the head. Locally at the head:
+eras-look 18/18, eras-static 23/23, eras-jump guard/fx 3/3, sky/freeze/modes 6/6, eras-modes 6/6, eras-hud 12/12 ×3,
+check-maps identical to the reviewed head; a Turf War 3:00 and a Zone Control 5:00 at dusk with clean ERAS lines and
+console 0 (§ fix round 1, issue 8). Sweeps: JOB-13 / JOB-14 (§ fix round 1). Pictures: `out/fix1/`.
+**Balance:** none run (the consolidated pass's); the art changes no play.
 
 ## 5. Commits; files
-**This round:** 71254eaf (issue 1: the clock runs on; net-clock), 9919c37f (issue 2: the rescue), 99cea4d9 and 26960f05
-(issue 5: the frozen front), 0a1c57fa (issue 3: the chip), cd15a047 (issue 4: 'first' prints the costliest era-update
-frames), 0a848ffd (the overtime clock), 4d704933 (issue 4: 'frames' settles after its set-up), 49a38128 (eras-bots'
-pre-position control); scratch: the pictures and tools (fr2-*, eras-shots2.cjs's ONLY=fr2, probe-gpu.js,
-JOB-6.sh) and the commit carrying this report and `local-logs/fr2/`. **Round 1:** 8a0197cf, 7d5ff94d, d34dba7f, 09015066,
-7aa5b49d, 389214df, cb082883, 0b662a92, 74515131. **The second half:** 5aa9068b, 59789c95, 0cd06847, 82b103ac, 3f91bc2b,
-1cd31873, c2c676ce, 1d60e8f4, cd62e353, a764f6fe, 1cd5e1d7 (the bake), 268c007c.
+**Code:** `b9c6208f` (superJumpLanding + eras-jump 'sjland'), `f6b3407e` (the first art pass: levelart, kit, arch, dress,
+surfaces, backdrop, layout, eras.js hooks, era prop colours), `d9e60328` (the clean edge, the flicker, the art between the
+era halves, Tartar's wires, the 3000s' walls and furniture, land under the backdrop; eras-look part 5), `8d5c45a1` (28
+grid lines un-inverted), `974f12e7`, `ad2fa3cf` (from the sweeps), `4edc9d9d` (the stage cards), `343c6919` (eras-look (e), the STAGE-MODS row).
+**Merges:** `1150bf38`, `66cfe6ed` (new-stages); `269d5234` and later merges of `botlab-b5-bluestone` (the Mac mini's results).
+**Fix round 1:** `f122b1ba` (the dusk looks, eras-look (f)), `dec4ac74` (the glass, the undersides), `71297b01` (Tartar),
+`6d016212`, `ffd9dd73`, `5d6ae632`, `234383a8` (rooms behind the glass, the pavilion, the glasshouse, the 3000s' small
+structures, the huts and booths, the boat doors), `460b305c`, `0f2ad377` (the hotel per era, the umbrellas, Hoki Lane's
+light), `5bd102f2` (the warning's old film, eras-look (b)), `ca80d0b6` (eras-hud, EraHud's size watch), `df8489ee`
+(Tartar's pickup, eras-jump 'fx'), `97cc76f4`, `4b5e2fc6`, `f1896455`, `4616da47`, `616c3480` (from the round's sweeps:
+the troughs and coal bin, the boat doors, the engine hall, the civic arches, the 3000s' arches), `f2972104` (the room
+trace only behind panes), `4a112ad4`, `0aeea997` (the cards); scratch: JOB-12 … JOB-15, their results, `c1023ecf` and the
+later picture commits, this report.
+**Scratch:** `3376402e` (tools), `7fcb79cf` (pictures), `5f000a2d` (the engine pictures, the logs), JOB-7 … JOB-11 and
+their results, this report.
+**Fix round 2:** `4f34e405`, `2d4f7a6b`, `a85f6179`, `f351342c`, `29705647`, `1779f17c`, `0ffc37c6`, `dbe15f36`, `d5077600`;
+scratch JOB-20 … JOB-26, `fc4f5227`, `fd514118`, `c6a310f8`, this report.
+**Shared files: `src/world/levelMaterial.js` since fix round 2** (4 lines tagged `[b5-bluestone]`, the same picture on every
+stage); before it none. Every other change is in the stage's own folder (`src/world/stages/bluestone/*`), its module (`src/game/
+eras.js`, `src/fx/eraFx.js`), its tests (`tools/botlab/tests/eras-look.js`, `eras-jump.js`, fix round 1 also
+`eras-hud.js`), `assets/stages/bluestone-*`
+and one doc row (`docs/STAGE-MODS.md` H8c: the level-art splice). For the integrator: the level program key on Bluestone
+is now `inkwave-level-v8-eras-bsart` (eras-look accepts it).
 
-**Shared files, for the integrator (each change small and tagged):**
-- `src/game/match.js` **(new this round):** `clockSlew` (constructor), the countdown's decrement gives it back, and
-  `match:count` only for a second below the last one [b5-eras].
-- `src/net/netmatch.js`: `_lead()` and the clock tick's two ends (`_sendTick`'s `msg.c`, `_hostClock`: this round the
-  slew, the 1.5 s resync and the `time > 0` guard) [b5-eras].
-- `src/game/stageMods.js`: `karpStates` in R_HOOKS plus one query method [b5-eras].
-- `tools/botlab/offscreen-boot.cjs`: the `ERA=` mapping and stop; **this round** `ERA_FROM` / `ERA_TO` / `FRONT` [b5-eras].
-- `tools/botlab/match.cjs`, `tools/botlab/tower-match.cjs`: `RESULT_JSON.eras` and the `ERAS` lines [b5-eras];
-  `tools/botlab/tower-check.cjs`: its `ERA` line [b5-eras].
-- `tools/botlab/tests/net-stagemods.cjs`: its clocks compared at the same wall time [b5-eras].
-- `docs/NET.md` (the eras paragraph; this round: the clock only runs on), `docs/STAGE-MODS.md` (H14, H17, PAGEQ / ERA;
-  this round T3 and the tools paragraph), `tools/botlab/README.md` (ERA / PAGEQ; this round ERA_FROM).
-
-**Module and stage files:** `src/game/eras.js`, `src/fx/eraFx.js`, `src/world/eras-data.js`;
-`src/world/stages/bluestone/{layout.js, murals.js}` — no geometry change; `assets/lightmaps/bluestone.{png,json}`.
-
-**Tests:** `tools/botlab/tests/eras-{world,look,jump,hud,bots,modes,karp,bake}.js`, `eras-static.mjs`, `net-eras.cjs`,
-**`net-clock.cjs` (new)**.
-
-## 6. What the art phase must know
-- **The module's API.**
-  - The world `G.eraWorld` (EraWorld): `names`, `uniforms` (`uEra`, `uEraW`, `uEraTint`, `uEraRemap`, `uMurEra`, `uEraColA`,
-    `uEraColV`, `uEraT`, `uEraFar`), `groups`, `meshes`, `propMeshes`, `fx` (EraFx: `setJump`, `setOpened`, `update`),
-    `stats`, `audit`, **`frozen`**; build hooks `prop`, `colliders`, `attachLevel`, `attachPaint`, `levelMaterial`,
-    `levelFilter`, `afterMeshes`, `buildNav`, `attachMinimap`, `mapBlock`, `attachEnv`, `ready`; `apply(e)`, `looks`,
-    `inkOk(b, et)`, `present`, `now`, `bakePasses()`, `bakeMode`, `dispose`.
-  - The runtime `G.match.eras` (StageEras): state `sched`, `era`, `phase`, `next`, `front`, `fresh`; queries
-    `eraAt(r, t)` / `eraAtPoint`, `eraInForce`, `jumps`, `present`, `inkOk`, `near`, `splatTime`, `dangerAt(pos, pad)` /
-    `danger`, `outlines()`, `pings()`, `restMask(era)`, `karpStates()`; hooks `goalWeight(id)`, `botAct`, `drawMap`;
-    `update`, `seek(t, why)`; tests, audits and the stage art `state()`, `botReport()`, `debugJump(to, { inS, instant })`,
-    **`freeze({ from, to, front })`**, `dispose`.
-  - Events: `era:prebell / warn / ring / jump / flip { group, on, off, r } / done { era, snapped? } / set`; per device pop,
-    `device:down { how: 'flip' }`.
-  - Switches: `?era=n` (`PAGEQ='era=n'` or `ERA=n`); **`?erafrom=a&erato=b&front=r` (`ERA_FROM` / `ERA_TO` / `FRONT`)**.
-    Test switches: `E.noDanger`, `E.noPrepos`.
-  - Layout data: `eras.accept.rule22` (check-maps' accepted exceptions, printed every run).
-- **The stage-select art (DESIGN §5.8):** `STAGES=bluestone ERA_FROM=1 ERA_TO=2 FRONT=30 … tools/botlab/stageart.cjs` and keep
-  the day picture; `ERA_FROM=2 ERA_TO=3` and keep the dusk one (stageart shoots both times of day per run). This round's
-  blockout shots: `out/engine/fr2-stageart-*`.
-- **Era meshes.** One level mesh per mask, `level:era<m>` (+ grate twins):
-
-  | Mask | Eras | Pieces |
-  |---|---|---|
-  | 1 | 1 only | the Degrayling crates |
-  | 3 | 1–2 | the cab-shelter top, the boat shed, the ferry booking office (2 halves), the goods wagon |
-  | 4 | 3 only | the Halo (16 sides, 36 rails, 12 planters), the hotel / boat / river stairs, their landings and glass, the bike dock, the floating garden (12 tiles, 10 planters) |
-  | 6 | 2–3 | the Iron Bridge (6 spans, 12 rails, the lamp), the café tables |
-
-  The tram block is a shared hidden collider; its three looks are props.
-- **Prop buckets** `props:<material>@e<mask>`; era props are static merged parts, ≤ 5 materials per mask (rule 40).
-- **Material tags:** the level program key ends in `-eras`; era prop materials `…|era-aTag`; shadows `era-depth-aEra` /
-  `era-depth-aTag`; backdrop era sets `|eraset`; `aEra` = (mask, r_g) on every level vertex; `aTag` on era props.
-- **Highlight colours:** `eras.colors.appear #f4e9c8` (holograms, wires, beads, the outlines' dashes, the done pulse, the
-  opened floor, the minimap ping, the front line, the bell glyph, the HUD chip and callouts); `eras.colors.vanish
-  #a9a49a` (the hatching, the warning's film tint); the curtain's foot brass `#c79a4e` (jump 1) / pearl `#e9ecf2`; the
-  jump chip's text `#2a2418` (not a layout colour: dark on whatever `appear` is); never a team ink.
-- **Sound cues** (`src/audio/sfx-eras.js`): `era_bell`, `era_ring`, `era_kiosk`, `era_pickup`, `era_swell`, `era_front`
-  (a loop riding the front), `era_pop`. `era_strike` is registered but unused (no striker clock prop yet).
-- **Bake passes:** `W.bakePasses()` is `[apply(1), apply(2), apply(3)]` into R / G / B; keys `bluestone`,
-  `bluestone.tower`, `bluestone.boss` (and `bluestone.bazookarp` once the karp kit adds its pieces). Re-bake after any
-  collider change.
-- **check-maps' rules** will judge the dressing: rule 22's routes, rule 23's overhead deck edges (a gap over 2.05 m
-  fails), rule 29's swaps, rule 39's slots. Dress the stage and run check-maps and eras-world part 3.
-- **Left to the art pass:** jump 2's hexagonal-shard curtain; a softer dissolve than the 20 cm blocks; real overhead
-  wires; murals 5 and 10; the striker clock's prop; era ambiences; the GPO clock; the curtain's brass foot against
-  Tangerine ink; **the stage-select art itself** (dressed, with the frozen front above); **the end-of-match beat
-  (DESIGN §3.10), or the lead's decision to cut it** — the dead future at the whistle (the sea at the rooftops, a dead
-  sky), Tartar's "…So that is how it ends.", an inward rewind wave to the 1880s and "Returning to the Professor." (issue
-  6 lists what each part needs; the Professor reaches a player nowhere else).
-
-## 7. Unfinished, flaky or uncertain
-- **The Mac mini.** The task says unavailable; COMMON.md in the worktree (uncommitted, the lead's) says it is back. I
-  followed the task: nothing pushed. JOB-6.sh (for the record, never run): 'first' and 'frames' ×3 on fresh pages, the
-  perf / load REPORTs beside Halyard, net-eras unlagged and lagged, and now net-clock lagged and probe-gpu.
-- **Frame time on a quiet machine** (issue 4): not proven. Here: the module's per-frame work ≤ 8.3 ms in every frame
-  measured; the recurring render spikes were the test's own set-up (gone when settled); what remains is a frame or three
-  after done in some runs (up to 196 ms once, here), which the minimap's swap at done precedes — its full-canvas ink
-  redraw is the lever (shared `minimap.js`), not changed.
-- **Rule 22's accepted exception** (the Halo's 225° side 3.66 m over the balcony stair's corner) is the lead's to keep or
-  lever away.
-- **The online clock under lag:** fixed for the timer and the countdown (issue 1); a follower's timer can run at down to
-  half speed for about a second after a host stall over 0.4 s — the price of never running backwards.
-- **eras-hud's two review-2 layout checks** stay timing-sensitive under load (the band measured during its 0.18 s
-  transition); **eras-bots' live era-3 median** failed once in four runs (bot variance).
-- **Bazookarp part B has never run**; the karp package needs `karp-anyValid.patch`.
-- **Bots on jump 1's new ground** (issue 7): the cause is measured, the lever is the balance pass's.
-- **The end-of-match beat** (issue 6): not built; listed.
-- **No balance sets were run** (the lead's consolidated pass); the Halo-dominance check is still risk 16.
-- **The lightmap is baked for this geometry.** Any collider change makes it stale (the loader warns and skips it).
+## 6. Unfinished, flaky or uncertain
+- **The end-of-match beat** (DESIGN §3.10: the dead future, "…So that is how it ends.", the inward rewind, "Returning to
+  the Professor.") is not built — not on the brief's list; still the lead's to keep or cut.
+- **Not done from the engine's "left to the art pass" list:** jump 2's hexagonal-shard curtain (the curtain is the
+  engine's, pearl in jump 2), era ambiences (sound), a check of the curtain's brass foot against Tangerine ink; the tram
+  still waits at its stop (no timetable).
+- **Dusk glass:** fixed in fix round 1 (rooms behind the shops, booths and huts).
+- **The sweep pages** I did not look at one by one: 18 of the 30 Mac mini pages and 14 of the 15 twin pages.
+- **The 28 inverted grid lines** (fixed in `8d5c45a1`) mean the earliest local pictures in the scratchpad show darker
+  joints than the stage has; the committed pictures are after the fix.
+- **Frame time:** repeated on the quiet Mac mini at fix round 1's head (JOB-12): the jump frame 32–34 ms, nothing after
+  done over 13 ms, ×3.
+- **(fix round 2) GPU time — closed by the lead's ruling:** the ×1.4–1.9 of fix round 1 was the timer query's, not the
+  GPU's (fix round 2, issue 1); by throughput Bluestone is ×0.85–0.95 Halyard at fix round 2's cut, ×0.95–1.03 before it.
+  The timer's mechanism on WebGL-over-Metal is not fully explained (it reads queueing behind earlier GPU work: an idle gap
+  before each frame halves it); gpu-time.sh is no longer a gate method.
+- **(fix round 1) Not built, by the brief:** the end-of-match beat (§3.10), the tram's timetable, the bots' fresh-ground
+  goal on jump 1 (the balance pass) — review issue 8; jump 2's hexagonal-shard curtain; era ambiences.
+- **(fix round 1) Tartar's coiled cord** is short (from the drum's ceiling at y 8, which the drum's solid 8–10 m hides
+  above); DESIGN's 7 m cord to the crown cannot be seen from play.
+- **(fix round 1) Upper-floor windows** still light as flat warm panes at dusk (a deliberate city-at-night read; the
+  shopfronts, booths, huts, civic arches and the engine hall have rooms).
+- **(fix round 1) eras-jump 'first'** failed once locally at load 34 (a 28 ms warning frame, the callout's DOM; no shader
+  compiled) and passed on the re-run, ×3 on the Mac mini (JOB-12) and ×2 at the final head (JOB-16).
+- **(fix round 1) The jump frame's margin:** at the final code its worst frame is 30–42 ms (JOB-16 / JOB-17), against
+  13–34 at JOB-12's head — the later rooms (huts, booths, civic arches, engine hall) cost the jump frame ~5–15 ms; 'frames'
+  passed 8 of 9 runs, one 3/4 inside JOB-16's suite with the failing check not returned. Lever if the lead wants the
+  margin back: drop the rooms from the small structures (keep the shopfronts', the pavilion's and the glasshouse's), or
+  one room path instead of eleven inlined calls.
+- **Climb-audit 144 vs DESIGN §8.8's 130 in eras 1–2:** the audit now counts the union graph in every era (unchanged by
+  the art); not a regression.
+- **(fix round 2) eras-jump 'frames'**: one run in four on the Mac mini still meets a single stall of 380–420 ms early in the
+  jump (J + 0.85–0.93) with the era update and the render both under 2 ms — outside the stage's code as measured, the same
+  as JOB-16's before this round; not explained. Every other frame of the jump ≤ 36 ms.
+- **(fix round 2) eras-jump 'first' locally** failed once at load 10–18 on its 10 ms bound for the warning frame's era
+  update (12.8 ms: the callout's DOM, audio, the ring; no program compiled); on the quiet Mac mini 1/1 ×4.
+- **(fix round 2) The cards** read as a city on land now, but not as Halyard's painted skyline: the art camera looks down
+  into the city, so the backdrop is roofs, trees and quays rather than a horizon (DESIGN §5.8's camera kept).
+- **(fix round 2) TODAY's river at dusk** mirrors the pink-violet sky strongly (Grape-like background 10 %, Halyard 16 %);
+  the Boathouse deck looking west shows a bright sun glint on its planks at dusk in the 1880s (the key raised to 3.5).
+- **(fix round 2) Left as they were in the 3000s:** the bike dock and the benches (the pearl family with moss seats), the
+  mooring posts (bluestone with iron bollards in every era), the phone kiosks (Tartar's, by design).
+- **(fix round 2) Review issue 8** (the end-of-match beat, the tram's timetable, the bots' fresh-ground lever): the lead's.
+- The stage stays BETA until the lead accepts the art.

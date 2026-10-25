@@ -1,0 +1,9 @@
+JOB-20 (bluestone, fix round 2) @ 2310eed9 — Mac mini b5-runner, 2026-10-25 16:28–16:41, exit 0. Short summary (gpu-ab.js, ms of GPU, variant − base beside it).
+- bases: Bluestone e1 day 42.6, e2 day 44.3 / dusk 46.3, e3 day 44.6 / dusk 46.7; Halyard 25.7 day / 28.0 dusk (×1.66–1.73).
+- the one big lever: the level drawn with a PLAIN material −9.6 to −13.0 ms on Bluestone (Halyard −1.3 / −3.9). Everything else is 1–4.8 ms
+  each on Bluestone: no art −2.5 to −3.5, art render target −2.4 / −3.7, each era chunk skipped −0.5 to −2.8, no fine detail −1.1 to −3.0,
+  copefix −1.7 / −1.9, hex off −2.3 / −2.9, no murals −1.7 / −2.3, no era −2.7 / −2.9, lamps −1.4 / −4.3, LOD 25 m −2.0 / −2.5, prepass
+  −2.6 / −3.6, GTAO off −3.3 / −4.8, shadow map held −0.7 / −0.9, no sea −1.1 / −2.6.
+- bloom off is SLOWER on Bluestone (+7.6 day, +5.7 dusk), as JOB-19 saw; on Halyard GTAO off (+7.4 / +5.8) and no sea (+11.7 / +10.5) read
+  slower too — those two 'off' switches likely change what the frame draws, so treat their signs with care. The coverage per art style and
+  the distance histogram are in ab.txt (JOB-20.raw.txt).

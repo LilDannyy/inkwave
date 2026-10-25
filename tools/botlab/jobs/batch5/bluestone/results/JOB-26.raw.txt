@@ -1,0 +1,95 @@
+JOB-26 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 18:54:20
+branch botlab-b5-bluestone, ran at 35381026, exit code 0, wall time 10min
+(a written-up JOB-26.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-26 (fix round 2) head 35381026 load { 2.18 3.17 3.29 }
+== sus halyard e0 day asis r1: "A":27.03,"A2":16.98,"B":29.32,"Bwall":11.34,"Cissue":0.96,"Cdone":6.98 
+== sus halyard e0 day nobloom r1: "A":34.21,"A2":15.93,"B":28.19,"Bwall":10.56,"Cissue":0.97,"Cdone":6.19 
+== sus bluestone e2 day asis r1: "A":40.81,"A2":17.11,"B":41,"Bwall":9.63,"Cissue":0.8,"Cdone":6.18 
+== sus bluestone e2 day live r1: "A":45.89,"A2":20.16,"B":45.46,"Bwall":10.71,"Cissue":0.98,"Cdone":7.26 
+== sus bluestone e2 day noprepass r1: "A":42.42,"A2":18.46,"B":42.51,"Bwall":9.87,"Cissue":0.83,"Cdone":6.52 
+== sus bluestone e2 day nobloom r1: "A":57.22,"A2":18.32,"B":55.2,"Bwall":8.91,"Cissue":0.77,"Cdone":5.41 
+== sus halyard e0 dusk asis r1: "A":26.19,"A2":17.44,"B":26,"Bwall":11.54,"Cissue":1.03,"Cdone":7.21 
+== sus halyard e0 dusk nobloom r1: "A":25.39,"A2":17.03,"B":31.24,"Bwall":10.53,"Cissue":0.96,"Cdone":6.1 
+== sus bluestone e2 dusk asis r1: "A":42.46,"A2":18.47,"B":42.31,"Bwall":9.94,"Cissue":0.85,"Cdone":6.62 
+== sus bluestone e2 dusk live r1: "A":48.27,"A2":20.96,"B":48.34,"Bwall":10.94,"Cissue":0.97,"Cdone":7.58 
+== sus bluestone e2 dusk noprepass r1: "A":44.58,"A2":19.66,"B":44.4,"Bwall":10.63,"Cissue":0.88,"Cdone":7.03 
+== sus bluestone e2 dusk nobloom r1: "A":58.69,"A2":19.45,"B":56.45,"Bwall":9.15,"Cissue":0.78,"Cdone":5.78 
+== sus halyard e0 day asis r2: "A":26.77,"A2":17.2,"B":30.55,"Bwall":11.49,"Cissue":0.99,"Cdone":7.13 
+== sus halyard e0 day nobloom r2: "A":23.55,"A2":16.29,"B":29.36,"Bwall":10.44,"Cissue":0.92,"Cdone":6.15 
+== sus bluestone e2 day asis r2: "A":41.69,"A2":16.76,"B":41.91,"Bwall":9.66,"Cissue":0.83,"Cdone":6.18 
+== sus bluestone e2 day live r2: "A":46.07,"A2":20.61,"B":46.34,"Bwall":10.75,"Cissue":0.87,"Cdone":7.24 
+== sus bluestone e2 day noprepass r2: "A":42.02,"A2":18.01,"B":41.58,"Bwall":9.66,"Cissue":0.79,"Cdone":6.43 
+== sus bluestone e2 day nobloom r2: "A":55.94,"A2":18.51,"B":54.84,"Bwall":8.98,"Cissue":0.76,"Cdone":5.48 
+== sus halyard e0 dusk asis r2: "A":28.75,"A2":17.82,"B":27.28,"Bwall":11.66,"Cissue":0.96,"Cdone":7.08 
+== sus halyard e0 dusk nobloom r2: "A":34.19,"A2":15.92,"B":28.73,"Bwall":10.88,"Cissue":0.99,"Cdone":6.27 
+== sus bluestone e2 dusk asis r2: "A":42.49,"A2":18.55,"B":42.7,"Bwall":10.15,"Cissue":0.88,"Cdone":6.62 
+== sus bluestone e2 dusk live r2: "A":48.88,"A2":21.15,"B":48.1,"Bwall":11.06,"Cissue":0.81,"Cdone":7.52 
+== sus bluestone e2 dusk noprepass r2: "A":44.88,"A2":19.71,"B":44.11,"Bwall":10.44,"Cissue":0.88,"Cdone":6.96 
+== sus bluestone e2 dusk nobloom r2: "A":58.51,"A2":19.37,"B":56.29,"Bwall":9.08,"Cissue":0.77,"Cdone":5.68 
+== idle bluestone: PRE {"map":"bluestone","out":{"idle0":18.4,"idle4":14.67,"idle8":7.83,"idle16":7.88,"idle0b":17.34}}
+== idle halyard: PRE {"map":"halyard","out":{"idle0":17.22,"idle4":17.86,"idle8":8.46,"idle16":8.36,"idle0b":16.57}}
+### done
+
+## last 15 lines of job.log
+  bluestone e2 asis          day  A  41.25 (x1.53) | A2  16.94 (x0.99) | C  6.18 (x0.88)
+  bluestone e2 live          day  A  45.98 (x1.71) | A2  20.38 (x1.19) | C  7.25 (x1.03)
+  bluestone e2 nobloom       day  A  56.58 (x2.10) | A2  18.41 (x1.08) | C  5.45 (x0.77)
+  bluestone e2 noprepass     day  A  42.22 (x1.57) | A2  18.23 (x1.07) | C  6.47 (x0.92)
+  bluestone e2 asis          dusk A  42.48 (x1.55) | A2  18.51 (x1.05) | C  6.62 (x0.93)
+  bluestone e2 live          dusk A  48.58 (x1.77) | A2  21.05 (x1.19) | C  7.55 (x1.06)
+  bluestone e2 nobloom       dusk A  58.60 (x2.13) | A2  19.41 (x1.10) | C  5.73 (x0.80)
+  bluestone e2 noprepass     dusk A  44.73 (x1.63) | A2  19.69 (x1.12) | C  7.00 (x0.98)
+  halyard asis               day  A  26.90 (x1.00) | A2  17.09 (x1.00) | C  7.05 (x1.00)
+  halyard nobloom            day  A  28.88 (x1.07) | A2  16.11 (x0.94) | C  6.17 (x0.87)
+  halyard asis               dusk A  27.47 (x1.00) | A2  17.63 (x1.00) | C  7.14 (x1.00)
+  halyard nobloom            dusk A  29.79 (x1.08) | A2  16.48 (x0.93) | C  6.18 (x0.87)
+== idle bluestone: PRE {"map":"bluestone","out":{"idle0":18.4,"idle4":14.67,"idle8":7.83,"idle16":7.88,"idle0b":17.34}}
+== idle halyard: PRE {"map":"halyard","out":{"idle0":17.22,"idle4":17.86,"idle8":8.46,"idle16":8.36,"idle0b":16.57}}
+### done
+
+## idle.txt
+== idle bluestone: PRE {"map":"bluestone","out":{"idle0":18.4,"idle4":14.67,"idle8":7.83,"idle16":7.88,"idle0b":17.34}}
+== idle halyard: PRE {"map":"halyard","out":{"idle0":17.22,"idle4":17.86,"idle8":8.46,"idle16":8.36,"idle0b":16.57}}
+
+## sus-summary.txt
+mean of 2 rounds: A the gate timer | A2 its render alone | C the GPU throughput ms per frame | ÷ halyard as is (same time)
+  bluestone e2 asis          day  A  41.25 (x1.53) | A2  16.94 (x0.99) | C  6.18 (x0.88)
+  bluestone e2 live          day  A  45.98 (x1.71) | A2  20.38 (x1.19) | C  7.25 (x1.03)
+  bluestone e2 nobloom       day  A  56.58 (x2.10) | A2  18.41 (x1.08) | C  5.45 (x0.77)
+  bluestone e2 noprepass     day  A  42.22 (x1.57) | A2  18.23 (x1.07) | C  6.47 (x0.92)
+  bluestone e2 asis          dusk A  42.48 (x1.55) | A2  18.51 (x1.05) | C  6.62 (x0.93)
+  bluestone e2 live          dusk A  48.58 (x1.77) | A2  21.05 (x1.19) | C  7.55 (x1.06)
+  bluestone e2 nobloom       dusk A  58.60 (x2.13) | A2  19.41 (x1.10) | C  5.73 (x0.80)
+  bluestone e2 noprepass     dusk A  44.73 (x1.63) | A2  19.69 (x1.12) | C  7.00 (x0.98)
+  halyard asis               day  A  26.90 (x1.00) | A2  17.09 (x1.00) | C  7.05 (x1.00)
+  halyard nobloom            day  A  28.88 (x1.07) | A2  16.11 (x0.94) | C  6.17 (x0.87)
+  halyard asis               dusk A  27.47 (x1.00) | A2  17.63 (x1.00) | C  7.14 (x1.00)
+  halyard nobloom            dusk A  29.79 (x1.08) | A2  16.48 (x0.93) | C  6.18 (x0.87)
+
+## sus.txt
+== sus halyard e0 day asis r1: "A":27.03,"A2":16.98,"B":29.32,"Bwall":11.34,"Cissue":0.96,"Cdone":6.98 
+== sus halyard e0 day nobloom r1: "A":34.21,"A2":15.93,"B":28.19,"Bwall":10.56,"Cissue":0.97,"Cdone":6.19 
+== sus bluestone e2 day asis r1: "A":40.81,"A2":17.11,"B":41,"Bwall":9.63,"Cissue":0.8,"Cdone":6.18 
+== sus bluestone e2 day live r1: "A":45.89,"A2":20.16,"B":45.46,"Bwall":10.71,"Cissue":0.98,"Cdone":7.26 
+== sus bluestone e2 day noprepass r1: "A":42.42,"A2":18.46,"B":42.51,"Bwall":9.87,"Cissue":0.83,"Cdone":6.52 
+== sus bluestone e2 day nobloom r1: "A":57.22,"A2":18.32,"B":55.2,"Bwall":8.91,"Cissue":0.77,"Cdone":5.41 
+== sus halyard e0 dusk asis r1: "A":26.19,"A2":17.44,"B":26,"Bwall":11.54,"Cissue":1.03,"Cdone":7.21 
+== sus halyard e0 dusk nobloom r1: "A":25.39,"A2":17.03,"B":31.24,"Bwall":10.53,"Cissue":0.96,"Cdone":6.1 
+== sus bluestone e2 dusk asis r1: "A":42.46,"A2":18.47,"B":42.31,"Bwall":9.94,"Cissue":0.85,"Cdone":6.62 
+== sus bluestone e2 dusk live r1: "A":48.27,"A2":20.96,"B":48.34,"Bwall":10.94,"Cissue":0.97,"Cdone":7.58 
+== sus bluestone e2 dusk noprepass r1: "A":44.58,"A2":19.66,"B":44.4,"Bwall":10.63,"Cissue":0.88,"Cdone":7.03 
+== sus bluestone e2 dusk nobloom r1: "A":58.69,"A2":19.45,"B":56.45,"Bwall":9.15,"Cissue":0.78,"Cdone":5.78 
+== sus halyard e0 day asis r2: "A":26.77,"A2":17.2,"B":30.55,"Bwall":11.49,"Cissue":0.99,"Cdone":7.13 
+== sus halyard e0 day nobloom r2: "A":23.55,"A2":16.29,"B":29.36,"Bwall":10.44,"Cissue":0.92,"Cdone":6.15 
+== sus bluestone e2 day asis r2: "A":41.69,"A2":16.76,"B":41.91,"Bwall":9.66,"Cissue":0.83,"Cdone":6.18 
+== sus bluestone e2 day live r2: "A":46.07,"A2":20.61,"B":46.34,"Bwall":10.75,"Cissue":0.87,"Cdone":7.24 
+== sus bluestone e2 day noprepass r2: "A":42.02,"A2":18.01,"B":41.58,"Bwall":9.66,"Cissue":0.79,"Cdone":6.43 
+== sus bluestone e2 day nobloom r2: "A":55.94,"A2":18.51,"B":54.84,"Bwall":8.98,"Cissue":0.76,"Cdone":5.48 
+== sus halyard e0 dusk asis r2: "A":28.75,"A2":17.82,"B":27.28,"Bwall":11.66,"Cissue":0.96,"Cdone":7.08 
+== sus halyard e0 dusk nobloom r2: "A":34.19,"A2":15.92,"B":28.73,"Bwall":10.88,"Cissue":0.99,"Cdone":6.27 
+== sus bluestone e2 dusk asis r2: "A":42.49,"A2":18.55,"B":42.7,"Bwall":10.15,"Cissue":0.88,"Cdone":6.62 
+== sus bluestone e2 dusk live r2: "A":48.88,"A2":21.15,"B":48.1,"Bwall":11.06,"Cissue":0.81,"Cdone":7.52 
+== sus bluestone e2 dusk noprepass r2: "A":44.88,"A2":19.71,"B":44.11,"Bwall":10.44,"Cissue":0.88,"Cdone":6.96 
+== sus bluestone e2 dusk nobloom r2: "A":58.51,"A2":19.37,"B":56.29,"Bwall":9.08,"Cissue":0.77,"Cdone":5.68 

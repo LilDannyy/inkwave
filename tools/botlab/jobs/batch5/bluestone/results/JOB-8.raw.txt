@@ -1,0 +1,89 @@
+JOB-8 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 06:53:08
+branch botlab-b5-bluestone, ran at f7536500, exit code 0, wall time 7min
+(a written-up JOB-8.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-8 head f7536500
+# bluestone1-day-1 load { 1.84 2.04 2.17 }
+== bluestone1-day-1: "quality":"high" "avg":{"calls":234,"tris":1250040,"ms":6.33}  HARNESS ERA=1: every game page loads with ?era=1 
+# bluestone2-day-1 load { 2.38 2.15 2.21 }
+== bluestone2-day-1: "quality":"high" "avg":{"calls":227,"tris":1171373,"ms":6.84}  HARNESS ERA=2: every game page loads with ?era=2 
+# bluestone3-day-1 load { 2.97 2.30 2.26 }
+== bluestone3-day-1: "quality":"high" "avg":{"calls":214,"tris":1219540,"ms":6.58}  HARNESS ERA=3: every game page loads with ?era=3 
+# halyard0-day-1 load { 3.61 2.48 2.32 }
+== halyard0-day-1: "quality":"high" "avg":{"calls":243,"tris":3289930,"ms":7.91}  
+# bluestone1-dusk-1 load { 3.42 2.49 2.33 }
+== bluestone1-dusk-1: "quality":"high" "avg":{"calls":212,"tris":1181171,"ms":6.67}  HARNESS ERA=1: every game page loads with ?era=1 
+# bluestone2-dusk-1 load { 3.42 2.55 2.35 }
+== bluestone2-dusk-1: "quality":"high" "avg":{"calls":239,"tris":1269975,"ms":6.65}  HARNESS ERA=2: every game page loads with ?era=2 
+# bluestone3-dusk-1 load { 3.37 2.60 2.37 }
+== bluestone3-dusk-1: "quality":"high" "avg":{"calls":227,"tris":1237667,"ms":7.02}  HARNESS ERA=3: every game page loads with ?era=3 
+# halyard0-dusk-1 load { 3.06 2.57 2.37 }
+== halyard0-dusk-1: "quality":"high" "avg":{"calls":263,"tris":3294606,"ms":8.38}  
+# bluestone1-day-2 load { 3.38 2.66 2.40 }
+== bluestone1-day-2: "quality":"high" "avg":{"calls":221,"tris":1221247,"ms":6.8}  HARNESS ERA=1: every game page loads with ?era=1 
+# bluestone2-day-2 load { 3.32 2.70 2.42 }
+== bluestone2-day-2: "quality":"high" "avg":{"calls":223,"tris":1153892,"ms":6.58}  HARNESS ERA=2: every game page loads with ?era=2 
+# bluestone3-day-2 load { 3.24 2.71 2.43 }
+== bluestone3-day-2: "quality":"high" "avg":{"calls":204,"tris":1202503,"ms":6.38}  HARNESS ERA=3: every game page loads with ?era=3 
+# halyard0-day-2 load { 3.13 2.71 2.44 }
+== halyard0-day-2: "quality":"high" "avg":{"calls":255,"tris":3286526,"ms":8.89}  
+# bluestone1-dusk-2 load { 2.85 2.67 2.43 }
+== bluestone1-dusk-2: "quality":"high" "avg":{"calls":229,"tris":1194432,"ms":7.02}  HARNESS ERA=1: every game page loads with ?era=1 
+# bluestone2-dusk-2 load { 2.78 2.67 2.43 }
+== bluestone2-dusk-2: "quality":"high" "avg":{"calls":222,"tris":1138253,"ms":6.56}  HARNESS ERA=2: every game page loads with ?era=2 
+# bluestone3-dusk-2 load { 2.76 2.67 2.43 }
+== bluestone3-dusk-2: "quality":"high" "avg":{"calls":237,"tris":1256408,"ms":7.02}  HARNESS ERA=3: every game page loads with ?era=3 
+# halyard0-dusk-2 load { 2.62 2.64 2.43 }
+== halyard0-dusk-2: "quality":"high" "avg":{"calls":256,"tris":3303990,"ms":8.9}  
+# bluestone1-day-3 load { 2.58 2.63 2.43 }
+== bluestone1-day-3: "quality":"high" "avg":{"calls":222,"tris":1179982,"ms":6.63}  HARNESS ERA=1: every game page loads with ?era=1 
+# bluestone2-day-3 load { 2.45 2.60 2.42 }
+== bluestone2-day-3: "quality":"high" "avg":{"calls":215,"tris":1162992,"ms":6.54}  HARNESS ERA=2: every game page loads with ?era=2 
+# bluestone3-day-3 load { 2.55 2.61 2.43 }
+== bluestone3-day-3: "quality":"high" "avg":{"calls":198,"tris":1163935,"ms":6.54}  HARNESS ERA=3: every game page loads with ?era=3 
+# halyard0-day-3 load { 3.65 2.86 2.52 }
+== halyard0-day-3: "quality":"high" "avg":{"calls":247,"tris":3299708,"ms":8.06}  
+# bluestone1-dusk-3 load { 3.21 2.80 2.50 }
+== bluestone1-dusk-3: "quality":"high" "avg":{"calls":229,"tris":1198412,"ms":7.15}  HARNESS ERA=1: every game page loads with ?era=1 
+# bluestone2-dusk-3 load { 3.06 2.80 2.51 }
+== bluestone2-dusk-3: "quality":"high" "avg":{"calls":216,"tris":1177607,"ms":6.98}  HARNESS ERA=2: every game page loads with ?era=2 
+# bluestone3-dusk-3 load { 3.02 2.81 2.52 }
+== bluestone3-dusk-3: "quality":"high" "avg":{"calls":221,"tris":1222255,"ms":6.78}  HARNESS ERA=3: every game page loads with ?era=3 
+# halyard0-dusk-3 load { 3.08 2.83 2.53 }
+== halyard0-dusk-3: "quality":"high" "avg":{"calls":293,"tris":3357744,"ms":8.24}  
+### done
+
+## last 15 lines of job.log
+  day  halyard:      calls 247 [243, 255, 247] | tris 3289930 [3289930, 3286526, 3299708] | ms 8.06 [7.91, 8.89, 8.06]
+  day  bluestone e1: calls 222 [234, 221, 222] | tris 1221247 [1250040, 1221247, 1179982] | ms 6.63 [6.33, 6.80, 6.63]
+  day    ratio e1:   calls ×0.90 | tris ×0.37 | cpuRender ×0.82
+  day  bluestone e2: calls 223 [227, 223, 215] | tris 1162992 [1171373, 1153892, 1162992] | ms 6.58 [6.84, 6.58, 6.54]
+  day    ratio e2:   calls ×0.90 | tris ×0.35 | cpuRender ×0.82
+  day  bluestone e3: calls 204 [214, 204, 198] | tris 1202503 [1219540, 1202503, 1163935] | ms 6.54 [6.58, 6.38, 6.54]
+  day    ratio e3:   calls ×0.83 | tris ×0.37 | cpuRender ×0.81
+  dusk halyard:      calls 263 [263, 256, 293] | tris 3303990 [3294606, 3303990, 3357744] | ms 8.38 [8.38, 8.90, 8.24]
+  dusk bluestone e1: calls 229 [212, 229, 229] | tris 1194432 [1181171, 1194432, 1198412] | ms 7.02 [6.67, 7.02, 7.15]
+  dusk   ratio e1:   calls ×0.87 | tris ×0.36 | cpuRender ×0.84
+  dusk bluestone e2: calls 222 [239, 222, 216] | tris 1177607 [1269975, 1138253, 1177607] | ms 6.65 [6.65, 6.56, 6.98]
+  dusk   ratio e2:   calls ×0.84 | tris ×0.36 | cpuRender ×0.79
+  dusk bluestone e3: calls 227 [227, 237, 221] | tris 1237667 [1237667, 1256408, 1222255] | ms 7.02 [7.02, 7.02, 6.78]
+  dusk   ratio e3:   calls ×0.86 | tris ×0.37 | cpuRender ×0.84
+### done
+
+## perf.txt
+medians of 3 runs (the runs in brackets); each Bluestone era ÷ Halyard
+  day  halyard:      calls 247 [243, 255, 247] | tris 3289930 [3289930, 3286526, 3299708] | ms 8.06 [7.91, 8.89, 8.06]
+  day  bluestone e1: calls 222 [234, 221, 222] | tris 1221247 [1250040, 1221247, 1179982] | ms 6.63 [6.33, 6.80, 6.63]
+  day    ratio e1:   calls ×0.90 | tris ×0.37 | cpuRender ×0.82
+  day  bluestone e2: calls 223 [227, 223, 215] | tris 1162992 [1171373, 1153892, 1162992] | ms 6.58 [6.84, 6.58, 6.54]
+  day    ratio e2:   calls ×0.90 | tris ×0.35 | cpuRender ×0.82
+  day  bluestone e3: calls 204 [214, 204, 198] | tris 1202503 [1219540, 1202503, 1163935] | ms 6.54 [6.58, 6.38, 6.54]
+  day    ratio e3:   calls ×0.83 | tris ×0.37 | cpuRender ×0.81
+  dusk halyard:      calls 263 [263, 256, 293] | tris 3303990 [3294606, 3303990, 3357744] | ms 8.38 [8.38, 8.90, 8.24]
+  dusk bluestone e1: calls 229 [212, 229, 229] | tris 1194432 [1181171, 1194432, 1198412] | ms 7.02 [6.67, 7.02, 7.15]
+  dusk   ratio e1:   calls ×0.87 | tris ×0.36 | cpuRender ×0.84
+  dusk bluestone e2: calls 222 [239, 222, 216] | tris 1177607 [1269975, 1138253, 1177607] | ms 6.65 [6.65, 6.56, 6.98]
+  dusk   ratio e2:   calls ×0.84 | tris ×0.36 | cpuRender ×0.79
+  dusk bluestone e3: calls 227 [227, 237, 221] | tris 1237667 [1237667, 1256408, 1222255] | ms 7.02 [7.02, 7.02, 6.78]
+  dusk   ratio e3:   calls ×0.86 | tris ×0.37 | cpuRender ×0.84

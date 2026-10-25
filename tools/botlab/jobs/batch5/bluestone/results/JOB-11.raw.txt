@@ -1,0 +1,30 @@
+JOB-11 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 09:43:04
+branch botlab-b5-bluestone, ran at c134754d, exit code 0, wall time 14min
+(a written-up JOB-11.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-11 head c134754d
+# sweep e1-day-B load { 2.18 1.94 1.84 }
+HARNESS ERA=1: every game page loads with ?era=1
+# sweep e2-day-B load { 2.69 2.32 2.05 }
+HARNESS ERA=2: every game page loads with ?era=2
+# sweep e3-day-B load { 3.81 3.27 2.56 }
+HARNESS ERA=3: every game page loads with ?era=3
+### done
+
+## last 15 lines of job.log
+-rw-r--r--@  1 danielosling  staff  445503 Oct 25 09:33 sweep-e1-day-B-01.jpg
+-rw-r--r--@  1 danielosling  staff  424738 Oct 25 09:33 sweep-e1-day-B-02.jpg
+-rw-r--r--@  1 danielosling  staff  496211 Oct 25 09:33 sweep-e1-day-B-03.jpg
+-rw-r--r--@  1 danielosling  staff  223361 Oct 25 09:33 sweep-e1-day-B-04.jpg
+-rw-r--r--@  1 danielosling  staff  425396 Oct 25 09:37 sweep-e2-day-B-00.jpg
+-rw-r--r--@  1 danielosling  staff  454606 Oct 25 09:37 sweep-e2-day-B-01.jpg
+-rw-r--r--@  1 danielosling  staff  412599 Oct 25 09:37 sweep-e2-day-B-02.jpg
+-rw-r--r--@  1 danielosling  staff  493135 Oct 25 09:37 sweep-e2-day-B-03.jpg
+-rw-r--r--@  1 danielosling  staff  255745 Oct 25 09:37 sweep-e2-day-B-04.jpg
+-rw-r--r--@  1 danielosling  staff  463482 Oct 25 09:43 sweep-e3-day-B-00.jpg
+-rw-r--r--@  1 danielosling  staff  475539 Oct 25 09:43 sweep-e3-day-B-01.jpg
+-rw-r--r--@  1 danielosling  staff  448209 Oct 25 09:43 sweep-e3-day-B-02.jpg
+-rw-r--r--@  1 danielosling  staff  452267 Oct 25 09:43 sweep-e3-day-B-03.jpg
+-rw-r--r--@  1 danielosling  staff  431181 Oct 25 09:43 sweep-e3-day-B-04.jpg
+### done

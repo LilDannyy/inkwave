@@ -1,0 +1,64 @@
+JOB-32 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 22:46:03
+branch botlab-b5-bluestone, ran at de8e927e, exit code 0, wall time 4min
+(a written-up JOB-32.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-32 head de8e927e load { 1.55 2.27 2.38 }
+== head-1: RESULT 4/4  load { 2.15 2.34 2.40 }
+# head-1 worst (main | bravo | sunset) "worst":[[35.7,1.43,"jump",0,0.2,4.4]
+# head-1 worst (main | bravo | sunset) "worst":[[11.9,3.97,1.6,2.6,7.7,0,0,2]
+# head-1 worst (main | bravo | sunset) "worst":[[14.3,3.97,1.3,2.1,10.9,0,0,2]
+== base-1: RESULT 4/4  load { 2.39 2.38 2.41 }
+# base-1 worst (main | bravo | sunset) "worst":[[33.7,1.47,"jump",0,0,3]
+# base-1 worst (main | bravo | sunset) "worst":[[14.7,0.02,3.4,5.1,6.2,0,0,1]
+# base-1 worst (main | bravo | sunset) "worst":[[13.1,3.97,0.9,1.7,10.5,0,0,2]
+== head-2: RESULT 4/4  load { 2.76 2.46 2.44 }
+# head-2 worst (main | bravo | sunset) "worst":[[36.3,1.48,"jump",0,0.1,1.8]
+# head-2 worst (main | bravo | sunset) "worst":[[12.1,3.97,1.3,2.1,8.7,0,0,2]
+# head-2 worst (main | bravo | sunset) "worst":[[14.2,4.32,0,13.5,0.7,0,0,0]
+== base-2: RESULT 4/4  load { 2.74 2.48 2.45 }
+# base-2 worst (main | bravo | sunset) "worst":[[32.4,1.47,"jump",0,0.1,4.9]
+# base-2 worst (main | bravo | sunset) "worst":[[14,0.02,3.2,5.6,5.2,0,0,1]
+# base-2 worst (main | bravo | sunset) "worst":[[13,3.97,1.1,1.6,10.3,0,0,2]
+== head-3: RESULT 4/4  load { 2.43 2.43 2.43 }
+# head-3 worst (main | bravo | sunset) "worst":[[33,1.47,"jump",0,0,2.9]
+# head-3 worst (main | bravo | sunset) "worst":[[14.1,0.02,2.2,6.7,5.2,0,0,0]
+# head-3 worst (main | bravo | sunset) "worst":[[14.1,4.3,0.1,13.3,0.7,0,0,0]
+== base-3: RESULT 4/4  load { 2.49 2.44 2.43 }
+# base-3 worst (main | bravo | sunset) "worst":[[33.1,1.47,"jump",0,0.1,2.3]
+# base-3 worst (main | bravo | sunset) "worst":[[10.9,3.97,1,1.9,8,0,0,2]
+# base-3 worst (main | bravo | sunset) "worst":[[12.7,3.97,1.1,1.6,10,0,0,2]
+== head-4: RESULT 4/4  load { 2.73 2.51 2.46 }
+# head-4 worst (main | bravo | sunset) "worst":[[33.4,1.45,"jump",0,0.1,4.4]
+# head-4 worst (main | bravo | sunset) "worst":[[15.9,0.02,3.1,6.9,5.9,0,0,1]
+# head-4 worst (main | bravo | sunset) "worst":[[12.9,3.97,1,1.5,10.4,0,0,2]
+== base-4: RESULT 3/4  load { 3.35 2.66 2.51 }
+# base-4 worst (main | bravo | sunset) "worst":[[429.5,2.8,"jump",0,0.1,2.4]
+# base-4 worst (main | bravo | sunset) "worst":[[11,3.97,1.2,1.8,8,0,0,2]
+# base-4 worst (main | bravo | sunset) "worst":[[13.7,4.3,0,13.1,0.6,0,0,0]
+== head-5: RESULT 4/4  load { 2.42 2.50 2.46 }
+# head-5 worst (main | bravo | sunset) "worst":[[35.3,1.45,"jump",0,0,3.3]
+# head-5 worst (main | bravo | sunset) "worst":[[13,0.02,2.7,5.1,5.2,0,0,1]
+# head-5 worst (main | bravo | sunset) "worst":[[14.3,3.97,1.2,1.7,11.4,0,0,2]
+== base-5: RESULT 4/4  load { 2.38 2.48 2.45 }
+# base-5 worst (main | bravo | sunset) "worst":[[32.3,1.48,"jump",0,0.1,2.2]
+# base-5 worst (main | bravo | sunset) "worst":[[13.8,0.02,3,5.2,5.6,0,0,1]
+# base-5 worst (main | bravo | sunset) "worst":[[16.5,3.97,1.3,2.2,13,0,0,2]
+### done load { 2.38 2.48 2.45 }
+
+## last 15 lines of job.log
+# head-4 worst (main | bravo | sunset) "worst":[[15.9,0.02,3.1,6.9,5.9,0,0,1]
+# head-4 worst (main | bravo | sunset) "worst":[[12.9,3.97,1,1.5,10.4,0,0,2]
+== base-4: RESULT 3/4  load { 3.35 2.66 2.51 }
+# base-4 worst (main | bravo | sunset) "worst":[[429.5,2.8,"jump",0,0.1,2.4]
+# base-4 worst (main | bravo | sunset) "worst":[[11,3.97,1.2,1.8,8,0,0,2]
+# base-4 worst (main | bravo | sunset) "worst":[[13.7,4.3,0,13.1,0.6,0,0,0]
+== head-5: RESULT 4/4  load { 2.42 2.50 2.46 }
+# head-5 worst (main | bravo | sunset) "worst":[[35.3,1.45,"jump",0,0,3.3]
+# head-5 worst (main | bravo | sunset) "worst":[[13,0.02,2.7,5.1,5.2,0,0,1]
+# head-5 worst (main | bravo | sunset) "worst":[[14.3,3.97,1.2,1.7,11.4,0,0,2]
+== base-5: RESULT 4/4  load { 2.38 2.48 2.45 }
+# base-5 worst (main | bravo | sunset) "worst":[[32.3,1.48,"jump",0,0.1,2.2]
+# base-5 worst (main | bravo | sunset) "worst":[[13.8,0.02,3,5.2,5.6,0,0,1]
+# base-5 worst (main | bravo | sunset) "worst":[[16.5,3.97,1.3,2.2,13,0,0,2]
+### done load { 2.38 2.48 2.45 }

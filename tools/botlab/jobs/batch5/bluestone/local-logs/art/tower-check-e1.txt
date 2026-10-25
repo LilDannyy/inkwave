@@ -1,0 +1,11 @@
+HARNESS ERA=1: every game page loads with ?era=1
+ERA 1 (started in era 1, held there: ?era=1; page ?autopilot&era=1)
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 7 pieces · 5 runs, 1 inclines, 0 climbs, 1 drops · 73.99 m
+   side Bravo (s<0), the mirror — pieces in the JSON: 7 pieces · 5 runs, 1 inclines, 0 climbs, 1 drops · 73.99 m
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   console errors: none
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}

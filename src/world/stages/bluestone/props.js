@@ -11,11 +11,21 @@
 // Placements carry the era engine's tags (eras / eraGroup); the dressing is the union of every era (era.js), and the
 // engine switches the tagged looks at the front (their own merged meshes per era mask: docs/STAGE-MODS.md "Props").
 import { eraFilter } from './era.js';
+import { LAYOUT } from './layout.js';
+import { LAMPS, WIRES, wirePath } from './levelart.js';
+import { makeKit } from './kit.js';
+import { registerArch } from './arch.js';
+import { registerDress } from './dress.js';
 
 const BOT = -1.8;
 const RAILYARD = { top: 3.0 };   // (round C: no railyard embankment in play; the track / train looks keep its height)
 
 export function register(D, H) {
+  // the art phase: the kit (palette, lettering, mouldings), the buildings' dressing and the street's (arch.js, dress.js)
+  const KIT = makeKit(D, H);
+  const { sphG, torG } = KIT;
+  registerArch(D, H, KIT);
+  registerDress(D, H, KIT);
   // a plain block of the railyard (centre pos, size [w, d], top): collider `roof`, a dark mass
   D.bluestone_berm = {
     build(B, o) {
@@ -24,23 +34,115 @@ export function register(D, H) {
       if (!o.noMesh) B.box('rubber', o.color || '#47433d', w, h, d, 0, BOT + h / 2, 0, { r: 0.02 });
     },
   };
-  // Commander Tartar (placeholder): a rounded cream-and-brass telephone hanging on his cord under the dome. A shared
-  // prop the era engine animates (src/fx/eraFx.js builds it as three parts — o.part 'body' (the cord and the body),
-  // 'dial' (both dial faces: they spin as he dials the year), 'handset' (lifted at the pickup) — so he is not in the
-  // static dressing; no part = the whole telephone)
+  // Commander Tartar (fix round 1: the blockout box rebuilt as a cream-and-brass cradle telephone, DESIGN §5.1): a tapered
+  // body on a moulded base with a brass band, a rotary dial on each face (toward Alpha and Bravo: a brass finger wheel with
+  // ten finger holes over a cream number plate, the warm-lit centre card, a brass bezel and finger stop), the handset (an
+  // earpiece and a mouthpiece cup on a curved grip) resting in a two-forked cradle, its curly cord down the body's end, two
+  // domed brass bells and their striker under him (his back, the way he hangs), and the coiled cord he hangs by from a
+  // brass rose on the drum's ceiling (y 8). No collider. A shared prop the era engine animates (src/fx/eraFx.js builds it as
+  // three parts (each two or three draw calls: gloss, metal, the dial's glow) — o.part 'body' (the body, the cradle, the bells and both cords), 'dial' (both finger wheels: they spin about
+  // the z axis through (0, 6.6) as he dials the year), 'handset' (lifted at the pickup, about the pivot (0, 8.2)) — so he is
+  // not in the static dressing; no part = the whole telephone)
+  const { THREE } = H, TAU2 = Math.PI * 2;
+  // a rounded-rectangle loft (superellipse rings [y, half-x, half-z], exponent ex) with flat caps: the body's tapered shell
+  const loftGeo = (rings, ex = 3.2, n = 36) => {
+    const pos = [], idx = [], ring = (y, ax, az) => { const o = pos.length / 3; for (let i = 0; i < n; i++) { const a = (i / n) * TAU2, c = Math.cos(a), sn = Math.sin(a); pos.push(ax * Math.sign(c) * Math.abs(c) ** (2 / ex), y, az * Math.sign(sn) * Math.abs(sn) ** (2 / ex)); } return o; };
+    const rs = rings.map(([y, ax, az]) => ring(y, ax, az));
+    for (let r = 0; r < rs.length - 1; r++) for (let i = 0; i < n; i++) { const a = rs[r] + i, b = rs[r] + ((i + 1) % n), c = rs[r + 1] + ((i + 1) % n), d = rs[r + 1] + i; idx.push(a, c, b, a, d, c); }
+    const side = new THREE.BufferGeometry();
+    side.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); side.setIndex(idx); side.computeVertexNormals();
+    // caps (own vertices, flat normals)
+    const cap = (y, ax, az, up) => { const P = [0, y, 0], I = []; for (let i = 0; i < n; i++) { const a = (i / n) * TAU2, c = Math.cos(a), sn = Math.sin(a); P.push(ax * Math.sign(c) * Math.abs(c) ** (2 / ex), y, az * Math.sign(sn) * Math.abs(sn) ** (2 / ex)); }
+      for (let i = 0; i < n; i++) { const a = 1 + i, b = 1 + ((i + 1) % n); if (up) I.push(0, b, a); else I.push(0, a, b); }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(Array.from({ length: n + 1 }, () => [0, up ? 1 : -1, 0]).flat(), 3)); g.setIndex(I); return g; };
+    const top = rings[rings.length - 1], bot = rings[0];
+    return [side, cap(top[0], top[1], top[2], true), cap(bot[0], bot[1], bot[2], false)].map((g) => { g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2)); return g; });
+  };
+  const TT = { cream: '#ece2c9', creamDk: '#d2c3a0', brass: '#c9a85a', brassDk: '#8f7034', ink: '#2a2622', plate: '#f3ead2' };
+  let TGEO = null;
+  const tGeo = () => TGEO || (TGEO = {
+    base: loftGeo([[5.84, 0.96, 0.68], [5.87, 1.06, 0.78], [5.97, 1.1, 0.82], [6.0, 1.05, 0.77]]),
+    band: loftGeo([[6.0, 1.055, 0.775], [6.075, 1.055, 0.775]]),
+    body: loftGeo([[6.075, 1.02, 0.745], [6.6, 1.0, 0.735], [6.95, 0.975, 0.72], [7.07, 0.93, 0.665], [7.16, 0.85, 0.56], [7.22, 0.74, 0.44]]),
+  });
+  const helix = (path, r, pitch, k0 = 0) => {   // a coiled cord round a polyline path: r the coil, pitch per turn
+    const out = [], up = new THREE.Vector3(0, 0, 1);
+    for (let s = 0; s < path.length - 1; s++) {
+      const A = new THREE.Vector3(...path[s]), Bv = new THREE.Vector3(...path[s + 1]), d = Bv.clone().sub(A), L = d.length(); d.normalize();
+      const u = new THREE.Vector3().crossVectors(d, Math.abs(d.z) > 0.9 ? new THREE.Vector3(1, 0, 0) : up).normalize(), w = new THREE.Vector3().crossVectors(d, u);
+      const m = Math.max(2, Math.round((L / pitch) * 10));
+      for (let i = s ? 1 : 0; i <= m; i++) { const t = i / m, a = k0 + ((t * L) / pitch) * TAU2; const p = A.clone().addScaledVector(d, t * L).addScaledVector(u, Math.cos(a) * r).addScaledVector(w, Math.sin(a) * r); out.push([p.x, p.y, p.z]); }
+      k0 += (L / pitch) * TAU2;
+    }
+    return out;
+  };
   D.bluestone_tartar = {
     build(B, o = {}) {
-      const all = !o.part;
+      const all = !o.part, G3 = tGeo();
       if (all || o.part === 'body') {
-        B.cyl('rubber', '#2d2a26', 0.05, 0.4, 0, 7.8, 0);                            // the cord to the drum's ceiling
-        B.box('gloss', '#e9dfc7', 2.0, 1.6, 1.4, 0, 6.6, 0, { round: true, r: 0.3 });  // the body
-        for (const s of [-1, 1]) B.sph('metal', '#c9a85a', 0.32, s * 0.55, 7.42, 0.55);   // the two bell domes on his back
+        // the cord he hangs by: a brass rose on the ceiling, the coiled cord down to the body's top (behind the handset)
+        B.cyl('metal', TT.brass, 0.17, 0.05, 0, 7.975, 0.4, { seg: 16 });
+        B.cyl('metal', TT.brassDk, 0.06, 0.08, 0, 7.92, 0.4, { seg: 10 });
+        B.tube('gloss', TT.ink, helix([[0, 7.9, 0.4], [0, 7.24, 0.4]], 0.045, 0.045), 0.016, { radial: 5 });
+        B.cyl('metal', TT.brass, 0.07, 0.05, 0, 7.245, 0.4, { seg: 12 });
+        // the body: a moulded base (darker cream), the brass band, the tapered shell
+        for (const g of G3.base) B.add('gloss', g, TT.creamDk, 0, 0, 0, {});
+        for (const g of G3.band) B.add('metal', g, TT.brass, 0, 0, 0, {});
+        for (const g of G3.body) B.add('gloss', g, TT.cream, 0, 0, 0, {});
+        // a brass bead round the shoulder
+        for (const g of loftGeo([[7.06, 0.94, 0.675], [7.085, 0.925, 0.655]])) B.add('metal', g, TT.brass, 0, 0, 0, {});
+        // each face's dial housing: a brass bezel, a cream number plate with the ten numbers, the finger stop (fixed)
+        for (const s of [-1, 1]) {
+          const z = s * 0.735;
+          B.add('metal', torG(0.445, 0.03, 6, 40), TT.brass, 0, 6.6, z + s * 0.02, {});
+          B.cyl('gloss', TT.plate, 0.43, 0.02, 0, 6.6, z + s * 0.01, { rx: Math.PI / 2, seg: 32 });
+          const fa = -50 * Math.PI / 180;
+          B.tube('metal', TT.brass, [[Math.cos(fa) * 0.36 * s, 6.6 + Math.sin(fa) * 0.36, z + s * 0.03], [Math.cos(fa) * 0.47 * s, 6.6 + Math.sin(fa) * 0.47, z + s * 0.075], [Math.cos(fa - 0.12) * 0.5 * s, 6.6 + Math.sin(fa - 0.12) * 0.5, z + s * 0.085]], 0.018, { radial: 6 });
+        }
+        // the cradle: two forks on the top (each two prongs with a curl), a brass boss under each
+        for (const sx of [-1, 1]) {
+          B.cyl('metal', TT.brass, 0.1, 0.06, sx * 0.55, 7.25, 0, { seg: 12 });
+          for (const sz of [-1, 1]) B.tube('metal', TT.brass, [[sx * 0.55, 7.24, sz * 0.07], [sx * 0.55, 7.4, sz * 0.1], [sx * 0.55, 7.5, sz * 0.15], [sx * 0.55, 7.55, sz * 0.2]], 0.022, { radial: 6 });
+        }
+        // the handset's curly cord: from the mouthpiece's handle end down the body's +x end into it
+        B.tube('gloss', TT.ink, helix([[1.1, 7.32, 0], [1.2, 6.95, 0.02], [1.16, 6.55, 0], [1.03, 6.35, 0]], 0.04, 0.04), 0.014, { radial: 5 });
+        // under him: two domed brass bells and the striker between them
+        for (const sx of [-1, 1]) {
+          B.lathe('metal', TT.brass, [[0.0, 5.84], [0.12, 5.84], [0.22, 5.8], [0.27, 5.72], [0.285, 5.64], [0.27, 5.62], [0.0, 5.62]], sx * 0.48, 0, 0, { seg: 20 });
+          B.cyl('metal', TT.brassDk, 0.03, 0.1, sx * 0.48, 5.6, 0, { seg: 8 });
+        }
+        B.cyl('metal', TT.brassDk, 0.025, 0.24, 0, 5.72, 0, { seg: 8 });
+        B.add('metal', sphG(0.055, 10, 8), TT.brass, 0, 5.6, 0, {});
       }
-      if (all || o.part === 'handset') B.box('metal', '#b8924a', 2.2, 0.35, 0.7, 0, 7.55, 0, { round: true, r: 0.12 }); // the handset on its cradle
+      if (all || o.part === 'handset') {
+        // the handset in its cradle: a curved grip (thicker toward the cups), the earpiece (−x) and the mouthpiece (+x)
+        B.tube('gloss', TT.cream, [[-0.86, 7.5, 0], [-0.62, 7.6, 0], [-0.3, 7.65, 0], [0, 7.66, 0], [0.3, 7.65, 0], [0.62, 7.6, 0], [0.86, 7.5, 0]], (t) => 0.075 + 0.025 * Math.abs(t * 2 - 1) ** 2, { radial: 12 });
+        for (const sx of [-1, 1]) {
+          const deep = sx > 0 ? 0.04 : 0;
+          B.lathe('gloss', TT.cream, [[0.0, 7.6], [0.1, 7.58], [0.15, 7.52], [0.2, 7.42 - deep], [0.245, 7.3 - deep], [0.255, 7.27 - deep]], sx * 0.9, 0, 0, { seg: 24 });
+          B.add('metal', torG(0.25, 0.022, 6, 28), TT.brass, sx * 0.9, 7.27 - deep, 0, { rx: Math.PI / 2 });
+          B.cyl('gloss', TT.creamDk, 0.23, 0.02, sx * 0.9, 7.275 - deep, 0, { seg: 24 });
+          for (let k = 0; k < 6; k++) { const a = (k / 6) * TAU2; B.cyl('gloss', TT.ink, 0.018, 0.012, sx * 0.9 + Math.cos(a) * 0.1, 7.268 - deep, Math.sin(a) * 0.1, { seg: 6 }); }
+          B.cyl('gloss', TT.ink, 0.02, 0.012, sx * 0.9, 7.268 - deep, 0, { seg: 6 });
+        }
+        B.add('metal', torG(0.085, 0.012, 5, 16), TT.brass, -0.62, 7.6, 0, { ry: Math.PI / 2, rz: 0.4 });
+        B.add('metal', torG(0.085, 0.012, 5, 16), TT.brass, 0.62, 7.6, 0, { ry: Math.PI / 2, rz: -0.4 });
+      }
       if (all || o.part === 'dial') {
-        B.cyl('metal', '#b8924a', 0.5, 0.08, 0, 6.6, -0.72, { rx: Math.PI / 2 });     // the dial (the face, toward Alpha)
-        B.cyl('metal', '#b8924a', 0.5, 0.08, 0, 6.6, 0.72, { rx: Math.PI / 2 });      // (and toward Bravo)
-        for (const z of [-0.77, 0.77]) B.cyl('glow', '#ffe9b0', 0.16, 0.02, 0, 6.6, z, { rx: Math.PI / 2 });   // the warmest light under the dome
+        // the finger wheels (they spin): a brass ring with ten finger holes over the number plate, the centre card lit warm
+        for (const s of [-1, 1]) {
+          const z = s * 0.735 + s * 0.035;
+          B.lathe('metal', TT.brass, [[0.13, 0.0], [0.42, 0.0], [0.42, 0.03], [0.4, 0.04], [0.13, 0.04]], 0, 6.6, z - s * 0.02, { seg: 40, rx: s * Math.PI / 2 });
+          for (let k = 0; k < 10; k++) {
+            const a = (60 + k * 30) * Math.PI / 180, x = Math.cos(a) * 0.3 * s, y = 6.6 + Math.sin(a) * 0.3;   // (mirrored per face: the holes run the same way seen from either side)
+            B.cyl('gloss', TT.plate, 0.068, 0.012, x, y, z + s * 0.024, { rx: Math.PI / 2, seg: 14 });
+            B.add('metal', torG(0.072, 0.012, 4, 14), TT.brassDk, x, y, z + s * 0.026, {});
+            B.add('gloss', sphG(0.026, 6, 4), TT.ink, x, y, z + s * 0.031, { sz: 0.3 });   // its number, read through the hole
+          }
+          B.cyl('gloss', TT.plate, 0.13, 0.02, 0, 6.6, z + s * 0.02, { rx: Math.PI / 2, seg: 24 });
+          B.cyl('glow', '#ffe9b0', 0.1, 0.012, 0, 6.6, z + s * 0.033, { rx: Math.PI / 2, seg: 20 });   // the warmest light under the dome
+          B.add('metal', torG(0.13, 0.014, 4, 24), TT.brass, 0, 6.6, z + s * 0.03, {});
+        }
       }
     },
   };
@@ -139,27 +241,164 @@ export function register(D, H) {
       B.box('metal', '#3a3a36', 2.2, 0.08, 0.08, 0, 1.0, -3.0); B.box('metal', '#3a3a36', 2.2, 0.08, 0.08, 0, 1.0, 3.0);   // the dashboards
     },
   };
-  // today: an electric tram, green with a cream band, dark windows and a pantograph
+  // (fix round 2, review 2 issue 3: the two later trams were blank slabs; DESIGN §2.10 / §5.2)
+  const tramFace = (B, x, y, z, nx, nz, fn) => { B.push(x, y, z, Math.atan2(nx, nz)); fn(); B.pop(); };
+  // today: a low-floor tram, white and graphite with a thin yellow band (DESIGN §5.2): graphite skirts over the bogies, the
+  // glazing from 1.25 to 2.6 m in separate panes in black frames, a hint of the lit saloon in each (the ceiling strip, the
+  // seat backs, a grab pole), two pairs of doors per side with yellow edges, at each end a raked windscreen under the lit
+  // destination blind (11 FLOUNDERS ST) and the fleet number on the dash, air-conditioning pods and the pantograph on the
+  // roof. Era 2's buckets only (gloss, glow, metal, rubber)
   D.bluestone_tram = {
     build(B) {
-      for (const z of [-2, 2]) B.box('rubber', '#262626', 2.0, 0.45, 1.4, 0, 0.3, z);  // the bogies
-      B.box('gloss', '#4f6b52', 2.6, 1.25, 6.0, 0, 1.15, 0, { round: true, r: 0.12 });
-      B.box('gloss', '#e4dcc6', 2.62, 0.22, 6.02, 0, 1.86, 0);
-      B.box('gloss', '#2b3236', 2.58, 0.95, 5.7, 0, 2.45, 0, { round: true, r: 0.08 });   // the windows
-      B.box('gloss', '#4f6b52', 2.6, 0.32, 6.0, 0, 3.05, 0, { round: true, r: 0.12 });
-      B.box('metal', '#8c9294', 0.1, 0.5, 1.4, 0, 3.45, 0, { rx: 0.5 });                // the pantograph
-      B.box('metal', '#8c9294', 1.3, 0.05, 0.1, 0, 3.72, -0.25);
-      for (const z of [-3.01, 3.01]) B.box('glow', '#fff1cc', 0.5, 0.18, 0.04, 0, 1.0, z);   // headlights
+      const { letters, pbox, rod } = KIT;
+      const WH = '#e9ebea', GR = '#32373c', GD = '#1d2125', YL = '#d6aa2c', GLS = '#2c3740', REF = '#4d5c68', SEAT = '#a3aeb8', LIT = '#fff0d2', FR = '#0e1012', HEAD = '#5a5048';
+      B.box('rubber', GD, 2.2, 0.3, 5.3, 0, 0.22, 0);                                        // the running gear, in shadow
+      B.box('gloss', GR, 2.54, 0.46, 5.9, 0, 0.6, 0, { round: true, r: 0.06 });               // the graphite skirt band
+      for (const z of [-1.95, 1.95]) B.box('gloss', GD, 2.6, 0.4, 1.55, 0, 0.43, z, { round: true, r: 0.05 });   // the skirts over the bogies
+      B.box('gloss', WH, 2.6, 0.48, 6.0, 0, 1.0, 0, { round: true, r: 0.08 });               // the white body under the glazing
+      B.box('gloss', YL, 2.62, 0.05, 6.02, 0, 1.2, 0);                                        // the thin yellow band
+      B.box('gloss', GR, 2.56, 1.38, 5.9, 0, 1.92, 0, { round: true, r: 0.05 });              // the glazing band (graphite)
+      B.box('gloss', WH, 2.6, 0.34, 6.0, 0, 2.78, 0, { round: true, r: 0.1 });                // the cant rail
+      B.box('gloss', '#d5d8d9', 2.3, 0.1, 5.7, 0, 2.98, 0, { round: true, r: 0.04 });         // the roof
+      for (const z of [-1.75, 1.75]) B.box('gloss', WH, 1.5, 0.24, 1.3, 0, 3.12, z, { round: true, r: 0.08 });   // air-conditioning pods
+      B.box('gloss', GR, 1.0, 0.16, 0.9, 0, 3.08, 0, { round: true, r: 0.05 });              // the pantograph's pod
+      rod(B, 'metal', '#8c9295', [0, 3.17, -0.36], [0, 3.6, 0.06], 0.026, { seg: 6 });        // the pantograph: a single arm, the pan across
+      rod(B, 'metal', '#8c9295', [0, 3.6, 0.06], [0, 3.84, -0.22], 0.022, { seg: 6 });
+      B.box('metal', '#8c9295', 1.3, 0.04, 0.1, 0, 3.86, -0.22);
+      // the sides: panes and doors along the face (local x along the tram, +z out of the face)
+      const panes = [[-2.3, 0.56], [-0.36, 0.64], [0.36, 0.64], [2.3, 0.56]], doors = [-1.35, 1.35];
+      for (const sd of [1, -1]) tramFace(B, sd * 1.282, 0, 0, sd, 0, () => {
+        for (const [cx, w] of panes) {
+          B.box('gloss', GLS, w, 1.12, 0.02, cx, 1.9, 0.012);                                 // the pane
+          pbox(B, 'gloss', REF, w, 0.26, 0.01, cx, 2.33, 0.023);                                // the sky in its upper part
+          for (const y of [1.33, 2.47]) pbox(B, 'gloss', FR, w + 0.06, 0.045, 0.03, cx, y, 0.016);   // its black frame
+          for (const x of [cx - w / 2, cx + w / 2]) pbox(B, 'gloss', FR, 0.045, 1.18, 0.03, x, 1.9, 0.016);
+          B.box('glow', LIT, w - 0.12, 0.05, 0.01, cx, 2.38, 0.028, { glow: 1.4 });            // the saloon's ceiling strip seen through it
+          const nk = Math.round(w / 0.32);
+          for (let k = 0; k < nk; k++) {
+            const sx = cx - w / 2 + 0.16 + k * 0.32;
+            pbox(B, 'gloss', SEAT, 0.24, 0.3, 0.01, sx, 1.5, 0.024);                           // the seat backs
+            if ((k + Math.round(cx * 3)) % 3 === 0) B.add('gloss', KIT.sphG(0.1, 8, 6), HEAD, sx, 1.78, 0.02, { sz: 0.25 });   // a passenger's head
+          }
+          pbox(B, 'metal', '#c4c9cc', 0.025, 1.0, 0.01, cx + w * 0.32, 1.88, 0.026);             // a grab pole
+        }
+        for (const dx of doors) {
+          for (const lx of [dx - 0.3, dx + 0.3]) {
+            B.box('gloss', WH, 0.58, 2.2, 0.03, lx, 1.43, 0.02);                              // a door leaf
+            B.box('gloss', GLS, 0.42, 1.62, 0.012, lx, 1.6, 0.038);                           // its glazing
+          }
+          for (const ex of [dx - 0.025, dx + 0.025]) pbox(B, 'gloss', YL, 0.035, 2.2, 0.012, ex, 1.43, 0.04);   // the yellow edges where they meet
+          pbox(B, 'gloss', YL, 0.035, 2.2, 0.012, dx - 0.59, 1.43, 0.04); pbox(B, 'gloss', YL, 0.035, 2.2, 0.012, dx + 0.59, 1.43, 0.04);
+          B.box('glow', '#d9f2dc', 0.07, 0.07, 0.01, dx + 0.68, 1.12, 0.03, { glow: 0.8 });   // the door button
+        }
+      });
+      // the ends: the windscreen, the destination blind over it, the fleet number on the dash, the headlights
+      for (const sd of [1, -1]) tramFace(B, 0, 0, sd * 3.0, 0, sd, () => {
+        B.box('gloss', GLS, 2.2, 1.22, 0.06, 0, 1.9, 0.02, { round: true, r: 0.06 });
+        pbox(B, 'gloss', REF, 2.1, 0.3, 0.01, 0, 2.36, 0.055);                                // the sky in the windscreen
+        pbox(B, 'gloss', '#454b52', 1.9, 0.2, 0.01, 0, 1.42, 0.055);                          // the driver's desk behind it
+        B.add('gloss', KIT.sphG(0.11, 8, 6), HEAD, -0.55, 1.78, 0.05, { sz: 0.25 });          // the driver
+        B.box('glow', LIT, 1.6, 0.04, 0.01, 0, 2.18, 0.056, { glow: 1.1 });                   // the cab's light
+        pbox(B, 'gloss', FR, 0.04, 0.7, 0.01, 0.35, 1.7, 0.06, { rz: 0.5 });                   // a wiper
+        B.box('gloss', FR, 1.84, 0.3, 0.06, 0, 2.72, 0.04);                                   // the destination blind
+        letters(B, '11 FLOUNDERS ST', { h: 0.12, y: 2.66, z: 0.075, c: LIT, lit: true, glow: 1.3, flat: true, wt: 0.2, track: 0.1 });
+        letters(B, '6012', { h: 0.11, y: 0.94, z: 0.06, c: GD, flat: true, wt: 0.22, mat: 'gloss' });
+        for (const x of [-0.85, 0.85]) B.box('glow', '#fff4dc', 0.34, 0.1, 0.03, x, 0.78, 0.06, { glow: 1.2 });
+      });
     },
   };
-  // the 3000s: a float-tram, a pearl capsule hovering over its light-rail plinth, a white-gold glow underneath
+  // the 3000s: a glass float-tram on a glowing magnetic plinth (DESIGN §2.10): a pearl lower body hovering over the light-rail
+  // plinth on a sheet of light (the gap glows: nothing seen through it), the upper body a rounded glass capsule (era 3's
+  // clear 'glass' bucket) over a lit saloon with a pearl frame — ribs and posts every 1.05 m, moss-green seats, standing
+  // passengers, a ceiling of light — an opaque partition along its middle (no sightline through the cover), a pearl roof
+  // with white-gold seams, the line's name in light on its flanks. Era 3's buckets only (gloss, glow, rubber, glass)
   D.bluestone_floattram = {
     build(B) {
-      B.box('rubber', '#cfd2d4', 1.6, 0.3, 6.0, 0, 0.15, 0, { r: 0.05 });              // the light-rail plinth
-      B.box('glow', '#f4e9c8', 1.2, 0.05, 5.6, 0, 0.32, 0);                            // its light seam
-      B.box('gloss', '#eef0f2', 2.5, 2.1, 6.0, 0, 1.95, 0, { round: true, r: 0.85 });   // the capsule
-      B.box('gloss', '#3a4650', 2.52, 0.7, 4.8, 0, 2.3, 0, { round: true, r: 0.3 });     // the window band
-      B.box('glow', '#f4e9c8', 2.0, 0.06, 5.0, 0, 0.88, 0);                            // the hover glow
+      const { letters, sphG } = KIT;
+      const PE = '#eef0f2', PF = '#f6f7f8', WG = '#f4e9c8', MOSS = '#7d9468', FIG = '#5b5c66';
+      B.box('rubber', '#d4d6da', 1.8, 0.28, 6.0, 0, 0.14, 0, { r: 0.05 });                    // the light-rail plinth
+      B.box('glow', WG, 1.3, 0.04, 5.7, 0, 0.29, 0, { glow: 1.2 });                             // its light seam
+      B.box('glow', '#ece6f6', 2.1, 0.3, 5.5, 0, 0.44, 0, { glow: 0.85 });                      // the magnetic field: the hover gap glows
+      B.box('gloss', PE, 2.5, 0.72, 5.8, 0, 0.94, 0, { round: true, r: 0.26 });               // the pearl lower body
+      for (const sd of [1, -1]) B.box('glow', WG, 0.03, 0.04, 5.2, sd * 1.25, 0.66, 0, { glow: 1.0 });   // its light line
+      // the saloon (opaque, inside the glass)
+      B.box('gloss', '#dcdde2', 2.24, 0.04, 5.3, 0, 1.31, 0);                                 // the floor
+      B.box('gloss', '#e8e5ee', 0.1, 1.32, 5.2, 0, 1.97, 0);                                  // the partition along the middle
+      for (const z of [-2.1, -1.05, 0, 1.05, 2.1]) {
+        B.box('gloss', PF, 2.36, 0.06, 0.08, 0, 2.6, z);                                      // the pearl frame: a rib over the saloon
+        for (const sd of [1, -1]) B.box('gloss', PF, 0.06, 1.3, 0.08, sd * 1.12, 1.96, z);     // and its posts
+      }
+      for (const sd of [1, -1]) B.box('glow', WG, 0.2, 0.03, 5.0, sd * 0.55, 2.56, 0, { glow: 0.9 });   // the ceiling of light
+      for (const z of [-2.35, -1.55, 0.55, 1.35]) for (const sd of [1, -1]) {
+        B.box('rubber', MOSS, 0.62, 0.12, 0.46, sd * 0.68, 1.62, z);                           // a seat (moss on pearl)
+        B.box('rubber', MOSS, 0.62, 0.46, 0.09, sd * 0.68, 1.88, z + 0.22);
+        B.box('gloss', PF, 0.66, 0.3, 0.5, sd * 0.68, 1.44, z);                                // its pearl base
+      }
+      for (const [x, z, h] of [[0.62, -0.42, 1.0], [-0.6, -0.2, 0.92], [0.7, 2.2, 0.96], [-0.66, -1.95, 1.0]]) {
+        B.cyl('rubber', FIG, 0.15, h, x, 1.33 + h / 2, z, { seg: 10 });                        // standing passengers' silhouettes
+        B.add('rubber', sphG(0.12, 10, 8), FIG, x, 1.33 + h + 0.13, z, {});
+      }
+      B.box('glass', '#e8eef2', 2.5, 1.46, 5.8, 0, 1.98, 0, { round: true, r: 0.5 });         // the glass capsule
+      B.box('gloss', PE, 2.4, 0.3, 5.7, 0, 2.82, 0, { round: true, r: 0.14 });               // the pearl roof
+      for (const sd of [1, -1]) B.box('glow', WG, 0.04, 0.04, 5.4, sd * 1.15, 2.72, 0, { glow: 1.2 });   // its white-gold seams
+      for (const sd of [1, -1]) {
+        B.box('glow', WG, 1.6, 0.06, 0.03, 0, 1.08, sd * 2.91, { glow: 1.3 });                 // the nose's light band
+        tramFace(B, sd * 1.26, 0, 0, sd, 0, () => letters(B, 'FLOUNDERS ST', { h: 0.12, y: 0.9, z: 0.02, c: WG, lit: true, glow: 1.3, flat: true, wt: 0.18 }));
+      }
+    },
+  };
+  // (fix round 2, review 2 issue 5) the drum's ceiling over the circus, seen from the floor in every era: it was one flat
+  // tan plane with a sky-coloured seam between the drum's OCT pieces. An octagonal plate just under the drum (y 7.98-8.0,
+  // inset 5 cm from its faces) closes the seam; under it, within 8 cm, coffers: eight radial ribs and two octagonal rings,
+  // bosses at the crossings, a moulded rim and a rose round Tartar's own. Per era: the 1880s coffered timber with gilt
+  // bosses, TODAY cream coffers with a gold rim, the 3000s white coffers with light seams. No collider
+  D.bluestone_drumceiling = {
+    build(B, o) {
+      const e = o.era || 1, PIq = Math.PI / 8, R = 8.75, A = R * Math.cos(PIq);
+      const plate = e === 1 ? '#5a3c29' : e === 2 ? '#e3d8bd' : '#eff1f2', rib = e === 1 ? '#76503a' : e === 2 ? '#d3c4a0' : '#f7f8f8';
+      const boss = e === 1 ? '#c9a356' : e === 2 ? '#c9a356' : '#f4e9c8', pm = e === 1 ? 'wood' : 'gloss', bm = e === 3 ? 'glow' : 'metal';
+      // the plate: an octagon (an 8-sided cylinder turned so its faces lie along the drum's)
+      B.add(pm, KIT.cylGeo(R, R, 0.02, 8), plate, 0, 7.99, 0, { ry: PIq });
+      // the rim: a moulding round the plate's edge, 6 cm deep
+      for (let k = 0; k < 8; k++) {
+        const a = (k + 0.5) * Math.PI / 4, cx = Math.sin(a) * (A - 0.12), cz = Math.cos(a) * (A - 0.12), L = 2 * A * Math.tan(PIq);
+        B.box(bm === 'glow' ? 'gloss' : 'metal', e === 1 ? '#8a6a32' : e === 2 ? '#c9a356' : '#f7f8f8', L - 0.1, 0.06, 0.18, cx, 7.95, cz, { ry: a });
+        if (e === 3) B.box('glow', '#f4e9c8', L - 0.3, 0.02, 0.03, Math.sin(a) * (A - 0.25), 7.925, Math.cos(a) * (A - 0.25), { ry: a, glow: 1.1 });
+      }
+      // the coffers: radial ribs (along the octagon's corners) and two rings
+      for (let k = 0; k < 8; k++) {
+        const a = k * Math.PI / 4, L = R - 0.9;
+        B.box(pm, rib, 0.16, 0.06, L, Math.sin(a) * (0.6 + L / 2), 7.95, Math.cos(a) * (0.6 + L / 2), { ry: a });
+        if (e === 3) B.box('glow', '#f4e9c8', 0.03, 0.015, L - 0.2, Math.sin(a) * (0.6 + L / 2), 7.918, Math.cos(a) * (0.6 + L / 2), { ry: a, glow: 1.0 });
+      }
+      for (const rr of [3.1, 5.9]) for (let k = 0; k < 8; k++) {
+        const a = (k + 0.5) * Math.PI / 4, ap = rr * Math.cos(PIq), L = 2 * ap * Math.tan(PIq);
+        B.box(pm, rib, L, 0.06, 0.16, Math.sin(a) * ap, 7.95, Math.cos(a) * ap, { ry: a });
+        if (e === 3) B.box('glow', '#f4e9c8', L - 0.2, 0.015, 0.03, Math.sin(a) * ap, 7.918, Math.cos(a) * ap, { ry: a, glow: 1.0 });
+        const ca = k * Math.PI / 4;   // the bosses where the ribs cross the rings
+        if (e !== 3) B.add(bm, sphG(0.18, 12, 6, Math.PI / 2), boss, Math.sin(ca) * rr, 7.99, Math.cos(ca) * rr, { rx: Math.PI, sy: 0.42 });   // (to y 7.914)
+      }
+      // the rose round Tartar's (a moulded disc and a ring)
+      B.cyl(e === 3 ? 'gloss' : 'metal', e === 1 ? '#8a6a32' : e === 2 ? '#c9a356' : '#f7f8f8', 0.62, 0.04, 0, 7.96, 0, { seg: 24 });
+      B.add(e === 3 ? 'glow' : 'metal', torG(0.62, 0.035, 6, 28), e === 3 ? '#f4e9c8' : '#c9a356', 0, 7.94, 0, { rx: Math.PI / 2 });
+    },
+  };
+  // (fix round 2, review 2 issue 7) a wreath laid against the statue plinth's face under its relief, per era (within 8 cm
+  // of the face; the plinth's top is walkable, so nothing stands on it): a ring of laurel with flowers and a ribbon — red
+  // and white with a maroon ribbon (1880s), lilac and cream with a blue ribbon (TODAY), white flowers round a ring of light
+  // (3000s). The face frame: x along it, +z out of it
+  D.bluestone_wreath = {
+    build(B, o) {
+      const e = o.era || 1, R = 0.17, n = 22, cy = 0.5;
+      const LEAF = ['#40603a', '#527448', '#38522f'], FL = e === 1 ? ['#8a2a24', '#ece4d4'] : e === 2 ? ['#a7a0c8', '#efe6cc'] : ['#f4f2ee', '#e6e2f2'];
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2, x = Math.cos(a) * R, y = cy + Math.sin(a) * R;
+        B.add('rubber', sphG(0.04, 6, 4), LEAF[i % 3], x, y, 0.035, { sz: 0.7 });
+        if (i % 3 === 0) B.add('rubber', sphG(0.028, 6, 4), FL[(i / 3) % 2], x * 1.05, y + 0.01, 0.06, { sz: 0.7 });
+      }
+      B.box('gloss', e === 1 ? '#6b2c27' : e === 2 ? '#2c4466' : '#f4f1ea', 0.05, 0.16, 0.012, -0.03, cy - R - 0.06, 0.03, { rz: 0.25 });   // the ribbon's tails
+      B.box('gloss', e === 1 ? '#6b2c27' : e === 2 ? '#2c4466' : '#f4f1ea', 0.05, 0.16, 0.012, 0.03, cy - R - 0.06, 0.03, { rz: -0.25 });
+      if (e === 3) B.add('glow', torG(R * 0.82, 0.008, 4, 28), '#f4e9c8', 0, cy, 0.04, { glow: 1.3 });
     },
   };
   // the street lamps on the shared lamp spots: a gas lamp (the 1880s), a street light (today), a light mast (the 3000s)
@@ -187,12 +426,54 @@ export function register(D, H) {
   };
   // the rooftop superstructures (no colliders, above play): today's glass towers rise behind the facades, the 3000s'
   // pearl spires with light seams grow out of them (o.size [w, d], o.y0 the roof, o.top)
+  // (fix round 2, review 2 issue 4: at dusk the Customs House's tower read as a near-black box on the stage card) today's
+  // glass office towers: blue-grey curtain walls between slim mullions every ~1 m, a floor band every 3 m, offices lit
+  // behind the glass in an irregular pattern (warm white; pale by day, lit at dusk), the big one with a stepped gold crown
+  // and a lit band under it (DESIGN §5.2: "a gold-crowned office tower"). Era 2's buckets
   D.bluestone_glasstower = {
     build(B, o) {
-      const [w, d] = o.size || [4, 4], y0 = o.y0 ?? 9, top = o.top ?? 28, h = top - y0;
-      B.box('gloss', '#7d93a3', w, h, d, 0, y0 + h / 2, 0, { r: 0.05 });
-      for (let y = y0 + 3; y < top - 0.5; y += 3) B.box('metal', '#e4e6e6', w + 0.06, 0.12, d + 0.06, 0, y, 0);
-      B.box('metal', '#c9a85a', w * 0.6, 1.2, d * 0.6, 0, top + 0.6, 0);
+      const [w, d] = o.size || [4, 4], y0 = o.y0 ?? 9, top = o.top ?? 28, h = top - y0, big = w * d > 20;
+      const rnd = (() => { let t = ((o.pos?.[0] ?? 0) * 73 + (o.pos?.[2] ?? 0) * 19) | 0; return () => { t = (t * 1103515245 + 12345) & 0x7fffffff; return t / 0x7fffffff; }; })();
+      B.box('gloss', '#6f8698', w, h, d, 0, y0 + h / 2, 0, { r: 0.05 });                      // the curtain wall
+      for (let y = y0 + 3; y < top - 0.5; y += 3) B.box('metal', '#dfe2e3', w + 0.06, 0.14, d + 0.06, 0, y, 0);   // the floor bands
+      // the mullions and the lit offices on each face (fr: along the face, depth out of it)
+      for (const [nx, nz, L, off] of [[1, 0, d, w / 2], [-1, 0, d, w / 2], [0, 1, w, d / 2], [0, -1, w, d / 2]]) {
+        B.push(nx * off, 0, nz * off, Math.atan2(nx, nz));
+        const nb = Math.max(2, Math.round(L / 1.0)), bw = L / nb;
+        for (let i = 1; i < nb; i++) KIT.pbox(B, 'metal', '#c7ccce', 0.06, h - 0.2, 0.1, -L / 2 + i * bw, y0 + h / 2, 0.04);
+        for (let y = y0 + 0.4; y < top - 2.2; y += 3) for (let i = 0; i < nb; i++) if (rnd() < 0.42) B.box('glow', '#ffe8c4', bw - 0.16, 2.2, 0.02, -L / 2 + (i + 0.5) * bw, y + 1.25, 0.012, { glow: 0.75 });
+        B.pop();
+      }
+      if (big) {
+        B.box('metal', '#c9a85a', w * 0.78, 1.4, d * 0.78, 0, top + 0.7, 0);                   // the stepped gold crown
+        B.box('metal', '#d8b868', w * 0.5, 1.6, d * 0.5, 0, top + 2.2, 0);
+        B.box('glow', '#ffe2a8', w * 0.8, 0.12, d * 0.8, 0, top + 0.1, 0, { glow: 1.2 });       // the lit band under it
+        B.cyl('metal', '#c9a85a', 0.12, 4.0, 0, top + 5.0, 0, { seg: 8 });                      // the mast
+      } else B.box('metal', '#c9a85a', w * 0.6, 1.2, d * 0.6, 0, top + 0.6, 0);
+    },
+  };
+  // the 3000s' vertical farm on the Customs House (FARM 03; DESIGN §5.2: "a vertical-farm tower … green glass louvres and
+  // planting"): a pearl frame (corner columns, a floor slab every 2.4 m with a white-gold light seam) round a green-glass
+  // core, green glass louvres across every face, planting spilling over every slab, a pearl roof with a ring of light. Era
+  // 3's buckets (gloss, glow, rubber)
+  D.bluestone_farmtower = {
+    build(B, o) {
+      const [w, d] = o.size || [4.4, 6], y0 = o.y0 ?? 9, top = o.top ?? 26, h = top - y0;
+      const PE = '#eef0f2', GG = '#5f8f72', GGL = '#7fae8c', WG = '#f4e9c8';
+      B.box('gloss', GG, w - 0.5, h, d - 0.5, 0, y0 + h / 2, 0, { r: 0.04 });                  // the green-glass core
+      for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) B.box('gloss', PE, 0.32, h + 0.2, 0.32, sx * (w / 2 - 0.16), y0 + h / 2 + 0.1, sz * (d / 2 - 0.16));   // the pearl columns
+      for (let y = y0 + 2.4; y < top; y += 2.4) {
+        B.box('gloss', PE, w + 0.3, 0.2, d + 0.3, 0, y, 0, { r: 0.05 });                      // a floor slab
+        B.box('glow', WG, w + 0.32, 0.04, d + 0.32, 0, y - 0.11, 0, { glow: 1.1 });           // its light seam
+        for (const [nx, nz, L, off] of [[1, 0, d, w / 2 + 0.12], [-1, 0, d, w / 2 + 0.12], [0, 1, w, d / 2 + 0.12], [0, -1, w, d / 2 + 0.12]]) {
+          B.push(nx * off, 0, nz * off, Math.atan2(nx, nz));
+          for (let k = 0; k < Math.round(L / 0.45); k++) B.add('rubber', KIT.sphG(0.26 + 0.08 * ((k * 7) % 3), 7, 5), k % 3 ? '#5d7a4a' : '#7e9a5e', -L / 2 + 0.22 + k * 0.45, y + 0.2, 0.04, { sy: 0.8 });   // planting over the slab's edge
+          for (let ly = y - 2.2; ly < y - 0.3; ly += 0.42) KIT.pbox(B, 'gloss', GGL, L - 0.4, 0.05, 0.34, 0, ly, -0.18, { rx: 0.55 });   // the green-glass louvres
+          B.pop();
+        }
+      }
+      B.box('gloss', PE, w + 0.2, 0.4, d + 0.2, 0, top + 0.2, 0, { r: 0.08 });                // the pearl roof
+      B.add('glow', KIT.torG(Math.min(w, d) * 0.38, 0.07, 4, 28), WG, 0, top + 0.5, 0, { rx: Math.PI / 2, glow: 1.3 });   // its ring of light
     },
   };
   D.bluestone_spire = {
@@ -223,30 +504,116 @@ export function register(D, H) {
 }
 
 const placements = [];
+const PI = Math.PI;
+const ERAS3 = [1, 2, 3];
 // (Commander Tartar is the era engine's: src/fx/eraFx.js builds him as parts it animates)
-// the landmark's and the hero buildings' blockout volumes (looks only)
-placements.push({ type: 'bluestone_dome', pos: [0, 0, 0], mirror: false });
-placements.push({ type: 'bluestone_clockrow', pos: [0, 0, -7.575] });
+// ---- the station (DESIGN.md §5.1): shared iron and stone, the dome / the drum's words / the clocks per era
+placements.push({ type: 'bluestone_station', pos: [0, 0, 0] });
+for (const e of ERAS3) placements.push({ type: 'bluestone_domeera', pos: [0, 0, 0], mirror: false, era: e, eras: String(e) });
+for (const e of ERAS3) placements.push({ type: 'bluestone_drumceiling', pos: [0, 0, 0], mirror: false, era: e, eras: String(e) });   // (fix round 2)
+for (const e of ERAS3) placements.push({ type: 'bluestone_wreath', pos: [-22.2, 0, -4.0], rotY: Math.PI / 2, era: e, eras: String(e) });   // (fix round 2: the statue plinth's circus face)
+for (const e of ERAS3) placements.push({ type: 'bluestone_drumletters', pos: [0, 0, 0], era: e, eras: String(e) });
+for (const e of ERAS3) placements.push({ type: 'bluestone_clockfaces', pos: [0, 0, -7.575], era: e, eras: String(e) });
+placements.push({ type: 'bluestone_destplates', pos: [0, 0, 0] });
+// ---- the buildings: roof lines (shared), the words on them and the rooftops (per era)
+placements.push({ type: 'bluestone_cornices', pos: [0, 0, 0] });
 placements.push({ type: 'bluestone_turret', pos: [-12.75, 0, -19.75] });
+for (const e of ERAS3) placements.push({ type: 'bluestone_signs', pos: [0, 0, 0], era: e, eras: String(e) });
+for (const e of [2, 3]) placements.push({ type: 'bluestone_rooftops', pos: [0, 0, 0], era: e, eras: String(e) });
 for (const z of [-36.75, -31.25]) placements.push({ type: 'bluestone_grille', pos: [-30.75, 0, z], len: 3.5 });   // (the arcade's grilles onto Hoki Lane)
-// ---- the eras' looks (look-only placements; ENGINE.md §3.3): the tram at its stop on Swimston's west track over the
-//      layout's shared tram collider (collision only), the street lamps, today's towers and the 3000s' spires on the roofs
+placements.push({ type: 'bluestone_vault', pos: [0, 0, 0] });
+for (const e of ERAS3) placements.push({ type: 'bluestone_vault', pos: [0, 0, 0], era: e, eras: String(e) });
+placements.push({ type: 'bluestone_lace', pos: [0, 0, 0] });
+placements.push({ type: 'bluestone_plates', pos: [0, 0, 0] });
+for (const e of ERAS3) placements.push({ type: 'bluestone_hangsigns', pos: [0, 0, 0], era: e, eras: String(e) });
+placements.push({ type: 'bluestone_pods', pos: [0, 0, 0], eras: '3' });
+// ---- the street: the tram at its stop (the era-slot kit: one shared collider in the layout, three looks), the lamps on the
+//      shared spots (the decor's light at their heads), the lanes' wall lamps, the overhead wires
 const TRAM = { pos: [-22.9, 0, -31], rotY: 0 };
 placements.push({ type: 'bluestone_cabletram', ...TRAM, eras: '1' }, { type: 'bluestone_tram', ...TRAM, eras: '2' }, { type: 'bluestone_floattram', ...TRAM, eras: '3' });
-// (the lamps stand in the kerb planters: on Swimston's kerbs and under the balcony; no collider, nobody stands there)
-for (const [x, y, z, ry] of [[-25.3, 1.5, -44, 0], [-25.3, 1.5, -23, 0], [-15.3, 1.5, -26.5, Math.PI], [-13.7, 1.5, -14.4, Math.PI], [-8, 1.5, -16.1, Math.PI / 2]]) {
-  for (const [type, eras] of [['bluestone_gaslamp', '1'], ['bluestone_streetlight', '2'], ['bluestone_lightmast', '3']]) placements.push({ type, pos: [x, y, z], rotY: ry, eras });
+const LAMP_Y = [1.5, 1.5, 2.2, 1.5, 1.3, 1.2];   // the planters' tops the lamps stand in (levelart.js LAMPS)
+LAMPS.forEach(([x, z], i) => { for (const e of ERAS3) placements.push({ type: 'bluestone_lamp', pos: [x, LAMP_Y[i], z], rotY: x > 0 ? PI : 0, era: e, eras: String(e) }); });
+for (const [x, y, z, ry] of [[-36.5, 3.2, -45, PI / 2], [-36.5, 3.2, -37, PI / 2], [-36.5, 3.2, -31, PI / 2], [-36.5, 3.2, -21, PI / 2], [-12.0, 3.0, -22.5, PI], [-13.5, 3.0, -46.0, PI], [-30.0, 3.4, -12.0, PI], [-31.0, 3.0, -34.0, -PI / 2]]) {
+  for (const e of ERAS3) placements.push({ type: 'bluestone_walllamp', pos: [x, 0, z], rotY: ry, y, era: e, eras: String(e) });
 }
-// (the spawn → dome line, DESIGN §8.3: from the spawn deck the dome stands exactly behind the GPO, so nothing stands on
-//  the GPO's roof in any era — its tower and spire are on the tram shed beside the spawn deck — and the hotel's
-//  extension and spire rise straight behind its turret, west of the dome's rim; eras-look part 3 checks that the dome
-//  stays in sight from both spawns in every era)
+for (const e of [1, 2]) placements.push({ type: 'bluestone_wires', pos: [0, 0, 0], era: e, eras: String(e) });
+// Tartar's wires from the drum (the warning's pulses run along them: layout.js eras.pulses): black wire in the 1880s and
+// TODAY, a filament of light in the 3000s; their brackets and roof poles shared
+const PATHS = WIRES.map((w) => wirePath(w));
+placements.push({ type: 'bluestone_pulsewires', pos: [0, 0, 0], anchors: WIRES });
+for (const e of ERAS3) placements.push({ type: 'bluestone_pulsewires', pos: [0, 0, 0], paths: PATHS, era: e, eras: String(e) });
+// ---- the railings: one per rail collider of the half list, its kind by its tag (an era rail keeps its piece's eras and group)
+const DEG = Math.PI / 180;
+function railOf(d) {
+  if (d.kind === 'box') {
+    const dx = d.max[0] - d.min[0], dz = d.max[2] - d.min[2], alongX = dx >= dz;
+    return { pos: [(d.min[0] + d.max[0]) / 2, d.min[1], (d.min[2] + d.max[2]) / 2], rotY: alongX ? 0 : -Math.PI / 2, len: alongX ? dx : dz, h: d.max[1] - d.min[1] };
+  }
+  if (d.kind === 'obox') {
+    const alongX = d.size[0] >= d.size[2], a = d.rotY * DEG;
+    return { pos: [d.center[0], d.center[1] - d.size[1] / 2, d.center[2]], rotY: alongX ? a : a - Math.PI / 2, len: alongX ? d.size[0] : d.size[2], h: d.size[1] };
+  }
+  return null;
+}
+for (const d of LAYOUT.half) {
+  if (!d.rail || d.tag === 'arcade-grille') continue;
+  const r = railOf(d);
+  if (!r) continue;
+  const g = d.eraGroup ? { eraGroup: d.eraGroup } : {};
+  if (d.tag === 'bridge-rail') {
+    placements.push({ type: 'bluestone_rail', ...r, kind: 'lattice', eras: '2', ...g }, { type: 'bluestone_rail', ...r, kind: 'glass', eras: '3', ...g });
+    continue;
+  }
+  const kind = d.tag === 'balustrade' ? 'lace' : d.tag === 'punt-rail' ? 'rope' : d.tag === 'deck-rail' ? (d.min && d.min[1] > 3 ? 'gallery' : 'timber') : /glass|halo/.test(d.tag) ? 'glass' : 'gallery';
+  // (fix round 2, review 2 issue 7: the wharf decks' timber rails stood unchanged in every era) a timber rail on a shared
+  // deck is the 1880s' look: TODAY painted steel, the 3000s glass
+  if (kind === 'timber' && !d.eras) {
+    placements.push({ type: 'bluestone_rail', ...r, kind: 'timber', eras: '1', ...g }, { type: 'bluestone_rail', ...r, kind: 'steel', eras: '2', ...g }, { type: 'bluestone_rail', ...r, kind: 'glass', eras: '3', ...g });
+    continue;
+  }
+  placements.push({ type: 'bluestone_rail', ...r, kind, ...(d.eras ? { eras: d.eras } : {}), ...g });
+}
+// ---- the planting on the planters' tops (roof tops only: nobody stands there), per era; the Halo's and the garden's
+//      planters exist in the 3000s only (their own group)
+for (const d of LAYOUT.half) {
+  if (!/planter/.test(d.tag || '') || !d.roof) continue;
+  if (d.tag === 'garden-planter' && d.kind === 'box' && d.max[1] - d.min[1] > 2) continue;   // (fix round 1: the garden's glasshouse — glazed over, no bed on top)
+  const top = d.kind === 'box' ? d.max[1] : d.center[1] + d.size[1] / 2;
+  const at = d.kind === 'box' ? { pos: [(d.min[0] + d.max[0]) / 2, top, (d.min[2] + d.max[2]) / 2], rotY: 0, w: d.max[0] - d.min[0], d: d.max[2] - d.min[2] } : { pos: [d.center[0], top, d.center[2]], rotY: d.rotY * DEG, w: d.size[0], d: d.size[2] };
+  const eras = d.eras ? [...d.eras].map(Number) : ERAS3;
+  for (const e of eras) placements.push({ type: 'bluestone_planting', ...at, era: e, eras: String(e), ...(d.eraGroup ? { eraGroup: d.eraGroup } : {}), seed: Math.round(at.pos[0] * 13 + at.pos[2] * 7) });
+}
+// ---- (fix round 1) TODAY's beer-garden umbrellas in the Young & Jackfish's balcony planters (roof tops; the canopies'
+//      rims 2.65 m over the balcony floor at 2.4)
+for (const d of LAYOUT.half) if (d.tag === 'balcony-planter' && d.kind === 'box') placements.push({ type: 'bluestone_umbrella', pos: [(d.min[0] + d.max[0]) / 2, d.max[1], (d.min[2] + d.max[2]) / 2], floor: d.min[1] - d.max[1], r: 1.05, eras: '2' });
+// ---- the small things on and round the cover (art phase, from the era-1 sweep): cast-iron bollards on the mooring blocks
+//      (roof tops), rowing eights on the Boathouse's racks (a roof top), hitching rings (1880s) / bike hoops (TODAY) on the
+//      bollard blocks' faces (within 4 cm)
+for (const d of LAYOUT.half) {
+  if (d.tag === 'mooring-post' && d.kind === 'box') placements.push({ type: 'bluestone_bollardcap', pos: [(d.min[0] + d.max[0]) / 2, d.max[1], (d.min[2] + d.max[2]) / 2] });
+  if (d.tag === 'mooring-post' && d.kind === 'obox') placements.push({ type: 'bluestone_bollardcap', pos: [d.center[0], d.center[1] + d.size[1] / 2, d.center[2]] });
+  if (d.tag === 'deck-racks') placements.push({ type: 'bluestone_shells', pos: [(d.min[0] + d.max[0]) / 2, d.max[1], (d.min[2] + d.max[2]) / 2], rotY: Math.PI / 2, len: d.max[0] - d.min[0] });
+  if (d.tag === 'bollards' && d.kind === 'box') {
+    const at = { pos: [(d.min[0] + d.max[0]) / 2, d.min[1], (d.min[2] + d.max[2]) / 2], w: d.max[0] - d.min[0], d: d.max[2] - d.min[2], h: d.max[1] - d.min[1], ...(d.notIn ? { notIn: d.notIn } : {}) };
+    placements.push({ type: 'bluestone_rings', ...at, eras: '1' }, { type: 'bluestone_hoops', ...at, eras: '2' });
+  }
+  // (fix round 3, review 3) the five cover pieces that still read as plain boxes in the 1880s / TODAY: their relief
+  // (dress.js bluestone_coverdress: within 8.5 cm of the faces, nothing on the walkable tops, no collider)
+  const CD = { fountain: ['fountain', '12'], trough: ['trough', '12'], bins: ['bin', '1'], 'coal-bin': ['coal', '12'], bollards: ['bollard', '1'] }[d.tag];
+  if (CD && d.kind === 'box') {
+    const at = { pos: [(d.min[0] + d.max[0]) / 2, d.min[1], (d.min[2] + d.max[2]) / 2], w: d.max[0] - d.min[0], d: d.max[2] - d.min[2], h: d.max[1] - d.min[1], ...(d.notIn ? { notIn: d.notIn } : {}) };
+    for (const e of CD[1]) placements.push({ type: 'bluestone_coverdress', kind: CD[0], ...at, era: +e, eras: e });
+  }
+}
+// (the spawn → dome line, DESIGN §8.3: from the spawn deck the dome stands exactly behind the GPO, so nothing tall stands on
+//  the GPO's roof in any era — its tower and spire are on the tram shed beside the spawn deck — and the hotel's extension
+//  and spire rise straight behind its turret, west of the dome's rim; eras-look part 3 checks that the dome stays in sight
+//  from both spawns in every era)
 placements.push({ type: 'bluestone_glasstower', pos: [-29.5, 0, -7], size: [4.4, 6], y0: 9, top: 34, eras: '2' });
 placements.push({ type: 'bluestone_glasstower', pos: [-9, 0, -68], size: [3.2, 2.6], y0: 6, top: 27, eras: '2' });
 placements.push({ type: 'bluestone_glasstower', pos: [-13.3, 0, -21.7], size: [1.4, 1.2], y0: 9, top: 21, eras: '2' });
-placements.push({ type: 'bluestone_spire', pos: [-29.5, 0, -7], y0: 9, top: 26, r: 3, eras: '3' });
+placements.push({ type: 'bluestone_farmtower', pos: [-29.5, 0, -7], size: [4.4, 6], y0: 9, top: 26, eras: '3' });   // (fix round 2: the vertical farm, was a spire)
 placements.push({ type: 'bluestone_spire', pos: [-9, 0, -68], y0: 6, top: 18, r: 2.2, eras: '3' });
 placements.push({ type: 'bluestone_spire', pos: [-13.3, 0, -21.8], y0: 9, top: 29, r: 1.05, eras: '3' });
-placements.push({ type: 'bluestone_lightlattice', pos: [0, 0, 0], mirror: false, eras: '3' });
 export const BERM_MISS = [];
 export const PLACEMENTS = eraFilter(placements);

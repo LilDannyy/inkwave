@@ -1,0 +1,3 @@
+JOB-14 (bluestone) @ 949cb5f1 (art fix round 1) — Mac mini b5-runner, 2026-10-25 13:31–13:45, exit 0. Short summary.
+- the dusk eye-level sweep at the round's head, every era: 511 / 523 / 582 views of 155 / 157 / 171 clusters (22 / 20 / 6 with no eye-level
+  view), console 0. 15 overview pages pushed under out/sweep/fix1/dusk/.

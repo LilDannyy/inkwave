@@ -1,0 +1,3 @@
+JOB-24 (bluestone, fix round 2) @ bf734d00 — Mac mini b5-runner, 2026-10-25 17:55–18:09, exit 0. Short summary.
+- the dusk eye-level sweep at fix round 2's head, every era: 511 / 523 / 582 views of 155 / 157 / 171 clusters (22 / 20 / 6 with no eye-level
+  view), console 0. 15 overview pages pushed under out/sweep/fix2/dusk/.

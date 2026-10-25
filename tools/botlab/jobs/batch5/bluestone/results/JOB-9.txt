@@ -1,0 +1,6 @@
+JOB-9 (bluestone) @ 5a6387eb — Mac mini b5-runner, 2026-10-25 06:54–07:13, exit 0. Short summary.
+- the day eye-level sweep, every era: era 1 511 views of 155 clusters (22 with no eye-level view), era 2 523 of 157 (20), era 3 582 of 171
+  (6) — the same counts as JOB-10's dusk sweep. The 15 overview pages (5 per era) are pushed under out/sweep/day/.
+- Bravo's twins (TWIN=1, era 2): 523 views of 157 clusters, 20 without an eye-level view (the same as Alpha's), console 0 — but its
+  pages did NOT come back: no TWIN overview page was written to out/sweep/day/ (the run's per-cluster sheets, 000-concourse.0-B.jpg …,
+  stay in its own folder on the Mac mini), so the push carried only the 15 Alpha pages.

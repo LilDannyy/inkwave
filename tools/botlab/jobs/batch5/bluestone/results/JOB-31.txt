@@ -1,0 +1,9 @@
+JOB-31 (bluestone, fix round 3) @ 1b86e9ed — Mac mini b5-runner, 2026-10-25 22:34–22:38, exit 0 (load 1.8–2.8). Short summary.
+- eras-jump frames 2/4, 4/4, 4/4, 4/4. Run 1 (the job's first page) has the spike in BOTH side jumps at the settle: Bravo 2 → 3 407.5 ms at
+  J + 4.85 [render 405.2], sunset 3 → 1 411.2 ms at J + 4.87 [render 409.9]; and its main jump a 415.2 ms frame at J − 0.42 (the warning).
+  Runs 2–4: no frame over 50 ms anywhere.
+- settle-diag (compiles / links / programs / textures / PMREM per frame in both side jumps) 4/4 — it found nothing built at the settle in its
+  run, which was a clean one.
+- so far: 3 of 9 frames runs since fix round 3 carry the ~400 ms render spike at ~J + 4.85 (the settle), never twice in a row, here in the first
+  run of the job.
+- full: first 1/1 ×2, sky 7/7, eras-look 22/22.

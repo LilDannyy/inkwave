@@ -1,0 +1,295 @@
+JOB-5 raw results — automatic, by the Mac mini's b5-runner, 2026-10-17 05:55:04
+branch botlab-b5-bluestone, ran at bd716651, exit code 0, wall time 9min
+(a written-up JOB-5.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+== era 1: Turf War x3
+== bluestone [turf 180s]: turf 29.5% vs 36.2%
+== bluestone [turf 180s]: turf 45.6% vs 26.7%
+== bluestone [turf 180s]: turf 32.6% vs 46.6%
+== era 2: Turf War x3
+== bluestone [turf 180s]: turf 44.7% vs 26.3%
+== bluestone [turf 180s]: turf 27.7% vs 33.9%
+== bluestone [turf 180s]: turf 43% vs 26.1%
+== era 3: Turf War x3
+== bluestone [turf 180s]: turf 29.4% vs 37%
+== bluestone [turf 180s]: turf 37.4% vs 28%
+== bluestone [turf 180s]: turf 28.7% vs 40.5%
+== Halyard: Turf War x3 (same machine)
+== halyard [turf 180s]: turf 47.2% vs 24.4%
+== halyard [turf 180s]: turf 27.1% vs 39.9%
+== halyard [turf 180s]: turf 34% vs 42.5%
+== Zone Control, one per era
+== bluestone [zones]: winner Alpha (knockout) | final 0 vs 98 (penalty +0/+3) | OT no
+== bluestone [zones]: winner Alpha (time) | final 35 vs 80 (penalty +25.9/+11.3) | OT no
+== bluestone [zones]: winner Alpha (knockout) | final 0 vs 100 (penalty +0/+0) | OT no
+== era 1: tower-check
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+== era 2: tower-check
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+== era 3: tower-check
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+== tower-match, eras 1 and 3
+== bluestone [tower len 74/74]: winner Bravo (retake) | counts 62 vs 16 (score 62/16) | best push A 28.8m B 59.9m | OT 1.9s | sim 302s
+== bluestone [tower len 74/74]: winner Bravo (knockout) | counts 100 vs 0 (score 100/0) | best push A 0m B 74m | OT no | sim 141s
+RESULT done
+
+## last 15 lines of job.log
+   holes (no floor under the platform): none
+   clearance: clean
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+== era 2: tower-check
+   holes (no floor under the platform): none
+   clearance: clean
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+== era 3: tower-check
+   holes (no floor under the platform): none
+   clearance: clean
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+== tower-match, eras 1 and 3
+== bluestone [tower len 74/74]: winner Bravo (retake) | counts 62 vs 16 (score 62/16) | best push A 28.8m B 59.9m | OT 1.9s | sim 302s
+== bluestone [tower len 74/74]: winner Bravo (knockout) | counts 100 vs 0 (score 100/0) | best push A 0m B 74m | OT no | sim 141s
+RESULT done
+
+## towercheck1.txt
+ERA 1 (started in era 1, held there: ?era=1; page ?autopilot&era=1)
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 7 pieces · 5 runs, 1 inclines, 0 climbs, 1 drops · 73.99 m
+     DROP     s=  9.99  [9.99,1.3,0] → [9.99,0,0]  -1.3 m
+     incline  s=  69.5  [19.5,0,48.7] → [19.5,1,51.3]  2.6 m 21°
+   side Bravo (s<0), the mirror — pieces in the JSON: 7 pieces · 5 runs, 1 inclines, 0 climbs, 1 drops · 73.99 m
+   checkpoints [{"team":0,"index":0,"d":28.8,"dur":10,"at":[19.5,0,8]},{"team":0,"index":1,"d":50.8,"dur":10,"at":[19.5,0,30]},{"team":1,"index":0,"d":28.8,"dur":10,"at":[-19.5,0,-8]},{"team":1,"index":1,"d":50.8,"dur":10,"at":[-19.5,0,-30]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   pictures (/Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-5-1017-0545/tc1): bluestone-top.png, bluestone-01-drop-s10.png, bluestone-02-corner-s21.png, bluestone-03-checkpoint1-s29.png, bluestone-04-checkpoint2-s51.png, bluestone-05-goal-s74.png
+   console errors: none
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+
+## towercheck2.txt
+ERA 2 (started in era 2, held there: ?era=2; page ?autopilot&era=2)
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 7 pieces · 5 runs, 1 inclines, 0 climbs, 1 drops · 73.99 m
+     DROP     s=  9.99  [9.99,1.3,0] → [9.99,0,0]  -1.3 m
+     incline  s=  69.5  [19.5,0,48.7] → [19.5,1,51.3]  2.6 m 21°
+   side Bravo (s<0), the mirror — pieces in the JSON: 7 pieces · 5 runs, 1 inclines, 0 climbs, 1 drops · 73.99 m
+   checkpoints [{"team":0,"index":0,"d":28.8,"dur":10,"at":[19.5,0,8]},{"team":0,"index":1,"d":50.8,"dur":10,"at":[19.5,0,30]},{"team":1,"index":0,"d":28.8,"dur":10,"at":[-19.5,0,-8]},{"team":1,"index":1,"d":50.8,"dur":10,"at":[-19.5,0,-30]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   pictures (/Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-5-1017-0545/tc2): bluestone-top.png, bluestone-01-drop-s10.png, bluestone-02-corner-s21.png, bluestone-03-checkpoint1-s29.png, bluestone-04-checkpoint2-s51.png, bluestone-05-goal-s74.png
+   console errors: none
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+
+## towercheck3.txt
+ERA 3 (started in era 3, held there: ?era=3; page ?autopilot&era=3)
+== bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints
+   side Alpha (s>0): 7 pieces · 5 runs, 1 inclines, 0 climbs, 1 drops · 73.99 m
+     DROP     s=  9.99  [9.99,1.3,0] → [9.99,0,0]  -1.3 m
+     incline  s=  69.5  [19.5,0,48.7] → [19.5,1,51.3]  2.6 m 21°
+   side Bravo (s<0), the mirror — pieces in the JSON: 7 pieces · 5 runs, 1 inclines, 0 climbs, 1 drops · 73.99 m
+   checkpoints [{"team":0,"index":0,"d":28.8,"dur":10,"at":[19.5,0,8]},{"team":0,"index":1,"d":50.8,"dur":10,"at":[19.5,0,30]},{"team":1,"index":0,"d":28.8,"dur":10,"at":[-19.5,0,-8]},{"team":1,"index":1,"d":50.8,"dur":10,"at":[-19.5,0,-30]}]
+   holes (no floor under the platform): none
+   clearance: clean
+   ride Alpha: knockout (winner 0) at s 73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   ride Bravo: knockout (winner 1) at s -73.99 after 83.4 s (real speed) · riders knocked off 0  · stalls none · max rider height over the top 0 m
+   pictures (/Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-5-1017-0545/tc3): bluestone-top.png, bluestone-01-drop-s10.png, bluestone-02-corner-s21.png, bluestone-03-checkpoint1-s29.png, bluestone-04-checkpoint2-s51.png, bluestone-05-goal-s74.png
+   console errors: none
+RESULT_JSON {"map":"bluestone","len":[73.99,73.99],"holes":0,"issues":0,"climbs":0,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}
+
+## towermatch1.txt
+### towermatch1
+== bluestone [tower len 74/74]: winner Bravo (retake) | counts 62 vs 16 (score 62/16) | best push A 28.8m B 59.9m | OT 1.9s | sim 302s
+   held A 125s B 165.8s | contested 4s (8×) | neutral 11s | control changes 9 (takes 11) | idle→neutral 1
+   checkpoints cleared A 0 B 2 (reached 1/2, refills 1/0) | riders avg while held A 1.19 B 1.11 | mounts 34/31
+   left empty while held: 24× (>2 s: 13, of those with a teammate up within 15 m: 11; team wiped: 0; longest 4.9s; [5,4.75,3.75,3.75,3.5,3.25]) | off the tower {"death":25,"role":32,"fell":7,"refill":1}, last one off a held tower {"death":11,"fell":6,"refill":1,"role":4}
+   stuck 0.3% | by the tower's side 3.6% of bot-time, stuck there 0s (0 episodes) | splats 105 (water 1) | specials 18 (ready 19) | super jumps 54 | turf 18.9/27.4 | sim 302s in 39s (wall 39s) | {"cpuSimMs":0.53}
+   ERAS shoves 0 rescues 0 flips 0 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 1, started in era 1 (held there: ?era=1)
+   stuck {"t":163,"name":"Zest","w":"charger","mode":"fight","role":"perch","pos":[12.8,0,-1.8],"tower":36.9,"path":false,"dur":1}
+   stuck {"t":238.5,"name":"P1","w":"charger","mode":"fight","role":"perch","pos":[-12.8,0,-49.6],"tower":18.1,"path":false,"dur":1}
+   stuck {"t":43,"name":"Zest","w":"charger","mode":"fight","role":"perch","pos":[0.5,0.77,10.1],"tower":19.1,"path":false,"dur":0.5}
+   stuck {"t":54,"name":"Zest","w":"charger","mode":"paint","role":"perch","pos":[0.8,1.3,8.1],"tower":18.7,"path":true,"dur":0.5}
+   stuck {"t":194.3,"name":"P1","w":"charger","mode":"fight","role":"perch","pos":[-9.1,0,-44.6],"tower":15,"path":false,"dur":0.5}
+   stuck {"t":217,"name":"Zest","w":"charger","mode":"paint","role":"perch","pos":[-3,0.05,-11.9],"tower":20.3,"path":true,"dur":0.5}
+   DEPLOY hits 7 (277 dmg) | shot down {"seeker":2} | crushed by the tower {} | pushed aside by it 0 | rides 9 lifts 0 shoves 0 drops 0 | skitter thrown 20 popped 2 | bots (device AI on): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+
+## towermatch3.txt
+### towermatch3
+== bluestone [tower len 74/74]: winner Bravo (knockout) | counts 100 vs 0 (score 100/0) | best push A 0m B 74m | OT no | sim 141s
+   held A 10s B 119.8s | contested 0.5s (2×) | neutral 11s | control changes 4 (takes 5) | idle→neutral 0
+   checkpoints cleared A 0 B 2 (reached 0/2, refills 0/0) | riders avg while held A 0.6 B 1.15 | mounts 5/25
+   left empty while held: 11× (>2 s: 3, of those with a teammate up within 15 m: 3; team wiped: 0; longest 4.3s; [4.5,3.5,2.5,2,2,1.5]) | off the tower {"death":14,"role":11,"fell":2,"retreat":1}, last one off a held tower {"death":9,"fell":1,"role":1,"retreat":1}
+   stuck 0.3% | by the tower's side 3.5% of bot-time, stuck there 0.8s (1 episodes) | splats 60 (water 0) | specials 4 (ready 5) | super jumps 35 | turf 7.5/16.1 | sim 141s in 23s (wall 23s) | {"cpuSimMs":1.32}
+   ERAS shoves 0 rescues 0 flips 0 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 3, started in era 3 (held there: ?era=3)
+   stuck {"t":42.8,"name":"Moxie","w":"charger","mode":"fight","role":"perch","pos":[-20.5,0,-23.7],"tower":19.7,"path":false,"dur":0.5}
+   stuck {"t":67.5,"name":"P1","w":"blade","mode":"fight","role":"ride","pos":[-18.3,0,-13],"tower":2.3,"path":false,"dur":0.5}
+   stuck {"t":79,"name":"Moxie","w":"charger","mode":"fight","role":"perch","pos":[-23.8,0,-21.5],"tower":16.4,"path":false,"dur":0.5}
+   stuck {"t":124,"name":"Moxie","w":"charger","mode":"fight","role":"perch","pos":[-28.1,0,-42.7],"tower":9.3,"path":false,"dur":0.5}
+   stuck {"t":26.3,"name":"Sprinkle","w":"shooter","mode":"fight","role":"escort","pos":[-10.8,0,3.2],"tower":3.2,"path":true,"dur":0.25}
+   stuck {"t":39,"name":"Moxie","w":"charger","mode":"fight","role":"perch","pos":[-20.4,0,-23.4],"tower":21.3,"path":false,"dur":0.25}
+   DEPLOY hits 0 (0 dmg) | shot down {} | crushed by the tower {} | pushed aside by it 0 | rides 2 lifts 0 shoves 0 drops 0 | skitter thrown 0 popped 0 | bots (device AI on): device mode 0.0 s/bot (walking 0.0) | picks 0 (beacon 0, sprinkler 0, buoy 0) re-picks 0 gave up 0
+CONSOLE 1 unique warning/error line(s)
+  [warning] [inkwave] no lightmap for bluestone.tower Unexpected token 'N', "Not found" is not valid JSON
+
+## turf1a.txt
+### turf1a
+== bluestone [turf 180s]: turf 29.5% vs 36.2%
+   ERAS shoves 0 rescues 0 flips 0 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 1, started in era 1 (held there: ?era=1)
+   stuck 0% | splats 46 (water 3) | specials 3 | super jumps 19 | turf 29.5/36.2 | sim 180s in 46s (wall 46s) | {"cpuSimMs":2.64}
+   splats by cause {"water":3,"brolly":7,"zooka":4,"shot":8,"blast":9,"drop":3,"blade":6,"charger":2,"seeker":1,"burst":1,"tracer":1,"roller":1}
+   wall climbs (at the wall): {"tries":3,"done":1,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 0 unique warning/error line(s)
+
+## turf1b.txt
+### turf1b
+== bluestone [turf 180s]: turf 45.6% vs 26.7%
+   ERAS shoves 0 rescues 0 flips 0 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 1, started in era 1 (held there: ?era=1)
+   stuck 0% | splats 53 (water 0) | specials 3 | super jumps 22 | turf 45.6/26.7 | sim 180s in 47s (wall 47s) | {"cpuSimMs":1.96}
+   splats by cause {"bow":10,"blade":8,"shot":8,"slosh":4,"brush":2,"roller":3,"blast":9,"shaker":1,"drop":5,"blaster":1,"mine":1,"waddle":1}
+   wall climbs (at the wall): {"tries":5,"done":3,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 0 unique warning/error line(s)
+
+## turf1c.txt
+### turf1c
+== bluestone [turf 180s]: turf 32.6% vs 46.6%
+   ERAS shoves 0 rescues 0 flips 0 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 1, started in era 1 (held there: ?era=1)
+   stuck 0% | splats 36 (water 0) | specials 8 | super jumps 21 | turf 32.6/46.6 | sim 180s in 48s (wall 48s) | {"cpuSimMs":0.49}
+   splats by cause {"blade":3,"bow":13,"crab":2,"shot":9,"mitts":5,"brolly":4}
+   wall climbs (at the wall): {"tries":12,"done":9,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 0 unique warning/error line(s)
+
+## turf2a.txt
+### turf2a
+== bluestone [turf 180s]: turf 44.7% vs 26.3%
+   ERAS shoves 0 rescues 0 flips 0 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 2, started in era 2 (held there: ?era=2)
+   stuck 0% | splats 35 (water 0) | specials 4 | super jumps 11 | turf 44.7/26.3 | sim 180s in 47s (wall 47s) | {"cpuSimMs":0.61}
+   splats by cause {"blast":5,"kraken":1,"shot":14,"mitts":4,"charger":7,"boomerang":1,"roller":1,"drop":1,"mine":1}
+   wall climbs (at the wall): {"tries":4,"done":2,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 0 unique warning/error line(s)
+
+## turf2b.txt
+### turf2b
+== bluestone [turf 180s]: turf 27.7% vs 33.9%
+   ERAS shoves 0 rescues 0 flips 0 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 2, started in era 2 (held there: ?era=2)
+   stuck 0.1% | splats 46 (water 1) | specials 1 | super jumps 23 | turf 27.7/33.9 | sim 180s in 44s (wall 44s) | {"cpuSimMs":2.87}
+   splats by cause {"blast":7,"bow":12,"drop":4,"boomerang":4,"slosh":3,"brolly":6,"water":1,"blaster":1,"charger":7,"roller":1}
+   wall climbs (at the wall): {"tries":5,"done":2,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 0 unique warning/error line(s)
+
+## turf2c.txt
+### turf2c
+== bluestone [turf 180s]: turf 43% vs 26.1%
+   ERAS shoves 0 rescues 0 flips 0 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 2, started in era 2 (held there: ?era=2)
+   stuck 0% | splats 40 (water 1) | specials 3 | super jumps 17 | turf 43/26.1 | sim 180s in 46s (wall 46s) | {"cpuSimMs":1.01}
+   splats by cause {"slosh":4,"bow":6,"zipcaster":1,"mitts":8,"brolly":4,"shot":4,"blade":6,"brush":1,"charger":3,"drop":1,"water":1,"burst":1}
+   wall climbs (at the wall): {"tries":5,"done":5,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 0 unique warning/error line(s)
+
+## turf3a.txt
+### turf3a
+== bluestone [turf 180s]: turf 29.4% vs 37%
+   ERAS shoves 0 rescues 0 flips 0 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 3, started in era 3 (held there: ?era=3)
+   stuck 0.1% | splats 38 (water 0) | specials 5 | super jumps 15 | turf 29.4/37 | sim 180s in 47s (wall 48s) | {"cpuSimMs":2.5}
+   splats by cause {"brolly":5,"roller":1,"charger":5,"shot":3,"bow":3,"mitts":9,"blade":3,"drop":4,"kraken":1,"slosh":2,"shaker":1,"tracer":1}
+   wall climbs (at the wall): {"tries":6,"done":5,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 0 unique warning/error line(s)
+
+## turf3b.txt
+### turf3b
+== bluestone [turf 180s]: turf 37.4% vs 28%
+   ERAS shoves 0 rescues 0 flips 0 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 3, started in era 3 (held there: ?era=3)
+   stuck 0.1% | splats 42 (water 1) | specials 5 | super jumps 17 | turf 37.4/28 | sim 180s in 48s (wall 48s) | {"cpuSimMs":1}
+   splats by cause {"water":1,"brolly":4,"shot":13,"blade":3,"mitts":5,"brush":3,"blast":3,"tracer":4,"jetpack":2,"boomerang":2,"slosh":2}
+   wall climbs (at the wall): {"tries":7,"done":4,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 0 unique warning/error line(s)
+
+## turf3c.txt
+### turf3c
+== bluestone [turf 180s]: turf 28.7% vs 40.5%
+   ERAS shoves 0 rescues 0 flips 0 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 3, started in era 3 (held there: ?era=3)
+   stuck 0.1% | splats 50 (water 0) | specials 3 | super jumps 19 | turf 28.7/40.5 | sim 180s in 47s (wall 47s) | {"cpuSimMs":2.65}
+   splats by cause {"drop":11,"shot":17,"blade":3,"slosh":2,"charger":5,"roller":3,"blast":6,"seeker":1,"boomerang":2}
+   wall climbs (at the wall): {"tries":5,"done":2,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 0 unique warning/error line(s)
+
+## turfHa.txt
+### turfHa
+== halyard [turf 180s]: turf 47.2% vs 24.4%
+   stuck 0% | splats 44 (water 0) | specials 4 | super jumps 25 | turf 47.2/24.4 | sim 180s in 43s (wall 43s) | {"cpuSimMs":0.92}
+   splats by cause {"shot":23,"slosh":2,"bow":11,"bomb":1,"charger":5,"zooka":1,"blade":1}
+   wall climbs (at the wall): {"tries":11,"done":7,"stalled":0,"dry":0,"long":0}
+   stuck {"t":83,"name":"Juno","w":"charger","mode":"fight","role":"-","pos":[-0.9,0,41.3],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 0 unique warning/error line(s)
+
+## turfHb.txt
+### turfHb
+== halyard [turf 180s]: turf 27.1% vs 39.9%
+   stuck 0.1% | splats 35 (water 2) | specials 1 | super jumps 19 | turf 27.1/39.9 | sim 180s in 44s (wall 44s) | {"cpuSimMs":0.51}
+   splats by cause {"shot":20,"water":2,"blast":3,"bow":4,"brolly":1,"charger":3,"blaster":1,"blade":1}
+   wall climbs (at the wall): {"tries":38,"done":15,"stalled":0,"dry":0,"long":0}
+   stuck {"t":11.5,"name":"Nori","w":"brolly","mode":"paint","role":"-","pos":[4.3,0,-44],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":68,"name":"P1","w":"spinner","mode":"retreat","role":"-","pos":[4.1,3.8,1.9],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":11,"name":"Nori","w":"brolly","mode":"paint","role":"-","pos":[3.6,0.07,-44],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":12.5,"name":"Nori","w":"brolly","mode":"paint","role":"-","pos":[4.3,0,-43.8],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 0 unique warning/error line(s)
+
+## turfHc.txt
+### turfHc
+== halyard [turf 180s]: turf 34% vs 42.5%
+   stuck 0.1% | splats 40 (water 4) | specials 3 | super jumps 20 | turf 34/42.5 | sim 180s in 41s (wall 42s) | {"cpuSimMs":1.48}
+   splats by cause {"drop":4,"blade":4,"mitts":12,"bow":4,"charger":7,"water":4,"mine":1,"shot":2,"boomerang":1,"roller":1}
+   wall climbs (at the wall): {"tries":21,"done":14,"stalled":0,"dry":0,"long":0}
+   stuck {"t":172,"name":"Bubbles","w":"roller","mode":"refill","role":"-","pos":[-20.6,0,1],"path":true,"hold":false,"pod":"-","dur":0.75}
+   stuck {"t":119.5,"name":"P1","w":"charger","mode":"paint","role":"-","pos":[12.2,0,-30.2],"path":true,"hold":false,"pod":"-","dur":0.5}
+   stuck {"t":165.8,"name":"P1","w":"charger","mode":"paint","role":"-","pos":[-0.4,0,-17.8],"path":true,"hold":false,"pod":"-","dur":0.25}
+   stuck {"t":167.8,"name":"Loop","w":"bucket","mode":"retreat","role":"-","pos":[15.5,0,-8.6],"path":true,"hold":false,"pod":"-","dur":0.25}
+CONSOLE 0 unique warning/error line(s)
+
+## zones1.txt
+### zones1
+== bluestone [zones]: winner Alpha (knockout) | final 0 vs 98 (penalty +0/+3) | OT no
+   held A 85s B 2.8s neutral 165.5s | captures 5 (takeovers 1), control events 9, first capture @33.4s | rotations 5
+   bots in the active zone 56.6% of the time | avg inside A 0.74 B 0.17 | within 12 m A 1.62 B 0.67
+   ERAS shoves 0 rescues 0 flips 0 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 1, started in era 1 (held there: ?era=1)
+   stuck 0.4% | splats 67 (water 2) | specials 5 | super jumps 31 | turf 29.1/14.9 | sim 253.5s in 72s (wall 72s) | {"cpuSimMs":1.21}
+   splats by cause {"shot":7,"mitts":15,"water":2,"brush":4,"drop":4,"brolly":3,"slosh":2,"bow":5,"charger":3,"blast":14,"torpedo":1,"burst":1,"tracer":3,"crab":2,"stamp":1}
+   wall climbs (at the wall): {"tries":5,"done":3,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 0 unique warning/error line(s)
+
+## zones2.txt
+### zones2
+== bluestone [zones]: winner Alpha (time) | final 35 vs 80 (penalty +25.9/+11.3) | OT no
+   held A 96.5s B 64.5s neutral 138.8s | captures 9 (takeovers 6), control events 17, first capture @18.2s | rotations 6
+   bots in the active zone 62.1% of the time | avg inside A 0.53 B 0.53 | within 12 m A 1.33 B 1.1
+   ERAS shoves 0 rescues 0 flips 0 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 2, started in era 2 (held there: ?era=2)
+   stuck 0.3% | splats 70 (water 1) | specials 15 | super jumps 25 | turf 30.9/23.4 | sim 300s in 76s (wall 76s) | {"cpuSimMs":0.46}
+   splats by cause {"shot":25,"slosh":3,"blaster":8,"charger":3,"blast":23,"sprinkler":1,"jetpack":2,"bomb":2,"crab":1,"water":1,"seeker":1}
+   wall climbs (at the wall): {"tries":9,"done":8,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 0 unique warning/error line(s)
+
+## zones3.txt
+### zones3
+== bluestone [zones]: winner Alpha (knockout) | final 0 vs 100 (penalty +0/+0) | OT no
+   held A 134.5s B 0s neutral 85s | captures 5 (takeovers 0), control events 9, first capture @18.6s | rotations 4
+   bots in the active zone 60.1% of the time | avg inside A 0.86 B 0.13 | within 12 m A 2.03 B 0.29
+   ERAS shoves 0 rescues 0 flips 0 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 0 (held 0) | era 3, started in era 3 (held there: ?era=3)
+   stuck 0.3% | splats 46 (water 0) | specials 15 | super jumps 15 | turf 30.4/22.7 | sim 219.8s in 70s (wall 70s) | {"cpuSimMs":2.85}
+   splats by cause {"shot":19,"mitts":5,"blaster":5,"zooka":3,"seeker":1,"burst":1,"blast":7,"charger":3,"brolly":1,"mine":1}
+   wall climbs (at the wall): {"tries":1,"done":1,"stalled":0,"dry":0,"long":0}
+   DIAG: 0 stuck episode(s) of 2 s or more
+CONSOLE 0 unique warning/error line(s)

@@ -1,0 +1,177 @@
+JOB-27 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 19:41:08
+branch botlab-b5-bluestone, ran at bfb4b6b1, exit code 0, wall time 37min
+(a written-up JOB-27.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-27 (art review 3) head bfb4b6b1 load { 1.42 2.00 2.63 }
+== check-maps (every stage): 19 ok lines, 5 not ok; bluestone#1  568 pieces  (strips over 25 m: 0);bluestone#2  590 pieces  (strips over 25 m: 0);bluestone#3  700 pieces  (strips over 25 m: 0);bluestone    712 pieces  ok;
+== eras-static: RESULT eras-static 23/23
+== eras-world-12: RESULT 12/12  0 FAIL
+== eras-world-34: RESULT 7/7  0 FAIL
+== eras-world-5: RESULT 3/3  0 FAIL
+== eras-look: RESULT 20/20  0 FAIL
+== eras-jump-first: RESULT 1/1  0 FAIL
+== eras-jump-a: RESULT 8/8  0 FAIL
+== eras-jump-b: RESULT 7/7  0 FAIL
+== eras-jump-c: RESULT 3/3  0 FAIL
+== eras-jump-d: RESULT 4/4  0 FAIL
+== eras-jump-e: RESULT 6/6  0 FAIL
+== eras-hud: RESULT 12/12  0 FAIL
+== eras-modes: RESULT 6/6  0 FAIL
+== stage-mods: RESULT 36/36  0 FAIL
+== world-build-halyard: RESULT 5/5  0 FAIL
+== world-build-bluestone: RESULT 5/5  0 FAIL
+== climb-audit-e1: RESULT 1/1  0 FAIL
+== cover-map-e1: RESULT 1/1  0 FAIL
+== spawn-mid-e1: RESULT 1/1  0 FAIL
+== tower-check e1: HARNESS ERA=1: every game page loads with ?era=1 ERA 1 (started in era 1, held there: ?era=1; page ?autopilot&era=1) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e2: RESULT 1/1  0 FAIL
+== cover-map-e2: RESULT 1/1  0 FAIL
+== spawn-mid-e2: RESULT 1/1  0 FAIL
+== tower-check e2: HARNESS ERA=2: every game page loads with ?era=2 ERA 2 (started in era 2, held there: ?era=2; page ?autopilot&era=2) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e3: RESULT 1/1  0 FAIL
+== cover-map-e3: RESULT 1/1  0 FAIL
+== spawn-mid-e3: RESULT 1/1  0 FAIL
+== tower-check e3: HARNESS ERA=3: every game page loads with ?era=3 ERA 3 (started in era 3, held there: ?era=3; page ?autopilot&era=3) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== done
+# check-maps bluestone#1  568 pieces  (strips over 25 m: 0)
+# check-maps bluestone#2  590 pieces  (strips over 25 m: 0)
+# check-maps bluestone#3  700 pieces  (strips over 25 m: 0)
+# check-maps bluestone    712 pieces  ok
+# e1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-27-1025-1903/art/climb-audit-e1.log:PASS climb edges barred by a railing  {"climbs":144,"bad":[],"n":0}
+# e1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-27-1025-1903/art/climb-audit-e1.log:RESULT 1/1
+# e1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-27-1025-1903/art/cover-map-e1.log:PASS cover map  {"map":"bluestone","floorCells":5006,"within5m_pct":99.6,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":"//////////////
+# e1 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-27-1025-1903/art/cover-map-e1.log:RESULT 1/1
+# e2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-27-1025-1903/art/climb-audit-e2.log:PASS climb edges barred by a railing  {"climbs":144,"bad":[],"n":0}
+# e2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-27-1025-1903/art/climb-audit-e2.log:RESULT 1/1
+# e2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-27-1025-1903/art/cover-map-e2.log:PASS cover map  {"map":"bluestone","floorCells":5166,"within5m_pct":99.6,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":"//////////////
+# e2 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-27-1025-1903/art/cover-map-e2.log:RESULT 1/1
+# e3 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-27-1025-1903/art/climb-audit-e3.log:PASS climb edges barred by a railing  {"climbs":144,"bad":[],"n":0}
+# e3 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-27-1025-1903/art/climb-audit-e3.log:RESULT 1/1
+# e3 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-27-1025-1903/art/cover-map-e3.log:PASS cover map  {"map":"bluestone","floorCells":5688,"within5m_pct":99.5,"largestOpenRadius_m":7,"at":[-29.5,-20.5],"skip":[],"grid":{"x0":-42,"z0":-80,"nx":84,"nz":160,"b64":"//////////////
+# e3 /Users/danielosling/inkwave-botlab/.botlab/b5runner/runs/bluestone-JOB-27-1025-1903/art/cover-map-e3.log:RESULT 1/1
+# art-tests frames worst "worst":[[31.9,1.47,"jump",0,0,3.9],[16.8,4.98,"idle",0,0,0]
+== frames-1: RESULT 4/4  0 FAIL
+# frames-1 jump worst "worst":[[11.1,1.15,"jump",0,1.5,0],[11,3.97,"idle",0,1.9,4.2]
+== frames-2: RESULT 4/4  0 FAIL
+# frames-2 jump worst "worst":[[34.5,1.47,"jump",0,0,3.9],[20.7,1.75,"jump",0,0,5.1]
+== first-1: RESULT 1/1  0 FAIL
+== eras-bake: RESULT 3/3  0 FAIL
+== stage-audit turf e1: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit zones e1: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"zones","rows":1142} RESULT 3/3 
+== stage-audit tower e1: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower","rows":1141} RESULT 4/4 
+== stage-audit turf e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit zones e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"zones","rows":1142} RESULT 3/3 
+== stage-audit tower e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower","rows":1141} RESULT 4/4 
+== stage-audit turf e3: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit zones e3: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"zones","rows":1142} RESULT 3/3 
+== stage-audit tower e3: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower","rows":1141} RESULT 4/4 
+== stage-audit boss e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"boss","rows":1142} RESULT 1/1 
+== net-eras: RESULT 13/14  1 FAIL
+FAIL turf: the guest's splats on the Iron Bridge from 0.4 s before its flip to 0.6 s after (the guard window; field 15 carries the painter's stage time) leave its cells equal on both screens  {"shots":17,"span":[-0.4,0.57],"cells":368,"inked":88,"differ":2,"differPerTry":[2,2,2,2,2,2]}
+== net-eras lagged: RESULT 8/8  0 FAIL
+== sus halyard e0 day r1: "A":27.89,"A2":16.56,"B":28.88,"Bwall":11.48,"Cissue":1.04,"Cdone":7.1 
+== sus bluestone e1 day r1: "A":40.85,"A2":18.12,"B":41.19,"Bwall":9.9,"Cissue":0.81,"Cdone":6.28 
+== sus bluestone e2 day r1: "A":41.06,"A2":18.94,"B":41.3,"Bwall":9.96,"Cissue":0.8,"Cdone":6.32 
+== sus bluestone e3 day r1: "A":42.68,"A2":19.23,"B":43.23,"Bwall":10.14,"Cissue":0.83,"Cdone":6.53 
+== sus halyard e0 dusk r1: "A":25.5,"A2":17.76,"B":29.08,"Bwall":11.61,"Cissue":1.08,"Cdone":7.33 
+== sus bluestone e1 dusk r1: "A":42.67,"A2":18.22,"B":42.02,"Bwall":10.06,"Cissue":0.89,"Cdone":6.55 
+== sus bluestone e2 dusk r1: "A":44.29,"A2":17.75,"B":44.88,"Bwall":10.4,"Cissue":0.82,"Cdone":6.53 
+== sus bluestone e3 dusk r1: "A":43.78,"A2":19.37,"B":43.52,"Bwall":10.25,"Cissue":0.88,"Cdone":7 
+== sus halyard e0 day r2: "A":25.09,"A2":17.65,"B":26.86,"Bwall":11.43,"Cissue":1.03,"Cdone":7.14 
+== sus bluestone e1 day r2: "A":41.01,"A2":17.13,"B":41.49,"Bwall":9.82,"Cissue":0.89,"Cdone":6.03 
+== sus bluestone e2 day r2: "A":41.29,"A2":18.59,"B":40.71,"Bwall":10.12,"Cissue":0.82,"Cdone":6.4 
+== sus bluestone e3 day r2: "A":43.65,"A2":17.56,"B":43.11,"Bwall":10.05,"Cissue":0.86,"Cdone":6.42 
+== sus halyard e0 dusk r2: "A":28.43,"A2":17.45,"B":27.9,"Bwall":11.4,"Cissue":0.93,"Cdone":7.2 
+== sus bluestone e1 dusk r2: "A":43.89,"A2":18.5,"B":43.18,"Bwall":10.1,"Cissue":0.82,"Cdone":6.58 
+== sus bluestone e2 dusk r2: "A":44.24,"A2":18.93,"B":44.49,"Bwall":10.31,"Cissue":0.86,"Cdone":6.63 
+== sus bluestone e3 dusk r2: "A":44.93,"A2":18.95,"B":44.49,"Bwall":10.46,"Cissue":0.86,"Cdone":6.85 
+SUMMARY method C (the gate): GPU throughput ms per frame, mean of 2 rounds | / halyard (same time of day)
+### done load { 3.13 3.39 3.36 }
+
+## last 15 lines of job.log
+== sus bluestone e3 day r2: "A":43.65,"A2":17.56,"B":43.11,"Bwall":10.05,"Cissue":0.86,"Cdone":6.42 
+== sus halyard e0 dusk r2: "A":28.43,"A2":17.45,"B":27.9,"Bwall":11.4,"Cissue":0.93,"Cdone":7.2 
+== sus bluestone e1 dusk r2: "A":43.89,"A2":18.5,"B":43.18,"Bwall":10.1,"Cissue":0.82,"Cdone":6.58 
+== sus bluestone e2 dusk r2: "A":44.24,"A2":18.93,"B":44.49,"Bwall":10.31,"Cissue":0.86,"Cdone":6.63 
+== sus bluestone e3 dusk r2: "A":44.93,"A2":18.95,"B":44.49,"Bwall":10.46,"Cissue":0.86,"Cdone":6.85 
+SUMMARY method C (the gate): GPU throughput ms per frame, mean of 2 rounds | / halyard (same time of day)
+  bluestone e1   day  C 6.16 (x0.86) issue 0.85
+  bluestone e1   dusk C 6.56 (x0.90) issue 0.85
+  bluestone e2   day  C 6.36 (x0.89) issue 0.81
+  bluestone e2   dusk C 6.58 (x0.91) issue 0.84
+  bluestone e3   day  C 6.47 (x0.91) issue 0.84
+  bluestone e3   dusk C 6.92 (x0.95) issue 0.87
+  halyard        day  C 7.12 (x1.00) issue 1.04
+  halyard        dusk C 7.27 (x1.00) issue 1.01
+### done load { 3.13 3.39 3.36 }
+
+## art-tests.txt
+== check-maps (every stage): 19 ok lines, 5 not ok; bluestone#1  568 pieces  (strips over 25 m: 0);bluestone#2  590 pieces  (strips over 25 m: 0);bluestone#3  700 pieces  (strips over 25 m: 0);bluestone    712 pieces  ok;
+== eras-static: RESULT eras-static 23/23
+== eras-world-12: RESULT 12/12  0 FAIL
+== eras-world-34: RESULT 7/7  0 FAIL
+== eras-world-5: RESULT 3/3  0 FAIL
+== eras-look: RESULT 20/20  0 FAIL
+== eras-jump-first: RESULT 1/1  0 FAIL
+== eras-jump-a: RESULT 8/8  0 FAIL
+== eras-jump-b: RESULT 7/7  0 FAIL
+== eras-jump-c: RESULT 3/3  0 FAIL
+== eras-jump-d: RESULT 4/4  0 FAIL
+== eras-jump-e: RESULT 6/6  0 FAIL
+== eras-hud: RESULT 12/12  0 FAIL
+== eras-modes: RESULT 6/6  0 FAIL
+== stage-mods: RESULT 36/36  0 FAIL
+== world-build-halyard: RESULT 5/5  0 FAIL
+== world-build-bluestone: RESULT 5/5  0 FAIL
+== climb-audit-e1: RESULT 1/1  0 FAIL
+== cover-map-e1: RESULT 1/1  0 FAIL
+== spawn-mid-e1: RESULT 1/1  0 FAIL
+== tower-check e1: HARNESS ERA=1: every game page loads with ?era=1 ERA 1 (started in era 1, held there: ?era=1; page ?autopilot&era=1) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e2: RESULT 1/1  0 FAIL
+== cover-map-e2: RESULT 1/1  0 FAIL
+== spawn-mid-e2: RESULT 1/1  0 FAIL
+== tower-check e2: HARNESS ERA=2: every game page loads with ?era=2 ERA 2 (started in era 2, held there: ?era=2; page ?autopilot&era=2) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e3: RESULT 1/1  0 FAIL
+== cover-map-e3: RESULT 1/1  0 FAIL
+== spawn-mid-e3: RESULT 1/1  0 FAIL
+== tower-check e3: HARNESS ERA=3: every game page loads with ?era=3 ERA 3 (started in era 3, held there: ?era=3; page ?autopilot&era=3) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== done
+
+## perf.txt
+perf6 medians of 3 runs; each Bluestone era / Halyard
+  day  e1: calls 229 / 241 x0.95 | tris 1343040 / 3264608 x0.41 | cpuRender 6.24 / 7.97 x0.78
+  day  e2: calls 243 / 241 x1.01 | tris 1352338 / 3264608 x0.41 | cpuRender 6.22 / 7.97 x0.78
+  day  e3: calls 235 / 241 x0.98 | tris 1464051 / 3264608 x0.45 | cpuRender 6.59 / 7.97 x0.83
+  dusk e1: calls 229 / 259 x0.88 | tris 1345880 / 3299047 x0.41 | cpuRender 6.36 / 8.22 x0.77
+  dusk e2: calls 224 / 259 x0.86 | tris 1314420 / 3299047 x0.40 | cpuRender 6.38 / 8.22 x0.78
+  dusk e3: calls 210 / 259 x0.81 | tris 1512668 / 3299047 x0.46 | cpuRender 6.77 / 8.22 x0.82
+
+## sus-summary.txt
+SUMMARY method C (the gate): GPU throughput ms per frame, mean of 2 rounds | / halyard (same time of day)
+  bluestone e1   day  C 6.16 (x0.86) issue 0.85
+  bluestone e1   dusk C 6.56 (x0.90) issue 0.85
+  bluestone e2   day  C 6.36 (x0.89) issue 0.81
+  bluestone e2   dusk C 6.58 (x0.91) issue 0.84
+  bluestone e3   day  C 6.47 (x0.91) issue 0.84
+  bluestone e3   dusk C 6.92 (x0.95) issue 0.87
+  halyard        day  C 7.12 (x1.00) issue 1.04
+  halyard        dusk C 7.27 (x1.00) issue 1.01
+
+## sus.txt
+== sus halyard e0 day r1: "A":27.89,"A2":16.56,"B":28.88,"Bwall":11.48,"Cissue":1.04,"Cdone":7.1 
+== sus bluestone e1 day r1: "A":40.85,"A2":18.12,"B":41.19,"Bwall":9.9,"Cissue":0.81,"Cdone":6.28 
+== sus bluestone e2 day r1: "A":41.06,"A2":18.94,"B":41.3,"Bwall":9.96,"Cissue":0.8,"Cdone":6.32 
+== sus bluestone e3 day r1: "A":42.68,"A2":19.23,"B":43.23,"Bwall":10.14,"Cissue":0.83,"Cdone":6.53 
+== sus halyard e0 dusk r1: "A":25.5,"A2":17.76,"B":29.08,"Bwall":11.61,"Cissue":1.08,"Cdone":7.33 
+== sus bluestone e1 dusk r1: "A":42.67,"A2":18.22,"B":42.02,"Bwall":10.06,"Cissue":0.89,"Cdone":6.55 
+== sus bluestone e2 dusk r1: "A":44.29,"A2":17.75,"B":44.88,"Bwall":10.4,"Cissue":0.82,"Cdone":6.53 
+== sus bluestone e3 dusk r1: "A":43.78,"A2":19.37,"B":43.52,"Bwall":10.25,"Cissue":0.88,"Cdone":7 
+== sus halyard e0 day r2: "A":25.09,"A2":17.65,"B":26.86,"Bwall":11.43,"Cissue":1.03,"Cdone":7.14 
+== sus bluestone e1 day r2: "A":41.01,"A2":17.13,"B":41.49,"Bwall":9.82,"Cissue":0.89,"Cdone":6.03 
+== sus bluestone e2 day r2: "A":41.29,"A2":18.59,"B":40.71,"Bwall":10.12,"Cissue":0.82,"Cdone":6.4 
+== sus bluestone e3 day r2: "A":43.65,"A2":17.56,"B":43.11,"Bwall":10.05,"Cissue":0.86,"Cdone":6.42 
+== sus halyard e0 dusk r2: "A":28.43,"A2":17.45,"B":27.9,"Bwall":11.4,"Cissue":0.93,"Cdone":7.2 
+== sus bluestone e1 dusk r2: "A":43.89,"A2":18.5,"B":43.18,"Bwall":10.1,"Cissue":0.82,"Cdone":6.58 
+== sus bluestone e2 dusk r2: "A":44.24,"A2":18.93,"B":44.49,"Bwall":10.31,"Cissue":0.86,"Cdone":6.63 
+== sus bluestone e3 dusk r2: "A":44.93,"A2":18.95,"B":44.49,"Bwall":10.46,"Cissue":0.86,"Cdone":6.85 

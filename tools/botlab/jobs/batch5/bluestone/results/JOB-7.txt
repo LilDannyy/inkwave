@@ -1,0 +1,6 @@
+JOB-7 (bluestone) @ 1afcae28 — Mac mini b5-runner, 2026-10-25 06:06–06:18 (load 1.8 at the start), exit 0. Short summary.
+- the nine-pass bake came back, all 6 files pushed (each under 1 MB): out/lm/bluestone.png 688 KB, bluestone.tower.png 683 KB,
+  bluestone.boss.png 675 KB, each with its .json.
+- stage-audit with the bake: turf / zones / tower × era 1, 2, 3 and boss era 2 — all full (3/3 or 4/4).
+- lightmaps.js 3/4: 'every reachable world has its lightmap' lists caldera and caldera.boss as unlit on this branch (its head predates the
+  caldera bake), and the Bazookarp variants unlit as before; Bluestone's own worlds are lit.

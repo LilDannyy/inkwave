@@ -1,0 +1,7 @@
+PASS tidewater then craters back to back: craters is built everywhere  {"layoutId":"craters","level":"craters","decals":"craters"}
+PASS craters then nantai back to back: nantai is built everywhere  {"layoutId":"nantai","level":"nantai","decals":"nantai"}
+PASS spirhalite then tidewater back to back: tidewater is built everywhere  {"layoutId":"tidewater","level":"tidewater","decals":"tidewater"}
+PASS calamari then crossmarket back to back: crossmarket is built everywhere  {"layoutId":"crossmarket","level":"crossmarket","decals":"crossmarket"}
+PASS back on halyard  {"layoutId":"halyard","decals":"halyard"}
+RESULT 5/5
+console errors: none

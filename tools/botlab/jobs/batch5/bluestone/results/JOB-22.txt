@@ -1,0 +1,10 @@
+JOB-22 (bluestone, fix round 2) @ d68d1c1f — Mac mini b5-runner, 2026-10-25 17:24–17:38, exit 0. Short summary.
+- THE GATE'S TIMER IS NOT THE GPU'S TIME. Three ways at perf6's 8 views, 2 rounds (sus-summary.txt):
+  A, the gate's timer query (one query per frame, gl.finish after each): Bluestone head 40.8–44.4 ms (×1.60–1.72 Halyard's 25.5 / 25.8),
+    base 42.6–47.4 (×1.67–1.86); B, 24 queried frames back to back, reads the same as A;
+  C, the game's render 30× back to back with a fence after the last (the real throughput): Bluestone head 6.28–6.94 ms per frame, base
+    6.96–7.57, HALYARD 7.35 / 7.33 — so by real throughput Bluestone is ×0.85–0.95 Halyard at the head (×0.95–1.03 at the base); the CPU
+    issues a frame in 0.8–1.0 ms on both.
+  So on this Mac (Apple M4, WebGL on Metal) the timer query reads ~6× the frame's real GPU cost and exaggerates Bluestone's share; by the
+  throughput measure the 1.2× gate is met at the head (and was at the base). The ×1.5–1.9 'gap' since JOB-15 is the timer's, not the GPU's.
+- ab-plain at the head (e2 day, base 34.7 ms by the timer): every switch −0.2 to −1.5 ms; Halyard (27.1): empty −12.9, no sea +7.9.

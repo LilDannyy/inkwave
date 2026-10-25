@@ -350,8 +350,12 @@ float gWake = 0.0;`)
   vec2 fsz = vFaceData.zw;
   vec3 base = diffuseColor.rgb;
   float rough = 0.82;
+#ifdef USE_TEXLIB
+  float big = 0.0, fine = 0.0;   // [b5-bluestone] (GPU time; the same picture) the texlib path reads them in two places only: computed there
+#else
   float big = fbm(vWPos.xz * 0.18 + vWPos.y * 0.1);
   float fine = vnoise(fu * 9.0);
+#endif
 #ifdef USE_TEXLIB
   {
     int pid = int(pattern + 0.5);
@@ -446,8 +450,10 @@ float gWake = 0.0;`)
         cop = 1.0 - smoothstep(0.1, 0.108, dt);
         groove = 1.0 - smoothstep(0.005, 0.016, abs(dt - 0.118));
       }
-      vec3 stone = vec3(0.9, 0.885, 0.845) * (0.95 + 0.07 * vnoise(fu * 9.0) + 0.03 * vnoise(fu * 41.0));
-      base = mix(base, stone * texlibMacro(wp + vWPos.y * 0.7), cop);
+      if (cop > 0.0) {   // [b5-bluestone] (GPU time; the same picture) the stone only where the coping shows
+        vec3 stone = vec3(0.9, 0.885, 0.845) * (0.95 + 0.07 * vnoise(fu * 9.0) + 0.03 * vnoise(fu * 41.0));
+        base = mix(base, stone * texlibMacro(wp + vWPos.y * 0.7), cop);
+      }
       rough = mix(rough, 0.72, cop);
       gTexStr *= 1.0 - 0.8 * cop;
       base *= 1.0 - 0.28 * groove;
@@ -503,6 +509,7 @@ float gWake = 0.0;`)
       float slot = smoothstep(0.3 - fw / 0.025, 0.3 + fw / 0.025, abs(fract(run / 0.025) - 0.5) * 2.0);
       float bar = mix(0.4, slot, clamp(0.025 / (fw * 4.0) - 0.5, 0.0, 1.0));
       base = mix(base, mix(vec3(0.025), vec3(0.34, 0.35, 0.36), bar), chan);
+      fine = vnoise(fu * 9.0);   // [b5-bluestone]
       base = mix(base, vec3(0.4, 0.41, 0.42) * (0.9 + 0.2 * fine), lip * 0.85);
       rough = mix(rough, 0.48, max(chan * bar, lip));
       gTexORM.b = mix(gTexORM.b, 0.75, max(chan * bar, lip));
@@ -652,6 +659,9 @@ float gWake = 0.0;`)
     vec4 mc = texture2D(uMural, muv);
     mc.rgb *= mix(vec3(1.0), gTexMod, mC.x);
     mc.a *= mix(1.0, gTexPaint, mC.y);
+#ifdef USE_TEXLIB
+    big = fbm(vWPos.xz * 0.18 + vWPos.y * 0.1);   // [b5-bluestone]
+#endif
     base = mix(base, mc.rgb * (0.92 + 0.1 * big), mc.a * 0.96);
   }
   // crisp modelled edges: thin bright chamfer + soft inner shadow

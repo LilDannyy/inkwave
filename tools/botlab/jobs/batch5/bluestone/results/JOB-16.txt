@@ -1,0 +1,8 @@
+JOB-16 (bluestone) @ a42cdc70 — Mac mini b5-runner, 2026-10-25 13:57–14:12, exit 0. Short summary.
+- CAUTION: from 13:57:22 to about 13:59:40 my gpu-time.sh trial ran beside this job (2 Electrons), so first-a/b and frames-a/b (13:57–13:59)
+  ran on a busy machine — they passed anyway: first 1/1 ×2, frames 4/4 ×2.
+- art-tests.sh: all full (eras-static 23/23, eras-world, eras-look 18/18 — JOB-12's 12c mural miss is gone, eras-hud, eras-modes, stage-mods,
+  world-build, climb-audit / cover-map / spawn-mid per era) except eras-jump-d 3/4 (14:03, after the overlap): step 8 'no frame over 50 ms
+  during a jump' — ONE frame of 422.6 ms at J + 4.22 s in the idle phase, split [era update 0, render 0, rest 1.9]: again a frame whose
+  measured parts are ~2 ms (as beta1 JOB-7 / 9's ~300 ms frames).
+- eras-bake 3/3; stage-audit turf e1–e3 3/3 (lightmap applied, not stale); check-maps: Bluestone clean.

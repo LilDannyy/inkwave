@@ -1,0 +1,203 @@
+JOB-7 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 06:18:36
+branch botlab-b5-bluestone, ran at 1afcae28, exit code 0, wall time 11min
+(a written-up JOB-7.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-7 head 1afcae28 load { 1.81 1.96 1.92 }
+# before: bluestone {"id":"bluestone","hash":"22885","size":2048,"ppm":8,"rays":96,"dist":3.5,"channels":3}
+# before: bluestone.tower {"id":"bluestone.tower","hash":"506dab2b","size":2048,"ppm":8,"rays":96,"dist":3.5,"channels":3}
+# before: bluestone.boss {"id":"bluestone.boss","hash":"d472b6af","size":2048,"ppm":8,"rays":96,"dist":3.5,"channels":3}
+# after: bluestone {"id":"bluestone","hash":"22885","size":2048,"ppm":8,"rays":96,"dist":3.5,"channels":3}
+# after: bluestone.tower {"id":"bluestone.tower","hash":"506dab2b","size":2048,"ppm":8,"rays":96,"dist":3.5,"channels":3}
+# after: bluestone.boss {"id":"bluestone.boss","hash":"d472b6af","size":2048,"ppm":8,"rays":96,"dist":3.5,"channels":3}
+[stage-audit turf era 1] HARNESS ERA=1: every game page loads with ?era=1
+[stage-audit turf era 1] RESULT 3/3
+[stage-audit turf era 2] HARNESS ERA=2: every game page loads with ?era=2
+[stage-audit turf era 2] RESULT 3/3
+[stage-audit turf era 3] HARNESS ERA=3: every game page loads with ?era=3
+[stage-audit turf era 3] RESULT 3/3
+[stage-audit zones era 1] HARNESS ERA=1: every game page loads with ?era=1
+[stage-audit zones era 1] RESULT 3/3
+[stage-audit zones era 2] HARNESS ERA=2: every game page loads with ?era=2
+[stage-audit zones era 2] RESULT 3/3
+[stage-audit zones era 3] HARNESS ERA=3: every game page loads with ?era=3
+[stage-audit zones era 3] RESULT 3/3
+[stage-audit tower era 1] HARNESS ERA=1: every game page loads with ?era=1
+[stage-audit tower era 1] RESULT 4/4
+[stage-audit tower era 2] HARNESS ERA=2: every game page loads with ?era=2
+[stage-audit tower era 2] RESULT 4/4
+[stage-audit tower era 3] HARNESS ERA=3: every game page loads with ?era=3
+[stage-audit tower era 3] RESULT 4/4
+[stage-audit boss era 2] HARNESS ERA=2: every game page loads with ?era=2
+[stage-audit boss era 2] RESULT 1/1
+[lightmaps] RESULT 3/4
+### done
+
+## last 15 lines of job.log
+[stage-audit tower era 2] PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower","rows":1141}
+[stage-audit tower era 2] RESULT 4/4
+[stage-audit tower era 3] HARNESS ERA=3: every game page loads with ?era=3
+[stage-audit tower era 3] PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower","rows":1141}
+[stage-audit tower era 3] RESULT 4/4
+[stage-audit boss era 2] HARNESS ERA=2: every game page loads with ?era=2
+[stage-audit boss era 2] PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"boss","rows":1142}
+[stage-audit boss era 2] RESULT 1/1
+[lightmaps] FAIL every world a player can reach (each stage, each mode it offers) has its baked lightmap applied  {"unlit":["caldera","caldera.boss"],"worlds":40,"bazookarpVariants":["halyard.bazookarp unlit","lockgate.bazookarp unlit","bluestone.bazookarp unlit","aquarium.bazookarp unlit","caldera.
+[lightmaps] PASS unbaked mode variants (halyard.bazookarp, lockgate.bazookarp, bluestone.bazookarp, aquarium.bazookarp, caldera.bazookarp) build unlit with no warning in the issue log  {"warns":[]}
+[lightmaps] PASS …and one debug line for halyard.bazookarp in the whole session though it was built 3 times  ["[inkwave] no lightmap for the mode variant halyard.bazookarp (unlit until it is baked)"]
+[lightmaps] PASS a stage's own missing lightmap still warns; a missing mode variant does not  ["[inkwave] no lightmap for nosuchstage Unexpected token 'N', \"Not found\" is not valid JSON"]
+[lightmaps] RESULT 3/4
+[lightmaps] console errors: none
+### done
+
+## bake.txt
+INKWAVE issue log: /Users/danielosling/inkwave-botlab/.botlab/ud-slot1/issues.log
+(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.
+sandbox_extension_issue_file failed for /Users/danielosling/inkwave-botlab/node_modules/electron/dist/Electron.app/Contents/Frameworks/Electron Helper.app/Contents/Resources: 1 (Operation not permitted)
+[bake] bluestone: building world…
+  [bake] state 1 of 3
+  [bake] 2%
+  [bake] 7%
+  [bake] 14%
+  [bake] 23%
+  [bake] 32%
+  [bake] 40%
+  [bake] 47%
+  [bake] 53%
+  [bake] 61%
+  [bake] 70%
+  [bake] 78%
+  [bake] 85%
+  [bake] 95%
+  [bake] state 2 of 3
+  [bake] 2%
+  [bake] 6%
+  [bake] 14%
+  [bake] 23%
+  [bake] 32%
+  [bake] 39%
+  [bake] 47%
+  [bake] 52%
+  [bake] 61%
+  [bake] 70%
+  [bake] 77%
+  [bake] 85%
+  [bake] 94%
+  [bake] state 3 of 3
+  [bake] 1%
+  [bake] 5%
+  [bake] 13%
+  [bake] 21%
+  [bake] 30%
+  [bake] 36%
+  [bake] 46%
+  [bake] 52%
+  [bake] 57%
+  [bake] 66%
+  [bake] 75%
+  [bake] 84%
+  [bake] 92%
+  [bake] 96%
+[bake] bluestone: done in 127.7 s (hash 22885, 1142/2048 rows used)
+[bake] bluestone.tower: building world…
+  [bake] state 1 of 3
+  [bake] 1%
+  [bake] 3%
+  [bake] 7%
+  [bake] 14%
+  [bake] 19%
+  [bake] 26%
+  [bake] 30%
+  [bake] 35%
+  [bake] 40%
+  [bake] 46%
+  [bake] 50%
+  [bake] 54%
+  [bake] 58%
+  [bake] 66%
+  [bake] 72%
+  [bake] 76%
+  [bake] 83%
+  [bake] 87%
+  [bake] 94%
+  [bake] 96%
+  [bake] state 2 of 3
+  [bake] 0%
+  [bake] 3%
+  [bake] 7%
+  [bake] 12%
+  [bake] 18%
+  [bake] 24%
+  [bake] 29%
+  [bake] 35%
+  [bake] 39%
+  [bake] 46%
+  [bake] 48%
+  [bake] 52%
+  [bake] 56%
+  [bake] 63%
+  [bake] 69%
+  [bake] 75%
+  [bake] 79%
+  [bake] 84%
+  [bake] 89%
+  [bake] 95%
+  [bake] 99%
+  [bake] state 3 of 3
+  [bake] 0%
+  [bake] 3%
+  [bake] 5%
+  [bake] 9%
+  [bake] 14%
+  [bake] 20%
+  [bake] 26%
+  [bake] 30%
+  [bake] 36%
+  [bake] 40%
+  [bake] 46%
+  [bake] 50%
+  [bake] 53%
+  [bake] 57%
+  [bake] 63%
+  [bake] 69%
+  [bake] 75%
+  [bake] 79%
+  [bake] 84%
+  [bake] 89%
+  [bake] 95%
+  [bake] 97%
+[bake] bluestone.tower: done in 195.9 s (hash 506dab2b, 1141/2048 rows used)
+[bake] bluestone.boss: building world…
+  [bake] state 1 of 3
+  [bake] 0%
+  [bake] 3%
+  [bake] 7%
+  [bake] 12%
+  [bake] 17%
+  [bake] 23%
+  [bake] 28%
+  [bake] 35%
+  [bake] 39%
+  [bake] 46%
+  [bake] 48%
+  [bake] 52%
+  [bake] 56%
+  [bake] 63%
+  [bake] 69%
+  [bake] 75%
+  [bake] 79%
+  [bake] 84%
+  [bake] 89%
+  [bake] 95%
+  [bake] 100%
+  [bake] state 2 of 3
+  [bake] 0%
+  [bake] 3%
+  [bake] 7%
+  [bake] 12%
+  [bake] 17%
+  [bake] 23%
+  [bake] 28%
+  [bake] 35%
+  [bake] 39%
+  [bake] 46%
