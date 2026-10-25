@@ -266,3 +266,9 @@ by day is the closest ink call (8.7 % vs Halyard's 7.4 %, ink still leads); F10 
 **The lead's note on his own eye reviews 1–3:** they judged the builder's chosen pictures and its mismatched pairs; the
 sweep pages are the test, and the reviewer's same-camera measurements supersede mine. From here Antigravity's rounds
 answer the JSON, and every claim comes with the sweep's own view (sweep id + camera), not a hand-picked frame.
+- **Round 4 (Antigravity, 27c52cc4) sent back before the reviewer (2026-10-26 01:40):** the cards measure 86.9 day (top third
+  70.1) and 48.1 dusk — identical to the previous head against Halyard's 118.4 / 91.0, so major 6 (cards + backdrop) was not
+  touched; blocker 3's bare-piece count (621 / 812) was not re-measured. Owed: backdrop surfaces and exposure (day within 15 %
+  of 118, top third sky-bright; dusk within 15 % of 91), all four card files re-rendered with the numbers; the bare-piece
+  measure after the changes with any remaining ids; the four sweep sets at the final head; the lamp count and placement (the
+  decor lamps were cut to four plinths). The reviewer runs when those are in.
