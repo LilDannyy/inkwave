@@ -165,3 +165,46 @@ the art phase: a 1-in-30 boss camp at the causeway's south end (probe-bosscamp10
 after 2 camps or mark the spot noGo); a squid at 11.8 m/s overshooting a lava edge at LOW (cap swim speed within
 2.5 m of an edge in the bots' lava look-ahead); pushing on across the slide off the Tide Boards and the gauge house
 (listed, not gated). Rule 42 and the lavafall's side patch belong to the art phase. The stage stays BETA until its art.
+
+## Art review 1 (the lead, by eye, 2026-10-25 18:20) — head 0b32b939 (code f77cf313): REDO, the whole pass
+
+I looked at all 28 pictures in `out/art/` (two contact sheets, then the pairs at full size) and measured them. This is not
+yet an art pass at the bar; it is the blockout with a paving texture, shot in the dark. Not sent to the Opus reviewer: the
+faults are visible without it. In order of weight:
+1. **The day is dark.** Mean luminance of each pair, before (blockout) → after (art): pour floor 102 → 38, spawn 133 → 29,
+   gauge 108 → 59, rim head 100 → 58, casting floor 99 → 65, the Slump 49 → 28; the day card averages 61 where the
+   blockout's day pairs average ~100. The "after" day is darker than the blockout's dusk; the sky is nearly gone. Find the
+   cause (the bake applied on top of the blockout's light: AO twice? the `art.lava` hold baking HIGH lava's shadow into
+   the floor? the new mist / scattering / starfield in the env hook? exposure?) and fix it: **the day must read as day —
+   the eight places within ±10 % of the blockout's luminance, Halyard's day card the reference.** The pairs must then be
+   re-shot with the same camera, time and settings on both sides, so they compare the art alone (the current pairs
+   compare lighting).
+2. **The spawn "after" looks into a black wall** (the left 60 % of the frame is black: an apron / rim piece or an unlit
+   face in front of the alpha spawn camera). The spawn view must show the works and the tower as the blockout's did.
+3. **Every face a material, every building built.** At eye level (every `sweep-*` page, `pair-pour-floor`,
+   `pair-rim-head`, `pair-gauge`, `pair-casting-floor`) the walls, blocks, boxes and buildings are flat untextured
+   grey / white / beige; what landed is the cracked paving, one brick tower, tuff on a few faces and the green gantry.
+   The triangle count says the same: 208,908 against Halyard's ~930,000 (−77.6 %) — the stage is four times emptier
+   than the bar, and the brief allows +15 % OVER Halyard: use it. The bar (STAGE-RULES, the Halyard bar, "never empty")
+   means: brick / iron / basalt / timber / corrugated iron on every face with trims, openings, roofs and gutters;
+   props at every structure (cranes and their hooks, chains, crucibles and ladles, slag heaps, mould stacks, rails,
+   bollards, pipes, valves, hoists, crates, lamps that light); the casting floor with its beds and ingots IN FRAME, the
+   pour floor with its ladle stand and cooling racks, the Rim Head's gables and winch house with doors and windows, the
+   gauge house as a house, the surge office as an office (a desk, a board, a lamp, not a green stripe), the Organ Pipes
+   as columns whose step links read as climbable (steel, worn, lit), the Customs sheds with their fronts. The report
+   lists these; the pictures do not show them. Only what a picture shows counts.
+4. **The dusk sweeps are near black** (`sweep-dusk-high-organ-pipes`, `sweep-dusk-high-slump-shelf`: the lava and
+   nothing else). Dusk must still show the works: lamps that throw light on the buildings, the sky's last light on the
+   rim, the lava's glow on the near faces (Halyard's dusk card is the reference).
+5. **Signage and murals** (the eight decals in the report: the gable mark, HIGHMARK FOUNDRY CO., SURGE WARNING, the
+   Tide Board datum, the ladle chevrons…) are not visible in any picture. Each one gets a picture at eye level that
+   shows it readable.
+6. **GPU gate, corrected:** the brief's `gpu-time.sh` method is void — on the M4 the timer query reads ~6× the GPU's real
+   time (Bluestone LEAD-NOTES, "The GPU gate, corrected"). Measure once at the end by `tools/botlab/jobs/batch5/bluestone/
+   gpu-sustained.js` method C ('done / frame', 30 renders + a fence), ≤ 1.2× Halyard, locally or as a Mac mini job.
+7. What stands: play geometry frozen with check-maps exact (1805 / 1867 / 1674), rule 42 0 / 1152, the two matches with 0
+   lava deaths, the lavafall's edge fade (keep), the backdrop closing the void (keep, but it must not darken the scene
+   or block the spawn camera), perf headroom.
+Process for the next round: finish the whole pass, re-shoot every picture at the new head, LOOK at each one against
+Halyard's cards and the Bluestone sweep pages before claiming it reads, then report the head and the report path. I judge
+by eye first; the Opus reviewer runs only after my eye passes.

@@ -51,9 +51,9 @@ cards (`assets/stages/caldera-{day,dusk}{,-sm}.webp`) from a hero camera that sh
   deaths.
 - Performance: level with Halyard on draw calls and cpuRender at LOW and HIGH (the fixed-view probe
   `tools/botlab/jobs/batch5/stages/aquarium/tools/perf6.js`, run alternately); triangles within +15 %; and GPU time
-  within 1.2× Halyard measured on the Mac mini (push the scratch branch `botlab-b5-caldera-art` with a JOB-<n>.sh that
-  calls the GPU timer `tools/botlab/jobs/batch5/bluestone/gpu-time.sh` from branch botlab-b5-bluestone, see its header;
-  compare only within one job).
+  within 1.2× Halyard measured by THROUGHPUT: `tools/botlab/jobs/batch5/bluestone/gpu-sustained.js` method C ('done / frame',
+  30 renders + a fence), locally or as a Mac mini job — NOT gpu-time.sh / the timer query, which reads ~6× the GPU's real time on
+  the M4 (corrected 2026-10-25, see Bluestone's LEAD-NOTES "The GPU gate, corrected").
 - Pictures (JPEG < 300 KB, committed) in `tools/botlab/jobs/batch5/stages/caldera/out/art/`: the sweep sheets at LOW and
   HIGH, day and dusk; the eight places (casting floor, pour floor, the Slump, the Rim Head, the gauge, the Organ Pipes
   from the island, the lavafall from the bridge, the spawn) before / after; a rise from the shelf with ink in frame; the
