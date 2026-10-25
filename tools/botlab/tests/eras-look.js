@@ -25,7 +25,8 @@
 //   dusk is readable, not murk: from the botlab's 'mid' preset camera the lower two thirds of the frame keep a median
 //   brightness ≥ 34/255 in this page's frame in every era (shoot.cjs's mid at dusk: review 2 16 / 22 / 44 before, Halyard
 //   49; 43.5 / 47.7 / 49.9 after), and the 3000s' violet dusk does not tint
-//   the city into Cobalt's hue (≤ 5 % of the lower frame within 15° of Cobalt's hue at saturation ≥ 0.5, value ≥ 0.3).
+//   the city into Cobalt's hue (≤ 5 % of the lower frame within 15° of Cobalt's hue at saturation ≥ 0.5, value ≥ 0.3);
+//   (h) (fix round 2) the level's static programs at rest and its depth prepass change no pixel and follow the eras.
 (async () => {
   const g = window.__inkwave, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
@@ -389,6 +390,47 @@
       env.setTheme(th0); g._applyNight?.(); E.debugJump(1, { instant: true }); step(0.1);
       R('art phase (g): the dusk reads (fix round 2) — from the mid preset camera the lower two thirds of the frame keep a median brightness ≥ 34/255 in every era (shoot.cjs\'s mid at dusk ≥ 40), and the 3000s dusk keeps Cobalt-hue pixels ≤ 5 % of it',
         dusk.every((d) => d.median >= 34) && dusk[2].cobaltHue <= 5, dusk);
+    }
+    // (h) (fix round 2, the lead's condition for keeping the GPU cut) the level's static programs and its depth prepass change
+    // no pixel and follow the eras: at rest in every era each prepass twin shows exactly when its level mesh does and the
+    // level draws with that era's static program; in the warning, a jump and the done pulse no twin shows and the level draws
+    // with the full program; and at rest the frame with the prepass equals the frame without it (no holes, no z-fighting
+    // from its polygon offset; the river, the backs, the era pieces) at five places and through the see-through window
+    // round the local player (standing behind the Swimston cart, the window open): max change ≤ 2/255
+    {
+      const tw = W._prepass?.twins || [], lm = W._levelMeshes || [];
+      const views = [[[-19.5, 2.75, -50.5], [-21, 3.6, -26]], [[-17.9, 1.75, -32.0], [-27, 3.0, -13]], [[1.2, 1.75, -16.4], [0, 5.4, -3]], [[-8.2, 1.75, -45], [-3, 0.6, -24]], [[6, 2.2, -30], [14, 0.2, -20]]];
+      const rest = [], diffs = [];
+      for (const e of [1, 2, 3]) {
+        E.debugJump(e, { instant: true }); step(4.3);   // (past an instant jump's done pulse: 4 s)
+        const vis = tw.length > 0 && tw.every((t) => t.visible === t.userData.of.visible), stat = lm.every((m) => m.material === W._static?.[e]);
+        rest.push({ e, twins: tw.filter((t) => t.visible).length, levelShown: lm.filter((m) => m.visible).length, vis, stat });
+        for (const [from, look] of views) {
+          cam(from, look, 66); step(0.05);
+          const A = grab(); for (const t of tw) t.visible = false; const B = grab(); W._levelProgram(e);
+          const d = diff(A, B, [0, 0, 1, 1]); diffs.push({ e, at: from.join(','), max: d.max, mean: d.mean });
+        }
+        // the see-through window: the local player behind the Swimston cart, the camera in front of it
+        const me = g.match.local, p0 = me.pos.clone(), lu = g.levelMat.userData.uniforms;
+        me.pos.set(-22.4, 0, -21.6); me.character.root.visible = true; me.character.setVisible?.(true);
+        cam([-22.4, 1.9, -27.6], [-22.4, 0.9, -21.6], 64); step(0.05);   // (just north of the tram's end: the cart between the eye and the player)
+        lu.uSeeOn.value = 1; lu.uSeeB.value.set(-22.4, 1.0, -21.6);
+        const A = grab(); for (const t of tw) t.visible = false; const B = grab(); W._levelProgram(e);
+        lu.uSeeOn.value = 1; const C0 = grab(); lu.uSeeOn.value = 0; const C1 = grab();
+        const d = diff(A, B, [0, 0, 1, 1]), open = diff(C0, C1, [0.3, 0.2, 0.7, 0.8]);
+        diffs.push({ e, at: 'see-through', max: d.max, mean: d.mean, windowOpens: open.mean });
+        me.pos.copy(p0); me.character.root.visible = false; me.character.setVisible?.(false); lu.uSeeOn.value = 0;
+      }
+      const phases = [];
+      E.debugJump(1, { instant: true }); step(0.1);
+      const Jp = E.debugJump(2, { inS: 6 }); step(0.3);
+      const ph = () => ({ phase: E.phase, twins: tw.filter((t) => t.visible).length, full: lm.every((m) => m.material === g.levelMat) });
+      phases.push(ph()); tAt0(Jp.at + 1.0); phases.push(ph()); tAt0(Jp.doneAt + 0.5); phases.push({ ...ph(), pulse: +W.uniforms.uEraW.value.w.toFixed(2) });
+      tAt0(Jp.doneAt + 5); phases.push(ph());
+      E.debugJump(1, { instant: true }); step(0.1);
+      R('art phase (h): the static programs and the depth prepass (fix round 2) change no pixel and follow the eras — at rest each prepass twin shows exactly with its level mesh and the level draws with its era\'s static program; in the warning, a jump and the done pulse no twin shows and the program is the full one; the frame with the prepass equals the frame without it (five places and the see-through window round the local player, every era: max ≤ 2/255)',
+        rest.every((r) => r.vis && r.stat) && phases.slice(0, 3).every((x) => x.twins === 0 && x.full) && phases[3].twins > 0 && !phases[3].full && diffs.every((d) => d.max <= 2) && diffs.filter((d) => d.at === 'see-through').every((d) => d.windowOpens > 0.5),
+        { rest, phases, diffs });
     }
     R('art phase (f): the per-era dusk looks apply — eras.look keys are theme names and THEMES keys; at dusk the 1880s, TODAY and the 3000s skies differ (the same camera up at the sky: mean change between eras ≥ 6/255), the 1880s\' violet twilight zenith in force',
       !badKeys.length && dz.every((d) => d >= 6) && sky[0].zenith === '#3f3766' && sky.every((x) => x.theme === 'sunset'), { badKeys, skyChange: { e1e2: dz[0], e2e3: dz[1], e1e3: dz[2] }, sky });

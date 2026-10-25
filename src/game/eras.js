@@ -390,7 +390,9 @@ export class EraWorld {
       const t = new THREE.Mesh(g, mat);
       t.name = 'prepass:' + m.name; t.renderOrder = -100; t.castShadow = false; t.receiveShadow = false; t.frustumCulled = m.frustumCulled;
       t.matrixAutoUpdate = false; t.matrix.copy(m.matrix); t.matrixWorld.copy(m.matrixWorld);
-      t.onBeforeRender = (r, sc, c, geo) => { geo.drawRange.count = sc.overrideMaterial ? 0 : Infinity; };
+      // (out of override passes; and the see-through's feet height set here as the level's onBeforeRender sets it, so the
+      //  prepass, drawn first, never cuts its window with last frame's height)
+      t.onBeforeRender = (r, sc, c, geo) => { geo.drawRange.count = sc.overrideMaterial ? 0 : Infinity; const loc = G.match && !G.match.attract ? G.match.local : null; lu.uSeeFeet.value = loc ? loc.pos.y : lu.uSeeB.value.y - 1.0; };
       t.userData.of = m; t.visible = false;
       scene.add(t); twins.push(t);
     }
