@@ -292,3 +292,10 @@ backdrop basic shapes; **the report's "matched pairs" used the reviewer's own re
 rule set: pairs are the builder's own renders at 8082e99a and at head with one camera JSON; every count from the committed
 probes (`review-tools/`, 52173503). Minors: crack lines over signs, decal 11 / 04 framing, dusk murk, blown lamp glows,
 aqua-cherry dusk HIGH 8.2 % vs 7.4 %. Round 6 is gated on the probes' numbers; the next independent pass after 2026-10-30.
+- **Round 6 (Antigravity, 6fc4fd1b, 2026-10-26 ~05:30) — the lead's own probe runs:** probe-cover floorFight 0 ✓, wallFight 5.2
+  (yard 2.9, rim-head 1.2 — must be 0), floorCov 193.1 (yard 93.4: surge office 50, yard cover dressing 33.9; ladle-road 13.3;
+  lakefront 10.4; …), wallCov 514.2 (from 1,070; surge office 45, pattern shop 33.6, cairn 30.7, terrace parapet 28.4, outcrop
+  23.4, …); probe-bare 642 / 812 bare = ledges, ground, coping, steps, terrain (the 24 bare objects of review 2 dressed per
+  the builder); probe-props2 all zero, eight lamps on the causeway plinths. Cards day 113.0 / 165.8, dusk 84.1 / 126.6 (builder's
+  numbers). Sent back for two residuals (wallFight → 0; per-tag justification of covered areas under the rule "ink must show
+  wherever a kid can stand"); then independent review 3 runs — before the reset, the round being at the gate.
