@@ -117,3 +117,7 @@ settings or era meshes left in the GTAO pass, the hologram / curtain / time-laps
 a jump, the backdrop sets all drawn at once, the water. Measure each by elimination (toggle one, re-time), fix the
 cause, and record the before / after per era in the report. The art builder does this before the cards; the reviewer
 re-measures.
+- **The GPU timer is a job step now:** `tools/botlab/jobs/batch5/bluestone/gpu-time.sh` on botlab-b5-bluestone (c495086b):
+  `SETS="bluestone:1 bluestone:2 bluestone:3" TIMES="day dusk" ROUNDS=2 BASE=<sha> bash tools/botlab/jobs/batch5/bluestone/gpu-time.sh`
+  from a JOB-<n>.sh gives before / after against BASE with Halyard as the reference (gpu.txt: medians, ÷ Halyard).
+  Compare only within one job (an overlapping job inflated Halyard to 41 ms). Fetch and merge botlab-b5-bluestone to get it.
