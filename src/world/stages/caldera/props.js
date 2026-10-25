@@ -29,7 +29,7 @@ export function register(D, H) {
     green: '#2f5a48', greenDk: '#24473a', greenLt: '#3d725c',
     white: '#f1ede4', cream: '#efe8d4', verd: '#7fb5a3',
     iron: '#34383e', ironDk: '#25282d', ironLt: '#525760',
-    brick: '#c9b08a', ash: '#f4f1ea', crust: '#6e2a1c', seam: '#ff5a24',
+    brick: '#8b4530', brickDk: '#683222', ash: '#f4f1ea', crust: '#6e2a1c', seam: '#ff5a24',
     basalt: '#55595f', basaltDk: '#3f4248', scoria: '#5c3830',
     red: '#c8202a', glass: '#ffb469', brass: '#b89658', wood: '#8a6e50', sand: '#b4a288',
   };
@@ -107,8 +107,51 @@ export function register(D, H) {
   // ------------------------------------------------------------------------------------------ walls
   D.caldera_walls = {
     build(B) {
+      let idx = 0;
       for (const [cx, cy, cz, w, h, d, ry] of WALL_BOXES) for (const s of [1, -1]) {
-        B.push(s * cx, 0, s * cz, (ry * PI) / 180); B.box('paint', '#4b4e54', w, h, d, 0, cy, 0, { r: 0.04 }); B.pop();
+        idx++;
+        B.push(s * cx, 0, s * cz, (ry * PI) / 180);
+        // 1. Basalt masonry foundation / plinth course at base (y = 0 to 1.4)
+        B.box('paint', K.basaltDk, w + 0.04, 1.4, d + 0.06, 0, 0.7, 0, { r: 0.03 });
+        B.box('paint', '#2c2e33', w + 0.06, 0.12, d + 0.08, 0, 1.46, 0);
+
+        // 2. Main wall body in warm dark industrial brick
+        B.box('paint', K.brick, w, h - 1.5, d, 0, 1.5 + (h - 1.5) / 2, 0, { r: 0.02 });
+
+        // 3. Structural vertical iron pilasters at wall ends
+        for (const sx of [-w / 2 + 0.12, w / 2 - 0.12]) {
+          B.box('metal', K.greenDk, 0.22, h, d + 0.06, sx, cy, 0, { r: 0.02 });
+        }
+
+        // 4. Belt course girder at y = 3.6
+        B.box(NS('metal'), K.ironDk, w + 0.04, 0.12, d + 0.06, 0, 3.6, 0);
+
+        // 5. Clerestory window openings with warm furnace interior glow
+        const winW = Math.min(w * 0.72, 1.8);
+        if (h > 4.5 && winW > 0.8) {
+          for (const fz of [-(d / 2) - 0.02, (d / 2) + 0.02]) {
+            B.box('glow', K.glass, winW, 1.1, 0.05, 0, 4.4, fz, { glow: 1.1 });
+            B.box(NS('metal'), K.greenDk, winW + 0.06, 0.06, 0.08, 0, 4.4, fz);
+            B.box(NS('metal'), K.greenDk, 0.06, 1.16, 0.08, 0, 4.4, fz);
+          }
+        }
+
+        // 6. Coping and eaves cornice along roofline
+        B.box('paint', K.verd, w + 0.14, 0.22, d + 0.16, 0, h + 0.11, 0);
+        B.box(NS('metal'), K.ironDk, w + 0.18, 0.08, 0.1, 0, h + 0.22, (d / 2) + 0.05);
+
+        // 7. Roof forms on upper storeys
+        B.box('metal', '#4a4f56', w * 0.96, 0.45, d * 0.92, 0, h + 0.34, 0, { rx: 0.12 });
+
+        // 8. Industrial skyline elements (every few segments)
+        if (idx % 3 === 0) {
+          B.cyl('paint', K.brick, 0.45, 3.2, 0, h + 1.8, 0, { seg: 8 });
+          B.tor(NS('metal'), K.ironDk, 0.52, 0.06, 0, h + 3.4, 0);
+          B.cyl(NS('metal'), K.iron, 0.65, 0.25, 0, h + 3.6, 0, { seg: 8 });
+        } else if (idx % 3 === 1) {
+          B.cyl(NS('metal'), K.greenDk, 0.18, 1.2, 0, h + 0.8, 0, { seg: 6 });
+        }
+        B.pop();
       }
     },
   };
@@ -512,12 +555,16 @@ export const PLACEMENTS = [
   { type: 'caldera_walls', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false, list: GANTRY_RAILS, onlyIn: 'bazookarp' },
   { type: 'caldera_surge_gauge', pos: [0, 0, 0], mirror: false, notIn: 'boss' },
+  { type: 'caldera_pour_floor_dressing', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_socket_collar', pos: [0, 0, 0] },
   { type: 'caldera_organ_stump', pos: [0, 0, 0] },
   { type: 'caldera_hall_roof', pos: [0, 0, 0] },
   { type: 'caldera_cupola_hood', pos: [-3.2, 0, -64.3] },
   { type: 'caldera_surge_office', pos: [(OFFICE.x0 + OFFICE.x1) / 2, 0, (OFFICE.z0 + OFFICE.z1) / 2] },
   { type: 'caldera_jib', pos: [0, 0, 0] },
+  { type: 'caldera_rim_head_dressing', pos: [0, 0, 0] },
+  { type: 'caldera_yard_cover_dressing', pos: [0, 0, 0] },
+  { type: 'caldera_horizon_dressing', pos: [0, 0, 0], mirror: false },
 
   // Flank & Slump
   { type: 'caldera_winch_house', pos: [-23.2, 1.2, -19.6], rotY: -139.5 * D_ },

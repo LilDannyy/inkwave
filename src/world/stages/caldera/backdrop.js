@@ -39,8 +39,9 @@ export function buildBackdrop(kit, data = {}) {
     iron: '#34383e',
     ironGreen: '#2f5a48',
     brick: C('#b88e68'),
-    orange: C('#ff7818'),
-    gold: C('#ffbe36'),
+    orange: C('#ff8a24'),
+    gold: C('#ffd048'),
+    canyonLit: C('#df9e68'),
     sea: C('#1c2e38'),
     steam: C('#f4f6f8'),
     sand: C('#222428'),
@@ -88,7 +89,7 @@ export function buildBackdrop(kit, data = {}) {
       const cx = r * Math.cos(rad);
       const cz = r * Math.sin(rad);
 
-      // Height of crater rim column: top calibrated to 11-15 m so sky remains visible
+      // Height of crater rim column: lower at the two breaches to let daylight in while sealing void
       const topY = (inSpillAlpha || inSpillBravo) ? 8.0 + (rnd() - 0.5) * 3.0 : 12.0 + 3.5 * Math.cos(a * 2 * D_) + (rnd() - 0.5) * 2.0;
       const y0 = -32.0; // Extend deep down to seal all sightlines from high ground and bridges
       const h = topY - y0;
@@ -138,8 +139,8 @@ export function buildBackdrop(kit, data = {}) {
           const lx = p0[0] + dx * (0.5 + (t - 0.5) * spread) + nx * d;
           const lz = p0[1] + dz * (0.5 + (t - 0.5) * spread) + nz * d;
           gPos.push(lx, y, lz);
-          const isLava = t > 0.35 && t < 0.65 && di > 0 && di < 7;
-          const c = isLava ? K.orange : (di < 3 ? K.basaltDk : K.scoria);
+          const isLava = t > 0.20 && t < 0.80 && di > 0 && di < 8;
+          const c = isLava ? (t > 0.35 && t < 0.65 ? K.gold : K.orange) : K.canyonLit;
           gCols.push(c.r, c.g, c.b);
         }
       }
@@ -187,12 +188,12 @@ export function buildBackdrop(kit, data = {}) {
       const inSpillA = aDeg > -80 && aDeg < -35;
       const inSpillB = aDeg > 100 && aDeg < 145;
       if (inSpillA || inSpillB) {
-        if (r <= 48) return -1.5 - (r - 36) * 0.45;
-        // Deep lava gorge descending to the plain, then rising into distant mountain ridges on horizon
-        if (r >= 220) {
-          return -15.0 + (r - 220) * 0.22 + fbm(r * 0.015, aDeg * 0.03, 3) * 15.0;
+        if (r <= 48) return -2.0 - (r - 36) * 0.45;
+        // Deep lava gorge descending to the plain, then rising into distant mountain ridges on horizon to seal Rule 42 rays
+        if (r >= 200) {
+          return -12.0 + (r - 200) * 0.25 + fbm(r * 0.015, aDeg * 0.03, 3) * 12.0;
         }
-        return Math.max(-50.0, -7.0 - (r - 48) * 0.35 + fbm(r * 0.02, aDeg * 0.04, 3) * 6.0);
+        return Math.max(-50.0, -8.0 - (r - 48) * 0.25 + fbm(r * 0.02, aDeg * 0.04, 3) * 5.0);
       }
       // Outer volcano mountain slope starting at the crater rim crest and sloping outward
       const crestH = 12.0 + 3.5 * Math.cos(aDeg * 2 * D_);
@@ -206,15 +207,15 @@ export function buildBackdrop(kit, data = {}) {
     };
 
     const getColor = (r, aDeg, y) => {
-      const inSpillA = aDeg > -75 && aDeg < -40;
-      const inSpillB = aDeg > 105 && aDeg < 140;
+      const inSpillA = aDeg > -78 && aDeg < -38;
+      const inSpillB = aDeg > 102 && aDeg < 142;
       if (inSpillA || inSpillB) {
-        // Spillway gorge: blackened basalt and scoria with glowing orange lava runs in the trough
-        const inTrough = (inSpillA && Math.abs(aDeg - (-57.5)) < 8) || (inSpillB && Math.abs(aDeg - 122.5) < 8);
-        if (inTrough && r > 48 && r < 260) {
-          return K.orange; // Glowing lava ribbon down mountain!
+        // Spillway gorge: sunlit warm tuff canyon with glowing orange/gold lava runs
+        const inTrough = (inSpillA && Math.abs(aDeg - (-57.5)) < 11) || (inSpillB && Math.abs(aDeg - 122.5) < 11);
+        if (inTrough) {
+          return K.gold; // Glowing lava ribbon down mountain!
         }
-        return K.basaltDk;
+        return K.canyonLit; // Warm sunlit canyon walls!
       }
       if (y > 12.0) return K.scoria;
       if (y > 0.0) return K.basalt;

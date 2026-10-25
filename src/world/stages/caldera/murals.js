@@ -114,7 +114,7 @@ export function drawMurals(g, R, kit) {
     g.fillText('SLUMP PATH: DANGER OF SURGE', x + w / 2, y + 208);
     wear(x, y, w, h, 30);
     g.restore();
-    out.push({ id: MURAL.warning, x, y, w, h, place: [0.2, 2.2, 0.2, 1.0], fx: [0.8, 1] });
+    out.push({ id: MURAL.warning, x, y, w, h, place: [0.05, 0.9, 0.1, 0.9], fx: [0.8, 1] });
   }
 
   // -------------------------------------------------------------------------------------------------
@@ -126,15 +126,15 @@ export function drawMurals(g, R, kit) {
     g.fillStyle = GREEN; rr(g, x, y, w, h, 10); g.fill();
     g.strokeStyle = WHITE; g.lineWidth = 4; rr(g, x + 5, y + 5, w - 10, h - 10, 6); g.stroke();
     g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.font = fontB(28); g.fillStyle = WHITE;
-    g.fillText('PUMICE RACE', x + w / 2, y + 44);
-    g.font = fontB(20); g.fillStyle = CREAM;
+    g.font = fontB(32); g.fillStyle = WHITE;
+    g.fillText('PUMICE RACE', x + w / 2, y + 42);
+    g.font = fontB(24); g.fillStyle = CREAM;
     g.fillText('HIGH LAVA ONLY  ▶▶▶', x + w / 2, y + 84);
-    g.font = font(16); g.fillStyle = ASH;
-    g.fillText('KEEP TO CHAINED BOULDERS', x + w / 2, y + 118);
+    g.font = fontB(18); g.fillStyle = ASH;
+    g.fillText('KEEP TO CHAINED BOULDERS', x + w / 2, y + 120);
     wear(x, y, w, h, 20);
     g.restore();
-    out.push({ id: MURAL.pumice, x, y, w, h, place: [0.2, 2.0, 0.2, 0.6], fx: [0.85, 1] });
+    out.push({ id: MURAL.pumice, x, y, w, h, place: [0.3, 1.8, 0.9, 0.6], fx: [0.85, 1] });
   }
 
   // -------------------------------------------------------------------------------------------------
@@ -221,13 +221,13 @@ export function drawMurals(g, R, kit) {
       g.fill();
     }
     g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.font = fontB(30); g.fillStyle = '#f03a28';
+    g.font = fontB(32); g.fillStyle = '#f03a28';
     g.fillText('SPILLWAY — KEEP CLEAR', x + w / 2, y + 54);
-    g.font = fontB(20); g.fillStyle = WHITE;
+    g.font = fontB(22); g.fillStyle = WHITE;
     g.fillText('NO STANDING DURING A SURGE', x + w / 2, y + 95);
     wear(x, y, w, h, 25);
     g.restore();
-    out.push({ id: MURAL.spillway, x, y, w, h, place: [0.2, 4.0, 0.2, 0.9], fx: [0.85, 1] });
+    out.push({ id: MURAL.spillway, x, y, w, h, place: [0.1, 2.4, 0.1, 0.9], fx: [0.85, 1] });
   }
 
   // -------------------------------------------------------------------------------------------------
@@ -238,16 +238,17 @@ export function drawMurals(g, R, kit) {
     g.save();
     g.fillStyle = '#22252a'; rr(g, x, y, w, h, 8); g.fill();
     g.textAlign = 'left'; g.textBaseline = 'middle';
-    g.fillStyle = CREAM; g.font = fontB(22);
+    g.fillStyle = CREAM; g.font = fontB(28);
     g.fillText('LADLE RAIL ◀◀ MIND THE CARS', x + 24, y + 36);
+    g.font = fontB(24);
     g.fillText('TAP 1  ·  TAP 2  ·  CUPOLA No. 1', x + 24, y + 84);
     g.fillText('PATTERN SHOP  ·  BAY 3', x + 24, y + 132);
     g.fillText('WEIGHBRIDGE 20 T  ·  TESTED 1931', x + 24, y + 180);
-    g.fillStyle = '#e8a042'; g.font = font(18);
+    g.fillStyle = '#e8a042'; g.font = fontB(20);
     g.fillText('DISPATCH — INKOPOLIS MUNICIPAL CASTINGS', x + 24, y + 224);
     wear(x, y, w, h, 30);
     g.restore();
-    out.push({ id: MURAL.stencils, x, y, w, h, place: [0.2, 3.2, 0.2, 1.1], fx: [0.85, 1] });
+    out.push({ id: MURAL.stencils, x, y, w, h, place: [0.2, 3.2, 0.2, 1.2], fx: [0.85, 1] });
   }
 
   return out;

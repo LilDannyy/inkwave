@@ -257,7 +257,7 @@ if (BLOCKOUT_LAVA) {
 // and of the Pond's 8 sightlines (the 7 m viewpoints). The island's west face (r 16.2) is the second Race's landing:
 // 4 m of floor between it and the deck, the machine house and a stump beside it
 const DECK = { x0: -12.0, x1: -5.4, z0: -0.6, z1: 6.6 };
-add(noBoss(B(DECK.x0, DECK.x1, 1.2, 2.4, DECK.z0, DECK.z1, { color: '#7b7e84', pattern: PATTERN.yard, tag: 'gauge-deck' })));
+add(noBoss(B(DECK.x0, DECK.x1, 1.2, 2.4, DECK.z0, DECK.z1, { color: '#7b7e84', pattern: PATTERN.yard, tag: 'gauge-deck', mural: [{ n: [0, 0, -1], id: MURAL.warning }] })));
 add(noBoss(R([-8.7, 1.2, 9.3], [-8.7, 2.4, DECK.z1], 4, steps({ tag: 'deck-stair' }))));             // up from the island's NW toward Bravo's causeway
 add(noBoss(B(-12.0, -9.0, 2.4, 4.6, 2.6, 6.6, white({ tag: 'gauge-machine-house', color: '#dcd6c8' }))));
 add(noBoss(B(-6.9, DECK.x1, 2.4, 3.4, DECK.z0, DECK.z0 + 1.2, cover(K.ironDk, { tag: 'valve-chest' }))));
@@ -397,7 +397,7 @@ add(noBoss([stack(-14.4, -29.8, 1.4, 1.2, 1.5, 1.6, 'capstan', '#4f5a52'), stack
   stack(-22.7, -26.6, 1.2, 1.2, 1.2, 1.6, 'stone-crate', K.pumice), stack(-13.6, -23.4, 1.0, 0.9, 1.3, 1.6, 'mooring-bollard', K.ironDk)]));
 // the south Slump head: a chain bollard back from the Race's landing; the winch house against the Rim Head's face
 { const [x, z] = G.sp(G.S0, -2.4, -1.4); add(O(x, z, 1.0, 1.0, 1.2, 2.3, 19, cover(K.ironDk, { tag: 'chain-bollard' }))); }
-{ const [x, z] = P(30.4, -139.5); add(O(x, z, 2.4, 2.4, 1.2, 4.0, 139.5, white({ tag: 'winch-house', mural: [{ n: [1, 0, 0], id: MURAL.pumice }, { n: [0, 0, 1], id: MURAL.pumice }] }))); }
+{ const [x, z] = P(30.4, -139.5); add(O(x, z, 2.4, 2.4, 1.2, 4.0, 139.5, white({ tag: 'winch-house', mural: [{ n: [-0.7604, 0, -0.6494], id: MURAL.pumice }, { n: [0.7604, 0, 0.6494], id: MURAL.pumice }, { n: [0.6494, 0, -0.7604], id: MURAL.pumice }, { n: [-0.6494, 0, 0.7604], id: MURAL.pumice }, { n: [1, 0, 0], id: MURAL.pumice }] }))); }
 
 // ---------------------------------------------------------------------------------------- the Casting Floor (0, LOW only)
 add(stack(12.0, -18.4, 1.4, 1.4, 1.8, 0, 'mould-stack', K.ironDk), stack(14.0, -13.6, 1.6, 1.6, 2.0, 0, 'ladle-stand', K.ironDk));
@@ -412,7 +412,7 @@ add(stack(12.0, -18.4, 1.4, 1.4, 1.8, 0, 'mould-stack', K.ironDk), stack(14.0, -
 // the Gauge Post (Bravo's, on its horn's point beside the bridge's landing; Alpha's is its turn at the NW): a squat
 // basalt blockhouse whose flat roof (3.6) is a hop from the horn — a lookout over the other works' bay and quay — with a
 // parapet on its outer sides
-add(armBox(8.9, 8.2, 2.8, 2.6, 2.4, 3.6, rock({ tag: 'gauge-post', color: '#8d8a84', mural: [{ n: [-1, 0, 0], id: MURAL.spillway }] })));
+add(armBox(8.9, 8.2, 2.8, 2.6, 2.4, 3.6, rock({ tag: 'gauge-post', color: '#8d8a84', mural: [{ n: [0.2079, 0, -0.9781], id: MURAL.spillway }, { n: [-0.9781, 0, -0.2079], id: MURAL.spillway }, { n: [-1, 0, 0], id: MURAL.spillway }] })));
 add(armBox(10.15, 8.2, 0.3, 2.6, 3.6, 4.5, cover(K.basaltDk, { tag: 'gauge-post-parapet' })), armBox(8.9, 9.35, 2.8, 0.3, 3.6, 4.6, cover(K.basaltDk, { tag: 'gauge-post-parapet' })));
 // the horn (Bravo's in the SE): a cairn behind the Horn Step
 add(armBox(-2.4, 9.4, 1.2, 1.2, 2.4, 3.6, cover(K.basaltDk, { tag: 'cairn' })));
