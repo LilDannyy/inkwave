@@ -1,0 +1,8 @@
+JOB-28 (bluestone, fix round 3) @ c40bb27b — Mac mini b5-runner, 2026-10-25 21:14–21:47, exit 0. Short summary.
+- ONE REAL REGRESSION: eras-jump frames run 2 is 2/4. The sunset-theme jump (3 → 1) has a frame of 451.2 ms at J + 4.8 s whose split is
+  [era update 0, RENDER 449.1, rest 2.1] — a real render spike, not the unmeasured stall (a lights / bake / cloud step in the render at that
+  moment? the round adds env.applyLights and the tiled cloud bake to a real jump). Its other miss (437.9 ms at J + 2.45, parts ~1.4 ms) is the
+  usual stall. frames run 1 4/4; first 1/1 ×2 (nothing compiled).
+- full: art-tests.sh, eras-look 22/22 with the new (i) real-jump test, and (i) alone 2/2 ×2; stage-mods 36/36; eras-bake 3/3; stage-audit
+  e1–e3 (lightmap applied); net-eras 14/14 and lagged 8/8; check-maps: Bluestone clean.
+- GPU gate, method C: e1 6.19 / 6.42, e2 6.29 / 6.71, e3 6.56 / 6.81 ms (day / dusk) vs Halyard 7.00 / 7.27 — ×0.88–0.94, met.
