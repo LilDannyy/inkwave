@@ -15,6 +15,7 @@
 //   11 3     the 3000s' light seams on the Royal Arcade's Swimston wall, with the flood line FLOOD LEVEL 3026 ▲
 // (5 and 10, the concourse dial and the turntable ring, are the art pass's.)
 // Palette: mid-value, saturation ≤ 0.35 on anything large; the highlights are the era engine's white-gold #f4e9c8.
+import { WORDS, WORD_GRID } from './levelart.js';
 export const MURAL = { hourRing: 4, cafe: 6, hoki: 7, tramStop: 8, ghostSign: 9, seams: 11 };
 
 const rng = (seed) => { let s = seed >>> 0; return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; }; };
@@ -227,6 +228,20 @@ export function drawMurals(g, R, kit) {
     fit(g, 'FLOOD LEVEL 3026 ▲', w * 0.3, h * 0.16, fontB); g.fillText('FLOOD LEVEL 3026 ▲', X + w / 2, Y + h * 0.78);
     g.restore();
     out.push({ id: MURAL.seams, x: X, y: Y, w, h, place: [0.3, Wm, 0.15, Hm], fx: [0.2, 0.3] });
+  }
+  // ---------------------------------------------------------------- (fix round 3) the words read up close (levelart.js WORDS)
+  // white letters (their coverage in alpha) centred in 200 × 42 px cells, 26 px or smaller to fit; the level art (bsWord)
+  // colours them per era — gilt and paint in the 1880s' serif, paint and light in TODAY's and the 3000s' sans
+  {
+    const G = WORD_GRID;
+    g.save(); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#ffffff';
+    WORDS.forEach(([t, f], i) => {
+      const x = R.x + G.x + (i % G.cols) * G.cw, y = R.y + G.y + Math.floor(i / G.cols) * G.ch;
+      g.clearRect(x, y, G.cw, G.ch);
+      fit(g, t, G.cw - 16, 26, f === 'serif' ? serif : fontB);
+      g.fillText(t, x + G.cw / 2, y + G.ch / 2 + 1);
+    });
+    g.restore();
   }
   return out;
 }

@@ -109,6 +109,24 @@ export function makeArtOf(layout) {
 // ring by the hotel's arch and by the boat shed, the knee by the Customs House. Their pools light the floors at dusk
 export const LAMPS = [[-25.3, -44.0], [-25.3, -23.0], [-10.3, -35.5], [-4.4, -15.6], [8.75, -10.53], [-16.2, -3.2]];
 
+// (fix round 3, review 3's minor 2: the procedural pseudo-lettering read as placeholder blocks up close) the words a player
+// reads up close, drawn by murals.js into the mural atlas's stage region (WORD_GRID: 5 × 9 cells of 200 × 42 px at
+// (1040, 624) in the region, the letters' coverage in alpha) and sampled by the level art (bsWord): the 1880s' in a
+// serif (painted and gilt signwriting), TODAY's and the 3000s' in a sans (paint, then light). Index = the cell.
+export const WORD_GRID = { x: 1040, y: 624, cw: 200, ch: 42, cols: 5 };
+export const WORDS = [
+  // the 1880s (serif): the arcade's seven trades, the hotel's bars, the booking office, the hoardings' banner, the huts
+  ['CHOCOLATIER', 'serif'], ['TOYS & GAMES', 'serif'], ['HAIRDRESSER', 'serif'], ['COFFEE PALACE', 'serif'], ['BOOKSELLER', 'serif'], ['FLORIST', 'serif'], ['OUTFITTER', 'serif'],
+  ['PUBLIC BAR', 'serif'], ['DINING ROOM', 'serif'], ['SALOON', 'serif'], ['BOOKING OFFICE', 'serif'], ['TICKETS', 'serif'], ['GRAND OPENING 1889', 'serif'],
+  ['CABMEN\'S REST', 'serif'], ['NEWSAGENT', 'serif'], ['CABLE TRAMS', 'serif'], ['FERRY OFFICE', 'serif'], ['BOAT HIRE', 'serif'],
+  ['AUCTION', 'serif'], ['THEATRE ROYAL', 'serif'], ['TO LET', 'serif'], ['GREAT SALE', 'serif'], ['CIRCUS', 'serif'],
+  // TODAY and the 3000s (sans)
+  ['CHOCOLATIER', 'sans'], ['TOYS', 'sans'], ['BARBER', 'sans'], ['CAFE', 'sans'], ['BOOKS', 'sans'], ['FLORIST', 'sans'], ['CLOTHING', 'sans'],
+  ['BAR', 'sans'], ['BISTRO', 'sans'], ['HOTEL', 'sans'], ['TOP UP', 'sans'], ['TICKETS', 'sans'], ['RECYCLE', 'sans'], ['NEWS', 'sans'],
+  ['TRAM STOP', 'sans'], ['FERRY', 'sans'], ['BOAT HIRE', 'sans'], ['ESPRESSO', 'sans'], ['LIVE MUSIC', 'sans'], ['FESTIVAL', 'sans'], ['MARKET', 'sans'], ['TRAVEL', 'sans'],
+];
+const WI = (t, f) => WORDS.findIndex((w) => w[0] === t && w[1] === f);
+
 // Tartar's wires (DESIGN §3.4: the warning's pulses run out along them from the dome; LEAD-NOTES: "real overhead wires"):
 // five spans per half from the drum's face out over the streets, hung on iron brackets at the parapets and on timber poles
 // standing on roof tops (the Boathouse's racks, the ferryman's box, the dock's crates), never lower than 4.5 m over a route.
@@ -183,15 +201,17 @@ float bsArchD(vec2 p, vec2 c, vec2 h) {
   float head = length(q - vec2(0.0, h.y - h.x)) - h.x;
   return q.y > h.y - h.x ? head : body;
 }
-// "lettering" seen from a little way off: a row of letter-sized blocks with word gaps, centred at c, cap height h, width w
-float bsText(vec2 p, vec2 c, float h, float w, float seed, float pw) {
-  vec2 q = p - c;
-  if (abs(q.y) > h * 0.5 || abs(q.x) > w * 0.5) return 0.0;
-  float cw = h * 0.72, k = floor((q.x + w * 0.5) / cw), lx = fract((q.x + w * 0.5) / cw);
-  float gap = step(0.82, bsH(vec2(k, seed)));
-  float stem = bsAA(abs(lx - 0.5) - 0.3, pw / cw) * (1.0 - gap);
-  float hole = bsAA(abs(lx - 0.5) - 0.12, pw / cw) * bsAA(abs(q.y / h) - 0.22, pw / h) * step(0.45, bsH(vec2(k, seed + 3.0)));
-  return stem * (1.0 - hole);
+// (fix round 3) a real word from the sign atlas (WORDS / WORD_GRID: murals.js draws them into the mural atlas's stage
+// region): cell id centred at c, the cell bw metres wide (its letters about 0.08 bw tall): the letters' coverage. Sampled
+// at an explicit level of detail (the cell's texels per screen pixel), so it is safe in the art's per-fragment branches
+float bsWord(vec2 p, vec2 c, float bw, float id, float pw) {
+  vec2 lp = (p - c) / vec2(bw, bw * ${WORD_GRID.ch / WORD_GRID.cw}) + 0.5;
+  float inside = step(0.0, lp.x) * step(lp.x, 1.0) * step(0.0, lp.y) * step(lp.y, 1.0);
+  lp = clamp(lp, vec2(0.02, 0.04), vec2(0.98, 0.96));
+  vec2 cell = vec2(mod(id, ${WORD_GRID.cols}.0), floor(id / ${WORD_GRID.cols}.0));
+  vec2 px = vec2(${WORD_GRID.x}.0 + (cell.x + lp.x) * ${WORD_GRID.cw}.0, ${1040 + WORD_GRID.y}.0 + (cell.y + 1.0 - lp.y) * ${WORD_GRID.ch}.0);
+  float lod = log2(max(1.0, pw / bw * ${WORD_GRID.cw}.0));
+  return textureLod(uMural, vec2(px.x / 2048.0, 1.0 - px.y / 2048.0), lod).a * inside;
 }
 // the 3000s' living walls: planting modules (0.6 m) in thin pearl frames, leaves in clusters with highlights and shade
 vec3 bsLeaves(vec2 p, float pw) {
@@ -493,7 +513,7 @@ const FBASE = /* glsl */`
               float pd = bsBox(lc, pc, vec2(0.36 + 0.06 * hs, 0.4));
               float poster = bsAA(pd + 0.02 * (vnoise(W * 9.0) - 0.5), pw / 1.15);
               vec3 paper = hs > 0.7 ? bsC(0.86, 0.8, 0.66) : (hs > 0.5 ? bsC(0.72, 0.62, 0.48) : bsC(0.78, 0.74, 0.68));
-              float txt = bsText(lc, vec2(pc.x, 0.68), 0.16, 0.6, cell.x * 3.1 + cell.y, pw / 1.15) + bsText(lc, vec2(pc.x, 0.42), 0.08, 0.58, cell.x + 9.0, pw / 1.15) * 0.8;
+              float txt = bsWord(lc * vec2(1.15, 1.25), vec2(pc.x * 1.15, 0.68 * 1.25), 0.72, 18.0 + mod(cell.x * 3.0 + cell.y, 5.0), pw) + (bsAA(abs(lc.y - 0.45) - 0.008, pw / 1.25) + bsAA(abs(lc.y - 0.39) - 0.008, pw / 1.25)) * step(abs(lc.x - pc.x), 0.22) * 0.6;   // (fix round 3: real words)
               float band = bsAA(abs(lc.y - 0.24) - 0.06, pw / 1.25) * step(abs(lc.x - pc.x), 0.34);
               vec3 ink = hs > 0.6 ? bsC(0.42, 0.14, 0.12) : bsC(0.12, 0.12, 0.14);
               base = mix(base, mix(mix(paper, ink, txt), ink, band * 0.85), poster);
@@ -501,7 +521,7 @@ const FBASE = /* glsl */`
             // the banner along the top: GRAND OPENING 1889
             float bn = bsRect(W, vec2(0.0, 3.1), vec2(fsz.x, 3.45), pw);
             base = mix(base, bsC(0.52, 0.16, 0.13), bn);
-            base = mix(base, bsC(0.9, 0.82, 0.62), bn * bsText(vec2(mod(W.x, 4.6), y), vec2(2.3, 3.28), 0.22, 3.6, 41.0, pw));
+            base = mix(base, bsC(0.9, 0.82, 0.62), bn * bsWord(vec2(mod(W.x, 4.6), y), vec2(2.3, 3.28), 2.9, 12.0, pw));
           } else {
             // a shopfront per bay: stall riser, glass, transom, fascia — or a civic arched opening
             bool civic = fam == 1 || fam == 5 || fam == 9;
@@ -558,7 +578,9 @@ const FBASE = /* glsl */`
                 // fascia: dark board with gilt lettering and a moulded cornice over it
                 float fas = bsRect(q, vec2(-hw - 0.16, fas0), vec2(hw + 0.16, gf - 0.04), pw);
                 base = mix(base, timber * 0.55, fas);
-                base = mix(base, bsC(0.76, 0.6, 0.3), fas * bsText(q, vec2(0.0, (fas0 + gf) * 0.5 - 0.02), 0.2, 2.0 * hw - 0.4, bi * 3.7 + float(prm), pw));
+                float wdn = fam == 2 ? 7.0 + mod(kind, 3.0) : kind, wbw = min(2.0 * hw - 0.3, 2.3);   // (fix round 3: the trade's name in gilt)
+                base = mix(base, timber * 0.25, fas * bsWord(q + vec2(-0.012, 0.012), vec2(0.0, (fas0 + gf) * 0.5 - 0.02), wbw, wdn, pw) * 0.7);
+                base = mix(base, bsC(0.76, 0.6, 0.3), fas * bsWord(q, vec2(0.0, (fas0 + gf) * 0.5 - 0.02), wbw, wdn, pw));
                 base = mix(base, bsC(0.8, 0.64, 0.34), bsAA(abs(y - gf + 0.06) - 0.025, pw) * fas);
                 // the pilasters: stone with a console bracket under the fascia
                 base = mix(base, stone * 0.95, pil * step(y, fas0));
@@ -591,7 +613,7 @@ const FBASE = /* glsl */`
                 vec3 fc = fam == 2 ? bsC(0.14, 0.24, 0.2) : (mod(bi, 3.0) < 1.0 ? bsC(0.2, 0.32, 0.3) : (mod(bi, 3.0) < 2.0 ? bsC(0.36, 0.18, 0.18) : bsC(0.2, 0.22, 0.3)));
                 base = mix(base, fc, fas);
                 float sign = bsRect(q, vec2(-hw * 0.6, gf - 0.5), vec2(hw * 0.6, gf - 0.16), pw) * fas;
-                base = mix(base, fam == 2 ? bsC(0.84, 0.66, 0.32) : bsC(0.86, 0.82, 0.72), sign * bsText(q, vec2(0.0, gf - 0.33), 0.2, hw * 1.1, bi * 5.1 + float(prm) + 30.0, pw));
+                base = mix(base, fam == 2 ? bsC(0.84, 0.66, 0.32) : bsC(0.86, 0.82, 0.72), sign * bsWord(q, vec2(0.0, gf - 0.33), hw * 1.15, fam == 2 ? 30.0 + mod(kind, 3.0) : 23.0 + kind, pw));
                 if (fam == 2) base = mix(base, bsC(0.8, 0.62, 0.3), bsAA(abs(y - gf + 0.08) - 0.02, pw) * fas);   // a gilt bead under the cornice
                 base = mix(base, stone, pil * step(y, gf - 0.62));
               } else {
@@ -610,8 +632,9 @@ const FBASE = /* glsl */`
                 base = mix(base, WG, seam);
                 gBsLit += seam * WG * 1.6;
                 float holo = bsRect(q, vec2(-hw * 0.55, gf - 0.62), vec2(hw * 0.55, gf - 0.36), pw) * body;
-                base = mix(base, mix(bsC(0.86, 0.84, 0.92), WG, bsText(q, vec2(0.0, gf - 0.49), 0.16, hw * 0.9, bi * 3.3 + float(prm) + 60.0, pw)), holo);
-                gBsGlow += holo * WG * 0.35;
+                float hwd = bsWord(q, vec2(0.0, gf - 0.49), hw * 1.05, fam == 2 ? 30.0 + mod(kind, 3.0) : 23.0 + kind, pw);
+                base = mix(base, mix(bsC(0.2, 0.24, 0.32), WG, hwd), holo); gBsGlow += holo * hwd * WG * 0.9;   // (the name in light on dark smart glass)
+                gBsGlow += holo * bsC(0.6, 0.66, 0.8) * 0.12;
                 float green = (1.0 - body) * step(0.15, y) * step(y, gf - 0.1);
                 base = mix(base, bsLeaves(vec2(W.x, y), pw), green);
               }
@@ -631,7 +654,7 @@ const FBASE = /* glsl */`
           if (E == 0) {
             vec2 cl = floor(vec2(W.x / 1.4, (y - 0.6) / 1.0)); vec2 lc = vec2(fract(W.x / 1.4), fract((y - 0.6) / 1.0));
             float pz = bsAA(bsBox(lc, vec2(0.5, 0.5), vec2(0.34, 0.4)), pw / 1.4) * step(0.55, bsH(cl)) * step(0.6, y) * step(y, 2.6) * (1.0 - door);
-            base = mix(base, mix(bsC(0.8, 0.74, 0.6), bsC(0.2, 0.18, 0.16), bsText(lc, vec2(0.5, 0.62), 0.12, 0.6, cl.x + cl.y * 7.0, pw / 1.4)), pz);
+            base = mix(base, mix(bsC(0.8, 0.74, 0.6), bsC(0.2, 0.18, 0.16), bsWord(lc * vec2(1.4, 1.0), vec2(0.7, 0.62), 0.8, 18.0 + mod(cl.x + cl.y * 3.0, 5.0), pw)), pz);
             gBsOld = max(gBsOld, pz);
           } else if (E == 1) {
             float tag = smoothstep(0.62, 0.66, fbm(vec2(W.x * 1.3, y * 2.2) + 3.0)) * step(0.3, y) * step(y, 2.2) * (1.0 - door);
@@ -657,7 +680,7 @@ const FBASE = /* glsl */`
           } else {
             base = mix(base, stone * 0.86, arch);
             base = mix(base, stone * 1.15, rim);
-            if (E == 1) { float pan = bsRect(vec2(ax3, y), vec2(-0.4, gf + 0.55), vec2(0.4, gf + 0.95), pw); base = mix(base, bsC(0.24, 0.3, 0.3), pan); base = mix(base, bsC(0.8, 0.68, 0.4), pan * bsText(vec2(ax3, y), vec2(0.0, gf + 0.75), 0.18, 0.6, floor(W.x / 1.75) + 50.0, pw)); }
+            if (E == 1) { float pan = bsRect(vec2(ax3, y), vec2(-0.4, gf + 0.55), vec2(0.4, gf + 0.95), pw); base = mix(base, bsC(0.24, 0.3, 0.3), pan); base = mix(base, bsC(0.8, 0.68, 0.4), pan * bsWord(vec2(ax3, y), vec2(0.0, gf + 0.75), 0.76, 23.0 + mod(floor(W.x / 1.75), 7.0), pw)); }
             else { base = mix(base, WG, rim * 0.6); gBsGlow += rim * WG * 0.6; float gr = bsGreen(vec2(W.x, y), 9.0, 0.5) * (1.0 - arch); base = mix(base, bsLeaves(vec2(W.x, y), pw), gr); }
           }
         }
@@ -775,7 +798,8 @@ const FBASE = /* glsl */`
             vec2 lc = vec2((abs(ax2) - 1.62) / max(0.01, bay * 0.5 - 1.62), (y - 0.4) / 2.1);
             float pp = step(0.06, lc.x) * step(lc.x, 0.94) * step(0.04, lc.y) * step(lc.y, 0.96);
             vec3 paper = E == 0 ? bsC(0.82, 0.76, 0.6) : bsC(0.55, 0.45, 0.42);
-            base = mix(base, mix(paper, bsC(0.2, 0.16, 0.14), bsText(lc, vec2(0.5, 0.7), 0.16, 0.8, floor(W.x / bay) + float(E) * 7.0, pw)), pp);
+            float pwd = max(0.01, bay * 0.5 - 1.62);
+            base = mix(base, mix(paper, bsC(0.2, 0.16, 0.14), bsWord(lc * vec2(pwd, 2.1), vec2(0.5 * pwd, 0.7 * 2.1), pwd * 0.9, E == 0 ? 18.0 + mod(floor(W.x / bay), 5.0) : 41.0 + mod(floor(W.x / bay), 3.0), pw)), pp);
             if (E == 0) gBsOld = max(gBsOld, pp);
           }
           // a coping along the top
@@ -943,7 +967,8 @@ const FBASE = /* glsl */`
         if (wall) {
           float diag = bsAA(abs((fu.x - fsz.x * 0.5) / max(fsz.x, 0.1) - (fu.y - fsz.y * 0.5) / max(fsz.y, 0.1)) * min(fsz.x, fsz.y) - 0.05, pw);
           base = mix(base, bsC(0.44, 0.33, 0.22), diag * (1.0 - fr));
-          float st2 = bsText(fu, vec2(fsz.x * 0.5, fsz.y * 0.62), 0.12, fsz.x * 0.55, 3.0 + floor(vBsArt.y), pw);
+          vec2 aq = fu - vec2(fsz.x * 0.5, fsz.y * 0.6); aq.x = abs(abs(aq.x) - 0.1);   // (fix round 3: 'this way up', two stencilled arrows)
+          float st2 = max(bsAA(max(aq.x - 0.02, abs(aq.y + 0.03) - 0.08), pw), step(0.05, aq.y) * step(aq.y, 0.13) * bsAA(aq.x - 0.06 * (0.13 - aq.y) / 0.08, pw));
           base = mix(base, E == 2 ? bsC(0.5, 0.52, 0.56) : bsC(0.18, 0.14, 0.12), st2 * 0.75 * (1.0 - diag));
         }
         if (E == 2 && top) { float ls = bsAA(abs(min(min(fu.x, fsz.x - fu.x), min(fu.y, fsz.y - fu.y)) - 0.05) - 0.012, pw); base = mix(base, WG, ls); gBsGlow += ls * WG * 0.6; }
@@ -957,7 +982,7 @@ const FBASE = /* glsl */`
           base *= 1.0 - 0.45 * bsAA((0.5 - abs(sl - 0.5)) * 0.14 - 0.008, pw);
           if (top) { float lb = fract(fu.y / 0.2); base = bsC(0.38, 0.3, 0.22) * (0.85 + 0.2 * h21(vec2(floor(fu.y / 0.2), 3.0))) * (1.0 - 0.4 * bsAA((0.5 - abs(lb - 0.5)) * 0.2 - 0.008, pw)); }
         }
-        else if (E == 1) { base = bsC(0.2, 0.3, 0.22) * (0.9 + 0.1 * vnoise(q * 8.0)); base = mix(base, bsC(0.12, 0.16, 0.13), bsAA(abs(fy - h + 0.12) - 0.05, pw)); if (wall) base = mix(base, bsC(0.85, 0.82, 0.72), bsText(fu, vec2(fsz.x * 0.5, h * 0.55), 0.1, fsz.x * 0.5, 7.0, pw)); }
+        else if (E == 1) { base = bsC(0.2, 0.3, 0.22) * (0.9 + 0.1 * vnoise(q * 8.0)); base = mix(base, bsC(0.12, 0.16, 0.13), bsAA(abs(fy - h + 0.12) - 0.05, pw)); if (wall) base = mix(base, bsC(0.85, 0.82, 0.72), bsWord(fu, vec2(fsz.x * 0.5, h * 0.55), fsz.x * 0.75, 35.0, pw)); }
         else { base = bsC(0.9, 0.9, 0.88); float ls = bsAA(abs(fy - h * 0.7) - 0.02, pw) * float(wall); base = mix(base, WG, ls); gBsGlow += ls * WG * 0.8; }
       } else if (prm == 2 && E > 0) {
         // the bollard blocks TODAY: a timber-slatted bench on a concrete plinth; in the 3000s a white bench with a light line
@@ -983,7 +1008,7 @@ const FBASE = /* glsl */`
             // the deck's foundation stone: a bronze plaque
             float pq = bsRect(fu, vec2(fsz.x * 0.2, h * 0.35), vec2(fsz.x * 0.8, h * 0.72), pw);
             base = mix(base, bsC(0.36, 0.27, 0.16), pq);
-            base = mix(base, bsC(0.66, 0.52, 0.3), pq * bsText(fu, vec2(fsz.x * 0.5, h * 0.6), 0.07, fsz.x * 0.5, 13.0 + float(E), pw));
+            base = mix(base, bsC(0.66, 0.52, 0.3), pq * (1.0 - bsRect(fu, vec2(fsz.x * 0.2 + 0.03, h * 0.35 + 0.03), vec2(fsz.x * 0.8 - 0.03, h * 0.72 - 0.03), pw)) * 0.8);   // (fix round 3: a plain plaque)
           }
           if (prm == 9) {
             // (fix round 2, review 2 issue 7) the statue plinth as a monument (its top is walkable: no figure stands on it):
@@ -1018,7 +1043,7 @@ const FBASE = /* glsl */`
             base = mix(base, bronzeL * 1.25, edge * panel * 0.7);
             base = mix(base, E == 2 ? WG : bronzeL * 1.3, prop2 * panel);
             if (E == 2) gBsGlow += prop2 * panel * WG * 1.2;
-            base = mix(base, bronzeL, bsText(fu, vec2(fsz.x * 0.5, h * 0.12 + 0.02), 0.06, fsz.x * 0.6, 13.0 + float(E), pw) * (1.0 - bc * 0.0) * 0.9);
+            base *= 1.0 - 0.25 * (bsRect(fu, vec2(fsz.x * 0.25, 0.32), vec2(fsz.x * 0.75, 0.5), pw) - bsRect(fu, vec2(fsz.x * 0.25 + 0.02, 0.34), vec2(fsz.x * 0.75 - 0.02, 0.48), pw));   // (fix round 3: a plain sunk tablet)
             gBaseRough = mix(gBaseRough, 0.4, panel);
           }
           if (prm == 2 && E == 0) {
@@ -1088,7 +1113,7 @@ const FBASE = /* glsl */`
       } else if (prm == 7) {
         // the cart: a costermonger's barrow (1880s), an espresso cart (TODAY), a hover cart (3000s)
         if (E == 0) { float pl = fract(fy / 0.16); base = bsC(0.5, 0.36, 0.24) * (1.0 - 0.35 * bsAA((0.5 - abs(pl - 0.5)) * 0.16 - 0.006, pw)); if (top) base = mix(bsC(0.62, 0.5, 0.26), bsC(0.55, 0.15, 0.12), step(0.5, h21(floor(P.xz * 7.0)))) * (0.8 + 0.3 * vnoise(P.xz * 14.0)); }
-        else if (E == 1) { base = bsC(0.22, 0.32, 0.3); if (wall) { base = mix(base, bsC(0.85, 0.82, 0.74), bsRect(fu, vec2(0.1, h * 0.45), vec2(fsz.x - 0.1, h * 0.85), pw)); base = mix(base, bsC(0.22, 0.2, 0.18), bsText(fu, vec2(fsz.x * 0.5, h * 0.66), 0.13, fsz.x * 0.7, 21.0, pw)); } if (top) base = bsC(0.5, 0.42, 0.34); }
+        else if (E == 1) { base = bsC(0.22, 0.32, 0.3); if (wall) { base = mix(base, bsC(0.85, 0.82, 0.74), bsRect(fu, vec2(0.1, h * 0.45), vec2(fsz.x - 0.1, h * 0.85), pw)); base = mix(base, bsC(0.22, 0.2, 0.18), bsWord(fu, vec2(fsz.x * 0.5, h * 0.66), min(fsz.x * 0.8, 1.6), 40.0, pw)); } if (top) base = bsC(0.5, 0.42, 0.34); }
         else { base = bsC(0.92, 0.92, 0.9); float ls = bsAA(abs(fy - 0.2) - 0.03, pw) * float(wall); base = mix(base, WG, ls); gBsGlow += ls * WG * 1.2; if (top) base = bsC(0.85, 0.87, 0.9); }
       } else if (prm == 8 && E == 2) {
         // (fix round 2, review 2 issue 7) the 3000s: a fountain of light — the pearl drum with arcs of light rising up its
@@ -1137,7 +1162,7 @@ const FBASE = /* glsl */`
         if (E == 2) { base = bsC(0.92, 0.92, 0.9); float ls = bsAA(abs(fy - h + 0.1) - 0.02, pw) * float(wall); base = mix(base, WG, ls); gBsGlow += ls * WG; }
         else {
           float bd = fract(fy / 0.12); base = bsC(0.52, 0.38, 0.26) * (1.0 - 0.3 * bsAA((0.5 - abs(bd - 0.5)) * 0.12 - 0.006, pw));
-          if (wall) { float board = bsRect(fu, vec2(0.12, 0.25), vec2(fsz.x - 0.12, h - 0.15), pw); base = mix(base, bsC(0.1, 0.11, 0.1), board); base = mix(base, bsC(0.86, 0.84, 0.78), board * (bsText(fu, vec2(fsz.x * 0.5, h - 0.3), 0.09, fsz.x * 0.6, 25.0, pw) + 0.6 * bsText(fu, vec2(fsz.x * 0.5, h * 0.5), 0.05, fsz.x * 0.62, 29.0, pw))); }
+          if (wall) { float board = bsRect(fu, vec2(0.12, 0.25), vec2(fsz.x - 0.12, h - 0.15), pw); base = mix(base, bsC(0.1, 0.11, 0.1), board); base = mix(base, bsC(0.86, 0.84, 0.78), board * (bsWord(fu, vec2(fsz.x * 0.5, h - 0.3), min(fsz.x * 0.8, 1.2), 26.0, pw) + 0.8 * bsWord(fu, vec2(fsz.x * 0.5, h * 0.5), min(fsz.x * 0.7, 0.9), 40.0, pw))); }
           if (top) base = bsC(0.55, 0.52, 0.48) * (0.9 + 0.15 * vnoise(P.xz * 6.0));
         }
       } else if (prm == 11) {
@@ -1162,7 +1187,7 @@ const FBASE = /* glsl */`
           float ls4 = bsAA(abs(fy - 0.35) - 0.012, pw) + bsAA(abs(fy - h + 0.25) - 0.012, pw);
           base = mix(base, WG, clamp(ls4, 0.0, 1.0)); gBsGlow += clamp(ls4, 0.0, 1.0) * WG;
           float lab = bsRect(fu, vec2(fsz.x * 0.25, 0.12), vec2(fsz.x * 0.75, 0.28), pw);
-          base = mix(base, bsC(0.2, 0.24, 0.3), lab); base = mix(base, WG, lab * bsText(fu, vec2(fsz.x * 0.5, 0.2), 0.07, fsz.x * 0.4, 205.0, pw)); gBsGlow += lab * WG * 0.3;
+          base = mix(base, bsC(0.2, 0.24, 0.3), lab); base = mix(base, WG, lab * bsAA(abs(fu.y - 0.2) - 0.01, pw) * step(abs(fu.x - fsz.x * 0.5), fsz.x * 0.18)); gBsGlow += lab * WG * 0.3;   // (fix round 3: a plain lit label)
         }
         if (top) base = bsC(0.06, 0.06, 0.065) * (0.6 + 0.9 * vnoise(P.xz * 20.0));
       } else if (prm == 12 && E == 2) {
@@ -1220,7 +1245,7 @@ const FBASE = /* glsl */`
           if (E == 1) {
             float scr = bsRect(f, vec2(fsz.x * 0.62, h * 0.2), vec2(fsz.x * 0.86, h * 0.4), pw);
             base = mix(base, bsC(0.12, 0.2, 0.3), scr); gBsLit += scr * bsC(0.35, 0.55, 0.8) * 0.6;
-            base = mix(base, bsC(0.85, 0.88, 0.9), scr * bsText(f, vec2(fsz.x * 0.74, h * 0.32), 0.05, fsz.x * 0.2, 131.0, pw));
+            base = mix(base, bsC(0.85, 0.88, 0.9), scr * bsWord(f, vec2(fsz.x * 0.74, h * 0.32), fsz.x * 0.24, 34.0, pw));
             base = mix(base, bsC(0.6, 0.62, 0.64), bsAA(fy - 0.25, pw));
           }
           // (the 3000s: dark smart glass with the timetable in light on it, framed in white-gold)
@@ -1231,12 +1256,12 @@ const FBASE = /* glsl */`
           vec3 troom = E == 2 ? vec3(0.0) : bsRoomIf(win, vec2(f.x - fsz.x * 0.5, fy), Vt, vec4(fsz.x * 0.45, 0.05, h - 0.1, min(fsz.x, 1.6)), 10.0, float(prm) + 3.0, E);
           base = mix(base, E == 2 ? mix(bsC(0.2, 0.25, 0.32), bsC(0.32, 0.38, 0.46), smoothstep(h * 0.45, h * 0.82, fy)) : mix(troom * 0.14, bsGlass(f, h * 0.45, h * 0.82, 1.0), ft2), win);
           if (E < 2) gBsRoom += win * troom * (1.0 - ft2) * (E == 0 ? 0.7 : 0.95);
-          if (E == 2) { float tt = win * (bsText(f, vec2(fsz.x * 0.5, h * 0.74), 0.07, fsz.x * 0.5, 141.0, pw) + bsText(f, vec2(fsz.x * 0.5, h * 0.64), 0.05, fsz.x * 0.48, 143.0, pw) + bsText(f, vec2(fsz.x * 0.5, h * 0.56), 0.05, fsz.x * 0.44, 147.0, pw)); base = mix(base, WG, clamp(tt, 0.0, 1.0)); gBsGlow += clamp(tt, 0.0, 1.0) * WG * 0.8; }
+          if (E == 2) { float ry2 = h * 0.66 + 0.05 * sin(f.x * 4.0); float tt = win * clamp(bsAA(abs(fy - ry2) - 0.012, pw) * step(fsz.x * 0.25, f.x) * step(f.x, fsz.x * 0.75) + bsAA(length(vec2(fract((f.x - fsz.x * 0.25) / max(0.01, fsz.x * 0.25)) - 0.5, (fy - ry2) / max(0.01, fsz.x * 0.25))) * fsz.x * 0.25 - 0.035, pw) * step(fsz.x * 0.2, f.x) * step(f.x, fsz.x * 0.8) + bsWord(f, vec2(fsz.x * 0.5, h * 0.53), fsz.x * 0.5, 44.0, pw), 0.0, 1.0); base = mix(base, WG, tt); gBsGlow += tt * WG * 1.1; }   // (fix round 3: the route in light and TRAVEL)
           if (E == 2) gBsLit += win * WG * 0.5;
           if (win > 0.5) { gBaseRough = 0.1; gTexStr = 0.0; }
           float sign = bsRect(f, vec2(0.1, h - 0.32), vec2(fsz.x - 0.1, h - 0.06), pw);
           base = mix(base, E == 0 ? bsC(0.12, 0.16, 0.14) : (E == 1 ? bsC(0.14, 0.2, 0.32) : WG * 0.9), sign);
-          base = mix(base, E == 2 ? bsC(0.3, 0.28, 0.24) : bsC(0.86, 0.78, 0.52), sign * bsText(f, vec2(fsz.x * 0.5, h - 0.19), 0.14, fsz.x * 0.62, 51.0, pw));
+          base = mix(base, E == 2 ? bsC(0.3, 0.28, 0.24) : bsC(0.86, 0.78, 0.52), sign * bsWord(f, vec2(fsz.x * 0.5, h - 0.19), min(fsz.x * 0.85, 1.25), E == 0 ? (prm == 1 ? 10.0 : 11.0) : (E == 1 ? 33.0 : 44.0), pw));
           if (E == 1) gBsLit += sign * bsC(0.3, 0.4, 0.6) * 0.3;
           if (E == 2) gBsGlow += sign * WG * 0.4;
         }
@@ -1250,7 +1275,7 @@ const FBASE = /* glsl */`
           vec3 paper = E == 0 ? mix(bsC(0.84, 0.78, 0.64), bsC(0.7, 0.6, 0.46), hs) : (E == 1 ? mix(bsC(0.62, 0.5, 0.46), bsC(0.4, 0.48, 0.52), hs) : mix(bsC(0.86, 0.88, 0.92), WG, hs * 0.4));
           float pp = bsAA(bsBox(lc, vec2(0.5), vec2(0.46, 0.46)), pw / 0.62);
           vec3 ink = E == 2 ? bsC(0.4, 0.42, 0.5) : bsC(0.16, 0.12, 0.1);
-          float tx = bsText(lc, vec2(0.5, 0.7), 0.14, 0.8, cell.x + cell.y * 5.0 + float(E) * 11.0, pw / 0.62) + bsText(lc, vec2(0.5, 0.4), 0.07, 0.76, cell.x * 2.0 + 3.0, pw / 0.62);
+          float tx = bsWord(lc * vec2(0.62, 0.75), vec2(0.31, 0.7 * 0.75), 0.5, E == 0 ? 18.0 + mod(cell.x + cell.y * 2.0, 5.0) : 41.0 + mod(cell.x + cell.y * 2.0, 3.0), pw) + (bsAA(abs(lc.y - 0.42) - 0.012, pw / 0.75) + bsAA(abs(lc.y - 0.34) - 0.012, pw / 0.75)) * step(abs(lc.x - 0.5), 0.3) * 0.6;   // (fix round 3: real headlines)
           base = mix(base, mix(paper, ink, clamp(tx, 0.0, 1.0)), pp * band);
           if (E == 0) gBsOld = max(gBsOld, pp * band);
           if (E == 2) gBsLit += pp * band * paper * 0.35;
@@ -1304,7 +1329,7 @@ const FBASE = /* glsl */`
           float band = bsRect(f, vec2(0.08, h * 0.42), vec2(fsz.x - 0.08, h * 0.86), pw);
           base = mix(base, mix(bsC(0.16, 0.2, 0.26), bsC(0.26, 0.3, 0.4), smoothstep(h * 0.42, h * 0.86, fy)), band);
           float tt = 0.0;
-          for (int k = 0; k < 3; k++) { float yk = h * (0.52 + 0.12 * float(k)); tt += bsText(vec2(mod(f.x + uEraT * (0.25 + 0.08 * float(k)), 3.0), fy), vec2(1.5, yk), 0.08, 2.8, 171.0 + float(k) * 7.0, pw); }
+          for (int k = 0; k < 3; k++) { float yk = h * (0.52 + 0.12 * float(k)); tt += bsWord(vec2(mod(f.x + uEraT * (0.25 + 0.08 * float(k)), 1.6), fy), vec2(0.8, yk), 1.4, k == 0 ? 36.0 : (k == 1 ? 41.0 : 43.0), pw); }
           tt = clamp(tt, 0.0, 1.0) * band;
           base = mix(base, WG, tt); gBsGlow += tt * WG * 1.1 + band * bsC(0.6, 0.66, 0.8) * 0.12;
           if (band > 0.5) { gBaseRough = 0.1; gTexStr = 0.0; }
@@ -1313,7 +1338,7 @@ const FBASE = /* glsl */`
           base = mix(base, bsC(0.95, 0.95, 0.93), seat); base = mix(base, bsLeaves(f, pw), moss);
           float scr = bsRect(f, vec2(fsz.x * 0.2, 1.25), vec2(fsz.x * 0.8, 1.95), pw);
           base = mix(base, bsC(0.16, 0.2, 0.26), scr);
-          float tt = scr * clamp(bsText(f, vec2(fsz.x * 0.5, 1.82), 0.08, fsz.x * 0.5, 181.0, pw) + bsText(f, vec2(fsz.x * 0.5, 1.66), 0.06, fsz.x * 0.52, 183.0, pw) + bsText(f, vec2(fsz.x * 0.5, 1.52), 0.06, fsz.x * 0.48, 187.0, pw) + bsText(f, vec2(fsz.x * 0.5, 1.38), 0.06, fsz.x * 0.5, 189.0, pw), 0.0, 1.0);
+          float ry3 = 1.5 + 0.05 * sin(f.x * 4.0); float tt = scr * clamp(bsWord(f, vec2(fsz.x * 0.5, 1.8), min(fsz.x * 0.55, 1.4), 37.0, pw) + bsAA(abs(fy - ry3) - 0.012, pw) * step(fsz.x * 0.25, f.x) * step(f.x, fsz.x * 0.75) + bsAA(length(vec2(fract((f.x - fsz.x * 0.25) / max(0.01, fsz.x * 0.25)) - 0.5, (fy - ry3) / max(0.01, fsz.x * 0.25))) * fsz.x * 0.25 - 0.035, pw) * step(fsz.x * 0.2, f.x) * step(f.x, fsz.x * 0.8), 0.0, 1.0);   // (fix round 3)
           base = mix(base, WG, tt); gBsGlow += tt * WG;
           if (scr > 0.5) { gBaseRough = 0.1; gTexStr = 0.0; }
         } else {
@@ -1324,7 +1349,7 @@ const FBASE = /* glsl */`
           float ry = h * 0.72 + 0.09 * sin(f.x * 3.1 + 0.6);
           float route = bsAA(abs(fy - ry) - 0.014, pw) * step(0.25, f.x) * step(f.x, fsz.x - 0.25);
           float stops = 0.0; for (int k = 0; k < 4; k++) { float sx = 0.3 + (fsz.x - 0.6) * float(k) / 3.0; stops += bsAA(length(vec2(f.x - sx, fy - (h * 0.72 + 0.09 * sin(sx * 3.1 + 0.6)))) - 0.045, pw); }
-          float tt = bsText(f, vec2(fsz.x * 0.5, h * 0.52), 0.06, fsz.x * 0.62, 191.0, pw) + bsText(f, vec2(fsz.x * 0.5, h * 0.43), 0.06, fsz.x * 0.58, 193.0, pw) + bsText(f, vec2(fsz.x * 0.5, h * 0.35), 0.06, fsz.x * 0.6, 197.0, pw);
+          float tt = bsWord(f, vec2(fsz.x * 0.5, h * 0.47), min(fsz.x * 0.7, 1.4), 38.0, pw);   // (fix round 3: FERRY, not pseudo-lettering)
           float lit = clamp(route + stops + tt, 0.0, 1.0) * pan;
           base = mix(base, WG, lit); gBsGlow += lit * WG * 1.1 + pan * bsC(0.6, 0.66, 0.8) * 0.1;
           if (pan > 0.5) { gBaseRough = 0.1; gTexStr = 0.0; }
@@ -1364,7 +1389,7 @@ const FBASE = /* glsl */`
           if (h > 2.5) {
             float fas = bsRect(f, vec2(0.0, h - 0.42), vec2(fsz.x, h - 0.08), pw);
             base = mix(base, E == 0 ? bsC(0.86, 0.8, 0.62) : (E == 1 ? bsC(0.9, 0.88, 0.84) : bsC(0.97, 0.96, 0.94)), fas);
-            base = mix(base, E == 0 ? bsC(0.3, 0.16, 0.12) : (E == 1 ? bsC(0.16, 0.24, 0.36) : WG * 0.8), fas * bsText(f, vec2(fsz.x * 0.5, h - 0.25), 0.2, fsz.x * 0.6, 111.0 + float(prm), pw));
+            base = mix(base, E == 0 ? bsC(0.3, 0.16, 0.12) : (E == 1 ? bsC(0.16, 0.24, 0.36) : WG * 0.8), fas * bsWord(f, vec2(fsz.x * 0.5, h - 0.25), min(fsz.x * 0.8, 1.8), prm == 4 || prm == 5 ? (E == 0 ? 13.0 : 26.0) : (prm == 6 ? (E == 0 ? 14.0 : 36.0) : (prm == 7 ? (E == 0 ? 15.0 : 37.0) : (prm == 9 ? (E == 0 ? 17.0 : 39.0) : (E == 0 ? 16.0 : 38.0)))), pw));
             if (fsz.x > 4.0) { float door = bsRect(f, vec2(fsz.x - 1.35, 0.0), vec2(fsz.x - 0.45, h * 0.72), pw); base = mix(base, E == 2 ? bsC(0.98, 0.97, 0.94) : c0 * 0.7, door); base = mix(base, bsC(0.7, 0.58, 0.3), door * bsAA(length(f - vec2(fsz.x - 0.6, h * 0.36)) - 0.035, pw)); }
           }
           // the skirt
@@ -1384,7 +1409,7 @@ const FBASE = /* glsl */`
           base = c0 * (0.9 + 0.12 * vnoise(f * 3.0));
           if (wall) {
             float win = bsRect(f, vec2(0.12, h * 0.45), vec2(fsz.x - 0.12, h * 0.85), pw);
-            if (prm == 18) { base = mix(base, bsGlass(f, h * 0.45, h * 0.85, 1.0), win); gBsLit += win * bsC(1.0, 0.86, 0.64) * 0.7; base = mix(base, bsC(0.86, 0.8, 0.6), bsText(f, vec2(fsz.x * 0.5, h * 0.3), 0.1, fsz.x * 0.6, 101.0, pw)); }
+            if (prm == 18) { base = mix(base, bsGlass(f, h * 0.45, h * 0.85, 1.0), win); gBsLit += win * bsC(1.0, 0.86, 0.64) * 0.7; base = mix(base, bsC(0.86, 0.8, 0.6), bsWord(f, vec2(fsz.x * 0.5, h * 0.3), min(fsz.x * 0.8, 1.2), 36.0, pw)); }
             else {
               // buckets of flowers in two tiers along the stall's front
               float tier = step(h * 0.5, fy) * step(fy, h * 0.66) + step(h * 0.74, fy) * step(fy, h * 0.9);
@@ -1398,7 +1423,7 @@ const FBASE = /* glsl */`
           if (top) base = prm == 19 ? bsC(0.34, 0.46, 0.26) * (0.7 + 0.5 * vnoise(P.xz * 9.0)) : bsC(0.3, 0.32, 0.32);
         } else {
           base = bsC(0.92, 0.92, 0.9);
-          if (wall && prm == 18) { float win = bsRect(f, vec2(0.12, h * 0.42), vec2(fsz.x - 0.12, h * 0.85), pw); base = mix(base, mix(bsC(0.2, 0.25, 0.32), bsC(0.32, 0.38, 0.46), smoothstep(h * 0.42, h * 0.85, fy)), win); float tt = win * bsText(f, vec2(fsz.x * 0.5, h * 0.7), 0.06, fsz.x * 0.6, 151.0, pw); base = mix(base, WG, tt); gBsGlow += tt * WG * 0.8; }
+          if (wall && prm == 18) { float win = bsRect(f, vec2(0.12, h * 0.42), vec2(fsz.x - 0.12, h * 0.85), pw); base = mix(base, mix(bsC(0.2, 0.25, 0.32), bsC(0.32, 0.38, 0.46), smoothstep(h * 0.42, h * 0.85, fy)), win); float tt = win * bsWord(f, vec2(fsz.x * 0.5, h * 0.7), min(fsz.x * 0.7, 1.0), 36.0, pw); base = mix(base, WG, tt); gBsGlow += tt * WG * 0.8; }
           if (wall) { float ls = bsAA(abs(fy - h + 0.1) - 0.015, pw); base = mix(base, WG, ls); gBsGlow += ls * WG; if (prm == 19) { float gr = step(h * 0.45, fy) * step(fy, h - 0.2); base = mix(base, bsLeaves(f, pw), gr); } }
           if (top) base = prm == 19 ? bsC(0.4, 0.52, 0.32) : bsC(0.9, 0.9, 0.9);
         }
@@ -1409,7 +1434,8 @@ const FBASE = /* glsl */`
         if (wall) {
           float strap = max(bsAA(abs(fract(f.x / 1.1) - 0.5) * 1.1 - 0.05, pw), bsAA(min(f.x, fsz.x - f.x) - 0.08, pw));
           base = mix(base, bsC(0.14, 0.14, 0.14), strap);
-          base = mix(base, bsC(0.86, 0.82, 0.7), bsText(f, vec2(fsz.x * 0.5, h * 0.62), 0.24, min(1.4, fsz.x * 0.4), 61.0 + float(E), pw) * (1.0 - strap));
+          float npl = bsRect(f, vec2(fsz.x * 0.5 - 0.2, h * 0.62 - 0.1), vec2(fsz.x * 0.5 + 0.2, h * 0.62 + 0.1), pw);   // (fix round 3: a plain plate)
+          base = mix(base, bsC(0.14, 0.14, 0.14), npl * (1.0 - strap)); base = mix(base, bsC(0.86, 0.82, 0.7), (npl - bsRect(f, vec2(fsz.x * 0.5 - 0.17, h * 0.62 - 0.07), vec2(fsz.x * 0.5 + 0.17, h * 0.62 + 0.07), pw)) * (1.0 - strap));
           base = mix(base, bsC(0.12, 0.12, 0.12), bsAA(fy - 0.35, pw));
         }
       } else if (prm == 11) {
@@ -1431,7 +1457,7 @@ const FBASE = /* glsl */`
           float open = (1.0 - post) * step(h * 0.48, fy) * step(fy, h - 0.3);
           base = mix(base, bsC(0.12, 0.1, 0.09), open * 0.85);
           base = mix(base, bsC(0.3, 0.2, 0.14), bsAA(abs(fy - h + 0.12) - 0.12, pw));
-          base = mix(base, bsC(0.76, 0.6, 0.3), bsText(f, vec2(fsz.x * 0.5, h * 0.25), 0.16, fsz.x * 0.5, 71.0, pw) * step(fy, h * 0.42));
+          base = mix(base, bsC(0.76, 0.6, 0.3), bsWord(f, vec2(fsz.x * 0.5, h * 0.25), min(fsz.x * 0.7, 2.0), 15.0, pw) * step(fy, h * 0.42));
         }
       } else if (prm == 14) {
         // the tram island: a bluestone kerb with a white edge line TODAY and light in the 3000s
@@ -1448,7 +1474,7 @@ const FBASE = /* glsl */`
         // the chimney: soot at the crown in the 1880s, a painted café band TODAY, a light ring in the 3000s
         float soot = smoothstep(h - 4.0, h, fy) * (E == 0 ? 0.65 : 0.25);
         base = mix(base, bsC(0.08, 0.07, 0.07), soot);
-        if (E == 1) { float b = bsRect(f, vec2(0.0, h - 5.0), vec2(fsz.x, h - 3.8), pw); base = mix(base, bsC(0.86, 0.82, 0.7), b); base = mix(base, bsC(0.3, 0.16, 0.14), b * bsText(f, vec2(fsz.x * 0.5, h - 4.4), 0.6, fsz.x * 0.8, 81.0, pw)); }
+        if (E == 1) { float b = bsRect(f, vec2(0.0, h - 5.0), vec2(fsz.x, h - 3.8), pw); base = mix(base, bsC(0.86, 0.82, 0.7), b); base = mix(base, bsC(0.3, 0.16, 0.14), b * bsWord(f, vec2(fsz.x * 0.5, h - 4.4), min(fsz.x * 2.4, 5.5), 26.0, pw)); }
         if (E == 2) { float r = bsAA(abs(fy - h + 0.6) - 0.08, pw) + bsAA(abs(fy - h + 3.0) - 0.04, pw); base = mix(base, WG, clamp(r, 0.0, 1.0)); gBsGlow += clamp(r, 0.0, 1.0) * WG * 1.4; }
       }
       // every small structure's foot: a bluestone base course
