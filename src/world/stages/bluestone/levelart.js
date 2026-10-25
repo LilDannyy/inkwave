@@ -504,12 +504,17 @@ const FBASE = /* glsl */`
               float rj = bsAA((0.5 - abs(fract((y - plinth) / 0.38) - 0.5)) * 0.38 - 0.018, pw);
               base *= 1.0 - 0.28 * rj * (1.0 - w.x) * step(plinth, y);
               base = mix(base, stone * 1.15, w.x);
-              vec3 gl = E == 2 ? mix(bsC(0.86, 0.88, 0.9), WG, 0.25) : bsGlass(p, c.y - hh.y, c.y + hh.y, 1.0);
+              // (fix round 1) behind the civic arches (the GPO's public hall, the hotel's bar, the boiler house) a room
+              // with depth: its counters and pinned notices, lit by its own light — not a flat lit pane at dusk
+              vec3 Vc = bsViewIn();
+              float fc2 = 0.05 + 0.75 * pow(1.0 - Vc.z, 4.0);
+              vec3 croom = E == 2 ? vec3(0.0) : bsRoom(p, Vc, vec4(hh.x + 0.5, plinth, gf - 0.1, 4.0), fam == 2 ? 3.0 : 10.0, float(bi) + float(prm) * 5.0, E);
+              vec3 gl = E == 2 ? mix(bsC(0.86, 0.88, 0.9), WG, 0.25) : mix(croom * 0.14, bsGlass(p, c.y - hh.y, c.y + hh.y, 1.0), fc2);
               base = mix(base, gl, w.y);
               base = mix(base, E == 0 ? bsC(0.24, 0.28, 0.24) : (E == 1 ? bsC(0.86, 0.85, 0.8) : bsC(0.92, 0.92, 0.9)), w.z);
               if (w.y > 0.5) { gBaseRough = 0.12; gTexStr = 0.0; }
-              float litK = E == 0 ? 0.55 : (E == 1 ? 0.85 : 0.7);
-              gBsLit += w.y * (E == 0 ? bsC(1.0, 0.72, 0.42) : (E == 1 ? bsC(1.0, 0.86, 0.64) : bsC(0.95, 0.94, 0.98))) * litK * step(0.3, bsH(vec2(bi, float(prm))));
+              if (E == 2) gBsLit += w.y * bsC(0.95, 0.94, 0.98) * 0.7 * step(0.3, bsH(vec2(bi, float(prm))));
+              else gBsRoom += w.y * croom * (1.0 - fc2) * (E == 0 ? 0.7 : 0.95) * (0.6 + 0.4 * step(0.3, bsH(vec2(bi, float(prm)))));
               // keystone
               base = mix(base, stone * 1.25, bsRect(p, vec2(-0.1, c.y + hh.y + 0.02), vec2(0.1, c.y + hh.y + 0.3), pw));
             } else if (inBay || fam == 3) {
