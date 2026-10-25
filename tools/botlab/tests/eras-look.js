@@ -485,18 +485,22 @@
     const still = (ut) => { U.uTime.value = ut; __G.fx?.clear?.(); const out2 = []; for (const [from, look] of [[[-17.9, 1.75, -32.0], [-27, 3.0, -13]], [[0, 2.0, -40], [-20, 52, -70]]]) { cam(from, look, 66); step(0.02); U.uTime.value = ut; out2.push(grab()); } return out2; };
     const D = W2.doneOff, real = {}, blend = [];
     const theme = env.theme, era0 = E2.era, x0 = brief(snap());
+    // (no cloud bake in or round a real jump: each era's clouds were baked at the match's load, W._warmClouds)
+    let bakes = 0; const bk0 = env._bakeClouds.bind(env); env._bakeClouds = (...a) => { bakes++; return bk0(...a); };
+    const miss0 = W2.stats.cloudMiss || 0, cached = W2._cloudCache ? W2._cloudCache.size : 0;
     m.time = m.duration - 39; step(0.1);                     // (39 s played: before jump 1's pre-bell)
     tAt(60 + D + 2);
     real[2] = { era: E2.era, envEra: W2.envEra, at: 'done + 2', ...snap() }; real[2].g2 = mid(); delete real[2].g2.F;
     tAt(60 + D + 4.5); real[2].g = mid(); delete real[2].g.F;   // (the done pulse over: 4 s)
     m.time = m.duration - 99; step(0.1);                     // (99 s: before jump 2's pre-bell; the era in force unchanged, no theme)
-    const slices0 = W2.stats.cloudSlices || 0;
     tAt(120 + D - 0.02); blend.push(['done', +E2.S.clock.t.toFixed(2), brief(snap())]);
     tAt(120 + D + 0.35); blend.push(['done + 0.35', +E2.S.clock.t.toFixed(2), brief(snap())]);
     tAt(120 + D + 0.75); blend.push(['done + 0.75', +E2.S.clock.t.toFixed(2), brief(snap())]);
     tAt(120 + D + 2);
     real[3] = { era: E2.era, envEra: W2.envEra, at: 'done + 2', ...snap() }; real[3].g2 = mid(); delete real[3].g2.F;
-    const slices = (W2.stats.cloudSlices || 0) - slices0, late = W2.stats.cloudLate;
+    const cloudTexReal = U.uCloudTex.value, cloudOk = !!W2._cloudCache && [...W2._cloudCache.values()].some((rt) => rt.texture === cloudTexReal);
+    env._bakeClouds = bk0;
+    const miss = (W2.stats.cloudMiss || 0) - miss0;
     tAt(120 + D + 4.5); real[3].g = mid(); delete real[3].g.F;
     const ut = U.uTime.value, realStill = still(ut);
     // the same eras by debugJump (a seek: setTheme, the look a late joiner gets)
@@ -509,9 +513,9 @@
     const same = realStill.map((F, i) => diff(F, refStill[i], [0, 0, 1, 1]));
     const e0 = blend[0][2].exposure, e1 = blend[1][2].exposure, e2 = blend[2][2].exposure, eT = brief(ref[3]).exposure;
     const smooth = Math.abs(e0 - brief(ref[2]).exposure) < 1e-6 && (eT - e0) * (e1 - e0) > 0 && Math.abs(e1 - e0) < Math.abs(eT - e0) && Math.abs(e2 - eT) < 1e-6;
-    R('art phase (i) (fix round 3): a REAL jump applies the new era\'s lights — a dusk match through both jumps on its own clock: at done + 2 s every light, grade, sky, fog, star and lamp value equals a debugJump\'s (a late joiner\'s seek) to that era; the world\'s light (exposure) blends from the old era\'s at done to the new at done + 0.7 (no pop); the clouds re-baked in slices before the jump',
-      theme === 'sunset' && era0 === 1 && real[2].era === 2 && real[3].era === 3 && !bad2.length && !bad3.length && smooth && slices > 0 && !late,
-      { theme, start: x0, real2: brief(real[2]), ref2: brief(ref[2]), real3: brief(real[3]), ref3: brief(ref[3]), differ2: bad2.slice(0, 8), differ3: bad3.slice(0, 8), blend, cloudSliceFrames: slices, cloudRowsLeftAtDone: late ?? 0 });
+    R('art phase (i) (fix round 3): a REAL jump applies the new era\'s lights — a dusk match through both jumps on its own clock: at done + 2 s every light, grade, sky, fog, star and lamp value equals a debugJump\'s (a late joiner\'s seek) to that era; the world\'s light (exposure) blends from the old era\'s at done to the new at done + 0.7 (no pop); the clouds are the new era\'s baked at load (no cloud bake from 39 s played to done + 2 of jump 2, the sky on the cache\'s texture)',
+      theme === 'sunset' && era0 === 1 && real[2].era === 2 && real[3].era === 3 && !bad2.length && !bad3.length && smooth && bakes === 0 && miss === 0 && cached >= 2 && cloudOk,
+      { theme, start: x0, real2: brief(real[2]), ref2: brief(ref[2]), real3: brief(real[3]), ref3: brief(ref[3]), differ2: bad2.slice(0, 8), differ3: bad3.slice(0, 8), blend, cloudBakesInTheJumps: bakes, cloudMiss: miss, cachedLooks: cached, skyOnCache: cloudOk, cloudWarmMs: W2.stats.cloudWarmMs });
     R('art phase (i): … and the street reads after the real jump as at rest — the mid camera\'s lower frame (the (g) measure) at done + 2 (the done pulse still lighting the new pieces) ≥ 34 in this page\'s frame with the 3000s\' share above 200/255 ≤ 7 % and Cobalt-hue ≤ 5 %; with the pulse over (done + 4.5) within 2/255 of the debugJump\'s, and the frame after the real jump equal to the seek\'s at the same uTime (a street camera and the sky: mean ≤ 1/255)',
       [2, 3].every((e) => real[e].g2.median >= 34 && real[e].g.median >= 34 && Math.abs(real[e].g.median - ref[e].g.median) <= 2) && real[3].g2.over200 <= 7 && real[3].g.over200 <= 7 && real[3].g2.cobaltHue <= 5 && same.every((d) => d.mean <= 1),
       { realDonePlus2: { 2: real[2].g2, 3: real[3].g2 }, realDonePlus4_5: { 2: real[2].g, 3: real[3].g }, debugJump: { 2: ref[2].g, 3: ref[3].g }, frameRealVsSeek: same });

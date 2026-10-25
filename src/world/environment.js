@@ -229,7 +229,7 @@ vec3 applyHaze(vec3 col, vec3 wp) {
 // ray-marches a field of cumulus heaps (1.1–3 km altitude, out to 55 km) with a short light march toward the sun
 // (self-shadowed bellies, lit cauliflower tops, forward-scattered silver lining) and aerial perspective, and stores
 // premultiplied radiance + opacity. Re-baked on theme change (sun/sky colours); per frame the sky is one texture fetch.
-const CLOUD_W = 2048, CLOUD_H = 640, CLOUD_BAND = 32;   // ([b5-bluestone] CLOUD_BAND: cloudBakeSlice's band target)
+const CLOUD_W = 2048, CLOUD_H = 640;
 const CLOUD_BAKE_FRAG = /* glsl */`
 ${GLSL_SKY_COMMON}
 uniform vec2 uRes;
@@ -239,7 +239,6 @@ uniform vec3 uSunCol;
 uniform vec4 uCloudParams;
 uniform float uSeed;
 uniform float uCov;
-uniform float uRowOff;   // [b5-bluestone] a band of rows baked into a small target (cloudBakeSlice): its first row's index
 vec3 hash33c(vec3 p) { p = fract(p * vec3(0.1031, 0.1030, 0.0973)); p += dot(p, p.yxz + 33.33); return fract((p.xxy + p.yxx) * p.zyx) * 2.0 - 1.0; }
 vec4 hash42c(vec2 p) { vec4 p4 = fract(vec4(p.xyxy) * vec4(0.1031, 0.1030, 0.0973, 0.1099)); p4 += dot(p4, p4.wzxy + 33.33); return fract((p4.xxyz + p4.yzzw) * p4.zywx); }
 float gn3(vec3 p) {
@@ -304,7 +303,7 @@ float cloudDens(vec3 p, out float hf, out float sdo) {
   return clamp(-sd / 42.0, 0.0, 1.0) * smoothstep(HB - 120.0, HB + 60.0, p.y);
 }
 void main() {
-  vec2 uv = (gl_FragCoord.xy + vec2(0.0, uRowOff)) / uRes;
+  vec2 uv = gl_FragCoord.xy / uRes;
   float az = (uv.x - 0.5) * 6.28318531;
   float sy = pow(uv.y, 1.6);
   float cy = sqrt(max(1.0 - sy * sy, 0.0));
@@ -1554,7 +1553,7 @@ export class Environment {
       uSeaDeep: C(), uSeaShallow: C(), uSeaCrest: C(), uFoamColor: C(), uSunLight: C(), uSeaAmbient: C(),
       uSunSpec: { value: 1 }, uWaveStrength: { value: 1 },
       uCloudTex: { value: null },
-      uCloudTex2: { value: null }, uCloudMix: { value: 0 },   // [b5-bluestone] a time jump's cross-fade to the next bake
+      uCloudTex2: { value: null }, uCloudMix: { value: 0 },   // [b5-bluestone] a time jump's cross-fade to the next look's clouds
       uSnow: { value: new THREE.Vector4(1e4, 0, 0, 0) },   // stage looks: backdrop terrain snow (line above the sea, cover)
       // marina water (theme.marina)
       uWet: { value: Array.from({ length: MAX_WET }, () => new THREE.Vector4()) }, uWetCount: { value: 0 }, uArena: { value: new THREE.Vector4() },
@@ -1758,7 +1757,7 @@ export class Environment {
     this.U.uCloudTex.value = this._cloudRT.texture;
     this._cloudMat = new THREE.ShaderMaterial({
       name: 'CloudBake', vertexShader: 'void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }', fragmentShader: CLOUD_BAKE_FRAG,
-      uniforms: { ...this.U, uRes: { value: new THREE.Vector2(CLOUD_W, CLOUD_H) }, uSunCol: { value: new THREE.Color() }, uSeed: { value: 3.0 }, uCov: { value: 0.46 }, uRowOff: { value: 0 } },
+      uniforms: { ...this.U, uRes: { value: new THREE.Vector2(CLOUD_W, CLOUD_H) }, uSunCol: { value: new THREE.Color() }, uSeed: { value: 3.0 }, uCov: { value: 0.46 } },
       depthTest: false, depthWrite: false, toneMapped: false,
     });
     const g = new THREE.BufferGeometry();
@@ -1778,7 +1777,7 @@ export class Environment {
     const prev = r.getRenderTarget(), ac = r.autoClear, xr = r.xr.enabled;
     r.autoClear = false; r.xr.enabled = false;
     const rt = this._cloudRT;
-    this.U.uCloudTex.value = rt.texture; this.U.uCloudMix.value = 0;   // [b5-bluestone] (a time jump's cross-fade ends here)
+    this.U.uCloudTex.value = rt.texture; this.U.uCloudMix.value = 0; this._cloudPrimaryT = T;   // [b5-bluestone] (a time jump's cross-fade ends here; the theme baked)
     r.setRenderTarget(rt);
     r.setClearColor(0x000000, 0); r.clear(true, false, false);
     const strips = 10, h = Math.ceil(CLOUD_H / strips);
@@ -3287,79 +3286,25 @@ export class Environment {
       if (!b) this.lhBeam.visible = T.night > 0.01 && this.bay.visible;
     }
   }
-  // [b5-bluestone] theme T's clouds baked into a second target a step at a time, without touching the live sky (its
-  // uniforms are set to T's for the call and put back): the full bake costs ~0.4 s of GPU on an M4, so a time jump runs
-  // it over the frames before it, cross-fades the sky to it (uCloudMix) and swaps it in (cloudSwap). A step is a tile of
-  // the march drawn into a small band target (a pass on the 2048 × 640 half-float target costs ~2.5 ms on a tile-based GPU
-  // whatever its size: its load and store), or a finished band copied into the second target in one pass. Steps i …
-  // i + n − 1 of cloudTiles(); returns the next index.
-  cloudBakeSlice(T, i, n = 1) {
-    const U = this.U, steps = this.cloudTiles(), r = this.renderer, end = Math.min(steps.length, i + n);
-    if (!this._cloudRT2) this._cloudRT2 = this._makeCloudRT();
-    if (!this._cloudBand) {
-      this._cloudBand = new THREE.WebGLRenderTarget(CLOUD_W, CLOUD_BAND, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, colorSpace: THREE.NoColorSpace, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, generateMipmaps: false, depthBuffer: false, stencilBuffer: false });
-      this._cloudCopyMat = new THREE.ShaderMaterial({
-        name: 'CloudBandCopy', vertexShader: 'void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }',
-        fragmentShader: 'uniform sampler2D uSrc; uniform float uY0; uniform vec2 uSize; void main() { gl_FragColor = texture2D(uSrc, (gl_FragCoord.xy - vec2(0.0, uY0)) / uSize); }',
-        uniforms: { uSrc: { value: this._cloudBand.texture }, uY0: { value: 0 }, uSize: { value: new THREE.Vector2(CLOUD_W, CLOUD_BAND) } }, depthTest: false, depthWrite: false, toneMapped: false,
-      });
-      this._cloudCopyScene = new THREE.Scene(); const q = new THREE.Mesh(this._cloudScene.children[0].geometry, this._cloudCopyMat); q.frustumCulled = false; this._cloudCopyScene.add(q);
-    }
-    U.uCloudTex2.value = this._cloudRT2.texture;
-    const keep = ['uSunDir', 'uZenith', 'uSkyMid', 'uHorizon', 'uHaze', 'uCloudParams', 'uGround', 'uHorizonGlow', 'uGlowColor', 'uGlowParams', 'uSunDisk', 'uCloudLit', 'uCloudShade', 'uNight'];
+  // [b5-bluestone] theme T's clouds baked whole into another target rt (the sky's own uniforms set to T's for the bake and
+  // put back, so the live sky is untouched): a stage module's time jump bakes each look's clouds once, at load (eras.js
+  // _warmClouds: ~0.45 s of GPU each on an M4), and only cross-fades (uCloudTex2 / uCloudMix) and swaps textures in a jump
+  cloudBakeInto(T, rt) {
+    const U = this.U, keep = ['uSunDir', 'uZenith', 'uSkyMid', 'uHorizon', 'uHaze', 'uCloudParams', 'uGround', 'uHorizonGlow', 'uGlowColor', 'uGlowParams', 'uSunDisk', 'uCloudLit', 'uCloudShade', 'uNight'];
     const was = keep.map((key) => (typeof U[key].value === 'number' ? U[key].value : U[key].value.clone()));
+    const tex = U.uCloudTex.value, mix = U.uCloudMix.value, prim = this._cloudPrimaryT, sk = this.stars?.material.uniforms.uK.value;
     const el = T.sunEl * DEG, az = T.sunAz * DEG;
     U.uSunDir.value.set(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).normalize();
     U.uZenith.value.set(T.zenith); U.uSkyMid.value.set(T.skyMid); U.uHorizon.value.set(T.horizon);
     U.uHaze.value.set(T.haze[0], T.haze[1], T.haze[2], 0); U.uCloudParams.value.set(...T.cloud);
-    const sk = this.stars?.material.uniforms.uK.value;
     this.applyLights(T, null, 1, 'sky');
-    const prev = r.getRenderTarget(), ac = r.autoClear, xr = r.xr.enabled, cc = r.getClearColor(new THREE.Color()), ca = r.getClearAlpha();
-    r.autoClear = false; r.xr.enabled = false;
-    const u = this._cloudMat.uniforms;
-    u.uSunCol.value.copy(lin(T.sunColor, (T.skySun ?? T.sunIntensity) / 2.75)); u.uCov.value = T.cloudCov ?? 0.46; u.uSeed.value = T.cloudSeed ?? 3.0;
-    for (; i < end; i++) {
-      const [kind, band, x, y, w, h] = steps[i];
-      if (kind === 'bake') {
-        const rt = this._cloudBand;
-        u.uRowOff.value = band * CLOUD_BAND;
-        rt.scissor.set(x, y, w, h); rt.scissorTest = true;
-        r.setRenderTarget(rt); r.render(this._cloudScene, this._cloudCam);
-        rt.scissorTest = false;
-      } else {
-        const rt = this._cloudRT2;
-        this._cloudCopyMat.uniforms.uY0.value = band * CLOUD_BAND;
-        rt.scissor.set(0, band * CLOUD_BAND, CLOUD_W, CLOUD_BAND); rt.scissorTest = true;
-        r.setRenderTarget(rt); r.render(this._cloudCopyScene, this._cloudCam);
-        rt.scissorTest = false;
-      }
-    }
-    u.uRowOff.value = 0;
-    r.setRenderTarget(prev); r.autoClear = ac; r.xr.enabled = xr; r.setClearColor(cc, ca);
+    const rt0 = this._cloudRT;
+    this._cloudRT = rt;
+    try { this._bakeClouds(T); } finally { this._cloudRT = rt0; this._cloudPrimaryT = prim; }
+    U.uCloudTex.value = tex; U.uCloudMix.value = mix;
     keep.forEach((key, j) => { if (typeof was[j] === 'number') U[key].value = was[j]; else U[key].value.copy(was[j]); });
     if (this.stars) this.stars.material.uniforms.uK.value = sk;
-    return end;
-  }
-  // the bake's steps: per band of CLOUD_BAND rows its tiles, each ~2 ms of march on an M4 (the march's cost per full row,
-  // fix round 3's probe: ~0.1 ms near the horizon, where the heaps fade out; ~3.4 a few degrees above it, the long marches
-  // through the low cumulus; ~1 higher up; ~0 toward the zenith), then the band's copy
-  cloudTiles() {
-    if (this._cloudTiles) return this._cloudTiles;
-    const cost = (r) => (r < 56 ? 0.1 : r < 168 ? 3.4 : r < 264 ? 1.1 : r < 568 ? 0.9 : 0.05), steps = [];
-    for (let b = 0; b < CLOUD_H / CLOUD_BAND; b++) {
-      for (let y = 0; y < CLOUD_BAND;) {
-        const c = cost(b * CLOUD_BAND + y), cols = c > 2 ? 2 : 1, h = Math.min(CLOUD_BAND - y, Math.max(1, Math.floor(2 / c)));
-        for (let k = 0; k < cols; k++) steps.push(['bake', b, (k * CLOUD_W) / cols, y, CLOUD_W / cols, h]);
-        y += h;
-      }
-      steps.push(['copy', b]);
-    }
-    return (this._cloudTiles = steps);
-  }
-  cloudSwap() {
-    if (!this._cloudRT2) return;
-    [this._cloudRT, this._cloudRT2] = [this._cloudRT2, this._cloudRT];
-    this.U.uCloudTex.value = this._cloudRT.texture; this.U.uCloudTex2.value = this._cloudRT2.texture; this.U.uCloudMix.value = 0;
+    return rt;
   }
 
   setTheme(name) {
@@ -3469,7 +3414,7 @@ export class Environment {
     this.scene.remove(this.root, this.sun, this.sun.target, this.hemi);
     this.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
     if (this._envRT) this._envRT.dispose();
-    this._cloudRT?.dispose(); this._cloudRT2?.dispose(); this._cloudBand?.dispose(); this._cloudCopyMat?.dispose(); this._cloudMat?.dispose();
+    this._cloudRT?.dispose(); this._cloudMat?.dispose();
     this._reflRT?.dispose(); this._farRT?.dispose(); this._stripMat?.dispose(); this._underMat?.dispose();
     this._pmrem.dispose();
     this.U.uWaveTex.value?.dispose(); this.U.uFoamTex.value?.dispose(); this._fieldRT?.dispose(); this._fieldMat?.dispose(); this._fieldQuad?.geometry.dispose();
