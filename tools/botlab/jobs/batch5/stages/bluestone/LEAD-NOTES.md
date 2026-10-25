@@ -121,3 +121,11 @@ re-measures.
   `SETS="bluestone:1 bluestone:2 bluestone:3" TIMES="day dusk" ROUNDS=2 BASE=<sha> bash tools/botlab/jobs/batch5/bluestone/gpu-time.sh`
   from a JOB-<n>.sh gives before / after against BASE with Halyard as the reference (gpu.txt: medians, ÷ Halyard).
   Compare only within one job (an overlapping job inflated Halyard to 41 ms). Fetch and merge botlab-b5-bluestone to get it.
+- **JOB-18's diagnostic (2026-10-25, review 2's head 8188097a):** day 44.3 / 44.9 / 46.0 ms (×1.46–1.51 Halyard's 30.4),
+  dusk 46.4 / 47.3 / 47.8 ms (×1.68–1.73 Halyard's 27.7): the gate FAILS. **With the whole level hidden Bluestone still
+  costs 37.0 ms against Halyard's 21.8**, so about 15 ms of the gap is OUTSIDE the level geometry; the art, the rooms,
+  the re-skin loop and the discard save at most 2.6 ms each. Look first, by elimination with the timer, at: the three
+  era backdrop sets (`G.env.stageSets`: are the two hidden sets still rendered, updated or shadow-casting; their
+  `onBeforeCompile` materials; the far clip by `length(vW.xz)`), the env root (the time-lapse sky and clouds, the env
+  map rebuild, exposure), the water, the shadow map size, GTAO or post passes touching era meshes, the holograms /
+  curtain / wire-bead FX kept alive outside a jump, full-screen quads. Find the 15 ms before touching the level.
