@@ -1339,6 +1339,9 @@ const FBASE = /* glsl */`
     else if (st == 5 && top) {
       gBsTop = 1.0;
       vec2 q = P.xz;
+      // (fix round 2) the 3000s' paving a warm pale stone (white-gold family), not the blue-grey that the violet dusk made
+      // of it: Cobalt ink stood on a ground of nearly its own hue (review 2, issue 6)
+      if (E == 2) base *= vec3(1.1, 1.05, 0.9);
       if (prm == 1) {
         // Swimston's carriageway (x −24.5 … −16): the tram tracks on both lines (x −22.9 and −19.5) and the kerbs
         float kerb = bsAA(min(q.x + 24.5, -16.0 - q.x) - 0.32, pw);

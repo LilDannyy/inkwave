@@ -525,7 +525,7 @@ const ERAS = {
   // (the art phase: the warning's pulses run along Tartar's real wires, hung from the drum to the parapets and roof poles:
   //  levelart.js WIRES — up Swimston, Prow Place and Hoki Lane, the quay, the punt crossing, the knee's river walk)
   pulses: WIRES.map((w) => wirePath(w)),
-  tint: { 1: [1.05, 0.99, 0.90, 0.20], 2: [1, 1, 1, 0], 3: [0.97, 1.0, 1.03, 0.08] },
+  tint: { 1: [1.05, 0.99, 0.90, 0.20], 2: [1, 1, 1, 0], 3: [1.0, 0.99, 0.97, 0.08] },
   remap: [
     { base: SURF.granite, eras: [SURF.granite, PATTERN.asphalt, PATTERN.pavers] },
     { base: PATTERN.planks, eras: [PATTERN.planks, PATTERN.planks, PATTERN.glasstile] },
@@ -543,11 +543,11 @@ const ERAS = {
         day: { horizon: '#e9dcc4' },
         // the 1880s: a violet twilight over the river through the coal haze, a pale warm sun low in the west
         sunset: {
-          sunColor: '#ffe6c8', sunIntensity: 3.0, skySun: 3.0, hemiSky: '#7c74b6', hemiGround: '#a08c8c', hemiGroundK: 1.4, hemiIntensity: 0.62, envK: 0.44,
+          sunColor: '#ffe6c8', sunIntensity: 3.5, skySun: 3.0, hemiSky: '#8a84b8', hemiGround: '#b8a8b8', hemiGroundK: 1.4, hemiIntensity: 2.1, envK: 1.2,
           zenith: '#3f3766', skyMid: '#6a6292', horizon: '#a996c2', ground: '#4a4466',
           horizonGlow: '#dcc8d4', horizonGlowK: 0.3, glowColor: '#f4e0d4', glow: [320, 2.0, 5.5, 0.4],
           sunDisk: '#ffe6c8', cloudLit: '#d2c6de', cloudLitK: 0.88, cloudShade: '#5c5684',
-          grade: { uHighTint: [1.02, 1.0, 0.97], uShadowTint: [0.92, 0.95, 1.12] },
+          grade: { uExposure: 1.2, uHighTint: [1.02, 1.0, 0.97], uShadowTint: [0.94, 0.96, 1.08] },
         },
       },
       lamps: '#ffe0b8',
@@ -556,10 +556,10 @@ const ERAS = {
       theme: {
         // TODAY: the base theme by day; a pink-violet sunset (no orange cast on the facades)
         sunset: {
-          sunColor: '#ffd4bc', sunIntensity: 3.9, skySun: 3.4, hemiSky: '#6c78d0', hemiGround: '#b08c8c', hemiGroundK: 1.5,
+          sunColor: '#ffd4bc', sunIntensity: 3.9, skySun: 3.4, hemiSky: '#8c8cb8', hemiGround: '#b8a4b0', hemiGroundK: 1.5, hemiIntensity: 2.2, envK: 0.75,
           zenith: '#232a6e', skyMid: '#6a4ea2', horizon: '#f4a0b4', ground: '#4a4a7a',
           horizonGlow: '#f8a0b4', horizonGlowK: 0.55, glowColor: '#ffc0c4', cloudLit: '#ffb8c8', cloudShade: '#5e5490',
-          grade: { uHighTint: [1.04, 1.0, 0.96] },
+          grade: { uExposure: 1.08, uHighTint: [1.04, 1.0, 0.96] },
         },
       },
       lamps: '#ffd9a8',
@@ -569,10 +569,10 @@ const ERAS = {
         // the 3000s: a clean bright sky by day; a violet dusk, cool and clear, the light seams glowing white-gold
         day: { horizon: '#e6eef6', zenith: '#4a86d0' },
         sunset: {
-          sunColor: '#efe8ff', sunIntensity: 3.2, skySun: 3.0, hemiSky: '#8a88d2', hemiGround: '#9a96b4', hemiGroundK: 1.4, hemiIntensity: 0.62,
-          zenith: '#3a3080', skyMid: '#706ab8', horizon: '#ccc0ec', ground: '#44447a',
+          sunColor: '#fff2e2', sunIntensity: 3.2, skySun: 3.0, hemiSky: '#a29eb6', hemiGround: '#a8a2aa', hemiGroundK: 1.4, hemiIntensity: 0.8, envK: 0.3,
+          zenith: '#3a3080', skyMid: '#8a84b0', horizon: '#ccc0ec', ground: '#44447a',
           horizonGlow: '#d8ccf2', horizonGlowK: 0.36, glowColor: '#e6dcff', sunDisk: '#f4f0ff', cloudLit: '#dcd4f4', cloudShade: '#4e4c88',
-          haze: [1 / 1500, 0.9, 260], grade: { uHighTint: [1.0, 1.0, 1.02], uShadowTint: [0.9, 0.95, 1.14] },
+          haze: [1 / 1500, 0.9, 260], grade: { uHighTint: [1.0, 1.0, 1.02], uShadowTint: [0.95, 0.96, 1.05] },
         },
       },
       lamps: '#eef4ff',

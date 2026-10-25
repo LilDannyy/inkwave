@@ -21,7 +21,11 @@
 //   (each scanline of it switches once or twice between "still there" and "gone"; the old 20 cm dissolve switched many
 //   times), and the cut follows the front; (d) the decor lamps' light per era (ENGINE rule 42) and their iron bodies
 //   hidden (each era's own lamp props stand there); (e) Tartar rings once in the intro; (f) (fix round 1) the per-era dusk
-//   looks apply (eras.look keyed by theme names and THEMES keys) and the three dusk skies differ.
+//   looks apply (eras.look keyed by theme names and THEMES keys) and the three dusk skies differ; (g) (fix round 2) the
+//   dusk is readable, not murk: from the botlab's 'mid' preset camera the lower two thirds of the frame keep a median
+//   brightness ≥ 34/255 in this page's frame in every era (shoot.cjs's mid at dusk: review 2 16 / 22 / 44 before, Halyard
+//   49; 43.5 / 47.7 / 49.9 after), and the 3000s' violet dusk does not tint
+//   the city into Cobalt's hue (≤ 5 % of the lower frame within 15° of Cobalt's hue at saturation ≥ 0.5, value ≥ 0.3).
 (async () => {
   const g = window.__inkwave, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
@@ -357,6 +361,35 @@
     }
     const dz = [[0, 1], [1, 2], [0, 2]].map(([a, b]) => diff(skies[a], skies[b], [0.05, 0.4, 0.95, 0.95]).mean);   // (GL rows: the frame's upper part)
     env.setTheme(th0); E.debugJump(1, { instant: true }); step(0.1);
+    // (g) (fix round 2) the dusk is readable, not murk (review 2, issues 2 and 6): the 'mid' preset (shoot.cjs: from
+    // (0.08 W, 7, −0.2 D) at fov 82 toward mid), no ink, the lower two thirds of the frame (GL rows 0 … 2/3): the median
+    // Rec.601 brightness ≥ 34/255 in every era, and in the 3000s the share of Cobalt-hue pixels (#2f5bff: 225°, within
+    // 15°, saturation ≥ 0.5, value ≥ 0.3) ≤ 5 %. (The review's acceptance, ≥ 40 by shoot.cjs's 'mid' shot of a match
+    // started at dusk, 1600 × 900, is measured there: 43.5 / 47.7 / 49.9 at fix round 2, Halyard 49. This page's frame,
+    // 1512 × 945 and its theme switched in place, reads ~4 lower — 40.0 / 42.7 / 48.4 — and the reviewed look 13–20 in the
+    // 1880s and TODAY; 34 sits between.)
+    {
+      const B = L.bounds, Wd = B.maxX - B.minX, Dp = B.maxZ - B.minZ;
+      env.setTheme('sunset'); g._applyNight?.();   // (as a match started at dusk: the lamps, signs and lit windows on)
+      const dusk = [];
+      for (const e of [1, 2, 3]) {
+        E.debugJump(e, { instant: true }); step(0.05);
+        cam([Wd * 0.08, 7, -Dp * 0.2], [0, 1, Dp * 0.08], 82); step(0.05);
+        const F = grab(), y1 = Math.floor(F.h * 2 / 3), lum = [];
+        let cob = 0;
+        for (let y = 0; y < y1; y++) for (let x = 0; x < F.w; x += 2) {
+          const i = (y * F.w + x) * 4, r = F.px[i], g2 = F.px[i + 1], b = F.px[i + 2];
+          lum.push(0.299 * r + 0.587 * g2 + 0.114 * b);
+          const mx = Math.max(r, g2, b), mn = Math.min(r, g2, b), c = mx - mn;
+          if (mx >= 77 && c / mx >= 0.5) { let h = mx === r ? ((g2 - b) / c) % 6 : mx === g2 ? (b - r) / c + 2 : (r - g2) / c + 4; h = (h * 60 + 360) % 360; if (Math.min(Math.abs(h - 225), 360 - Math.abs(h - 225)) < 15) cob++; }
+        }
+        lum.sort((a2, b2) => a2 - b2);
+        dusk.push({ e, median: +lum[lum.length >> 1].toFixed(1), below40: +(100 * lum.filter((v) => v < 40).length / lum.length).toFixed(1), cobaltHue: +(100 * cob / lum.length).toFixed(2) });
+      }
+      env.setTheme(th0); g._applyNight?.(); E.debugJump(1, { instant: true }); step(0.1);
+      R('art phase (g): the dusk reads (fix round 2) — from the mid preset camera the lower two thirds of the frame keep a median brightness ≥ 34/255 in every era (shoot.cjs\'s mid at dusk ≥ 40), and the 3000s dusk keeps Cobalt-hue pixels ≤ 5 % of it',
+        dusk.every((d) => d.median >= 34) && dusk[2].cobaltHue <= 5, dusk);
+    }
     R('art phase (f): the per-era dusk looks apply — eras.look keys are theme names and THEMES keys; at dusk the 1880s, TODAY and the 3000s skies differ (the same camera up at the sky: mean change between eras ≥ 6/255), the 1880s\' violet twilight zenith in force',
       !badKeys.length && dz.every((d) => d >= 6) && sky[0].zenith === '#3f3766' && sky.every((x) => x.theme === 'sunset'), { badKeys, skyChange: { e1e2: dz[0], e2e3: dz[1], e1e3: dz[2] }, sky });
   }
