@@ -23,8 +23,8 @@
 // both until the checker passes.
 export const BAZOOKARP_DEFS = {
   halyard: {
-    // the Pond on the ferry's cabin roof (3.8 m: its wheelhouse is cleared for this mode, as for Tower Command)
-    start: [0, 3.8, 0],
+    // The ferry's car deck is the central, open fight space. Bazookarp clears the cabin so the Pond has a walkable ring.
+    start: [0, 1.3, 0],
     weirs: [{ at: [-1.5, 0, 27.5], yaw: 0 }],          // the Long Pier / boatyard junction (§9.3)
     gate: { at: [0, 0, 52.5], yaw: 0 },                 // in front of Bravo's spawn (13.5 m from the pad)
     freeZones: [
@@ -32,10 +32,10 @@ export const BAZOOKARP_DEFS = {
     ],
   },
   lockgate: {
-    // the Pond on the bridge over the lock at the centre (3.3 m)
+    // The Pond sits on the centre of the humpback bridge (3.3 m); its Bazookarp plaza widens the approaches.
     start: [0, 3.3, 0],
-    weirs: [{ at: [0, 0, 24], yaw: 0 }],
-    gate: { at: [0, 0, 52], yaw: 0 },                   // in front of Bravo's spawn (12.6 m from the pad)
+    weirs: [{ at: [-2.2, 0, 26], yaw: 0 }],             // the weigh-house yard, at 45–55% while leaving a full final push
+    gate: { at: [2, 0, 51.5], yaw: 0 },                 // in front of Bravo's spawn (12.4 m from the pad)
     freeZones: [
       { poly: [[-12, 58], [4, 58], [4, 70], [-12, 70]], y0: 2.0, y1: 3.2, signs: [[-11.6, 58.4, 180], [3.6, 58.4, 180]] },   // the spawn deck
     ],
