@@ -286,3 +286,5 @@ carried items had no decision. Decisions:
   item. No settle render spike in any of the ten runs; overall it showed in 3 of 19 runs, all at fix round 3's heads before
   de8e927e. The builder's report must say whether JOB-32 ran with the shader disk cache OFF; if not, the warm-up is proven
   only warm, and the cold proof is owed before acceptance (review 4, after the reset).
+- **JOB-33 (GPU shader disk cache OFF, every page cold):** frames 4/4 ×3, settle-diag 4/4, first 1/1, no frame over 50 ms in
+  any jump. With JOB-32 that is 8 clean frames runs in a row at the newest head: **the settle spike is closed, cold and warm.**
