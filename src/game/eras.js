@@ -605,6 +605,12 @@ export class EraWorld {
     const t = now(); let n = 0;
     for (const [k, T] of want) if (!C.has(k)) { C.set(k, env.cloudBakeInto(T, spare.pop() || env._makeCloudRT())); n++; }
     for (const rt of spare) rt.dispose();
+    // each era's env map (PMREM) too, with its clouds: the settle swaps it in by reference, no PMREM pass in a jump
+    const EM = this._envCache || (this._envCache = new Map()), all = new Map();
+    for (const e of [1, 2, 3]) { this.envEra = e; const T = env._stageTheme(env.theme); all.set(cloudKey(T), T); }
+    this.envEra = save;
+    for (const [k, rt] of EM) if (!all.has(k)) { EM.delete(k); rt.dispose(); }
+    if (env.envMapFor) for (const [k, T] of all) if (!EM.has(k)) { const ct = this._cloudTex(T); if (ct) { EM.set(k, env.envMapFor(T, ct)); n++; } }
     // (the bakes' GPU work finished here, at load, so none of it is still queued when the intro or a jump draws)
     if (n) { try { env.renderer?.getContext?.().finish(); } catch (e) { /* (a headless page) */ } this.stats.cloudBakes = (this.stats.cloudBakes || 0) + n; this.stats.cloudWarmMs = Math.round(now() - t); }
     return n;
@@ -706,6 +712,7 @@ export class EraWorld {
     this.fx?.dispose(); this.fx = null;
     if (this.env && this.env.themeOverlay) this.env.themeOverlay = null;
     if (this._cloudCache) { for (const rt of this._cloudCache.values()) rt.dispose(); this._cloudCache = null; }
+    if (this._envCache) { for (const rt of this._envCache.values()) rt.dispose(); this._envCache = null; }
   }
 }
 
@@ -1454,7 +1461,7 @@ export class StageEras {
       const { Tf, Tt } = this._themes(J);
       // (fix round 3) the new look's clouds, baked at load (W._warmClouds): the sky cross-fades to them, nothing is baked here
       const ct = W._cloudTex(Tt);
-      this._envBase = { at: J.at, Tf, Tt, cloud: env.U.uCloudParams.value.z, fog: env.scene?.fog ? [env.scene.fog.near, env.scene.fog.far] : null, cloudTex: ct && ct !== env.U.uCloudTex.value ? ct : null };
+      this._envBase = { at: J.at, Tf, Tt, cloud: env.U.uCloudParams.value.z, fog: env.scene?.fog ? [env.scene.fog.near, env.scene.fog.far] : null, cloudTex: ct && ct !== env.U.uCloudTex.value ? ct : null, envRT: W._envCache?.get(cloudKey(Tt)) || null };
       if (!ct) W.stats.cloudMiss = (W.stats.cloudMiss || 0) + 1;
     }
     const B = this._envBase, U = env.U, k = Math.min(1, (t - J.at) / W.doneOff), s = k * k * (3 - 2 * k), bump = Math.sin(Math.PI * k);
@@ -1512,7 +1519,8 @@ export class StageEras {
     if (U.uCloudMix) { if (B.cloudTex) U.uCloudTex.value = B.cloudTex; U.uCloudMix.value = 0; }
     G.fx?.setLighting?.(env.getSkyColors?.());
     env._fitShadow?.();
-    env._rebuildEnvMap?.();
+    // the env map: the new look's, built at load, swapped in by reference (a PMREM pass only if it was not cached)
+    if (B.envRT && env.useEnvMap) env.useEnvMap(B.envRT); else { env._rebuildEnvMap?.(); this.W.stats.envMiss = (this.W.stats.envMiss || 0) + 1; }
     this.W.stats.envFinalMs = Math.round((now() - t) * 10) / 10;
   }
   _envRestore() {

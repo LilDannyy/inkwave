@@ -3289,7 +3289,21 @@ export class Environment {
   // [b5-bluestone] theme T's clouds baked whole into another target rt (the sky's own uniforms set to T's for the bake and
   // put back, so the live sky is untouched): a stage module's time jump bakes each look's clouds once, at load (eras.js
   // _warmClouds: ~0.45 s of GPU each on an M4), and only cross-fades (uCloudTex2 / uCloudMix) and swaps textures in a jump
-  cloudBakeInto(T, rt) {
+  // [b5-bluestone] theme T's env map (PMREM, 256) built now with its clouds `cloudTex`, the live sky untouched: a stage
+  // module's time jump builds each look's at load and swaps it in by reference (useEnvMap) — no PMREM pass in a jump
+  envMapFor(T, cloudTex) {
+    return this._withSky(T, () => {
+      this.U.uCloudTex.value = cloudTex; this.U.uCloudMix.value = 0;
+      return this._pmrem.fromScene(this._envScene, 0, 0.1, 100, { size: 256 });
+    });
+  }
+  useEnvMap(rt) {
+    const prev = this.envMap;
+    this.envMap = rt.texture;
+    if (this.scene.environment === prev || this.scene.environment == null) this.scene.environment = this.envMap;
+  }
+  // the sky's uniforms set to theme T's for fn() and put back
+  _withSky(T, fn) {
     const U = this.U, keep = ['uSunDir', 'uZenith', 'uSkyMid', 'uHorizon', 'uHaze', 'uCloudParams', 'uGround', 'uHorizonGlow', 'uGlowColor', 'uGlowParams', 'uSunDisk', 'uCloudLit', 'uCloudShade', 'uNight'];
     const was = keep.map((key) => (typeof U[key].value === 'number' ? U[key].value : U[key].value.clone()));
     const tex = U.uCloudTex.value, mix = U.uCloudMix.value, prim = this._cloudPrimaryT, sk = this.stars?.material.uniforms.uK.value;
@@ -3298,13 +3312,19 @@ export class Environment {
     U.uZenith.value.set(T.zenith); U.uSkyMid.value.set(T.skyMid); U.uHorizon.value.set(T.horizon);
     U.uHaze.value.set(T.haze[0], T.haze[1], T.haze[2], 0); U.uCloudParams.value.set(...T.cloud);
     this.applyLights(T, null, 1, 'sky');
-    const rt0 = this._cloudRT;
-    this._cloudRT = rt;
-    try { this._bakeClouds(T); } finally { this._cloudRT = rt0; this._cloudPrimaryT = prim; }
-    U.uCloudTex.value = tex; U.uCloudMix.value = mix;
-    keep.forEach((key, j) => { if (typeof was[j] === 'number') U[key].value = was[j]; else U[key].value.copy(was[j]); });
-    if (this.stars) this.stars.material.uniforms.uK.value = sk;
-    return rt;
+    try { return fn(); } finally {
+      this._cloudPrimaryT = prim; U.uCloudTex.value = tex; U.uCloudMix.value = mix;
+      keep.forEach((key, j) => { if (typeof was[j] === 'number') U[key].value = was[j]; else U[key].value.copy(was[j]); });
+      if (this.stars) this.stars.material.uniforms.uK.value = sk;
+    }
+  }
+  cloudBakeInto(T, rt) {
+    return this._withSky(T, () => {
+      const rt0 = this._cloudRT;
+      this._cloudRT = rt;
+      try { this._bakeClouds(T); } finally { this._cloudRT = rt0; }
+      return rt;
+    });
   }
 
   setTheme(name) {
