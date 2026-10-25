@@ -1,0 +1,96 @@
+JOB-16 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 14:12:54
+branch botlab-b5-bluestone, ran at a42cdc70, exit code 0, wall time 15min
+(a written-up JOB-16.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-16 head a42cdc70 load { 1.97 2.79 2.79 }
+== first-a: RESULT 1/1  0 FAIL
+== frames-a: RESULT 4/4  0 FAIL
+# frames-a jump worst "worst":[[41.8,1.47,"jump",0,0.1,5.2]
+== first-b: RESULT 1/1  0 FAIL
+== frames-b: RESULT 4/4  0 FAIL
+# frames-b jump worst "worst":[[37.1,1.47,"jump",0,0.1,0]
+== check-maps (every stage): 19 ok lines, 5 not ok; bluestone#1  568 pieces  (strips over 25 m: 0);bluestone#2  590 pieces  (strips over 25 m: 0);bluestone#3  700 pieces  (strips over 25 m: 0);bluestone    712 pieces  ok;
+== eras-static: RESULT eras-static 23/23
+== eras-world-12: RESULT 12/12  0 FAIL
+== eras-world-34: RESULT 7/7  0 FAIL
+== eras-world-5: RESULT 3/3  0 FAIL
+== eras-look: RESULT 18/18  0 FAIL
+== eras-jump-first: RESULT 1/1  0 FAIL
+== eras-jump-a: RESULT 8/8  0 FAIL
+== eras-jump-b: RESULT 7/7  0 FAIL
+== eras-jump-c: RESULT 3/3  0 FAIL
+== eras-jump-d: RESULT 3/4  1 FAIL
+== eras-jump-e: RESULT 6/6  0 FAIL
+== eras-hud: RESULT 12/12  0 FAIL
+== eras-modes: RESULT 6/6  0 FAIL
+== stage-mods: RESULT 36/36  0 FAIL
+== world-build-halyard: RESULT 5/5  0 FAIL
+== world-build-bluestone: RESULT 5/5  0 FAIL
+== climb-audit-e1: RESULT 1/1  0 FAIL
+== cover-map-e1: RESULT 1/1  0 FAIL
+== spawn-mid-e1: RESULT 1/1  0 FAIL
+== tower-check e1: HARNESS ERA=1: every game page loads with ?era=1 ERA 1 (started in era 1, held there: ?era=1; page ?autopilot&era=1) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e2: RESULT 1/1  0 FAIL
+== cover-map-e2: RESULT 1/1  0 FAIL
+== spawn-mid-e2: RESULT 1/1  0 FAIL
+== tower-check e2: HARNESS ERA=2: every game page loads with ?era=2 ERA 2 (started in era 2, held there: ?era=2; page ?autopilot&era=2) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e3: RESULT 1/1  0 FAIL
+== cover-map-e3: RESULT 1/1  0 FAIL
+== spawn-mid-e3: RESULT 1/1  0 FAIL
+== tower-check e3: HARNESS ERA=3: every game page loads with ?era=3 ERA 3 (started in era 3, held there: ?era=3; page ?autopilot&era=3) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== done
+== eras-bake: RESULT 3/3  0 FAIL
+== stage-audit turf e1: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit turf e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit turf e3: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+### done
+
+## last 15 lines of job.log
+== tower-check e1: HARNESS ERA=1: every game page loads with ?era=1 ERA 1 (started in era 1, held there: ?era=1; page ?autopilot&era=1) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints   
+== climb-audit-e2: RESULT 1/1  0 FAIL
+== cover-map-e2: RESULT 1/1  0 FAIL
+== spawn-mid-e2: RESULT 1/1  0 FAIL
+== tower-check e2: HARNESS ERA=2: every game page loads with ?era=2 ERA 2 (started in era 2, held there: ?era=2; page ?autopilot&era=2) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints   
+== climb-audit-e3: RESULT 1/1  0 FAIL
+== cover-map-e3: RESULT 1/1  0 FAIL
+== spawn-mid-e3: RESULT 1/1  0 FAIL
+== tower-check e3: HARNESS ERA=3: every game page loads with ?era=3 ERA 3 (started in era 3, held there: ?era=3; page ?autopilot&era=3) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints   
+== done
+== eras-bake: RESULT 3/3  0 FAIL
+== stage-audit turf e1: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit turf e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit turf e3: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+### done
+
+## art-tests.txt
+== check-maps (every stage): 19 ok lines, 5 not ok; bluestone#1  568 pieces  (strips over 25 m: 0);bluestone#2  590 pieces  (strips over 25 m: 0);bluestone#3  700 pieces  (strips over 25 m: 0);bluestone    712 pieces  ok;
+== eras-static: RESULT eras-static 23/23
+== eras-world-12: RESULT 12/12  0 FAIL
+== eras-world-34: RESULT 7/7  0 FAIL
+== eras-world-5: RESULT 3/3  0 FAIL
+== eras-look: RESULT 18/18  0 FAIL
+== eras-jump-first: RESULT 1/1  0 FAIL
+== eras-jump-a: RESULT 8/8  0 FAIL
+== eras-jump-b: RESULT 7/7  0 FAIL
+== eras-jump-c: RESULT 3/3  0 FAIL
+== eras-jump-d: RESULT 3/4  1 FAIL
+== eras-jump-e: RESULT 6/6  0 FAIL
+== eras-hud: RESULT 12/12  0 FAIL
+== eras-modes: RESULT 6/6  0 FAIL
+== stage-mods: RESULT 36/36  0 FAIL
+== world-build-halyard: RESULT 5/5  0 FAIL
+== world-build-bluestone: RESULT 5/5  0 FAIL
+== climb-audit-e1: RESULT 1/1  0 FAIL
+== cover-map-e1: RESULT 1/1  0 FAIL
+== spawn-mid-e1: RESULT 1/1  0 FAIL
+== tower-check e1: HARNESS ERA=1: every game page loads with ?era=1 ERA 1 (started in era 1, held there: ?era=1; page ?autopilot&era=1) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e2: RESULT 1/1  0 FAIL
+== cover-map-e2: RESULT 1/1  0 FAIL
+== spawn-mid-e2: RESULT 1/1  0 FAIL
+== tower-check e2: HARNESS ERA=2: every game page loads with ?era=2 ERA 2 (started in era 2, held there: ?era=2; page ?autopilot&era=2) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e3: RESULT 1/1  0 FAIL
+== cover-map-e3: RESULT 1/1  0 FAIL
+== spawn-mid-e3: RESULT 1/1  0 FAIL
+== tower-check e3: HARNESS ERA=3: every game page loads with ?era=3 ERA 3 (started in era 3, held there: ?era=3; page ?autopilot&era=3) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== done
