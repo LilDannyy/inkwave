@@ -37,11 +37,17 @@ app.on('browser-window-created', (_, win) => {
         const CAMS = {};   // (per-stage overrides; Halyard's upstream framing moved into its layout's art camera with the Long Stages stretch)
         const { TEAM_PALETTES } = await import('./src/config.js'); const pal = TEAM_PALETTES.find((p) => p.id === 'tangerine-cobalt'); if (pal) g._setPalette(pal);
         const art = CAMS['${id}'] || (__G.level.layout && __G.level.layout.art);
+        if (art && art.lava && g.match?.lava) g.match.lava.hold(art.lava);
         const from = art ? new THREE.Vector3(...art.from) : new THREE.Vector3(B.maxX + W * 0.08, Math.max(15, D * 0.2), B.minZ + D * 0.2);
         const look = art ? new THREE.Vector3(...art.look) : new THREE.Vector3(B.minX + W * 0.42, -1, B.minZ + D * 0.6);
         window.__fov0 = g.settings.fov; g.settings.fov = (art && art.fov) || 70;
         g.rig.cinematic(from, from, look, look, 99, () => {});
-        g.debug.step(1000 / 60); g.rig.cinematic(from, from, look, look, 99, () => {}); g.debug.step(1000 / 60); g.debug.step(1000 / 60);
+        if (g.rig.blend) g.rig.blend.active = false;
+        g.rig.camera.position.copy(from);
+        g.rig.camera.lookAt(look);
+        g.rig.camera.updateMatrixWorld(true);
+        g.debug.step(1000 / 60);
+        g.debug.step(1000 / 60);
       })()`);
       await wait(1500);
       if (frame) fs.writeFileSync(`${out}/${id}-${time}.png`, frame.toPNG());   // (full supersampled frame)

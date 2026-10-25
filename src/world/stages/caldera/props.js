@@ -1,29 +1,47 @@
 // Highmark Foundry — stage props (prop types prefixed 'caldera_') and set dressing (PLACEMENTS: the half list, mirrored
-// unless `mirror: false`).
+// (x, z) → (−x, −z), rotY + π, unless an entry says `mirror: false`).
 //
-// BLOCKOUT: only what the blockout needs to read as this place before the art pass —
-//   caldera_lava         the blockout's placeholder lava surface (only with BLOCKOUT_LAVA: the lava engine's LavaLook
-//                        draws the real one — src/fx/lavaFx.js)
-//   caldera_highmark     the works' painted HIGH MARK stripes (causeway faces, quay walls)
-//   caldera_rails        every railing's look (the layout's rail colliders are invisible by design)
-//   caldera_surge_gauge  the landmark's silhouette: lattice, gauge boards and needle, clock house, bell cage, pyramid
-//   caldera_hall_roof    the Casting Hall's north-light sawtooth roof, chimneys and round furnace window
-//   caldera_cupola_hood, caldera_jib, caldera_office_roof   the yard's skyline
-// No colliders here: every collider is a layout piece (layout.js).
+// DESIGN.md §5.2:
+//   caldera_surge_gauge (piers, collars, girders, lattice, boards, clock, bell cage)
+//   caldera_organ_stump, caldera_socket_collar
+//   caldera_winch_house, caldera_chain_ring, caldera_chain_bollard, caldera_mooring_bollard, caldera_capstan
+//   caldera_tide_board, caldera_ladle_car, caldera_lamp_post, caldera_lamp_plinth
+//   caldera_hornito, caldera_spatter_cone, caldera_cairn, caldera_scree
+//   caldera_pig_bed, caldera_floor_drain, caldera_mould_stack, caldera_ladle_stand
+//   caldera_spillway_bridge, caldera_slag_pot, caldera_gauge_post
+//   caldera_pattern_doors, caldera_pattern_crates, caldera_firebrick_store, caldera_casting_bed, caldera_flask_stack
+//   caldera_surge_office, caldera_cupola, caldera_weigh_office, caldera_weigh_pit, caldera_jib_crane, caldera_casting_stack
+//   caldera_charging_shed, caldera_casting_hall_gable, caldera_gallery_balustrade, caldera_planter_urn
+//
+// Rules: Visual only, no colliders (layout.js holds all collision). Props within 8.5 cm of a face.
+// Nothing loose on ledges. Merged into kit materials: paint, metal, wood, rubber, gloss (noShadow for small details).
 import { RAILS, GANTRY_RAILS, WALL_BOXES, OFFICE } from './layout.js';
-import { REGION_ALL, inPoly, HALL_LINE, PAD, CW, CAUSE_Z, RSF } from './geo.js';
+import { REGION_ALL, inPoly, HALL_LINE, PAD, CW, CAUSE_Z, RSF, PIT, ST_CUPOLA, BR_S, AW, A } from './geo.js';
 import { LAVA_Y, BLOCKOUT_LAVA, LAVA } from './lava.js';
+
 const HIGH_MARK = LAVA.high, D_ = Math.PI / 180;
 
 export function register(D, H) {
   const { THREE, PI, HP } = H;
   const NS = (m) => (H.noShadow ? H.noShadow(m) : m);
-  const K = { green: '#2f5a48', greenDk: '#24473a', white: '#eee9de', cream: '#efe8d4', verd: '#7fb5a3', iron: '#3d4146', brick: '#b98f6a',
-    ash: '#f4f1ea', crust: '#6e2a1c', seam: '#ff5a24', basalt: '#55595f', red: '#c8202a', glass: '#ffb469' };
+  const K = {
+    green: '#2f5a48', greenDk: '#24473a', greenLt: '#3d725c',
+    white: '#f1ede4', cream: '#efe8d4', verd: '#7fb5a3',
+    iron: '#34383e', ironDk: '#25282d', ironLt: '#525760',
+    brick: '#c9b08a', ash: '#f4f1ea', crust: '#6e2a1c', seam: '#ff5a24',
+    basalt: '#55595f', basaltDk: '#3f4248', scoria: '#5c3830',
+    red: '#c8202a', glass: '#ffb469', brass: '#b89658', wood: '#8a6e50', sand: '#b4a288',
+  };
 
-  // ------------------------------------------------------------------------------------------ the placeholder lava
-  // a 0.5 m grid over every region polygon (cells whose centre is inside; the region lies 0.5 m inside every bank, so
-  // the cells' outer halves hide in the bank faces), unlit, crust and lit seams from a cheap value noise
+  // Helper strut
+  const strut = (B, a, b, t = 0.22, c = K.green, mat = 'metal') => {
+    const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], L = Math.hypot(dx, dy, dz);
+    B.push((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, Math.atan2(dx, dz), -Math.atan2(dy, Math.hypot(dx, dz)));
+    B.box(mat, c, t, t, L, 0, 0, 0, { r: 0.03 });
+    B.pop();
+  };
+
+  // ------------------------------------------------------------------------------------------ placeholder lava
   D.caldera_lava = {
     build(B) {
       const S = 0.5, cells = new Set();
@@ -43,7 +61,7 @@ export function register(D, H) {
         const key = i + ',' + j; let k = vid.get(key);
         if (k !== undefined) return k;
         const x = i * S, z = j * S, n = vn(x * 0.35, z * 0.35) * 0.65 + vn(x * 1.1 + 7, z * 1.1 - 3) * 0.35;
-        const seam = Math.max(0, 1 - Math.abs(n - 0.5) * 7);           // thin bright bands where the noise crosses 0.5
+        const seam = Math.max(0, 1 - Math.abs(n - 0.5) * 7);
         tmp.copy(cA).lerp(cB, Math.min(1, seam * 1.1));
         k = pos.length / 3; vid.set(key, k);
         pos.push(x, 0, z); nor.push(0, 1, 0); colr.push(tmp.r, tmp.g, tmp.b); uv.push(0, 0);
@@ -54,8 +72,6 @@ export function register(D, H) {
         const a = vert(i, j), b = vert(i + 1, j), c = vert(i + 1, j + 1), d = vert(i, j + 1);
         idx.push(a, c, b, a, d, c);
       }
-      // (fix round 2: no lavafall placeholders past the lips — they are out of play, and from above they made a pinwheel
-      // the playable outline did not have; the backdrop's real lavafalls come with the art pass)
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
       g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
@@ -67,7 +83,6 @@ export function register(D, H) {
   };
 
   // ------------------------------------------------------------------------------------------ railings
-  // works-green iron: a top rail and posts every ~1.6 m along each rail line (both halves: the list is Alpha's)
   const railLine = (B, x0, z0, x1, z1, y0, h, y1 = y0) => {
     const dx = x1 - x0, dz = z1 - z0, L = Math.hypot(dx, dz), ry = Math.atan2(dx, dz), dy = y1 - y0;
     const n = Math.max(1, Math.round(L / 1.6));
@@ -88,8 +103,7 @@ export function register(D, H) {
     },
   };
 
-  // ------------------------------------------------------------------------------------------ the caldera walls
-  // the walls round the dry floors (collision-only layout blocks): raw basalt, both halves
+  // ------------------------------------------------------------------------------------------ walls
   D.caldera_walls = {
     build(B) {
       for (const [cx, cy, cz, w, h, d, ry] of WALL_BOXES) for (const s of [1, -1]) {
@@ -99,44 +113,64 @@ export function register(D, H) {
   };
 
   // ------------------------------------------------------------------------------------------ the Surge Gauge
-  // a 22 m iron tower on four basalt piers (the piers and girders are layout pieces): an A-frame lattice across the piers
-  // to 12 m, a square shaft to 17 m, the clock house, the bell cage with the Surge Bell, a verdigris pyramid and the
-  // ladle weathervane. A 7 m gauge board on the south and north faces with its float needle.
-  const strut = (B, a, b, t = 0.22, c = K.green, mat = 'metal') => {
-    const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], L = Math.hypot(dx, dy, dz);
-    B.push((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, Math.atan2(dx, dz), -Math.atan2(dy, Math.hypot(dx, dz)));
-    B.box(mat, c, t, t, L, 0, 0, 0, { r: 0.03 });
-    B.pop();
-  };
   D.caldera_surge_gauge = {
     build(B) {
       const legs = [[4.2, 1.75], [4.2, -1.75], [-4.2, 1.75], [-4.2, -1.75]];
-      // the A-frame: from each pier top (7.0) up and in to the shaft's corners (12.0), with braces and a ring girder
+      // Basalt piers iron collars at 6.0 and 7.0 m
+      for (const [x, z] of legs) {
+        B.box('metal', K.iron, 2.2, 0.35, 2.2, x, 6.0, z, { r: 0.04 });
+        B.box('metal', K.iron, 2.2, 0.35, 2.2, x, 7.0, z, { r: 0.04 });
+      }
+      // A-frame (7 to 12 m)
       for (const [x, z] of legs) strut(B, [x, 7.0, z], [Math.sign(x) * 1.8, 12.0, Math.sign(z) * 1.8], 0.42);
-      for (const sz of [-1, 1]) { strut(B, [-4.2, 7.0, sz * 1.75], [4.2, 7.0, sz * 1.75], 0.36); strut(B, [-4.2, 7.0, sz * 1.75], [0, 12, sz * 1.8], 0.22); strut(B, [4.2, 7.0, sz * 1.75], [0, 12, sz * 1.8], 0.22); }
-      for (const sx of [-1, 1]) { strut(B, [sx * 4.2, 7.0, -1.75], [sx * 1.8, 12, 1.8], 0.18); strut(B, [sx * 4.2, 7.0, 1.75], [sx * 1.8, 12, -1.8], 0.18); }
+      for (const sz of [-1, 1]) {
+        strut(B, [-4.2, 7.0, sz * 1.75], [4.2, 7.0, sz * 1.75], 0.36);
+        strut(B, [-4.2, 7.0, sz * 1.75], [0, 12, sz * 1.8], 0.22);
+        strut(B, [4.2, 7.0, sz * 1.75], [0, 12, sz * 1.8], 0.22);
+      }
+      for (const sx of [-1, 1]) {
+        strut(B, [sx * 4.2, 7.0, -1.75], [sx * 1.8, 12, 1.8], 0.18);
+        strut(B, [sx * 4.2, 7.0, 1.75], [sx * 1.8, 12, -1.8], 0.18);
+      }
       for (const y of [9.5]) for (const sz of [-1, 1]) strut(B, [-3.0, y, sz * 1.78], [3.0, y, sz * 1.78], 0.2);
-      // the shaft (12 → 17): corner posts, rings, X braces
+      // Shaft (12 to 17 m)
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) strut(B, [sx * 1.8, 12, sz * 1.8], [sx * 1.8, 17, sz * 1.8], 0.32);
-      for (const y of [12, 14.5, 17]) { for (const s of [-1, 1]) { strut(B, [-1.8, y, s * 1.8], [1.8, y, s * 1.8], 0.22); strut(B, [s * 1.8, y, -1.8], [s * 1.8, y, 1.8], 0.22); } }
-      for (const s of [-1, 1]) { strut(B, [-1.8, 12, s * 1.8], [1.8, 14.5, s * 1.8], 0.14); strut(B, [1.8, 14.5, s * 1.8], [-1.8, 17, s * 1.8], 0.14); strut(B, [s * 1.8, 12, -1.8], [s * 1.8, 14.5, 1.8], 0.14); strut(B, [s * 1.8, 14.5, 1.8], [s * 1.8, 17, -1.8], 0.14); }
-      // the clock house (17 → 18.5), whitewashed, a dial on each side
+      for (const y of [12, 14.5, 17]) {
+        for (const s of [-1, 1]) {
+          strut(B, [-1.8, y, s * 1.8], [1.8, y, s * 1.8], 0.22);
+          strut(B, [s * 1.8, y, -1.8], [s * 1.8, y, 1.8], 0.22);
+        }
+      }
+      for (const s of [-1, 1]) {
+        strut(B, [-1.8, 12, s * 1.8], [1.8, 14.5, s * 1.8], 0.14);
+        strut(B, [1.8, 14.5, s * 1.8], [-1.8, 17, s * 1.8], 0.14);
+        strut(B, [s * 1.8, 12, -1.8], [s * 1.8, 14.5, 1.8], 0.14);
+        strut(B, [s * 1.8, 14.5, 1.8], [s * 1.8, 17, -1.8], 0.14);
+      }
+      // Clock house (17 to 18.5 m)
       B.box('paint', K.white, 3.0, 1.5, 3.0, 0, 17.75, 0, { r: 0.05 });
       for (const [x, z, ry] of [[0, 1.52, 0], [0, -1.52, PI], [1.52, 0, HP], [-1.52, 0, -HP]]) {
-        B.push(x, 17.75, z, ry); B.cyl('paint', K.cream, 0.6, 0.06, 0, 0, 0, { rx: HP, seg: 20 }); B.box(NS('metal'), K.iron, 0.06, 0.5, 0.04, 0, 0.12, 0.05); B.pop();
+        B.push(x, 17.75, z, ry);
+        B.cyl('paint', K.cream, 0.6, 0.06, 0, 0, 0, { rx: HP, seg: 20 });
+        B.box(NS('metal'), K.iron, 0.06, 0.5, 0.04, 0, 0.12, 0.05);
+        B.pop();
       }
-      // the bell cage (18.5 → 20.5): four posts, the 1.6 m Surge Bell, two siren trumpets, beacons
+      // Bell cage (18.5 to 20.5 m)
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) strut(B, [sx * 1.4, 18.5, sz * 1.4], [sx * 1.4, 20.5, sz * 1.4], 0.2);
       B.lathe('metal', '#8a6a3a', [[0, 0.95], [0.18, 0.95], [0.35, 0.8], [0.45, 0.3], [0.62, 0.0], [0.8, -0.12], [0, -0.12]], 0, 19.0, 0, { seg: 18 });
-      for (const sx of [-1, 1]) { B.push(sx * 1.0, 20.2, 0, sx > 0 ? HP : -HP); B.cyl('metal', K.iron, 0.28, 0.9, 0, 0, 0.4, { r2: 0.08, rx: HP, seg: 12 }); B.pop(); }
-      // (the four beacons at the cage's corners (±1.4, 20.65, ±1.4) are the lava engine's: src/fx/lavaFx.js lights them)
+      for (const sx of [-1, 1]) {
+        B.push(sx * 1.0, 20.2, 0, sx > 0 ? HP : -HP);
+        B.cyl('metal', K.iron, 0.28, 0.9, 0, 0, 0.4, { r2: 0.08, rx: HP, seg: 12 });
+        B.pop();
+      }
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) B.cyl(NS('metal'), K.iron, 0.2, 0.12, sx * 1.4, 20.5, sz * 1.4, { seg: 8 });
-      // the cap (20.5 → 22): verdigris pyramid, the weathervane (a ladle pouring a flame)
+      // Cap (20.5 to 22 m)
       B.box('paint', K.green, 3.0, 0.2, 3.0, 0, 20.6, 0, { r: 0.04 });
       B.lathe('paint', K.verd, [[0, 1.6], [0.02, 1.6], [1.75, 0.0], [0, 0.0]], 0, 20.7, 0, { seg: 4, ry: PI / 4 });
       B.box(NS('metal'), K.iron, 0.06, 1.0, 0.06, 0, 22.7, 0);
-      B.box(NS('metal'), K.iron, 0.9, 0.12, 0.06, 0.2, 23.0, 0); B.sph(NS('metal'), K.iron, 0.16, 0.7, 23.0, 0, { ws: 8, hs: 5 });
-      // the gauge boards (8 → 15 m) on the south and north faces: cream enamel, the HIGH MARK band at the top, the needle
+      B.box(NS('metal'), K.iron, 0.9, 0.12, 0.06, 0.2, 23.0, 0);
+      B.sph(NS('metal'), K.iron, 0.16, 0.7, 23.0, 0, { ws: 8, hs: 5 });
+      // Gauge boards (8 to 15 m)
       for (const sz of [-1, 1]) {
         B.push(0, 11.5, sz * 2.5, sz > 0 ? 0 : PI);
         B.box('paint', K.green, 2.6, 7.2, 0.25, 0, 0, -0.02, { r: 0.04 });
@@ -144,66 +178,250 @@ export function register(D, H) {
         B.box(NS('paint'), K.ash, 2.3, 0.7, 0.07, 0, 3.0, 0.13, { r: 0.01 });
         for (let i = 0; i < 6; i++) B.box(NS('paint'), K.iron, 0.9, 0.06, 0.07, -0.55, -3.0 + i * 1.2, 0.14, { r: 0.01 });
         B.box(NS('metal'), K.iron, 0.12, 6.4, 0.08, 0.35, 0, 0.15);
-        // (the float needle is the lava engine's: it climbs the board as the lake rises — src/fx/lavaFx.js)
         B.pop();
       }
     },
   };
 
-  // ------------------------------------------------------------------------------------------ the works' HIGH MARK lines
-  // DESIGN §5.4 mural 5: the works paint their own white stripe at the high mark on what they own — the causeway's lake
-  // faces, the quay walls of the Lakefront, the island's quay either side of the causeway's root — just over the
-  // shader's rind (0.81–0.89), broken every 2.4 m where the stencilled words go (the art pass letters them)
-  D.caldera_highmark = {
+  // ------------------------------------------------------------------------------------------ Organ socket collars & stumps
+  D.caldera_socket_collar = {
     build(B) {
-      const y = HIGH_MARK + 0.05, h = 0.08, col = '#f4f1ea';
-      const dash = (ax, az, bx, bz, nx, nz) => {
-        const L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.round(L / 2.4)), ry = Math.atan2(bx - ax, bz - az);
-        for (let i = 0; i < n; i++) {
-          const t0 = (i + 0.08) / n, t1 = (i + 0.92) / n, cx = ax + (bx - ax) * (t0 + t1) / 2 + nx * 0.03, cz = az + (bz - az) * (t0 + t1) / 2 + nz * 0.03;
-          B.push(cx, y, cz, ry); B.box('paint', col, 0.04, h, L * (t1 - t0), 0, 0, 0); B.pop();
-        }
-      };
-      // the causeway's two lake faces (x ±5, the island's root to the Lakefront)
-      for (const s of [-1, 1]) dash(s * CW, CAUSE_Z + 0.6, s * CW, -11.8, s, 0);
-      // the Lakefront's quay wall either side of the causeway's foot (r 23), and the island's root faces
-      for (const [a0, a1] of [[-110, -98], [-82, -64]]) for (let a = a0; a < a1; a += 3) {
-        const r0 = RSF(a), r1 = RSF(a + 3), p = [r0 * Math.cos(a * D_), r0 * Math.sin(a * D_)], q = [r1 * Math.cos((a + 3) * D_), r1 * Math.sin((a + 3) * D_)];
-        dash(p[0], p[1], q[0], q[1], -Math.cos((a + 1.5) * D_), -Math.sin((a + 1.5) * D_));
+      // Cast iron collars with bolts encircling the organ sockets on Gauge Island
+      B.cyl('metal', K.iron, 2.7, 0.15, -10, 1.25, -12.8, { r2: 2.6, seg: 18 });
+      B.cyl('metal', K.iron, 1.7, 0.15, -10, 1.25, -9.14, { r2: 1.6, seg: 16 });
+      B.cyl('metal', K.iron, 1.7, 0.15, -10, 1.25, -6.34, { r2: 1.6, seg: 16 });
+      // Glowing lava seam inside socket
+      B.cyl(NS('glow'), K.seam, 2.45, 0.05, -10, 1.15, -12.8, { seg: 12, glow: 1.5 });
+      B.cyl(NS('glow'), K.seam, 1.45, 0.05, -10, 1.15, -9.14, { seg: 12, glow: 1.5 });
+      B.cyl(NS('glow'), K.seam, 1.45, 0.05, -10, 1.15, -6.34, { seg: 12, glow: 1.5 });
+    },
+  };
+  D.caldera_organ_stump = {
+    build(B) {
+      // Static basalt stumps clustered around the Organ Pipes, rough weathered tops
+      const stumps = [
+        [-10, 0.7, -15.6, 1.2, 0.9],
+        [-12.2, 0.8, -13.2, 0.9, 1.1],
+        [-12.0, 0.6, -9.8, 1.0, 0.8],
+        [-11.8, 0.7, -6.0, 0.8, 0.9],
+        [-8.0, 0.9, -14.5, 0.9, 1.2],
+        [-8.2, 0.7, -4.5, 0.7, 0.8],
+      ];
+      for (const [x, h, z, r, topH] of stumps) {
+        B.cyl('paint', K.basalt, r, h, x, 1.2 + h / 2, z, { seg: 6 });
+        B.cyl(NS('paint'), K.basaltDk, r * 0.9, 0.06, x, 1.2 + h + 0.02, z, { seg: 6 });
       }
     },
   };
 
-  // ------------------------------------------------------------------------------------------ the yard's skyline
-  D.caldera_hall_roof = {
+  // ------------------------------------------------------------------------------------------ Slump Winch House & Chain Bollards
+  D.caldera_winch_house = {
     build(B) {
-      // the Casting Hall behind the gallery and its side yards: a whitewashed hall running back out of play under a
-      // north-light sawtooth roof whose glazed faces look toward the lake; two brick chimneys; the round furnace window
-      const [[xe, z0], [xw]] = HALL_LINE, L = xe - xw + 0.6, D0 = 16, H = 12, mx = (xe + xw) / 2;
-      B.box('paint', K.white, L, H, D0, mx, H / 2, z0 - D0 / 2 - 0.2, { r: 0.05 });
-      for (let k = 0; k < 4; k++) {
-        const zc = z0 - 2.0 - k * 3.8;
-        B.push(mx, H + 0.95, zc, 0, 0); B.box('paint', K.verd, L + 0.1, 0.18, 3.9, 0, 0, 0, { rx: -0.5, r: 0.03 }); B.pop();
-        B.box(NS('paint'), '#3a5560', L - 0.4, 1.7, 0.12, mx, H + 0.85, zc + 1.9, { r: 0.02 });
-      }
-      for (const x of [xe - 4, xw + 4]) { B.box('paint', K.brick, 1.4, 6.0, 1.4, x, H + 3.5, z0 - 12, { r: 0.04 }); B.box(NS('paint'), K.iron, 1.6, 0.3, 1.6, x, H + 6.6, z0 - 12); }
-      B.push(PAD[0], 9.2, z0 - 0.15, 0);
-      B.cyl('paint', K.green, 2.3, 0.2, 0, 0, 0, { rx: HP, seg: 28 });
-      B.cyl(NS('glow'), K.glass, 2.0, 0.22, 0, 0, 0.02, { rx: HP, seg: 28, glow: 1.4 });
-      for (let k = 0; k < 4; k++) B.box(NS('paint'), K.green, 0.14, 4.0, 0.25, 0, 0, 0.05, { rz: (k * PI) / 4 });
+      // Whitewashed basalt winch house on south Slump head with iron winch drum
+      B.box('paint', K.white, 2.2, 2.5, 2.2, 0, 1.25, 0, { r: 0.05 });
+      B.box('paint', K.verd, 2.4, 0.3, 2.4, 0, 2.6, 0, { r: 0.04 });
+      B.lathe('paint', K.verd, [[0, 0.8], [0.05, 0.8], [1.4, 0.0], [0, 0.0]], 0, 2.75, 0, { seg: 4, ry: PI / 4 });
+      // Winch drum and cable rings on front face
+      B.push(0, 1.1, 1.18, 0);
+      B.cyl('metal', K.iron, 0.45, 0.6, 0, 0, 0, { rx: HP, seg: 12 });
+      B.box(NS('metal'), K.green, 0.8, 0.8, 0.2, 0, 0, -0.1);
       B.pop();
+    },
+  };
+  D.caldera_chain_bollard = {
+    build(B) {
+      // Heavy iron chain bollard
+      B.cyl('metal', K.iron, 0.28, 0.85, 0, 0.42, 0, { seg: 12 });
+      B.sph('metal', K.iron, 0.32, 0, 0.88, 0, { ws: 8, hs: 6 });
+      B.tor(NS('metal'), K.ironLt, 0.18, 0.05, 0, 0.65, 0.22, { rx: HP });
+    },
+  };
+  D.caldera_mooring_bollard = {
+    build(B) {
+      B.cyl('metal', K.iron, 0.25, 0.7, 0, 0.35, 0, { r2: 0.3, seg: 12 });
+      B.sph('metal', K.iron, 0.32, 0, 0.72, 0, { ws: 8, hs: 6 });
+    },
+  };
+  D.caldera_capstan = {
+    build(B) {
+      B.cyl('metal', K.greenDk, 0.55, 0.8, 0, 0.4, 0, { r2: 0.45, seg: 14 });
+      B.cyl('metal', K.iron, 0.6, 0.15, 0, 0.85, 0, { seg: 14 });
+      for (let k = 0; k < 4; k++) {
+        B.push(0, 0.88, 0, (k * PI) / 2);
+        B.box(NS('metal'), K.iron, 1.6, 0.08, 0.08, 0, 0, 0);
+        B.pop();
+      }
+    },
+  };
+
+  // ------------------------------------------------------------------------------------------ Tide Board & Ladle Car
+  D.caldera_tide_board = {
+    build(B) {
+      // Cream enamel board on two works-green posts at causeway foot
+      for (const sx of [-0.9, 0.9]) strut(B, [sx, 0, 0], [sx, 2.2, 0], 0.12);
+      B.box('paint', K.green, 2.1, 1.4, 0.15, 0, 1.5, 0, { r: 0.03 });
+      B.box('paint', K.cream, 1.9, 1.2, 0.08, 0, 1.5, 0.05, { r: 0.02 });
+    },
+  };
+  D.caldera_ladle_car = {
+    build(B) {
+      // 4-wheel foundry car carrying heavy ladle
+      B.box('metal', K.iron, 1.6, 0.25, 1.2, 0, 0.3, 0, { r: 0.03 });
+      // 4 wheels
+      for (const sx of [-0.65, 0.65]) for (const sz of [-0.48, 0.48]) {
+        B.cyl('metal', K.ironLt, 0.22, 0.08, sx, 0.22, sz, { rx: HP, seg: 12 });
+      }
+      // Ladle
+      B.lathe('metal', K.ironDk, [[0, 0.9], [0.55, 0.9], [0.45, 0.1], [0, 0]], 0, 0.45, 0, { seg: 14 });
+      B.cyl(NS('glow'), K.seam, 0.48, 0.04, 0, 1.3, 0, { seg: 12, glow: 1.2 });
+    },
+  };
+
+  // ------------------------------------------------------------------------------------------ Lamp post
+  D.caldera_lamp_post = {
+    build(B) {
+      B.cyl('metal', K.greenDk, 0.18, 0.8, 0, 0.4, 0, { r2: 0.12, seg: 10 });
+      B.cyl('metal', K.green, 0.08, 2.6, 0, 1.7, 0, { seg: 8 });
+      B.box('metal', K.green, 0.3, 0.08, 0.3, 0, 3.0, 0);
+      B.cyl(NS('glow'), K.cream, 0.16, 0.3, 0, 3.2, 0, { seg: 8, glow: 1.3 });
+      B.lathe('metal', K.green, [[0, 0.15], [0.26, 0]], 0, 3.35, 0, { seg: 8 });
+    },
+  };
+
+  // ------------------------------------------------------------------------------------------ Slump Hornitos & Cairn
+  D.caldera_hornito = {
+    build(B) {
+      B.lathe('paint', K.scoria, [[0, 1.3], [0.35, 1.3], [0.75, 0.7], [1.1, 0.0], [0, 0.0]], 0, 0, 0, { seg: 12 });
+      // Glowing crater vent
+      B.cyl(NS('glow'), K.seam, 0.28, 0.08, 0, 1.28, 0, { seg: 10, glow: 1.4 });
+    },
+  };
+  D.caldera_cairn = {
+    build(B) {
+      for (let i = 0; i < 4; i++) {
+        const y = i * 0.28, r = 0.55 - i * 0.1;
+        B.cyl('paint', K.basaltDk, r, 0.26, 0, y + 0.13, 0, { seg: 7 });
+      }
+    },
+  };
+
+  // ------------------------------------------------------------------------------------------ Casting Floor Props (LOW)
+  D.caldera_pig_bed = {
+    build(B) {
+      // Flush rows of ingot moulds in sand bed
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 5; c++) {
+        B.box('metal', K.iron, 0.65, 0.04, 0.24, -1.5 + c * 0.75, 0.02, -0.9 + r * 0.6, { r: 0.01 });
+      }
+    },
+  };
+  D.caldera_floor_drain = {
+    build(B) {
+      B.box('metal', K.iron, 0.9, 0.03, 0.9, 0, 0.015, 0, { r: 0.02 });
+      for (let k = -3; k <= 3; k++) B.box(NS('metal'), K.ironDk, 0.7, 0.04, 0.04, 0, 0.02, k * 0.1);
+      B.cyl(NS('glow'), K.seam, 0.2, 0.02, 0, 0.01, 0, { seg: 8, glow: 1.2 });
+    },
+  };
+  D.caldera_mould_stack = {
+    build(B) {
+      for (let i = 0; i < 4; i++) {
+        B.box('metal', K.ironDk, 1.3 - i * 0.05, 0.38, 1.3 - i * 0.05, 0, i * 0.4 + 0.2, 0, { r: 0.04 });
+        B.box(NS('metal'), K.ironLt, 1.35, 0.05, 1.35, 0, i * 0.4 + 0.38, 0);
+      }
+    },
+  };
+  D.caldera_ladle_stand = {
+    build(B) {
+      strut(B, [-0.65, 0, -0.65], [-0.65, 1.8, -0.65], 0.12, K.greenDk);
+      strut(B, [0.65, 0, -0.65], [0.65, 1.8, -0.65], 0.12, K.greenDk);
+      strut(B, [-0.65, 0, 0.65], [-0.65, 1.8, 0.65], 0.12, K.greenDk);
+      strut(B, [0.65, 0, 0.65], [0.65, 1.8, 0.65], 0.12, K.greenDk);
+      B.box('metal', K.iron, 1.5, 0.15, 1.5, 0, 1.85, 0, { r: 0.03 });
+      // Resting crucible ladle
+      B.lathe('metal', K.iron, [[0, 0.7], [0.45, 0.7], [0.35, 0], [0, 0]], 0, 1.95, 0, { seg: 12 });
+    },
+  };
+
+  // ------------------------------------------------------------------------------------------ Spillway Bridge & Slag Pot
+  D.caldera_spillway_bridge = {
+    build(B) {
+      // Works-green riveted bridge girders with SPILLWAY cast plates
+      B.box('metal', K.green, 5.5, 0.55, 0.3, 0, 0.2, 4.4, { r: 0.03 });
+      B.box('metal', K.green, 5.5, 0.55, 0.3, 0, 0.2, -4.4, { r: 0.03 });
+      // Cast iron plate on outer face
+      B.box('metal', K.iron, 1.8, 0.35, 0.08, 0, 0.2, 4.56, { r: 0.02 });
+      B.box('metal', K.iron, 1.8, 0.35, 0.08, 0, 0.2, -4.56, { r: 0.02 });
+    },
+  };
+  D.caldera_slag_pot = {
+    build(B) {
+      B.lathe('metal', K.ironDk, [[0, 1.1], [0.55, 1.1], [0.48, 0.6], [0.32, 0.0], [0, 0.0]], 0, 0, 0, { seg: 12 });
+      B.cyl(NS('metal'), K.iron, 0.58, 0.1, 0, 0.95, 0, { seg: 12 });
+    },
+  };
+  D.caldera_gauge_post = {
+    build(B) {
+      // Whitewashed blockhouse on horn tip
+      B.box('paint', K.white, 2.7, 1.2, 2.5, 0, 0.6, 0, { r: 0.04 });
+      B.box('metal', K.green, 0.9, 1.0, 0.08, 0, 0.5, 1.28);   // Green door
+      // Hand siren on roof
+      B.cyl(NS('metal'), K.iron, 0.12, 0.35, 0.6, 1.35, 0.6, { seg: 8 });
+      B.lathe(NS('metal'), K.iron, [[0, 0.25], [0.18, 0]], 0.6, 1.55, 0.6, { seg: 8 });
+    },
+  };
+
+  // ------------------------------------------------------------------------------------------ Moulding Terrace Props
+  D.caldera_pattern_doors = {
+    build(B) {
+      B.box('wood', K.wood, 3.8, 2.2, 0.12, 0, 1.1, 0, { r: 0.02 });
+      // Weatherboard slats
+      for (let k = 0; k < 6; k++) B.box(NS('wood'), '#785f44', 3.7, 0.04, 0.14, 0, 0.3 + k * 0.32, 0.01);
+      // "THE TAP ROOM" sign
+      B.box('paint', K.cream, 1.6, 0.35, 0.06, 0, 2.0, 0.08, { r: 0.01 });
+    },
+  };
+  D.caldera_pattern_crates = {
+    build(B) {
+      B.box('wood', K.wood, 1.2, 0.85, 1.1, 0, 0.42, 0, { r: 0.02 });
+      B.box(NS('metal'), K.ironLt, 1.22, 0.06, 1.12, 0, 0.8, 0);
+    },
+  };
+  D.caldera_firebrick_store = {
+    build(B) {
+      B.box('paint', K.brick, 3.2, 3.4, 2.2, 0, 1.7, 0, { r: 0.04 });
+      B.box('metal', K.green, 1.4, 2.2, 0.1, 0, 1.1, 1.12, { r: 0.02 });
+    },
+  };
+  D.caldera_flask_stack = {
+    build(B) {
+      for (let i = 0; i < 3; i++) {
+        B.box('metal', '#5c5248', 1.2, 0.45, 0.9, 0, i * 0.5 + 0.25, 0, { r: 0.03 });
+      }
+    },
+  };
+
+  // ------------------------------------------------------------------------------------------ Yard Props
+  D.caldera_surge_office = {
+    build(B) {
+      const hw = (OFFICE.x1 - OFFICE.x0) / 2;
+      B.lathe('paint', K.verd, [[0, 1.6], [0.05, 1.6], [hw * Math.SQRT2 + 0.3, 0.0], [0, 0.0]], 0, 9.5, 0, { seg: 4, ry: PI / 4 });
+      for (const y of [5.6, 8.0]) for (const s of [-1, 1]) {
+        B.box(NS('paint'), K.green, 2 * hw - 0.4, 0.9, 0.08, 0, y, s * (hw + 0.03));
+        B.box(NS('paint'), K.green, 0.08, 0.9, 2 * hw - 0.4, s * (hw + 0.03), y, 0);
+      }
+      B.box('paint', K.cream, 0.2, 1.8, 3.0, hw + 0.12, 6.2, 0, { r: 0.03 });
     },
   };
   D.caldera_cupola_hood = {
     build(B) {
-      // (the furnace body and stack are layout octagons; this is the verdigris spark hood on the stack's top)
       B.lathe('paint', K.verd, [[0, 2.2], [0.3, 2.2], [1.6, 0.4], [1.8, 0.0], [0, 0.0]], 0, 15.05, 0, { seg: 16 });
-      for (let k = 0; k < 4; k++) { const a = k * HP + PI / 4; B.box(NS('metal'), K.iron, 0.1, 0.9, 0.1, Math.cos(a) * 1.2, 15.4, Math.sin(a) * 1.2); }
+      for (let k = 0; k < 4; k++) {
+        const a = k * HP + PI / 4;
+        B.box(NS('metal'), K.iron, 0.1, 0.9, 0.1, Math.cos(a) * 1.2, 15.4, Math.sin(a) * 1.2);
+      }
     },
   };
   D.caldera_jib = {
     build(B) {
-      // the jib parked pointing out over the east edge (ESE), its counter-jib back over the yard wall; floodlights
       B.push(0, 10.0, 0, Math.atan2(24 - 16, -60 + 56.5));
       B.box('metal', K.green, 0.7, 0.9, 9.0, 0, 0, 4.5, { r: 0.06 });
       B.box('metal', K.green, 0.6, 0.6, 3.0, 0, 0, -1.6, { r: 0.05 });
@@ -213,27 +431,124 @@ export function register(D, H) {
       B.box('paint', K.green, 1.6, 1.2, 1.6, 0, 12.6, 0, { r: 0.05 });
     },
   };
-  D.caldera_office_roof = {
+  D.caldera_weigh_office = {
     build(B) {
-      // two storeys: a verdigris hipped roof, works-green window bands, the Surge Board frame on its south face
-      const hw = (OFFICE.x1 - OFFICE.x0) / 2;
-      B.lathe('paint', K.verd, [[0, 1.6], [0.05, 1.6], [hw * Math.SQRT2 + 0.3, 0.0], [0, 0.0]], 0, 9.5, 0, { seg: 4, ry: PI / 4 });
-      for (const y of [5.6, 8.0]) for (const s of [-1, 1]) { B.box(NS('paint'), K.green, 2 * hw - 0.4, 0.9, 0.08, 0, y, s * (hw + 0.03)); B.box(NS('paint'), K.green, 0.08, 0.9, 2 * hw - 0.4, s * (hw + 0.03), y, 0); }
-      B.box('paint', K.cream, 0.2, 1.8, 3.0, hw + 0.12, 6.2, 0, { r: 0.03 });   // the Surge Board's frame on its east face
+      // Small scale hut beside weighbridge
+      B.box('paint', K.white, 2.4, 2.2, 2.0, 0, 1.1, 0, { r: 0.04 });
+      B.box('paint', K.verd, 2.6, 0.2, 2.2, 0, 2.25, 0, { r: 0.03 });
+      B.box(NS('paint'), K.green, 1.2, 0.9, 0.08, 0, 1.2, 1.03);   // window
+    },
+  };
+  D.caldera_casting_stack = {
+    build(B, o) {
+      const kind = o.kind || 'manholes';
+      if (kind === 'manholes') {
+        for (let i = 0; i < 8; i++) {
+          B.cyl('metal', K.iron, 0.45, 0.08, 0, i * 0.09 + 0.05, 0, { seg: 14 });
+        }
+      } else if (kind === 'bollards') {
+        for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) {
+          B.cyl('metal', K.ironDk, 0.2, 0.7, -0.4 + c * 0.4, 0.35, -0.2 + r * 0.4, { seg: 10 });
+        }
+      } else if (kind === 'pipes') {
+        for (let i = 0; i < 5; i++) {
+          B.cyl('metal', K.ironLt, 0.16, 2.2, -0.3 + i * 0.15, 0.2 + (i & 1) * 0.15, 0, { rx: HP, seg: 10 });
+        }
+      }
+    },
+  };
+  D.caldera_charging_shed = {
+    build(B) {
+      // Lean-to shed with open front
+      B.box('metal', K.greenDk, 4.0, 2.6, 2.5, 0, 1.3, 0, { r: 0.04 });
+      B.box('metal', K.verd, 4.4, 0.15, 2.8, 0, 2.65, 0.1, { rx: -0.15, r: 0.03 });
+    },
+  };
+
+  // ------------------------------------------------------------------------------------------ Casting Hall (Spawn)
+  D.caldera_hall_roof = {
+    build(B) {
+      const [[xe, z0], [xw]] = HALL_LINE, L = xe - xw + 0.6, D0 = 16, H = 12, mx = (xe + xw) / 2;
+      B.box('paint', K.white, L, H, D0, mx, H / 2, z0 - D0 / 2 - 0.2, { r: 0.05 });
+      for (let k = 0; k < 4; k++) {
+        const zc = z0 - 2.0 - k * 3.8;
+        B.push(mx, H + 0.95, zc, 0, 0);
+        B.box('paint', K.verd, L + 0.1, 0.18, 3.9, 0, 0, 0, { rx: -0.5, r: 0.03 });
+        B.pop();
+        B.box(NS('paint'), '#3a5560', L - 0.4, 1.7, 0.12, mx, H + 0.85, zc + 1.9, { r: 0.02 });
+      }
+      for (const x of [xe - 4, xw + 4]) {
+        B.box('paint', K.brick, 1.4, 6.0, 1.4, x, H + 3.5, z0 - 12, { r: 0.04 });
+        B.box(NS('paint'), K.iron, 1.6, 0.3, 1.6, x, H + 6.6, z0 - 12);
+      }
+      B.push(PAD[0], 9.2, z0 - 0.15, 0);
+      B.cyl('paint', K.green, 2.3, 0.2, 0, 0, 0, { rx: HP, seg: 28 });
+      B.cyl(NS('glow'), K.glass, 2.0, 0.22, 0, 0, 0.02, { rx: HP, seg: 28, glow: 1.4 });
+      for (let k = 0; k < 4; k++) B.box(NS('paint'), K.green, 0.14, 4.0, 0.25, 0, 0, 0.05, { rz: (k * PI) / 4 });
+      B.pop();
+    },
+  };
+  D.caldera_planter_urn = {
+    build(B) {
+      B.cyl('paint', K.basalt, 0.32, 0.65, 0, 0.32, 0, { r2: 0.45, seg: 10 });
+      B.sph(NS('paint'), '#3f5845', 0.38, 0, 0.75, 0, { ws: 8, hs: 6 });
     },
   };
 }
 
-// one placement each (the layout's own geometry is mirrored by the level; these draw both halves themselves, or are
-// mirrored as usual)
+// Set dressing placements (Alpha's half; mirrored unless `mirror: false`)
 export const PLACEMENTS = [
   ...(BLOCKOUT_LAVA ? [{ type: 'caldera_lava', pos: [0, 0, 0], mirror: false }] : []),
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_walls', pos: [0, 0, 0], mirror: false },
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false, list: GANTRY_RAILS, onlyIn: 'bazookarp' },
-  { type: 'caldera_surge_gauge', pos: [0, 0, 0], mirror: false, notIn: 'boss' },   // (the lava fix round 3: Boss Battle's variant has no gauge — its piers stood in the boss's ground)
-  { type: 'caldera_highmark', pos: [0, 0, 0] },
+  { type: 'caldera_surge_gauge', pos: [0, 0, 0], mirror: false, notIn: 'boss' },
+  { type: 'caldera_socket_collar', pos: [0, 0, 0] },
+  { type: 'caldera_organ_stump', pos: [0, 0, 0] },
   { type: 'caldera_hall_roof', pos: [0, 0, 0] },
   { type: 'caldera_cupola_hood', pos: [-3.2, 0, -64.3] },
-  { type: 'caldera_office_roof', pos: [(OFFICE.x0 + OFFICE.x1) / 2, 0, (OFFICE.z0 + OFFICE.z1) / 2] },
+  { type: 'caldera_surge_office', pos: [(OFFICE.x0 + OFFICE.x1) / 2, 0, (OFFICE.z0 + OFFICE.z1) / 2] },
+  { type: 'caldera_jib', pos: [0, 0, 0] },
+
+  // Flank & Slump
+  { type: 'caldera_winch_house', pos: [-23.2, 1.2, -19.6], rotY: -139.5 * D_ },
+  { type: 'caldera_hornito', pos: [-25.2, 0, -6.8] },
+  { type: 'caldera_hornito', pos: [-24.8, 0, -11.2] },
+  { type: 'caldera_cairn', pos: [17.5, 2.4, -10.5] },
+
+  // Moorings & Lakefront
+  { type: 'caldera_tide_board', pos: [-7.8, 1.2, -23.4] },
+  { type: 'caldera_capstan', pos: [-14.4, 1.8, -29.8] },
+  { type: 'caldera_chain_bollard', pos: [-17.2, 1.8, -28.6] },
+  { type: 'caldera_mooring_bollard', pos: [-13.6, 1.8, -23.4] },
+  { type: 'caldera_mooring_bollard', pos: [-4.0, 1.2, -23.2] },
+  { type: 'caldera_ladle_car', pos: [2.5, 1.2, -26.0] },
+
+  // Casting Floor (LOW)
+  { type: 'caldera_pig_bed', pos: [10.5, 0, -17.5] },
+  { type: 'caldera_floor_drain', pos: [13.0, 0, -15.0] },
+  { type: 'caldera_mould_stack', pos: [12.0, 0, -18.4] },
+  { type: 'caldera_ladle_stand', pos: [14.0, 0, -13.6] },
+
+  // Spillway
+  { type: 'caldera_spillway_bridge', pos: [22.75, 2.3, -25.26], rotY: -38 * D_ },
+  { type: 'caldera_slag_pot', pos: [22.75, 2.3, -26.5] },
+  { type: 'caldera_gauge_post', pos: [21.5, 2.4, -17.5] },
+
+  // Moulding Terrace
+  { type: 'caldera_pattern_doors', pos: [-20.5, 2.4, -36.5], rotY: 60 * D_ },
+  { type: 'caldera_pattern_crates', pos: [-11.8, 3.0, -38.2] },
+  { type: 'caldera_firebrick_store', pos: [-7.5, 2.4, -42.0] },
+  { type: 'caldera_flask_stack', pos: [-13.5, 2.4, -37.5] },
+
+  // Yard
+  { type: 'caldera_weigh_office', pos: [PIT.x0 - 1.5, 3.6, (PIT.z0 + PIT.z1) / 2] },
+  { type: 'caldera_charging_shed', pos: [10.0, 3.6, -60.0], rotY: -90 * D_ },
+  { type: 'caldera_casting_stack', pos: [-8.0, 3.6, -58.0], kind: 'manholes' },
+  { type: 'caldera_casting_stack', pos: [-22.0, 3.6, -52.0], kind: 'bollards' },
+  { type: 'caldera_casting_stack', pos: [4.0, 3.6, -56.0], kind: 'pipes' },
+
+  // Spawn Gallery Balustrade Urns
+  { type: 'caldera_planter_urn', pos: [PAD[0] - 3.5, 4.8, HALL_LINE[0][1] + 1.8] },
+  { type: 'caldera_planter_urn', pos: [PAD[0] + 3.5, 4.8, HALL_LINE[0][1] + 1.8] },
 ];

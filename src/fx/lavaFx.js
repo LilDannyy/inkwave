@@ -164,8 +164,9 @@ float lvn(vec2 p) { vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0
 void main() {
   float s = lvn(vec2(vUv.x * 9.0, vUv.y * 3.0 + uTime * 1.8)) * 0.6 + lvn(vec2(vUv.x * 23.0, vUv.y * 7.0 + uTime * 3.1)) * 0.4;
   vec3 col = mix(uA, uB, smoothstep(0.35, 0.8, s)) * (1.6 + 0.8 * s);
-  float edge = 1.0;
-  float a = clamp((0.45 + 0.55 * uK) * edge * (0.7 + 0.5 * s) * (1.0 - smoothstep(0.75, 1.0, vUv.y)), 0.0, 1.0);
+  float edge = smoothstep(0.0, 0.08, vUv.x) * (1.0 - smoothstep(0.92, 1.0, vUv.x));
+  float top = smoothstep(0.0, 0.03, vUv.y);
+  float a = clamp((0.45 + 0.55 * uK) * edge * top * (0.7 + 0.5 * s) * (1.0 - smoothstep(0.75, 1.0, vUv.y)), 0.0, 1.0);
   gl_FragColor = vec4(col, a);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>

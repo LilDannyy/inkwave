@@ -18,6 +18,8 @@ import * as G from './geo.js';
 import { fill, edgeKinds, walls, cutColumns, rotBox, splitColumns } from './ground.js';
 import { LAVA, LAVA_VIEW, BLOCKOUT_LAVA, riderStandIns } from './lava.js';
 import { KARP_VETO, KARP_VETO_16 } from './karpVeto.js';   // (fix round 5: the Carp Field's hop / gap edges over the lava, and those checker #16 found no kid makes)
+import { SURF } from './surfaces.js';
+import { MURAL } from './murals.js';
 
 const { P, rotPoly, inPoly } = G;
 const HIGH_BUILD = BLOCKOUT_LAVA && LAVA_VIEW === 'high';
@@ -35,16 +37,16 @@ const K = {
 };
 // (blockout patterns: never the ones the level shader caps with pale stone coping on narrow tops — plain, tiles,
 // concrete, brick, glasstile, pavers, render — since the curved floors are columns often under 1.15 m wide)
-const tuff = (o = {}) => ({ color: K.tuff, pattern: PATTERN.yard, ...o });
-const rock = (o = {}) => ({ color: K.basalt, pattern: PATTERN.asphalt, ...o });
+const tuff = (o = {}) => ({ color: K.tuff, pattern: SURF.tuff, ...o });
+const rock = (o = {}) => ({ color: K.basalt, pattern: SURF.basalt, ...o });
 // (the ledges that drown: blockout colour = DESIGN.md §5.3's glaze as the stain will darken it below the high mark)
-const glaze = (o = {}) => ({ color: K.glaze, pattern: PATTERN.rubber, ...o });
-const coping = (o = {}) => ({ color: K.basaltDk, pattern: PATTERN.asphalt, tag: 'coping', ...o });
-const steps = (o = {}) => ({ color: K.basalt, pattern: PATTERN.stonestep, ...o });
+const glaze = (o = {}) => ({ color: K.glaze, pattern: SURF.glaze, ...o });
+const coping = (o = {}) => ({ color: K.basaltDk, pattern: SURF.basalt, tag: 'coping', ...o });
+const steps = (o = {}) => ({ color: K.basalt, pattern: SURF.basalt, ...o });
 const iron = (o = {}) => ({ color: K.iron, pattern: PATTERN.metalpanel, ...o });
 const cover = (c = K.cast, o = {}) => ({ color: c, pattern: PATTERN.rubber, roof: true, ...o });
 const white = (o = {}) => ({ color: K.white, pattern: PATTERN.render, roof: true, ...o });
-const calWall = () => ({ color: K.wall, pattern: PATTERN.concrete, roof: true, tag: 'caldera-wall' });
+const calWall = () => ({ color: K.wall, pattern: SURF.basalt, roof: true, tag: 'caldera-wall' });
 // (the caldera walls round the dry floors are collision-only here and drawn by props.js — caldera_walls — so they cost
 // the lightmap nothing: the art pass replaces them with the backdrop's cliffs. The Slump's cliff stays a level block: it
 // stands in the lava region and carries the high-mark rind — the level shader's band, not paint)
@@ -57,7 +59,7 @@ const calCliff = () => ({ ...calWall(), paint: false });
 // the curved floors (geo.js outlines), filled by ground.js. Alpha's half unless `single`. Floors with nothing open
 // under them stop at 0.45 (under the level's 0.5 m underside cull); lake banks reach −1.1 through their copings
 const FLOORS = [
-  { id: 'island', poly: G.ISLAND, top: 1.2, y0: -1.1, single: true, mk: () => rock({ tag: 'island', color: K.pave, pattern: PATTERN.yard }) },
+  { id: 'island', poly: G.ISLAND, top: 1.2, y0: -1.1, single: true, mk: () => tuff({ tag: 'island', color: K.pave, pattern: SURF.tuff }) },
   { id: 'gallery', poly: G.GALLERY, top: 4.8, y0: 3.6, w: 1.2, mk: () => ({ color: K.spawn, pattern: PATTERN.spawn, tag: 'gallery' }) },
   { id: 'yard', poly: G.YARD, top: 3.6, y0: 0.45, w: 1.4, mk: () => tuff({ tag: 'yard', color: '#b4aea3' }) },
   { id: 'rimHead', poly: G.RIM_HEAD, top: 4.2, y0: 0.45, w: 1.2, mk: () => rock({ tag: 'rim-head', color: K.scoria }) },
@@ -86,7 +88,7 @@ const ALL0 = [];
 for (const f of [...FLOORS, ...BOXES]) { ALL0.push(f); if (!f.single) ALL0.push({ ...f, poly: rotPoly(f.poly), twin: f }); }
 const floorAt = (x, z) => ALL0.some((f) => !f.wall && inPoly(f.poly, x, z));
 const EDGE_WALLS = G.EDGES.map((e) => ({ e, w: walls(e.pts, { t: e.t, top: e.top, y0: e.y0, ext0: e.ext0, ext1: e.ext1, mk: e.cliff ? calCliff : calWallHidden }, floorAt) }));
-const hallMk = () => white({ tag: 'casting-hall', hidden: true, paint: false });   // (props.js draws the hall)
+const hallMk = () => white({ tag: 'casting-hall', hidden: true, paint: false, mural: [{ n: [0, 0, 1], id: MURAL.gable }] });   // (props.js draws the hall)
 const HALL_W = [walls(G.HALL_LINE, { t: 4.0, top: 12.0, y0: 0, ext0: 0.3, ext1: 0.3, mk: hallMk }, floorAt)];
 const WALL_FEET = [...EDGE_WALLS.flatMap((x) => x.w.feet), ...HALL_W.flatMap((w) => w.feet)];
 const ALL = [...ALL0];
@@ -188,7 +190,7 @@ SINGLE.push(B(-0.37, 0.41, -1.2, 0, -0.43, 0.39, { hidden: true, paint: false, t
 
 // ---------------------------------------------------------------------------------------- mid: Gauge Island
 // the Pour Floor (cast-iron plates, 1.8): the plinth under the Surge Gauge; the centre zone, the Pond, the tower's start
-SINGLE.push(B(-5, 5, 1.2, 1.8, -5, 5, iron({ tag: 'pour-floor', color: '#7f8389' })));
+SINGLE.push(B(-5, 5, 1.2, 1.8, -5, 5, iron({ tag: 'pour-floor', color: '#7f8389', mural: [{ n: [0, 1, 0], id: MURAL.pourfloor }] })));
 // (Boss Battle: none of the gauge — noBoss)
 // the Surge Gauge: four basalt piers to 7 m (off the diagonals: the Pond is seen from all 8 directions), two tie girders
 // at 6.0–6.9 m (they cut the spawn-to-spawn sightline), the upper works solid to 22 m (props.js draws them)
@@ -214,7 +216,7 @@ function segsAlong(pts, t, y0, y1, o, side = 0) {
   return out;
 }
 const stairOn = (c, run, y0, y1, width, o) => R([G.r3(c.mid[0] + c.n[0] * run), y0, G.r3(c.mid[1] + c.n[1] * run)], [G.r3(c.mid[0]), y1, G.r3(c.mid[1])], width, o);
-const stack = (x, z, w, d, h, base, tag, c = K.cast) => B(G.r3(x - w / 2), G.r3(x + w / 2), base, G.r3(base + h), G.r3(z - d / 2), G.r3(z + d / 2), cover(c, { tag }));
+const stack = (x, z, w, d, h, base, tag, c = K.cast, o = {}) => B(G.r3(x - w / 2), G.r3(x + w / 2), base, G.r3(base + h), G.r3(z - d / 2), G.r3(z + d / 2), cover(c, { tag, ...o }));
 const stack2 = (x, z, w, d, h, base, tag, c, [w2, d2, h2, ox = 0, oz = 0]) => [stack(x, z, w, d, h, base, tag, c), stack(x + ox, z + oz, w2, d2, h2, base + h, tag, c)];
 const drum = (x, z, r, h, base, tag, c) => OCT(x, z, r, base, G.r3(base + h), cover(c, { tag }));
 const ob = (p, w, d, y0, y1, deg, o) => O(G.r3(p[0]), G.r3(p[1]), w, d, y0, y1, G.r3(deg), o);
@@ -242,7 +244,7 @@ function cone(cx, cz, rTop, yTop, rBase, yBase, tag) {
 add(B(-G.CW, G.CW, -1.1, 1.2, G.r3(G.CAUSE_Z), -11.5, tuff({ tag: 'causeway', color: '#aaa59c' })));
 // (the lava phase: the plinths 1 m in from the edges — at x ±4 they left a 0.55 m strip, no landing for the 1.2 m hop up
 // from the Casting Floor beside them, and a bot escaping the rise died there; ≥ 0.8 m from the tower's lane still)
-for (const [x, z] of [[3.0, -14.5], [-3.0, -14.5], [3.0, -19.5], [-3.0, -19.5]]) add(noBoss(B(x - 0.45, x + 0.45, 1.2, 2.5, z - 0.45, z + 0.45, cover(K.basaltDk, { tag: 'lamp-plinth' }))));
+for (const [x, z] of [[3.0, -14.5], [-3.0, -14.5], [3.0, -19.5], [-3.0, -19.5]]) add(noBoss(B(x - 0.45, x + 0.45, 1.2, 2.5, z - 0.45, z + 0.45, cover(K.basaltDk, { tag: 'lamp-plinth', mural: [{ n: [1, 0, 0], id: MURAL.highmark }, { n: [-1, 0, 0], id: MURAL.highmark }] }))));
 // the Organ Pipes and (at HIGH) both Pumice Races: static stand-ins at this build's level until the lava engine lands
 if (BLOCKOUT_LAVA) {
   add(riderStandIns((what, o) => (what === 'stone' ? { color: K.pumice, pattern: PATTERN.rubber, ...o }
@@ -290,7 +292,7 @@ for (const [x, z] of [[G.GAL.x0 + 1.6, GZ1 - 1.9], [G.GAL.x1 - 1.6, G.GAL.z0 + 2
 // the Surge Office (and weigh-house): two storeys of whitewashed basalt against the west wall, its south face the pit's
 // north side (props.js: its roof; the Surge Board on its east face, toward the yard)
 export const OFFICE = { x0: -38.3, x1: -31.3, z0: G.PIT.z1, z1: G.PIT.z1 + 7.0 };
-add(B(OFFICE.x0, OFFICE.x1, 3.6, 9.5, OFFICE.z0, OFFICE.z1, white({ tag: 'surge-office' })));
+add(B(OFFICE.x0, OFFICE.x1, 3.6, 9.5, OFFICE.z0, OFFICE.z1, white({ tag: 'surge-office', mural: [{ n: [1, 0, 0], id: MURAL.stencils }] })));
 // the lines of castings stacked for the ferry: two walls of castings (2.2–2.4 m: nobody climbs or sees over them) that
 // split the yard into its three lanes, each from the gallery's front to the tower's yard lane (z −45 ± 1.75). The east
 // line stands against the Gallery Stair's east side (x −12.4), clear of the tower's climb lane at x −9 (± 1.75): broken
@@ -380,13 +382,13 @@ add(B(-14.15, -12.95, 2.4, 4.0, -37.95, -37.05, cover('#6b5f55', { tag: 'flask-s
   add(frameBox(e, u, [0.02, 3.25], [-0.05, 2.3], 2.4, 5.9, { color: K.brick, pattern: PATTERN.brick, roof: true, tag: 'firebrick-store' })); }
 
 // ---------------------------------------------------------------------------------------- the Lakefront (1.2), the Moorings (1.8)
-add(noBoss(ob([-7.8, -23.4], 2.4, 0.6, 1.2, 3.4, 0, cover('#e6dfcd', { tag: 'tide-board' }))));   // the Tide Board by the causeway's foot, clear of the tower's run and the weir's room
+add(noBoss(ob([-7.8, -23.4], 2.4, 0.6, 1.2, 3.4, 0, cover('#e6dfcd', { tag: 'tide-board', mural: [{ n: [0, 0, 1], id: MURAL.tideboard }, { n: [0, 0, -1], id: MURAL.tideboard }] }))));   // the Tide Board by the causeway's foot, clear of the tower's run and the weir's room
 add(noBoss(stack(-4.0, -23.2, 1.0, 1.0, 1.1, 1.2, 'mooring-bollard', K.ironDk)));
 // the Lakefront east of the causeway: a ladle cradle (1.6) at the terrace face's foot, between the weir's 3 m room and
 // the East Steps' west side
 add(noBoss(polBox(G.RT(-75.95) - 0.52, -75.95, 1.3, 1.0, 1.2, 2.8, cover(K.ironDk, { tag: 'ladle-cradle' }))));
 // and a chain bin at the face's foot beside the Lower Surge Steps (3.3 m from the weir)
-add(stack(1.8, -29.3, 1.0, 0.8, 1.1, 1.2, 'chain-bin', '#4f5a52'));
+add(stack(1.8, -29.3, 1.0, 0.8, 1.1, 1.2, 'chain-bin', '#4f5a52', { mural: [{ n: [0, 0, 1], id: MURAL.warning }] }));
 // the Moorings (the side zone): the capstan, a chain bollard (off the tower's climb lane, x ≥ −17.75), the spare-stone
 // crate and a mooring bollard on its lake edge (north of the tower's run, z ≥ −24.25). Their colliders start 0.2 m down
 // in the Moorings' deck (1.6): the same on screen and to every player, and the cover rule's Lakefront-level measure
@@ -395,7 +397,7 @@ add(noBoss([stack(-14.4, -29.8, 1.4, 1.2, 1.5, 1.6, 'capstan', '#4f5a52'), stack
   stack(-22.7, -26.6, 1.2, 1.2, 1.2, 1.6, 'stone-crate', K.pumice), stack(-13.6, -23.4, 1.0, 0.9, 1.3, 1.6, 'mooring-bollard', K.ironDk)]));
 // the south Slump head: a chain bollard back from the Race's landing; the winch house against the Rim Head's face
 { const [x, z] = G.sp(G.S0, -2.4, -1.4); add(O(x, z, 1.0, 1.0, 1.2, 2.3, 19, cover(K.ironDk, { tag: 'chain-bollard' }))); }
-{ const [x, z] = P(30.4, -139.5); add(O(x, z, 2.4, 2.4, 1.2, 4.0, 139.5, white({ tag: 'winch-house' }))); }
+{ const [x, z] = P(30.4, -139.5); add(O(x, z, 2.4, 2.4, 1.2, 4.0, 139.5, white({ tag: 'winch-house', mural: [{ n: [1, 0, 0], id: MURAL.pumice }, { n: [0, 0, 1], id: MURAL.pumice }] }))); }
 
 // ---------------------------------------------------------------------------------------- the Casting Floor (0, LOW only)
 add(stack(12.0, -18.4, 1.4, 1.4, 1.8, 0, 'mould-stack', K.ironDk), stack(14.0, -13.6, 1.6, 1.6, 2.0, 0, 'ladle-stand', K.ironDk));
@@ -410,7 +412,7 @@ add(stack(12.0, -18.4, 1.4, 1.4, 1.8, 0, 'mould-stack', K.ironDk), stack(14.0, -
 // the Gauge Post (Bravo's, on its horn's point beside the bridge's landing; Alpha's is its turn at the NW): a squat
 // basalt blockhouse whose flat roof (3.6) is a hop from the horn — a lookout over the other works' bay and quay — with a
 // parapet on its outer sides
-add(armBox(8.9, 8.2, 2.8, 2.6, 2.4, 3.6, rock({ tag: 'gauge-post', color: '#8d8a84' })));
+add(armBox(8.9, 8.2, 2.8, 2.6, 2.4, 3.6, rock({ tag: 'gauge-post', color: '#8d8a84', mural: [{ n: [-1, 0, 0], id: MURAL.spillway }] })));
 add(armBox(10.15, 8.2, 0.3, 2.6, 3.6, 4.5, cover(K.basaltDk, { tag: 'gauge-post-parapet' })), armBox(8.9, 9.35, 2.8, 0.3, 3.6, 4.6, cover(K.basaltDk, { tag: 'gauge-post-parapet' })));
 // the horn (Bravo's in the SE): a cairn behind the Horn Step
 add(armBox(-2.4, 9.4, 1.2, 1.2, 2.4, 3.6, cover(K.basaltDk, { tag: 'cairn' })));
@@ -521,8 +523,17 @@ const LAYOUT_CALDERA = {
   spawnBarrier: 4.2,
   intro: { from: [40, 26, -40], lookFrom: [0, 8, 0], toBack: 3.2 },
   art: { from: [-44, 30, -56], look: [4, 2, 4], fov: 56, lava: 'high' },
-  env: { backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, gulls: false, buoys: false, sea: false,
-    theme: { all: { seaDeep: '#1c1918', seaShallow: '#2b2523', seaCrest: '#3a312d', foam: '#4a403a', waveStrength: 0.15, sunSpec: 0.25 } } },
+  env: {
+    backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, gulls: false, buoys: false,
+    sea: false,                 // ENGINE H22: no sea mesh (the backdrop draws the far ocean far below); the death plane stays
+    stars: true,
+    weather: { mist: { layers: 2, height: 1.6, reach: 26, inner: 6, opacity: 0.12, scale: 1.0, color: '#d8c8bc' } },   // heat haze over the lake
+    theme: {
+      all:    { fog: [40, 900], haze: [1 / 2600, 0.8, 320] },
+      day:    { zenith: '#1f5fbf', skyMid: '#5c9be0', horizon: '#d6cbbd', sunIntensity: 3.2 },   // thin high air, warm volcanic haze
+      sunset: { hemiIntensity: 0.62, envK: 0.45, grade: { uExposure: 1.02, uSat: 0.98 } },     // violet-indigo; the lava is the key light
+    },
+  },
   lava: LAVA,
   zones: ZONES,
   tower: TOWER,
@@ -538,7 +549,11 @@ const LAYOUT_CALDERA = {
   boss: { floorY: 1.2, headroom: 4.6, maxRise: 0.65, roamAfter: 12, noGo: [[-20.5, -25.5, 3.5], [20.5, 25.5, 3.5]] },
   single: SINGLE,
   half: HALF,
-  decor: { lamps: [], palms: [], flags: [] },
+  decor: {
+    lamps: [[-3.0, -14.5], [3.0, -14.5], [-16.0, -22.5], [8.5, -23.5], [-16.5, -32.5], [0.0, -33.5]],
+    palms: [],
+    flags: [[-6.0, 12.0, -68.5], [6.0, 12.0, -68.5]],
+  },
 };
 
 export const LAYOUT = LAYOUT_CALDERA;
