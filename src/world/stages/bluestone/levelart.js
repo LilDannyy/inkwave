@@ -1016,9 +1016,15 @@ const FBASE = /* glsl */`
             base = mix(base, bsC(0.6, 0.62, 0.64), bsAA(fy - 0.25, pw));
           }
           // (the 3000s: dark smart glass with the timetable in light on it, framed in white-gold)
-          base = mix(base, E == 2 ? mix(bsC(0.2, 0.25, 0.32), bsC(0.32, 0.38, 0.46), smoothstep(h * 0.45, h * 0.82, fy)) : bsGlass(f, h * 0.45, h * 0.82, 1.0), win);
+          // (fix round 1: the 1880s' and TODAY's ticket windows show the booking clerk's office behind them — its charts,
+          //  its desk — lit by its own light, not a flat lit pane at dusk)
+          vec3 Vt = bsViewIn();
+          float ft2 = 0.05 + 0.75 * pow(1.0 - Vt.z, 4.0);
+          vec3 troom = E == 2 ? vec3(0.0) : bsRoom(vec2(f.x - fsz.x * 0.5, fy), Vt, vec4(fsz.x * 0.45, 0.05, h - 0.1, min(fsz.x, 1.6)), 10.0, float(prm) + 3.0, E);
+          base = mix(base, E == 2 ? mix(bsC(0.2, 0.25, 0.32), bsC(0.32, 0.38, 0.46), smoothstep(h * 0.45, h * 0.82, fy)) : mix(troom * 0.14, bsGlass(f, h * 0.45, h * 0.82, 1.0), ft2), win);
+          if (E < 2) gBsRoom += win * troom * (1.0 - ft2) * (E == 0 ? 0.7 : 0.95);
           if (E == 2) { float tt = win * (bsText(f, vec2(fsz.x * 0.5, h * 0.74), 0.07, fsz.x * 0.5, 141.0, pw) + bsText(f, vec2(fsz.x * 0.5, h * 0.64), 0.05, fsz.x * 0.48, 143.0, pw) + bsText(f, vec2(fsz.x * 0.5, h * 0.56), 0.05, fsz.x * 0.44, 147.0, pw)); base = mix(base, WG, clamp(tt, 0.0, 1.0)); gBsGlow += clamp(tt, 0.0, 1.0) * WG * 0.8; }
-          gBsLit += win * (E == 2 ? WG * 0.5 : bsC(1.0, 0.82, 0.58) * 0.6);
+          if (E == 2) gBsLit += win * WG * 0.5;
           if (win > 0.5) { gBaseRough = 0.1; gTexStr = 0.0; }
           float sign = bsRect(f, vec2(0.1, h - 0.32), vec2(fsz.x - 0.1, h - 0.06), pw);
           base = mix(base, E == 0 ? bsC(0.12, 0.16, 0.14) : (E == 1 ? bsC(0.14, 0.2, 0.32) : WG * 0.9), sign);
