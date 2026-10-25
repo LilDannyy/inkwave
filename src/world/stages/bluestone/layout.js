@@ -532,10 +532,51 @@ const ERAS = {
   ],
   murals: { 4: '123', 5: '123', 6: '23', 7: '23', 8: '2', 9: '1', 10: '123', 11: '3' },
   colors: { appear: '#f4e9c8', vanish: '#a9a49a' },
+  // the per-era looks over the time of day (DESIGN §5.6 / §5.7). The theme keys are the environment's THEMES keys and its
+  // theme NAMES (config.js bluestone times: day → 'day', dusk → 'sunset'; fix round 1: the 1880s' twilight was keyed
+  // `dusk` and never applied, so the 1880s and TODAY shared the base orange sunset). At dusk no era paints the city
+  // orange: a pale warm key light, violet / pink-violet / lilac skies, so team ink (Tangerine, Lemon) stays the loudest
   look: {
-    1: { theme: { all: { haze: [1 / 900, 0.9, 200], fog: [30, 520], horizon: '#e9dcc4' }, dusk: { zenith: '#3f3766', horizon: '#a996c2', sun: '#ffe6c8' } }, lamps: '#ffe0b8' },
-    2: { lamps: '#ffd9a8' },
-    3: { theme: { all: { horizon: '#e6eef6', zenith: '#4a86d0' } }, lamps: '#eef4ff' },
+    1: {
+      theme: {
+        all: { haze: [1 / 900, 0.9, 200], fog: [30, 520] },
+        day: { horizon: '#e9dcc4' },
+        // the 1880s: a violet twilight over the river through the coal haze, a pale warm sun low in the west
+        sunset: {
+          sunColor: '#ffe6c8', sunIntensity: 3.0, skySun: 3.0, hemiSky: '#7c74b6', hemiGround: '#a08c8c', hemiGroundK: 1.4, hemiIntensity: 0.62, envK: 0.44,
+          zenith: '#3f3766', skyMid: '#6a6292', horizon: '#a996c2', ground: '#4a4466',
+          horizonGlow: '#dcc8d4', horizonGlowK: 0.3, glowColor: '#f4e0d4', glow: [320, 2.0, 5.5, 0.4],
+          sunDisk: '#ffe6c8', cloudLit: '#d2c6de', cloudLitK: 0.88, cloudShade: '#5c5684',
+          grade: { uHighTint: [1.02, 1.0, 0.97], uShadowTint: [0.92, 0.95, 1.12] },
+        },
+      },
+      lamps: '#ffe0b8',
+    },
+    2: {
+      theme: {
+        // TODAY: the base theme by day; a pink-violet sunset (no orange cast on the facades)
+        sunset: {
+          sunColor: '#ffd4bc', sunIntensity: 3.9, skySun: 3.4, hemiSky: '#6c78d0', hemiGround: '#b08c8c', hemiGroundK: 1.5,
+          zenith: '#232a6e', skyMid: '#6a4ea2', horizon: '#f4a0b4', ground: '#4a4a7a',
+          horizonGlow: '#f8a0b4', horizonGlowK: 0.55, glowColor: '#ffc0c4', cloudLit: '#ffb8c8', cloudShade: '#5e5490',
+          grade: { uHighTint: [1.04, 1.0, 0.96] },
+        },
+      },
+      lamps: '#ffd9a8',
+    },
+    3: {
+      theme: {
+        // the 3000s: a clean bright sky by day; a violet dusk, cool and clear, the light seams glowing white-gold
+        day: { horizon: '#e6eef6', zenith: '#4a86d0' },
+        sunset: {
+          sunColor: '#efe8ff', sunIntensity: 3.2, skySun: 3.0, hemiSky: '#8a88d2', hemiGround: '#9a96b4', hemiGroundK: 1.4, hemiIntensity: 0.62,
+          zenith: '#3a3080', skyMid: '#706ab8', horizon: '#ccc0ec', ground: '#44447a',
+          horizonGlow: '#d8ccf2', horizonGlowK: 0.36, glowColor: '#e6dcff', sunDisk: '#f4f0ff', cloudLit: '#dcd4f4', cloudShade: '#4e4c88',
+          haze: [1 / 1500, 0.9, 260], grade: { uHighTint: [1.0, 1.0, 1.02], uShadowTint: [0.9, 0.95, 1.14] },
+        },
+      },
+      lamps: '#eef4ff',
+    },
   },
   timelapse: { sunSwing: 60, cloudRate: 20 },
   // check-maps' accepted exceptions, printed on every run (eras-data.js): rule 22 wants an overhead piece's underside

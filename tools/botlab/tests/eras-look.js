@@ -20,7 +20,8 @@
 //   beside it does not; (c) the front's clean edge — mid-jump, a vanishing piece the front crosses is cut along one line
 //   (each scanline of it switches once or twice between "still there" and "gone"; the old 20 cm dissolve switched many
 //   times), and the cut follows the front; (d) the decor lamps' light per era (ENGINE rule 42) and their iron bodies
-//   hidden (each era's own lamp props stand there).
+//   hidden (each era's own lamp props stand there); (e) Tartar rings once in the intro; (f) (fix round 1) the per-era dusk
+//   looks apply (eras.look keyed by theme names and THEMES keys) and the three dusk skies differ.
 (async () => {
   const g = window.__inkwave, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
@@ -327,6 +328,24 @@
     // (e) Tartar rang once in this page's own intro fly-in (DESIGN §3.5: the sound taught before the first jump)
     R('art phase (e): Tartar rings once in the intro fly-in (the page\'s own match intro: stats.introRing, one ring counted by the effects)', E.stats.introRing === 1, { introRing: E.stats.introRing ?? 0, rings: W.fx?.stats?.rings, state: g.match.state });
     E.debugJump(1, { instant: true }); step(0.1);
+    // (f) (fix round 1) the per-era dusk looks apply: eras.look's theme keys are the environment's theme names (config's
+    // times: day → 'day', dusk → 'sunset') and THEMES keys (the 1880s' twilight was keyed 'dusk' and never applied), and
+    // at dusk the three skies differ — the same camera up at the sky over the river, mean pixel change between eras
+    const env = __G.env, TH = env?.constructor?.THEMES || {}, keys = new Set(Object.keys(TH.day || {})), names = new Set(['all', ...Object.keys(TH)]);
+    const badKeys = [];
+    for (const e of [1, 2, 3]) for (const [n, o] of Object.entries(W.E.look?.[e]?.theme || {})) { if (!names.has(n)) badKeys.push(`${e}.${n}`); for (const k of Object.keys(o || {})) if (!keys.has(k)) badKeys.push(`${e}.${n}.${k}`); }
+    const th0 = env.theme, skies = [], sky = [];
+    env.setTheme('sunset');
+    for (const e of [1, 2, 3]) {
+      E.debugJump(e, { instant: true }); step(0.05);
+      cam([0, 2.0, -40], [-20, 52, -70], 60); step(0.05);   // (up at 55°: sky only, over the backdrop's skyline)
+      const F = grab(); skies.push(F);
+      const zen = W._overlay('sunset', e)?.zenith || null; sky.push({ e, zenith: zen, theme: env.theme });
+    }
+    const dz = [[0, 1], [1, 2], [0, 2]].map(([a, b]) => diff(skies[a], skies[b], [0.05, 0.4, 0.95, 0.95]).mean);   // (GL rows: the frame's upper part)
+    env.setTheme(th0); E.debugJump(1, { instant: true }); step(0.1);
+    R('art phase (f): the per-era dusk looks apply — eras.look keys are theme names and THEMES keys; at dusk the 1880s, TODAY and the 3000s skies differ (the same camera up at the sky: mean change between eras ≥ 6/255), the 1880s\' violet twilight zenith in force',
+      !badKeys.length && dz.every((d) => d >= 6) && sky[0].zenith === '#3f3766' && sky.every((x) => x.theme === 'sunset'), { badKeys, skyChange: { e1e2: dz[0], e2e3: dz[1], e1e3: dz[2] }, sky });
   }
   return out;
 })()
