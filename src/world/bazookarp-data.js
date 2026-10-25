@@ -47,12 +47,19 @@ export const BAZOOKARP_DEFS = {
   },
   lockgate: {
     // The Pond sits on the centre of the humpback bridge (3.3 m); its Bazookarp plaza widens the approaches.
-    start: [0, 3.45, 0],
-    carrierField: { swimJump: [[[-23, -18], [-15, -18], [-15, -8], [-23, -8]]] },   // [b5-karp-ref] inked boat/canal crossing, mirrored by the Carp Field
-    weirs: [{ at: [-2.2, 0, 24], yaw: 0 }],             // the weigh-house yard, at the middle-side end of the dry dock
+    start: [0, 0.25, 0],
+    carrierField: {
+      swimJump: [[[-23, -18], [-15, -18], [-15, -8], [-23, -8]]], // inked boat/canal crossing, mirrored by the Carp Field
+      gapEdges: [
+      [[-5.5, 0.25, 2.5], [-3.5, 0.25, 4.5]], [[3.5, 0.25, -4.5], [5.5, 0.25, -2.5]],
+      [[-18.5, -1.08, -10.5], [-17.5, -1.52, -12.25]], [[-17.5, -1.52, -10.5], [-17.5, -1.52, -12.25]],
+      ], // the underbridge and drained-lock passage gaps, mirrored by the Carp Field
+    },
+    weirs: [{ at: [-2.5, 0, 27], yaw: 0 }],             // central bridge-street lane at mid distance
     gate: { at: [2, 0, 51.5], yaw: 0 },                 // in front of Bravo's spawn (12.4 m from the pad)
     freeZones: [
       { poly: [[-12, 58], [4, 58], [4, 70], [-12, 70]], y0: 2.0, y1: 3.2, signs: [[-11.6, 58.4, 180], [3.6, 58.4, 180], [4, 64.2, 0], [-12, 63.5, 180], [-1.8, 59, 180], [-6.3, 59, 180]] },   // the spawn deck
+      { poly: [[10.5, 27], [15.5, 27], [15.5, 32], [10.5, 32]], y0: 2.0, y1: 3.0, signs: [[10.2, 29.5, 90], [15.8, 29.5, 270], [13, 26.7, 0], [13, 32.3, 180]] }, // mirrored safe roof on the old stables
     ],
   },
 };

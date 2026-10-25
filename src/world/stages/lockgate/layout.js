@@ -217,9 +217,10 @@ const LOCKGATE = {
   intro: { from: [-9, 12, 9], lookFrom: [2, 3, -2], toBack: 3.0 },
   // stage-select picture: from over lock W's south side, across the humpback bridge + moored boats to ANCHOR MILLS
   art: { from: [-24, 14, -12], look: [8, 0, 4], fov: 66 },
+  // A fixed 11 m towpath deck bridges the lower canal under the moving bridge; the Pond and both lower-bank routes meet
+  // here at the true centre, with the bridge crest still overhead as landmark and high route.
   single: [
-    // A centred single-build plaza avoids a mirrored copy z-fighting over the Pond.
-    B(-7.5, 7.5, 3.3, 3.45, -7.5, 7.5, { tag: 'karp-pond-plaza', color: LG.quay, pattern: PATTERN.pavers, onlyIn: 'bazookarp' }),
+    B(-6.5, 6.5, -0.05, 0.25, -6.5, 6.5, { tag: 'karp-underbridge-quay', color: LG.quay, pattern: PATTERN.pavers, onlyIn: 'bazookarp' }),
   ],
   half: [
     // ================= canal: towpath quay, lock E (both sides; lock W is its twin), basins, drained chamber, boats
