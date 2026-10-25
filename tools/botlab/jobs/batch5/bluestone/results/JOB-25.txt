@@ -1,0 +1,9 @@
+JOB-25 (bluestone, fix round 2) @ 413d5a09 — Mac mini b5-runner, 2026-10-25 18:10–18:42, exit 0. Short summary.
+- art-tests.sh (the engine's suite and the frozen geometry) all full; check-maps: Bluestone clean (the 'not ok' lines are Halyard's old ramp
+  and information lines).
+- eras-jump first 1/1; frames 4/4, 4/4, 3/4 — run 3's failing frame 421.7 ms at J + 0.93 s, split [era update 0, render 0.1, rest 1.4]: the
+  same unmeasured stall as JOB-16 / 21, nothing compiled (first passes).
+- eras-bake 3/3; stage-audit turf / zones / tower × e1–e3: the lightmap applied (baked for this build, not stale) everywhere. (This job bakes
+  nothing new, so no PNG / JSON came back: the lightmaps on the branch are JOB-7's, which stage-audit says still match.)
+- net-eras and its lagged run full.
+- perf6 vs Halyard: calls ×0.83–0.95, triangles ×0.39–0.45, cpuRender ×0.73–0.86.
