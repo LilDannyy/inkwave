@@ -710,7 +710,10 @@ export class EraHud {
     //  a gameplay callout or a Zone Control callout comes or goes, the chip changes state — never every frame)
     this._dirty = false;
     if (typeof MutationObserver === 'function') {
-      this._mo = new MutationObserver(() => { this._dirty = true; });
+      // (fix round 1: and when one of them changes size after it came — a gameplay callout's box settling after its first
+      //  layout left the band 5 px over it under load: each new child is watched for its size too)
+      this._ro = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { this._dirty = true; }) : null;
+      this._mo = new MutationObserver((recs) => { this._dirty = true; if (this._ro) for (const r of recs) for (const n of r.addedNodes) if (n.nodeType === 1 && n !== this.calls) this._ro.observe(n); });
       const HC = G.hud?.callouts, BL = G.hud?.bannerLayer;
       if (HC) this._mo.observe(HC, { childList: true });
       if (BL) this._mo.observe(BL, { childList: true });   // (the HUD's banners: "1 minute left!" comes with jump 2 in a 3:00 Turf War)
@@ -784,7 +787,7 @@ export class EraHud {
     if (w !== this._w) { this._w = w; this.bar.style.width = w; }
   }
   get text() { return this.el ? this.el.textContent : ''; }
-  dispose() { this._mo?.disconnect(); this._mo = null; this.el?.remove(); this.el = null; this.calls?.remove(); this.calls = null; }
+  dispose() { this._mo?.disconnect(); this._mo = null; this._ro?.disconnect(); this._ro = null; this.el?.remove(); this.el = null; this.calls?.remove(); this.calls = null; }
 }
 
 // --------------------------------------------------------------------------------------------- the minimap (H14)
