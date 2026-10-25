@@ -99,6 +99,9 @@ export const HALYARD = {
     B(-1.7, 1.7, 0, 2.7, -22.5, -18.8, { tag: 'fuel-hut', color: M.hut, pattern: PATTERN.render, onlyIn: 'tower' }),
     // gangway onto the ferry's side corridor (free-spanning plank over the water)
     R([0, 0, -9.8], [0, 1.3, -4.0], 3.8, { tag: 'gangway', thin: true, thickness: 0.22, color: M.steel, pattern: PATTERN.gangdeck }),
+    // Bazookarp's north gangway connects the ferry-side boat line to the main deck beside the weir;
+    // it gives the west jetty a real second approach through mid, mirrored for both teams.
+    R([-12.5, 1.3, 1.5], [-2.5, 0, 26.5], 3.6, { tag: 'karp-north-gangway', thickness: 0.6, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'bazookarp' }),
 
     // ================= right lane: the Long Pier (−X for Alpha)
     B(-24, -19.5, -1.2, 0, QF, 0, deck({ tag: 'long-pier' })),

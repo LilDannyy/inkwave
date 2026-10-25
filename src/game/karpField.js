@@ -372,6 +372,32 @@ export class KarpField {
     const ord = []; for (let k = 0; k < later.length; k += 3) ord.push(k);
     ord.sort((p, q) => later[p] - later[q]);
     for (const k of ord) gapEdge(later[k], later[k + 1], later[k + 2], 0);
+    // [b5-karp-ref] A stage may name a small set of physically walkable carrier gap moves the nav grid misses.
+    // These are explicit, reviewed endpoints from the stage's own data; model both travel directions and the mirror.
+    const layoutGaps = R.def.carrierField?.gapEdges || [], layoutWalks = R.def.carrierField?.walkEdges || [];
+    if (layoutGaps.length || layoutWalks.length) {
+      const nearest = (p) => {
+        let best = -1, bd = Infinity;
+        for (const id of nav.validIds) {
+          if (!ok[id]) continue;
+          const n = nodes[id], d = Math.hypot(n.x - p[0], n.z - p[2], n.y - p[1]);
+          if (d < bd) { bd = d; best = id; }
+        }
+        return bd <= 0.8 ? best : -1;
+      };
+      const addLayoutEdges = (pairs, type, maxLen) => {
+        for (const [a0, b0] of pairs) for (const [a, b] of [[a0, b0], [[-a0[0], a0[1], -a0[2]], [-b0[0], b0[1], -b0[2]]]]) {
+          const ai = nearest(a), bi = nearest(b);
+          if (ai < 0 || bi < 0 || ai === bi) continue;
+          const len = Math.hypot(nodes[bi].x - nodes[ai].x, nodes[bi].y - nodes[ai].y, nodes[bi].z - nodes[ai].z);
+          if (len > maxLen + 1e-6) continue;
+          push(ai, bi, len, type); push(bi, ai, len, type);
+          if (type === TYPES.gap) gaps += 2;
+        }
+      };
+      addLayoutEdges(layoutGaps, TYPES.gap, Gp.flatMax);
+      addLayoutEdges(layoutWalks, TYPES.walk, 8);
+    }
     this.stats.hops = hops; this.stats.gaps = gaps;
   }
 

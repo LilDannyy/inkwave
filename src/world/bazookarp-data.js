@@ -25,8 +25,16 @@ export const BAZOOKARP_DEFS = {
   halyard: {
     // The ferry's car deck is the central, open fight space. Bazookarp clears the cabin so the Pond has a walkable ring.
     start: [0, 1.3, 0],
-    carrierField: { swimJump: [[[-24, -36], [-17, -36], [-17, -25], [-24, -25]], [[-12, -20], [-7, -20], [-7, -10], [-12, -10]]] },   // [b5-karp-ref] inked boat/canal crossings, mirrored by the Carp Field
-    weirs: [{ at: [-1.5, 0, 27.5], yaw: 0 }],          // the Long Pier / boatyard junction (§9.3)
+    carrierField: {
+      swimJump: [[[-24, -36], [-17, -36], [-17, -25], [-24, -25]], [[-12, -20], [-7, -20], [-7, -10], [-12, -10]]],
+      gapEdges: [[[-10.5, 0, 12.5], [-10.05, 0, 10.5]], [[-10.5, 0, 12.5], [-10.5, 0, 9.5]]],
+      walkEdges: [
+        [[-12.5, 1.3, 1.5], [-10.5, 1.3, 6.5]], [[-10.5, 1.3, 6.5], [-8.5, 1.3, 11.5]],
+        [[-8.5, 1.3, 11.5], [-6.5, 0.5, 16.5]], [[-6.5, 0.5, 16.5], [-4.5, 0.3, 21.5]],
+        [[-4.5, 0.3, 21.5], [-2.5, 0, 26.5]],
+      ],
+    },   // [b5-karp-ref] measured swim jumps and layout gap moves, mirrored by the Carp Field
+    weirs: [{ at: [-1.5, 0, 27.5], yaw: 0 }],          // Long Pier / boatyard junction (§9.3)
     gate: { at: [1.8, 0, 53.9], yaw: 0 },                 // in front of Bravo's spawn, centered on the landing lane
     freeZones: [
       { poly: [[-10, 62], [10, 62], [10, 69.4], [-10, 69.4]], y0: 2.0, y1: 4.6, signs: [[-11.2, 65.9, 90], [11.2, 65.9, 270], [-4.8, 61.5, 0], [4.8, 61.5, 180], [-8.3, 64.7, 90], [8.3, 64.7, 270], [7.5, 61.5, 0], [-7.5, 61.5, 180]] },   // deck free zone; entrance signs stand outside it
