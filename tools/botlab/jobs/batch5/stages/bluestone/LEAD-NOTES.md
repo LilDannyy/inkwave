@@ -137,3 +137,24 @@ re-measures.
   (the era chunks per fragment: make the era one-hot / mural-mask / front work cheap or skipped when no jump runs).
   GTAO −5 ms; shadows, EraFx and transparents ≤ 2–4 ms each. Bloom OFF makes Bluestone SLOWER (53–62 ms): find why (a
   fallback path drawing twice?).
+- **JOB-20's attribution (fix round 2, head 2310eed9, BEFORE the fix; `results/JOB-20.txt`, the per-config `ab.txt` in
+  `JOB-20.raw.txt` on botlab-b5-bluestone):** bases e1 day 42.6, e2 day 44.3 / dusk 46.3, e3 day 44.6 / dusk 46.7 ms against
+  Halyard 25.7 / 28.0 (×1.66–1.73; the gate wants ≤ 30.8 day / ≤ 33.6 dusk). **The one big lever is the level's MATERIAL:**
+  drawn plain, Bluestone saves 9.6–13.0 ms (e1 42.6 → 33.0, e3 dusk 46.7 → 33.7) where Halyard saves 1.3–3.9. No single part
+  of it dominates: at e2 day the generic parts (fine −2.2, cope −1.9, hex −2.3, murals −1.7), the era chunks (−2.9), 'no art'
+  (−3.1) and each art style skipped alone (−0.5 to −1.7; the eight sum to −10.8, so the skips are NOT additive with 'no art':
+  the builder who wrote gpu-ab.js must say what skip:N removes — the style's shader branch or its pieces — because that decides
+  whether the lever is shader work or fragments). **The lead's reading:** the level covers a comparable share of the screen
+  on both stages (Halyard 60 % style 0; Bluestone 72 % styles 1–8), yet every per-fragment part costs ~2 ms on Bluestone
+  against ~0 on Halyard — the signature of MORE SHADED FRAGMENTS PER PIXEL (the five level meshes, inactive-era meshes drawn
+  outside a jump, hidden faces) and/or a shader every one of whose parts runs for every fragment; the depth prepass saving
+  (−2.6 / −3.6 against Halyard's −0.8 / −1.3) points at overdraw too. Even plain, Bluestone is ×1.35 Halyard-plain, so the
+  fill side alone is ~8 ms. Two levers, BOTH needed to reach the gate: (1) cut the shaded fragments — the inactive eras' meshes
+  hidden outside a jump (`visible = false`, out of the shadow and GTAO passes), the active era one mesh drawn once, front-to-back
+  or the prepass if it pays; (2) make the Bluestone-only shader work vanish when no jump runs — the era one-hot, murals and art
+  styles behind a uniform early-out, or a second program (`defines`) for the static era so the generic program is what Halyard
+  pays. Lamps (−1.4 / −4.3 at dusk) and LOD 25 m (−2.0 / −2.5) are the next 2–4 ms if still short. NOT allowed for the gate:
+  GTAO, bloom, shadows or the sea turned off (same quality settings as Halyard). The 'off' switches whose sign flips (bloom off
+  +5.7 / +7.6 SLOWER on Bluestone; GTAO off and sea off slower on Halyard) change what the frame draws, so they are not savings;
+  the bloom-off anomaly still wants its cause found — it may be the same double draw as the overdraw above. After the fix:
+  re-run gpu-ab.js's base rows (JOB-21) and record before / after per era in the report.
