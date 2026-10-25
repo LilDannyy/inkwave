@@ -158,3 +158,21 @@ re-measures.
   +5.7 / +7.6 SLOWER on Bluestone; GTAO off and sea off slower on Halyard) change what the frame draws, so they are not savings;
   the bloom-off anomaly still wants its cause found — it may be the same double draw as the overdraw above. After the fix:
   re-run gpu-ab.js's base rows (JOB-21) and record before / after per era in the report.
+- **JOB-21 (the first cut, 2d4f7a6b — static level programs at rest, the depth prepass, lighter generic paths — against
+  2310eed9):** e1/e2/e3 day 40.6 / 41.0 / 42.6, dusk 42.4 / 43.2 / 45.1 against 44.1 / 44.4 / 45.1 and 46.5 / 45.3 / 47.4:
+  **the cut saves 2–4 ms; ×1.54–1.64 Halyard (26.2 / 27.5); the gate (~31–33 ms) is still 8–12 ms away, and the
+  plain-material lever is UNCHANGED at −9 to −10 ms at the head.** So compiling the era out of the program at rest did not
+  remove the material's cost: what is left in the static program — the art per style (the procedural facades; 'skip' rows)
+  and the generic parts (fine / cope / hex / murals, each ~2 ms here against ~0 on Halyard) — is the 9–10 ms, and the
+  reading of non-additive savings (every part removed helps a little, all removed helps a lot) is a program bound by its
+  size: registers / occupancy, every style's code carried by every fragment. **The lead's direction:** the level material at
+  rest must cost what Halyard's does — ≤ 4 ms over plain. Candidate shapes, the builder picks by measurement: one program
+  per art style (the level split into style groups with `defines`, so a fragment carries one facade's code; +8 calls per
+  era is nothing), the procedural facades baked once per era into a texture the shader samples (the art render target is
+  already there — 'artrt' −2.4 / −3.7), constant work moved to the vertex stage, noise octaves cut with distance (the
+  histogram puts 60 % of the level's pixels in the first bin). Measure with gpu-ab.js `pre=plain` (what remains beyond
+  the material: props, backdrop, transparents) AND at the head; the fix lands only with a before / after per era.
+- **Lead's decision on the gate and the budget (2026-10-25 17:20):** the gate stands for review 3. If review 3 fails on the
+  GPU gate ALONE (every art item passed) the stage ships as PUBLIC BETA with the GPU gap written into the beta round 2 brief
+  (DECISIONS #33: playable but unfinished ships BETA); the art is not held hostage to it, and the GPU work resumes after the
+  reset of 2026-10-30. The reviewer writes the per-era numbers either way.
