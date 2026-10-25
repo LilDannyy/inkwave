@@ -272,3 +272,8 @@ answer the JSON, and every claim comes with the sweep's own view (sweep id + cam
   of 118, top third sky-bright; dusk within 15 % of 91), all four card files re-rendered with the numbers; the bare-piece
   measure after the changes with any remaining ids; the four sweep sets at the final head; the lamp count and placement (the
   decor lamps were cut to four plinths). The reviewer runs when those are in.
+- **Round 5 (Antigravity, f847307e, 2026-10-26 02:10): numbers in** — cards day 123.3 / 183.2, dusk 87.0 / 135.0 (verified by
+  the lead; Halyard 118.4 / 174.4, 91.0 / 133.9); backdrop strata + scree, hero camera re-framed; 838 / 844 Alpha eye-level
+  blocks dressed (six named bare: footprint marker, protected mid floor, tie girder, three internal gauge-works blocks); 38
+  lamps; caldera-art.js 6/6; rule 42 0/1152; GPU C ×0.815. **Independent review 2 launched** (the same reviewer resumed, the
+  same method; JSON → `review:caldera-art#2`, sheets `out/review2/`).
