@@ -58,13 +58,35 @@ export function buildBackdrop(kit) {
   // the land the city stands on (every era): north and south of the river behind each base, and its banks east and west
   // beyond the wharves; a bluestone quay wall along every water edge. The river runs east–west through the arena's corners
   // (|z| < 42 beyond the arena), so no building of any era stands in the channel (wet() below)
-  const LAND = '#7d7a6c', QUAY = '#5b6068';
+  const LAND = '#6c7064', QUAY = '#5b6068';
   for (const s of [-1, 1]) {
     hills.push(xf(box(1000, 3, 340, LAND), 0, -0.3, s * (95 + 170)));
     hills.push(xf(box(1000, 3.2, 1.2, QUAY), 0, -0.2, s * 95.6));
     for (const t of [-1, 1]) { hills.push(xf(box(430, 3, 53, LAND), t * (70 + 215), -0.3, s * (42 + 26.5))); hills.push(xf(box(430, 3.2, 1.2, QUAY), t * (70 + 215), -0.2, s * 42.6)); hills.push(xf(box(1.2, 3.2, 53, QUAY), t * 70.6, -0.2, s * (42 + 26.5))); }
   }
   const wet = (x, z) => Math.abs(z) < 48 || (Math.abs(z) < 100 && Math.abs(x) < 76);
+  // (fix round 2, review 2 issue 4: on the stage card the land read as a bare grey slab) the land dressed, the same in every
+  // era: a stone promenade along every quay with an avenue of trees, parks, and the streets between the blocks
+  const PROM = '#a49b87', ROAD = '#58595a', PARK = '#5f7a4f', TREE = ['#4c6844', '#5a7a4c', '#46603e'];
+  const tree = (x, z, k) => { const r = 2.4 + ((k * 37) % 10) / 10; hills.push(xf(sph(r, 7, 5, TREE[k % 3]), x, 1.2 + r * 0.9, z, 0, 0, 0, 1, 0.9, 1)); };
+  for (const s of [-1, 1]) {
+    // the north / south banks: the promenade and its avenue along the quay (x −500 … 500 at z ±95.6), roads every 60 m
+    hills.push(xf(box(1000, 0.1, 7, PROM), 0, 1.25, s * 99.6));
+    for (let x = -480, k = 0; x <= 480; x += 13, k++) if (Math.abs(x) > 6) tree(x, s * 104.5, k);
+    for (let x = -450; x <= 450; x += 60) hills.push(xf(box(7, 0.08, 330, ROAD), x, 1.24, s * (105 + 165)));
+    for (const zz of [150, 210, 270, 330]) hills.push(xf(box(1000, 0.08, 6, ROAD), 0, 1.24, s * zz));
+    // the east / west banks beyond the wharves: their promenades along z ±42.6 … ±95 and trees
+    for (const t of [-1, 1]) {
+      hills.push(xf(box(430, 0.1, 6, PROM), t * (70 + 215), 1.25, s * 46.2));
+      hills.push(xf(box(6, 0.1, 53, PROM), t * 74.2, 1.25, s * (42 + 26.5)));
+      for (let x = 82, k = 3; x < 490; x += 12, k++) tree(t * x, s * 52.0, k);
+    }
+    // parks (green squares) here and there among the blocks
+    for (const [px, pz, pw, pd] of [[-210, 130, 60, 40], [180, 175, 70, 50], [-60, 300, 80, 40], [260, 120, 40, 50], [-330, 230, 50, 60]]) {
+      hills.push(xf(box(pw, 0.12, pd, PARK), s * px, 1.26, s * pz));
+      for (let k = 0; k < 6; k++) tree(s * (px - pw / 2 + 6 + ((k * 23) % Math.max(8, pw - 12))), s * (pz - pd / 2 + 6 + ((k * 17) % Math.max(8, pd - 12))), k);
+    }
+  }
 
   // ---- the 1880s
   const s1 = [], c1 = [];
@@ -73,8 +95,18 @@ export function buildBackdrop(kit) {
     if (wet(x, z)) continue;
     const h = 7 + R() * 9, w = 10 + R() * 14, d = 8 + R() * 8, col = R() < 0.5 ? BRICK[(R() * 3) | 0] : STONE[(R() * 3) | 0];
     c1.push(bld(xf(box(w, h, d, col), x, h / 2, z, -a), 1, R() * 10));
-    s1.push(xf(box(w + 0.6, 0.7, d + 0.6, '#5d5650'), x, h + 0.35, z, -a));   // the roofs' parapets
+    // (fix round 2) a pitched roof on each terrace (seen from above on the stage card: no bare grey tops), slate or red tile
+    const rr = (d + 0.6) / 1.732;
+    s1.push(xf(cyl(rr, rr, w + 0.5, 3, R() < 0.6 ? '#5c6066' : '#8a5242'), x, h + 0.275 * rr, z, -a, -Math.PI / 2, Math.PI / 2, 1, 1, 0.55));
     if (R() < 0.3) s1.push(xf(cyl(0.9, 1.1, h + 14, 8, '#7a5848'), x + 3, (h + 14) / 2, z, 0));   // chimneys
+  }
+  // (fix round 2) the wharf sheds along the river banks east and west (DESIGN §5.5: the river between parkland and wharf
+  // sheds): long brick and timber sheds under pitched roofs, gable ends to the water
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (let x = 86, k = 0; x < 330; x += 22, k++) {
+    const L = 16 + (k % 3) * 2, hh = 5 + (k % 2) * 2, D = 11, z = sz * (64 + (k % 2) * 4), col = k % 3 ? BRICK[k % 3] : '#7a6250';
+    c1.push(bld(xf(box(D, hh, L, col), sx * x, 1.2 + hh / 2, z), 1, k));
+    const rr = (D + 0.6) / 1.732;
+    s1.push(xf(cyl(rr, rr, L + 0.6, 3, k % 2 ? '#5c6066' : '#6e4a3a'), sx * x, 1.2 + hh + 0.275 * rr, z, Math.PI / 2, -Math.PI / 2, Math.PI / 2, 1, 1, 0.55));
   }
   for (const [x, z] of [[-150, 170], [150, -170]]) for (const dx of [-8, 0, 8]) {
     s1.push(xf(cyl(0, 3.2, dx ? 34 : 46, 8, '#8f8679'), x + dx, (dx ? 34 : 46) / 2 + 24, z));
@@ -92,9 +124,15 @@ export function buildBackdrop(kit) {
   // tall ships' masts and a paddle steamer on the river (east and west beyond the wharves)
   for (const [x, z] of [[-85, -30], [-120, 10], [85, 30], [120, -10]]) {
     s1.push(xf(box(22, 3, 6, '#3d3631'), x, 1.2, z, Math.PI / 2));
-    for (const dz of [-6, 0, 6]) { s1.push(xf(cyl(0.25, 0.35, 22, 6, '#4a3a2c'), x, 12, z + dz)); s1.push(xf(box(0.3, 0.3, 7, '#4a3a2c'), x, 18, z + dz, Math.PI / 2)); }
+    // (fix round 2) a ship's silhouette: a pointed bow and a raked stern, a white strake, the bowsprit, sails set on the yards
+    s1.push(xf(box(4.24, 3, 4.24, '#3d3631'), x, 1.2, z + 11, Math.PI / 4), xf(box(3.4, 3.2, 3.4, '#3d3631'), x, 1.35, z - 11, Math.PI / 4, 0.12));
+    s1.push(xf(box(6.1, 0.35, 22.2, '#e8dcc0'), x, 2.3, z), xf(cyl(0.18, 0.3, 9, 6, '#4a3a2c'), x, 4.5, z + 15, 0, 1.2));
+    for (const dz of [-6, 0, 6]) {
+      s1.push(xf(cyl(0.25, 0.35, 22, 6, '#4a3a2c'), x, 12, z + dz)); s1.push(xf(box(0.3, 0.3, 7, '#4a3a2c'), x, 18, z + dz, Math.PI / 2));
+      s1.push(xf(box(0.25, 4.6, 6.4, '#ece2c8'), x + 0.3, 9.6, z + dz), xf(box(0.25, 3.6, 5.2, '#f1e8d2'), x + 0.3, 15.6, z + dz));   // the courses and topsails
+    }
   }
-  for (const [x, z] of [[-150, 22], [150, -22]]) { s1.push(xf(box(5, 3.5, 24, '#2f2b28'), x, 1.6, z), xf(box(4, 2.4, 14, '#e8dcc0'), x, 4.4, z), xf(cyl(0.8, 0.9, 7, 10, '#3a2a22'), x, 8, z), xf(cyl(3, 3, 1.2, 14, '#7a2c22'), x + 2.6, 2.4, z, 0, 0, Math.PI / 2)); }
+  for (const [x, z] of [[-150, 22], [150, -22]]) { s1.push(xf(box(3.54, 3.5, 3.54, '#2f2b28'), x, 1.6, z + 12, Math.PI / 4), xf(box(5.2, 0.3, 24.2, '#7a2c22'), x, 3.2, z), xf(box(5, 3.5, 24, '#2f2b28'), x, 1.6, z), xf(box(4, 2.4, 14, '#e8dcc0'), x, 4.4, z), xf(cyl(0.8, 0.9, 7, 10, '#3a2a22'), x, 8, z), xf(cyl(3, 3, 1.2, 14, '#7a2c22'), x + 2.6, 2.4, z, 0, 0, Math.PI / 2)); }
 
   // ---- today
   const s2 = [], c2 = [];
@@ -104,6 +142,12 @@ export function buildBackdrop(kit) {
     const col = tall ? (R() < 0.5 ? '#7d93a3' : '#9aa9b2') : (R() < 0.5 ? '#b0a38b' : '#a1765f');
     c2.push(bld(xf(box(w, h, w * (0.7 + R() * 0.5), col), x, h / 2, z, -a), tall ? (R() < 0.5 ? 3 : 2) : 1, R() * 10));
     if (tall && R() < 0.5) s2.push(xf(box(w * 0.5, 3, w * 0.4, '#5d6b75'), x, h + 1.5, z, -a));   // plant rooms
+  }
+  // (fix round 2) the river banks today: the wharf sheds turned apartments and offices, mid-rise, with roof gardens
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (let x = 88, k = 0; x < 330; x += 24, k++) {
+    const hh = 12 + ((k * 7) % 4) * 4, W2 = 14 + (k % 3) * 2, z = sz * (66 + (k % 2) * 3);
+    c2.push(bld(xf(box(W2, hh, 12, k % 2 ? '#b0a38b' : '#8e9aa3'), sx * x, 1.2 + hh / 2, z), k % 2 ? 1 : 2, k));
+    s2.push(xf(box(W2 * 0.6, 0.6, 7, '#5f7a4f'), sx * x, 1.2 + hh + 0.3, z));
   }
   for (const [x, z] of [[-150, 170], [150, -170]]) for (const dx of [-8, 0, 8]) { s2.push(xf(cyl(0, 3.2, dx ? 34 : 46, 8, '#8f8679'), x + dx, (dx ? 34 : 46) / 2 + 24, z)); c2.push(bld(xf(box(6, 24, 6, '#9a9083'), x + dx, 12, z), 1, 3)); }
   for (const [x, z] of [[120, 150], [-120, -150]]) s2.push(xf(cyl(4, 5.5, 50, 12, '#8c4f3c'), x, 25, z), xf(cyl(6, 22, 70, 16, '#a9bcc8'), x, 35, z));   // the shot tower in its cone

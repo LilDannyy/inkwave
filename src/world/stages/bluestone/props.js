@@ -408,12 +408,54 @@ export function register(D, H) {
   };
   // the rooftop superstructures (no colliders, above play): today's glass towers rise behind the facades, the 3000s'
   // pearl spires with light seams grow out of them (o.size [w, d], o.y0 the roof, o.top)
+  // (fix round 2, review 2 issue 4: at dusk the Customs House's tower read as a near-black box on the stage card) today's
+  // glass office towers: blue-grey curtain walls between slim mullions every ~1 m, a floor band every 3 m, offices lit
+  // behind the glass in an irregular pattern (warm white; pale by day, lit at dusk), the big one with a stepped gold crown
+  // and a lit band under it (DESIGN §5.2: "a gold-crowned office tower"). Era 2's buckets
   D.bluestone_glasstower = {
     build(B, o) {
-      const [w, d] = o.size || [4, 4], y0 = o.y0 ?? 9, top = o.top ?? 28, h = top - y0;
-      B.box('gloss', '#7d93a3', w, h, d, 0, y0 + h / 2, 0, { r: 0.05 });
-      for (let y = y0 + 3; y < top - 0.5; y += 3) B.box('metal', '#e4e6e6', w + 0.06, 0.12, d + 0.06, 0, y, 0);
-      B.box('metal', '#c9a85a', w * 0.6, 1.2, d * 0.6, 0, top + 0.6, 0);
+      const [w, d] = o.size || [4, 4], y0 = o.y0 ?? 9, top = o.top ?? 28, h = top - y0, big = w * d > 20;
+      const rnd = (() => { let t = ((o.pos?.[0] ?? 0) * 73 + (o.pos?.[2] ?? 0) * 19) | 0; return () => { t = (t * 1103515245 + 12345) & 0x7fffffff; return t / 0x7fffffff; }; })();
+      B.box('gloss', '#6f8698', w, h, d, 0, y0 + h / 2, 0, { r: 0.05 });                      // the curtain wall
+      for (let y = y0 + 3; y < top - 0.5; y += 3) B.box('metal', '#dfe2e3', w + 0.06, 0.14, d + 0.06, 0, y, 0);   // the floor bands
+      // the mullions and the lit offices on each face (fr: along the face, depth out of it)
+      for (const [nx, nz, L, off] of [[1, 0, d, w / 2], [-1, 0, d, w / 2], [0, 1, w, d / 2], [0, -1, w, d / 2]]) {
+        B.push(nx * off, 0, nz * off, Math.atan2(nx, nz));
+        const nb = Math.max(2, Math.round(L / 1.0)), bw = L / nb;
+        for (let i = 1; i < nb; i++) KIT.pbox(B, 'metal', '#c7ccce', 0.06, h - 0.2, 0.1, -L / 2 + i * bw, y0 + h / 2, 0.04);
+        for (let y = y0 + 0.4; y < top - 2.2; y += 3) for (let i = 0; i < nb; i++) if (rnd() < 0.42) B.box('glow', '#ffe8c4', bw - 0.16, 2.2, 0.02, -L / 2 + (i + 0.5) * bw, y + 1.25, 0.012, { glow: 0.75 });
+        B.pop();
+      }
+      if (big) {
+        B.box('metal', '#c9a85a', w * 0.78, 1.4, d * 0.78, 0, top + 0.7, 0);                   // the stepped gold crown
+        B.box('metal', '#d8b868', w * 0.5, 1.6, d * 0.5, 0, top + 2.2, 0);
+        B.box('glow', '#ffe2a8', w * 0.8, 0.12, d * 0.8, 0, top + 0.1, 0, { glow: 1.2 });       // the lit band under it
+        B.cyl('metal', '#c9a85a', 0.12, 4.0, 0, top + 5.0, 0, { seg: 8 });                      // the mast
+      } else B.box('metal', '#c9a85a', w * 0.6, 1.2, d * 0.6, 0, top + 0.6, 0);
+    },
+  };
+  // the 3000s' vertical farm on the Customs House (FARM 03; DESIGN §5.2: "a vertical-farm tower … green glass louvres and
+  // planting"): a pearl frame (corner columns, a floor slab every 2.4 m with a white-gold light seam) round a green-glass
+  // core, green glass louvres across every face, planting spilling over every slab, a pearl roof with a ring of light. Era
+  // 3's buckets (gloss, glow, rubber)
+  D.bluestone_farmtower = {
+    build(B, o) {
+      const [w, d] = o.size || [4.4, 6], y0 = o.y0 ?? 9, top = o.top ?? 26, h = top - y0;
+      const PE = '#eef0f2', GG = '#5f8f72', GGL = '#7fae8c', WG = '#f4e9c8';
+      B.box('gloss', GG, w - 0.5, h, d - 0.5, 0, y0 + h / 2, 0, { r: 0.04 });                  // the green-glass core
+      for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) B.box('gloss', PE, 0.32, h + 0.2, 0.32, sx * (w / 2 - 0.16), y0 + h / 2 + 0.1, sz * (d / 2 - 0.16));   // the pearl columns
+      for (let y = y0 + 2.4; y < top; y += 2.4) {
+        B.box('gloss', PE, w + 0.3, 0.2, d + 0.3, 0, y, 0, { r: 0.05 });                      // a floor slab
+        B.box('glow', WG, w + 0.32, 0.04, d + 0.32, 0, y - 0.11, 0, { glow: 1.1 });           // its light seam
+        for (const [nx, nz, L, off] of [[1, 0, d, w / 2 + 0.12], [-1, 0, d, w / 2 + 0.12], [0, 1, w, d / 2 + 0.12], [0, -1, w, d / 2 + 0.12]]) {
+          B.push(nx * off, 0, nz * off, Math.atan2(nx, nz));
+          for (let k = 0; k < Math.round(L / 0.45); k++) B.add('rubber', KIT.sphG(0.26 + 0.08 * ((k * 7) % 3), 7, 5), k % 3 ? '#5d7a4a' : '#7e9a5e', -L / 2 + 0.22 + k * 0.45, y + 0.2, 0.04, { sy: 0.8 });   // planting over the slab's edge
+          for (let ly = y - 2.2; ly < y - 0.3; ly += 0.42) KIT.pbox(B, 'gloss', GGL, L - 0.4, 0.05, 0.34, 0, ly, -0.18, { rx: 0.55 });   // the green-glass louvres
+          B.pop();
+        }
+      }
+      B.box('gloss', PE, w + 0.2, 0.4, d + 0.2, 0, top + 0.2, 0, { r: 0.08 });                // the pearl roof
+      B.add('glow', KIT.torG(Math.min(w, d) * 0.38, 0.07, 4, 28), WG, 0, top + 0.5, 0, { rx: Math.PI / 2, glow: 1.3 });   // its ring of light
     },
   };
   D.bluestone_spire = {
@@ -538,7 +580,7 @@ for (const d of LAYOUT.half) {
 placements.push({ type: 'bluestone_glasstower', pos: [-29.5, 0, -7], size: [4.4, 6], y0: 9, top: 34, eras: '2' });
 placements.push({ type: 'bluestone_glasstower', pos: [-9, 0, -68], size: [3.2, 2.6], y0: 6, top: 27, eras: '2' });
 placements.push({ type: 'bluestone_glasstower', pos: [-13.3, 0, -21.7], size: [1.4, 1.2], y0: 9, top: 21, eras: '2' });
-placements.push({ type: 'bluestone_spire', pos: [-29.5, 0, -7], y0: 9, top: 26, r: 3, eras: '3' });
+placements.push({ type: 'bluestone_farmtower', pos: [-29.5, 0, -7], size: [4.4, 6], y0: 9, top: 26, eras: '3' });   // (fix round 2: the vertical farm, was a spire)
 placements.push({ type: 'bluestone_spire', pos: [-9, 0, -68], y0: 6, top: 18, r: 2.2, eras: '3' });
 placements.push({ type: 'bluestone_spire', pos: [-13.3, 0, -21.8], y0: 9, top: 29, r: 1.05, eras: '3' });
 export const BERM_MISS = [];

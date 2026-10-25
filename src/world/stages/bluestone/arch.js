@@ -298,12 +298,12 @@ export function registerArch(D, H, KIT) {
         B.add('gloss', cylGeo(1.1, 1.1, 38, 16, true), K.pearlDk, -39.0, 7.4, -31, { rx: HP });
         B.add('glow', cylGeo(0.06, 0.06, 38, 6), K.wg, -39.0, 6.4, -31, { rx: HP, glow: 1.2 });
         // the Customs House's sky-bridge (underside 12) toward the knee's far side, and its vertical farm's louvres
-        B.push(-29.5, 12.0, -2.0, 0);
-        pbox(B, 'gloss', K.pearl, 2.6, 0.3, 9.0, 0, 0.15, 4.5);
-        for (const s of [-1, 1]) pbox(B, 'gloss', K.glassLt, 0.06, 1.6, 9.0, s * 1.25, 1.1, 4.5);
-        B.add('glow', cylGeo(0.04, 0.04, 9.0, 6), K.wg, 0, 0.02, 4.5, { rx: HP, glow: 1.2 });
+        // (fix round 2: from the vertical farm's north face, props.js bluestone_farmtower — its louvres and planting there now)
+        B.push(-29.5, 12.0, -3.85, 0);
+        pbox(B, 'gloss', K.pearl, 2.6, 0.3, 10.85, 0, 0.15, 5.425);
+        for (const s of [-1, 1]) pbox(B, 'gloss', K.glassLt, 0.06, 1.6, 10.85, s * 1.25, 1.1, 5.425);
+        B.add('glow', cylGeo(0.04, 0.04, 10.85, 6), K.wg, 0, 0.02, 5.425, { rx: HP, glow: 1.2 });
         B.pop();
-        for (let i = 0; i < 9; i++) pbox(B, 'rubber', i % 2 ? K.leaf : K.leafDk, 6.4, 0.5, 0.6, -29.5, 9.4 + i * 0.9, -7.0 + (i % 3) * 0.2);
         // the chimney's beam of light (DESIGN §5.1: the float-tram dock's beacon)
         B.add('glow', cylGeo(0.35, 0.6, 40, 12, true), K.wg, -29, 44, -73, { glow: 0.9 });
         B.add('glow', torG(1.3, 0.08, 4, 20), K.wg, -29, 24.3, -73, { rx: HP, glow: 1.4 });
