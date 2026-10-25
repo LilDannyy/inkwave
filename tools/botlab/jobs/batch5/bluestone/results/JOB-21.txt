@@ -6,3 +6,4 @@ JOB-21 (bluestone, fix round 2) @ 37ef9f31 (the first cut 2d4f7a6b vs BASE 2310e
   the cut's static programs pay; the prepass now ~0; lamps −1.5 / −1.9; LOD 40 m −1.3 / −0.8; the art render target −1.3 / −1.0; the rest
   under 1 ms. Halyard plain −5.6.
 - eras-jump first 1/1 ×2; frames 4/4 and 3/4 (one FAIL, 'no frame over 50 ms during a jump': the worst frame is in its log).
+  frames-1's failing frame: 379.5 ms at J + 0.85 s, split [era update 0, render 0.1, rest 2.5] — the same unmeasured stall as JOB-16's 422 ms.
