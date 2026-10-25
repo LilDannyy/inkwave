@@ -370,6 +370,11 @@ vec3 bsRoom(vec2 q, vec3 V, vec4 R, float kind, float seed, int E) {
   c *= mix(1.1, 0.62, h.z / R.w) * (E == 0 ? vec3(1.05, 0.86, 0.62) : (E == 1 ? vec3(1.04, 0.98, 0.9) : vec3(0.97, 0.98, 1.03)));
   return c;
 }
+// (fix round 1, cost) the room only where a pane shows it: the trace is skipped on the walls round the glass
+vec3 bsRoomIf(float m, vec2 q, vec3 V, vec4 R, float kind, float seed, int E) {
+  if (m < 0.002) return vec3(0.0);
+  return bsRoom(q, V, R, kind, seed, E);
+}
 // a window: centre c, half-size h; bars: 0 plain / 1 one bar / 2 four lights / 3 small panes; returns
 // (surround, glass, bar, sill)
 vec4 bsWin(vec2 p, vec2 c, vec2 h, float bars, float sur, float pw, bool arch) {
@@ -508,7 +513,7 @@ const FBASE = /* glsl */`
               // with depth: its counters and pinned notices, lit by its own light — not a flat lit pane at dusk
               vec3 Vc = bsViewIn();
               float fc2 = 0.05 + 0.75 * pow(1.0 - Vc.z, 4.0);
-              vec3 croom = bsRoom(p, Vc, vec4(hh.x + 0.5, plinth, gf - 0.1, 4.0), fam == 2 ? 3.0 : 10.0, float(bi) + float(prm) * 5.0, E);
+              vec3 croom = bsRoomIf(w.y, p, Vc, vec4(hh.x + 0.5, plinth, gf - 0.1, 4.0), fam == 2 ? 3.0 : 10.0, float(bi) + float(prm) * 5.0, E);
               vec3 gl = E == 2 ? mix(mix(bsC(0.86, 0.88, 0.9), WG, 0.25), croom * 0.3, 0.5 * (1.0 - fc2)) : mix(croom * 0.14, bsGlass(p, c.y - hh.y, c.y + hh.y, 1.0), fc2);
               base = mix(base, gl, w.y);
               base = mix(base, E == 0 ? bsC(0.24, 0.28, 0.24) : (E == 1 ? bsC(0.86, 0.85, 0.8) : bsC(0.92, 0.92, 0.9)), w.z);
@@ -537,7 +542,7 @@ const FBASE = /* glsl */`
                 float panel = bsAA(bsBox(vec2(mod(q.x + hw, 0.6) - 0.3, y), vec2(0.0, (plinth + riser) * 0.5 + 0.03), vec2(0.22, (riser - plinth) * 0.35)), pw);
                 float glassA = bsRect(q, vec2(-hw + 0.08, riser + 0.05), vec2(hw - 0.08, gTop), pw);
                 float bars = max(bsAA(abs(fract((q.x + hw) / ((2.0 * hw) / 4.0)) - 0.5) * (2.0 * hw) / 4.0 - 0.018, pw), bsAA(abs(y - (riser + gTop) * 0.5 - 0.35) - 0.018, pw));
-                vec3 room = bsRoom(q, Vin, vec4(hw + 0.2, 0.08, gf - 0.25, 3.0), kind, sseed, 0) * (0.55 + 0.45 * step(0.3, bsH(vec2(bi, 5.0))));
+                vec3 room = bsRoomIf(glassA * body, q, Vin, vec4(hw + 0.2, 0.08, gf - 0.25, 3.0), kind, sseed, 0) * (0.55 + 0.45 * step(0.3, bsH(vec2(bi, 5.0))));
                 vec3 g = mix(room * 0.12, bsGlass(q, riser, gTop, 0.95), fres);
                 float pane = glassA * (1.0 - bars) * body;
                 base = mix(base, col, body);
@@ -566,7 +571,7 @@ const FBASE = /* glsl */`
                 float dglass = bsRect(vec2(q.x * ds, y), vec2(dx0 + 0.07, 0.16), vec2(hw - 0.13, gf - 0.7), pw);
                 vec3 tile = mix(bsC(0.3, 0.38, 0.36), bsC(0.55, 0.5, 0.42), step(0.5, bsH(vec2(bi, float(prm) + 4.0))));
                 float tj = max(bsAA((0.5 - abs(fract(q.x / 0.15) - 0.5)) * 0.15 - 0.006, pw), bsAA((0.5 - abs(fract(y / 0.075) - 0.5)) * 0.075 - 0.0035, pw));
-                vec3 room = bsRoom(q, Vin, vec4(hw + 0.25, 0.05, gf - 0.2, 3.4), kind, sseed, 1);
+                vec3 room = bsRoomIf((glassA + dglass) * body, q, Vin, vec4(hw + 0.25, 0.05, gf - 0.2, 3.4), kind, sseed, 1);
                 vec3 refl = mix(bsC(0.1, 0.12, 0.14), bsC(0.5, 0.56, 0.62), smoothstep(riser, gf - 0.62, y));
                 vec3 g = mix(room * 0.14, refl, fres);
                 float pane = (glassA + dglass) * body;
@@ -592,7 +597,7 @@ const FBASE = /* glsl */`
                 float glassA = bsRect(q, vec2(-hw + 0.04, 0.12), vec2(hw - 0.04, gf - 0.3), pw);
                 vec3 pearl = mix(bsC(0.84, 0.86, 0.9), bsC(0.96, 0.95, 0.92), smoothstep(0.0, gf, y)) * (0.92 + 0.08 * vnoise(q * 3.0));
                 base = mix(base, bsC(0.92, 0.92, 0.9), body);
-                vec3 room = bsRoom(q, Vin, vec4(hw + 0.25, 0.05, gf - 0.1, 3.4), kind, sseed, 2);
+                vec3 room = bsRoomIf(glassA, q, Vin, vec4(hw + 0.25, 0.05, gf - 0.1, 3.4), kind, sseed, 2);
                 float through = 0.5 * (1.0 - fres);
                 base = mix(base, mix(pearl, room * 0.3, through), glassA);
                 gBsRoom += glassA * room * through * 1.1;
@@ -724,7 +729,7 @@ const FBASE = /* glsl */`
               //  lit by its own light — not a flat orange pane at dusk)
               vec3 Ve = bsViewIn();
               float fe = 0.05 + 0.75 * pow(1.0 - Ve.z, 4.0);
-              vec3 eroom = bsRoom(p, Ve, vec4(hh.x + 0.4, plinth, gf + 1.6, 5.0), 11.0, float(bi), E);
+              vec3 eroom = bsRoomIf(inside, p, Ve, vec4(hh.x + 0.4, plinth, gf + 1.6, 5.0), 11.0, float(bi), E);
               fill = E == 2 ? mix(mix(bsC(0.84, 0.86, 0.9), WG, 0.25), eroom * 0.3, 0.5 * (1.0 - fe)) : mix(eroom * 0.14, bsGlass(p, c.y - hh.y, c.y + hh.y, 1.0), fe);
               float bars = max(bsAA(abs(fract(p.x / 0.45) - 0.5) * 0.45 - 0.02, pw), bsAA(abs(fract(p.y / 0.5) - 0.5) * 0.5 - 0.02, pw));
               if (E < 2) fill = mix(fill, bsC(0.24, 0.27, 0.26), bars);
@@ -806,7 +811,7 @@ const FBASE = /* glsl */`
             float pane = bsRect(W, vec2(0.08, 0.3), vec2(fsz.x - 0.08, 2.18), pw) * (1.0 - bsAA(mx2 - 0.03, pw));
             vec3 Vb = bsViewIn();
             float fb2 = 0.05 + 0.75 * pow(1.0 - Vb.z, 4.0);
-            vec3 room = bsRoom(vec2(W.x - fsz.x * 0.5, y), Vb, vec4(fsz.x * 0.5, 0.1, 2.3, 4.2), 7.0, float(fb) * 1.3, 2);
+            vec3 room = bsRoomIf(pane, vec2(W.x - fsz.x * 0.5, y), Vb, vec4(fsz.x * 0.5, 0.1, 2.3, 4.2), 7.0, float(fb) * 1.3, 2);
             vec3 refl = mix(bsC(0.62, 0.68, 0.76), bsC(0.9, 0.92, 0.94), smoothstep(0.3, 2.2, y));
             base = mix(bsC(0.93, 0.93, 0.92), mix(room * 0.2, refl, fb2), pane);
             gBsRoom += pane * room * (1.0 - fb2) * 0.9;
@@ -1057,7 +1062,7 @@ const FBASE = /* glsl */`
           //  its desk — lit by its own light, not a flat lit pane at dusk)
           vec3 Vt = bsViewIn();
           float ft2 = 0.05 + 0.75 * pow(1.0 - Vt.z, 4.0);
-          vec3 troom = E == 2 ? vec3(0.0) : bsRoom(vec2(f.x - fsz.x * 0.5, fy), Vt, vec4(fsz.x * 0.45, 0.05, h - 0.1, min(fsz.x, 1.6)), 10.0, float(prm) + 3.0, E);
+          vec3 troom = E == 2 ? vec3(0.0) : bsRoomIf(win, vec2(f.x - fsz.x * 0.5, fy), Vt, vec4(fsz.x * 0.45, 0.05, h - 0.1, min(fsz.x, 1.6)), 10.0, float(prm) + 3.0, E);
           base = mix(base, E == 2 ? mix(bsC(0.2, 0.25, 0.32), bsC(0.32, 0.38, 0.46), smoothstep(h * 0.45, h * 0.82, fy)) : mix(troom * 0.14, bsGlass(f, h * 0.45, h * 0.82, 1.0), ft2), win);
           if (E < 2) gBsRoom += win * troom * (1.0 - ft2) * (E == 0 ? 0.7 : 0.95);
           if (E == 2) { float tt = win * (bsText(f, vec2(fsz.x * 0.5, h * 0.74), 0.07, fsz.x * 0.5, 141.0, pw) + bsText(f, vec2(fsz.x * 0.5, h * 0.64), 0.05, fsz.x * 0.48, 143.0, pw) + bsText(f, vec2(fsz.x * 0.5, h * 0.56), 0.05, fsz.x * 0.44, 147.0, pw)); base = mix(base, WG, clamp(tt, 0.0, 1.0)); gBsGlow += clamp(tt, 0.0, 1.0) * WG * 0.8; }
@@ -1095,7 +1100,7 @@ const FBASE = /* glsl */`
           frame = max(frame, bsAA(h - fy - 0.08, pw));
           vec3 Vg = bsViewIn();
           float fg = 0.05 + 0.7 * pow(1.0 - Vg.z, 4.0);
-          vec3 room = bsRoom(vec2(f.x - fsz.x * 0.5, fy), Vg, vec4(fsz.x * 0.5 - 0.02, 0.0, h - 0.1, fsz.x > 2.0 ? 1.15 : 2.75), 8.0, fsz.x, 2);
+          vec3 room = bsRoomIf(1.0 - frame, vec2(f.x - fsz.x * 0.5, fy), Vg, vec4(fsz.x * 0.5 - 0.02, 0.0, h - 0.1, fsz.x > 2.0 ? 1.15 : 2.75), 8.0, fsz.x, 2);
           vec3 refl = mix(bsC(0.6, 0.66, 0.7), bsC(0.9, 0.93, 0.95), smoothstep(0.4, h, fy));
           base = mix(mix(room * 0.25, refl, fg), bsC(0.93, 0.93, 0.92), frame);
           gBsRoom += (1.0 - frame) * room * (1.0 - fg) * 0.95;
@@ -1123,7 +1128,7 @@ const FBASE = /* glsl */`
         if (prm == 4 || prm == 5 || prm == 8 || prm == 9) {
           float wi = bsRect(f, vec2(0.15, 0.45), vec2(fsz.x - 0.15, h - 0.35), pw);
           float kd = prm == 8 ? 10.0 : (prm == 9 ? 7.0 : 9.0);
-          vec3 room = bsRoom(vec2(f.x - fsz.x * 0.5, fy), Vs, vec4(fsz.x * 0.5 - 0.1, 0.05, h - 0.2, prm == 8 ? 2.6 : 1.8), kd, float(prm) + fsz.x, 2);
+          vec3 room = bsRoomIf(wi, vec2(f.x - fsz.x * 0.5, fy), Vs, vec4(fsz.x * 0.5 - 0.1, 0.05, h - 0.2, prm == 8 ? 2.6 : 1.8), kd, float(prm) + fsz.x, 2);
           base = mix(base, mix(room * 0.22, bsC(0.8, 0.84, 0.88), fs), wi);
           gBsRoom += wi * room * (1.0 - fs);
           if (wi > 0.5) { gBaseRough = 0.08; gTexStr = 0.0; }
@@ -1182,7 +1187,7 @@ const FBASE = /* glsl */`
           float hk = prm == 6 ? 4.0 : (prm == 8 || prm == 13 ? 10.0 : (prm == 9 ? 7.0 : 9.0));
           vec3 Vh = bsViewIn();
           float fh = 0.05 + 0.75 * pow(1.0 - Vh.z, 4.0);
-          vec3 hroom = bsRoom(wq, Vh, vec4(fsz.x / nwin * 0.32 + 0.15, 0.05, h - 0.15, min(fsz.y, 1.8)), hk, float(prm) + floor(f.x / (fsz.x / nwin)), E);
+          vec3 hroom = bsRoomIf(win, wq, Vh, vec4(fsz.x / nwin * 0.32 + 0.15, 0.05, h - 0.15, min(fsz.y, 1.8)), hk, float(prm) + floor(f.x / (fsz.x / nwin)), E);
           vec3 g = mix(hroom * 0.14, bsGlass(wq, h * 0.5, h * 0.82, 1.0), fh);
           base = mix(base, g, win * (1.0 - bar));
           base = mix(base, bsC(0.86, 0.82, 0.7), win * bar);
