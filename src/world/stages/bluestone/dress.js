@@ -150,6 +150,26 @@ export function registerDress(D, H, KIT) {
     },
   };
 
+  // ============================================================================================================ umbrella (TODAY)
+  // (fix round 1) a beer-garden umbrella standing in a balcony planter (DESIGN §5.1: TODAY's Young & Jackfish): the local
+  // origin on the planter's top; a pole to a canopy of eight cream and maroon gores whose rim stays ≥ 2.6 m over the
+  // balcony floor (o.floor: the floor's height under it, relative to the origin)
+  D.bluestone_umbrella = {
+    desc: 'a beer-garden umbrella in a planter (TODAY)',
+    build(B, o) {
+      const rim = (o.floor ?? -1.0) + 2.65, R = o.r ?? 1.1, top = rim + 0.42;
+      B.cyl('metal', K.aluDk, 0.03, top + 0.1, 0, (top + 0.1) / 2, 0, { seg: 8 });
+      // the canopy: a cream shell seen from above and below, maroon on every other gore, a valance round the rim
+      B.add('rubber', latheG('umbrella|' + R.toFixed(2), [[R, rim], [0.03, top], null, [0.03, top - 0.025], [R, rim - 0.012]], 16), K.cream, 0, 0, 0, {});
+      for (let i = 0; i < 8; i++) {
+        const a0 = (i / 8) * TAU, a1 = ((i + 1) / 8) * TAU, c = i % 2 ? K.maroon : K.cream;
+        if (i % 2) B.add('rubber', cylGeo(0.03, R + 0.004, top - rim, 2, true, a0, a1 - a0), c, 0, (top + rim) / 2 + 0.006, 0, {});
+        B.add('rubber', cylGeo(R + 0.005, R + 0.005, 0.14, 2, true, a0, a1 - a0), c, 0, rim - 0.07, 0, {});   // the valance
+      }
+      B.add('metal', sphG(0.05, 8, 6), K.gilt, 0, top + 0.12, 0, {});
+    },
+  };
+
   // ============================================================================================================ wires (era)
   // a sagging wire from P to Q (world frame), n segments
   const wire = (B, mat, c, P, Q, sag, r = 0.012, n = 10) => {

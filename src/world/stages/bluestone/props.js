@@ -396,6 +396,9 @@ for (const d of LAYOUT.half) {
   const eras = d.eras ? [...d.eras].map(Number) : ERAS3;
   for (const e of eras) placements.push({ type: 'bluestone_planting', ...at, era: e, eras: String(e), ...(d.eraGroup ? { eraGroup: d.eraGroup } : {}), seed: Math.round(at.pos[0] * 13 + at.pos[2] * 7) });
 }
+// ---- (fix round 1) TODAY's beer-garden umbrellas in the Young & Jackfish's balcony planters (roof tops; the canopies'
+//      rims 2.65 m over the balcony floor at 2.4)
+for (const d of LAYOUT.half) if (d.tag === 'balcony-planter' && d.kind === 'box') placements.push({ type: 'bluestone_umbrella', pos: [(d.min[0] + d.max[0]) / 2, d.max[1], (d.min[2] + d.max[2]) / 2], floor: d.min[1] - d.max[1], r: 1.05, eras: '2' });
 // ---- the small things on and round the cover (art phase, from the era-1 sweep): cast-iron bollards on the mooring blocks
 //      (roof tops), rowing eights on the Boathouse's racks (a roof top), hitching rings (1880s) / bike hoops (TODAY) on the
 //      bollard blocks' faces (within 4 cm)

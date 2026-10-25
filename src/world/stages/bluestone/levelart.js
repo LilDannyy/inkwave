@@ -146,7 +146,7 @@ export function levelArt({ grate = false, night = { value: 0 }, lamps = ['#ffe0b
       uBsNight: night, uBsB: { value: B }, uBsLamp: { value: LP }, uBsLampN: { value: Math.min(8, lampPts.length) },
       uBsLampC: { value: new Float32Array(LC.flat()) },
     },
-    vertPars: VPARS, vertMain: VMAIN, fragPars: FPARS, fragBase: FBASE, fragEmissive: FEMIT,
+    vertPars: VPARS, vertMain: VMAIN, fragPars: FPARS, fragBase: FBASE, fragEmissive: FEMIT, fragMural: FMURAL,
   };
 }
 
@@ -415,7 +415,26 @@ const FBASE = /* glsl */`
         if (fam == 8) tint = E == 0 ? vec3(0.62, 0.66, 0.6) : (E == 1 ? vec3(0.95, 0.9, 0.8) : vec3(1.25, 1.25, 1.25));
         if (fam == 4 || fam == 5 || fam == 6 || fam == 7) tint = E == 2 ? vec3(1.06, 1.08, 1.1) : vec3(1.0);
         base *= tint;
+        // (fix round 1) the Young & Jackfish per era (DESIGN §5.1), its walls repainted, not only tinted: the 1880s a
+        // bluestone ground storey under grey-ochre render; TODAY cream render with ochre dressings (the string course, the
+        // cornice, the window surrounds, quoins at the corners) and gold lettering on its fascias; the 3000s pale pearl
+        bool hotelOchre = fam == 2 && E == 1;
+        if (fam == 2) {
+          float grain = 0.88 + 0.24 * fbm(vec2(W.x * 0.7, y * 0.9));
+          vec3 rend = E == 0 ? bsC(0.6, 0.55, 0.45) : (E == 1 ? bsC(0.88, 0.84, 0.74) : bsC(0.93, 0.93, 0.92));
+          base = mix(base, rend * grain, 0.78);
+          if (E == 0 && y < gf - 0.02) {
+            vec3 ash = bsC(0.36, 0.39, 0.43) * (0.88 + 0.16 * h21(floor(vec2(W.x / 0.75 + 0.5 * floor(y / 0.38), y / 0.38))));
+            float aj = max(bsAA(abs(fract(W.x / 0.75 + 0.5 * floor(y / 0.38)) - 0.5) * 0.75 - 0.006, pw), bsAA((0.5 - abs(fract(y / 0.38) - 0.5)) * 0.38 - 0.008, pw));
+            base = mix(ash, ash * 0.62, aj);
+          }
+          if (hotelOchre) {
+            float qn = bsAA(min(W.x, fsz.x - W.x) - (mod(floor(y / 0.45), 2.0) < 1.0 ? 0.5 : 0.3), pw) * step(gf, y);
+            base = mix(base, bsC(0.72, 0.6, 0.43) * grain, qn);
+          }
+        }
         vec3 stone = base;
+        vec3 dressC = hotelOchre ? bsC(0.74, 0.62, 0.44) : stone * 1.18;
         // plinth: a bluestone course at the foot (every era: the constant)
         float pl = step(y, plinth) * step(-0.5, y);
         if (plinth > 0.01) {
@@ -429,8 +448,8 @@ const FBASE = /* glsl */`
         float cn = bsAA(abs(y - wtop + 0.35) - 0.22, pw) * step(wtop - 0.6, y);
         float shadow = bsAA(abs(y - gf + 0.03) - 0.05, pw) * 0.35 + bsAA(abs(y - wtop + 0.62) - 0.06, pw) * 0.4;
         if (fam != 7 && fam != 8 && fam != 9) {
-          base = mix(base, stone * 1.18, sc * 0.9);
-          base = mix(base, stone * 1.22, cn);
+          base = mix(base, dressC, sc * 0.9);
+          base = mix(base, hotelOchre ? dressC * 1.04 : stone * 1.22, cn);
           base *= 1.0 - shadow;
         }
         // ---- ground floor
@@ -542,10 +561,11 @@ const FBASE = /* glsl */`
                 if (pane > 0.5) { gBaseRough = 0.06; gTexStr = 0.0; }
                 gBsRoom += pane * room * (1.0 - fres) * (0.75 + 0.35 * step(0.35, bsH(vec2(sbi, 3.0 + float(prm)))));
                 float fas = bsRect(q, vec2(-hw - 0.16, gf - 0.62), vec2(hw + 0.16, gf - 0.04), pw);
-                vec3 fc = mod(bi, 3.0) < 1.0 ? bsC(0.2, 0.32, 0.3) : (mod(bi, 3.0) < 2.0 ? bsC(0.36, 0.18, 0.18) : bsC(0.2, 0.22, 0.3));
+                vec3 fc = fam == 2 ? bsC(0.14, 0.24, 0.2) : (mod(bi, 3.0) < 1.0 ? bsC(0.2, 0.32, 0.3) : (mod(bi, 3.0) < 2.0 ? bsC(0.36, 0.18, 0.18) : bsC(0.2, 0.22, 0.3)));
                 base = mix(base, fc, fas);
                 float sign = bsRect(q, vec2(-hw * 0.6, gf - 0.5), vec2(hw * 0.6, gf - 0.16), pw) * fas;
-                base = mix(base, bsC(0.86, 0.82, 0.72), sign * bsText(q, vec2(0.0, gf - 0.33), 0.2, hw * 1.1, bi * 5.1 + float(prm) + 30.0, pw));
+                base = mix(base, fam == 2 ? bsC(0.84, 0.66, 0.32) : bsC(0.86, 0.82, 0.72), sign * bsText(q, vec2(0.0, gf - 0.33), 0.2, hw * 1.1, bi * 5.1 + float(prm) + 30.0, pw));
+                if (fam == 2) base = mix(base, bsC(0.8, 0.62, 0.3), bsAA(abs(y - gf + 0.08) - 0.02, pw) * fas);   // a gilt bead under the cornice
                 base = mix(base, stone, pil * step(y, gf - 0.62));
               } else {
                 // the 3000s: pearl glass in white frames, light seams at the joints, planting on the piers; behind the glass
@@ -624,7 +644,7 @@ const FBASE = /* glsl */`
           float bars = E == 0 ? 2.0 : (E == 1 ? 1.0 : 0.0);
           if (fam == 5 || fam == 6) bars = E == 0 ? 3.0 : (E == 1 ? 2.0 : 0.0);
           vec4 w = bsWin(p, c, hh, bars, 0.1, pw, arch);
-          vec3 trim = E == 0 ? stone * 1.12 : (E == 1 ? bsC(0.92, 0.9, 0.84) : bsC(0.95, 0.95, 0.94));
+          vec3 trim = E == 0 ? stone * 1.12 : (E == 1 ? (hotelOchre ? dressC : bsC(0.92, 0.9, 0.84)) : bsC(0.95, 0.95, 0.94));
           base = mix(base, trim, w.x);
           vec3 gl = bsGlass(p, c.y - hh.y, c.y + hh.y, 1.0);
           if (E == 2) gl = mix(bsC(0.78, 0.82, 0.88), bsC(0.95, 0.94, 0.9), smoothstep(c.y - hh.y, c.y + hh.y, y));
@@ -1451,6 +1471,22 @@ const FBASE = /* glsl */`
     }
   }
 `;
+
+// ------------------------------------------------------------------------------------------------ GLSL: the murals
+// (fix round 1) Hoki Lane's street art (mural 7) in the 3000s: DESIGN §5.1's "murals turned to slow-moving light" — the
+// paint gone pale, a ghost under the light, and the outlines of its shapes (edges of the mural's alpha and luminance,
+// read from the atlas round the texel) drawn in white-gold light that runs slowly along them
+const FMURAL = /* glsl */`
+    if (mi == 7 && eraBitHere() > 3.5) {
+      // the 3000s' version of the street art, drawn 480 px under it in the atlas (stages/bluestone/murals.js hokiLight):
+      // outlines of white-gold light over a pale ghost of the shapes; the light runs slowly along the lines
+      vec2 muv3 = vec2(muv.x, muv.y - 480.0 / 2048.0);
+      vec4 m3 = texture2D(uMural, muv3);
+      float line = smoothstep(0.45, 0.9, m3.a);
+      float flow = 0.35 + 0.65 * smoothstep(0.25, 1.0, sin((mx * 9.0 - my * 2.0) * 6.2832 - uEraT * 0.5) * 0.5 + 0.5);
+      mc = vec4(m3.rgb, m3.a);
+      gBsGlow += line * flow * m3.rgb * 1.6;
+    }`;
 
 // ------------------------------------------------------------------------------------------------ GLSL: the light
 const FEMIT = /* glsl */`

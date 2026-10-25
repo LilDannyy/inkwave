@@ -27,6 +27,28 @@ function chalk(g, x, y, w, h, seed, n) {
   g.restore();
 }
 
+// Hoki Lane's street art as light (the 3000s): the source rect's pieces → their outlines (white-gold, opaque) over a faint
+// pale ghost of their fills, into the destination rect (same size)
+function hokiLight(g, sx, sy, w, h, dx, dy) {
+  const src = g.getImageData(sx, sy, w, h).data, N = w * h;
+  const L = new Float32Array(N), A = new Float32Array(N);
+  for (let i = 0; i < N; i++) { const a = src[i * 4 + 3] / 255; A[i] = a; L[i] = ((0.299 * src[i * 4] + 0.587 * src[i * 4 + 1] + 0.114 * src[i * 4 + 2]) / 255) * a; }
+  const blur = (F) => { const T = new Float32Array(N), O = new Float32Array(N), r = 2; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { let s = 0, n = 0; for (let k = -r; k <= r; k++) { const xx = x + k; if (xx >= 0 && xx < w) { s += F[y * w + xx]; n++; } } T[y * w + x] = s / n; }
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { let s = 0, n = 0; for (let k = -r; k <= r; k++) { const yy = y + k; if (yy >= 0 && yy < h) { s += T[yy * w + x]; n++; } } O[y * w + x] = s / n; } return O; };
+  const Lb = blur(L), Ab = blur(A);
+  const out = g.createImageData(w, h), o = out.data;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x, at = (xx, yy) => { const cx = Math.min(w - 1, Math.max(0, xx)), cy = Math.min(h - 1, Math.max(0, yy)); return cy * w + cx; };
+    const gx = Math.abs(Lb[at(x + 2, y)] - Lb[at(x - 2, y)]) + Math.abs(Ab[at(x + 2, y)] - Ab[at(x - 2, y)]) * 0.6;
+    const gy = Math.abs(Lb[at(x, y + 2)] - Lb[at(x, y - 2)]) + Math.abs(Ab[at(x, y + 2)] - Ab[at(x, y - 2)]) * 0.6;
+    const e = Math.min(1, Math.max(0, (gx + gy - 0.09) / 0.12));
+    const ghost = Ab[i] * 0.3;
+    o[i * 4] = Math.round(226 + (244 - 226) * e); o[i * 4 + 1] = Math.round(226 + (233 - 226) * e); o[i * 4 + 2] = Math.round(236 + (200 - 236) * e);
+    o[i * 4 + 3] = Math.round(255 * Math.max(e, ghost));
+  }
+  g.putImageData(out, dx, dy);
+}
+
 export function drawMurals(g, R, kit) {
   const out = [];
   const serif = (px) => `700 ${px}px Georgia, "Times New Roman", serif`;
@@ -112,6 +134,11 @@ export function drawMurals(g, R, kit) {
     g.fillStyle = '#c8b9a0'; g.fillText('HOKI LANE', X + w * 0.03, Y + h * 0.3);
     g.font = fontB(Math.round(h * 0.13)); g.fillStyle = 'rgba(62, 58, 54, 0.8)';
     for (const [k, t] of [[0.72, 'TARTAR WAS HERE'], [0.86, 'RING RING'], [0.36, 'KEEP UP']]) g.fillText(t, X + w * k, Y + h * 0.84);
+    // (fix round 1) the 3000s' version (DESIGN §5.1: "the murals turned to slow-moving light"): the same pieces as outlines of
+    // white-gold light over a faint pale ghost of their shapes, made from this drawing before its chalk wear (an edge filter
+    // on a blurred copy: the shapes' outlines, not the grain), drawn 480 px below it (R.y + 480: the level art samples it
+    // there in era 3 and runs the light slowly along the lines)
+    if (g.getImageData) hokiLight(g, X, Y, w, h, X, Y + 480);
     chalk(g, X, Y, w, h, 77, 5200);
     g.restore();
     out.push({ id: MURAL.hoki, x: X, y: Y, w, h, place: [11.5, Wm, 1.95, Hm], fx: [0.75, 1] });
