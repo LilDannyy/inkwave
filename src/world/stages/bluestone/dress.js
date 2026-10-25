@@ -442,6 +442,124 @@ export function registerDress(D, H, KIT) {
     },
   };
 
+  // ============================================================================================================ cover dressing (era)
+  // (fix round 3, review 3's minor: five 1880s / TODAY cover pieces still read as plain rounded boxes at eye level) the
+  // relief round a cover block, in one era (o.era): o.kind fountain / trough / bin / coal / bollard, the block o.w × o.d
+  // × o.h with the local origin at its foot's centre. Everything stands within 8.5 cm of the block's faces (the mouldings
+  // 2.5–6 cm proud, a spout or a cup bowl 8.2 cm), nothing stands on its walkable top (a lip's top 1.25 cm over it, at the
+  // edge), no collider; the surfaces themselves (flutes, water, slats, riveted plates, coal, the rust) are the level art's
+  D.bluestone_coverdress = {
+    desc: "a cover block's relief in one era (o.kind fountain / trough / bin / coal / bollard; o.w, o.d, o.h; o.era)",
+    build(B, o) {
+      const e = o.era || 1, w = o.w, d = o.d, h = o.h, kind = o.kind, long = w >= d;
+      // a band round the block: centre height y, height bh, standing t proud of the faces
+      const band = (mat, c, y, bh, t) => {
+        pbox(B, mat, c, w + 2 * t, bh, t, 0, y, d / 2 + t / 2); pbox(B, mat, c, w + 2 * t, bh, t, 0, y, -d / 2 - t / 2);
+        pbox(B, mat, c, t, bh, d, w / 2 + t / 2, y, 0); pbox(B, mat, c, t, bh, d, -w / 2 - t / 2, y, 0);
+      };
+      // the four faces ([x, z, nx, nz, length]) and the two long ones
+      const faces = [[0, d / 2, 0, 1, w], [0, -d / 2, 0, -1, w], [w / 2, 0, 1, 0, d], [-w / 2, 0, -1, 0, d]];
+      const longF = long ? faces.slice(0, 2) : faces.slice(2), shortF = long ? faces.slice(2) : faces.slice(0, 2);
+      const on = (f, y, fn) => face(B, f[0], y, f[1], f[2], f[3], fn);
+      if (kind === 'fountain') {
+        // a heritage drinking fountain (1880s; TODAY kept): a moulded basin lip proud of the top's edge, a string course, a
+        // plinth course with a chamfer; on two faces a bronze lion's head with its spout over a cup bowl on a bracket, on
+        // the other two a bronze plaque (1880s) or a push-button tap plate (TODAY); the water and the fluted pedestal are
+        // the level art's
+        const G = '#8f9290', Gd = '#5e6261', BR = '#7a5a30', BRl = '#a07a42';
+        band('gloss', G, h - 0.03, 0.085, 0.06);
+        band('gloss', Gd, h - 0.2, 0.03, 0.025);
+        band('gloss', Gd, 0.08, 0.16, 0.05);
+        band('gloss', G, 0.175, 0.03, 0.028);
+        for (const f of longF) on(f, h * 0.6, () => {
+          B.add('metal', cylGeo(0.13, 0.13, 0.03, 18), BR, 0, 0, 0.015, { rx: HP });
+          B.add('metal', torG(0.12, 0.02, 4, 18), BRl, 0, 0, 0.03, {});
+          B.add('metal', sphG(0.055, 10, 8), BRl, 0, -0.01, 0.035, { sz: 0.7 });
+          for (const sx of [-1, 1]) B.add('metal', sphG(0.022, 6, 4), BR, sx * 0.045, 0.045, 0.04, {});
+          rod(B, 'metal', BRl, [0, -0.05, 0.05], [0, -0.075, 0.07], 0.012);
+          // the cup bowl under it on an iron bracket
+          pbox(B, 'metal', K.iron, 0.025, 0.12, 0.03, 0, -0.33, 0.015);
+          B.add('metal', sphG(0.042, 10, 6, PI / 2), BR, 0, -0.27, 0.042, { rx: PI });
+          B.add('metal', torG(0.042, 0.006, 4, 12), BRl, 0, -0.27, 0.042, { rx: HP });
+        });
+        for (const f of shortF) on(f, h * 0.6, () => {
+          if (e === 1) {
+            pbox(B, 'metal', BR, Math.min(0.7, f[4] - 0.4), 0.22, 0.012, 0, 0, 0.006);
+            letters(B, 'PUBLIC FOUNTAIN', { h: 0.045, y: 0.02, z: 0.0125, c: BRl, flat: true, wt: 0.2, track: 0.12, mat: 'metal' });
+            letters(B, '1886', { h: 0.045, y: -0.07, z: 0.0125, c: BRl, flat: true, wt: 0.2, track: 0.12, mat: 'metal' });
+          } else {
+            pbox(B, 'metal', K.alu, 0.18, 0.24, 0.012, 0, 0, 0.006);
+            B.add('metal', cylGeo(0.035, 0.035, 0.02, 14), K.aluDk, 0, 0.04, 0.022, { rx: HP });
+            rod(B, 'metal', K.alu, [0, -0.06, 0.012], [0, -0.06, 0.05], 0.01);
+            letters(B, 'PUSH', { h: 0.03, y: -0.11, z: 0.0125, c: K.black, flat: true, wt: 0.22, track: 0.12, mat: 'metal' });
+          }
+        });
+      } else if (kind === 'trough') {
+        if (e === 1) {
+          // a horse trough: a rolled iron lip round the top, iron hoops strapping the long faces, a stamped maker's plate
+          for (const f of faces) on(f, h - 0.025, () => rod(B, 'metal', K.iron, [-f[4] / 2 - 0.03, 0, 0.03], [f[4] / 2 + 0.03, 0, 0.03], 0.035, { seg: 8 }));
+          for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) B.add('metal', sphG(0.04, 8, 6), K.iron, sx * (w / 2 + 0.03), h - 0.025, sz * (d / 2 + 0.03), {});
+          band('metal', K.ironLt, h - 0.12, 0.05, 0.012);
+          for (const f of longF) {
+            for (const k of [-1, 1]) on(f, 0, () => { pbox(B, 'metal', K.ironLt, 0.07, h - 0.17, 0.014, k * f[4] * 0.3, (h - 0.17) / 2, 0.007); for (const yy of [0.15, h * 0.5, h - 0.25]) B.add('metal', sphG(0.014, 6, 4), K.iron, k * f[4] * 0.3, yy, 0.016, {}); });
+            on(f, h * 0.48, () => {
+              pbox(B, 'metal', K.iron, 0.62, 0.17, 0.016, 0, 0, 0.008);
+              letters(B, 'J. KNOX & CO', { h: 0.045, y: 0.012, z: 0.0165, c: K.ironLt, wt: 0.22, dep: 0.006, track: 0.12, mat: 'metal' });
+              letters(B, 'FOUNDERS 1884', { h: 0.035, y: -0.06, z: 0.0165, c: K.ironLt, wt: 0.22, dep: 0.006, track: 0.12, mat: 'metal' });
+            });
+          }
+        } else {
+          // TODAY: the trough kept as a planter — an oak capping round its rim and the council's planter plate
+          band('wood', K.oak, h - 0.035, 0.07, 0.04);
+          for (const f of longF) on(f, h * 0.5, () => { pbox(B, 'gloss', K.green, 0.5, 0.12, 0.012, 0, 0, 0.006); letters(B, 'CITY GARDENS', { h: 0.04, y: -0.02, z: 0.0125, c: K.cream, flat: true, wt: 0.2, track: 0.12, mat: 'gloss' }); });
+        }
+      } else if (kind === 'bin') {
+        // the 1880s ash bin: timber slats (the level art) bound by two iron bands, angle irons on its corners, a timber lid
+        // rim, and the parish's name stencilled on its long faces
+        band('metal', K.iron, 0.2, 0.06, 0.014);
+        band('metal', K.iron, h - 0.2, 0.06, 0.014);
+        band('wood', K.timber, h - 0.025, 0.05, 0.03);
+        for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) pbox(B, 'metal', K.iron, 0.06, h - 0.1, 0.06, sx * (w / 2 - 0.015), (h - 0.1) / 2 + 0.02, sz * (d / 2 - 0.015));
+        for (const f of longF) on(f, h * 0.5, () => {
+          letters(B, 'ST JAMES', { h: 0.09, y: 0.02, z: 0.0035, c: '#d9d0bc', flat: true, wt: 0.2, track: 0.14, mat: 'rubber' });
+          letters(B, 'PARISH', { h: 0.07, y: -0.1, z: 0.0035, c: '#d9d0bc', flat: true, wt: 0.2, track: 0.14, mat: 'rubber' });
+        });
+      } else if (kind === 'coal') {
+        // the coal bin: a hinged lid's line round its top, hinge knuckles along its back, a hasp and padlock on its front,
+        // and a chalked tally (1880s; TODAY the museum's exhibit with its label); its riveted plates and the coal heaped
+        // in its top are the level art's
+        band('metal', K.black, h - 0.13, 0.03, 0.014);
+        const back = longF[1], front = longF[0];
+        on(back, h - 0.03, () => { for (const x of [-0.35, 0, 0.35]) B.add('metal', cylGeo(0.026, 0.026, 0.13, 10), K.black, x, 0, 0.026, { rz: HP }); });
+        on(front, h - 0.13, () => {
+          pbox(B, 'metal', K.black, 0.08, 0.2, 0.012, 0, 0.02, 0.006);
+          B.add('metal', torG(0.025, 0.007, 4, 10), K.black, 0, -0.06, 0.02, { ry: HP });
+          pbox(B, 'metal', K.brassDk, 0.06, 0.07, 0.03, 0, -0.11, 0.03);
+        });
+        if (e === 1) on(front, 0.62, () => {
+          // the coalman's chalk: four strokes and the gate, and the week's tally
+          for (let i = 0; i < 4; i++) pbox(B, 'rubber', '#d6d2c6', 0.012, 0.16, 0.003, -0.32 + i * 0.05, 0, 0.0015);
+          pbox(B, 'rubber', '#d6d2c6', 0.012, 0.24, 0.003, -0.245, 0, 0.0015, { rz: 1.05 });
+          for (let i = 0; i < 2; i++) pbox(B, 'rubber', '#d6d2c6', 0.012, 0.16, 0.003, -0.08 + i * 0.05, 0, 0.0015);
+          letters(B, '12 CWT', { h: 0.06, x: 0.25, y: -0.03, z: 0.0015, c: '#d6d2c6', flat: true, wt: 0.2, track: 0.12, mat: 'rubber' });
+        });
+        else on(front, 0.62, () => {
+          pbox(B, 'gloss', K.cream, 0.42, 0.16, 0.012, 0, 0, 0.006);
+          letters(B, 'COAL BIN C.1890', { h: 0.035, y: 0.01, z: 0.0125, c: K.ink, flat: true, wt: 0.2, track: 0.1, mat: 'gloss' });
+          letters(B, 'TRAMWAY MUSEUM', { h: 0.028, y: -0.05, z: 0.0125, c: K.maroon, flat: true, wt: 0.2, track: 0.1, mat: 'gloss' });
+        });
+      } else if (kind === 'bollard') {
+        // the 1880s mooring block: a dressed bluestone cap with a chamfer, a chamfered base course (the iron rings and the
+        // rust streaks under them are the rings prop's and the level art's)
+        const S = '#5a6169', Sd = '#454b52';
+        band('rubber', S, h - 0.06, 0.12, 0.05);
+        band('rubber', S, h + 0.0, 0.025, 0.02);
+        band('rubber', Sd, 0.07, 0.14, 0.055);
+        band('rubber', Sd, 0.155, 0.03, 0.028);
+      }
+    },
+  };
+
   // ============================================================================================================ Tartar's wires
   // o.paths (levelart.js wirePath per wire) and o.anchors: the wires themselves (o.era: 1 / 2 black, 3 a thin light
   // filament) or, with no era, the brackets and poles they hang on (shared)

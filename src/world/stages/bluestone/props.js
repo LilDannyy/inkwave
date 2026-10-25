@@ -597,6 +597,13 @@ for (const d of LAYOUT.half) {
     const at = { pos: [(d.min[0] + d.max[0]) / 2, d.min[1], (d.min[2] + d.max[2]) / 2], w: d.max[0] - d.min[0], d: d.max[2] - d.min[2], h: d.max[1] - d.min[1], ...(d.notIn ? { notIn: d.notIn } : {}) };
     placements.push({ type: 'bluestone_rings', ...at, eras: '1' }, { type: 'bluestone_hoops', ...at, eras: '2' });
   }
+  // (fix round 3, review 3) the five cover pieces that still read as plain boxes in the 1880s / TODAY: their relief
+  // (dress.js bluestone_coverdress: within 8.5 cm of the faces, nothing on the walkable tops, no collider)
+  const CD = { fountain: ['fountain', '12'], trough: ['trough', '12'], bins: ['bin', '1'], 'coal-bin': ['coal', '12'], bollards: ['bollard', '1'] }[d.tag];
+  if (CD && d.kind === 'box') {
+    const at = { pos: [(d.min[0] + d.max[0]) / 2, d.min[1], (d.min[2] + d.max[2]) / 2], w: d.max[0] - d.min[0], d: d.max[2] - d.min[2], h: d.max[1] - d.min[1], ...(d.notIn ? { notIn: d.notIn } : {}) };
+    for (const e of CD[1]) placements.push({ type: 'bluestone_coverdress', kind: CD[0], ...at, era: +e, eras: e });
+  }
 }
 // (the spawn → dome line, DESIGN §8.3: from the spawn deck the dome stands exactly behind the GPO, so nothing tall stands on
 //  the GPO's roof in any era — its tower and spire are on the tram shed beside the spawn deck — and the hotel's extension

@@ -949,7 +949,14 @@ const FBASE = /* glsl */`
         if (E == 2 && top) { float ls = bsAA(abs(min(min(fu.x, fsz.x - fu.x), min(fu.y, fsz.y - fu.y)) - 0.05) - 0.012, pw); base = mix(base, WG, ls); gBsGlow += ls * WG * 0.6; }
       } else if (prm == 1) {
         // bins: an ash barrel's galvanised hoops (1880s), a green wheelie bin (TODAY), a white recycling pod (3000s)
-        if (E == 0) { base = bsC(0.5, 0.52, 0.52) * (0.85 + 0.2 * vnoise(q * 5.0)); base *= 1.0 - 0.3 * bsAA((0.5 - abs(fract(fy / 0.3) - 0.5)) * 0.3 - 0.02, pw); }
+        if (E == 0) {
+          // (fix round 3) the 1880s ash bin: upright timber slats (its iron bands, corner irons, lid rim and the parish's
+          // stencil are props), its lid boards on top
+          float sl = fract(fu.x / 0.14);
+          base = bsC(0.42, 0.33, 0.24) * (0.85 + 0.22 * h21(vec2(floor(fu.x / 0.14), vBsArt.y + 5.0))) * (0.92 + 0.1 * vnoise(vec2(fu.x * 4.0, fu.y * 18.0)));
+          base *= 1.0 - 0.45 * bsAA((0.5 - abs(sl - 0.5)) * 0.14 - 0.008, pw);
+          if (top) { float lb = fract(fu.y / 0.2); base = bsC(0.38, 0.3, 0.22) * (0.85 + 0.2 * h21(vec2(floor(fu.y / 0.2), 3.0))) * (1.0 - 0.4 * bsAA((0.5 - abs(lb - 0.5)) * 0.2 - 0.008, pw)); }
+        }
         else if (E == 1) { base = bsC(0.2, 0.3, 0.22) * (0.9 + 0.1 * vnoise(q * 8.0)); base = mix(base, bsC(0.12, 0.16, 0.13), bsAA(abs(fy - h + 0.12) - 0.05, pw)); if (wall) base = mix(base, bsC(0.85, 0.82, 0.72), bsText(fu, vec2(fsz.x * 0.5, h * 0.55), 0.1, fsz.x * 0.5, 7.0, pw)); }
         else { base = bsC(0.9, 0.9, 0.88); float ls = bsAA(abs(fy - h * 0.7) - 0.02, pw) * float(wall); base = mix(base, WG, ls); gBsGlow += ls * WG * 0.8; }
       } else if (prm == 2 && E > 0) {
@@ -1015,10 +1022,12 @@ const FBASE = /* glsl */`
             gBaseRough = mix(gBaseRough, 0.4, panel);
           }
           if (prm == 2 && E == 0) {
-            // the 1880s: a granite mounting block — a carved step line and V.R. (the iron rings are props)
-            base = mix(base, bsC(0.55, 0.55, 0.53) * (0.9 + 0.15 * vnoise(fu * 4.0)), 0.7);
-            base *= 1.0 - 0.3 * bsAA(abs(fy - h * 0.5) - 0.012, pw);
-            base = mix(base, bsC(0.3, 0.3, 0.3), bsText(fu, vec2(fsz.x * 0.5, h * 0.72), 0.1, 0.4, 91.0, pw) * 0.6);
+            // (fix round 3) the 1880s mooring block: dressed bluestone, pick-tooled, a rust streak run down the face from
+            // each iron ring (the rings, the dressed cap and the chamfered base course are props: dress.js coverdress)
+            base *= 0.9 + 0.2 * vnoise(fu * 26.0);
+            float rx = abs(fu.x - fsz.x * 0.5), ry = h * 0.62 - 0.13 - fy;
+            float streak = step(0.0, ry) * bsAA(rx - 0.035 * (1.0 - 0.6 * clamp(ry / 0.5, 0.0, 1.0)) - 0.012 * vnoise(vec2(fy * 9.0, fu.x * 3.0)), pw) * smoothstep(0.55, 0.0, ry);
+            base = mix(base, bsC(0.4, 0.26, 0.16), streak * 0.55);
           }
           if (prm == 99) {
             float pc = abs(fract(fu.x / 0.6) - 0.5) * 0.6;
@@ -1034,7 +1043,7 @@ const FBASE = /* glsl */`
         // its sides the 3000s' pearl family too — they stayed granite grey boxes)
         base = E == 2 ? bsC(0.9, 0.9, 0.88) * (0.95 + 0.06 * vnoise(q * 3.0)) : bsC(0.5, 0.5, 0.48) * (0.9 + 0.15 * vnoise(q * 3.0));
         if (E == 2 && wall) { float fl3 = 0.5 + 0.5 * cos(fu.x / 0.12 * 6.2832); base *= 0.93 + 0.07 * fl3 * step(0.22, fy); float ls3 = bsAA(abs(fy - 0.1) - 0.012, pw) + bsAA(abs(fy - h + 0.14) - 0.012, pw); base = mix(base, WG, clamp(ls3, 0.0, 1.0)); gBsGlow += clamp(ls3, 0.0, 1.0) * WG * 1.1; base = mix(base, bsC(0.2, 0.22, 0.24), bsAA(fy - 0.08, pw)); }
-        if (wall && E < 2) { base = mix(base, base * 1.2, bsAA(abs(fy - h + 0.06) - 0.06, pw)); base = mix(base, bsC(0.3, 0.3, 0.3), bsRect(fu, vec2(fsz.x * 0.3, h * 0.3), vec2(fsz.x * 0.7, h * 0.6), pw) * 0.3); }
+        if (wall && E < 2) { base = mix(base, base * 1.2, bsAA(abs(fy - h + 0.06) - 0.06, pw)); base *= 1.0 - (E == 0 ? 0.25 : 0.1) * smoothstep(0.35, 0.0, fy) * vnoise(fu * 7.0); }   // (fix round 3: its plates are props; a weathered foot)
         if (top) {
           float e2 = min(min(fu.x, fsz.x - fu.x), min(fu.y, fsz.y - fu.y));
           float inner = step(0.12, e2);
@@ -1106,11 +1115,23 @@ const FBASE = /* glsl */`
         gBaseRough = 0.35;
         if (wall) {
           base = mix(base, base * 1.3, bsAA(abs(fy - h + 0.08) - 0.08, pw));
-          float mk = bsAA(length(fu - vec2(fsz.x * 0.5, h * 0.55)) - 0.18, pw);
-          base = mix(base, bsC(0.4, 0.3, 0.18), mk);
-          base = mix(base, bsC(0.15, 0.12, 0.1), mk * bsAA(length(fu - vec2(fsz.x * 0.5, h * 0.5)) - 0.04, pw));
+          // (fix round 3) a fluted pedestal over the plinth course and a sunk panel above it (the lip, the courses, the lion
+          // spouts, the cup bowls and the plaques are props: dress.js coverdress)
+          float ped = step(0.2, fy) * step(fy, h * 0.42), fl = 0.5 + 0.5 * cos(fu.x / 0.12 * 6.2832);
+          base *= 1.0 - ped * 0.22 * fl;
+          base *= 1.0 - 0.35 * bsAA(abs(fy - h * 0.42) - 0.012, pw);
+          float pn = bsRect(fu, vec2(0.22, h * 0.47), vec2(fsz.x - 0.22, h - 0.3), pw) - bsRect(fu, vec2(0.26, h * 0.47 + 0.04), vec2(fsz.x - 0.26, h - 0.34), pw);
+          base *= 1.0 - 0.2 * pn;
         }
-        if (top) { float e2 = min(min(fu.x, fsz.x - fu.x), min(fu.y, fsz.y - fu.y)); float bowl = step(0.2, e2); base = mix(base, E == 2 ? bsC(0.8, 0.86, 0.9) : bsC(0.2, 0.26, 0.28), bowl); gBaseRough = mix(gBaseRough, 0.1, bowl); base = mix(base, bsC(0.48, 0.36, 0.2), bsAA(abs(e2 - 0.17) - 0.03, pw)); }
+        if (top) {
+          // the basin: its water standing ~5 cm down inside the bronze rim (the basin's inner wall in shade), rippling
+          float e2 = min(min(fu.x, fsz.x - fu.x), min(fu.y, fsz.y - fu.y)), bowl = step(0.2, e2);
+          float rip = 0.5 + 0.5 * sin(length(fu - fsz * 0.5) * 38.0 - uTime * 2.2);
+          base = mix(base, bsC(0.2, 0.27, 0.3) * (0.85 + 0.25 * rip), bowl);
+          base = mix(base, base * 0.45, bowl * (1.0 - smoothstep(0.2, 0.27, e2)));
+          gBaseRough = mix(gBaseRough, 0.06, bowl);
+          base = mix(base, bsC(0.48, 0.36, 0.2), bsAA(abs(e2 - 0.17) - 0.03, pw));
+        }
       } else if (prm == 10) {
         // the café tables (TODAY, the 3000s): a timber counter with a chalkboard menu; the 3000s a pearl café pod
         if (E == 2) { base = bsC(0.92, 0.92, 0.9); float ls = bsAA(abs(fy - h + 0.1) - 0.02, pw) * float(wall); base = mix(base, WG, ls); gBsGlow += ls * WG; }
@@ -1123,7 +1144,17 @@ const FBASE = /* glsl */`
         // the coal bin (a museum exhibit TODAY): riveted iron, coal heaped in the top; (fix round 1) in the 3000s the
         // float-tram dock keeps it in a pearl vitrine — the iron bin seen through a glass band, a lit label
         base = bsC(0.22, 0.22, 0.22) * (0.85 + 0.25 * vnoise(q * 6.0));
-        if (wall) base *= 1.0 - 0.3 * bsAA(abs(fract(fu.x / 0.3) - 0.5) * 0.3 - 0.01, pw);
+        if (wall && E == 2) base *= 1.0 - 0.3 * bsAA(abs(fract(fu.x / 0.3) - 0.5) * 0.3 - 0.01, pw);
+        if (wall && E < 2) {
+          // (fix round 3) riveted iron plates (0.4 × 0.35 m), a row of rivets along each seam, rust bloomed at the foot (its
+          // lid line, hinges, hasp and the chalk are props: dress.js coverdress)
+          vec2 pf = fract(vec2(fu.x / 0.4, fy / 0.35));
+          float seam = max(bsAA((0.5 - abs(pf.x - 0.5)) * 0.4 - 0.006, pw), bsAA((0.5 - abs(pf.y - 0.5)) * 0.35 - 0.006, pw));
+          base *= 1.0 - 0.4 * seam;
+          float ds = min(pf.y, 1.0 - pf.y) * 0.35, riv = bsAA(length(vec2((fract(fu.x / 0.1) - 0.5) * 0.1, ds - 0.035)) - 0.011, pw);
+          base = mix(base, base * 1.7 + bsC(0.06, 0.05, 0.04), riv);
+          base = mix(base, bsC(0.32, 0.2, 0.13) * (0.8 + 0.4 * vnoise(fu * 9.0)), 0.35 * smoothstep(0.35, 0.0, fy));
+        }
         if (E == 2 && wall) {
           float band = step(0.35, fy) * step(fy, h - 0.25);
           base = mix(bsC(0.9, 0.9, 0.88), mix(base * 1.4, bsC(0.55, 0.6, 0.66), 0.25), band);
