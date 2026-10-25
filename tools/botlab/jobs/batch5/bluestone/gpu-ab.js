@@ -55,6 +55,11 @@
     nolevel: () => hideAll(levelMeshes().filter((m) => m.visible)),
     empty: () => hideAll([...sc.children]),
     nosea: () => hideAll([env.sea].filter(Boolean)),
+    // (fix round 2) every transparent mesh / the era prop buckets / every prop mesh drawn with one plain material
+    notransp: () => { const tr = []; sc.traverse((o) => { if (o.isMesh && o.visible && [].concat(o.material).some((m) => m?.transparent)) tr.push(o); }); return hideAll(tr); },
+    noeraprops: () => hideAll(G.eraWorld?.propMeshes || []),
+    propsplain: () => { const pm = []; sc.traverse((o) => { if (o.isMesh && o.parent?.name === 'props' && !(Array.isArray(o.material)) && !o.material?.transparent) pm.push(o); }); const plain = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.8, vertexColors: false }), mats = pm.map((m) => m.material); pm.forEach((m) => { m.material = plain; }); return () => pm.forEach((m, i) => { m.material = mats[i]; }); },
+    backplain: () => { const pm = []; for (const g2 of [...Object.values(env.stageSets || {}), env.city, env.terrain, env.staticScenery].filter(Boolean)) g2.traverse((o) => { if (o.isMesh) pm.push(o); }); const plain = new THREE.MeshBasicMaterial({ color: 0x8090a0 }), mats = pm.map((m) => m.material); pm.forEach((m) => { m.material = plain; }); return () => pm.forEach((m, i) => { m.material = mats[i]; }); },
     nosky: () => hideAll([env.sky].filter(Boolean)),
     noback: () => hideAll([...Object.values(env.stageSets || {}), env.city, env.terrain, env.staticScenery].filter(Boolean)),
     noprops: () => hideAll(sc.children.filter((o) => o.name === 'props')),
@@ -126,6 +131,9 @@
     return { styles: st.map((c) => +(100 * c / n).toFixed(1)), dist: dh.map((c) => +(100 * c / Math.max(1, lvN)).toFixed(1)) };
   };
   const cover = coverage();
+  // pre=v1+v2: switched on for the whole run before the base (e.g. pre=plain: every variant measured over a plain level)
+  const preOff = (O.pre || '').split('+').filter(Boolean).map((v) => { const f = V2[v] || pat(v); return f ? f() : null; }).filter(Boolean);
+  for (let i = 0; i < 6; i++) g.debug.step(1000 / 60);
   const res = { base: [] };
   for (let r = 0; r < ROUNDS; r++) {
     res.base.push((await measure()).mean);
@@ -142,6 +150,7 @@
     }
   }
   res.base.push((await measure()).mean);
+  preOff.reverse().forEach((f) => f());
   R.render = rend0;
   const med = (a) => { const s = [...a].sort((x, y) => x - y), n = s.length; return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2; };
   const b = med(res.base), d = {};
