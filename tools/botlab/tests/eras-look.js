@@ -276,17 +276,30 @@
     const cr = L.blocks.find((b) => b.tag === 'crates-stack' && b.center.z < 0);
     cam([-20.5, 2.4, -24.0], [cr.center.x, 1.2, cr.center.z], 56); step(0.05);   // (from Swimston at Degrayling Lane's mouth: the crates' lit west face, the street below)
     const rest = grab();
-    const Jw = E.debugJump(2, { inS: 3 }); step(1.0);   // (J − 2 s: the flicker at its strongest, warnK ≈ 0.9)
+    const Jw = E.debugJump(2, { inS: 3 }); step(0.5);   // (J − 2.5 … J − 1.3 s over the samples: the flicker at its strongest, warnK ≈ 0.9–1)
     const phase = E.phase, Wz = W.uniforms.uEraW.value;
     // the same frame with the flicker on and off (nothing else moves between the two renders): only what is about to vanish
     // may change, and toward the old-film tone (eras.colors.vanish with its chroma ×4: red over blue ≈ 1.58 in sRGB)
-    let best = null;
-    for (let k = 0; k < 6; k++) { step(1 / 60); const on = grab(), z0 = Wz.z; Wz.z = 0; const off = grab(); Wz.z = z0; const d = diff(off, on, [0.38, 0.3, 0.62, 0.55]); if (!best || d.mean > best.d.mean) best = { on, off, d }; }
+    // (fix round 1: the flicker is a projector's — the whole piece ±25 % at 9 Hz over full sepia at the warning's peak —
+    //  so six frames 0.12 s apart, the strongest kept; the threshold raised from 1.5 to a perceptible 8/255)
+    // (the mean over the pixels of what is about to vanish — those that change when the era-1 meshes are taken out — in the
+    //  crates' box: the crates, not the street round them)
+    const gone = [...W.meshes, ...W.propMeshes].filter((m) => m.userData.eraMask === 1);
+    const onPx = grab(), offPx = without(gone, () => grab()), box0 = [0.38, 0.3, 0.62, 0.55];
+    const maskOf = (A, B) => { const M = new Uint8Array(A.w * A.h); for (let i = 0; i < M.length; i++) M[i] = Math.abs(A.px[i * 4] - B.px[i * 4]) + Math.abs(A.px[i * 4 + 1] - B.px[i * 4 + 1]) + Math.abs(A.px[i * 4 + 2] - B.px[i * 4 + 2]) > 12 ? 1 : 0; return M; };
+    const MK = maskOf(onPx, offPx);
+    const diffM = (A, B, box) => { const x0 = Math.floor(box[0] * A.w), x1 = Math.floor(box[2] * A.w), y0 = Math.floor(box[1] * A.h), y1 = Math.floor(box[3] * A.h); let sum = 0, n = 0; for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { const j = y * A.w + x; if (!MK[j]) continue; for (let c = 0; c < 3; c++) sum += Math.abs(A.px[j * 4 + c] - B.px[j * 4 + c]); n++; } return { mean: +(sum / Math.max(1, n * 3)).toFixed(3), px: n }; };
+    let best = null, all = [];
+    for (let k = 0; k < 6; k++) { step(0.12); const on = grab(), z0 = Wz.z; Wz.z = 0; const off = grab(); Wz.z = z0; const d = diffM(off, on, box0); all.push(d.mean); if (!best || d.mean > best.d.mean) best = { on, off, d }; }
     const street = diff(best.off, best.on, [0.0, 0.9, 0.25, 1.0]);
     const hue = (F, box) => { const x0 = Math.floor(box[0] * F.w), x1 = Math.floor(box[2] * F.w), y0 = Math.floor(box[1] * F.h), y1 = Math.floor(box[3] * F.h); let r = 0, b = 0; for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { const i = (y * F.w + x) * 4; r += F.px[i]; b += F.px[i + 2]; } return r / Math.max(1, b); };
     const h0 = hue(best.off, [0.38, 0.3, 0.62, 0.55]), h1 = hue(best.on, [0.38, 0.3, 0.62, 0.55]), FILM = 1.58;
-    R('art phase (b): the warning\'s sepia flicker — the Degrayling crates (about to vanish at jump 1) visibly shift toward the old-film tone during the warning (a pixel check, the same frame with the flicker off and on: mean change ≥ 1.5/255, red over blue moving toward the film tint\'s), the shared street beside them untouched (≤ 0.3)',
-      phase === 'warn' && best.d.mean >= 1.5 && Math.abs(h1 - FILM) < Math.abs(h0 - FILM) && street.mean <= 0.3, { phase, crates: best.d, street, redOverBlue: [+h0.toFixed(3), +h1.toFixed(3)], film: FILM, warnK: +Wz.z.toFixed(2) });
+    // the arcade's hoardings (1880s paper on a shared wall, rewritten at jump 1) flicker with them
+    cam([-20.5, 2.4, -44], [-26.5, 2.0, -35], 66); step(0.02);
+    let hoard = 0;
+    for (let k = 0; k < 4; k++) { step(0.12); const on = grab(), z0 = Wz.z; Wz.z = 0; const off = grab(); Wz.z = z0; hoard = Math.max(hoard, diff(off, on, [0.3, 0.2, 0.7, 0.6]).mean); }
+    R('art phase (b): the warning\'s sepia flicker — the Degrayling crates (about to vanish at jump 1) visibly turn to old film during the warning (a pixel check, the same frame with the flicker off and on: mean change ≥ 8/255 over their pixels, red over blue moving toward the film tint\'s), the shared street beside them untouched (≤ 0.3); the arcade\'s 1880s hoardings flicker too (≥ 4/255)',
+      phase === 'warn' && best.d.mean >= 8 && best.d.px > 500 && Math.abs(h1 - FILM) < Math.abs(h0 - FILM) && street.mean <= 0.3 && hoard >= 4, { phase, crates: best.d, frames: all, street, redOverBlue: [+h0.toFixed(3), +h1.toFixed(3)], film: FILM, warnK: +Wz.z.toFixed(2), hoardings: +hoard.toFixed(2) });
     E.debugJump(1, { instant: true }); step(0.1);
     // (c) the front's clean edge on a vanishing piece it crosses (the crates again): with the front held through its middle
     // and the jump's effects hidden, a grid of points on the crates' top face, projected to the frame — each is drawn (the

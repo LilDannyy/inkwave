@@ -168,6 +168,7 @@ vec3 gBsLit = vec3(0.0);        // emissive under the ink: windows lit at dusk (
 vec3 gBsGlow = vec3(0.0);       // the 3000s' light seams and lines: faint by day, bright at dusk
 vec3 gBsRoom = vec3(0.0);       // (fix round 1) the rooms seen through glass: their own light, by day and brighter at dusk
 float gBsTop = 0.0;             // a floor (lamp pools land here)
+float gBsOld = 0.0;             // (fix round 1) 1880s-only paper on shared walls (hoardings, bills): it flickers in the warning
 int gBsEra = 0;
 float bsAA(float d, float w) { return clamp(0.5 - d / max(w, 1e-4), 0.0, 1.0); }
 float bsBox(vec2 p, vec2 c, vec2 h) { vec2 d = abs(p - c) - h; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }
@@ -457,6 +458,7 @@ const FBASE = /* glsl */`
           // shopfronts and civic fronts per family and era
           if (fam == 3 && E == 0 && vari == 0) {
             // the Royal Arcade under construction: timber hoardings with posters, GRAND OPENING 1889
+            gBsOld = 1.0;
             float plank = floor(W.x / 0.22);
             vec3 wood = bsC(0.42, 0.33, 0.24) * (0.82 + 0.3 * h21(vec2(plank, 3.0))) * (0.9 + 0.12 * fbm(vec2(W.x * 2.0, y * 0.3)));
             float seam = bsAA((0.5 - abs(fract(W.x / 0.22) - 0.5)) * 0.22 - 0.01, pw);
@@ -605,6 +607,7 @@ const FBASE = /* glsl */`
             vec2 cl = floor(vec2(W.x / 1.4, (y - 0.6) / 1.0)); vec2 lc = vec2(fract(W.x / 1.4), fract((y - 0.6) / 1.0));
             float pz = bsAA(bsBox(lc, vec2(0.5, 0.5), vec2(0.34, 0.4)), pw / 1.4) * step(0.55, bsH(cl)) * step(0.6, y) * step(y, 2.6) * (1.0 - door);
             base = mix(base, mix(bsC(0.8, 0.74, 0.6), bsC(0.2, 0.18, 0.16), bsText(lc, vec2(0.5, 0.62), 0.12, 0.6, cl.x + cl.y * 7.0, pw / 1.4)), pz);
+            gBsOld = max(gBsOld, pz);
           } else if (E == 1) {
             float tag = smoothstep(0.62, 0.66, fbm(vec2(W.x * 1.3, y * 2.2) + 3.0)) * step(0.3, y) * step(y, 2.2) * (1.0 - door);
             base = mix(base, mix(bsC(0.32, 0.36, 0.42), bsC(0.55, 0.42, 0.5), step(0.5, fract(W.x * 0.3))), tag * 0.85);
@@ -742,6 +745,7 @@ const FBASE = /* glsl */`
             float pp = step(0.06, lc.x) * step(lc.x, 0.94) * step(0.04, lc.y) * step(lc.y, 0.96);
             vec3 paper = E == 0 ? bsC(0.82, 0.76, 0.6) : bsC(0.55, 0.45, 0.42);
             base = mix(base, mix(paper, bsC(0.2, 0.16, 0.14), bsText(lc, vec2(0.5, 0.7), 0.16, 0.8, floor(W.x / bay) + float(E) * 7.0, pw)), pp);
+            if (E == 0) gBsOld = max(gBsOld, pp);
           }
           // a coping along the top
           base = mix(base, bsC(0.42, 0.44, 0.46), bsAA(abs(y - 3.95) - 0.15, pw));
@@ -1024,6 +1028,7 @@ const FBASE = /* glsl */`
           vec3 ink = E == 2 ? bsC(0.4, 0.42, 0.5) : bsC(0.16, 0.12, 0.1);
           float tx = bsText(lc, vec2(0.5, 0.7), 0.14, 0.8, cell.x + cell.y * 5.0 + float(E) * 11.0, pw / 0.62) + bsText(lc, vec2(0.5, 0.4), 0.07, 0.76, cell.x * 2.0 + 3.0, pw / 0.62);
           base = mix(base, mix(paper, ink, clamp(tx, 0.0, 1.0)), pp * band);
+          if (E == 0) gBsOld = max(gBsOld, pp * band);
           if (E == 2) gBsLit += pp * band * paper * 0.35;
           base = mix(base, bsC(0.4, 0.36, 0.26), bsAA(abs(fy - h + 0.2) - 0.1, pw));
         }
@@ -1469,6 +1474,10 @@ const FBASE = /* glsl */`
         }
       }
     }
+    // (fix round 1) the 1880s' paper on shared walls (the arcade's hoardings, the bills on the viaduct, the lane and the
+    // poster column) turns to old film with the pieces about to vanish in jump 1's warning: it too is about to be rewritten
+    if (gBsOld > 0.0 && uEraW.z > 0.0 && uEraW.x < 1.5 && uEraW.y > 1.5 && E == 0)
+      base = mix(base, mix(base, vec3(bsLum(base)) * eraFilm(), clamp(uEraW.z, 0.0, 1.0)) * eraFlick(uEraW.z), gBsOld);
   }
 `;
 

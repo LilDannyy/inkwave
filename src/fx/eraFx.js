@@ -55,6 +55,8 @@ vec3 eraOneHot = vec3(1.0, 0.0, 0.0);
 float eraHasF(float m, float b) { return mod(floor(m / b + 0.01), 2.0); }
 // the warning's film tint on what is about to vanish: eras.colors.vanish's warm hue, its chroma ×4 (old film), luminance 1
 vec3 eraFilm() { float l = max(dot(uEraColV, vec3(0.299, 0.587, 0.114)), 0.01); return max(vec3(0.0), vec3(1.0) + (uEraColV / l - vec3(1.0)) * 4.0); }
+// the warning's projector flicker: one brightness per 1/9 s for everything about to vanish, ±25 % at the warning's peak
+float eraFlick(float k) { float f = fract(sin(floor(uEraT * 9.0) * 12.9898 + 0.31) * 43758.5453); return 1.0 + k * 0.25 * (f < 0.5 ? -1.0 : 1.0) * (0.8 + 0.2 * fract(f * 7.3)); }
 // the era bit of this fragment: by its own side of the front during a live jump (shared ground and era pieces alike: the
 // front rewrites everything along one clean line), an era piece by its group's flip (r_g) in a frozen still
 float eraBitHere() {
@@ -100,11 +102,12 @@ const LV_FBASE_B = /* glsl */`
     base = mix(base, vec3(elum), etn.w) * etn.rgb;
     if (vEra.x < 6.5) {
       float hf = eraHasF(vEra.x, uEraW.x), ht = eraHasF(vEra.x, uEraW.y);
-      // the warning: what is about to vanish flickers in a sepia film grain (up to 45 %, art phase: it read too faintly)
+      // the warning: what is about to vanish turns to old film (fix round 1: it still did not read) — sepia rising with the
+      // warning to full at its peak (the last 3 s), a projector's flicker in the brightness (±25 % at 9 Hz, the whole piece
+      // at once: eraFlick) and a little grain
       if (uEraW.z > 0.0 && hf > 0.5 && ht < 0.5) {
-        float fl = step(0.45, fract(sin(floor(uEraT * 9.0) * 12.9898 + dot(floor(vWPos * 3.0), vec3(1.7, 3.1, 2.3))) * 43758.5453));
-        // (art phase: strong enough to read — the old-film sepia up to 45 % and a projector's flicker in the brightness)
-        base = mix(base, vec3(elum) * eraFilm(), uEraW.z * (0.25 + 0.2 * fl)) * (1.0 + uEraW.z * 0.14 * (fl - 0.5));
+        float gr = fract(sin(floor(uEraT * 9.0) * 4.1414 + dot(floor(vWPos * 3.0), vec3(1.7, 3.1, 2.3))) * 43758.5453);
+        base = mix(base, vec3(elum) * eraFilm(), clamp(uEraW.z * (0.88 + 0.12 * step(0.5, gr)), 0.0, 1.0)) * eraFlick(uEraW.z);
       }
       // done: what is new pulses white-gold for 4 s
       if (uEraW.w > 0.0 && ht > 0.5 && hf < 0.5) base = mix(base, uEraColA, uEraW.w * (0.3 + 0.2 * sin(uEraT * 7.0)));
@@ -167,7 +170,8 @@ varying float vEraK;
 varying float vEraM;
 varying vec3 vEraWP;
 float eraHasF(float m, float b) { return mod(floor(m / b + 0.01), 2.0); }
-vec3 eraFilm() { float l = max(dot(uEraColV, vec3(0.299, 0.587, 0.114)), 0.01); return max(vec3(0.0), vec3(1.0) + (uEraColV / l - vec3(1.0)) * 4.0); }`;
+vec3 eraFilm() { float l = max(dot(uEraColV, vec3(0.299, 0.587, 0.114)), 0.01); return max(vec3(0.0), vec3(1.0) + (uEraColV / l - vec3(1.0)) * 4.0); }
+float eraFlick(float k) { float f = fract(sin(floor(uEraT * 9.0) * 12.9898 + 0.31) * 43758.5453); return 1.0 + k * 0.25 * (f < 0.5 ? -1.0 : 1.0) * (0.8 + 0.2 * fract(f * 7.3)); }`;
 const PR_FCOLOR = /* glsl */`
 if (vEraM < 6.5) {
   // the front's clean edge (art phase): in a live jump each fragment by its own side of the front; else whole
@@ -175,7 +179,7 @@ if (vEraM < 6.5) {
   else if (vEraK < 0.5) discard;
   float hf = eraHasF(vEraM, uEraW.x), ht = eraHasF(vEraM, uEraW.y);
   float elum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-  if (uEraW.z > 0.0 && hf > 0.5 && ht < 0.5) { float efl = step(0.5, fract(uEraT * 9.0 + vEraWP.x)); diffuseColor.rgb = mix(diffuseColor.rgb, vec3(elum) * eraFilm(), uEraW.z * (0.25 + 0.2 * efl)) * (1.0 + uEraW.z * 0.14 * (efl - 0.5)); }
+  if (uEraW.z > 0.0 && hf > 0.5 && ht < 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, vec3(elum) * eraFilm(), clamp(uEraW.z * 0.92, 0.0, 1.0)) * eraFlick(uEraW.z);   // (fix round 1: as the level's)
   if (uEraW.w > 0.0 && ht > 0.5 && hf < 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, uEraColA, uEraW.w * (0.3 + 0.2 * sin(uEraT * 7.0)));
 }`;
 // a clone of a prop material whose parts carry `attr` = (era mask, r_g): absent → collapsed; dissolving at the flip
