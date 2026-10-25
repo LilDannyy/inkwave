@@ -246,9 +246,9 @@ export function drawMurals(g, R, kit) {
     g.fillText('WEIGHBRIDGE 20 T  ·  TESTED 1931', x + 24, y + 180);
     g.fillStyle = '#e8a042'; g.font = fontB(20);
     g.fillText('DISPATCH — INKOPOLIS MUNICIPAL CASTINGS', x + 24, y + 224);
-    wear(x, y, w, h, 30);
+    wear(x, y, w, h, 20);
     g.restore();
-    out.push({ id: MURAL.stencils, x, y, w, h, place: [0.2, 3.2, 0.2, 1.2], fx: [0.85, 1] });
+    out.push({ id: MURAL.stencils, x, y, w, h, place: [1.9, 3.2, 2.6, 1.2], fx: [0.85, 1] });
   }
 
   return out;

@@ -293,6 +293,47 @@ totalEmissiveRadiance += vec3(1.0, 0.13, 0.02) * gCr * uCrack * 1.5;`);
         parts.push(colourGeo(new THREE.CylinderGeometry(rr, rr, h, 6, 1, false, Math.PI / 6).rotateY(q.yaw).translate(q.ox, (q.y0 + q.y1) / 2, q.oz), LOOK.basalt),
           colourGeo(new THREE.CylinderGeometry(rr * 0.92, rr * 0.92, 0.04, 6, 1, false, Math.PI / 6).rotateY(q.yaw).translate(q.ox, q.y1 + 0.01, q.oz), LOOK.basaltTop)); }
       for (const q of r.parts) if (!q.body && !q.pipe) parts.push(colourGeo(new THREE.BoxGeometry(q.hx * 2, q.y1 - q.y0, q.hz * 2).rotateY(q.yaw).translate(q.ox, (q.y0 + q.y1) / 2, q.oz), LOOK.basalt));
+
+      // Organ Pipes dynamic set dressing: riveted iron bands, climbable step plates, yellow grab handles, bulkhead lamp
+      if (r.look?.type === 'caldera_organ') {
+        const isLookout = r.look?.role === 'lookout';
+        // 1. Riveted hexagonal wrought-iron bands around column
+        for (const by of [-0.6, -1.6, -2.6]) {
+          if (-by < r.depth) {
+            parts.push(colourGeo(new THREE.CylinderGeometry(r.r + 0.04, r.r + 0.04, 0.12, 6, 1, false, Math.PI / 2).translate(0, by, 0), '#2e3238'));
+            for (let a = 0; a < 6; a++) {
+              const ang = (a * Math.PI) / 3;
+              parts.push(colourGeo(new THREE.BoxGeometry(0.06, 0.06, 0.06).translate(Math.cos(ang) * (r.r + 0.05), by, Math.sin(ang) * (r.r + 0.05)), '#5a6068'));
+            }
+          }
+        }
+        // 2. Climbable step links with bright yellow grab handles
+        const stepFaces = isLookout ? [1] : [-1, 1];
+        for (const sf of stepFaces) {
+          const zSign = sf; // +1 facing south (island / lower column), -1 facing north
+          const cz = zSign * (r.r - 0.02);
+          const numSteps = isLookout ? 4 : 2;
+          for (let s = 0; s < numSteps; s++) {
+            const sy = -0.35 - s * 0.42;
+            // Steel checkerplate step plate
+            parts.push(colourGeo(new THREE.BoxGeometry(0.75, 0.08, 0.22).translate(0, sy, cz + zSign * 0.08), '#3a3e45'));
+            // Safety yellow grab handles clearly reading as climbable routes
+            parts.push(colourGeo(new THREE.BoxGeometry(0.55, 0.06, 0.06).translate(0, sy + 0.30, cz + zSign * 0.14), '#ffd700'));
+            parts.push(colourGeo(new THREE.BoxGeometry(0.06, 0.12, 0.06).translate(-0.25, sy + 0.24, cz + zSign * 0.14), '#ffd700'));
+            parts.push(colourGeo(new THREE.BoxGeometry(0.06, 0.12, 0.06).translate(0.25, sy + 0.24, cz + zSign * 0.14), '#ffd700'));
+          }
+        }
+        // 3. Lookout platform dressing (organL)
+        if (isLookout) {
+          // Top deck rim curb
+          parts.push(colourGeo(new THREE.CylinderGeometry(r.r + 0.02, r.r + 0.02, 0.12, 6, 1, false, Math.PI / 2).translate(0, 0.06, 0), '#2e3238'));
+          // Caged inspection bulkhead lamp facing south (toward mid / Pour Floor)
+          const lz = r.r + 0.06;
+          parts.push(colourGeo(new THREE.BoxGeometry(0.24, 0.36, 0.14).translate(0, -0.4, lz), '#243e32'));
+          parts.push(colourGeo(new THREE.CylinderGeometry(0.08, 0.08, 0.08, 10).rotateX(Math.PI / 2).translate(0, -0.4, lz + 0.08), '#fff2a8'));
+          parts.push(colourGeo(new THREE.BoxGeometry(0.26, 0.38, 0.03).translate(0, -0.4, lz + 0.12), '#d4a034'));
+        }
+      }
       // (only the lookouts cast shadows: the short columns' shadows cost a draw call per cascade for little)
       const m = new THREE.Mesh(mergeGeos(parts), basalt); m.castShadow = r.look?.role === 'lookout'; m.receiveShadow = true; g.add(m);
       g.rotation.y = r.yaw;

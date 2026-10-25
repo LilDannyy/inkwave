@@ -89,8 +89,8 @@ export function buildBackdrop(kit, data = {}) {
       const cx = r * Math.cos(rad);
       const cz = r * Math.sin(rad);
 
-      // Height of crater rim column: lower at the two breaches to let daylight in while sealing void
-      const topY = (inSpillAlpha || inSpillBravo) ? 8.0 + (rnd() - 0.5) * 3.0 : 12.0 + 3.5 * Math.cos(a * 2 * D_) + (rnd() - 0.5) * 2.0;
+      // Height of crater rim column: lowered to open sky dome toward Halyard standards while sealing void
+      const topY = (inSpillAlpha || inSpillBravo) ? 5.5 + (rnd() - 0.5) * 2.0 : 9.5 + 2.5 * Math.cos(a * 2 * D_) + (rnd() - 0.5) * 1.5;
       const y0 = -32.0; // Extend deep down to seal all sightlines from high ground and bridges
       const h = topY - y0;
 
@@ -345,43 +345,30 @@ export function buildBackdrop(kit, data = {}) {
   }
 
   // =========================================================================================================
-  // 5. COMPANY TOWNS ON THE RIM (Behind North & South Casting Halls)
-  // Terraced workers' cottages, verdigris roofs, chimneys, water towers, radio masts.
+  // 5. INDUSTRIAL RIM STRUCTURES (Behind North & South Casting Halls)
+  // Seated water towers and radio transmission masts on rim foundations (no floating houses).
   // =========================================================================================================
   {
     for (const sz of [-1, 1]) {
       const townZ = sz * 98.0;
-      // Terrace house blocks
-      for (let tx = -28; tx <= 28; tx += 14) {
-        const hW = 12, hH = 8, hD = 9;
-        const bldG = new THREE.BoxGeometry(hW, hH, hD);
-        bldG.translate(tx, 14.0, townZ);
-        addGeo(out.static, bldG, K.white);
 
-        // Verdigris pitched roof
-        const roofG = new THREE.ConeGeometry(hW * 0.72, 3.8, 4);
-        roofG.rotateY(Math.PI / 4);
-        roofG.translate(tx, 18.0 + 1.9, townZ);
-        addGeo(out.static, roofG, K.verd);
+      // Heavy basalt plinth foundation for rim utilities
+      const fndG = new THREE.BoxGeometry(24, 8, 14);
+      fndG.translate(0, 4.0, townZ);
+      addGeo(out.static, fndG, K.basaltDk);
 
-        // Brick chimney
-        const chimG = new THREE.BoxGeometry(1.2, 3.5, 1.2);
-        chimG.translate(tx + 3.5, 19.5, townZ + 2.0);
-        addGeo(out.static, chimG, K.brick);
-      }
-
-      // Water tower
+      // Water tower seated on foundation
       const wtG = new THREE.CylinderGeometry(4.0, 4.0, 6.0, 12);
-      wtG.translate(38.0 * -sz, 24.0, townZ);
+      wtG.translate(8.0 * -sz, 17.0, townZ);
       addGeo(out.static, wtG, C('#4a6058'));
-      const wtLegs = new THREE.CylinderGeometry(0.5, 0.5, 14.0, 6);
-      wtLegs.translate(38.0 * -sz, 14.0, townZ);
+      const wtLegs = new THREE.CylinderGeometry(0.5, 0.5, 10.0, 6);
+      wtLegs.translate(8.0 * -sz, 9.0, townZ);
       addGeo(out.static, wtLegs, C(K.iron));
 
       // Radio transmission mast
-      const mastH = 34.0;
-      const mastG = new THREE.CylinderGeometry(0.3, 1.4, mastH, 4);
-      mastG.translate(-38.0 * -sz, 14.0 + mastH / 2, townZ);
+      const mastH = 28.0;
+      const mastG = new THREE.CylinderGeometry(0.3, 1.2, mastH, 4);
+      mastG.translate(-8.0 * -sz, 8.0 + mastH / 2, townZ);
       addGeo(out.static, mastG, C(K.iron));
     }
   }

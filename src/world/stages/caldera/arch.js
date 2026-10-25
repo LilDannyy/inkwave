@@ -121,24 +121,24 @@ export function registerArch(D, H) {
       const mx = (xe + xw) / 2, w = xe - xw + 0.8, d = 18.0, h = 12.0;
       const bZ = z0 - d / 2 - 0.1;
 
-      // Heavy brick facade courses along front wall (z = z0 - 0.1)
-      pbox(B, 'paint', K.brick, w, h, 0.45, mx, h / 2, z0 - 0.2);
+      // Heavy brick facade courses along front wall (z = z0 - 0.25)
+      pbox(B, 'paint', K.brick, w, h, 0.45, mx, h / 2, z0 - 0.25);
       // Dark plinth foundation
-      pbox(B, 'paint', K.brickDk, w + 0.2, 1.4, 0.6, mx, 0.7, z0 - 0.22);
+      pbox(B, 'paint', K.brickDk, w + 0.2, 1.4, 0.6, mx, 0.7, z0 - 0.32);
       // Cornice band at roof line
-      pbox(B, 'paint', K.brickDk, w + 0.3, 0.5, 0.65, mx, h - 0.25, z0 - 0.22);
+      pbox(B, 'paint', K.brickDk, w + 0.3, 0.5, 0.65, mx, h - 0.25, z0 - 0.35);
 
       // Structural iron vertical pilasters every 4.5 m
       const nP = Math.floor(w / 4.5);
       for (let i = 0; i <= nP; i++) {
         const px = xw + (w * i) / nP;
-        pbox(B, 'metal', K.iron, 0.38, h, 0.52, px, h / 2, z0 - 0.2);
+        pbox(B, 'metal', K.iron, 0.38, h, 0.52, px, h / 2, z0 - 0.28);
         // Base plate and capital
-        pbox(B, NS('metal'), K.ironDk, 0.5, 0.35, 0.6, px, 0.18, z0 - 0.2);
-        pbox(B, NS('metal'), K.ironDk, 0.5, 0.35, 0.6, px, h - 0.18, z0 - 0.2);
+        pbox(B, NS('metal'), K.ironDk, 0.5, 0.35, 0.6, px, 0.18, z0 - 0.32);
+        pbox(B, NS('metal'), K.ironDk, 0.5, 0.35, 0.6, px, h - 0.18, z0 - 0.32);
         // Rivet rows
-        rivets(B, [px - 0.14, 0.6, z0 + 0.07], [px - 0.14, h - 0.6, z0 + 0.07], 18);
-        rivets(B, [px + 0.14, 0.6, z0 + 0.07], [px + 0.14, h - 0.6, z0 + 0.07], 18);
+        rivets(B, [px - 0.14, 0.6, z0 - 0.02], [px - 0.14, h - 0.6, z0 - 0.02], 18);
+        rivets(B, [px + 0.14, 0.6, z0 - 0.02], [px + 0.14, h - 0.6, z0 - 0.02], 18);
       }
 
       // Large central arched Rose Window with radiant tracery and glowing orange furnace backlight
@@ -190,7 +190,7 @@ export function registerArch(D, H) {
         pcyl(B, 'paint', K.brickDk, 1.4, chH, cx, chY, cz, { seg: 16 });
         // Heavy riveted iron reinforcement rings every 2.5 m
         for (let rY = h + 1.5; rY < h + chH; rY += 2.5) {
-          ptor(B, NS('metal'), K.iron, 1.42, 0.06, cx, rY, cz);
+          ptor(B, NS('metal'), K.iron, 1.42, 0.06, cx, rY, cz, { rx: HP });
         }
         // Corbelled crown and spark arrestor cap
         pcyl(B, 'metal', K.ironDk, 1.65, 0.6, cx, h + chH + 0.3, cz, { seg: 16 });
@@ -201,28 +201,28 @@ export function registerArch(D, H) {
         }
       }
 
-      // Heavy Sliding Bay Doors at ground level (left and right of center)
+      // Heavy Sliding Bay Doors at ground level (flush against wall behind z0 - 0.1)
       for (const dx of [mx - 6.5, mx + 6.5]) {
         // Door opening surround
-        pbox(B, 'metal', K.iron, 3.6, 4.2, 0.55, dx, 2.1, z0 - 0.18);
+        pbox(B, 'metal', K.iron, 3.6, 4.2, 0.35, dx, 2.1, z0 - 0.28);
         // Slotted iron bay door with hazard stripes
-        pbox(B, 'metal', K.ironDk, 3.2, 3.8, 0.14, dx, 1.95, z0 - 0.1);
-        pbox(B, NS('paint'), K.gold, 3.2, 0.25, 0.16, dx, 1.0, z0 - 0.08);
-        pbox(B, NS('paint'), K.gold, 3.2, 0.25, 0.16, dx, 2.6, z0 - 0.08);
+        pbox(B, 'metal', K.ironDk, 3.2, 3.8, 0.14, dx, 1.95, z0 - 0.22);
+        pbox(B, NS('paint'), K.gold, 3.2, 0.25, 0.16, dx, 1.0, z0 - 0.20);
+        pbox(B, NS('paint'), K.gold, 3.2, 0.25, 0.16, dx, 2.6, z0 - 0.20);
         // Top roller track
-        pbox(B, NS('metal'), K.ironLt, 4.0, 0.18, 0.22, dx, 3.95, z0 - 0.06);
+        pbox(B, NS('metal'), K.ironLt, 4.0, 0.18, 0.22, dx, 3.95, z0 - 0.18);
       }
 
-      // Overhead Jib Crane Runway protruding 4 m over the yard
-      pbox(B, 'metal', K.greenDk, 0.4, 0.6, 5.2, mx, 9.8, z0 + 1.8);
-      // Crane trolley and forged hook
-      pbox(B, 'metal', K.iron, 0.6, 0.45, 0.8, mx, 9.4, z0 + 2.8);
-      pcyl(B, NS('metal'), K.ironLt, 0.03, 1.8, mx, 8.4, z0 + 2.8);
-      ptor(B, 'metal', K.ironDk, 0.22, 0.06, mx, 7.4, z0 + 2.8, { rx: HP });
+      // Overhead Jib Crane Runway mounted high on the facade (y = 11.2, clear of gallery)
+      pbox(B, 'metal', K.greenDk, 0.4, 0.6, 1.2, mx, 11.2, z0 + 0.2);
+      // Crane trolley and forged hook (mounted high at y = 10.6, well above 6.6 m player reach)
+      pbox(B, 'metal', K.iron, 0.6, 0.4, 0.6, mx, 10.8, z0 + 0.3);
+      pcyl(B, NS('metal'), K.ironLt, 0.03, 0.6, mx, 10.3, z0 + 0.3);
+      ptor(B, 'metal', K.ironDk, 0.22, 0.06, mx, 9.9, z0 + 0.3, { rx: HP });
 
-      // Wall Gooseneck Lamps along the hall facade
+      // Wall Gooseneck Lamps along the hall facade (mounted high at y = 7.4, well above 6.6 m player reach)
       for (const lx of [xw + 3.0, mx - 4.5, mx + 4.5, xe - 3.0]) {
-        industrialLamp(B, lx, 5.2, z0 + 0.05, 0);
+        industrialLamp(B, lx, 7.4, z0 + 0.05, 0);
       }
     },
   };
@@ -239,42 +239,39 @@ export function registerArch(D, H) {
       const cx = 0, cz = 0; // Local origin
       const y0 = 3.6, h = 5.8;
 
-      // Stone plinth foundation
-      pbox(B, 'paint', K.basaltDk, w + 0.15, 0.6, d + 0.15, cx, y0 + 0.3, cz);
+      // Stone plinth foundation (within 4 cm of face)
+      pbox(B, 'paint', K.basaltDk, w + 0.06, 0.6, d + 0.06, cx, y0 + 0.3, cz);
 
-      // Weatherboard timber body
-      pbox(B, 'paint', K.cream, w, h - 0.6, d, cx, y0 + 0.6 + (h - 0.6) / 2, cz);
-
-      // Crisp dark green corner trims and baseboard
+      // Crisp dark green corner trims and baseboard (within 3 cm of face)
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-        pbox(B, NS('paint'), K.greenDk, 0.22, h, 0.22, cx + sx * (w / 2 - 0.08), y0 + h / 2, cz + sz * (d / 2 - 0.08));
+        pbox(B, NS('paint'), K.greenDk, 0.08, h, 0.08, cx + sx * (w / 2 - 0.02), y0 + h / 2, cz + sz * (d / 2 - 0.02));
       }
-      pbox(B, NS('paint'), K.greenDk, w + 0.06, 0.2, d + 0.06, cx, y0 + 0.7, cz);
-      pbox(B, NS('paint'), K.greenDk, w + 0.06, 0.22, d + 0.06, cx, y0 + h - 0.1, cz);
+      pbox(B, NS('paint'), K.greenDk, w + 0.05, 0.2, d + 0.05, cx, y0 + 0.7, cz);
+      pbox(B, NS('paint'), K.greenDk, w + 0.05, 0.22, d + 0.05, cx, y0 + h - 0.1, cz);
 
-      // Multi-pane sash windows on lakefront face (+Z) and causeway face (+X)
+      // Multi-pane sash windows on lakefront face (+Z) and causeway face (+X) (flush within 5 cm)
       // Lakefront Windows (+Z face, cz + d / 2)
       for (const wx of [-1.3, 1.3]) {
         const wy = y0 + 2.5;
         // Window casing frame
-        pbox(B, 'paint', K.greenDk, 1.4, 1.8, 0.14, cx + wx, wy, cz + d / 2 + 0.04);
-        pbox(B, 'paint', K.white, 1.2, 1.6, 0.08, cx + wx, wy, cz + d / 2 + 0.07);
+        pbox(B, 'paint', K.greenDk, 1.4, 1.8, 0.04, cx + wx, wy, cz + d / 2 + 0.02);
+        pbox(B, 'paint', K.white, 1.2, 1.6, 0.03, cx + wx, wy, cz + d / 2 + 0.03);
         // Illuminated interior glass
-        pbox(B, 'glow', K.glassLit, 1.1, 1.5, 0.05, cx + wx, wy, cz + d / 2 + 0.08, { glow: 1.6 });
+        pbox(B, 'glow', K.glassLit, 1.1, 1.5, 0.02, cx + wx, wy, cz + d / 2 + 0.035, { glow: 1.6 });
         // Timber glazing bars
-        pbox(B, NS('paint'), K.greenDk, 1.1, 0.04, 0.09, cx + wx, wy, cz + d / 2 + 0.09);
-        pbox(B, NS('paint'), K.greenDk, 0.04, 1.5, 0.09, cx + wx, wy, cz + d / 2 + 0.09);
+        pbox(B, NS('paint'), K.greenDk, 1.1, 0.04, 0.02, cx + wx, wy, cz + d / 2 + 0.04);
+        pbox(B, NS('paint'), K.greenDk, 0.04, 1.5, 0.02, cx + wx, wy, cz + d / 2 + 0.04);
         // Window sill
-        pbox(B, NS('paint'), K.greenDk, 1.5, 0.1, 0.22, cx + wx, wy - 0.85, cz + d / 2 + 0.1);
+        pbox(B, NS('paint'), K.greenDk, 1.5, 0.1, 0.06, cx + wx, wy - 0.85, cz + d / 2 + 0.03);
       }
 
       // Causeway Window (+X face, cx + w / 2)
       {
         const wy = y0 + 2.5;
-        pbox(B, 'paint', K.greenDk, 0.14, 1.8, 1.4, cx + w / 2 + 0.04, wy, cz);
-        pbox(B, 'glow', K.glassLit, 0.05, 1.5, 1.1, cx + w / 2 + 0.08, wy, cz, { glow: 1.6 });
-        pbox(B, NS('paint'), K.greenDk, 0.09, 0.04, 1.1, cx + w / 2 + 0.09, wy, cz);
-        pbox(B, NS('paint'), K.greenDk, 0.09, 1.5, 0.04, cx + w / 2 + 0.09, wy, cz);
+        pbox(B, 'paint', K.greenDk, 0.04, 1.8, 1.4, cx + w / 2 + 0.02, wy, cz);
+        pbox(B, 'glow', K.glassLit, 0.02, 1.5, 1.1, cx + w / 2 + 0.03, wy, cz, { glow: 1.6 });
+        pbox(B, NS('paint'), K.greenDk, 0.02, 0.04, 1.1, cx + w / 2 + 0.04, wy, cz);
+        pbox(B, NS('paint'), K.greenDk, 0.02, 1.5, 0.04, cx + w / 2 + 0.04, wy, cz);
       }
 
       // Visible lit interior details through windows:
@@ -287,20 +284,18 @@ export function registerArch(D, H) {
       pbox(B, NS('paint'), K.white, 1.8, 1.2, 0.05, cx, y0 + 3.0, cz - d / 2 + 0.1);
       pbox(B, NS('paint'), K.brassDk, 0.4, 0.4, 0.08, cx + 1.2, y0 + 3.2, cz - d / 2 + 0.12); // Tide dial
 
-      // Panelled Entrance Door on East (+X) face
+      // Panelled Entrance Door on East (+X) face (flush within 4 cm of face)
       {
         const dy = y0 + 1.8, dz = cz + 1.3;
         // Door surround
-        pbox(B, 'paint', K.greenDk, 0.16, 2.4, 1.2, cx + w / 2 + 0.04, dy, dz);
+        pbox(B, 'paint', K.greenDk, 0.04, 2.4, 1.2, cx + w / 2 + 0.02, dy, dz);
         // Panelled door body
-        pbox(B, 'wood', K.woodDk, 0.08, 2.2, 1.0, cx + w / 2 + 0.07, dy - 0.1, dz);
+        pbox(B, 'wood', K.woodDk, 0.02, 2.2, 1.0, cx + w / 2 + 0.03, dy - 0.1, dz);
         // Brass handle & kickplate
-        pbox(B, NS('metal'), K.brass, 0.08, 0.08, 0.06, cx + w / 2 + 0.12, dy - 0.1, dz + 0.35);
-        pbox(B, NS('metal'), K.brass, 0.04, 0.25, 0.9, cx + w / 2 + 0.09, y0 + 0.72, dz);
+        pbox(B, NS('metal'), K.brass, 0.02, 0.08, 0.04, cx + w / 2 + 0.04, dy - 0.1, dz + 0.35);
+        pbox(B, NS('metal'), K.brass, 0.02, 0.25, 0.9, cx + w / 2 + 0.035, y0 + 0.72, dz);
         // Transom window with SURGE CONTROLLER lettering
-        pbox(B, 'glow', K.glassLit, 0.05, 0.4, 0.9, cx + w / 2 + 0.07, dy + 1.05, dz, { glow: 1.2 });
-        // Gooseneck porch lamp
-        industrialLamp(B, cx + w / 2 + 0.08, dy + 1.5, dz, HP);
+        pbox(B, 'glow', K.glassLit, 0.02, 0.4, 0.9, cx + w / 2 + 0.035, dy + 1.05, dz, { glow: 1.2 });
       }
 
       // Overhanging Corrugated Iron Hipped Roof
@@ -328,84 +323,99 @@ export function registerArch(D, H) {
   // 22 m riveted lattice tower, huge backlit clock/gauge dial with warning sectors, copper float-well
   // =========================================================================================================
   D.caldera_surge_gauge = {
-    desc: 'The Great Surge Gauge: 22 m riveted lattice tower, copper float-well, huge backlit dial with flood sectors, brass bell cage',
+    desc: 'The Great Surge Gauge: 22 m riveted lattice tower, upper copper float-well, illuminated tidal surge sight glass, brass bell cage',
     build(B) {
-      const topH = 22.0, baseH = 1.2;
+      const topH = 22.0;
+      // 4 piers in cyclic perimeter order (no diagonal crossing!)
+      const piers = [[4.2, 1.75], [-4.2, 1.75], [-4.2, -1.75], [4.2, -1.75]];
 
-      // 4 Massive Hexagonal Foundation Pier Collars on the island
-      const pierR = 2.4;
-      for (let k = 0; k < 4; k++) {
-        const a = k * HP + PI / 4;
-        const px = Math.cos(a) * pierR, pz = Math.sin(a) * pierR;
-        pcyl(B, 'metal', K.ironDk, 0.55, 1.6, px, baseH + 0.8, pz, { seg: 8 });
-        ptor(B, NS('metal'), K.ironLt, 0.58, 0.06, px, baseH + 0.4, pz);
-        ptor(B, NS('metal'), K.ironLt, 0.58, 0.06, px, baseH + 1.2, pz);
+      // 4 Foundation Pier Collars on the real layout piers (px = +-4.2, pz = +-1.75, width 1.2x1.2, y = 1.8 to 7.0)
+      for (const [px, pz] of piers) {
+        const sx = Math.sign(px), sz = Math.sign(pz);
+        // Cast-iron plinth collar at pier base (y = 1.8 to 2.5) — offset outward, 0 in open mid (|x|<3.6 && |z|<1.15)
+        pbox(B, 'metal', K.ironDk, 1.22, 0.7, 1.22, px + sx * 0.02, 2.15, pz + sz * 0.02);
+        pbox(B, NS('metal'), K.ironLt, 1.24, 0.08, 1.24, px + sx * 0.02, 2.46, pz + sz * 0.02);
+        // Corner angle irons running up the four corners of the pier
+        for (const cx of [-0.56, 0.58]) {
+          for (const cz of [-0.56, 0.58]) {
+            pbox(B, NS('metal'), K.iron, 0.06, 4.4, 0.06, px + sx * cx, 4.6, pz + sz * cz);
+          }
+        }
+        // Capital collar below tie girders / pier top (y = 6.6 to 7.0)
+        pbox(B, 'metal', K.ironDk, 1.24, 0.4, 1.24, px + sx * 0.02, 6.8, pz + sz * 0.02);
       }
 
-      // Central Polished Copper Float-Well Cylinder (rising to 13.5 m)
-      pcyl(B, 'metal', K.copper, 1.1, 12.5, 0, baseH + 6.25, 0, { seg: 16 });
-      for (let y = baseH + 2.0; y < baseH + 12.0; y += 2.0) {
-        ptor(B, NS('metal'), K.brass, 1.14, 0.05, 0, y, 0);
+      // Tie girder trim (y = 6.0 to 6.9, z = +-1.75)
+      for (const sz of [-1, 1]) {
+        pbox(B, 'metal', K.greenDk, 9.6, 0.12, 0.44, 0, 6.06, sz * 1.75);
+        pbox(B, 'metal', K.greenDk, 9.6, 0.12, 0.44, 0, 6.84, sz * 1.75);
       }
 
-      // Riveted Lattice Tower: 4 Corner Main Chords tapering inward
-      const bRad = pierR, tRad = 1.2;
-      for (let k = 0; k < 4; k++) {
-        const a = k * HP + PI / 4;
-        const x0 = Math.cos(a) * bRad, z0 = Math.sin(a) * bRad;
-        const x1 = Math.cos(a) * tRad, z1 = Math.sin(a) * tRad;
-        strut(B, 'metal', K.greenDk, [x0, baseH + 1.6, z0], [x1, topH, z1], 0.22);
+      // Upper Polished Copper Float-Well (strictly above y = 7.2 m inside gauge works box; 0 below 7.0!)
+      pcyl(B, 'metal', K.copper, 1.1, 5.4, 0, 10.1, 0, { seg: 16 });
+      for (let y = 8.0; y <= 12.5; y += 1.5) {
+        ptor(B, NS('metal'), K.brass, 1.14, 0.04, 0, y, 0, { rx: HP });
       }
 
-      // Horizontal Ring Girders & Diagonal X-Bracing
-      const rings = [baseH + 3.5, baseH + 6.5, baseH + 9.5, 13.0, 16.5, 19.5];
+      // Riveted Lattice Tower: 4 Corner Main Chords starting at pier tops (strictly y >= 7.2 m)
+      for (const [px, pz] of piers) {
+        const tx = Math.sign(px) * 1.2, tz = Math.sign(pz) * 1.2;
+        strut(B, 'metal', K.greenDk, [px, 7.2, pz], [tx, topH, tz], 0.22);
+      }
+
+      // Horizontal Ring Girders & Diagonal X-Bracing strictly from y = 7.2 to topH = 22.0
+      const rings = [7.2, 9.5, 12.5, 15.5, 18.5, 20.0];
       for (let ri = 0; ri < rings.length; ri++) {
         const y = rings[ri];
-        const u = (y - (baseH + 1.6)) / (topH - (baseH + 1.6));
-        const curR = bRad + (tRad - bRad) * u;
+        const u = (y - 7.2) / (topH - 7.2);
+        const p = piers.map(([px, pz]) => [
+          px + (Math.sign(px) * 1.2 - px) * u,
+          pz + (Math.sign(pz) * 1.2 - pz) * u,
+        ]);
+        // Perimeter ring struts (in cyclic order around perimeter, zero cross-pond intrusion)
         for (let k = 0; k < 4; k++) {
-          const a0 = k * HP + PI / 4, a1 = (k + 1) * HP + PI / 4;
-          const p0 = [Math.cos(a0) * curR, y, Math.sin(a0) * curR];
-          const p1 = [Math.cos(a1) * curR, y, Math.sin(a1) * curR];
-          strut(B, 'metal', K.green, p0, p1, 0.16);
-          // Diagonal X-braces between tiers
+          const kNext = (k + 1) % 4;
+          strut(B, 'metal', K.green, [p[k][0], y, p[k][1]], [p[kNext][0], y, p[kNext][1]], 0.16);
+          // Diagonal X-bracing between tiers
           if (ri > 0) {
             const yPrev = rings[ri - 1];
-            const uPrev = (yPrev - (baseH + 1.6)) / (topH - (baseH + 1.6));
-            const prevR = bRad + (tRad - bRad) * uPrev;
-            const q0 = [Math.cos(a0) * prevR, yPrev, Math.sin(a0) * prevR];
-            const q1 = [Math.cos(a1) * prevR, yPrev, Math.sin(a1) * prevR];
-            strut(B, NS('metal'), K.greenDk, p0, q1, 0.08);
-            strut(B, NS('metal'), K.greenDk, p1, q0, 0.08);
+            const uPrev = (yPrev - 7.2) / (topH - 7.2);
+            const pPrev = piers.map(([px, pz]) => [
+              px + (Math.sign(px) * 1.2 - px) * uPrev,
+              pz + (Math.sign(pz) * 1.2 - pz) * uPrev,
+            ]);
+            strut(B, NS('metal'), K.greenDk, [p[k][0], y, p[k][1]], [p[kNext][0], yPrev, p[kNext][1]], 0.08);
+            strut(B, NS('metal'), K.greenDk, [p[kNext][0], y, p[kNext][1]], [p[k][0], yPrev, p[k][1]], 0.08);
           }
         }
       }
 
-      // Massive 4.2 m Circular Backlit Tidal Dial (facing ±Z)
-      const dialY = 14.8, dialR = 2.1;
+      // Industrial Vertical Tidal Surge Sight Scale (facing +-Z at y = 14.5; NOT a clock/face!)
+      const dialY = 14.5;
       for (const s of [-1, 1]) {
         B.push(0, dialY, s * 1.35, s < 0 ? PI : 0);
-        // Bezel & Housing
-        ptor(B, 'metal', K.brass, dialR, 0.14, 0, 0, 0.06);
-        pcyl(B, 'metal', K.ironDk, dialR + 0.1, 0.4, 0, 0, -0.15, { rx: HP, seg: 24 });
-        // Backlit enamelled dial face
-        pcyl(B, 'glow', K.glassLit, dialR - 0.05, 0.06, 0, 0, 0.03, { rx: HP, seg: 24, glow: 1.8 });
-        // Calibrated Flood Sectors: Green (bottom), Amber (mid), Red (high surge)
-        pbox(B, NS('paint'), '#348b48', dialR * 1.2, 0.12, 0.08, 0, -dialR * 0.6, 0.06);
-        pbox(B, NS('paint'), '#e8a024', dialR * 1.2, 0.12, 0.08, 0, dialR * 0.2, 0.06);
-        pbox(B, NS('paint'), K.red, dialR * 1.2, 0.12, 0.08, 0, dialR * 0.65, 0.06);
-        // Counterbalanced Clock Hands
-        strut(B, NS('metal'), K.ironDk, [0, 0, 0.08], [0, dialR * 0.75, 0.08], 0.07);
-        strut(B, NS('metal'), K.red, [0, 0, 0.09], [dialR * 0.65, dialR * 0.2, 0.09], 0.05);
-        psph(B, NS('metal'), K.brass, 0.16, 0, 0, 0.1);
+        // Heavy cast-iron and brass rectangular housing
+        pbox(B, 'metal', K.ironDk, 2.6, 5.0, 0.35, 0, 0, 0);
+        pbox(B, NS('metal'), K.brass, 2.4, 4.8, 0.38, 0, 0, 0);
+        // Vertical illuminated surge scale (lower green, mid amber, top red)
+        pbox(B, 'glow', '#2ecc71', 1.0, 1.3, 0.06, 0, -1.4, 0.21, { glow: 1.5 });
+        pbox(B, 'glow', '#f39c12', 1.0, 1.3, 0.06, 0, 0.0, 0.21, { glow: 1.8 });
+        pbox(B, 'glow', '#e74c3c', 1.0, 1.3, 0.06, 0, 1.4, 0.21, { glow: 2.2 });
+        // Heavy horizontal bronze indicator cursor
+        pbox(B, 'metal', K.brass, 1.5, 0.14, 0.14, 0, 0.1, 0.26);
+        // Calibration scale tick marks
+        for (let ty = -1.8; ty <= 1.8; ty += 0.4) {
+          pbox(B, NS('metal'), K.ironLt, 0.25, 0.04, 0.08, -0.7, ty, 0.22);
+          pbox(B, NS('metal'), K.ironLt, 0.25, 0.04, 0.08, 0.7, ty, 0.22);
+        }
         B.pop();
       }
 
       // Bell Cage at the Tower Summit (y = 20.0 to 22.5 m)
-      pcyl(B, 'metal', K.ironDk, tRad + 0.2, 0.35, 0, 20.0, 0, { seg: 12 });
+      pcyl(B, 'metal', K.ironDk, 1.4, 0.35, 0, 20.0, 0, { seg: 12 });
       for (let k = 0; k < 6; k++) {
         const a = k * (PI / 3);
-        pcyl(B, NS('metal'), K.green, 0.06, 2.2, Math.cos(a) * (tRad - 0.15), 21.1, Math.sin(a) * (tRad - 0.15));
+        pcyl(B, NS('metal'), K.green, 0.06, 2.2, Math.cos(a) * 1.05, 21.1, Math.sin(a) * 1.05);
       }
       // Bronze Warning Bell with clapper
       pcyl(B, 'metal', K.brass, 0.65, 0.9, 0, 21.0, 0, { seg: 14 });
@@ -528,18 +538,14 @@ export function registerArch(D, H) {
     desc: 'Stack of foundry moulding flasks with alignment pins and clamping lugs',
     build(B) {
       for (let tier = 0; tier < 3; tier++) {
-        const fy = tier * 0.45;
-        // Cast iron rectangular flask frame (open center)
-        pbox(B, 'metal', K.iron, 1.8, 0.4, 0.12, 0, fy + 0.2, -0.65);
-        pbox(B, 'metal', K.iron, 1.8, 0.4, 0.12, 0, fy + 0.2, 0.65);
-        pbox(B, 'metal', K.iron, 0.12, 0.4, 1.4, -0.85, fy + 0.2, 0);
-        pbox(B, 'metal', K.iron, 0.12, 0.4, 1.4, 0.85, fy + 0.2, 0);
+        const fy = tier * 0.5;
+        // Cast iron rectangular flask frame matching 1.2 x 0.9 m block
+        pbox(B, 'metal', K.iron, 1.22, 0.42, 0.08, 0, fy + 0.22, -0.44);
+        pbox(B, 'metal', K.iron, 1.22, 0.42, 0.08, 0, fy + 0.22, 0.44);
+        pbox(B, 'metal', K.iron, 0.08, 0.42, 0.92, -0.59, fy + 0.22, 0);
+        pbox(B, 'metal', K.iron, 0.08, 0.42, 0.92, 0.59, fy + 0.22, 0);
         // Sand fill
-        pbox(B, 'paint', K.sand, 1.6, 0.36, 1.2, 0, fy + 0.18, 0);
-        // Alignment pins and lugs
-        for (const px of [-0.9, 0.9]) {
-          pcyl(B, NS('metal'), K.ironLt, 0.04, 0.25, px, fy + 0.4, 0);
-        }
+        pbox(B, 'paint', K.sand, 1.14, 0.38, 0.84, 0, fy + 0.2, 0);
       }
     },
   };
@@ -584,137 +590,76 @@ export function registerArch(D, H) {
 
   // =========================================================================================================
   // 6. THE SLUMP & VOLCANIC HORNITOS (Shelves & cooling vents)
-  // Basalt steps, hollow volcanic spatter cones/hornitos with glowing lava cores, sulfur crusts, steam
+  // Welded volcanic spatter cones/hornitos with glowing lava cores, sulfur crags, steam wisps
   // =========================================================================================================
   D.caldera_hornito = {
-    desc: 'Volcanic Spatter Cone / Hornito: welded agglutinate chimney, incandescent lava core, sulfur crust',
+    desc: 'Volcanic Spatter Cone / Hornito: welded basalt agglutinate chimney, incandescent lava core, sulfur rim',
     build(B) {
-      const h = 2.4;
-      // Irregular conical spatter chimney
+      const h = 1.3;
+      // Steep conical spatter chimney fitting within the 1.4 x 1.4 x 1.3 m block (r <= 0.72 m)
       B.lathe('paint', K.scoria, [
-        [0, 0], [1.3, 0], [1.15, 0.6], [0.95, 1.4], [0.75, 2.0], [0.65, h],
-        [0.45, h], [0.4, 1.8], [0.35, 0.4], [0, 0.2]
+        [0, 0], [0.72, 0], [0.68, 0.35], [0.58, 0.8], [0.52, 1.15], [0.48, h],
+        [0.34, h], [0.28, 0.9], [0.22, 0.4], [0, 0.2]
       ], 0, 0, 0, { seg: 14 });
-      // Sulfur mineral crust around vent lip (pale gold/yellow)
-      ptor(B, NS('paint'), K.sulfur, 0.55, 0.12, 0, h - 0.04, 0);
+      // Basalt crags and agglutinate lumps
+      for (let k = 0; k < 6; k++) {
+        const a = k * (PI / 3);
+        pbox(B, 'paint', K.basaltDk, 0.18, 0.45, 0.14, Math.cos(a) * 0.62, 0.4, Math.sin(a) * 0.62);
+      }
       // Incandescent Molten Lava Vent Core (deep orange-red glow from within)
-      psph(B, 'glow', K.orange, 0.42, 0, 0.9, 0, { glow: 2.6 });
-      // Fissure cooling grates bolted to the rock base
-      pbox(B, NS('metal'), K.ironDk, 1.4, 0.06, 0.6, 0.8, 0.04, 0.6);
-      pbox(B, NS('metal'), K.ironDk, 0.6, 0.06, 1.4, -0.6, 0.04, -0.8);
+      psph(B, 'glow', K.orange, 0.32, 0, 0.85, 0, { glow: 2.4 });
+      // Sulfur mineral crags along rim
+      for (let k = 0; k < 4; k++) {
+        const a = k * HP + 0.3;
+        pbox(B, NS('paint'), K.sulfur, 0.12, 0.08, 0.12, Math.cos(a) * 0.42, h, Math.sin(a) * 0.42);
+      }
     },
   };
 
   // =========================================================================================================
   // 7. THE RIM HEAD & WINCH HOUSE (South Slump head)
-  // Corrugated iron machinery shed, double doors, windows, twin wire-rope winding drums, headframe sheaves
+  // Corrugated iron machinery shed, double doors, windows, twin wire-rope winding drums (fitting 2.4 x 2.4 m block)
   // =========================================================================================================
   D.caldera_winch_house = {
     desc: 'The Rim Head Winch House: machinery shed, twin winding drums, spooled wire cables, headframe sheaves',
     build(B) {
-      const w = 2.8, d = 3.2, h = 3.2;
+      const w = 2.42, d = 2.42, h = 2.76;
 
       // Dressed basalt masonry foundation trim
-      pbox(B, 'paint', K.basaltDk, w + 0.08, 0.3, d + 0.08, 0, 0.15, 0);
+      pbox(B, 'paint', K.basaltDk, w + 0.04, 0.3, d + 0.04, 0, 0.15, 0);
 
       // Dark green structural angle corner trims
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-        pbox(B, NS('metal'), K.greenDk, 0.14, h, 0.14, sx * (w / 2 - 0.05), h / 2, sz * (d / 2 - 0.05));
+        pbox(B, NS('metal'), K.greenDk, 0.12, h, 0.12, sx * (w / 2 - 0.04), h / 2, sz * (d / 2 - 0.04));
       }
 
-      // Pitched Corrugated Iron Roof with ridge ventilator
+      // Pitched Corrugated Iron Roof with ridge ventilator (overhang <= 6 cm)
       B.push(0, h, 0);
-      pbox(B, 'metal', K.verd, w + 0.5, 0.15, d + 0.4, 0, 0.4, 0, { rx: -0.28 });
-      pcyl(B, NS('metal'), K.iron, 0.2, 0.8, 0, 0.9, 0, { seg: 8 });
+      pbox(B, 'metal', K.verd, w + 0.12, 0.14, d + 0.12, 0, 0.25, 0, { rx: -0.25 });
+      pcyl(B, NS('metal'), K.iron, 0.16, 0.6, 0, 0.6, 0, { seg: 8 });
       B.pop();
 
-      // Double Corrugated Sliding Equipment Doors on front (+Z face)
-      pbox(B, 'metal', K.greenDk, 2.0, 2.4, 0.12, 0, 1.4, d / 2 + 0.06);
-      pbox(B, NS('metal'), K.ironLt, 2.4, 0.12, 0.16, 0, 2.65, d / 2 + 0.1); // Top roller track
+      // Double Corrugated Sliding Equipment Doors on front (+Z face, within 5 cm)
+      pbox(B, 'metal', K.greenDk, 1.8, 2.2, 0.06, 0, 1.2, d / 2 + 0.03);
+      pbox(B, NS('metal'), K.ironLt, 2.0, 0.1, 0.08, 0, 2.35, d / 2 + 0.04); // Top roller track
 
-      // Multi-pane factory window on side (+X face)
-      pbox(B, 'paint', K.greenDk, 0.1, 1.4, 1.4, w / 2 + 0.04, 1.8, 0);
-      pbox(B, 'glow', K.glassLit, 0.05, 1.2, 1.2, w / 2 + 0.08, 1.8, 0, { glow: 1.4 });
+      // Multi-pane factory window on side (+X face, within 5 cm)
+      pbox(B, 'paint', K.greenDk, 0.06, 1.2, 1.2, w / 2 + 0.03, 1.6, 0);
+      pbox(B, 'glow', K.glassLit, 0.04, 1.0, 1.0, w / 2 + 0.04, 1.6, 0, { glow: 1.4 });
 
-      // Heavy Electric Winding Hoist Drums (in front of machinery shed)
-      B.push(0, 0.7, d / 2 + 1.2);
-      pbox(B, 'metal', K.ironDk, 2.2, 0.4, 1.4, 0, 0.2, 0); // Bedplate
-      // Twin grooved cable drums spooled with multi-strand steel wire rope
-      for (const dx of [-0.6, 0.6]) {
-        pcyl(B, 'metal', K.iron, 0.55, 0.65, dx, 0.7, 0, { rx: HP, seg: 16 });
-        ptor(B, NS('metal'), K.ironLt, 0.58, 0.05, dx, 0.7, -0.3);
-        ptor(B, NS('metal'), K.ironLt, 0.58, 0.05, dx, 0.7, 0.3);
-        // Brake calipers
-        ptor(B, NS('metal'), K.red, 0.52, 0.08, dx, 0.7, 0, { arc: PI });
-      }
-      B.pop();
-
-      // Headframe Sheaves: 2 large spoked pulley wheels mounted on structural A-frames
-      B.push(0, h + 0.6, d / 2 + 0.6);
-      strut(B, 'metal', K.greenDk, [-0.8, -h, 0], [-0.5, 1.2, 0], 0.18);
-      strut(B, 'metal', K.greenDk, [0.8, -h, 0], [0.5, 1.2, 0], 0.18);
-      for (const sx of [-0.45, 0.45]) {
-        ptor(B, 'metal', K.iron, 0.7, 0.08, sx, 1.2, 0, { seg: 16 });
-        for (let sp = 0; sp < 6; sp++) {
-          const sa = sp * (PI / 3);
-          strut(B, NS('metal'), K.ironLt, [sx, 1.2, 0], [sx, 1.2 + Math.sin(sa) * 0.65, Math.cos(sa) * 0.65], 0.04);
-        }
+      // Compact cable winding drums mounted flush against the wall face (+Z, within 5 cm)
+      B.push(0, 0.5, d / 2 + 0.02);
+      pbox(B, 'metal', K.ironDk, 1.6, 0.3, 0.04, 0, 0.15, 0);
+      for (const dx of [-0.45, 0.45]) {
+        pcyl(B, 'metal', K.iron, 0.22, 0.06, dx, 0.35, 0.02, { rx: HP, seg: 12 });
       }
       B.pop();
     },
   };
 
   // =========================================================================================================
-  // 8. ORGAN PIPES INDUSTRIAL STEP LINKS & RETAINING COLLARS
-  // Hexagonal basalt columns bound with riveted iron bands, checkerplate climbing step links with safety-yellow handles
+  // 8. ORGAN PIPES DRESSING (Moved to dynamic rider mesh inside src/fx/lavaFx.js so dressing dynamically tracks riders!)
   // =========================================================================================================
-  D.caldera_organ_stump = {
-    desc: 'Organ Pipes: basalt columns, heavy riveted retaining bands, checkerplate climbing step links with safety grab handles',
-    build(B) {
-      // Heavy Wrought-iron Hexagonal Retaining Collars
-      for (const y of [1.6, 3.2, 4.8]) {
-        ptor(B, 'metal', K.ironDk, 1.25, 0.09, 0, y, 0, { ts: 6 });
-        // Heavy tensioning bolts
-        for (let k = 0; k < 6; k++) {
-          const ba = k * (PI / 3);
-          pbox(B, NS('metal'), K.ironLt, 0.1, 0.14, 0.1, Math.cos(ba) * 1.3, y, Math.sin(ba) * 1.3);
-        }
-      }
-
-      // Steel Climbing Step Links: checkerplate diamond-tread steps with bright safety-yellow grab handles
-      for (let s = 0; s < 5; s++) {
-        const sy = 0.8 + s * 0.85;
-        const sa = (s & 1 ? 0.35 : -0.35);
-        const sx = Math.sin(sa) * 1.22, sz = Math.cos(sa) * 1.22;
-        B.push(sx, sy, sz, sa);
-        // Welded mounting bracket
-        pbox(B, 'metal', K.iron, 0.42, 0.12, 0.18, 0, 0, 0);
-        // Checkerplate diamond-tread step plate
-        pbox(B, 'metal', '#7a8288', 0.55, 0.06, 0.35, 0, 0.05, 0.15, { r: 0.02 });
-        // Bright Safety-Yellow Tubular Grab Handle
-        strut(B, 'paint', K.gold, [-0.22, 0.08, 0.3], [-0.22, 0.45, 0.3], 0.04);
-        strut(B, 'paint', K.gold, [0.22, 0.08, 0.3], [0.22, 0.45, 0.3], 0.04);
-        strut(B, 'paint', K.gold, [-0.22, 0.45, 0.3], [0.22, 0.45, 0.3], 0.04);
-        B.pop();
-      }
-
-      // Caged Bulkhead Inspection Lamp along climb route
-      pbox(B, NS('metal'), K.ironDk, 0.18, 0.28, 0.12, 0, 3.6, 1.28);
-      psph(B, 'glow', K.lampGlow, 0.08, 0, 3.6, 1.35, { glow: 1.8 });
-    },
-  };
-
-  // Socket Collars (around lava rider columns)
-  D.caldera_socket_collar = {
-    desc: 'Heavy cast iron socket collars with brass wear plates and grease cups',
-    build(B) {
-      ptor(B, 'metal', K.iron, 1.45, 0.14, 0, 0.12, 0, { ts: 8 });
-      for (let i = 0; i < 8; i++) {
-        const a = i * (PI / 4);
-        pcyl(B, NS('metal'), K.ironLt, 0.06, 0.22, Math.cos(a) * 1.52, 0.14, Math.sin(a) * 1.52);
-      }
-    },
-  };
 
   // =========================================================================================================
   // 9. INDUSTRIAL PIPE MANIFOLDS, VALVES & CLUTTER
@@ -759,103 +704,55 @@ export function registerArch(D, H) {
   D.caldera_pour_floor_dressing = {
     desc: 'Heavy cast-iron plinth skirting, pier boots, ingot cooling racks, and tongs racks for Pour Floor',
     build(B) {
-      // 1. Plinth skirting panels along the 4 vertical faces of [-5, 5] x [1.2, 1.8] x [-5, 5]
-      // North & South faces (z = ±5.04 m, span x: -5 to +5 m, y: 1.2 to 1.8 m)
+      // 1. Plinth skirting panels along the 4 vertical faces of [-5, 5] x [1.2, 1.8] x [-5, 5] (within 6 cm of face)
+      // North & South faces (z = ±5.02 m, span x: -5 to +5 m, y: 1.2 to 1.8 m)
       for (const sz of [-1, 1]) {
-        const pz = sz * 5.04;
+        const pz = sz * 5.02;
         // Iron base flange at floor line
-        pbox(B, NS('metal'), K.ironDk, 10.15, 0.08, 0.08, 0, 1.24, pz);
+        pbox(B, NS('metal'), K.ironDk, 10.08, 0.08, 0.04, 0, 1.24, pz);
         // Angle iron coping with yellow hazard strip along top lip
-        pbox(B, 'metal', K.iron, 10.15, 0.06, 0.08, 0, 1.78, pz);
-        pbox(B, NS('paint'), K.gold, 10.1, 0.04, 0.09, 0, 1.75, pz);
+        pbox(B, 'metal', K.iron, 10.08, 0.06, 0.04, 0, 1.78, pz);
+        pbox(B, NS('paint'), K.gold, 10.06, 0.04, 0.05, 0, 1.75, pz);
         // Vertical stiffener ribs every 1.25 m
         for (let x = -4.5; x <= 4.5; x += 1.25) {
-          pbox(B, 'metal', K.ironLt, 0.12, 0.5, 0.06, x, 1.5, pz + sz * 0.02);
+          pbox(B, 'metal', K.ironLt, 0.12, 0.5, 0.04, x, 1.5, pz + sz * 0.01);
           // Rivets on stiffener
-          psph(B, NS('metal'), K.ironDk, 0.022, x, 1.35, pz + sz * 0.04);
-          psph(B, NS('metal'), K.ironDk, 0.022, x, 1.65, pz + sz * 0.04);
+          psph(B, NS('metal'), K.ironDk, 0.015, x, 1.35, pz + sz * 0.025);
+          psph(B, NS('metal'), K.ironDk, 0.015, x, 1.65, pz + sz * 0.025);
         }
         // Base drainage slots
         for (let x = -3.8; x <= 3.8; x += 2.5) {
-          pbox(B, NS('metal'), K.ironDk, 0.35, 0.08, 0.06, x, 1.25, pz);
+          pbox(B, NS('metal'), K.ironDk, 0.35, 0.08, 0.04, x, 1.25, pz);
         }
       }
-      // East & West faces (x = ±5.04 m, span z: -5 to +5 m, y: 1.2 to 1.8 m)
+      // East & West faces (x = ±5.02 m, span z: -5 to +5 m, y: 1.2 to 1.8 m)
       for (const sx of [-1, 1]) {
-        const px = sx * 5.04;
+        const px = sx * 5.02;
         // Iron base flange at floor line
-        pbox(B, NS('metal'), K.ironDk, 0.08, 0.08, 10.15, px, 1.24, 0);
+        pbox(B, NS('metal'), K.ironDk, 0.04, 0.08, 10.08, px, 1.24, 0);
         // Angle iron coping with yellow hazard strip
-        pbox(B, 'metal', K.iron, 0.08, 0.06, 10.15, px, 1.78, 0);
-        pbox(B, NS('paint'), K.gold, 0.09, 0.04, 10.1, px, 1.75, 0);
+        pbox(B, 'metal', K.iron, 0.04, 0.06, 10.08, px, 1.78, 0);
+        pbox(B, NS('paint'), K.gold, 0.05, 0.04, 10.06, px, 1.75, 0);
         // Vertical stiffener ribs every 1.25 m
         for (let z = -4.5; z <= 4.5; z += 1.25) {
-          pbox(B, 'metal', K.ironLt, 0.06, 0.5, 0.12, px + sx * 0.02, 1.5, z);
-          psph(B, NS('metal'), K.ironDk, 0.022, px + sx * 0.04, 1.35, z);
-          psph(B, NS('metal'), K.ironDk, 0.022, px + sx * 0.04, 1.65, z);
+          pbox(B, 'metal', K.ironLt, 0.04, 0.5, 0.12, px + sx * 0.01, 1.5, z);
+          psph(B, NS('metal'), K.ironDk, 0.015, px + sx * 0.025, 1.35, z);
+          psph(B, NS('metal'), K.ironDk, 0.015, px + sx * 0.025, 1.65, z);
         }
       }
-      // Heavy cast-iron corner brackets with hex bolts
+      // Cast-iron corner brackets (within 4 cm of faces)
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-        pbox(B, 'metal', K.ironDk, 0.28, 0.58, 0.28, sx * 5.05, 1.5, sz * 5.05);
+        pbox(B, 'metal', K.ironDk, 0.06, 0.58, 0.06, sx * 5.01, 1.5, sz * 5.01);
       }
 
-      // 2. Column Boots & Strapping for the 4 Piers at [±4.2, ±1.75], y = 1.8 to 7.0 m
-      for (const px of [-4.2, 4.2]) for (const pz of [-1.75, 1.75]) {
-        // Cast iron foundation boot
-        pbox(B, 'metal', K.ironDk, 1.35, 0.75, 1.35, px, 2.18, pz);
-        // Anchor flange rim
-        pbox(B, NS('metal'), K.ironLt, 1.45, 0.08, 1.45, px, 1.85, pz);
-        // Strapping bands every 1.2 m up the column
-        for (let y = 2.8; y <= 6.8; y += 1.2) {
-          pbox(B, NS('metal'), K.iron, 1.28, 0.1, 1.28, px, y, pz);
-          // Corner rivets
-          for (const dx of [-0.62, 0.62]) for (const dz of [-0.62, 0.62]) {
-            psph(B, NS('metal'), K.ironLt, 0.025, px + dx, y, pz + dz);
-          }
+      // 2. Wall-Mounted Ingot Cooling Stills (flush against plinth vertical faces, within 6 cm)
+      for (const sx of [-1, 1]) {
+        const px = sx * 5.02;
+        pbox(B, 'metal', K.ironDk, 0.04, 0.4, 2.4, px, 1.5, 0);
+        for (let iz = -0.9; iz <= 0.9; iz += 0.45) {
+          pbox(B, 'metal', '#383430', 0.04, 0.12, 0.32, px + sx * 0.02, 1.5, iz, { r: 0.02 });
+          pbox(B, 'glow', K.lavaGlow, 0.03, 0.04, 0.28, px + sx * 0.025, 1.5, iz, { glow: 1.4 });
         }
-        // Diagonal corner gusset plate connecting to tie-girder at y = 6.0
-        strut(B, NS('metal'), K.greenLt, [px, 5.2, pz], [px, 6.0, pz + (pz > 0 ? -0.8 : 0.8)], 0.12);
-      }
-
-      // 3. Ingot Cooling Racks on the Island beside the plinth (y = 1.2)
-      // Steel A-frame rack with tiers of glowing iron ingots
-      for (const [rx, rz, ryaw] of [[-5.8, 2.0, HP], [5.8, -2.0, -HP], [-2.0, -5.8, 0], [2.0, 5.8, PI]]) {
-        B.push(rx, 1.2, rz, ryaw);
-        // A-frame ends
-        for (const ex of [-1.2, 1.2]) {
-          strut(B, 'metal', K.ironDk, [ex, 0, -0.45], [ex, 1.4, 0], 0.08);
-          strut(B, 'metal', K.ironDk, [ex, 0, 0.45], [ex, 1.4, 0], 0.08);
-          strut(B, NS('metal'), K.iron, [ex, 0.4, -0.3], [ex, 0.4, 0.3], 0.06);
-          strut(B, NS('metal'), K.iron, [ex, 0.85, -0.18], [ex, 0.85, 0.18], 0.06);
-        }
-        // Horizontal support rails
-        pbox(B, 'metal', K.iron, 2.45, 0.06, 0.06, 0, 0.4, -0.28);
-        pbox(B, 'metal', K.iron, 2.45, 0.06, 0.06, 0, 0.4, 0.28);
-        pbox(B, 'metal', K.iron, 2.45, 0.06, 0.06, 0, 0.85, -0.16);
-        pbox(B, 'metal', K.iron, 2.45, 0.06, 0.06, 0, 0.85, 0.16);
-        // Rows of cast iron ingots with molten glow
-        for (let ix = -0.9; ix <= 0.9; ix += 0.36) {
-          pbox(B, 'metal', '#383430', 0.28, 0.14, 0.65, ix, 0.48, 0, { r: 0.02 });
-          pbox(B, 'glow', K.lavaGlow, 0.22, 0.05, 0.55, ix, 0.52, 0, { glow: 1.5 });
-          pbox(B, 'metal', '#383430', 0.24, 0.12, 0.42, ix, 0.92, 0, { r: 0.02 });
-          pbox(B, 'glow', K.orange, 0.18, 0.04, 0.34, ix, 0.96, 0, { glow: 1.8 });
-        }
-        B.pop();
-      }
-
-      // 4. Foundry Tongs & Ladles Stand
-      {
-        B.push(-5.8, 1.2, -3.2, HP);
-        // Iron stand frame
-        pbox(B, 'metal', K.ironDk, 1.8, 1.2, 0.1, 0, 0.6, 0);
-        pbox(B, NS('metal'), K.iron, 2.0, 0.06, 0.25, 0, 1.18, 0);
-        // Hanging long tongs and skimmers
-        for (let tx = -0.7; tx <= 0.7; tx += 0.35) {
-          pcyl(B, NS('metal'), K.ironLt, 0.018, 1.1, tx, 0.55, 0.12);
-          pbox(B, NS('metal'), K.ironDk, 0.08, 0.2, 0.04, tx, 0.12, 0.12);
-        }
-        B.pop();
       }
 
       // 5. Island Cover Blocks Dressing (Skin within 8.5 cm)
@@ -874,77 +771,77 @@ export function registerArch(D, H) {
       }
       B.pop();
 
-      // Stilling Drum at [7.6, 1.2, -6.3] (OCT r = 1.0, h = 1.4)
+      // Stilling Drum at [7.6, 1.2, -6.3] (OCT r = 1.0, h = 1.4, within 4 cm of face)
       B.push(7.6, 1.2, -6.3);
-      pcyl(B, 'metal', K.ironDk, 1.04, 1.38, 0, 0.7, 0, { seg: 18 });
+      pcyl(B, 'metal', K.ironDk, 0.94, 1.36, 0, 0.68, 0, { seg: 16 });
       for (const hy of [0.25, 0.7, 1.15]) {
-        ptor(B, NS('metal'), K.ironLt, 1.06, 0.035, 0, hy, 0);
+        ptor(B, NS('metal'), K.ironLt, 0.95, 0.015, 0, hy, 0, { rx: HP });
       }
       // Bolted inspection manway on side
-      pcyl(B, NS('metal'), K.iron, 0.32, 0.12, 0.98, 0.7, 0, { rz: HP });
-      // Brass pressure relief valve and gauge
-      pcyl(B, NS('metal'), K.brass, 0.08, 0.4, 0, 1.45, 0.5);
-      psph(B, NS('metal'), K.brass, 0.12, 0, 1.65, 0.5);
+      pcyl(B, NS('metal'), K.iron, 0.18, 0.04, 0.92, 0.7, 0, { rz: HP });
+      // Brass pressure relief valve and gauge (stays within 8 cm of drum top)
+      pcyl(B, NS('metal'), K.brass, 0.05, 0.06, 0, 1.41, 0.3);
+      psph(B, NS('metal'), K.brass, 0.03, 0, 1.45, 0.3);
       B.pop();
 
-      // Ladle Stand at [11.6, 1.2, 0.8] (1.4 x 1.8 x 1.4)
+      // Ladle Stand at [11.6, 1.2, 0.8] (1.4 x 1.8 x 1.4, within 4 cm of faces, h <= 1.4 m)
       B.push(11.6, 1.2, 0.8);
       // Steel cradle frame
-      for (const sx of [-0.72, 0.72]) {
-        strut(B, 'metal', K.greenDk, [sx, 0, -0.85], [sx, 1.35, 0], 0.12);
-        strut(B, 'metal', K.greenDk, [sx, 0, 0.85], [sx, 1.35, 0], 0.12);
-        ptor(B, NS('metal'), K.ironDk, 0.22, 0.06, sx, 1.35, 0, { rz: HP });
+      for (const sx of [-0.68, 0.68]) {
+        strut(B, 'metal', K.greenDk, [sx, 0, -0.80], [sx, 1.32, 0], 0.06);
+        strut(B, 'metal', K.greenDk, [sx, 0, 0.80], [sx, 1.32, 0], 0.06);
+        pcyl(B, NS('metal'), K.ironDk, 0.08, 0.04, sx, 1.32, 0, { rz: HP });
       }
       // Tilted pouring ladle body with slag crust
-      pcyl(B, 'metal', K.ironRust, 0.65, 1.1, 0, 0.85, 0, { rx: 0.25, seg: 14 });
-      ptor(B, NS('metal'), K.ironDk, 0.68, 0.05, 0, 1.38, 0.12, { rx: 0.25 });
-      pbox(B, 'glow', K.lavaGlow, 0.45, 0.04, 0.55, 0, 1.35, 0.15, { rx: 0.25, glow: 1.8 });
+      pcyl(B, 'metal', K.ironRust, 0.48, 0.9, 0, 0.78, 0, { rx: HP + 0.25, seg: 14 });
+      ptor(B, NS('metal'), K.ironDk, 0.50, 0.025, 0, 1.25, 0.1, { rx: HP + 0.25 });
+      pbox(B, 'glow', K.lavaGlow, 0.35, 0.02, 0.40, 0, 1.23, 0.1, { rx: 0.25, glow: 1.8 });
       B.pop();
 
-      // Gauge Machine House at [-10.5, 2.4, 4.6] (3.0 x 2.2 x 4.0)
+      // Gauge Machine House at [-10.5, 2.4, 4.6] (3.0 x 2.2 x 4.0, within 4 cm of face)
       B.push(-10.5, 2.4, 4.6);
       // Corrugated galvanized iron walls with dark green corner angles
-      for (const sx of [-1.52, 1.52]) {
-        pbox(B, 'metal', '#5c646b', 0.06, 2.15, 3.95, sx, 1.08, 0);
+      for (const sx of [-1.51, 1.51]) {
+        pbox(B, 'metal', '#5c646b', 0.02, 2.15, 3.95, sx, 1.08, 0);
       }
-      for (const sz of [-2.02, 2.02]) {
-        pbox(B, 'metal', '#5c646b', 2.95, 2.15, 0.06, 0, 1.08, sz);
+      for (const sz of [-2.01, 2.01]) {
+        pbox(B, 'metal', '#5c646b', 2.95, 2.15, 0.02, 0, 1.08, sz);
       }
-      for (const sx of [-1.53, 1.53]) for (const sz of [-2.03, 2.03]) {
-        pbox(B, NS('metal'), K.greenDk, 0.12, 2.2, 0.12, sx, 1.1, sz);
+      for (const sx of [-1.51, 1.51]) for (const sz of [-2.01, 2.01]) {
+        pbox(B, NS('metal'), K.greenDk, 0.06, 2.2, 0.06, sx, 1.1, sz);
       }
       // Illuminated factory window on south face (facing mid / Pour Floor)
-      pbox(B, 'glow', K.glassLit, 1.4, 1.0, 0.06, 0, 1.2, -2.04, { glow: 1.3 });
-      pbox(B, NS('metal'), K.greenDk, 1.46, 0.06, 0.1, 0, 1.2, -2.04);
-      pbox(B, NS('metal'), K.greenDk, 0.06, 1.06, 0.1, 0, 1.2, -2.04);
+      pbox(B, 'glow', K.glassLit, 1.4, 1.0, 0.02, 0, 1.2, -2.01, { glow: 1.3 });
+      pbox(B, NS('metal'), K.greenDk, 1.44, 0.04, 0.04, 0, 1.2, -2.01);
+      pbox(B, NS('metal'), K.greenDk, 0.04, 1.04, 0.04, 0, 1.2, -2.01);
       // Copper float-well counterweight cable and dial
-      pcyl(B, NS('metal'), K.copper, 0.02, 1.8, -1.1, 1.1, -2.05);
-      pcyl(B, NS('metal'), K.brass, 0.24, 0.04, -1.1, 1.8, -2.06, { rx: HP });
+      pcyl(B, NS('metal'), K.copper, 0.02, 1.8, -1.1, 1.1, -2.02);
+      pcyl(B, NS('metal'), K.brass, 0.2, 0.02, -1.1, 1.8, -2.03, { rx: HP });
       B.pop();
 
-      // Valve Chest at [-6.15, 2.4, 0.0] (1.5 x 1.0 x 1.2)
+      // Valve Chest at [-6.15, 2.4, 0.0] (1.5 x 1.0 x 1.2, within 4 cm of face)
       B.push(-6.15, 2.4, 0.0);
-      pbox(B, 'metal', K.ironDk, 1.54, 0.08, 1.24, 0, 0.04, 0);
-      // Red handwheels on rising stems
+      pbox(B, 'metal', K.ironDk, 1.52, 0.04, 1.22, 0, 0.02, 0);
+      // Red handwheels on rising stems (stays within 7 cm of top)
       for (const sx of [-0.4, 0.4]) {
-        pcyl(B, NS('metal'), K.ironLt, 0.03, 0.45, sx, 1.12, 0);
-        ptor(B, 'metal', K.red, 0.18, 0.03, sx, 1.32, 0, { rx: HP });
-        psph(B, NS('metal'), K.brass, 0.04, sx, 1.32, 0);
+        pcyl(B, NS('metal'), K.ironLt, 0.02, 0.06, sx, 1.03, 0);
+        ptor(B, 'metal', K.red, 0.12, 0.015, sx, 1.05, 0, { rx: HP });
+        psph(B, NS('metal'), K.brass, 0.02, sx, 1.05, 0);
       }
-      // Bolted bonnet flanges on side faces
-      for (const sz of [-0.62, 0.62]) {
-        ptor(B, NS('metal'), K.iron, 0.25, 0.04, 0, 0.55, sz, { rx: HP });
+      // Bolted bonnet flanges on side faces (flat against faces in XY plane)
+      for (const sz of [-0.61, 0.61]) {
+        ptor(B, NS('metal'), K.iron, 0.16, 0.02, 0, 0.55, sz);
       }
       B.pop();
 
       // Organ Stumps Columnar Dressing (basalt octagons [-6.4, -8.6], [-12.3, -2.7], [-7.0, -3.6])
       for (const [ox, oz, oy, orad] of [[-6.4, -8.6, 2.1, 0.9], [-12.3, -2.7, 2.4, 0.8], [-7.0, -3.6, 1.8, 0.8]]) {
         B.push(ox, 1.2, oz);
-        // Riveted iron collar band around column
-        ptor(B, NS('metal'), K.ironDk, orad + 0.04, 0.06, 0, (oy - 1.2) * 0.6, 0);
+        // Riveted iron collar band around column (within 4 cm of face)
+        ptor(B, NS('metal'), K.ironDk, orad * 0.93, 0.02, 0, (oy - 1.2) * 0.6, 0, { rx: HP });
         // Climbing rungs on face toward path
         for (let ry = 0.25; ry <= (oy - 1.2) * 0.85; ry += 0.3) {
-          pbox(B, NS('paint'), K.gold, 0.32, 0.04, 0.06, 0, ry, orad + 0.02);
+          pbox(B, NS('paint'), K.gold, 0.25, 0.03, 0.03, 0, ry, orad * 0.92 + 0.01);
         }
         B.pop();
       }
@@ -958,109 +855,90 @@ export function registerArch(D, H) {
   D.caldera_rim_head_dressing = {
     desc: 'Architectural skins, openings, roofs, and industrial props for Rim Head and Moulding Terrace',
     build(B) {
-      // 1. Pattern Shop Skin (around frameBox on terrace)
-      // Planks, multi-pane illuminated windows, corner trims, corrugated roof
-      B.push(-20.5, 2.4, -36.5, 60 * D_);
-      // Weatherboard wall panels
-      pbox(B, 'wood', K.wood, 4.2, 2.9, 0.1, 0, 1.5, 1.72);
-      pbox(B, 'wood', K.wood, 0.1, 2.9, 3.4, -2.12, 1.5, 0);
-      pbox(B, 'wood', K.wood, 0.1, 2.9, 3.4, 2.12, 1.5, 0);
-      // Corner trim battens
-      pbox(B, NS('paint'), K.white, 0.14, 3.0, 0.14, -2.14, 1.5, 1.74);
-      pbox(B, NS('paint'), K.white, 0.14, 3.0, 0.14, 2.14, 1.5, 1.74);
-      // Multi-pane Workshop Windows with glowing warm interior
-      for (const wx of [-1.1, 1.1]) {
-        pbox(B, 'metal', K.greenDk, 1.2, 1.4, 0.12, wx, 1.6, 1.74);
-        pbox(B, 'glow', K.glassLit, 1.05, 1.25, 0.06, wx, 1.6, 1.76, { glow: 1.4 });
-        // Window mullions
-        pbox(B, NS('paint'), K.white, 0.05, 1.25, 0.14, wx, 1.6, 1.78);
-        pbox(B, NS('paint'), K.white, 1.05, 0.05, 0.14, wx, 1.6, 1.78);
+      // 1. Pattern Shop Skin (around layout frameBox on terrace at [-23.147, 2.4, -33.305], rotY: 126 deg)
+      // Block size: 3.9 x 3.0 x 1.7 m (local x: +-1.95, local y: 0..3.0, local z: +-0.85)
+      B.push(-23.147, 2.4, -33.305, 126 * D_);
+      // Weatherboard wall panels within 3 cm of faces
+      pbox(B, 'wood', K.wood, 3.92, 2.9, 0.04, 0, 1.45, 0.86);
+      pbox(B, 'wood', K.wood, 3.92, 2.9, 0.04, 0, 1.45, -0.86);
+      pbox(B, 'wood', K.wood, 0.04, 2.9, 1.72, -1.96, 1.45, 0);
+      pbox(B, 'wood', K.wood, 0.04, 2.9, 1.72, 1.96, 1.45, 0);
+      // Corner trim battens (within 4 cm of corners)
+      for (const cx of [-1.96, 1.96]) for (const cz of [-0.86, 0.86]) {
+        pbox(B, NS('paint'), K.white, 0.06, 3.0, 0.06, cx, 1.5, cz);
       }
-      // Overhanging Corrugated Roof with rain gutter
-      pbox(B, 'paint', K.verdDk, 4.6, 0.15, 3.8, 0, 3.05, 0);
-      pbox(B, NS('metal'), K.ironLt, 4.65, 0.08, 0.08, 0, 2.98, 1.92); // Front gutter
-      pcyl(B, NS('metal'), K.iron, 0.04, 2.8, -2.2, 1.5, 1.9, { seg: 6 }); // Downpipe
+      // Multi-pane Workshop Windows with glowing warm interior on front face
+      for (const wx of [-1.0, 1.0]) {
+        pbox(B, 'metal', K.greenDk, 1.1, 1.3, 0.04, wx, 1.6, 0.88);
+        pbox(B, 'glow', K.glassLit, 0.95, 1.15, 0.02, wx, 1.6, 0.89, { glow: 1.4 });
+        pbox(B, NS('paint'), K.white, 0.02, 1.15, 0.04, wx, 1.6, 0.89);
+        pbox(B, NS('paint'), K.white, 0.95, 0.02, 0.04, wx, 1.6, 0.89);
+      }
+      // Corrugated Roof at y = 3.0 (within 5 cm of faces)
+      pbox(B, 'paint', K.verdDk, 3.94, 0.04, 1.74, 0, 3.02, 0);
+      pbox(B, NS('metal'), K.ironLt, 3.94, 0.03, 0.03, 0, 3.01, 0.86); // Front gutter
+      pcyl(B, NS('metal'), K.iron, 0.02, 2.8, -1.96, 1.5, 0.86, { seg: 6 }); // Downpipe
       // Stove pipe chimney
-      pcyl(B, 'metal', K.ironLt, 0.12, 1.6, 1.2, 3.8, -0.8, { seg: 8 });
-      pcyl(B, NS('metal'), K.ironDk, 0.22, 0.12, 1.2, 4.5, -0.8, { seg: 8 });
+      pcyl(B, 'metal', K.ironLt, 0.08, 1.4, 1.0, 3.7, -0.4, { seg: 8 });
+      pcyl(B, NS('metal'), K.ironDk, 0.14, 0.08, 1.0, 4.3, -0.4, { seg: 8 });
       B.pop();
 
-      // 2. Sand Bin & Flask Stacks Skin
-      B.push(-13.5, 2.4, -37.5);
-      // Heavy timber plank retainers with rusty iron strapping
-      pbox(B, 'wood', K.woodDk, 3.4, 1.1, 0.12, 0, 0.55, 1.8);
-      pbox(B, 'wood', K.woodDk, 0.12, 1.1, 3.6, -1.7, 0.55, 0);
-      for (const bx of [-1.6, 0, 1.6]) {
-        pbox(B, NS('metal'), K.ironRust, 0.1, 1.15, 0.16, bx, 0.55, 1.82);
-      }
-      // Spilled Moulding Sand heaps at base
-      pbox(B, 'paint', K.sand, 3.6, 0.35, 1.2, 0, 0.18, 2.2);
-      // Flask Stack tiers
-      for (let tier = 0; tier < 3; tier++) {
-        const fy = tier * 0.42;
-        pbox(B, 'metal', K.iron, 1.5, 0.38, 1.2, 0.4, fy + 0.2, -0.4, { r: 0.03 });
-        pbox(B, 'paint', K.sand, 1.3, 0.35, 1.0, 0.4, fy + 0.22, -0.4);
+      // 2. Flask Stacks Skin (around layout block at [-13.55, 2.4, -37.5], size: 1.2 x 1.6 x 0.9 m)
+      B.push(-13.55, 2.4, -37.5);
+      // Tiers of cast-iron moulding flasks fitting the block within 3 cm
+      for (let tier = 0; tier < 4; tier++) {
+        const fy = tier * 0.4;
+        pbox(B, 'metal', K.iron, 1.22, 0.36, 0.92, 0, fy + 0.18, 0, { r: 0.02 });
+        pbox(B, 'paint', K.sand, 1.16, 0.32, 0.86, 0, fy + 0.20, 0);
+        pbox(B, NS('metal'), K.ironRust, 1.24, 0.03, 0.03, 0, fy + 0.18, 0.46);
+        pbox(B, NS('metal'), K.ironRust, 1.24, 0.03, 0.03, 0, fy + 0.18, -0.46);
       }
       B.pop();
 
-      // 3. Stencilled Pattern Crates on Moulding Terrace
-      B.push(-11.8, 2.4, -38.2);
-      // Large banded crates
-      pbox(B, 'wood', '#8a6e50', 1.8, 1.2, 1.4, 0, 0.6, 0);
-      pbox(B, NS('metal'), K.ironRust, 1.82, 0.06, 0.06, 0, 0.15, -0.68);
-      pbox(B, NS('metal'), K.ironRust, 1.82, 0.06, 0.06, 0, 1.05, -0.68);
-      pbox(B, NS('metal'), K.ironRust, 1.82, 0.06, 0.06, 0, 0.15, 0.68);
-      pbox(B, NS('metal'), K.ironRust, 1.82, 0.06, 0.06, 0, 1.05, 0.68);
+      // 3. Stencilled Pattern Crates (around layout block at [-11.8, 3.0, -38.2], size: 1.0 x 0.9 x 1.2 m)
+      B.push(-11.8, 3.0, -38.2);
+      pbox(B, 'wood', '#8a6e50', 1.04, 0.88, 1.24, 0, 0.44, 0);
+      pbox(B, NS('metal'), K.ironRust, 1.05, 0.04, 0.04, 0, 0.12, -0.58);
+      pbox(B, NS('metal'), K.ironRust, 1.05, 0.04, 0.04, 0, 0.76, -0.58);
+      pbox(B, NS('metal'), K.ironRust, 1.05, 0.04, 0.04, 0, 0.12, 0.58);
+      pbox(B, NS('metal'), K.ironRust, 1.05, 0.04, 0.04, 0, 0.76, 0.58);
       // Stencil badge plate
-      pbox(B, NS('paint'), K.white, 0.9, 0.45, 0.02, 0, 0.65, 0.72);
-      pbox(B, NS('paint'), K.ironDk, 0.8, 0.1, 0.03, 0, 0.72, 0.73);
-      // Second stacked crate
-      pbox(B, 'wood', '#9c7b5a', 1.2, 0.9, 1.1, 0.2, 1.65, -0.1);
+      pbox(B, NS('paint'), K.white, 0.7, 0.35, 0.02, 0, 0.45, 0.61);
+      pbox(B, NS('paint'), K.ironDk, 0.6, 0.08, 0.02, 0, 0.50, 0.62);
       B.pop();
 
-      // 4. Refractory Firebrick Pallets along terrace
-      for (const [px, pz] of [[-7.5, -42.0], [-9.5, -40.0], [-15.5, -39.0]]) {
-        B.push(px, 2.4, pz);
-        pbox(B, 'wood', K.wood, 1.3, 0.12, 1.3, 0, 0.06, 0);
-        for (let t = 0; t < 3; t++) {
-          pbox(B, 'paint', '#d9c28a', 1.15, 0.22, 1.15, 0, 0.12 + t * 0.22 + 0.11, 0);
-        }
-        pbox(B, NS('metal'), K.ironDk, 1.18, 0.7, 0.03, 0, 0.45, 0);
-        B.pop();
-      }
-
-      // 5. Rim Head Outcrops & Cairns Dressing (skin within 8.5 cm of faces)
+      // 5. Rim Head Outcrops & Cairns Dressing (skin within 6 cm of faces)
       // Outcrop 1 at [-29.0, 4.2, -24.5] (1.6 x 1.3 x 1.4)
       B.push(-29.0, 4.2, -24.5);
       for (const sx of [-0.78, 0.78]) {
-        pbox(B, 'paint', K.basalt, 0.06, 1.25, 1.35, sx, 0.63, 0);
-        pbox(B, NS('paint'), K.basaltDk, 0.08, 1.1, 0.35, sx, 0.6, -0.35);
-        pbox(B, NS('paint'), K.basaltLt, 0.08, 0.9, 0.35, sx, 0.5, 0.35);
+        pbox(B, 'paint', K.basalt, 0.04, 1.25, 1.35, sx, 0.63, 0);
+        pbox(B, NS('paint'), K.basaltDk, 0.05, 1.1, 0.35, sx, 0.6, -0.35);
+        pbox(B, NS('paint'), K.basaltLt, 0.05, 0.9, 0.35, sx, 0.5, 0.35);
       }
       for (const sz of [-0.68, 0.68]) {
-        pbox(B, 'paint', K.basalt, 1.55, 1.25, 0.06, 0, 0.63, sz);
-        pbox(B, NS('paint'), K.basaltDk, 0.45, 1.0, 0.08, -0.4, 0.55, sz);
+        pbox(B, 'paint', K.basalt, 1.55, 1.25, 0.04, 0, 0.63, sz);
+        pbox(B, NS('paint'), K.basaltDk, 0.45, 1.0, 0.05, -0.4, 0.55, sz);
       }
-      // Forged iron mooring/anchor ring on rock
-      ptor(B, NS('metal'), K.ironRust, 0.18, 0.04, 0, 0.85, 0.73, { rx: HP });
-      // Scoria and basalt gravel skirts at base
-      pbox(B, NS('paint'), K.scoria, 1.76, 0.15, 1.56, 0, 0.08, 0);
+      // Forged iron mooring/anchor ring on rock (flat against rock face in XY plane)
+      ptor(B, NS('metal'), K.ironRust, 0.08, 0.015, 0, 0.85, 0.71);
+      // Scoria and basalt gravel skirts at base (within 4 cm)
+      pbox(B, NS('paint'), K.scoria, 1.66, 0.12, 1.46, 0, 0.06, 0);
       B.pop();
 
       // Outcrop 2 at [-35.4, 4.2, -37.0] (1.4 x 1.3 x 1.6)
       B.push(-35.4, 4.2, -37.0);
       for (const sx of [-0.68, 0.68]) {
-        pbox(B, 'paint', K.basalt, 0.06, 1.25, 1.55, sx, 0.63, 0);
-        pbox(B, NS('paint'), K.basaltLt, 0.08, 0.8, 0.45, sx, 0.45, 0);
+        pbox(B, 'paint', K.basalt, 0.04, 1.25, 1.55, sx, 0.63, 0);
+        pbox(B, NS('paint'), K.basaltLt, 0.05, 0.8, 0.45, sx, 0.45, 0);
       }
       for (const sz of [-0.78, 0.78]) {
-        pbox(B, 'paint', K.basalt, 1.35, 1.25, 0.06, 0, 0.63, sz);
+        pbox(B, 'paint', K.basalt, 1.35, 1.25, 0.04, 0, 0.63, sz);
       }
-      // Steel surveyor benchmark tripod on outer edge
-      strut(B, NS('metal'), K.gold, [-0.4, 0, -0.4], [0, 1.45, 0], 0.04);
-      strut(B, NS('metal'), K.gold, [0.4, 0, -0.4], [0, 1.45, 0], 0.04);
-      strut(B, NS('metal'), K.gold, [0, 0, 0.5], [0, 1.45, 0], 0.04);
-      psph(B, NS('metal'), K.brass, 0.08, 0, 1.45, 0);
+      // Steel surveyor benchmark tripod on outer edge (within 6 cm of top)
+      strut(B, NS('metal'), K.gold, [-0.3, 0, -0.3], [0, 1.34, 0], 0.03);
+      strut(B, NS('metal'), K.gold, [0.3, 0, -0.3], [0, 1.34, 0], 0.03);
+      strut(B, NS('metal'), K.gold, [0, 0, 0.4], [0, 1.34, 0], 0.03);
+      psph(B, NS('metal'), K.brass, 0.03, 0, 1.35, 0);
       B.pop();
 
       // Cairn 1 at [-29.2, 4.2, -35.6] (1.2 x 1.2 x 1.2)
@@ -1094,50 +972,50 @@ export function registerArch(D, H) {
   D.caldera_yard_cover_dressing = {
     desc: 'Heavy cast-iron castings stacked for ferry shipment, ingot racks, drum stacks, stillage frames',
     build(B) {
-      // 1. Ferry Castings Line East (x = -12.4, z = -62.5 to -46.75 and -43.25 to -40.85, y = 3.6 to 6.0)
-      for (const [z0, z1] of [[-62.5, -46.75], [-43.25, -40.85]]) {
+      // 1. Ferry Castings Line East (x = -12.4, z = -55.5 to -46.75 and -43.25 to -40.85, y = 3.6 to 6.0)
+      for (const [z0, z1] of [[-55.5, -46.75], [-43.25, -40.85]]) {
         const zc = (z0 + z1) / 2, zl = Math.abs(z1 - z0);
         B.push(-12.4, 3.6, zc);
         // Base timber dunnage runners
-        pbox(B, 'wood', K.woodDk, 1.26, 0.14, zl + 0.04, 0, 0.07, 0);
-        // Stacked locomotive wheel blanks and flywheel rings along faces
+        pbox(B, 'wood', K.woodDk, 1.24, 0.12, zl + 0.02, 0, 0.06, 0);
+        // Stacked locomotive wheel blanks and flywheel rings flush against wall faces (within 4 cm)
         for (let z = -zl / 2 + 1.2; z <= zl / 2 - 1.2; z += 2.4) {
-          // East face (facing east lane)
-          ptor(B, 'metal', K.iron, 0.75, 0.12, 0.63, 1.2, z);
-          pcyl(B, NS('metal'), K.ironLt, 0.28, 0.24, 0.63, 1.2, z, { rx: HP });
+          // East face (facing east lane, ry: HP puts ring in YZ plane parallel to wall)
+          ptor(B, 'metal', K.iron, 0.55, 0.025, 0.61, 1.2, z, { ry: HP });
+          pcyl(B, NS('metal'), K.ironLt, 0.16, 0.04, 0.61, 1.2, z, { rz: HP });
           // West face (facing center lane)
-          ptor(B, 'metal', K.ironDk, 0.75, 0.12, -0.63, 1.2, z);
-          pcyl(B, NS('metal'), K.ironLt, 0.28, 0.24, -0.63, 1.2, z, { rx: HP });
+          ptor(B, 'metal', K.ironDk, 0.55, 0.025, -0.61, 1.2, z, { ry: HP });
+          pcyl(B, NS('metal'), K.ironLt, 0.16, 0.04, -0.61, 1.2, z, { rz: HP });
         }
         // Heavy steel strapping bands every 2.0 m
         for (let z = -zl / 2 + 1.0; z <= zl / 2 - 1.0; z += 2.0) {
-          pbox(B, NS('metal'), K.ironRust, 1.28, 0.08, 0.08, 0, 0.4, z);
-          pbox(B, NS('metal'), K.ironRust, 1.28, 0.08, 0.08, 0, 1.8, z);
-          pbox(B, NS('metal'), K.ironRust, 0.08, 2.35, 0.08, 0.62, 1.18, z);
-          pbox(B, NS('metal'), K.ironRust, 0.08, 2.35, 0.08, -0.62, 1.18, z);
+          pbox(B, NS('metal'), K.ironRust, 1.24, 0.06, 0.06, 0, 0.4, z);
+          pbox(B, NS('metal'), K.ironRust, 1.24, 0.06, 0.06, 0, 1.8, z);
+          pbox(B, NS('metal'), K.ironRust, 0.04, 2.35, 0.06, 0.61, 1.18, z);
+          pbox(B, NS('metal'), K.ironRust, 0.04, 2.35, 0.06, -0.61, 1.18, z);
         }
         // Stencil plate: "HIGHMARK FOUNDRY - LOT 41"
-        pbox(B, NS('paint'), K.white, 0.04, 0.45, 1.8, -0.64, 1.7, 0);
-        pbox(B, NS('paint'), K.ironDk, 0.05, 0.1, 1.6, -0.65, 1.7, 0);
+        pbox(B, NS('paint'), K.white, 0.02, 0.45, 1.8, -0.61, 1.7, 0);
+        pbox(B, NS('paint'), K.ironDk, 0.03, 0.1, 1.6, -0.615, 1.7, 0);
         B.pop();
       }
 
-      // 2. Ferry Castings Line West (x = -27.7, z = -62.5 to -46.75, y = 3.6 to 6.0)
+      // 2. Ferry Castings Line West (x = -27.7, z = -55.5 to -46.75, y = 3.6 to 6.0)
       {
-        const z0 = -62.5, z1 = -46.75, zc = (z0 + z1) / 2, zl = Math.abs(z1 - z0);
+        const z0 = -55.5, z1 = -46.75, zc = (z0 + z1) / 2, zl = Math.abs(z1 - z0);
         B.push(-27.7, 3.6, zc);
-        pbox(B, 'wood', K.woodDk, 1.26, 0.14, zl + 0.04, 0, 0.07, 0);
-        // Flanged steam manifold castings along faces
+        pbox(B, 'wood', K.woodDk, 1.24, 0.12, zl + 0.02, 0, 0.06, 0);
+        // Flanged steam manifold castings flush along faces (within 6 cm)
         for (let z = -zl / 2 + 1.5; z <= zl / 2 - 1.5; z += 3.0) {
-          for (const sx of [-0.64, 0.64]) {
-            pcyl(B, 'metal', K.iron, 0.35, 1.8, sx, 1.1, z, { rz: HP });
-            ptor(B, NS('metal'), K.ironDk, 0.48, 0.08, sx, 1.1, z - 0.75, { rx: HP });
-            ptor(B, NS('metal'), K.ironDk, 0.48, 0.08, sx, 1.1, z + 0.75, { rx: HP });
+          for (const sx of [-0.61, 0.61]) {
+            pcyl(B, 'metal', K.iron, 0.035, 2.2, sx, 1.1, z, { rx: HP });
+            ptor(B, NS('metal'), K.ironDk, 0.05, 0.012, sx, 1.1, z - 0.75, { rx: HP });
+            ptor(B, NS('metal'), K.ironDk, 0.05, 0.012, sx, 1.1, z + 0.75, { rx: HP });
           }
         }
         for (let z = -zl / 2 + 1.0; z <= zl / 2 - 1.0; z += 2.0) {
-          pbox(B, NS('metal'), K.ironRust, 1.28, 0.08, 0.08, 0, 0.4, z);
-          pbox(B, NS('metal'), K.ironRust, 1.28, 0.08, 0.08, 0, 1.8, z);
+          pbox(B, NS('metal'), K.ironRust, 1.24, 0.06, 0.06, 0, 0.4, z);
+          pbox(B, NS('metal'), K.ironRust, 1.24, 0.06, 0.06, 0, 1.8, z);
         }
         B.pop();
       }
@@ -1145,57 +1023,55 @@ export function registerArch(D, H) {
       // 3. Center Lane Gate Apron: Drain Grates & Ingot Rack (y = 3.6)
       // Drain Grates at [-20.6, 3.6, -49.4] (1.6 x 1.3 x 1.2)
       B.push(-20.6, 3.6, -49.4);
-      pbox(B, 'metal', K.ironDk, 1.66, 0.12, 1.26, 0, 0.06, 0);
-      for (const sx of [-0.83, 0.83]) pbox(B, 'metal', K.ironLt, 0.08, 1.28, 1.24, sx, 0.65, 0);
-      for (const sz of [-0.63, 0.63]) pbox(B, 'metal', K.ironLt, 1.64, 1.28, 0.08, 0, 0.65, sz);
+      pbox(B, 'metal', K.ironDk, 1.64, 0.10, 1.24, 0, 0.05, 0);
+      for (const sx of [-0.81, 0.81]) pbox(B, 'metal', K.ironLt, 0.04, 1.28, 1.22, sx, 0.65, 0);
+      for (const sz of [-0.61, 0.61]) pbox(B, 'metal', K.ironLt, 1.62, 1.28, 0.04, 0, 0.65, sz);
       // Slotted iron drainage grates
       for (let x = -0.65; x <= 0.65; x += 0.22) {
-        pbox(B, NS('metal'), K.iron, 0.08, 0.1, 1.18, x, 1.32, 0);
+        pbox(B, NS('metal'), K.iron, 0.06, 0.08, 1.16, x, 1.31, 0);
       }
       B.pop();
 
       // Ingot Rack at [-14.6, 3.6, -48.7] (1.6 x 1.3 x 1.4)
       B.push(-14.6, 3.6, -48.7);
       // Steel tiered A-frame uprights
-      for (const sx of [-0.82, 0.82]) {
-        pbox(B, 'metal', K.greenDk, 0.08, 1.3, 1.44, sx, 0.65, 0);
+      for (const sx of [-0.81, 0.81]) {
+        pbox(B, 'metal', K.greenDk, 0.06, 1.3, 1.42, sx, 0.65, 0);
         for (let tier = 0; tier < 3; tier++) {
-          pbox(B, NS('metal'), K.ironLt, 0.12, 0.08, 1.46, sx, 0.25 + tier * 0.42, 0);
+          pbox(B, NS('metal'), K.ironLt, 0.08, 0.06, 1.44, sx, 0.25 + tier * 0.42, 0);
         }
       }
       // Glowing ingots on tiers
       for (let tier = 0; tier < 3; tier++) {
         const ty = 0.32 + tier * 0.42;
-        pbox(B, 'metal', K.iron, 1.58, 0.14, 1.32, 0, ty, 0);
-        pbox(B, 'glow', K.orange, 1.54, 0.04, 1.24, 0, ty + 0.08, 0, { glow: 1.2 });
+        pbox(B, 'metal', K.iron, 1.56, 0.12, 1.32, 0, ty, 0);
+        pbox(B, 'glow', K.orange, 1.52, 0.03, 1.24, 0, ty + 0.07, 0, { glow: 1.2 });
       }
       B.pop();
 
-      // 4. Drum Stack at [-36.0, 3.6, -59.8] (r = 0.85, h = 1.3)
+      // 4. Drum Stack at [-36.0, 3.6, -59.8] (OCT r = 0.85, h = 1.3, within 4 cm of face)
       B.push(-36.0, 3.6, -59.8);
-      for (const [dx, dz] of [[-0.45, -0.45], [0.45, -0.45], [-0.45, 0.45], [0.45, 0.45]]) {
-        pcyl(B, 'metal', '#4a5450', 0.38, 1.25, dx, 0.63, dz, { seg: 12 });
-        ptor(B, NS('metal'), K.ironDk, 0.4, 0.03, dx, 0.35, dz);
-        ptor(B, NS('metal'), K.ironDk, 0.4, 0.03, dx, 0.95, dz);
-        // Bung cap
-        pcyl(B, NS('metal'), K.brass, 0.06, 0.04, dx + 0.18, 1.27, dz);
-      }
+      pcyl(B, 'metal', '#4a5450', 0.80, 1.28, 0, 0.64, 0, { seg: 16 });
+      ptor(B, NS('metal'), K.ironDk, 0.81, 0.02, 0, 0.35, 0, { rx: HP });
+      ptor(B, NS('metal'), K.ironDk, 0.81, 0.02, 0, 0.95, 0, { rx: HP });
+      // Bung cap
+      pcyl(B, NS('metal'), K.brass, 0.05, 0.03, 0.25, 1.29, 0);
       B.pop();
 
       // 5. Cable Drum at [-7.6, 3.6, -48.6] (r = 0.8, h = 1.3)
       B.push(-7.6, 3.6, -48.6);
-      // Timber side flanges
+      // Timber side flanges (radius 0.76 fits octagon inradius)
       for (const sy of [0.08, 1.22]) {
-        pcyl(B, 'wood', K.woodDk, 0.82, 0.12, 0, sy, 0, { seg: 14 });
-        ptor(B, NS('metal'), K.ironDk, 0.84, 0.03, 0, sy, 0);
+        pcyl(B, 'wood', K.woodDk, 0.76, 0.12, 0, sy, 0, { seg: 14 });
+        ptor(B, NS('metal'), K.ironDk, 0.77, 0.03, 0, sy, 0, { rx: HP });
       }
       // Steel core with wound wire rope
       pcyl(B, 'metal', K.ironLt, 0.45, 1.05, 0, 0.65, 0, { seg: 14 });
       for (let y = 0.25; y <= 1.05; y += 0.15) {
-        ptor(B, NS('metal'), K.iron, 0.65, 0.06, 0, y, 0);
+        ptor(B, NS('metal'), K.iron, 0.65, 0.04, 0, y, 0, { rx: HP });
       }
-      // Forged steel rigging shackle on top
-      ptor(B, NS('metal'), K.ironRust, 0.15, 0.04, 0.25, 1.32, 0, { rx: HP });
+      // Forged steel rigging shackle on top (within 5 cm of top)
+      ptor(B, NS('metal'), K.ironRust, 0.05, 0.015, 0.2, 1.33, 0, { rx: HP });
       B.pop();
 
       // 6. Moulding Floor Cover: Lamp-Post Rack & Flask Stack & Ingot Pile
@@ -1243,7 +1119,7 @@ export function registerArch(D, H) {
         pbox(B, 'glow', K.glassLit, 4.6, 1.6, 0.1, 0, 1.4, 1.76, { glow: 1.2 });
         // Heavy Brick Smelting Chimney Stack
         pcyl(B, 'paint', K.brick, 0.65, 8.5, 2.2, 5.5, 0, { seg: 10 });
-        ptor(B, NS('metal'), K.ironDk, 0.72, 0.08, 2.2, 9.4, 0);
+        ptor(B, NS('metal'), K.ironDk, 0.72, 0.08, 2.2, 9.4, 0, { rx: HP });
         pcyl(B, NS('metal'), K.iron, 0.95, 0.4, 2.2, 9.7, 0, { seg: 10 }); // Cap
         B.pop();
       }
@@ -1265,7 +1141,7 @@ export function registerArch(D, H) {
         pcyl(B, 'wood', K.woodDk, 1.7, 3.2, 0, 6.2, 0, { seg: 18 });
         // Steel retention hoops
         for (let hy = 4.8; hy <= 7.6; hy += 0.7) {
-          ptor(B, NS('metal'), K.ironDk, 1.74, 0.04, 0, hy, 0);
+          ptor(B, NS('metal'), K.ironDk, 1.74, 0.04, 0, hy, 0, { rx: HP });
         }
         // Conical roof cap
         B.lathe('paint', K.verd, [[0, 1.2], [0.08, 1.2], [1.85, 0], [0, 0]], 0, 7.8, 0, { seg: 16 });

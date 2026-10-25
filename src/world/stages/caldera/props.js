@@ -110,46 +110,65 @@ export function register(D, H) {
       let idx = 0;
       for (const [cx, cy, cz, w, h, d, ry] of WALL_BOXES) for (const s of [1, -1]) {
         idx++;
-        B.push(s * cx, 0, s * cz, (ry * PI) / 180);
-        // 1. Basalt masonry foundation / plinth course at base (y = 0 to 1.4)
-        B.box('paint', K.basaltDk, w + 0.04, 1.4, d + 0.06, 0, 0.7, 0, { r: 0.03 });
-        B.box('paint', '#2c2e33', w + 0.06, 0.12, d + 0.08, 0, 1.46, 0);
+        const y0 = cy - h / 2;
+        B.push(s * cx, y0, s * cz, (ry * PI) / 180 + (s < 0 ? PI : 0));
+        // 1. Basalt masonry foundation / plinth course at base (y = 0 to 1.4, within 4 cm of face)
+        B.box('paint', K.basaltDk, w + 0.04, 1.4, d + 0.04, 0, 0.7, 0, { r: 0.02 });
+        B.box(NS('paint'), '#2c2e33', w + 0.04, 0.12, d + 0.05, 0, 1.46, 0);
+        B.box(NS('paint'), K.basaltLt, w + 0.05, 0.08, d + 0.06, 0, 1.52, 0);
 
         // 2. Main wall body in warm dark industrial brick
         B.box('paint', K.brick, w, h - 1.5, d, 0, 1.5 + (h - 1.5) / 2, 0, { r: 0.02 });
 
-        // 3. Structural vertical iron pilasters at wall ends
-        for (const sx of [-w / 2 + 0.12, w / 2 - 0.12]) {
-          B.box('metal', K.greenDk, 0.22, h, d + 0.06, sx, cy, 0, { r: 0.02 });
+        // Horizontal brick relief courses visible from eye level
+        for (let by = 2.2; by < h; by += 0.8) {
+          B.box(NS('paint'), '#5c2d20', w + 0.02, 0.05, d + 0.03, 0, by, 0);
         }
 
-        // 4. Belt course girder at y = 3.6
-        B.box(NS('metal'), K.ironDk, w + 0.04, 0.12, d + 0.06, 0, 3.6, 0);
+        // 3. Structural vertical iron pilasters at wall ends
+        for (const sx of [-w / 2 + 0.12, w / 2 - 0.12]) {
+          B.box('metal', K.greenDk, 0.18, h, d + 0.04, sx, h / 2, 0, { r: 0.02 });
+        }
+
+        // Downpipe along wall corner
+        B.cyl(NS('metal'), K.ironLt, 0.025, h - 0.2, w / 2 - 0.25, (h - 0.2) / 2, (d / 2) + 0.02, { seg: 6 });
+
+        // 4. Belt course girder at 60% of wall height
+        if (h > 3.0) {
+          B.box(NS('metal'), K.ironDk, w + 0.04, 0.12, d + 0.04, 0, h * 0.6, 0);
+        }
 
         // 5. Clerestory window openings with warm furnace interior glow
         const winW = Math.min(w * 0.72, 1.8);
         if (h > 4.5 && winW > 0.8) {
-          for (const fz of [-(d / 2) - 0.02, (d / 2) + 0.02]) {
-            B.box('glow', K.glass, winW, 1.1, 0.05, 0, 4.4, fz, { glow: 1.1 });
-            B.box(NS('metal'), K.greenDk, winW + 0.06, 0.06, 0.08, 0, 4.4, fz);
-            B.box(NS('metal'), K.greenDk, 0.06, 1.16, 0.08, 0, 4.4, fz);
+          const winY = h * 0.7;
+          for (const fz of [-(d / 2) - 0.01, (d / 2) + 0.01]) {
+            B.box('glow', K.glass, winW, 1.1, 0.03, 0, winY, fz, { glow: 1.1 });
+            B.box(NS('metal'), K.greenDk, winW + 0.04, 0.06, 0.04, 0, winY, fz);
+            B.box(NS('metal'), K.greenDk, 0.06, 1.16, 0.04, 0, winY, fz);
+            B.box(NS('paint'), K.basaltLt, winW + 0.06, 0.08, 0.05, 0, winY - 0.58, fz); // Sill
+            B.box(NS('paint'), K.basaltLt, winW + 0.06, 0.1, 0.05, 0, winY + 0.58, fz);  // Lintel
           }
         }
 
-        // 6. Coping and eaves cornice along roofline
-        B.box('paint', K.verd, w + 0.14, 0.22, d + 0.16, 0, h + 0.11, 0);
-        B.box(NS('metal'), K.ironDk, w + 0.18, 0.08, 0.1, 0, h + 0.22, (d / 2) + 0.05);
+        // 6. Coping along roofline (low walls within 6 cm of top; tall walls get upper storey roofs)
+        if (y0 + h <= 6.5) {
+          B.box('paint', K.verd, w + 0.04, 0.06, d + 0.04, 0, h + 0.03, 0);
+        } else {
+          B.box('paint', K.verd, w + 0.06, 0.22, d + 0.06, 0, h + 0.11, 0);
+          B.box(NS('metal'), K.ironDk, w + 0.06, 0.08, 0.04, 0, h + 0.22, (d / 2) + 0.02);
 
-        // 7. Roof forms on upper storeys
-        B.box('metal', '#4a4f56', w * 0.96, 0.45, d * 0.92, 0, h + 0.34, 0, { rx: 0.12 });
+          // 7. Roof forms on upper storeys
+          B.box('metal', '#4a4f56', w * 0.96, 0.45, d * 0.92, 0, h + 0.34, 0, { rx: 0.12 });
 
-        // 8. Industrial skyline elements (every few segments)
-        if (idx % 3 === 0) {
-          B.cyl('paint', K.brick, 0.45, 3.2, 0, h + 1.8, 0, { seg: 8 });
-          B.tor(NS('metal'), K.ironDk, 0.52, 0.06, 0, h + 3.4, 0);
-          B.cyl(NS('metal'), K.iron, 0.65, 0.25, 0, h + 3.6, 0, { seg: 8 });
-        } else if (idx % 3 === 1) {
-          B.cyl(NS('metal'), K.greenDk, 0.18, 1.2, 0, h + 0.8, 0, { seg: 6 });
+          // 8. Industrial skyline elements (every few segments)
+          if (idx % 3 === 0) {
+            B.cyl('paint', K.brick, 0.45, 3.2, 0, h + 1.8, 0, { seg: 8 });
+            B.tor(NS('metal'), K.ironDk, 0.52, 0.06, 0, h + 3.4, 0, { rx: HP });
+            B.cyl(NS('metal'), K.iron, 0.65, 0.25, 0, h + 3.6, 0, { seg: 8 });
+          } else if (idx % 3 === 1) {
+            B.cyl(NS('metal'), K.greenDk, 0.18, 1.2, 0, h + 0.8, 0, { seg: 6 });
+          }
         }
         B.pop();
       }
@@ -556,63 +575,15 @@ export const PLACEMENTS = [
   { type: 'caldera_rails', pos: [0, 0, 0], mirror: false, list: GANTRY_RAILS, onlyIn: 'bazookarp' },
   { type: 'caldera_surge_gauge', pos: [0, 0, 0], mirror: false, notIn: 'boss' },
   { type: 'caldera_pour_floor_dressing', pos: [0, 0, 0], mirror: false },
-  { type: 'caldera_socket_collar', pos: [0, 0, 0] },
-  { type: 'caldera_organ_stump', pos: [0, 0, 0] },
   { type: 'caldera_hall_roof', pos: [0, 0, 0] },
   { type: 'caldera_cupola_hood', pos: [-3.2, 0, -64.3] },
   { type: 'caldera_surge_office', pos: [(OFFICE.x0 + OFFICE.x1) / 2, 0, (OFFICE.z0 + OFFICE.z1) / 2] },
-  { type: 'caldera_jib', pos: [0, 0, 0] },
   { type: 'caldera_rim_head_dressing', pos: [0, 0, 0] },
   { type: 'caldera_yard_cover_dressing', pos: [0, 0, 0] },
   { type: 'caldera_horizon_dressing', pos: [0, 0, 0], mirror: false },
 
-  // Flank & Slump
-  { type: 'caldera_winch_house', pos: [-23.2, 1.2, -19.6], rotY: -139.5 * D_ },
-  { type: 'caldera_hornito', pos: [-25.2, 0, -6.8] },
-  { type: 'caldera_hornito', pos: [-24.8, 0, -11.2] },
-  { type: 'caldera_hornito', pos: [-21.0, 0, -14.0] },
-  { type: 'caldera_hornito', pos: [-26.5, 0, -4.5] },
-  { type: 'caldera_cairn', pos: [17.5, 2.4, -10.5] },
-
-  // Moorings & Lakefront
-  { type: 'caldera_tide_board', pos: [-7.8, 1.2, -23.4] },
-  { type: 'caldera_capstan', pos: [-14.4, 1.8, -29.8] },
-  { type: 'caldera_chain_bollard', pos: [-17.2, 1.8, -28.6] },
-  { type: 'caldera_mooring_bollard', pos: [-13.6, 1.8, -23.4] },
-  { type: 'caldera_mooring_bollard', pos: [-4.0, 1.2, -23.2] },
-  { type: 'caldera_ladle_car', pos: [2.5, 1.2, -26.0] },
-
-  // Casting Floor (LOW)
-  { type: 'caldera_pig_bed', pos: [10.5, 0, -17.5] },
-  { type: 'caldera_pig_bed', pos: [8.0, 0, -13.5] },
-  { type: 'caldera_floor_drain', pos: [13.0, 0, -15.0] },
-  { type: 'caldera_mould_stack', pos: [12.0, 0, -18.4] },
-  { type: 'caldera_mould_stack', pos: [14.5, 0, -15.5] },
-  { type: 'caldera_ladle_stand', pos: [14.0, 0, -13.6] },
-
-  // Spillway
-  { type: 'caldera_spillway_bridge', pos: [22.75, 2.3, -25.26], rotY: -38 * D_ },
-  { type: 'caldera_slag_pot', pos: [22.75, 2.3, -26.5] },
-  { type: 'caldera_gauge_post', pos: [22.4, 1.2, -19.5] },
-
-  // Moulding Terrace
-  { type: 'caldera_pattern_doors', pos: [-20.5, 2.4, -36.5], rotY: 60 * D_ },
-  { type: 'caldera_pattern_crates', pos: [-11.8, 3.0, -38.2] },
-  { type: 'caldera_firebrick_store', pos: [-7.5, 2.4, -42.0] },
-  { type: 'caldera_flask_stack', pos: [-13.5, 2.4, -37.5] },
-  { type: 'caldera_firebrick_pallet', pos: [-9.5, 2.4, -40.0] },
-
-  // Yard
-  { type: 'caldera_weigh_office', pos: [PIT.x0 - 1.5, 3.6, (PIT.z0 + PIT.z1) / 2] },
-  { type: 'caldera_charging_shed', pos: [10.0, 3.6, -60.0], rotY: -90 * D_ },
-  { type: 'caldera_casting_stack', pos: [-8.0, 3.6, -58.0], kind: 'manholes' },
-  { type: 'caldera_casting_stack', pos: [-22.0, 3.6, -52.0], kind: 'bollards' },
-  { type: 'caldera_casting_stack', pos: [4.0, 3.6, -56.0], kind: 'pipes' },
-  { type: 'caldera_firebrick_pallet', pos: [-18.0, 3.6, -56.0] },
-  { type: 'caldera_pipe_manifold', pos: [-14.0, 3.6, -48.0] },
-  { type: 'caldera_pipe_manifold', pos: [-10.0, 4.8, -66.5] },
-
-  // Spawn Gallery Balustrade Urns
-  { type: 'caldera_planter_urn', pos: [PAD[0] - 3.5, 4.8, HALL_LINE[0][1] + 1.8] },
-  { type: 'caldera_planter_urn', pos: [PAD[0] + 3.5, 4.8, HALL_LINE[0][1] + 1.8] },
+  // Flank & Slump (skins wrapping layout blocks within 2 cm)
+  { type: 'caldera_winch_house', pos: [-23.116, 1.2, -19.743], rotY: 139.5 * D_ },
+  { type: 'caldera_hornito', pos: [-27.156, 0, -12.204], rotY: 155.8 * D_ },
+  { type: 'caldera_hornito', pos: [-27.797, 0, -6.417], rotY: 167.0 * D_ },
 ];
