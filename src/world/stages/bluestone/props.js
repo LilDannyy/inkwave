@@ -390,6 +390,7 @@ for (const d of LAYOUT.half) {
 //      planters exist in the 3000s only (their own group)
 for (const d of LAYOUT.half) {
   if (!/planter/.test(d.tag || '') || !d.roof) continue;
+  if (d.tag === 'garden-planter' && d.kind === 'box' && d.max[1] - d.min[1] > 2) continue;   // (fix round 1: the garden's glasshouse — glazed over, no bed on top)
   const top = d.kind === 'box' ? d.max[1] : d.center[1] + d.size[1] / 2;
   const at = d.kind === 'box' ? { pos: [(d.min[0] + d.max[0]) / 2, top, (d.min[2] + d.max[2]) / 2], rotY: 0, w: d.max[0] - d.min[0], d: d.max[2] - d.min[2] } : { pos: [d.center[0], top, d.center[2]], rotY: d.rotY * DEG, w: d.size[0], d: d.size[2] };
   const eras = d.eras ? [...d.eras].map(Number) : ERAS3;

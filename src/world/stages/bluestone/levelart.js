@@ -54,7 +54,8 @@ const COVER = { crates: 0, bins: 1, bollards: 2, trough: 3, bench: 4, planter: 5
   'coal-bin': 11, buffer: 12, 'turntable-bench': 13, 'mooring-post': 14, 'deck-racks': 15, 'deck-plinth': 16, 'bike-dock': 17, 'bridge-lamp': 18 };
 const PLANTERS = new Set(['planter', 'kerb-planter', 'ring-bed-planter', 'deck-planter', 'balcony-planter', 'gpo-planter', 'halo-planter', 'garden-planter']);
 const STRUCT = { 'arcade-kiosk': 18, 'flower-stall': 19, 'phone-kiosk': 0, 'ticket-booth': 1, 'poster-column': 3, 'cab-shelter': 4, 'cabmen-shelter': 5, 'news-kiosk': 6, 'tram-shelter': 7,
-  'ferry-office': 8, 'boat-shed': 9, 'goods-wagon': 10, 'crates-stack': 11, 'grip-car': 12, 'ferry-box': 13, 'tram-island': 14, 'balcony-post': 15, 'gpo-pier': 16, chimney: 17 };
+  'ferry-office': 8, 'boat-shed': 9, 'goods-wagon': 10, 'crates-stack': 11, 'grip-car': 12, 'ferry-box': 13, 'tram-island': 14, 'balcony-post': 15, 'gpo-pier': 16, chimney: 17,
+  glasshouse: 20 };
 const TER = { terrace: 0, 'prow-place': 1, 'gpo-terrace': 2, 'customs-dock': 3, 'spawn-deck': 4, concourse: 5 };
 const GROUND = { street: 0, carriageway: 1, circus: 2, 'arcade-floor': 3, kerb: 4 };
 const DECKS = { balcony: 0, 'balcony-landing': 0, punt: 1, 'ferry-landing': 1, 'iron-bridge': 2, 'dock-gangway': 3, 'floating-garden': 4, halo: 5, 'hotel-stair-landing': 5, 'boat-stair-landing': 5, 'river-stair-landing': 5 };
@@ -81,6 +82,9 @@ export function makeArtOf(layout) {
     if (t === 'tram-shed') return v(ART.BLD, 10);
     if (t === 'viaduct' || t === 'viaduct-pier') return v(ART.BLD, 11);
     if (t === 'boathouse' || t === 'boathouse-base') return v(ART.BLD, 12);
+    // (fix round 1) the floating garden's 2.6 m piece (garden-01: DESIGN's glasshouse) is drawn as a glasshouse, its own
+    // style (the piece, its tag and collider unchanged)
+    if (t === 'garden-planter' && b.half && b.half.y > 1.0) return v(ART.STRUCT, STRUCT.glasshouse);
     if (PLANTERS.has(t)) return v(ART.COVER, COVER.planter);
     if (t in COVER) return v(ART.COVER, COVER[t]);
     if (t === 'ticket-booth') return v(ART.STRUCT, Math.abs(az) > 30 ? 2 : 1);
@@ -162,6 +166,7 @@ uniform int uBsLampN;
 uniform vec3 uBsLampC[3];
 vec3 gBsLit = vec3(0.0);        // emissive under the ink: windows lit at dusk (fragEmissive)
 vec3 gBsGlow = vec3(0.0);       // the 3000s' light seams and lines: faint by day, bright at dusk
+vec3 gBsRoom = vec3(0.0);       // (fix round 1) the rooms seen through glass: their own light, by day and brighter at dusk
 float gBsTop = 0.0;             // a floor (lamp pools land here)
 int gBsEra = 0;
 float bsAA(float d, float w) { return clamp(0.5 - d / max(w, 1e-4), 0.0, 1.0); }
@@ -206,6 +211,150 @@ vec3 bsGlass(vec2 p, float y0, float y1, float tone) {
   float g = smoothstep(y0, y1, p.y);
   vec3 c = mix(bsC(0.10, 0.12, 0.14), bsC(0.33, 0.39, 0.45), g * 0.8) * tone;
   c *= 0.97 + 0.06 * smoothstep(0.3, 0.7, fract((p.x * 0.7 + p.y) * 0.18));
+  return c;
+}
+// ---- (fix round 1) interiors behind the glass: the view ray traced into a box room behind a pane ("interior mapping"),
+// so a shopfront, a pavilion or a shelter shows a lit room with depth (its back wall, its side walls receding, its floor
+// and ceiling) that moves with the camera, instead of a flat dark or cream pane
+// the view ray in a wall's frame: x along the face's u (fu.x), y up, z into the wall
+vec3 bsViewIn() {
+  vec3 Vw = normalize(vWPos - cameraPosition);
+  vec3 T = normalize(vFaceTan - vWNorm * dot(vFaceTan, vWNorm));
+  return vec3(dot(Vw, T), Vw.y, max(-dot(Vw, vWNorm), 0.05));
+}
+// a shop's goods colour: kind 0 chocolatier, 1 toys, 2 barber's bottles, 3 café, 4 books and papers, 5 florist, 6 clothes,
+// 7 rowing eights, 8 a glasshouse's plants, 9 a shelter, 10 an office; mid chroma (team ink stays the loudest)
+vec3 bsGoodC(float kind, float hs, int E) {
+  vec3 c;
+  if (kind < 0.5) c = hs < 0.3 ? bsC(0.34, 0.2, 0.14) : (hs < 0.55 ? bsC(0.52, 0.32, 0.2) : (hs < 0.8 ? bsC(0.78, 0.58, 0.6) : bsC(0.88, 0.82, 0.7)));
+  else if (kind < 1.5) c = hs < 0.25 ? bsC(0.62, 0.26, 0.22) : (hs < 0.45 ? bsC(0.3, 0.42, 0.62) : (hs < 0.65 ? bsC(0.36, 0.54, 0.34) : (hs < 0.82 ? bsC(0.86, 0.8, 0.64) : bsC(0.62, 0.46, 0.3))));
+  else if (kind < 2.5) c = hs < 0.4 ? bsC(0.5, 0.36, 0.18) : (hs < 0.7 ? bsC(0.3, 0.42, 0.34) : bsC(0.6, 0.66, 0.74));
+  else if (kind < 3.5) c = hs < 0.5 ? bsC(0.92, 0.9, 0.86) : (hs < 0.75 ? bsC(0.58, 0.4, 0.28) : bsC(0.8, 0.62, 0.58));
+  else if (kind < 4.5) c = hs < 0.2 ? bsC(0.5, 0.2, 0.18) : (hs < 0.4 ? bsC(0.22, 0.3, 0.42) : (hs < 0.6 ? bsC(0.3, 0.4, 0.3) : (hs < 0.8 ? bsC(0.78, 0.72, 0.58) : bsC(0.4, 0.3, 0.24))));
+  else if (kind < 5.5) c = hs < 0.35 ? bsC(0.32, 0.46, 0.26) : (hs < 0.55 ? bsC(0.8, 0.5, 0.58) : (hs < 0.75 ? bsC(0.92, 0.9, 0.86) : bsC(0.86, 0.74, 0.4)));
+  else if (kind < 6.5) c = hs < 0.3 ? bsC(0.24, 0.26, 0.32) : (hs < 0.55 ? bsC(0.62, 0.56, 0.48) : (hs < 0.8 ? bsC(0.5, 0.3, 0.3) : bsC(0.86, 0.84, 0.8)));
+  else if (kind < 7.5) c = hs < 0.5 ? bsC(0.78, 0.6, 0.38) : bsC(0.94, 0.94, 0.92);
+  else c = mix(bsC(0.22, 0.36, 0.18), bsC(0.42, 0.58, 0.3), hs);
+  if (E == 0) c = mix(c, vec3(bsLum(c)) * vec3(1.1, 0.95, 0.75), 0.4);   // the 1880s: browner goods under gas light
+  return c;
+}
+// a wall of the room: u along it, v up (the floor at 0), y1 its ceiling
+vec3 bsShopWall(vec2 uv, float kind, float seed, int E, float y1, bool back) {
+  float u = uv.x, v = uv.y;
+  vec3 wallC = kind < 0.5 ? bsC(0.6, 0.48, 0.42) : (kind < 1.5 ? bsC(0.76, 0.72, 0.6) : (kind < 2.5 ? bsC(0.86, 0.86, 0.84) : (kind < 3.5 ? bsC(0.56, 0.42, 0.3) : (kind < 4.5 ? bsC(0.5, 0.36, 0.26) : (kind < 6.5 ? bsC(0.8, 0.78, 0.72) : bsC(0.86, 0.86, 0.84))))));
+  if (E == 0) wallC = mix(wallC, bsC(0.36, 0.26, 0.18), 0.6);
+  if (E == 2) wallC = mix(wallC, bsC(0.94, 0.94, 0.92), 0.6);
+  vec3 c = wallC;
+  if (kind > 6.5 && kind < 7.5) {
+    // the boathouse: rowing eights racked along a timber wall (long hulls, three high), oars upright between them, planting
+    // in pots along the floor
+    c = mix(bsC(0.46, 0.36, 0.27), bsC(0.56, 0.46, 0.36), step(0.5, fract(v / 0.16))) * (0.9 + 0.1 * bsH(vec2(floor(u / 1.2), 3.0)));
+    float pot = step(v, 0.42) * bsAA(abs(fract(u / 1.1) - 0.5) - 0.18, 0.02);
+    c = mix(c, mix(bsC(0.3, 0.46, 0.26), bsC(0.85, 0.85, 0.82), step(v, 0.2)), pot);
+    float r = floor((v - 0.45) / 0.55), ly = (v - 0.45) - r * 0.55;
+    float hull = step(0.0, r) * step(r, 2.0) * bsAA(abs(ly - 0.2) - 0.08 * (1.0 - pow(abs(fract(u / 9.0) * 2.0 - 1.0), 6.0)), 0.01);
+    c = mix(c, bsGoodC(7.0, bsH(vec2(r, seed)), E), hull);
+    c = mix(c, bsC(0.5, 0.38, 0.26), bsAA(abs(ly - 0.06) - 0.025, 0.01) * step(0.0, r) * step(r, 2.0) * step(0.85, fract(u / 1.5)));
+    float oar = bsAA(abs(fract(u / 2.3) - 0.5) - 0.012, 0.01) * step(v, 2.0);
+    return mix(c, bsC(0.6, 0.48, 0.32), oar);
+  }
+  if (kind > 7.5 && kind < 8.5) {
+    // a glasshouse: benches of potted plants under hanging greenery, a white frame behind
+    float pot = step(v, 0.95) * step(0.55, v) * bsAA(abs(fract(u / 0.45) - 0.5) - 0.3, 0.02);
+    vec3 leaf = bsLeaves(vec2(u, v), 0.01);
+    c = mix(bsC(0.86, 0.88, 0.86), leaf, step(0.9, v) * step(0.3, h21(floor(vec2(u, v) / 0.6) + seed)));
+    c = mix(c, leaf, step(v, 1.6) * step(0.85, v));
+    c = mix(c, bsC(0.62, 0.42, 0.32), pot);
+    return mix(c, bsC(0.9, 0.9, 0.88), step(v, 0.55));
+  }
+  if (kind > 8.5 && kind < 9.5) {
+    // a shelter: a bench along the back (a moss seat on pearl in the 3000s, slats otherwise), a lit route map over it
+    float seat = bsAA(abs(v - 0.47) - 0.05, 0.01), bk = bsAA(abs(v - 0.78) - 0.16, 0.01) * step(0.5, fract(v / 0.08) + 0.3);
+    c = mix(c, E == 2 ? bsC(0.5, 0.6, 0.4) : bsC(0.55, 0.42, 0.28), max(seat, bk * float(back)));
+    float map = bsAA(bsBox(vec2(fract(u / 2.4) * 2.4, v), vec2(1.2, 1.45), vec2(0.5, 0.3)), 0.01) * float(back);
+    vec3 mc = E == 2 ? bsC(0.24, 0.28, 0.36) : bsC(0.84, 0.82, 0.74);
+    mc = mix(mc, E == 2 ? bsC(0.95, 0.88, 0.7) : bsC(0.3, 0.42, 0.6), bsAA(abs(v - 1.45 - 0.12 * sin(u * 4.0)) - 0.012, 0.006));
+    return mix(c, mc, map);
+  }
+  if (kind > 9.5) {
+    // an office: a desk under the window, charts of the river and timetables pinned up, a lamp
+    float desk = step(0.7, v) * step(v, 0.78) + step(v, 0.7) * step(0.85, fract(u / 1.2)) * 0.9;
+    c = mix(c, E == 2 ? bsC(0.9, 0.9, 0.88) : bsC(0.42, 0.3, 0.2), clamp(desk, 0.0, 1.0));
+    vec2 pc = vec2(fract(u / 0.9), (v - 1.2) / 0.6);
+    float paper = step(0.12, pc.x) * step(pc.x, 0.88) * step(0.0, pc.y) * step(pc.y, 1.0) * step(0.3, bsH(vec2(floor(u / 0.9), seed)));
+    vec3 pcol = E == 2 ? bsC(0.32, 0.38, 0.48) : bsC(0.86, 0.82, 0.7);
+    pcol = mix(pcol, E == 2 ? bsC(0.95, 0.88, 0.7) : bsC(0.35, 0.4, 0.5), bsAA(abs(fract(pc.y * 5.0) - 0.5) - 0.38, 0.05) * step(0.2, pc.x) * step(pc.x, 0.8));
+    return mix(c, pcol, paper);
+  }
+  if (kind > 1.5 && kind < 2.5) {
+    // the barber's: white tiles, a long mirror over a shelf of bottles; on the back wall two barber's chairs (red leather
+    // on chrome pedestals) facing the mirror
+    float mir = step(1.05, v) * step(v, 1.85);
+    float tile = bsAA((0.5 - abs(fract(u / 0.15) - 0.5)) * 0.15 - 0.004, 0.006) + bsAA((0.5 - abs(fract(v / 0.15) - 0.5)) * 0.15 - 0.004, 0.006);
+    c = mix(c, c * 0.86, clamp(tile, 0.0, 1.0));
+    c = mix(c, mix(bsC(0.62, 0.68, 0.72), bsC(0.85, 0.88, 0.9), smoothstep(1.05, 1.85, v)), mir);
+    float bot = step(0.88, v) * step(v, 0.88 + 0.08 + 0.08 * bsH(vec2(floor(u / 0.07), seed))) * step(0.3, fract(u / 0.07));
+    c = mix(c, bsGoodC(2.0, bsH(vec2(floor(u / 0.07), seed + 2.0)), E), bot * step(0.85, v));
+    if (back) {
+      float cu = mod(u, 1.6) - 0.8;
+      float seat = bsAA(bsBox(vec2(cu, v), vec2(0.0, 0.55), vec2(0.3, 0.07)), 0.01), bk = bsAA(bsBox(vec2(cu, v), vec2(0.0, 0.95), vec2(0.24, 0.32)), 0.01);
+      float arm = bsAA(bsBox(vec2(abs(cu), v), vec2(0.3, 0.7), vec2(0.04, 0.09)), 0.01), ped = bsAA(bsBox(vec2(cu, v), vec2(0.0, 0.24), vec2(0.06 + 0.12 * step(v, 0.06), 0.24)), 0.01);
+      c = mix(c, E == 2 ? bsC(0.86, 0.86, 0.9) : bsC(0.82, 0.82, 0.84), ped);
+      c = mix(c, E == 0 ? bsC(0.32, 0.16, 0.12) : (E == 1 ? bsC(0.5, 0.14, 0.12) : bsC(0.9, 0.9, 0.88)), max(max(seat, bk), arm));
+    }
+    return c;
+  }
+  if (v < 0.85) {
+    // the counter and the cabinets under the shelves (the counter's top lighter)
+    c = E == 2 ? bsC(0.9, 0.9, 0.88) : (E == 0 ? bsC(0.3, 0.2, 0.14) : bsC(0.38, 0.28, 0.2));
+    c *= 0.86 + 0.14 * step(0.5, fract(u / 0.6));
+    return mix(c, c * 1.35, step(0.78, v));
+  }
+  if (v > y1 - 0.25) return c * 1.12;
+  // shelves every 0.42 m with goods standing on each
+  float sh = 0.42, r = floor((v - 0.85) / sh), ly = (v - 0.85) - r * sh;
+  float cw = kind > 3.5 && kind < 4.5 ? 0.055 : (kind > 5.5 && kind < 6.5 ? 0.11 : 0.18);
+  float ci = floor(u / cw), lx = fract(u / cw);
+  float hs = bsH(vec2(ci + seed * 7.0, r + seed));
+  float ih = (kind > 3.5 && kind < 4.5 ? 0.2 : 0.08) + (kind > 5.5 && kind < 6.5 ? 0.3 : 0.2) * bsH(vec2(ci, r + 3.1 + seed));
+  float gap = kind > 3.5 && kind < 4.5 ? 0.04 : 0.1;
+  float item = step(0.03, ly) * step(ly, 0.03 + ih) * step(gap, lx) * step(lx, 1.0 - gap) * step(0.16, hs);
+  if (kind > 0.5 && kind < 1.5 && hs > 0.8) item *= bsAA(length(vec2((lx - 0.5) * cw, ly - 0.03 - ih * 0.5)) - ih * 0.5, 0.01) + 0.0;   // a teddy: round
+  vec3 ic = bsGoodC(kind, hs, E);
+  if (kind < 0.5) ic = mix(ic, bsC(0.8, 0.64, 0.32), bsAA(abs(ly - 0.03 - ih * 0.55) - 0.008, 0.006));   // the chocolates' gold ribbons
+  if (kind > 4.5 && kind < 5.5) ic = mix(ic, bsC(0.3, 0.44, 0.24), step(ly, 0.03 + ih * 0.45));       // the flowers' stems and buckets
+  c = mix(c, ic * (0.85 + 0.25 * step(0.5, lx)), item);
+  vec3 bc = E == 2 ? bsC(0.94, 0.92, 0.86) : (E == 0 ? bsC(0.42, 0.3, 0.2) : bsC(0.62, 0.5, 0.36));
+  return mix(c, bc, step(ly, 0.03));
+}
+// the room: q = the point on the pane (x along the face's u, centred on the window; y up from the street), V the view
+// ray in the wall's frame, R = (half width, floor y, ceiling y, depth). Returns the colour seen (before the glass)
+vec3 bsRoom(vec2 q, vec3 V, vec4 R, float kind, float seed, int E) {
+  float tB = R.w / V.z;
+  float tS = V.x > 0.0 ? (R.x - q.x) / max(V.x, 1e-4) : (R.x + q.x) / max(-V.x, 1e-4);
+  float tF = V.y > 0.0 ? (R.z - q.y) / max(V.y, 1e-4) : (q.y - R.y) / max(-V.y, 1e-4);
+  float t = max(min(tB, min(tS, tF)), 0.0);
+  vec3 h = vec3(q, 0.0) + V * t;
+  float y = h.y - R.y, yc = R.z - R.y;
+  vec3 c;
+  if (t >= tB - 1e-4) c = bsShopWall(vec2(h.x + R.x, y), kind, seed, E, yc, true);
+  else if (t >= tS - 1e-4) c = bsShopWall(vec2(h.z + (V.x > 0.0 ? 5.3 : 9.7), y), kind, seed + 1.7, E, yc, false) * 0.82;
+  else if (V.y < 0.0) {
+    // the floor: boards (1880s), small black-and-white tiles (TODAY), pale stone (3000s)
+    vec2 f = h.xz;
+    if (E == 0) c = bsC(0.36, 0.26, 0.18) * (0.85 + 0.25 * bsH(vec2(floor(f.x / 0.18), 3.0)));
+    else if (E == 1) c = mix(bsC(0.82, 0.8, 0.74), bsC(0.18, 0.18, 0.2), mod(floor(f.x / 0.3) + floor(f.y / 0.3), 2.0));
+    else c = bsC(0.88, 0.88, 0.86);
+    c *= 0.8;
+  } else {
+    // the ceiling: a gas pendant's glow (1880s), light panels (TODAY), a luminous ceiling (3000s)
+    vec2 f = vec2(h.x, h.z);
+    float lp = E == 0 ? exp(-dot(f - vec2(0.0, R.w * 0.5), f - vec2(0.0, R.w * 0.5)) * 2.0) : (E == 1 ? bsAA(abs(fract(f.y / 1.2) - 0.5) * 1.2 - 0.18, 0.02) * bsAA(abs(f.x) - R.x * 0.6, 0.02) : 0.8);
+    c = mix(E == 0 ? bsC(0.3, 0.24, 0.18) : bsC(0.86, 0.86, 0.84), E == 0 ? bsC(1.0, 0.8, 0.5) : bsC(1.0, 0.97, 0.9), lp) * 1.3;
+  }
+  // the light: brightest near the glass and under the ceiling lights, falling off into the room; warm gas light in the
+  // 1880s, warm white TODAY, cool white in the 3000s
+  c *= mix(1.1, 0.62, h.z / R.w) * (E == 0 ? vec3(1.05, 0.86, 0.62) : (E == 1 ? vec3(1.04, 0.98, 0.9) : vec3(0.97, 0.98, 1.03)));
   return c;
 }
 // a window: centre c, half-size h; bars: 0 plain / 1 one bar / 2 four lights / 3 small panes; returns
@@ -337,6 +486,13 @@ const FBASE = /* glsl */`
               float pil = 1.0 - bsAA(abs(q.x) - hw, pw);
               float riser = E == 1 ? 0.35 : 0.7, gTop = gf - 0.85, fas0 = gf - 0.62;
               vec3 timber = fam == 2 ? bsC(0.16, 0.24, 0.2) : (mod(bi, 3.0) < 1.0 ? bsC(0.34, 0.14, 0.12) : (mod(bi, 3.0) < 2.0 ? bsC(0.16, 0.24, 0.2) : bsC(0.18, 0.2, 0.28)));
+              // (fix round 1) each shop a trade (the arcade's run in order: a chocolatier, a toy shop, a barber, a café, books
+              // and papers, a florist, a clothier) and a room behind its glass, seen with depth (bsRoom)
+              float sbi = fam == 3 ? floor(W.x / bay) : bi;
+              float kind = fam == 3 ? mod(sbi + (vari == 1 ? 3.0 : 0.0), 7.0) : floor(bsH(vec2(bi, float(prm) + 11.0)) * 6.99);
+              float sseed = sbi * 1.37 + float(prm) * 3.1;
+              vec3 Vin = bsViewIn();
+              float fres = 0.05 + 0.75 * pow(1.0 - Vin.z, 4.0);
               if (E == 0) {
                 // the 1880s: a timber shopfront — panelled stall riser, small panes in slender bars, a gilt-lettered fascia
                 float body = bsAA(abs(q.x) - hw, pw);
@@ -344,14 +500,15 @@ const FBASE = /* glsl */`
                 float panel = bsAA(bsBox(vec2(mod(q.x + hw, 0.6) - 0.3, y), vec2(0.0, (plinth + riser) * 0.5 + 0.03), vec2(0.22, (riser - plinth) * 0.35)), pw);
                 float glassA = bsRect(q, vec2(-hw + 0.08, riser + 0.05), vec2(hw - 0.08, gTop), pw);
                 float bars = max(bsAA(abs(fract((q.x + hw) / ((2.0 * hw) / 4.0)) - 0.5) * (2.0 * hw) / 4.0 - 0.018, pw), bsAA(abs(y - (riser + gTop) * 0.5 - 0.35) - 0.018, pw));
-                float door = step(0.66, bsH(vec2(bi, float(prm) + 2.0)));
-                vec3 g = bsGlass(q, riser, gTop, 0.95);
+                vec3 room = bsRoom(q, Vin, vec4(hw + 0.2, 0.08, gf - 0.25, 3.0), kind, sseed, 0) * (0.55 + 0.45 * step(0.3, bsH(vec2(bi, 5.0))));
+                vec3 g = mix(room * 0.12, bsGlass(q, riser, gTop, 0.95), fres);
+                float pane = glassA * (1.0 - bars) * body;
                 base = mix(base, col, body);
                 base = mix(base, col * 0.72, panel * body * step(y, riser));
-                base = mix(base, g, glassA * (1.0 - bars) * body);
+                base = mix(base, g, pane);
                 base = mix(base, col * 1.15, glassA * bars * body);
-                if (glassA * (1.0 - bars) > 0.5) { gBaseRough = 0.1; gTexStr = 0.0; }
-                gBsLit += glassA * (1.0 - bars) * body * bsC(1.0, 0.7, 0.4) * 0.5 * step(0.35, bsH(vec2(bi, 5.0)));
+                if (pane > 0.5) { gBaseRough = 0.1; gTexStr = 0.0; }
+                gBsRoom += pane * room * (1.0 - fres) * 0.75;   // gas-lit: dimmer than TODAY's
                 // fascia: dark board with gilt lettering and a moulded cornice over it
                 float fas = bsRect(q, vec2(-hw - 0.16, fas0), vec2(hw + 0.16, gf - 0.04), pw);
                 base = mix(base, timber * 0.55, fas);
@@ -362,20 +519,28 @@ const FBASE = /* glsl */`
                 base = mix(base, stone * 1.2, pil * bsRect(vec2(abs(q.x) - hw - 0.16, y), vec2(-0.12, fas0 - 0.3), vec2(0.12, fas0), pw));
               } else if (E == 1) {
                 // TODAY: plate glass in slim dark frames, a tiled stall riser, a painted fascia with its sign panel
+                // (fix round 1) the room behind the plate glass (bsRoom: the trade's shelves and goods, a counter, the floor
+                // and the light panels, with depth); a glazed door with a brass push plate at one side; the sky's
+                // reflection on the glass by the view angle (lighter up top)
                 float body = bsAA(abs(q.x) - hw, pw);
-                float glassA = bsRect(q, vec2(-hw + 0.06, riser), vec2(hw - 0.06, gf - 0.62), pw);
-                float mull = bsAA(abs(q.x - hw * 0.34) - 0.03, pw) * step(0.5, bsH(vec2(bi, 9.0)));
+                float ds = bsH(vec2(sbi, float(prm) + 6.0)) < 0.5 ? -1.0 : 1.0, dx0 = hw * 0.3;
+                float doorA = bsRect(vec2(q.x * ds, y), vec2(dx0, 0.04), vec2(hw - 0.06, gf - 0.62), pw);
+                float glassA = max(bsRect(q, vec2(-hw + 0.06, riser), vec2(hw - 0.06, gf - 0.62), pw) * (1.0 - bsRect(vec2(q.x * ds, y), vec2(dx0 - 0.06, 0.0), vec2(hw, gf - 0.62), pw)), 0.0);
+                float dglass = bsRect(vec2(q.x * ds, y), vec2(dx0 + 0.07, 0.16), vec2(hw - 0.13, gf - 0.7), pw);
                 vec3 tile = mix(bsC(0.3, 0.38, 0.36), bsC(0.55, 0.5, 0.42), step(0.5, bsH(vec2(bi, float(prm) + 4.0))));
                 float tj = max(bsAA((0.5 - abs(fract(q.x / 0.15) - 0.5)) * 0.15 - 0.006, pw), bsAA((0.5 - abs(fract(y / 0.075) - 0.5)) * 0.075 - 0.0035, pw));
-                vec3 g = bsGlass(q, riser, gf - 0.62, 1.05);
-                // what is behind the glass: shelves and goods (blocks of warm colour), seen dimly
-                float shelf = step(0.82, fract(y * 2.2)) * step(0.3, bsH(vec2(floor(q.x * 1.3), floor(y * 2.2) + bi)));
-                g = mix(g, g + bsC(0.22, 0.17, 0.12) * 0.5, shelf * 0.6);
+                vec3 room = bsRoom(q, Vin, vec4(hw + 0.25, 0.05, gf - 0.2, 3.4), kind, sseed, 1);
+                vec3 refl = mix(bsC(0.1, 0.12, 0.14), bsC(0.5, 0.56, 0.62), smoothstep(riser, gf - 0.62, y));
+                vec3 g = mix(room * 0.14, refl, fres);
+                float pane = (glassA + dglass) * body;
                 base = mix(base, bsC(0.12, 0.13, 0.14), body * (1.0 - glassA));
-                base = mix(base, mix(tile, tile * 0.55, tj), body * step(y, riser));
-                base = mix(base, g, glassA * (1.0 - mull) * body);
-                if (glassA > 0.5) { gBaseRough = 0.08; gTexStr = 0.0; }
-                gBsLit += glassA * body * (1.0 - mull) * bsC(1.0, 0.88, 0.7) * (0.5 + 0.15 * shelf) * (0.6 + 0.4 * step(0.4, bsH(vec2(bi, 3.0 + float(prm)))));
+                base = mix(base, mix(tile, tile * 0.55, tj), body * step(y, riser) * (1.0 - doorA));
+                base = mix(base, g, pane);
+                // the door's push plate and its kick plate
+                base = mix(base, bsC(0.72, 0.58, 0.32), bsRect(vec2(q.x * ds, y), vec2(dx0 + 0.1, 0.98), vec2(dx0 + 0.2, 1.3), pw) * doorA);
+                base = mix(base, bsC(0.6, 0.6, 0.6), bsRect(vec2(q.x * ds, y), vec2(dx0 + 0.07, 0.04), vec2(hw - 0.13, 0.16), pw) * doorA);
+                if (pane > 0.5) { gBaseRough = 0.06; gTexStr = 0.0; }
+                gBsRoom += pane * room * (1.0 - fres) * (0.75 + 0.35 * step(0.35, bsH(vec2(sbi, 3.0 + float(prm)))));
                 float fas = bsRect(q, vec2(-hw - 0.16, gf - 0.62), vec2(hw + 0.16, gf - 0.04), pw);
                 vec3 fc = mod(bi, 3.0) < 1.0 ? bsC(0.2, 0.32, 0.3) : (mod(bi, 3.0) < 2.0 ? bsC(0.36, 0.18, 0.18) : bsC(0.2, 0.22, 0.3));
                 base = mix(base, fc, fas);
@@ -383,24 +548,20 @@ const FBASE = /* glsl */`
                 base = mix(base, bsC(0.86, 0.82, 0.72), sign * bsText(q, vec2(0.0, gf - 0.33), 0.2, hw * 1.1, bi * 5.1 + float(prm) + 30.0, pw));
                 base = mix(base, stone, pil * step(y, gf - 0.62));
               } else {
-                // the 3000s: pearl glass in white frames, light seams at the joints, planting on the piers
+                // the 3000s: pearl glass in white frames, light seams at the joints, planting on the piers; behind the glass
+                // the same trades' rooms (bsRoom, pale and cool-lit) seen through the pearl at about half
                 float body = bsAA(abs(q.x) - hw, pw);
                 float glassA = bsRect(q, vec2(-hw + 0.04, 0.12), vec2(hw - 0.04, gf - 0.3), pw);
                 vec3 pearl = mix(bsC(0.84, 0.86, 0.9), bsC(0.96, 0.95, 0.92), smoothstep(0.0, gf, y)) * (0.92 + 0.08 * vnoise(q * 3.0));
                 base = mix(base, bsC(0.92, 0.92, 0.9), body);
-                // behind the pearl glass: the shop's own light shelves and plants as soft shapes (counters, a planter, displays)
-                float shelfL = step(0.82, fract(y * 1.6)) * step(0.2, y) * step(y, gf - 0.5);
-                float pot = bsAA(length(vec2(q.x - hw * 0.45 * sign(sin(bi * 2.1 + 1.0)), y - 0.55) * vec2(1.0, 1.4)) - 0.32, pw);
-                float disp = bsRect(q, vec2(-hw * 0.35, 0.12), vec2(hw * 0.1, 0.95), pw);
-                vec3 inside = mix(pearl, pearl * 0.8, disp * 0.6);
-                inside = mix(inside, bsC(0.5, 0.62, 0.42), pot * 0.55);
-                inside = mix(inside, WG, shelfL * 0.5);
-                base = mix(base, inside, glassA);
-                gBsGlow += glassA * shelfL * WG * 0.4;
+                vec3 room = bsRoom(q, Vin, vec4(hw + 0.25, 0.05, gf - 0.1, 3.4), kind, sseed, 2);
+                float through = 0.5 * (1.0 - fres);
+                base = mix(base, mix(pearl, room * 0.3, through), glassA);
+                gBsRoom += glassA * room * through * 1.1;
                 if (glassA > 0.5) { gBaseRough = 0.14; gTexStr = 0.0; }
                 float seam = max(bsAA(abs(abs(q.x) - hw + 0.02) - 0.012, pw), bsAA(abs(y - gf + 0.3) - 0.012, pw)) * body;
                 base = mix(base, WG, seam);
-                gBsLit += seam * WG * 1.6 + glassA * bsC(0.95, 0.94, 0.98) * 0.12;
+                gBsLit += seam * WG * 1.6;
                 float holo = bsRect(q, vec2(-hw * 0.55, gf - 0.62), vec2(hw * 0.55, gf - 0.36), pw) * body;
                 base = mix(base, mix(bsC(0.86, 0.84, 0.92), WG, bsText(q, vec2(0.0, gf - 0.49), 0.16, hw * 0.9, bi * 3.3 + float(prm) + 60.0, pw)), holo);
                 gBsGlow += holo * WG * 0.35;
@@ -578,11 +739,21 @@ const FBASE = /* glsl */`
             base = mix(base, bsC(0.86, 0.82, 0.72), 0.6);
             if (inBay) { vec4 w = bsWin(p, vec2(0.0, 1.35), vec2(bay * 0.36, 0.62), 1.0, 0.06, pw, false); base = mix(base, bsC(0.3, 0.32, 0.3), w.x); base = mix(base, bsGlass(p, 0.7, 2.0, 1.0), w.y); base = mix(base, bsC(0.3, 0.32, 0.3), w.z); gBsLit += w.y * bsC(1.0, 0.86, 0.66) * 0.8; if (w.y > 0.5) { gBaseRough = 0.1; gTexStr = 0.0; } }
           } else {
-            float pane = bsRect(vec2(mod(W.x, bay), y), vec2(0.06, 0.25), vec2(bay - 0.06, 2.25), pw);
-            base = mix(bsC(0.93, 0.93, 0.92), mix(bsC(0.82, 0.86, 0.9), bsC(0.96, 0.95, 0.92), smoothstep(0.2, 2.3, y)), pane);
+            // (fix round 1) the Tide Pavilion: a glass pavilion — clear glazing between slim white mullions every ~1.2 m on a
+            // pearl sill, a light seam at the eaves, and inside (one room the length of the face) the club's rowing eights
+            // racked along the back with oars and planting (bsRoom kind 7)
+            float mw = fsz.x / max(1.0, floor(fsz.x / 1.2 + 0.5));
+            float mx2 = abs(fract(W.x / mw + 0.5) - 0.5) * mw;
+            float pane = bsRect(W, vec2(0.08, 0.3), vec2(fsz.x - 0.08, 2.18), pw) * (1.0 - bsAA(mx2 - 0.03, pw));
+            vec3 Vb = bsViewIn();
+            float fb2 = 0.05 + 0.75 * pow(1.0 - Vb.z, 4.0);
+            vec3 room = bsRoom(vec2(W.x - fsz.x * 0.5, y), Vb, vec4(fsz.x * 0.5, 0.1, 2.3, 4.2), 7.0, float(fb) * 1.3, 2);
+            vec3 refl = mix(bsC(0.62, 0.68, 0.76), bsC(0.9, 0.92, 0.94), smoothstep(0.3, 2.2, y));
+            base = mix(bsC(0.93, 0.93, 0.92), mix(room * 0.2, refl, fb2), pane);
+            gBsRoom += pane * room * (1.0 - fb2) * 0.9;
             float seam = bsAA(abs(y - 2.3) - 0.015, pw) + bsAA(abs(y - 0.22) - 0.015, pw);
-            base = mix(base, WG, clamp(seam, 0.0, 1.0)); gBsLit += clamp(seam, 0.0, 1.0) * WG * 0.8 + pane * bsC(0.95, 0.94, 1.0) * 0.25;
-            if (pane > 0.5) { gBaseRough = 0.14; gTexStr = 0.0; }
+            base = mix(base, WG, clamp(seam, 0.0, 1.0)); gBsLit += clamp(seam, 0.0, 1.0) * WG * 0.8;
+            if (pane > 0.5) { gBaseRough = 0.06; gTexStr = 0.0; }
           }
         }
         // the 3000s: a light seam along the string course and the cornice of every building (white-gold, faint by day)
@@ -836,6 +1007,81 @@ const FBASE = /* glsl */`
           if (E == 2) gBsLit += pp * band * paper * 0.35;
           base = mix(base, bsC(0.4, 0.36, 0.26), bsAA(abs(fy - h + 0.2) - 0.1, pw));
         }
+      } else if (prm == 20) {
+        // (fix round 1) the floating garden's glasshouse: a pearl frame (corner posts, a sill course, glazing bars every
+        // 0.6 m and a transom), clear glass over benches of potted plants and hanging greenery inside (bsRoom kind 8), a
+        // white-gold light along the eaves and the roof's ridge; the roof glazed over the plants
+        if (wall) {
+          float bx3 = abs(fract(f.x / 0.6 + 0.5) - 0.5) * 0.6;
+          float frame = max(max(bsAA(min(f.x, fsz.x - f.x) - 0.07, pw), bsAA(fy - 0.45, pw)), max(bsAA(bx3 - 0.02, pw), bsAA(abs(fy - 1.75) - 0.025, pw)));
+          frame = max(frame, bsAA(h - fy - 0.08, pw));
+          vec3 Vg = bsViewIn();
+          float fg = 0.05 + 0.7 * pow(1.0 - Vg.z, 4.0);
+          vec3 room = bsRoom(vec2(f.x - fsz.x * 0.5, fy), Vg, vec4(fsz.x * 0.5 - 0.02, 0.0, h - 0.1, fsz.x > 2.0 ? 1.15 : 2.75), 8.0, fsz.x, 2);
+          vec3 refl = mix(bsC(0.6, 0.66, 0.7), bsC(0.9, 0.93, 0.95), smoothstep(0.4, h, fy));
+          base = mix(mix(room * 0.25, refl, fg), bsC(0.93, 0.93, 0.92), frame);
+          gBsRoom += (1.0 - frame) * room * (1.0 - fg) * 0.95;
+          float ls = bsAA(abs(fy - h + 0.12) - 0.015, pw) + bsAA(abs(fy - 0.47) - 0.012, pw);
+          base = mix(base, WG, clamp(ls, 0.0, 1.0)); gBsGlow += clamp(ls, 0.0, 1.0) * WG;
+          if (frame < 0.5) { gBaseRough = 0.06; gTexStr = 0.0; }
+        } else if (top) {
+          vec2 tq = fu;
+          float bar = max(bsAA(abs(fract(tq.x / 0.6 + 0.5) - 0.5) * 0.6 - 0.02, pw), bsAA(min(min(tq.x, fsz.x - tq.x), min(tq.y, fsz.y - tq.y)) - 0.07, pw));
+          float ridge = bsAA(abs(tq.y - fsz.y * 0.5) - 0.025, pw);
+          vec3 under = bsLeaves(tq * 1.3, pw) * 0.55;
+          base = mix(mix(under, bsC(0.82, 0.88, 0.9), 0.35), bsC(0.93, 0.93, 0.92), bar);
+          base = mix(base, WG, ridge); gBsGlow += ridge * WG * 1.2;
+          gBsRoom += (1.0 - bar) * under * 0.4;
+          gBaseRough = 0.08; gTexStr = 0.0;
+        }
+      } else if (E == 2 && wall && (prm == 4 || prm == 5 || prm == 6 || prm == 7 || prm == 8 || prm == 9 || prm == 13)) {
+        // (fix round 1) the 3000s' small structures each with their function, pearl panels with light seams: the cab
+        // shelters' bench and light through a wide window (a room behind), the news kiosk's hologram headlines scrolling in
+        // light, the tram shelter's seat under its timetable screen, the ferry office's and boat shed's lit interiors (an
+        // office's charts, the boats on their racks), the ferryman's box's route map of the river and its timetable in light
+        base = bsC(0.9, 0.9, 0.88) * (0.95 + 0.06 * vnoise(f * 3.0));
+        vec3 Vs = bsViewIn();
+        float fs = 0.05 + 0.75 * pow(1.0 - Vs.z, 4.0);
+        if (prm == 4 || prm == 5 || prm == 8 || prm == 9) {
+          float wi = bsRect(f, vec2(0.15, 0.45), vec2(fsz.x - 0.15, h - 0.35), pw);
+          float kd = prm == 8 ? 10.0 : (prm == 9 ? 7.0 : 9.0);
+          vec3 room = bsRoom(vec2(f.x - fsz.x * 0.5, fy), Vs, vec4(fsz.x * 0.5 - 0.1, 0.05, h - 0.2, prm == 8 ? 2.6 : 1.8), kd, float(prm) + fsz.x, 2);
+          base = mix(base, mix(room * 0.22, bsC(0.8, 0.84, 0.88), fs), wi);
+          gBsRoom += wi * room * (1.0 - fs);
+          if (wi > 0.5) { gBaseRough = 0.08; gTexStr = 0.0; }
+          float fr = bsRect(f, vec2(0.1, 0.4), vec2(fsz.x - 0.1, h - 0.3), pw) * (1.0 - wi);
+          base = mix(base, WG, fr * 0.7); gBsGlow += fr * WG * 0.5;
+        } else if (prm == 6) {
+          float band = bsRect(f, vec2(0.08, h * 0.42), vec2(fsz.x - 0.08, h * 0.86), pw);
+          base = mix(base, mix(bsC(0.16, 0.2, 0.26), bsC(0.26, 0.3, 0.4), smoothstep(h * 0.42, h * 0.86, fy)), band);
+          float tt = 0.0;
+          for (int k = 0; k < 3; k++) { float yk = h * (0.52 + 0.12 * float(k)); tt += bsText(vec2(mod(f.x + uEraT * (0.25 + 0.08 * float(k)), 3.0), fy), vec2(1.5, yk), 0.08, 2.8, 171.0 + float(k) * 7.0, pw); }
+          tt = clamp(tt, 0.0, 1.0) * band;
+          base = mix(base, WG, tt); gBsGlow += tt * WG * 1.1 + band * bsC(0.6, 0.66, 0.8) * 0.12;
+          if (band > 0.5) { gBaseRough = 0.1; gTexStr = 0.0; }
+        } else if (prm == 7) {
+          float seat = bsRect(f, vec2(0.12, 0.42), vec2(fsz.x - 0.12, 0.54), pw), moss = bsRect(f, vec2(0.16, 0.5), vec2(fsz.x - 0.16, 0.56), pw);
+          base = mix(base, bsC(0.95, 0.95, 0.93), seat); base = mix(base, bsLeaves(f, pw), moss);
+          float scr = bsRect(f, vec2(fsz.x * 0.2, 1.25), vec2(fsz.x * 0.8, 1.95), pw);
+          base = mix(base, bsC(0.16, 0.2, 0.26), scr);
+          float tt = scr * clamp(bsText(f, vec2(fsz.x * 0.5, 1.82), 0.08, fsz.x * 0.5, 181.0, pw) + bsText(f, vec2(fsz.x * 0.5, 1.66), 0.06, fsz.x * 0.52, 183.0, pw) + bsText(f, vec2(fsz.x * 0.5, 1.52), 0.06, fsz.x * 0.48, 187.0, pw) + bsText(f, vec2(fsz.x * 0.5, 1.38), 0.06, fsz.x * 0.5, 189.0, pw), 0.0, 1.0);
+          base = mix(base, WG, tt); gBsGlow += tt * WG;
+          if (scr > 0.5) { gBaseRough = 0.1; gTexStr = 0.0; }
+        } else {
+          // the ferryman's box: on each face a smart-glass panel — the river's route in light (the line, the stops) over
+          // the timetable
+          float pan = bsRect(f, vec2(0.12, h * 0.3), vec2(fsz.x - 0.12, h * 0.86), pw);
+          base = mix(base, mix(bsC(0.16, 0.2, 0.26), bsC(0.26, 0.3, 0.4), smoothstep(h * 0.3, h * 0.86, fy)), pan);
+          float ry = h * 0.72 + 0.09 * sin(f.x * 3.1 + 0.6);
+          float route = bsAA(abs(fy - ry) - 0.014, pw) * step(0.25, f.x) * step(f.x, fsz.x - 0.25);
+          float stops = 0.0; for (int k = 0; k < 4; k++) { float sx = 0.3 + (fsz.x - 0.6) * float(k) / 3.0; stops += bsAA(length(vec2(f.x - sx, fy - (h * 0.72 + 0.09 * sin(sx * 3.1 + 0.6)))) - 0.045, pw); }
+          float tt = bsText(f, vec2(fsz.x * 0.5, h * 0.52), 0.06, fsz.x * 0.62, 191.0, pw) + bsText(f, vec2(fsz.x * 0.5, h * 0.43), 0.06, fsz.x * 0.58, 193.0, pw) + bsText(f, vec2(fsz.x * 0.5, h * 0.35), 0.06, fsz.x * 0.6, 197.0, pw);
+          float lit = clamp(route + stops + tt, 0.0, 1.0) * pan;
+          base = mix(base, WG, lit); gBsGlow += lit * WG * 1.1 + pan * bsC(0.6, 0.66, 0.8) * 0.1;
+          if (pan > 0.5) { gBaseRough = 0.1; gTexStr = 0.0; }
+        }
+        float seam = bsAA(abs(fy - h * 0.94) - 0.015, pw) + bsAA(abs(fy - 0.3) - 0.012, pw);
+        base = mix(base, WG, clamp(seam, 0.0, 1.0)); gBsGlow += clamp(seam, 0.0, 1.0) * WG;
       } else if (prm == 4 || prm == 5 || prm == 6 || prm == 7 || prm == 8 || prm == 9 || prm == 13) {
         // the cab shelters, the news kiosk, the tram shelter, the ferry office, the boat shed, the ferryman's box: timber
         // huts (green with cream window frames in the 1880s; TODAY coffee, papers and tickets behind glass; the 3000s
@@ -1211,7 +1457,7 @@ const FEMIT = /* glsl */`
   // ---- Bluestone Junction: windows and seams lit at dusk (faint by day), lamp pools on the floors (levelart.js)
   {
     float lk = 0.1 + 0.42 * uBsNight;
-    totalEmissiveRadiance += (gBsLit * lk + gBsGlow * (0.22 + 0.9 * uBsNight)) * (1.0 - 0.8 * gInk);
+    totalEmissiveRadiance += (gBsLit * lk + gBsGlow * (0.22 + 0.9 * uBsNight) + gBsRoom * (0.42 + 0.5 * uBsNight)) * (1.0 - 0.8 * gInk);
     if (uBsNight > 0.01 && vWNorm.y > 0.7) {
       vec2 q = vWPos.z > 0.0 ? -vWPos.xz : vWPos.xz;
       float pool = 0.0;
