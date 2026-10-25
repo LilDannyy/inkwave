@@ -249,7 +249,15 @@ export class KarpField {
   // the hop and gap edges (§3.2 step 1): moves a carrier's real jump makes that nav.js has no edge for
   _extraEdges(push) {
     const nav = this.nav, ok = this.ok, H = K.hop, Gp = K.gap, L = this.level;
+    // [b5-karp-ref] A carrier can swim-jump from inkable floor. The node-pair reach includes the two rim-cell offsets
+    // (0.95 m each) and the measured 0.3 m probe margin; only layouts that opt in add these longer edges.
+    const swimGap = !!R.def.carrierField?.swimJump;
+    const swimReach = [[-20, 19.0], [-10, 15.6], [-6, 13.9], [-3.4, 12.6], [-2.2, 11.9], [-1.2, 11.2], [-0.6, 10.7], [0, 10.2], [0.6, 9.6], [0.9, 9.1], [1.2, 8.6], [1.5, 8.4], [1.8, 7.8], [2.0, 7.7], [2.1, 7.2], [2.25, 7.2]];
     const nodes = nav.nodes, nx = nav.nx, nz = nav.nz, NN = nodes.length;
+    const swimMax = (dy) => { if (dy <= swimReach[0][0]) return swimReach[0][1]; for (let k = 1; k < swimReach.length; k++) if (dy <= swimReach[k][0]) { const [y0, x0] = swimReach[k - 1], [y1, x1] = swimReach[k]; return x0 + ((x1 - x0) * (dy - y0)) / (y1 - y0); } return 0; };
+    const inkFloor = new Uint8Array(NN).fill(255);
+    const takesInk = (id) => { if (!swimGap) return false; if (inkFloor[id] !== 255) return inkFloor[id] === 1; const n = nodes[id]; const h = this.physics.raycast(_a.set(n.x, n.y + 0.3, n.z), _d.set(0, -1, 0), 0.7, this._hit || (this._hit = new Hit()), false); const f = h.hit && h.face >= 0 ? L.faces[h.face] : null; inkFloor[id] = f && f.atlas && f.grid >= 0 && h.normal.y > 0.5 ? 1 : 0; return inkFloor[id] === 1; };
+    const scanFlat = swimGap ? swimReach[0][1] : Gp.flatMax;
     let hops = 0, gaps = 0;
     // every cell's node heights in one flat table (the floor tests below run a few hundred thousand times at load)
     const NC = nx * nz, cs = new Int32Array(NC + 1);
@@ -333,16 +341,18 @@ export class KarpField {
       }
       // gaps: across open air, 1.2–3.0 m (rim to rim). A level pair (dy 0: the same line both ways, and both ends rim
       // nodes in each other's window) is tested once, from its lower id; its reverse edge is checked after the scan.
-      if (rim[i]) for (let dz = -3; dz <= 3; dz++) for (let dx = -3; dx <= 3; dx++) {
+      if (rim[i]) {
+      const cellReach = Math.ceil(scanFlat / nav.step), swimTakeoff = takesInk(i);
+      for (let dz = -cellReach; dz <= cellReach; dz++) for (let dx = -cellReach; dx <= cellReach; dx++) {
         if (Math.abs(dx) + Math.abs(dz) < 2) continue;
         const jx = n.ix + dx, jz = n.iz + dz;
         if (jx < 0 || jz < 0 || jx >= nx || jz >= nz) continue;
         const c = jz * nx + jx;
         for (let q = rs0[c], qe = rs0[c + 1]; q < qe; q++) {
           const mid = rl[q], m = nodes[mid], dy = m.y - n.y;
-          if (dy > Gp.upMax || dy < -Gp.downMax) continue;
+          if (dy > (swimTakeoff ? 2.25 : Gp.upMax) || dy < -(swimTakeoff ? 20 : Gp.downMax)) continue;
           const flat = Math.hypot(m.x - n.x, m.z - n.z);
-          if (flat <= Gp.flatMin || flat > Gp.flatMax + 1e-6) continue;
+          if (flat <= Gp.flatMin || (flat > Gp.flatMax + 1e-6 && (!takesInk(i) || flat > swimMax(dy) + 1e-6))) continue;
           const level = dy === 0;
           if (level && mid < i) continue;
           if (!openAir(n, m, flat, dy)) continue;
@@ -352,8 +362,9 @@ export class KarpField {
           // (crossmarket's verandas: 272 such edges no kid makes, bazookarp-check #16), reading the top too close
           if (dy < -Gp.upMax && !nav._openAbove(m, n.y)) continue;
           gapEdge(i, mid, flat, dy);
-          if (level) later.push(mid, i, flat);
+          if (level && (flat <= Gp.flatMax + 1e-6 || takesInk(mid))) later.push(mid, i, flat);
         }
+      }
       }
     }
     // the level pairs' reverse edges, grouped by start node (the 6 m walk is cached per start)
