@@ -65,54 +65,50 @@ export function buildBackdrop(kit, data = {}) {
 
   // =========================================================================================================
   // 1. THE GREAT CRATER RIM (Inner Caldera Wall)
-  // Encircles the arena: columns from R ~ 46 m to R ~ 65 m, heights 18 to 32 m.
+  // Encircles the arena: columns pushed out to R ~ 80 m to 110 m, crest heights 11 to 15 m
+  // so the open sky occupies 40-50% of eye-level camera views across the entire arena.
   // Breaks open at the two Spillway breaches: SE (around -45° to -75°) and NW (around 105° to 135°).
   // =========================================================================================================
   {
-    const numCols = 76;
+    const numCols = 84;
     for (let i = 0; i < numCols; i++) {
       const a = (i / numCols) * 360 - 180;
       // Skip or lower at the two breaches
       const inSpillAlpha = a > -76 && a < -40;
       const inSpillBravo = a > 104 && a < 140;
 
-      // Distance from center: elliptical rim enclosing arena and company towns
+      // Distance from center: elliptical rim pushed back to keep open sky above eye level
       const rad = a * D_;
-      const rx = 56.0, rz = 86.0;
+      const rx = 82.0, rz = 108.0;
       let r = 1.0 / Math.sqrt((Math.cos(rad) / rx) ** 2 + (Math.sin(rad) / rz) ** 2);
       if ((a > -145 && a < -115) || (a > 35 && a < 65)) {
-        r = Math.max(r, 78.0);
+        r = Math.max(r, 96.0);
       }
       r += (rnd() - 0.5) * 4.0;
       const cx = r * Math.cos(rad);
       const cz = r * Math.sin(rad);
 
-      // Height of crater rim column
-      let h = 22.0 + 8.0 * Math.cos(a * 2 * D_) + (rnd() - 0.5) * 4.0;
-      let y0 = -2.0;
-
-      if (inSpillAlpha || inSpillBravo) {
-        // In the spillways, columns flank the breach
-        h = 14.0 + 6.0 * (rnd() - 0.5);
-        y0 = -18.0; // Extend deep down to flank the lavafall gorge
-      }
+      // Height of crater rim column: top calibrated to 11-15 m so sky remains visible
+      const topY = (inSpillAlpha || inSpillBravo) ? 8.0 + (rnd() - 0.5) * 3.0 : 12.0 + 3.5 * Math.cos(a * 2 * D_) + (rnd() - 0.5) * 2.0;
+      const y0 = -32.0; // Extend deep down to seal all sightlines from high ground and bridges
+      const h = topY - y0;
 
       // Special 1977 collapse scar above the Slump (Alpha at ~ -160°, Bravo at ~ 20°)
       const isScar = (a > -175 && a < -145) || (a > 5 && a < 35);
       const colCol = isScar ? K.scar1977 : (rnd() > 0.4 ? K.basalt : (rnd() > 0.5 ? K.basaltDk : K.scoria));
 
       // Hexagonal basalt column
-      const hexR = 2.4 + rnd() * 1.8;
-      const colG = new THREE.CylinderGeometry(hexR, hexR * 1.05, h, 6);
+      const hexR = 2.8 + rnd() * 2.0;
+      const colG = new THREE.CylinderGeometry(hexR, hexR * 1.08, h, 6);
       colG.translate(cx, y0 + h / 2, cz);
       addGeo(out.terrain, colG, colCol);
 
       // Scree fan at the foot of the column
       if (rnd() > 0.35 && !inSpillAlpha && !inSpillBravo) {
-        const screeR = hexR * 1.8;
-        const screeH = 3.5 + rnd() * 3.0;
+        const screeR = hexR * 2.0;
+        const screeH = 5.5 + rnd() * 4.0;
         const scG = new THREE.ConeGeometry(screeR, screeH, 6);
-        scG.translate(cx * 0.92, y0 + screeH / 2, cz * 0.92);
+        scG.translate(cx * 0.94, -2.0 + screeH / 2, cz * 0.94);
         addGeo(out.plain, scG, K.scree);
       }
     }
@@ -124,16 +120,15 @@ export function buildBackdrop(kit, data = {}) {
   // Also a wide outer volcano apron covering down to y = -50 m in all directions.
   // =========================================================================================================
   {
-    // Dedicated gorge slopes right under each Spillway lip
-    // Lip Alpha: [18.81, -28.81] to [26.69, -21.72], y = 0.0
+    // Dedicated gorge slopes right under each Spillway lip covering full width of the breach
     for (const s of [1, -1]) {
-      const p0 = [s * 18.81, s * -28.81], p1 = [s * 26.69, s * -21.72];
+      const p0 = [s * -14.0, s * -44.0], p1 = [s * 30.0, s * -22.0];
       const dx = p1[0] - p0[0], dz = p1[1] - p0[1], len = Math.hypot(dx, dz);
-      // outward normal from lip
-      const nx = -dz / len * s, nz = dx / len * s;
+      // outward normal from lip away from arena center
+      const nx = (dz / len) * -s, nz = (-dx / len) * -s;
       const gPos = [], gCols = [], gIdx = [];
-      const steps = 8, dists = [0, 4, 10, 20, 35, 60, 100, 160];
-      const drops = [-0.1, -1.8, -5.5, -12.0, -22.0, -35.0, -48.0, -55.0];
+      const steps = 10, dists = [-4, 0, 6, 14, 25, 42, 70, 110, 170];
+      const drops = [0.2, -0.2, -2.5, -6.5, -14.0, -25.0, -38.0, -48.0, -58.0];
 
       for (let di = 0; di < dists.length; di++) {
         const d = dists[di], y = drops[di];
@@ -143,8 +138,8 @@ export function buildBackdrop(kit, data = {}) {
           const lx = p0[0] + dx * (0.5 + (t - 0.5) * spread) + nx * d;
           const lz = p0[1] + dz * (0.5 + (t - 0.5) * spread) + nz * d;
           gPos.push(lx, y, lz);
-          const isLava = t > 0.3 && t < 0.7 && di < 6;
-          const c = isLava ? K.orange : (di < 2 ? K.basaltDk : K.scoria);
+          const isLava = t > 0.35 && t < 0.65 && di > 0 && di < 7;
+          const c = isLava ? K.orange : (di < 3 ? K.basaltDk : K.scoria);
           gCols.push(c.r, c.g, c.b);
         }
       }
@@ -154,9 +149,9 @@ export function buildBackdrop(kit, data = {}) {
           const i01 = di * (steps + 1) + u + 1;
           const i10 = (di + 1) * (steps + 1) + u;
           const i11 = (di + 1) * (steps + 1) + u + 1;
-          // Normal pointing up
-          if (s > 0) gIdx.push(i00, i01, i10, i01, i11, i10);
-          else gIdx.push(i00, i10, i01, i01, i10, i11);
+          // Both windings to prevent any face culling
+          gIdx.push(i00, i01, i10, i01, i11, i10);
+          gIdx.push(i00, i10, i01, i01, i10, i11);
         }
       }
       const gorgeG = new THREE.BufferGeometry();
@@ -167,9 +162,8 @@ export function buildBackdrop(kit, data = {}) {
       out.terrain.push(gorgeG);
     }
 
-    // Outer apron grid encircling the caldera
-    // Starts at the crater rim crest (or spillway mouth) and slopes outward down the volcano flanks
-    const ringFactors = [0, 0.12, 0.28, 0.52, 0.9, 1.5, 2.5, 4.0, 6.5];
+    // Outer apron grid encircling the caldera, starting from inner floor skirt
+    const ringFactors = [-0.4, 0, 0.12, 0.28, 0.52, 0.9, 1.5, 2.5, 4.0, 6.5];
     const maxRf = ringFactors[ringFactors.length - 1];
     const sectors = 48;
     const pos = [], cols = [], idx = [];
@@ -178,15 +172,18 @@ export function buildBackdrop(kit, data = {}) {
       const inSpillA = aDeg > -76 && aDeg < -40;
       const inSpillB = aDeg > 104 && aDeg < 140;
       if (inSpillA || inSpillB) return 36.0;
-      const rx = 56.0, rz = 86.0;
+      const rx = 82.0, rz = 108.0;
       let rRim = 1.0 / Math.sqrt((Math.cos(rad) / rx) ** 2 + (Math.sin(rad) / rz) ** 2);
       if ((aDeg > -145 && aDeg < -115) || (aDeg > 35 && aDeg < 65)) {
-        rRim = Math.max(rRim, 78.0);
+        rRim = Math.max(rRim, 96.0);
       }
       return rRim + 1.0;
     };
 
     const getHeight = (r, aDeg, r0) => {
+      if (r < r0) {
+        return -28.0; // Sub-crater floor skirt sealing rays that dip below arena perimeter
+      }
       const inSpillA = aDeg > -80 && aDeg < -35;
       const inSpillB = aDeg > 100 && aDeg < 145;
       if (inSpillA || inSpillB) {
@@ -198,10 +195,10 @@ export function buildBackdrop(kit, data = {}) {
         return Math.max(-50.0, -7.0 - (r - 48) * 0.35 + fbm(r * 0.02, aDeg * 0.04, 3) * 6.0);
       }
       // Outer volcano mountain slope starting at the crater rim crest and sloping outward
-      const crestH = 22.0 + 8.0 * Math.cos(aDeg * 2 * D_);
+      const crestH = 12.0 + 3.5 * Math.cos(aDeg * 2 * D_);
       if (r <= r0 + 2) return crestH;
       if (r >= 220) {
-        return 10.0 + (r - 220) * 0.18 + fbm(r * 0.015, aDeg * 0.03, 3) * 18.0;
+        return 8.0 + (r - 220) * 0.18 + fbm(r * 0.015, aDeg * 0.03, 3) * 18.0;
       }
       const distFromRim = r - r0;
       const falloff = Math.min(1.0, distFromRim / 120.0);
@@ -230,7 +227,12 @@ export function buildBackdrop(kit, data = {}) {
         const aDeg = (si / sectors) * 360 - 180;
         const rad = aDeg * D_;
         const r0 = getR0(aDeg, rad);
-        const r = r0 + (rf / maxRf) * (540 - r0);
+        let r;
+        if (rf < 0) {
+          r = Math.max(25.0, r0 * (1.0 + rf));
+        } else {
+          r = r0 + (rf / maxRf) * (540 - r0);
+        }
         const y = getHeight(r, aDeg, r0);
         const x = r * Math.cos(rad);
         const z = r * Math.sin(rad);
@@ -248,6 +250,7 @@ export function buildBackdrop(kit, data = {}) {
         const i10 = (ri + 1) * sectors + si;
         const i11 = (ri + 1) * sectors + nextS;
         idx.push(i00, i01, i10, i01, i11, i10);
+        idx.push(i00, i10, i01, i01, i10, i11);
       }
     }
 
@@ -346,38 +349,38 @@ export function buildBackdrop(kit, data = {}) {
   // =========================================================================================================
   {
     for (const sz of [-1, 1]) {
-      const townZ = sz * 78.0;
+      const townZ = sz * 98.0;
       // Terrace house blocks
       for (let tx = -28; tx <= 28; tx += 14) {
         const hW = 12, hH = 8, hD = 9;
         const bldG = new THREE.BoxGeometry(hW, hH, hD);
-        bldG.translate(tx, 22.0, townZ);
+        bldG.translate(tx, 14.0, townZ);
         addGeo(out.static, bldG, K.white);
 
         // Verdigris pitched roof
         const roofG = new THREE.ConeGeometry(hW * 0.72, 3.8, 4);
         roofG.rotateY(Math.PI / 4);
-        roofG.translate(tx, 26.0 + 1.9, townZ);
+        roofG.translate(tx, 18.0 + 1.9, townZ);
         addGeo(out.static, roofG, K.verd);
 
         // Brick chimney
         const chimG = new THREE.BoxGeometry(1.2, 3.5, 1.2);
-        chimG.translate(tx + 3.5, 27.5, townZ + 2.0);
+        chimG.translate(tx + 3.5, 19.5, townZ + 2.0);
         addGeo(out.static, chimG, K.brick);
       }
 
       // Water tower
       const wtG = new THREE.CylinderGeometry(4.0, 4.0, 6.0, 12);
-      wtG.translate(38.0 * -sz, 32.0, townZ);
+      wtG.translate(38.0 * -sz, 24.0, townZ);
       addGeo(out.static, wtG, C('#4a6058'));
       const wtLegs = new THREE.CylinderGeometry(0.5, 0.5, 14.0, 6);
-      wtLegs.translate(38.0 * -sz, 22.0, townZ);
+      wtLegs.translate(38.0 * -sz, 14.0, townZ);
       addGeo(out.static, wtLegs, C(K.iron));
 
       // Radio transmission mast
       const mastH = 34.0;
       const mastG = new THREE.CylinderGeometry(0.3, 1.4, mastH, 4);
-      mastG.translate(-38.0 * -sz, 22.0 + mastH / 2, townZ);
+      mastG.translate(-38.0 * -sz, 14.0 + mastH / 2, townZ);
       addGeo(out.static, mastG, C(K.iron));
     }
   }
@@ -388,18 +391,18 @@ export function buildBackdrop(kit, data = {}) {
   // =========================================================================================================
   {
     const pylonAngles = [-150, -110, -30, 10, 50, 90, 160];
-    const rx = 56.0, rz = 86.0;
+    const rx = 82.0, rz = 108.0;
     for (const a of pylonAngles) {
       const rad = a * D_;
       let pr = (1.0 / Math.sqrt((Math.cos(rad) / rx) ** 2 + (Math.sin(rad) / rz) ** 2)) + 3.0;
-      if ((a > -145 && a < -115) || (a > 35 && a < 65)) pr = Math.max(pr, 81.0);
+      if ((a > -145 && a < -115) || (a > 35 && a < 65)) pr = Math.max(pr, 99.0);
       const px = pr * Math.cos(rad);
       const pz = pr * Math.sin(rad);
-      const pylonG = new THREE.BoxGeometry(1.6, 18.0, 1.6);
-      pylonG.translate(px, 26.0, pz);
+      const pylonG = new THREE.BoxGeometry(1.6, 16.0, 1.6);
+      pylonG.translate(px, 18.0, pz);
       addGeo(out.static, pylonG, C(K.iron));
       const crossG = new THREE.BoxGeometry(7.0, 0.6, 0.8);
-      crossG.translate(px, 32.0, pz);
+      crossG.translate(px, 24.0, pz);
       addGeo(out.static, crossG, C(K.iron));
     }
   }

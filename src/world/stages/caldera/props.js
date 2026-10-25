@@ -18,6 +18,7 @@
 import { RAILS, GANTRY_RAILS, WALL_BOXES, OFFICE } from './layout.js';
 import { REGION_ALL, inPoly, HALL_LINE, PAD, CW, CAUSE_Z, RSF, PIT, ST_CUPOLA, BR_S, AW, A } from './geo.js';
 import { LAVA_Y, BLOCKOUT_LAVA, LAVA } from './lava.js';
+import { registerArch } from './arch.js';
 
 const HIGH_MARK = LAVA.high, D_ = Math.PI / 180;
 
@@ -360,12 +361,17 @@ export function register(D, H) {
   };
   D.caldera_gauge_post = {
     build(B) {
-      // Whitewashed blockhouse on horn tip
-      B.box('paint', K.white, 2.7, 1.2, 2.5, 0, 0.6, 0, { r: 0.04 });
-      B.box('metal', K.green, 0.9, 1.0, 0.08, 0, 0.5, 1.28);   // Green door
+      // Whitewashed blockhouse on horn tip with masonry trim, green door, and siren
+      B.box('paint', K.white, 3.2, 1.6, 3.0, 0, 0.8, 0, { r: 0.04 });
+      // Plinth trim and coping
+      B.box('metal', K.ironDk, 3.26, 0.08, 3.06, 0, 0.04, 0);
+      B.box('metal', K.iron, 3.3, 0.08, 3.1, 0, 1.6, 0);
+      // Green door with iron frame
+      B.box('metal', K.ironDk, 0.98, 1.18, 0.1, 0, 0.6, 1.52);
+      B.box('metal', K.green, 0.9, 1.1, 0.08, 0, 0.6, 1.53);
       // Hand siren on roof
-      B.cyl(NS('metal'), K.iron, 0.12, 0.35, 0.6, 1.35, 0.6, { seg: 8 });
-      B.lathe(NS('metal'), K.iron, [[0, 0.25], [0.18, 0]], 0.6, 1.55, 0.6, { seg: 8 });
+      B.cyl(NS('metal'), K.iron, 0.12, 0.35, 0.6, 1.75, 0.6, { seg: 8 });
+      B.lathe(NS('metal'), K.iron, [[0, 0.22], [0.16, 0]], 0.6, 1.95, 0.6, { seg: 8 });
     },
   };
 
@@ -494,6 +500,9 @@ export function register(D, H) {
       B.sph(NS('paint'), '#3f5845', 0.38, 0, 0.75, 0, { ws: 8, hs: 6 });
     },
   };
+
+  // Register rich architectural and industrial structures
+  registerArch(D, H);
 }
 
 // Set dressing placements (Alpha's half; mirrored unless `mirror: false`)
@@ -514,6 +523,8 @@ export const PLACEMENTS = [
   { type: 'caldera_winch_house', pos: [-23.2, 1.2, -19.6], rotY: -139.5 * D_ },
   { type: 'caldera_hornito', pos: [-25.2, 0, -6.8] },
   { type: 'caldera_hornito', pos: [-24.8, 0, -11.2] },
+  { type: 'caldera_hornito', pos: [-21.0, 0, -14.0] },
+  { type: 'caldera_hornito', pos: [-26.5, 0, -4.5] },
   { type: 'caldera_cairn', pos: [17.5, 2.4, -10.5] },
 
   // Moorings & Lakefront
@@ -526,20 +537,23 @@ export const PLACEMENTS = [
 
   // Casting Floor (LOW)
   { type: 'caldera_pig_bed', pos: [10.5, 0, -17.5] },
+  { type: 'caldera_pig_bed', pos: [8.0, 0, -13.5] },
   { type: 'caldera_floor_drain', pos: [13.0, 0, -15.0] },
   { type: 'caldera_mould_stack', pos: [12.0, 0, -18.4] },
+  { type: 'caldera_mould_stack', pos: [14.5, 0, -15.5] },
   { type: 'caldera_ladle_stand', pos: [14.0, 0, -13.6] },
 
   // Spillway
   { type: 'caldera_spillway_bridge', pos: [22.75, 2.3, -25.26], rotY: -38 * D_ },
   { type: 'caldera_slag_pot', pos: [22.75, 2.3, -26.5] },
-  { type: 'caldera_gauge_post', pos: [21.5, 2.4, -17.5] },
+  { type: 'caldera_gauge_post', pos: [22.4, 1.2, -19.5] },
 
   // Moulding Terrace
   { type: 'caldera_pattern_doors', pos: [-20.5, 2.4, -36.5], rotY: 60 * D_ },
   { type: 'caldera_pattern_crates', pos: [-11.8, 3.0, -38.2] },
   { type: 'caldera_firebrick_store', pos: [-7.5, 2.4, -42.0] },
   { type: 'caldera_flask_stack', pos: [-13.5, 2.4, -37.5] },
+  { type: 'caldera_firebrick_pallet', pos: [-9.5, 2.4, -40.0] },
 
   // Yard
   { type: 'caldera_weigh_office', pos: [PIT.x0 - 1.5, 3.6, (PIT.z0 + PIT.z1) / 2] },
@@ -547,6 +561,9 @@ export const PLACEMENTS = [
   { type: 'caldera_casting_stack', pos: [-8.0, 3.6, -58.0], kind: 'manholes' },
   { type: 'caldera_casting_stack', pos: [-22.0, 3.6, -52.0], kind: 'bollards' },
   { type: 'caldera_casting_stack', pos: [4.0, 3.6, -56.0], kind: 'pipes' },
+  { type: 'caldera_firebrick_pallet', pos: [-18.0, 3.6, -56.0] },
+  { type: 'caldera_pipe_manifold', pos: [-14.0, 3.6, -48.0] },
+  { type: 'caldera_pipe_manifold', pos: [-10.0, 4.8, -66.5] },
 
   // Spawn Gallery Balustrade Urns
   { type: 'caldera_planter_urn', pos: [PAD[0] - 3.5, 4.8, HALL_LINE[0][1] + 1.8] },

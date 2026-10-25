@@ -301,9 +301,9 @@ add(B(OFFICE.x0, OFFICE.x1, 3.6, 9.5, OFFICE.z0, OFFICE.z1, white({ tag: 'surge-
 // leaving the west lane's mouth at the Rim Head's foot in sight of the gallery (Bazookarp: every way into the Gate's
 // 15 m ring is seen from the deck)
 const LANE_Z = [-46.75, -43.25];   // the tower's yard run (z −45: platform ± 1.25 and 0.5 m clear)
-const castWall = (x, z0, z1, h, tag, c) => B(G.r3(x - 0.6), G.r3(x + 0.6), 3.6, G.r3(3.6 + h), G.r3(z0), G.r3(z1), cover(c, { tag }));
+const castWall = (x, z0, z1, h, tag, c, o = {}) => B(G.r3(x - 0.6), G.r3(x + 0.6), 3.6, G.r3(3.6 + h), G.r3(z0), G.r3(z1), cover(c, { tag, ...o }));
 add(castWall(-27.7, G.GAL.z1, LANE_Z[0], 2.4, 'ferry-castings', K.cast));
-add(castWall(-12.4, G.GAL.z1, LANE_Z[0], 2.3, 'ferry-castings', '#5f6a63'), castWall(-12.4, LANE_Z[1], -40.85, 2.4, 'ferry-castings', '#5f6a63'));
+add(castWall(-12.4, G.GAL.z1, LANE_Z[0], 2.3, 'ferry-castings', '#5f6a63', { mural: [{ n: [1, 0, 0], id: MURAL.highmark }] }), castWall(-12.4, LANE_Z[1], -40.85, 2.4, 'ferry-castings', '#5f6a63'));
 // the Gate's apron (Bazookarp: blocks ≥ 1.2 m within 4 m of route 1 between the gallery and the Gate): the centre lane's
 // cluster, two stepped stacks (1.8 and 1.9 m to the top)
 add(stack2(-20.6, -49.4, 1.6, 1.2, 1.3, 3.6, 'drain-grates', '#56606a', [1.0, 0.8, 0.5, 0, 0]), stack2(-14.6, -48.7, 1.6, 1.4, 1.3, 3.6, 'ingot-rack', K.cast, [1.1, 0.9, 0.6, 0.1, 0]));
@@ -312,7 +312,7 @@ add(stack2(-20.6, -49.4, 1.6, 1.2, 1.3, 3.6, 'drain-grates', '#56606a', [1.0, 0.
 add(B(-30.6, G.GAL.x0, 3.6, 5.6, G.GAL.z0, SWZ - 1.5, cover('#6a6258', { tag: 'pattern-bay' })), drum(-36.0, -59.8, 0.85, 1.3, 3.6, 'drum-stack', '#56606a'));
 // the cupola house: the furnace's shed filling the dead end of the east side yard behind the east side stair (its stack
 // and the hood above, props.js)
-add(B(G.GAL.x1, 0.6, 3.6, 9.4, G.GAL.z0, G.PADZ + 1.0, { color: K.brick, pattern: PATTERN.brick, roof: true, tag: 'cupola-house' }));
+add(B(G.GAL.x1, 0.6, 3.6, 9.4, G.GAL.z0, G.PADZ + 1.0, { color: K.brick, pattern: PATTERN.brick, roof: true, tag: 'cupola-house', mural: [{ n: [0, 0, 1], id: MURAL.gable }] }));
 add(OCT(-3.2, -64.3, 1.0, 9.4, 15.0, { color: '#4b4f55', pattern: PATTERN.metal, roof: true, tag: 'cupola-stack' }));
 // the east lane's cluster, against the head's cheek half-way to the Bay Stair: a ladle stand (1.8) and a cable drum
 { const u = unit(G.LC, [-4.6, -53.5]);
@@ -522,16 +522,25 @@ const LAYOUT_CALDERA = {
   spawnPads: [[G.PAD[0], 4.8, G.PAD[1]], [-G.PAD[0], 4.8, -G.PAD[1]]],
   spawnBarrier: 4.2,
   intro: { from: [40, 26, -40], lookFrom: [0, 8, 0], toBack: 3.2 },
-  art: { from: [-44, 30, -56], look: [4, 2, 4], fov: 56, lava: 'high' },
+  art: { from: [-44, 30, -56], look: [4, 2, 4], fov: 56 },
   env: {
     backdrop: buildBackdrop, bay: false, edge: 'none', boats: false, gulls: false, buoys: false,
     sea: false,                 // ENGINE H22: no sea mesh (the backdrop draws the far ocean far below); the death plane stays
     stars: true,
-    weather: { mist: { layers: 2, height: 1.6, reach: 26, inner: 6, opacity: 0.12, scale: 1.0, color: '#d8c8bc' } },   // heat haze over the lake
     theme: {
-      all:    { fog: [40, 900], haze: [1 / 2600, 0.8, 320] },
-      day:    { zenith: '#1f5fbf', skyMid: '#5c9be0', horizon: '#d6cbbd', sunIntensity: 3.2 },   // thin high air, warm volcanic haze
-      sunset: { hemiIntensity: 0.62, envK: 0.45, grade: { uExposure: 1.02, uSat: 0.98 } },     // violet-indigo; the lava is the key light
+      all:    { fog: [45, 950], haze: [1 / 2800, 0.7, 340] },
+      day:    {
+        zenith: '#2475e2', skyMid: '#68b2f8', horizon: '#ebf4fc',
+        sunIntensity: 4.4, skySun: 3.5,
+        hemiIntensity: 0.70, hemiSky: '#c8e2ff', hemiGround: '#d8bca0', hemiGroundK: 2.3, envK: 0.54,
+        grade: { uExposure: 1.24, uSat: 1.06, uContrast: 1.04 },
+      },
+      sunset: {
+        sunIntensity: 5.2, skySun: 4.2,
+        hemiIntensity: 0.90, hemiSky: '#7e90e6', hemiGround: '#c8926e', envK: 0.55,
+        zenith: '#222d75', skyMid: '#655cb0', horizon: '#ffad75',
+        grade: { uExposure: 1.22, uSat: 1.08, uContrast: 1.05, bloom: [0.45, 0.55, 1.8] },
+      },
     },
   },
   lava: LAVA,
@@ -550,7 +559,14 @@ const LAYOUT_CALDERA = {
   single: SINGLE,
   half: HALF,
   decor: {
-    lamps: [[-3.0, -14.5], [3.0, -14.5], [-16.0, -22.5], [8.5, -23.5], [-16.5, -32.5], [0.0, -33.5]],
+    lamps: [
+      [-3.0, -14.5], [3.0, -14.5],      // Pour Floor / Causeway
+      [-16.0, -22.5], [-8.5, -23.5],    // Moorings / Surge Office
+      [-22.0, -10.0], [-18.0, -6.0],     // Slump Shelf
+      [-8.0, -6.0],   [-5.0, -2.0],     // Organ Pipes / Lookout
+      [12.0, -14.0],  [8.0, -10.0],     // Casting Floor
+      [-26.0, -30.0], [-16.5, -34.0],   // Rim Head & Moulding Terrace
+    ],
     palms: [],
     flags: [[-6.0, 12.0, -68.5], [6.0, 12.0, -68.5]],
   },
