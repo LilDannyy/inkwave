@@ -53,8 +53,12 @@ export const HALYARD = {
     // ---- the ferry: navy hull, light non-slip deck plate (its 0.2 m edge reads as the sheer stripe)
     B(-16, 16, -1.9, 1.1, -5, 5, { color: M.navy, tag: 'ferry-hull', pattern: PATTERN.hullpaint }),
     B(-16, 16, 1.1, 1.3, -5, 5, { tag: 'ferry-deck', color: M.carDeck, pattern: PATTERN.nonslip, mural: [{ n: [0, 1, 0], id: 4 }] }),
+    // Bazookarp's Pond needs an honest fight ring on the ferry's open car deck. These broad side aprons turn its
+    // narrow vehicle deck into the public loading apron around the centre; only this mode gets the extra float-deck.
+    B(-10, 10, 1.1, 1.3, -10, -5, { tag: 'car-deck-apron', color: M.ferryDeck, pattern: PATTERN.nonslip, onlyIn: 'bazookarp' }),
+    B(-10, 10, 1.1, 1.3, 5, 10, { tag: 'car-deck-apron', color: M.ferryDeck, pattern: PATTERN.nonslip, onlyIn: 'bazookarp' }),
     // cabin (its roof is the sun deck) + wheelhouse on top
-    B(-6.5, 6.5, 1.3, 3.8, -2.9, 2.9, { tag: 'ferry-cabin', color: M.cabin, pattern: PATTERN.hullpaint, mural: [{ n: [1, 0, 0], id: 6 }, { n: [-1, 0, 0], id: 6 }, { n: [0, 0, 1], id: 5 }, { n: [0, 0, -1], id: 5 }] }),
+    B(-6.5, 6.5, 1.3, 3.8, -2.9, 2.9, { tag: 'ferry-cabin', color: M.cabin, pattern: PATTERN.hullpaint, mural: [{ n: [1, 0, 0], id: 6 }, { n: [-1, 0, 0], id: 6 }, { n: [0, 0, 1], id: 5 }, { n: [0, 0, -1], id: 5 }], notIn: 'bazookarp' }),
     B(-1.5, 1.5, 3.8, 5.2, -1.6, 1.6, { tag: 'ferry-wheelhouse', roof: true, color: M.cabin, pattern: PATTERN.hullpaint, notIn: ['tower', 'bazookarp'] }),   // [b5-karp] (the Pond on the cabin roof)
   ],
   half: [
