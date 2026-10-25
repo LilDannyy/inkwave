@@ -73,11 +73,11 @@ export function drawMurals(g, R, kit) {
     g.fillText('BELLOWS CALDERA  ·  EST. 1931', x + w / 2, y + 104);
     wear(x, y, w, h, 20);
     g.restore();
-    out.push({ id: MURAL.gable, x, y, w, h, place: [0.6, 4.2, 0.25, 1.1], fx: [0.8, 1] });
+    out.push({ id: MURAL.gable, x, y, w, h, place: [0.6, 4.2, 0.25, 1.1], fx: [0, 0] });
   }
 
   // -------------------------------------------------------------------------------------------------
-  // 5: HIGH MARK painted line (1024 × 80 px, 4.0 m repeat × 0.25 m)
+  // 5: HIGH MARK painted line & plate (1024 × 80 px, 0.8 × 0.22 m on lamp plinth)
   // -------------------------------------------------------------------------------------------------
   {
     const x = X0 + 700, y = Y0 + 8, w = 1024, h = 80;
@@ -85,12 +85,13 @@ export function drawMurals(g, R, kit) {
     g.fillStyle = WHITE; g.fillRect(x, y + 16, w, 48);
     g.fillStyle = CHARCOAL;
     g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.font = fontB(22);
-    const txt = '▲  HIGH MARK  —  DO NOT STAND BELOW THIS LINE DURING A SURGE  ▲';
+    g.font = fontB(20);
+    const txt = '▲  HIGH MARK  —  DO NOT STAND BELOW THIS LINE  ▲';
+    fit(g, txt, w - 60, 24, fontB);
     g.fillText(txt, x + w / 2, y + 40);
     wear(x, y, w, h, 35);
     g.restore();
-    out.push({ id: MURAL.highmark, x, y, w, h, place: [0, -4.0, 0.72, 0.22], fx: [0.85, 1] });
+    out.push({ id: MURAL.highmark, x, y, w, h, place: [0.05, 0.8, 0.72, 0.22], fx: [0, 0] });
   }
 
   // -------------------------------------------------------------------------------------------------
@@ -116,7 +117,7 @@ export function drawMurals(g, R, kit) {
     g.fillText('SLUMP PATH: DANGER OF SURGE', x + w / 2, y + 172);
     wear(x, y, w, h, 20);
     g.restore();
-    out.push({ id: MURAL.warning, x, y, w, h, place: [0.05, 0.9, 0.12, 0.95], fx: [0.8, 1] });
+    out.push({ id: MURAL.warning, x, y, w, h, place: [2.2, 2.2, 0.15, 0.9], fx: [0, 0] });
   }
 
   // -------------------------------------------------------------------------------------------------
@@ -136,7 +137,7 @@ export function drawMurals(g, R, kit) {
     g.fillText('KEEP TO CHAINED BOULDERS', x + w / 2, y + 120);
     wear(x, y, w, h, 20);
     g.restore();
-    out.push({ id: MURAL.pumice, x, y, w, h, place: [0.3, 1.8, 0.9, 0.6], fx: [0.85, 1] });
+    out.push({ id: MURAL.pumice, x, y, w, h, place: [0.3, 1.8, 0.9, 0.6], fx: [0, 0] });
   }
 
   // -------------------------------------------------------------------------------------------------
@@ -171,7 +172,7 @@ export function drawMurals(g, R, kit) {
     g.fillText('CYCLE PERIOD: 90 SECONDS', x + w / 2, y + 302);
     wear(x, y, w, h, 25);
     g.restore();
-    out.push({ id: MURAL.tideboard, x, y, w, h, place: [0.1, 1.8, 0.2, 1.2], fx: [0.9, 1] });
+    out.push({ id: MURAL.tideboard, x, y, w, h, place: [0.3, 1.8, 0.3, 1.2], fx: [0, 0] });
   }
 
   // -------------------------------------------------------------------------------------------------
@@ -201,7 +202,7 @@ export function drawMurals(g, R, kit) {
     g.fillText('HIGHMARK WORKS', cx, cy + 145);
     wear(x, y, w, h, 35);
     g.restore();
-    out.push({ id: MURAL.pourfloor, x, y, w, h, place: [0.4, 3.2, 0.4, 3.2], fx: [0.85, 1] });
+    out.push({ id: MURAL.pourfloor, x, y, w, h, place: [3.4, 3.2, 3.4, 3.2], fx: [0, 0] });
   }
 
   // -------------------------------------------------------------------------------------------------
@@ -229,7 +230,7 @@ export function drawMurals(g, R, kit) {
     g.fillText('NO STANDING DURING A SURGE', x + w / 2, y + 95);
     wear(x, y, w, h, 25);
     g.restore();
-    out.push({ id: MURAL.spillway, x, y, w, h, place: [0.1, 2.4, 0.1, 0.9], fx: [0.85, 1] });
+    out.push({ id: MURAL.spillway, x, y, w, h, place: [0.1, 2.4, 0.15, 0.9], fx: [0, 0] });
   }
 
   // -------------------------------------------------------------------------------------------------
@@ -250,7 +251,7 @@ export function drawMurals(g, R, kit) {
     g.fillText('DISPATCH — INKOPOLIS MUNICIPAL CASTINGS', x + 24, y + 224);
     wear(x, y, w, h, 20);
     g.restore();
-    out.push({ id: MURAL.stencils, x, y, w, h, place: [0.9, 3.2, 4.1, 1.2], fx: [0.85, 1] });
+    out.push({ id: MURAL.stencils, x, y, w, h, place: [0.9, 3.2, 4.1, 1.2], fx: [0, 0] });
   }
 
   return out;

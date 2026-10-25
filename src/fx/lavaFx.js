@@ -310,6 +310,20 @@ totalEmissiveRadiance += vec3(1.0, 0.13, 0.02) * gCr * uCrack * 1.5;`);
       // Organ Pipes dynamic set dressing: riveted iron bands, bright galvanised checkerplate steps, yellow safety nosings
       if (r.look?.type === 'caldera_organ') {
         const isLookout = r.look?.role === 'lookout';
+        // 0. Columnar basalt masonry jointing: horizontal course lines & corner bevels
+        for (const jy of [-0.3, -1.1, -2.1]) {
+          if (-jy < r.depth) {
+            parts.push(colourGeo(new THREE.CylinderGeometry(r.r + 0.012, r.r + 0.012, 0.035, 6, 1, false, Math.PI / 2).translate(0, jy, 0), '#24272c'));
+          }
+        }
+        // Lighter basalt cap stone course below deck
+        parts.push(colourGeo(new THREE.CylinderGeometry(r.r + 0.018, r.r + 0.018, 0.08, 6, 1, false, Math.PI / 2).translate(0, -0.04, 0), '#6c727c'));
+        // Vertical corner chamfers along the 6 hexagonal column facets
+        const colH = Math.min(r.depth, 3.2);
+        for (let a = 0; a < 6; a++) {
+          const ang = (a * Math.PI) / 3;
+          parts.push(colourGeo(new THREE.BoxGeometry(0.04, colH, 0.04).translate(Math.cos(ang) * (r.r + 0.005), -colH / 2, Math.sin(ang) * (r.r + 0.005)), '#32363d'));
+        }
         // 1. Riveted hexagonal wrought-iron bands around column
         for (const by of [-0.6, -1.6, -2.6]) {
           if (-by < r.depth) {
@@ -346,6 +360,14 @@ totalEmissiveRadiance += vec3(1.0, 0.13, 0.02) * gCr * uCrack * 1.5;`);
         if (isLookout) {
           // Top deck rim curb
           parts.push(colourGeo(new THREE.CylinderGeometry(r.r + 0.02, r.r + 0.02, 0.12, 6, 1, false, Math.PI / 2).translate(0, 0.06, 0), '#282b30'));
+          // Crown acoustic organ pipes along rear/north rim
+          for (let p = -2; p <= 2; p++) {
+            const py = 0.5 + Math.abs(p) * 0.25;
+            const px = p * 0.28, pz = -(r.r - 0.15);
+            parts.push(colourGeo(new THREE.CylinderGeometry(0.07, 0.07, py, 10).translate(px, py / 2, pz), '#4a5058'));
+            parts.push(colourGeo(new THREE.CylinderGeometry(0.08, 0.08, 0.04, 10).translate(px, py - 0.02, pz), '#b89438'));
+            parts.push(colourGeo(new THREE.CylinderGeometry(0.04, 0.04, 0.02, 8).translate(px, py, pz), '#181a1d'));
+          }
           // Caged inspection bulkhead lamp facing south (toward mid / Pour Floor)
           const lz = r.r + 0.06;
           parts.push(colourGeo(new THREE.BoxGeometry(0.22, 0.32, 0.12).translate(0, -0.4, lz), '#243e32'));

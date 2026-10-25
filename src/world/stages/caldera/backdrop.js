@@ -162,8 +162,9 @@ export function buildBackdrop(kit, data = {}) {
     rimGeo.setAttribute('position', new THREE.Float32BufferAttribute(rimPos, 3));
     rimGeo.setAttribute('color', new THREE.Float32BufferAttribute(rimCols, 3));
     rimGeo.setIndex(rimIdx);
-    rimGeo.computeVertexNormals();
-    out.static.push(rimGeo);
+    const rimFlat = rimGeo.toNonIndexed();
+    rimFlat.computeVertexNormals();
+    out.static.push(rimFlat);
 
     // =========================================================================================================
     // Scree fans along the foot of the crater rim
@@ -405,8 +406,10 @@ export function buildBackdrop(kit, data = {}) {
     ventGeo.setAttribute('position', new THREE.Float32BufferAttribute(ventPos, 3));
     ventGeo.setAttribute('color', new THREE.Float32BufferAttribute(ventCols, 3));
     ventGeo.setIndex(ventIdx);
-    ventGeo.computeVertexNormals();
-    out.plain.push(ventGeo);
+    // Non-indexed flat normals ensure each faceted scoria strata step and fluting rib catches sunlight crisply
+    const ventFlat = ventGeo.toNonIndexed();
+    ventFlat.computeVertexNormals();
+    out.plain.push(ventFlat);
 
     // Glowing incandescent throat bottom disc
     const coreG = new THREE.CylinderGeometry(8.0, 5.0, 3.0, 16);
@@ -414,22 +417,36 @@ export function buildBackdrop(kit, data = {}) {
     addGeo(out.static, coreG, K.gold);
 
     // Drifting volcanic smoke & steam plumes catching bright sun
-    // Soft layered puffs with warm glowing base transitioning to diffuse ash
-    for (let p = 0; p < 18; p++) {
-      const u = p / 18;
-      const px = vx - u * 110.0 + (rnd() - 0.5) * 18.0;
-      const py = vy + vh + 4.0 + u * 65.0;
-      const pz = vz - u * 42.0 + (rnd() - 0.5) * 18.0;
-      const ps = 10.0 + u * 32.0;
+    // Multi-layered billowy puff clusters (subdivision 2) with soft ash/steam gradient colors
+    for (let p = 0; p < 24; p++) {
+      const u = p / 24;
+      const px = vx - u * 125.0 + (rnd() - 0.5) * 16.0;
+      const py = vy + vh + 3.0 + u * 72.0;
+      const pz = vz - u * 48.0 + (rnd() - 0.5) * 16.0;
+      const ps = 9.0 + u * 34.0;
 
-      const puffG = new THREE.IcosahedronGeometry(ps, 1);
-      puffG.translate(px, py, pz);
       let pCol;
-      if (u < 0.15) pCol = K.orange.clone().lerp(K.steamWarm, u / 0.15);
-      else if (u < 0.45) pCol = K.steamWarm.clone().lerp(K.steam, (u - 0.15) / 0.3);
-      else if (u < 0.75) pCol = K.steam.clone().lerp(K.tuffLt, (u - 0.45) / 0.3);
-      else pCol = K.tuffLt.clone().lerp(K.scree, (u - 0.75) / 0.25);
+      if (u < 0.12) pCol = K.orange.clone().lerp(K.steamWarm, u / 0.12);
+      else if (u < 0.38) pCol = K.steamWarm.clone().lerp(K.steam, (u - 0.12) / 0.26);
+      else if (u < 0.70) pCol = K.steam.clone().lerp(K.tuffLt, (u - 0.38) / 0.32);
+      else pCol = K.tuffLt.clone().lerp(K.scree, (u - 0.70) / 0.30);
+
+      // Main billowy puff
+      const puffG = new THREE.IcosahedronGeometry(ps, 2);
+      puffG.translate(px, py, pz);
       addGeo(out.plain, puffG, pCol);
+
+      // Satellite billows creating soft volumetric cloud lobes
+      if (p % 2 === 0) {
+        for (let sub = 0; sub < 2; sub++) {
+          const sRad = ps * (0.55 + rnd() * 0.25);
+          const subG = new THREE.IcosahedronGeometry(sRad, 2);
+          const ang = rnd() * Math.PI * 2;
+          const offDist = ps * 0.45;
+          subG.translate(px + Math.cos(ang) * offDist, py + (rnd() - 0.4) * ps * 0.4, pz + Math.sin(ang) * offDist);
+          addGeo(out.plain, subG, pCol);
+        }
+      }
     }
 
     // Fumaroles along crater rim fissures (billowing white steam)
