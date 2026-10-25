@@ -26,9 +26,11 @@ export const BAZOOKARP_DEFS = {
     // The ferry's car deck is the central, open fight space. Bazookarp clears the cabin so the Pond has a walkable ring.
     start: [0, 1.3, 0],
     weirs: [{ at: [-1.5, 0, 27.5], yaw: 0 }],          // the Long Pier / boatyard junction (§9.3)
-    gate: { at: [0, 0, 53.8], yaw: 0 },                 // in front of Bravo's spawn (12.2 m from the pad)
+    gate: { at: [3, 0, 54.2], yaw: 0 },                 // in front of Bravo's spawn (12.2 m, 14° off the centreline)
     freeZones: [
-      { poly: [[-8.5, 62.5], [8.5, 62.5], [8.5, 69.4], [-8.5, 69.4]], y0: 2.0, y1: 4.6, signs: [[-9.7, 65.9, 90], [9.7, 65.9, 270], [-4.8, 61.5, 0], [4.8, 61.5, 180], [-8.9, 62.5, 90], [8.9, 62.5, 270]] },   // deck free zone; entrance signs stand outside it
+      { poly: [[-10, 62], [10, 62], [10, 69.4], [-10, 69.4]], y0: 2.0, y1: 4.6, signs: [[-11.2, 65.9, 90], [11.2, 65.9, 270], [-4.8, 61.5, 0], [4.8, 61.5, 180], [-10.9, 62.5, 90], [10.9, 62.5, 270]] },   // deck free zone; entrance signs stand outside it
+      { poly: [[13, 13], [22, 13], [22, 24], [13, 24]], y0: 2.2, y1: 3.3, signs: [[17.5, 11.5, 180]] },   // Bazookarp excludes the climb-only tug deck; its ramp remains a route
+      { poly: [[-22, 13], [-13, 13], [-13, 24], [-22, 24]], y0: 2.2, y1: 3.3, signs: [[-17.5, 11.5, 180]] },
     ],
     hopVeto: [
       [-15.5, 2.9, -18.5, -17.5, 0.7, -17.5], [-15.5, 2.9, -17.5, -17.5, 0.7, -17.5], [-14.5, 2.9, -17.5, -17.5, 0.7, -17.5],
