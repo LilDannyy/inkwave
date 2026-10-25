@@ -135,10 +135,17 @@ export function registerDress(D, H, KIT) {
         for (let i = 0; i < n; i++) { const x0 = -L / 2 + (L * i) / n, x1 = -L / 2 + (L * (i + 1)) / n; strut(B, 'metal', K.ironLt, [x0, 0.1, 0], [x1, h - 0.1, 0], 0.035); strut(B, 'metal', K.ironLt, [x1, 0.1, 0], [x0, h - 0.1, 0], 0.035); }
         for (const s of [-1, 1]) pbox(B, 'metal', K.ironLt, 0.14, h + 0.1, 0.14, s * L / 2, (h + 0.1) / 2, 0);
       } else {
-        // glass: a pearl-glass panel with a rail of light on top (the 3000s)
-        pbox(B, 'gloss', K.glassLt, L, h - 0.08, 0.03, 0, (h - 0.08) / 2, 0);
-        pbox(B, 'glow', K.wg, L, 0.04, 0.05, 0, h - 0.04, 0, { glow: 1.3 });
-        pbox(B, 'gloss', K.pearl, L, 0.06, 0.06, 0, 0.03, 0);
+        // glass (the 3000s: the Halo, the glass stairs, the Iron Bridge): clear panels (the 'glass' bucket — a see-through
+        // material with a fresnel edge, the era module's: fix round 1, the panels were opaque blue-grey slabs and these
+        // rails are shoot-through) between slim pearl posts every ~1.5 m, a pearl handrail with the rail of light on top,
+        // a pearl foot
+        const n = Math.max(1, Math.round(L / 1.5)), gm = o.bucketTag && o.bucketTag[0] === 'e' ? 'glass' : 'gloss';   // ('glass' is an era bucket's)
+        pbox(B, gm, K.glassClear, L - 0.04, h - 0.2, 0.024, 0, 0.1 + (h - 0.2) / 2, 0);
+        for (let i = 0; i <= n; i++) { const x = -L / 2 + (L * i) / n; pbox(B, 'gloss', K.pearl, 0.05, h - 0.04, 0.05, Math.max(-L / 2 + 0.025, Math.min(L / 2 - 0.025, x)), (h - 0.04) / 2, 0); }
+        pbox(B, 'gloss', K.pearl, L, 0.05, 0.075, 0, h - 0.065, 0);
+        pbox(B, 'glow', K.wg, L, 0.025, 0.05, 0, h - 0.025, 0, { glow: 1.3 });
+        pbox(B, 'gloss', K.pearl, L, 0.08, 0.06, 0, 0.04, 0);
+        pbox(B, 'glow', K.wg, L - 0.06, 0.012, 0.064, 0, 0.082, 0, { glow: 0.9 });
       }
     },
   };

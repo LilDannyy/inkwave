@@ -1178,6 +1178,29 @@ const FBASE = /* glsl */`
         // deck edges: a fascia board (timber; the 3000s white with a light seam)
         base = E == 2 ? bsC(0.92, 0.92, 0.9) : bsC(0.42, 0.32, 0.24) * (0.9 + 0.15 * vnoise(fu * vec2(1.0, 12.0)));
         if (E == 2) { float ls = bsAA(abs(fu.y - fsz.y * 0.5) - 0.015, pw); base = mix(base, WG, ls); gBsGlow += ls * WG; }
+      } else if (N.y < -0.7) {
+        // (fix round 1) the undersides seen from below: the 3000s' glass decks (the Halo over the circus and the balcony,
+        // the stair landings) as pearl coffers between white ribs with white-gold light seams; the timber decks' joists
+        vec2 cf = abs(fract(fu / 1.2) - 0.5) * 1.2;                            // from the coffer's centre, per axis (0 … 0.6)
+        float dE = 0.6 - max(cf.x, cf.y);                                       // to the coffer's edge
+        float rib = bsAA(dE - 0.07, pw), seam = bsAA(abs(dE - 0.1) - 0.012, pw);
+        float e3 = min(min(fu.x, fsz.x - fu.x), min(fu.y, fsz.y - fu.y));
+        if (prm == 5 || (E == 2 && prm == 4)) {
+          float well = 1.0 - smoothstep(0.08, 0.5, dE);                          // the coffer's recess, shaded toward its rim
+          vec3 pearl = mix(bsC(0.93, 0.93, 0.92), bsC(0.72, 0.74, 0.8), well) * (0.96 + 0.04 * vnoise(fu * 3.0));
+          base = mix(pearl, bsC(0.97, 0.96, 0.94), rib);
+          base = mix(base, WG, seam * 0.8);
+          float edge = bsAA(abs(e3 - 0.18) - 0.02, pw);
+          base = mix(base, WG, edge);
+          gBsGlow += (seam * 0.9 + edge) * WG;
+          gBsLit += (1.0 - rib) * (1.0 - well) * bsC(0.95, 0.94, 0.98) * 0.35;  // a soft light in each coffer's centre
+          gBaseRough = 0.3; gTexStr = 0.0;
+        } else if (prm < 4) {
+          float joist = bsAA(abs(fract(fu.x / 0.6) - 0.5) * 0.6 - 0.05, pw);
+          base = bsC(0.34, 0.26, 0.2) * (0.85 + 0.2 * vnoise(fu * vec2(0.6, 8.0)));
+          base = mix(base, base * 0.62, joist);
+          gTexStr = 0.0;
+        }
       }
     }
   }

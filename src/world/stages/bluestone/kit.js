@@ -18,7 +18,7 @@ export function makeKit(D, H) {
     // iron, timber, glass
     iron: '#2c3a34', ironLt: '#46564e', black: '#1f2224', gilt: '#c9a356', giltLt: '#e2c47e', brass: '#b8924a', brassDk: '#8a6a32',
     timber: '#5a3a2a', timberLt: '#8a6446', oak: '#9a7350', maroon: '#6b2c27', green: '#2e4a3c', greenLt: '#4f6b58', cream: '#e8dcc0',
-    canvas: '#d9cdb0', glass: '#3e4c56', glassLt: '#8fa2ad', enamel: '#203a5a', enamelW: '#f1ede2', red: '#9a3a2e',
+    canvas: '#d9cdb0', glass: '#3e4c56', glassLt: '#8fa2ad', glassClear: '#e4edf2', enamel: '#203a5a', enamelW: '#f1ede2', red: '#9a3a2e',
     // TODAY
     alu: '#9aa1a5', aluDk: '#5f666b', tram: '#4f6b52', teal: '#335a58', ochre: '#c69a4a', signBlue: '#2c4466', lit: '#fff1d6', litWarm: '#ffe2b0',
     // the 3000s

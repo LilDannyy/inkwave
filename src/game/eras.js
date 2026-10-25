@@ -108,10 +108,28 @@ export class EraWorld {
   // ---------------------------------------------------------------- build chain
   prop(it, kit) {
     if (!it.eras) return it;
-    if (kit && !kit.tagMaterial) kit.tagMaterial = (key, tag, base) => (tag && tag[0] === 'e' ? eraMaterial(base, this.uniforms, 'aTag') : null);
+    if (kit && !kit.tagMaterial) kit.tagMaterial = (key, tag, base) => (tag && tag[0] === 'e' && (base || key === 'glass') ? eraMaterial(base || this._glassMat(), this.uniforms, 'aTag') : null);
     const mask = eraMask(it.eras), p = it.pos || [0, 0, 0];
     const g = it.eraGroup ? this.planGroups.get(groupKey(it.eraGroup, p[2], '')) : null;
     return { ...it, bucketTag: 'e' + mask, bucketVec: [mask, g ? g.rg : Math.hypot(p[0], p[2])] };
+  }
+  // (fix round 1) the era props' clear glass ('glass' buckets: the 3000s' glass rails — see-through like the rails they draw,
+  // which shots and ink pass): a pale tint at ~22 % that rises to ~70 % at a grazing angle (a fresnel edge), no depth
+  // write, no shadow (PropKit's CASTS has no 'glass'), out of the GTAO pass (afterMeshes)
+  _glassMat() {
+    if (this._glass) return this._glass;
+    const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.06, metalness: 0, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide, envMapIntensity: 1.4 });
+    m.onBeforeCompile = (sh) => {
+      sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `{
+  float bsFres = pow(1.0 - abs(dot(normalize(vViewPosition), normal)), 3.0);
+  diffuseColor.a = clamp(diffuseColor.a + bsFres * 0.5, 0.0, 0.72);
+  outgoingLight += vec3(0.05, 0.05, 0.055) + bsFres * vec3(0.18, 0.18, 0.2);
+}
+#include <opaque_fragment>`);
+    };
+    m.customProgramCacheKey = () => 'bs-glass';
+    this._glass = m;
+    return m;
   }
   colliders(it, cols) { return it.eras ? cols.map((c) => ({ ...c, eras: it.eras, eraGroup: it.eraGroup })) : cols; }
 
@@ -276,7 +294,9 @@ export class EraWorld {
       if (!tag || tag[0] !== 'e') continue;
       m.userData.eraMask = +tag.slice(1);
       m.customDepthMaterial = eraDepthMaterial(this.uniforms, 'aTag');
-      m.onBeforeRender = this._aoGateFor(m.userData.eraMask);
+      // (fix round 1: a see-through bucket — the glass — never draws into the GTAO override pass)
+      m.onBeforeRender = m.material?.transparent ? (r, s, c, g) => { g.drawRange.count = s.overrideMaterial ? 0 : Infinity; } : this._aoGateFor(m.userData.eraMask);
+      if (m.material?.transparent) m.castShadow = false;
       this.propMeshes.push(m);
     }
     this.fx = new EraFx(this, { scene, props });
