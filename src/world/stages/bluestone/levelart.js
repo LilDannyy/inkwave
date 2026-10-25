@@ -407,7 +407,11 @@ const FBASE = /* glsl */`
     // along the wall, left to right as seen from outside (the face's own u: fu.x), and the height
     vec2 W = vec2(fu.x, P.y);
     float pw = max(length(fwidth(vWPos)) * 0.75, 0.003);
+#ifdef ERA_STATIC
+    const int E = ERA_NOW;   // (fix round 2: the static program — this era's code alone is compiled)
+#else
     int E = gBsEra;
+#endif
     vec3 WG = bsC(0.95, 0.88, 0.70);                      // white-gold (eras.colors.appear's family)
     // ============================================================== BLD
     if (st == 1 && prm < 16) {
@@ -1543,8 +1547,10 @@ const FBASE = /* glsl */`
     }
     // (fix round 1) the 1880s' paper on shared walls (the arcade's hoardings, the bills on the viaduct, the lane and the
     // poster column) turns to old film with the pieces about to vanish in jump 1's warning: it too is about to be rewritten
+#ifndef ERA_STATIC
     if (gBsOld > 0.0 && uEraW.z > 0.0 && uEraW.x < 1.5 && uEraW.y > 1.5 && E == 0)
       base = mix(base, mix(base, vec3(bsLum(base)) * eraFilm(), clamp(uEraW.z, 0.0, 1.0)) * eraFlick(uEraW.z), gBsOld);
+#endif
   }
 `;
 

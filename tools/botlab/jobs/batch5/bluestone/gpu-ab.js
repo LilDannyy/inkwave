@@ -66,6 +66,9 @@
     nolamps: () => { const us = lmats().map((m) => m.userData.uniforms).filter(Boolean), sv = us.map((u) => [u.uLampN?.value, u.uBsLampN?.value]); us.forEach((u) => { if (u.uLampN) u.uLampN.value = 0; if (u.uBsLampN) u.uBsLampN.value = 0; }); return () => us.forEach((u, i) => { if (u.uLampN) u.uLampN.value = sv[i][0]; if (u.uBsLampN) u.uBsLampN.value = sv[i][1]; }); },
     noart: () => patch((f) => rep(f, 'if (vBsArt.x > 0.5) {', 'if (false) {'), 'noart'),
     noera: () => patch((f) => rep(rep(rep(f, 'for (int r = 0; r < 4; r++) {', 'for (int r = 0; r < 0; r++) {'), 'if (vEra.x < 6.5 && eraHasF(vEra.x, eb) < 0.5) discard;', ''), 'if (uEra.z >= 0.0) {\n  // the clock-light front', 'if (false) {\n  // the clock-light front'), 'noera'),
+    // (fix round 2) the full program at rest instead of the static one (and no prepass) / the static one without the prepass
+    live: () => { const W = G.eraWorld, f = W._levelProgram; W._levelProgram = () => f.call(W, 0); W._levelProgram(); return () => { W._levelProgram = f; }; },
+    noprepass: () => { const W = G.eraWorld, f = W._levelProgram; W._levelProgram = (e) => { f.call(W, e); for (const t of W._prepass?.twins || []) t.visible = false; }; return () => { W._levelProgram = f; }; },
     prepass: () => {
       const lv = levelMeshes().filter((m) => m.visible && !/grate/.test(m.name)), add = [];
       for (const m of lv) {

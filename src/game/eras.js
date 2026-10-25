@@ -71,6 +71,44 @@ function auditFront() {
   return ok(a) && ok(b) && a !== b && Number.isFinite(r) && r >= 0 ? { from: a, to: b, front: r } : null;
 }
 
+// (fix round 2) the level's depth prepass at rest: the level's own transform, absent pieces collapsed as LV_VMAIN does
+// (eraFx.js), and the see-through window round the local player left out (the level's cut, levelMaterial.js, with a wider
+// margin and no exceptions: there the level simply draws without a prepass)
+const PREPASS_VS = /* glsl */`
+attribute vec2 aEra;
+uniform vec4 uEra;
+varying vec3 vVP;
+float eraHasV(float m, float b) { return mod(floor(m / b + 0.01), 2.0); }
+void main() {
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  vVP = mv.xyz;
+  gl_Position = projectionMatrix * mv;
+  float em = aEra.x < 0.5 ? 7.0 : aEra.x;
+  if (em < 6.5 && eraHasV(em, uEra.x) < 0.5) gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+}`;
+const PREPASS_FS = /* glsl */`
+uniform vec3 uSeeB;
+uniform float uSeeOn;
+uniform float uSeeFeet;
+varying vec3 vVP;
+void main() {
+  if (uSeeOn > 0.001) {
+    vec3 Bv = (viewMatrix * vec4(uSeeB, 1.0)).xyz;
+    float dB = -Bv.z, dP = -vVP.z;
+    if (dB > 0.6 && dP < dB - 0.1) {
+      float bodyH = uSeeB.y - uSeeFeet;
+      vec3 Fv = (viewMatrix * vec4(uSeeB.x, uSeeFeet - 0.2, uSeeB.z, 1.0)).xyz;
+      vec3 Hv = (viewMatrix * vec4(uSeeB.x, uSeeFeet + bodyH * 1.42 + 0.3, uSeeB.z, 1.0)).xyz;
+      vec2 p = vVP.xy / max(dP, 0.05), f = Fv.xy / max(-Fv.z, 0.05), h = Hv.xy / max(-Hv.z, 0.05);
+      vec2 fh = h - f;
+      float t = clamp(dot(p - f, fh) / max(dot(fh, fh), 1e-8), 0.0, 1.0);
+      float sd = length(p - (f + fh * t)) * dB;
+      if (sd < 0.46 + 0.42 + 0.25) discard;
+    }
+  }
+  gl_FragColor = vec4(0.0);
+}`;
+
 // ================================================================================================== the world
 export class EraWorld {
   constructor(ctx) {
@@ -300,7 +338,69 @@ export class EraWorld {
       this.propMeshes.push(m);
     }
     this.fx = new EraFx(this, { scene, props });
+    // (fix round 2, the art phase's GPU gate) the level's programs while no jump runs: one per era with the era a
+    // compile-time constant (ERA_STATIC, ERA_NOW: no per-fragment era, front, warning or pulse; a stage's level art folds to
+    // that era's code alone), swapped in by looks() at rest; the full program (levelMat) from the warning to the done
+    // pulse's end. And a depth prepass of the level drawn first at rest, so each pixel of the level shades once and what
+    // the level hides (the river, the far city, the backs of pieces) is rejected before it shades.
+    this.levelMat = levelMat;
+    // (fix round 2) the stage may drop texlib's hex anti-tiling on its level (LAYOUT.levelTexlib.hex === false: one tap
+    // instead of three, the per-tile flips of the grid mode kept): its own level material's uniforms only
+    if (this.layout?.levelTexlib?.hex === false) for (const mt of [levelMat, grateMat]) for (const v of mt?.userData?.uniforms?.uTL?.value || []) if (v.z === 2) { v.z = 1; v.w = 7; }
+    this._levelMeshes = [o.levelMesh, ...this.meshes.filter((m) => !/:grate$/.test(m.name))].filter(Boolean);
+    this._static = levelMat ? { 1: this._staticMat(levelMat, 1), 2: this._staticMat(levelMat, 2), 3: this._staticMat(levelMat, 3) } : null;
+    this._matNow = levelMat;
+    this._prepass = this._buildPrepass(scene, levelMat);
     this.stats.meshMs = now() - t0;
+  }
+  // a copy of the level material that compiles the static program of era e: the same uniforms (the very objects: the paint,
+  // the lamps, the see-through and the era uniforms all reach it), the same patch, its own program key
+  _staticMat(mat, e) {
+    const ud = mat.userData;
+    mat.userData = {};   // (Material.copy clones userData through JSON: the uniforms hold textures)
+    const m = new mat.constructor();
+    try { m.copy(mat); } finally { mat.userData = ud; }
+    m.userData = ud;
+    m.defines = { ...(mat.defines || {}), ERA_STATIC: 1, ERA_NOW: e - 1 };
+    m.onBeforeCompile = mat.onBeforeCompile; m.onBeforeRender = mat.onBeforeRender;
+    const key = mat.customProgramCacheKey;
+    m.customProgramCacheKey = () => key.call(mat) + '-static' + e;
+    m.name = (mat.name || 'level') + ':static' + e;
+    return m;
+  }
+  // the depth prepass: per level mesh (not the grates) a twin sharing its position and aEra buffers, colour off, drawn
+  // before every opaque mesh (renderOrder −100), pushed back a hair (polygon offset) so the level's own fragments pass; it
+  // collapses absent pieces as the level does and leaves out the see-through window round the local player (a margin
+  // wider than the level's own cut: there the level draws without the prepass), never in the shadow or GTAO passes
+  _buildPrepass(scene, levelMat) {
+    const lu = levelMat?.userData?.uniforms;
+    if (!lu || !lu.uSeeB || !this._levelMeshes.length) return null;
+    const mat = new THREE.ShaderMaterial({
+      name: 'level:prepass',
+      uniforms: { uEra: this.uniforms.uEra, uSeeB: lu.uSeeB, uSeeOn: lu.uSeeOn, uSeeFeet: lu.uSeeFeet },
+      vertexShader: PREPASS_VS, fragmentShader: PREPASS_FS,
+      colorWrite: false, side: levelMat.side, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2,
+    });
+    const twins = [];
+    for (const m of this._levelMeshes) {
+      const g = new THREE.BufferGeometry(), src = m.geometry;
+      g.setIndex(src.index); g.setAttribute('position', src.attributes.position);
+      if (src.attributes.aEra) g.setAttribute('aEra', src.attributes.aEra);
+      g.boundingBox = src.boundingBox; g.boundingSphere = src.boundingSphere;
+      const t = new THREE.Mesh(g, mat);
+      t.name = 'prepass:' + m.name; t.renderOrder = -100; t.castShadow = false; t.receiveShadow = false; t.frustumCulled = m.frustumCulled;
+      t.matrixAutoUpdate = false; t.matrix.copy(m.matrix); t.matrixWorld.copy(m.matrixWorld);
+      t.onBeforeRender = (r, sc, c, geo) => { geo.drawRange.count = sc.overrideMaterial ? 0 : Infinity; };
+      t.userData.of = m; t.visible = false;
+      scene.add(t); twins.push(t);
+    }
+    return { mat, twins };
+  }
+  // the level's program for a moment: static (era e) or the full one; the prepass only with a static program
+  _levelProgram(e) {
+    const mat = (e && this._static && this._static[e]) || this.levelMat;
+    if (mat && this._matNow !== mat) { this._matNow = mat; for (const m of this._levelMeshes) m.material = mat; }
+    if (this._prepass) for (const t of this._prepass.twins) t.visible = !!e && t.userData.of.visible;
   }
 
   // three NavGraphs (one per era's solidity) merged into one union graph with an era mask on every edge
@@ -496,12 +596,19 @@ export class EraWorld {
     const sprites = fx.filter((o) => o.isSprite), op = sprites.map((o) => o.material.opacity);
     for (const o of sprites) o.material.opacity = 0;
     const sets = Object.values(this.env?.stageSets || {}).filter(Boolean);
-    const t = now(), ms = [...this.meshes, ...this.propMeshes, ...fx, ...sets], was = ms.map((m) => m.visible);
+    const twins = this._prepass?.twins || [];
+    const t = now(), ms = [...this.meshes, ...this.propMeshes, ...fx, ...sets, ...twins], was = ms.map((m) => m.visible);
     for (const m of ms) m.visible = true;
     const p0 = r.info?.programs?.length || 0;
     // a real frame (the game's own post stack: the exact program variants, the shadow depth and the GTAO passes), every
-    // era mesh up but collapsed by the shader (uEra holds the world's era: a piece of another era draws nothing)
-    try { if (G.game?.R?.render) G.game.R.render(); else r.compile(sc, cam); } catch (e) { /* (a headless page) */ }
+    // era mesh up but collapsed by the shader (uEra holds the world's era: a piece of another era draws nothing) — once
+    // with each of the level's programs (fix round 2: the full one and the three static ones)
+    const now0 = this._matNow, progs = [this.levelMat, ...Object.values(this._static || {})].filter(Boolean);
+    for (const pm of progs.length ? progs : [null]) {
+      if (pm) for (const m of this._levelMeshes) m.material = pm;
+      try { if (G.game?.R?.render) G.game.R.render(); else r.compile(sc, cam); } catch (e) { /* (a headless page) */ }
+    }
+    if (progs.length) for (const m of this._levelMeshes) m.material = now0;
     ms.forEach((m, i) => { m.visible = was[i]; });
     sprites.forEach((o, i) => { o.material.opacity = op[i]; });
     // the paint atlas's clearing quad (paint.clearFaces: first used at the warning, when the appearing pieces are cleared):
@@ -540,6 +647,9 @@ export class EraWorld {
     const vis = (m) => hasEra(m, from) || (front >= 0 && hasEra(m, to)) || (this.warming && hasEra(m, nextTo));
     for (const m of this.meshes) m.visible = vis(m.userData.eraMask);
     for (const m of this.propMeshes) m.visible = vis(m.userData.eraMask);
+    // (fix round 2) at rest — no front, no warning, no done pulse, not a frozen still — the static program of the era in
+    // force and the depth prepass; else the full program
+    this._levelProgram(front < 0 && !(warnK > 0) && !(pulseK > 0) && from === to && !this.frozen ? from : 0);
   }
   // is this block in play at the painter's stage time (and outside its flip's guard)? — the paint block gate (H5)
   inkOk(b, et) {
@@ -555,6 +665,9 @@ export class EraWorld {
   dispose() {
     if (this.mm && Object.prototype.hasOwnProperty.call(this.mm, 'setViewerTeam')) delete this.mm.setViewerTeam;
     for (const m of this.meshes) { this.scene?.remove(m); m.geometry.dispose(); }
+    if (this._prepass) { for (const t of this._prepass.twins) { this.scene?.remove(t); } this._prepass.mat.dispose(); this._prepass = null; }
+    for (const m of Object.values(this._static || {})) m.dispose();
+    this._static = null; this._levelMeshes = [];
     this.meshes = []; this.propMeshes = [];
     this.fx?.dispose(); this.fx = null;
     if (this.env && this.env.themeOverlay) this.env.themeOverlay = null;

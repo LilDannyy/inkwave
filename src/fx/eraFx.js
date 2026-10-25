@@ -51,7 +51,19 @@ uniform vec3 uEraColV;
 uniform float uEraT;
 varying vec2 vEra;
 varying float vEraK;
+#ifdef ERA_STATIC
+// (fix round 2, GPU time) the static program: the era in force is a compile-time constant (ERA_NOW 0 / 1 / 2) while no jump
+// runs — no per-fragment era, no front, no warning, no pulse; a stage's level art folds to that era's code alone
+#if ERA_NOW == 0
+const vec3 eraOneHot = vec3(1.0, 0.0, 0.0);
+#elif ERA_NOW == 1
+const vec3 eraOneHot = vec3(0.0, 1.0, 0.0);
+#else
+const vec3 eraOneHot = vec3(0.0, 0.0, 1.0);
+#endif
+#else
 vec3 eraOneHot = vec3(1.0, 0.0, 0.0);
+#endif
 float eraHasF(float m, float b) { return mod(floor(m / b + 0.01), 2.0); }
 // the warning's film tint on what is about to vanish: eras.colors.vanish's warm hue, its chroma ×4 (old film), luminance 1
 vec3 eraFilm() { float l = max(dot(uEraColV, vec3(0.299, 0.587, 0.114)), 0.01); return max(vec3(0.0), vec3(1.0) + (uEraColV / l - vec3(1.0)) * 4.0); }
@@ -60,16 +72,24 @@ float eraFlick(float k) { float f = fract(sin(floor(uEraT * 9.0) * 12.9898 + 0.3
 // the era bit of this fragment: by its own side of the front during a live jump (shared ground and era pieces alike: the
 // front rewrites everything along one clean line), an era piece by its group's flip (r_g) in a frozen still
 float eraBitHere() {
+#ifdef ERA_STATIC
+  return ERA_NOW == 0 ? 1.0 : (ERA_NOW == 1 ? 2.0 : 4.0);
+#else
   if (vEra.x > 6.5 || uEra.w > 0.05) return (uEra.z >= 0.0 && length(vWPos.xz) < uEra.z) ? uEra.y : uEra.x;
   return uEra.z >= vEra.y ? uEra.y : uEra.x;
+#endif
 }`;
 const LV_FMURAL = /* glsl */`
     mc.a *= eraHasF(uMurEra[mi], eraBitHere());`;
 const LV_FBASE = /* glsl */`
   {
+#ifdef ERA_STATIC
+    const int ei = ERA_NOW;
+#else
     float eb = eraBitHere();
     int ei = eb > 3.5 ? 2 : (eb > 1.5 ? 1 : 0);
     eraOneHot = vec3(ei == 0 ? 1.0 : 0.0, ei == 1 ? 1.0 : 0.0, ei == 2 ? 1.0 : 0.0);
+#endif
 #ifdef USE_TEXLIB
     // re-skin (eras.remap): the bare surface sampled again from this era's texlib layer (the ink on it stays)
     for (int r = 0; r < 4; r++) {
@@ -94,6 +114,12 @@ const LV_FBASE = /* glsl */`
 // surface AFTER a stage's own level art (LAYOUT.levelArt), which reads eraOneHot from the first half and paints `base`
 const LV_FBASE_B = /* glsl */`
   {
+#ifdef ERA_STATIC
+    // (the static program: the tint alone — nothing about to vanish, nothing new, no front)
+    vec4 etn = uEraTint[ERA_NOW];
+    float elum = dot(base, vec3(0.299, 0.587, 0.114));
+    base = mix(base, vec3(elum), etn.w) * etn.rgb;
+#else
     float eb = eraBitHere();
     int ei = eb > 3.5 ? 2 : (eb > 1.5 ? 1 : 0);
     // the era's tint on the bare surface (the 1880s: warm and a little desaturated), never on the ink
@@ -114,8 +140,10 @@ const LV_FBASE_B = /* glsl */`
     }
     // the front's clean edge: a piece is drawn where this fragment's era has it (art phase: no 20 cm block dissolve)
     if (vEra.x < 6.5 && eraHasF(vEra.x, eb) < 0.5) discard;
+#endif
   }`;
 const LV_FFINAL = /* glsl */`
+#ifndef ERA_STATIC
 if (uEra.z >= 0.0) {
   // the clock-light front: a white-gold line with a soft glow, ticks of light running round it like a dial's minutes
   float ed = length(vWPos.xz) - uEra.z;
@@ -125,7 +153,8 @@ if (uEra.z >= 0.0) {
   float esh = 0.6 + 0.4 * sin(vWPos.y * 4.0 + length(vWPos.xz) * 1.3 - uEraT * 9.0);
   outgoingLight = mix(outgoingLight, outgoingLight * 0.85 + uEraColA * 0.2, clamp(eband * 0.6, 0.0, 1.0));
   outgoingLight += uEraColA * (ecore * 2.0 + eband * 0.45 * esh + etick * 1.2);
-}`;
+}
+#endif`;
 // (split: the era bit and the re-skins first; a stage's level art may go between; the tint / flicker / pulse / cut after —
 //  pass the art's chunk as `art` and it is spliced in between, else the two halves run back to back as before)
 export function eraLevelExt(U, grate = false, art = '') {

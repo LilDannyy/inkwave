@@ -614,6 +614,9 @@ const LAYOUT_BLUESTONE = {
   decor: { lamps: LAMPS, palms: [], flags: [] },
   // the level art (stages/bluestone/levelart.js): the three looks of the streets drawn under the ink, per block and per era
   levelArt, levelArtOf: makeArtOf,
+  // (fix round 2, GPU time) no hex anti-tiling on the level (render, asphalt, rubber: the grid's per-tile flips instead):
+  // the art breaks the walls into bays and courses, so the repeat it hid does not show
+  levelTexlib: { hex: false },
   // the intro (DESIGN.md §5.8): high over Alpha's west wharf, looking east-north-east along the crossbar at the dome with
   // Tartar under it (he rings once as the camera passes the clocks: the era engine), then back to the team's spawn deck
   intro: { from: [-58, 16, -24], lookFrom: [0, 7, 0], toBack: 3.2 },
