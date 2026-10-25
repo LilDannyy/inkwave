@@ -23,6 +23,7 @@ const RAILYARD = { top: 3.0 };   // (round C: no railyard embankment in play; th
 export function register(D, H) {
   // the art phase: the kit (palette, lettering, mouldings), the buildings' dressing and the street's (arch.js, dress.js)
   const KIT = makeKit(D, H);
+  const { sphG, torG } = KIT;
   registerArch(D, H, KIT);
   registerDress(D, H, KIT);
   // a plain block of the railyard (centre pos, size [w, d], top): collider `roof`, a dark mass
@@ -33,23 +34,115 @@ export function register(D, H) {
       if (!o.noMesh) B.box('rubber', o.color || '#47433d', w, h, d, 0, BOT + h / 2, 0, { r: 0.02 });
     },
   };
-  // Commander Tartar (placeholder): a rounded cream-and-brass telephone hanging on his cord under the dome. A shared
-  // prop the era engine animates (src/fx/eraFx.js builds it as three parts — o.part 'body' (the cord and the body),
-  // 'dial' (both dial faces: they spin as he dials the year), 'handset' (lifted at the pickup) — so he is not in the
-  // static dressing; no part = the whole telephone)
+  // Commander Tartar (fix round 1: the blockout box rebuilt as a cream-and-brass cradle telephone, DESIGN §5.1): a tapered
+  // body on a moulded base with a brass band, a rotary dial on each face (toward Alpha and Bravo: a brass finger wheel with
+  // ten finger holes over a cream number plate, the warm-lit centre card, a brass bezel and finger stop), the handset (an
+  // earpiece and a mouthpiece cup on a curved grip) resting in a two-forked cradle, its curly cord down the body's end, two
+  // domed brass bells and their striker under him (his back, the way he hangs), and the coiled cord he hangs by from a
+  // brass rose on the drum's ceiling (y 8). No collider. A shared prop the era engine animates (src/fx/eraFx.js builds it as
+  // three parts (each two or three draw calls: gloss, metal, the dial's glow) — o.part 'body' (the body, the cradle, the bells and both cords), 'dial' (both finger wheels: they spin about
+  // the z axis through (0, 6.6) as he dials the year), 'handset' (lifted at the pickup, about the pivot (0, 8.2)) — so he is
+  // not in the static dressing; no part = the whole telephone)
+  const { THREE } = H, TAU2 = Math.PI * 2;
+  // a rounded-rectangle loft (superellipse rings [y, half-x, half-z], exponent ex) with flat caps: the body's tapered shell
+  const loftGeo = (rings, ex = 3.2, n = 36) => {
+    const pos = [], idx = [], ring = (y, ax, az) => { const o = pos.length / 3; for (let i = 0; i < n; i++) { const a = (i / n) * TAU2, c = Math.cos(a), sn = Math.sin(a); pos.push(ax * Math.sign(c) * Math.abs(c) ** (2 / ex), y, az * Math.sign(sn) * Math.abs(sn) ** (2 / ex)); } return o; };
+    const rs = rings.map(([y, ax, az]) => ring(y, ax, az));
+    for (let r = 0; r < rs.length - 1; r++) for (let i = 0; i < n; i++) { const a = rs[r] + i, b = rs[r] + ((i + 1) % n), c = rs[r + 1] + ((i + 1) % n), d = rs[r + 1] + i; idx.push(a, c, b, a, d, c); }
+    const side = new THREE.BufferGeometry();
+    side.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); side.setIndex(idx); side.computeVertexNormals();
+    // caps (own vertices, flat normals)
+    const cap = (y, ax, az, up) => { const P = [0, y, 0], I = []; for (let i = 0; i < n; i++) { const a = (i / n) * TAU2, c = Math.cos(a), sn = Math.sin(a); P.push(ax * Math.sign(c) * Math.abs(c) ** (2 / ex), y, az * Math.sign(sn) * Math.abs(sn) ** (2 / ex)); }
+      for (let i = 0; i < n; i++) { const a = 1 + i, b = 1 + ((i + 1) % n); if (up) I.push(0, b, a); else I.push(0, a, b); }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(Array.from({ length: n + 1 }, () => [0, up ? 1 : -1, 0]).flat(), 3)); g.setIndex(I); return g; };
+    const top = rings[rings.length - 1], bot = rings[0];
+    return [side, cap(top[0], top[1], top[2], true), cap(bot[0], bot[1], bot[2], false)].map((g) => { g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2)); return g; });
+  };
+  const TT = { cream: '#ece2c9', creamDk: '#d2c3a0', brass: '#c9a85a', brassDk: '#8f7034', ink: '#2a2622', plate: '#f3ead2' };
+  let TGEO = null;
+  const tGeo = () => TGEO || (TGEO = {
+    base: loftGeo([[5.84, 0.96, 0.68], [5.87, 1.06, 0.78], [5.97, 1.1, 0.82], [6.0, 1.05, 0.77]]),
+    band: loftGeo([[6.0, 1.055, 0.775], [6.075, 1.055, 0.775]]),
+    body: loftGeo([[6.075, 1.02, 0.745], [6.6, 1.0, 0.735], [6.95, 0.975, 0.72], [7.07, 0.93, 0.665], [7.16, 0.85, 0.56], [7.22, 0.74, 0.44]]),
+  });
+  const helix = (path, r, pitch, k0 = 0) => {   // a coiled cord round a polyline path: r the coil, pitch per turn
+    const out = [], up = new THREE.Vector3(0, 0, 1);
+    for (let s = 0; s < path.length - 1; s++) {
+      const A = new THREE.Vector3(...path[s]), Bv = new THREE.Vector3(...path[s + 1]), d = Bv.clone().sub(A), L = d.length(); d.normalize();
+      const u = new THREE.Vector3().crossVectors(d, Math.abs(d.z) > 0.9 ? new THREE.Vector3(1, 0, 0) : up).normalize(), w = new THREE.Vector3().crossVectors(d, u);
+      const m = Math.max(2, Math.round((L / pitch) * 10));
+      for (let i = s ? 1 : 0; i <= m; i++) { const t = i / m, a = k0 + ((t * L) / pitch) * TAU2; const p = A.clone().addScaledVector(d, t * L).addScaledVector(u, Math.cos(a) * r).addScaledVector(w, Math.sin(a) * r); out.push([p.x, p.y, p.z]); }
+      k0 += (L / pitch) * TAU2;
+    }
+    return out;
+  };
   D.bluestone_tartar = {
     build(B, o = {}) {
-      const all = !o.part;
+      const all = !o.part, G3 = tGeo();
       if (all || o.part === 'body') {
-        B.cyl('rubber', '#2d2a26', 0.05, 0.4, 0, 7.8, 0);                            // the cord to the drum's ceiling
-        B.box('gloss', '#e9dfc7', 2.0, 1.6, 1.4, 0, 6.6, 0, { round: true, r: 0.3 });  // the body
-        for (const s of [-1, 1]) B.sph('metal', '#c9a85a', 0.32, s * 0.55, 7.42, 0.55);   // the two bell domes on his back
+        // the cord he hangs by: a brass rose on the ceiling, the coiled cord down to the body's top (behind the handset)
+        B.cyl('metal', TT.brass, 0.17, 0.05, 0, 7.975, 0.4, { seg: 16 });
+        B.cyl('metal', TT.brassDk, 0.06, 0.08, 0, 7.92, 0.4, { seg: 10 });
+        B.tube('gloss', TT.ink, helix([[0, 7.9, 0.4], [0, 7.24, 0.4]], 0.045, 0.045), 0.016, { radial: 5 });
+        B.cyl('metal', TT.brass, 0.07, 0.05, 0, 7.245, 0.4, { seg: 12 });
+        // the body: a moulded base (darker cream), the brass band, the tapered shell
+        for (const g of G3.base) B.add('gloss', g, TT.creamDk, 0, 0, 0, {});
+        for (const g of G3.band) B.add('metal', g, TT.brass, 0, 0, 0, {});
+        for (const g of G3.body) B.add('gloss', g, TT.cream, 0, 0, 0, {});
+        // a brass bead round the shoulder
+        for (const g of loftGeo([[7.06, 0.94, 0.675], [7.085, 0.925, 0.655]])) B.add('metal', g, TT.brass, 0, 0, 0, {});
+        // each face's dial housing: a brass bezel, a cream number plate with the ten numbers, the finger stop (fixed)
+        for (const s of [-1, 1]) {
+          const z = s * 0.735;
+          B.add('metal', torG(0.445, 0.03, 6, 40), TT.brass, 0, 6.6, z + s * 0.02, {});
+          B.cyl('gloss', TT.plate, 0.43, 0.02, 0, 6.6, z + s * 0.01, { rx: Math.PI / 2, seg: 32 });
+          const fa = -50 * Math.PI / 180;
+          B.tube('metal', TT.brass, [[Math.cos(fa) * 0.36 * s, 6.6 + Math.sin(fa) * 0.36, z + s * 0.03], [Math.cos(fa) * 0.47 * s, 6.6 + Math.sin(fa) * 0.47, z + s * 0.075], [Math.cos(fa - 0.12) * 0.5 * s, 6.6 + Math.sin(fa - 0.12) * 0.5, z + s * 0.085]], 0.018, { radial: 6 });
+        }
+        // the cradle: two forks on the top (each two prongs with a curl), a brass boss under each
+        for (const sx of [-1, 1]) {
+          B.cyl('metal', TT.brass, 0.1, 0.06, sx * 0.55, 7.25, 0, { seg: 12 });
+          for (const sz of [-1, 1]) B.tube('metal', TT.brass, [[sx * 0.55, 7.24, sz * 0.07], [sx * 0.55, 7.4, sz * 0.1], [sx * 0.55, 7.5, sz * 0.15], [sx * 0.55, 7.55, sz * 0.2]], 0.022, { radial: 6 });
+        }
+        // the handset's curly cord: from the mouthpiece's handle end down the body's +x end into it
+        B.tube('gloss', TT.ink, helix([[1.1, 7.32, 0], [1.2, 6.95, 0.02], [1.16, 6.55, 0], [1.03, 6.35, 0]], 0.04, 0.04), 0.014, { radial: 5 });
+        // under him: two domed brass bells and the striker between them
+        for (const sx of [-1, 1]) {
+          B.lathe('metal', TT.brass, [[0.0, 5.84], [0.12, 5.84], [0.22, 5.8], [0.27, 5.72], [0.285, 5.64], [0.27, 5.62], [0.0, 5.62]], sx * 0.48, 0, 0, { seg: 20 });
+          B.cyl('metal', TT.brassDk, 0.03, 0.1, sx * 0.48, 5.6, 0, { seg: 8 });
+        }
+        B.cyl('metal', TT.brassDk, 0.025, 0.24, 0, 5.72, 0, { seg: 8 });
+        B.add('metal', sphG(0.055, 10, 8), TT.brass, 0, 5.6, 0, {});
       }
-      if (all || o.part === 'handset') B.box('metal', '#b8924a', 2.2, 0.35, 0.7, 0, 7.55, 0, { round: true, r: 0.12 }); // the handset on its cradle
+      if (all || o.part === 'handset') {
+        // the handset in its cradle: a curved grip (thicker toward the cups), the earpiece (−x) and the mouthpiece (+x)
+        B.tube('gloss', TT.cream, [[-0.86, 7.5, 0], [-0.62, 7.6, 0], [-0.3, 7.65, 0], [0, 7.66, 0], [0.3, 7.65, 0], [0.62, 7.6, 0], [0.86, 7.5, 0]], (t) => 0.075 + 0.025 * Math.abs(t * 2 - 1) ** 2, { radial: 12 });
+        for (const sx of [-1, 1]) {
+          const deep = sx > 0 ? 0.04 : 0;
+          B.lathe('gloss', TT.cream, [[0.0, 7.6], [0.1, 7.58], [0.15, 7.52], [0.2, 7.42 - deep], [0.245, 7.3 - deep], [0.255, 7.27 - deep]], sx * 0.9, 0, 0, { seg: 24 });
+          B.add('metal', torG(0.25, 0.022, 6, 28), TT.brass, sx * 0.9, 7.27 - deep, 0, { rx: Math.PI / 2 });
+          B.cyl('gloss', TT.creamDk, 0.23, 0.02, sx * 0.9, 7.275 - deep, 0, { seg: 24 });
+          for (let k = 0; k < 6; k++) { const a = (k / 6) * TAU2; B.cyl('gloss', TT.ink, 0.018, 0.012, sx * 0.9 + Math.cos(a) * 0.1, 7.268 - deep, Math.sin(a) * 0.1, { seg: 6 }); }
+          B.cyl('gloss', TT.ink, 0.02, 0.012, sx * 0.9, 7.268 - deep, 0, { seg: 6 });
+        }
+        B.add('metal', torG(0.085, 0.012, 5, 16), TT.brass, -0.62, 7.6, 0, { ry: Math.PI / 2, rz: 0.4 });
+        B.add('metal', torG(0.085, 0.012, 5, 16), TT.brass, 0.62, 7.6, 0, { ry: Math.PI / 2, rz: -0.4 });
+      }
       if (all || o.part === 'dial') {
-        B.cyl('metal', '#b8924a', 0.5, 0.08, 0, 6.6, -0.72, { rx: Math.PI / 2 });     // the dial (the face, toward Alpha)
-        B.cyl('metal', '#b8924a', 0.5, 0.08, 0, 6.6, 0.72, { rx: Math.PI / 2 });      // (and toward Bravo)
-        for (const z of [-0.77, 0.77]) B.cyl('glow', '#ffe9b0', 0.16, 0.02, 0, 6.6, z, { rx: Math.PI / 2 });   // the warmest light under the dome
+        // the finger wheels (they spin): a brass ring with ten finger holes over the number plate, the centre card lit warm
+        for (const s of [-1, 1]) {
+          const z = s * 0.735 + s * 0.035;
+          B.lathe('metal', TT.brass, [[0.13, 0.0], [0.42, 0.0], [0.42, 0.03], [0.4, 0.04], [0.13, 0.04]], 0, 6.6, z - s * 0.02, { seg: 40, rx: s * Math.PI / 2 });
+          for (let k = 0; k < 10; k++) {
+            const a = (60 + k * 30) * Math.PI / 180, x = Math.cos(a) * 0.3 * s, y = 6.6 + Math.sin(a) * 0.3;   // (mirrored per face: the holes run the same way seen from either side)
+            B.cyl('gloss', TT.plate, 0.068, 0.012, x, y, z + s * 0.024, { rx: Math.PI / 2, seg: 14 });
+            B.add('metal', torG(0.072, 0.012, 4, 14), TT.brassDk, x, y, z + s * 0.026, {});
+            B.add('gloss', sphG(0.026, 6, 4), TT.ink, x, y, z + s * 0.031, { sz: 0.3 });   // its number, read through the hole
+          }
+          B.cyl('gloss', TT.plate, 0.13, 0.02, 0, 6.6, z + s * 0.02, { rx: Math.PI / 2, seg: 24 });
+          B.cyl('glow', '#ffe9b0', 0.1, 0.012, 0, 6.6, z + s * 0.033, { rx: Math.PI / 2, seg: 20 });   // the warmest light under the dome
+          B.add('metal', torG(0.13, 0.014, 4, 24), TT.brass, 0, 6.6, z + s * 0.03, {});
+        }
       }
     },
   };
