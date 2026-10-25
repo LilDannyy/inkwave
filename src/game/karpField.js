@@ -252,9 +252,9 @@ export class KarpField {
     // [b5-karp-ref] A carrier can swim-jump from inkable floor. The node-pair reach includes the two rim-cell offsets
     // (0.95 m each) and the measured 0.3 m probe margin; only layouts that opt in add these longer edges.
     const swimGap = !!R.def.carrierField?.swimJump;
-    const swimReach = [[-20, 19.0], [-10, 15.6], [-6, 13.9], [-3.4, 12.6], [-2.2, 11.9], [-1.2, 11.2], [-0.6, 10.7], [0, 10.2], [0.6, 9.6], [0.9, 9.1], [1.2, 8.6], [1.5, 8.4], [1.8, 7.8], [2.0, 7.7], [2.1, 7.2], [2.25, 7.2]];
+    const swimReach = [[-3.4, 12.6], [-2.2, 11.9], [-1.2, 11.2], [-0.6, 10.7], [0, 10.2], [0.6, 9.6], [0.9, 9.1], [1.2, 8.6], [1.5, 8.4], [1.8, 7.8], [2.0, 7.7], [2.1, 7.2], [2.25, 7.2]];
     const nodes = nav.nodes, nx = nav.nx, nz = nav.nz, NN = nodes.length;
-    const swimMax = (dy) => { if (dy <= swimReach[0][0]) return swimReach[0][1]; for (let k = 1; k < swimReach.length; k++) if (dy <= swimReach[k][0]) { const [y0, x0] = swimReach[k - 1], [y1, x1] = swimReach[k]; return x0 + ((x1 - x0) * (dy - y0)) / (y1 - y0); } return 0; };
+    const swimMax = (dy) => { if (dy < swimReach[0][0]) return 0; if (dy === swimReach[0][0]) return swimReach[0][1]; for (let k = 1; k < swimReach.length; k++) if (dy <= swimReach[k][0]) { const [y0, x0] = swimReach[k - 1], [y1, x1] = swimReach[k]; return x0 + ((x1 - x0) * (dy - y0)) / (y1 - y0); } return 0; };
     const inkFloor = new Uint8Array(NN).fill(255);
     const takesInk = (id) => { if (!swimGap) return false; if (inkFloor[id] !== 255) return inkFloor[id] === 1; const n = nodes[id]; const h = this.physics.raycast(_a.set(n.x, n.y + 0.3, n.z), _d.set(0, -1, 0), 0.7, this._hit || (this._hit = new Hit()), false); const f = h.hit && h.face >= 0 ? L.faces[h.face] : null; inkFloor[id] = f && f.atlas && f.grid >= 0 && h.normal.y > 0.5 ? 1 : 0; return inkFloor[id] === 1; };
     const scanFlat = swimGap ? swimReach[0][1] : Gp.flatMax;
@@ -342,7 +342,7 @@ export class KarpField {
       // gaps: across open air, 1.2–3.0 m (rim to rim). A level pair (dy 0: the same line both ways, and both ends rim
       // nodes in each other's window) is tested once, from its lower id; its reverse edge is checked after the scan.
       if (rim[i]) {
-      const cellReach = Math.ceil(scanFlat / nav.step), swimTakeoff = takesInk(i);
+      const swimTakeoff = takesInk(i), cellReach = Math.ceil((swimTakeoff ? scanFlat : Gp.flatMax) / nav.step);
       for (let dz = -cellReach; dz <= cellReach; dz++) for (let dx = -cellReach; dx <= cellReach; dx++) {
         if (Math.abs(dx) + Math.abs(dz) < 2) continue;
         const jx = n.ix + dx, jz = n.iz + dz;
@@ -350,7 +350,7 @@ export class KarpField {
         const c = jz * nx + jx;
         for (let q = rs0[c], qe = rs0[c + 1]; q < qe; q++) {
           const mid = rl[q], m = nodes[mid], dy = m.y - n.y;
-          if (dy > (swimTakeoff ? 2.25 : Gp.upMax) || dy < -(swimTakeoff ? 20 : Gp.downMax)) continue;
+          if (dy > (swimTakeoff ? 2.25 : Gp.upMax) || dy < -(swimTakeoff ? 3.4 : Gp.downMax)) continue;
           const flat = Math.hypot(m.x - n.x, m.z - n.z);
           if (flat <= Gp.flatMin || (flat > Gp.flatMax + 1e-6 && (!takesInk(i) || flat > swimMax(dy) + 1e-6))) continue;
           const level = dy === 0;
