@@ -47,6 +47,9 @@ const _p = new THREE.Vector3(), _q = new THREE.Vector3(), _c = new THREE.Color()
 // placed or stuck; a running / winding-up Skitter Bomb and the clouds follow the ground or the air as before)
 const RESTING = new Set(['stuck', 'spray', 'curtain', 'mine', 'beacon']);
 const DEG = Math.PI / 180;
+// (fix round 3) what the cloud bake reads from a theme: two looks with the same key share their clouds (no re-bake)
+const CLOUD_IN = ['sunColor', 'skySun', 'sunIntensity', 'cloudCov', 'cloudSeed', 'sunEl', 'sunAz', 'zenith', 'skyMid', 'horizon', 'ground', 'horizonGlow', 'horizonGlowK', 'glowColor', 'glow', 'night', 'cloudLit', 'cloudLitK', 'cloudShade', 'cloud'];
+const cloudKey = (T) => JSON.stringify(CLOUD_IN.map((k) => T[k] ?? null));
 
 // the presence fields (docs/STAGE-MODS.md "Level"): a def or a prop collider carrying `eras` / `eraGroup`
 Level.blockField('eras', (b, d, level) => { b.eras = eraMask(d.eras); b.presence = b.eras === 7 ? 0 : b.eras; level.presenceAll = 7; });
@@ -571,7 +574,7 @@ export class EraWorld {
     this._lamps(e);
     this._sets(e);
     this.uniforms.uEraFar.value.w = 0;
-    if (apply && changed && this.env?.setTheme && this.env.theme) { const t = now(); this.env.setTheme(this.env.theme); this.stats.setThemeMs = Math.round(now() - t); }
+    if (apply && changed && this.env?.setTheme && this.env.theme) { const t = now(); this.env.setTheme(this.env.theme); G.fx?.setLighting?.(this.env.getSkyColors?.()); this.stats.setThemeMs = Math.round(now() - t); }
   }
 
   ready() {
@@ -618,6 +621,12 @@ export class EraWorld {
     // its program compiled now, on one face of a piece absent in the era shown (blank: it can take no ink here)
     const P = this.paint, B = this.level?.blocks;
     if (P && B && this.faceOf) for (const id of this.eraIds) { if (hasEra(B[id].presence, this.era || 1)) continue; const fs = this.faceOf.get(id); if (fs && fs.length) { P.clearFaces([fs[0]]); break; } }
+    // (fix round 3) the environment's second cloud target allocated and drawn into once now: a time jump bakes the next
+    // look's clouds into it in slices from the pre-bell
+    const env = this.env;
+    if (env?.cloudBakeSlice && env._stageTheme && env.theme) {
+      try { const T = env._stageTheme(env.theme), st = env.cloudTiles(); env.cloudBakeSlice(T, 0, 1); env.cloudBakeSlice(T, st.findIndex((x) => x[0] === 'copy'), 1); } catch (e) { /* (a headless page) */ }
+    }
     this.stats.compileMs = Math.round(now() - t); this.stats.compiled = (r.info?.programs?.length || 0) - p0; this.stats.precompiled = (this.stats.precompiled || 0) + 1;
   }
   // ---------------------------------------------------------------- switches
@@ -803,6 +812,7 @@ export class StageEras {
     if (t > this.lastT && t - this.lastT < 1.0) this._events(this.lastT, t, list);
     this.lastT = t;
     this._view(t, list);
+    if (this._cb?.pend) this._cloudPending(t);
     if (this.cur || this._visit) this._botTick(t, this.cur);
     // a minimap base still missing (a drop the load did not see: the time of day changed mid-match) is rebuilt outside a
     // jump, one per frame (~0.1 s each): from J to done only cached bases are swapped
@@ -822,6 +832,7 @@ export class StageEras {
     if (W.navEra !== e) { W._setNavEra(e); this._replan(null); }
     if (!(A && t >= A.at && t < A.at + W.doneOff)) W._mapEra(e);
     W._envEra(e, true);
+    if (this._cb?.pend && this._cb.to !== e) { this._cb = null; if (G.env?.U?.uCloudMix) G.env.U.uCloudMix.value = 0; }
     this.lastT = t;
     this._view(t, list);
     emit('era:set', { era: e, instant: true, why });
@@ -1379,7 +1390,11 @@ export class StageEras {
     else { const lj = this._lastDone(t, list); W.looks(e, e, -1, 0, pulse, lj ? lj.from : e, lj ? lj.to : e); }
     if (this.fresh && t > this._freshUntil) this.fresh = null;
     // the environment: the time-lapse from J to done, the backdrop's horizon run
-    if (phase === 'jump') this._timelapse(J, t); else if (this._envBase && !(J && t >= J.at)) this._envRestore();
+    // (fix round 3: the next look's clouds baked in slices from the pre-bell; after done the new era's lights come in)
+    if (J && t >= J.prebellAt && t < J.at) this._cloudBake(J, t);
+    if (phase === 'jump') this._timelapse(J, t);
+    else if (this._envBase && J && t >= J.at && this._envBase.at === J.at) this._lightsIn(J, t);
+    else if (this._envBase && !(J && t >= J.at)) this._envRestore();
     this._horizon(J, t);
     // FX
     let ringK = this._ringAt !== undefined && t - this._ringAt < this._ringLen ? 1 - (t - this._ringAt) / this._ringLen : 0;
@@ -1403,14 +1418,19 @@ export class StageEras {
   _lastDone(t, list) { let r = null; for (const j of list) { if (t >= j.at + this.W.doneOff) r = j; else break; } return r; }
   // H13: from J to done the sky runs fast — the sun swings sunSwing° and back, clouds race cloudRate ×, the sky's colours
   // blend from the old era's look to the new; exposure and the grade are never touched (ink stays as readable)
+  // the old era's theme and the new one's at this time of day (the eras' looks over the theme)
+  _themes(J) {
+    const env = G.env, W = this.W, save = W.envEra;
+    W.envEra = J.from; const Tf = env._stageTheme(env.theme);
+    W.envEra = J.to; const Tt = env._stageTheme(env.theme);
+    W.envEra = save;
+    return { Tf, Tt };
+  }
   _timelapse(J, t) {
     const env = G.env, W = this.W;
     if (!env || !env.U || !env._stageTheme) return;
     if (!this._envBase || this._envBase.at !== J.at) {
-      const save = W.envEra;
-      W.envEra = J.from; const Tf = env._stageTheme(env.theme);
-      W.envEra = J.to; const Tt = env._stageTheme(env.theme);
-      W.envEra = save;
+      const { Tf, Tt } = this._themes(J);
       this._envBase = { at: J.at, Tf, Tt, cloud: env.U.uCloudParams.value.z, fog: env.scene?.fog ? [env.scene.fog.near, env.scene.fog.far] : null };
     }
     const B = this._envBase, U = env.U, k = Math.min(1, (t - J.at) / W.doneOff), s = k * k * (3 - 2 * k), bump = Math.sin(Math.PI * k);
@@ -1423,12 +1443,64 @@ export class StageEras {
     const el = (B.Tf.sunEl + (B.Tt.sunEl - B.Tf.sunEl) * s) * DEG, az = (B.Tf.sunAz + (B.Tt.sunAz - B.Tf.sunAz) * s + TL.sunSwing * bump) * DEG;
     U.uSunDir.value.set(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).normalize();
     U.uCloudParams.value.z = B.cloud * (1 + (TL.cloudRate - 1) * bump);
+    // (fix round 3) the sky's light colours (its ground, glows, sun disk, cloud colours, night, stars) blend with it, and the
+    // clouds cross-fade to the new look's bake; the world's lights and the grade hold until done (ink stays as readable)
+    env.applyLights?.(B.Tt, B.Tf, s, 'sky');
+    if (U.uCloudMix) U.uCloudMix.value = this._cloudK(J, t) * s;
     W._lamps(J.to, J.from, s);
     env._fitShadow?.();
   }
-  // done + 0.7 s: the new era's look settles — the uniforms the time-lapse blended are set to the new theme exactly, the
-  // fog colour follows, and the env map (PMREM, 256) is rebuilt once; no cloud re-bake (the eras' looks never change the
-  // clouds), so this costs a few ms where a full setTheme costs tens (ENGINE §7 risk 10)
+  // the next look's clouds, in the pre-bell and the warning: the full bake is ~0.4 s of GPU on an M4, so one step of it a
+  // frame (~1.7 ms: env.cloudTiles, a tile of the march or a band's copy; ~480 steps, ~8 s of the 20 s pre-bell) into the
+  // environment's second target — none when the two looks' clouds are the same (the same sun, sky and cloud colours), and
+  // none in the jump's own frames. A jump with no pre-bell (a test's debugJump, a late joiner in the warning) finishes it
+  // after the era settles and cross-fades it in then (_cloudPending): never forced into a frame
+  _newCb(J) {
+    const env = G.env, { Tf, Tt } = this._themes(J);
+    return { at: J.at, to: J.to, theme: env.theme, T: Tt, i: 0, n: env.cloudTiles().length, same: cloudKey(Tf) === cloudKey(Tt), readyAt: null };
+  }
+  _cloudBake(J, t) {
+    const env = G.env;
+    if (!env?.cloudBakeSlice || !env._stageTheme || !env.theme) return;
+    let cb = this._cb;
+    if (!cb || cb.at !== J.at || cb.to !== J.to || cb.theme !== env.theme) cb = this._cb = this._newCb(J);
+    if (cb.same || cb.i >= cb.n) return;
+    cb.i = env.cloudBakeSlice(cb.T, cb.i, 1);
+    if (cb.i >= cb.n) cb.readyAt = t;
+    this.W.stats.cloudSlices = (this.W.stats.cloudSlices || 0) + 1;
+  }
+  // after the era settled with its clouds not yet baked: one step a frame, then a 0.7 s cross-fade, the swap, the env map
+  _cloudPending(t) {
+    const env = G.env, cb = this._cb;
+    if (!env?.cloudBakeSlice || !cb || cb.theme !== env.theme) { this._cb = null; if (env?.U?.uCloudMix) env.U.uCloudMix.value = 0; return; }
+    if (cb.i < cb.n) { cb.i = env.cloudBakeSlice(cb.T, cb.i, 1); if (cb.i >= cb.n) cb.readyAt = t; return; }
+    const k = Math.min(1, Math.max(0, (t - cb.readyAt) / 0.7));
+    env.U.uCloudMix.value = k * k * (3 - 2 * k);
+    if (k >= 1) { env.cloudSwap(); env._rebuildEnvMap?.(); this._cb = null; }
+  }
+  // how far the sky may cross-fade to that bake (0 until it is complete; eased in over 0.4 s if it completed mid-jump)
+  _cloudK(J, t) {
+    const cb = this._cb;
+    if (!cb || cb.at !== J.at || cb.same || cb.readyAt === null) return 0;
+    return cb.readyAt <= J.at ? 1 : Math.min(1, Math.max(0, (t - cb.readyAt) / 0.4));
+  }
+  // done → done + 0.7 s: the new era's lights come in — the world's part (the sun, the sky / sea sun, the hemisphere, the
+  // sky IBL's strength, the grade: exposure, tints, bloom) blended from the old era's, the sky's held at the new look —
+  // so the light does not pop; at done + 0.7 _envFinal sets everything exactly as setTheme would (a late joiner's look)
+  _lightsIn(J, t) {
+    const env = G.env, B = this._envBase;
+    if (!env?.applyLights || !B) return;
+    const k = Math.min(1, Math.max(0, (t - (J.at + this.W.doneOff)) / 0.7)), s = k * k * (3 - 2 * k);
+    env.applyLights(B.Tt, null, 1, 'sky');
+    env.applyLights(B.Tt, B.Tf, s, 'world');
+    if (env.U.uCloudMix) env.U.uCloudMix.value = this._cloudK(J, t);
+    G.fx?.setLighting?.(env.getSkyColors?.());
+  }
+  // done + 0.7 s: the new era's look settles — everything setTheme would set for the new era, set exactly: the uniforms the
+  // time-lapse blended, the lights, the grade and the sky's light colours (env.applyLights: fix round 3 — before it a real
+  // jump kept the old era's sun, hemisphere, sky IBL and grade, and only a seek or a debugJump applied the new ones), the
+  // fog, the clouds (the slices baked from the pre-bell swapped in: no full re-bake, ~0.45 s of GPU) and the env map
+  // (PMREM, 256) rebuilt once — so a late joiner's seek and the room's jump give the same look
   _envFinal(J) {
     const env = G.env, B = this._envBase;
     this._envBase = null;
@@ -1438,10 +1510,25 @@ export class StageEras {
     if (T.haze) U.uHaze.value.set(T.haze[0], T.haze[1], T.haze[2], 0);
     const el = T.sunEl * DEG, az = T.sunAz * DEG;
     U.uSunDir.value.set(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).normalize();
-    U.uCloudParams.value.z = B.cloud;
+    if (T.cloud) U.uCloudParams.value.set(...T.cloud); else U.uCloudParams.value.z = B.cloud;
+    if (T.sunRadius !== undefined && U.uSunCos) U.uSunCos.value = Math.cos(T.sunRadius * DEG);
+    if (T.seaDeep && U.uSeaDeep) { U.uSeaDeep.value.set(T.seaDeep); U.uSeaShallow.value.set(T.seaShallow); U.uSeaCrest.value.set(T.seaCrest); U.uFoamColor.value.set(T.foam); }
+    if (U.uSunSpec && T.sunSpec !== undefined) { U.uSunSpec.value = T.sunSpec; U.uWaveStrength.value = T.waveStrength; }
     if (U.uSeaAmbient && T.seaAmbientK !== undefined) U.uSeaAmbient.value.copy(U.uSkyMid.value).lerp(U.uHorizon.value, 0.5).multiplyScalar(T.seaAmbientK);
+    env.applyLights?.(T);
     if (env.fogColor) env.fogColor.copy(U.uHorizon.value).lerp(U.uSkyMid.value, 0.15);
     if (env.scene?.fog?.isFog) { env.scene.fog.color.copy(env.fogColor); if (T.fog) { env.scene.fog.near = T.fog[0]; env.scene.fog.far = T.fog[1]; } }
+    // the clouds: the new look's bake swapped in (if a jump with no pre-bell left some of it, it is finished after)
+    let cb = this._cb;
+    this._cb = null;
+    this.W.stats.cloudLate = 0;
+    if (env.cloudBakeSlice && env._stageTheme && env.theme) {
+      if (!cb || cb.at !== J.at || cb.to !== J.to || cb.theme !== env.theme) cb = this._newCb(J);   // (a jump with no pre-bell)
+      if (cb.same) U.uCloudMix.value = 0;
+      else if (cb.i >= cb.n) env.cloudSwap();
+      else { cb.pend = true; this._cb = cb; U.uCloudMix.value = 0; this.W.stats.cloudLate = cb.n - cb.i; }   // (finished after: _cloudPending)
+    } else if (U.uCloudMix) U.uCloudMix.value = 0;
+    G.fx?.setLighting?.(env.getSkyColors?.());
     env._fitShadow?.();
     env._rebuildEnvMap?.();
     this.W.stats.envFinalMs = Math.round((now() - t) * 10) / 10;
@@ -1451,6 +1538,7 @@ export class StageEras {
     this._envBase = null;
     if (!env || !B) return;
     if (env.U?.uCloudParams) env.U.uCloudParams.value.z = B.cloud;
+    if (env.U?.uCloudMix) env.U.uCloudMix.value = 0;
     if (env.setTheme && env.theme) env.setTheme(env.theme);
   }
   // the horizon run: as the front leaves the arena the backdrop's era sets swap, a radial wipe from R_max outward (1.3 s)
@@ -1545,6 +1633,8 @@ export class StageEras {
     for (const a of this.m.actors) if (a.bot) a.bot._eraHold = null;
     if (this._fz) { this._fz.stop(0.1); this._fz = null; }
     if (this._envBase) this._envRestore();
+    if (this._cb?.pend && G.env?.U?.uCloudMix) G.env.U.uCloudMix.value = 0;
+    this._cb = null;
     this.chip?.dispose(); this.chip = null;
     const W = this.W;
     W.fx?.setJump(null);

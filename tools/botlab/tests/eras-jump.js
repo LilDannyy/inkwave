@@ -25,7 +25,8 @@
 //         sounds (era_bell, era_ring, era_kiosk, era_pickup, era_swell, era_front, era_pop)
 // frames  no frame over 50 ms during a jump (performance.now() round each simulated, rendered frame)
 // sky     12c: the time-lapse from J to done (the sun swings, the clouds race, exposure and the grade held) and the new
-//         era's look settling at done (the env map rebuilt once)
+//         era's look settling at done (the env map rebuilt once); (fix round 3) run at dusk, where the eras' lights differ:
+//         from done the new era's lights and grade come in, and at done + 1.2 every value equals the new era's theme
 // freeze  T3, the split-time stage art (final review 2, issue 5): StageEras.freeze / ?erafrom=1&erato=2&front=30 (run it
 //         with PAGEQ= too: the page then loads frozen) holds every group in its era at the front, the looks and the curtain
 // modes   a Boss Battle starts in era 2 and never jumps; Practice starts in era 1 and cycles 1 → 2 → 3 → 1
@@ -514,28 +515,47 @@
 
   // ------------------------------------------------------------------------------------------- sky (12c: the time-lapse)
   // from J to done the sun swings (up to timelapse.sunSwing°) and the clouds race (× cloudRate), the sky blending to the new
-  // era's look; exposure and the grade are never touched; at done + 0.7 the new era's look settles and the env map is
-  // rebuilt once (the scene's environment is a new PMREM texture)
+  // era's look; exposure and the grade are held from J to done (fix round 3: only to done — review 3's major was that a real
+  // jump never applied the new era's lights, and this check held the grade to done + 1.2, locking that in); from done the
+  // new era's lights and grade come in, and at done + 0.7 the look settles: every light, grade and sky value equals the new
+  // era's theme (compared by value: setTheme makes a new grade object each call) and the env map is rebuilt once. Run at
+  // dusk, where the eras' lights and grades differ (by day the 1880s and TODAY share them)
   if (parts.includes('sky')) {
-    E.debugJump(1, { instant: true }); step(0.3);
-    const env = __G.env, U = env.U, Rn = __G.renderer, TL = W.E.timelapse;
+    const env = __G.env, U = env.U, Rn = __G.renderer, TL = W.E.timelapse, th0 = env.theme;
+    env.setTheme('sunset');
+    E.debugJump(2, { instant: true }); step(0.1); E.debugJump(1, { instant: true }); step(0.3);
     const sun0 = U.uSunDir.value.clone(), cloud0 = U.uCloudParams.value.z, exp0 = Rn.toneMappingExposure, grade0 = env.grade, envMap0 = __G.scene.environment, hz0 = U.uHorizon.value.getHexString();
+    const lit = () => ({ sun: +env.sun.intensity.toFixed(4), sunC: env.sun.color.getHexString(), hemi: +env.hemi.intensity.toFixed(4), hemiC: env.hemi.color.getHexString(), envK: +env.scene.environmentIntensity.toFixed(4), exposure: env.grade?.uExposure });
+    const lit0 = lit();
     const J = E.debugJump(2, { inS: 0.05 });
     const rows = [];
-    let maxAng = 0, maxCloud = cloud0, exposureKept = true, gradeKept = true;
+    let maxAng = 0, maxCloud = cloud0, exposureKept = true, gradeKept = true, lightsKept = true, after = null;
     while (E.S.clock.t < J.doneAt + 1.2) {
       step(1 / 15);
       const ang = Math.acos(Math.max(-1, Math.min(1, U.uSunDir.value.dot(sun0)))) * 180 / Math.PI;
       if (E.phase === 'jump') { maxAng = Math.max(maxAng, ang); maxCloud = Math.max(maxCloud, U.uCloudParams.value.z); }
       if (Rn.toneMappingExposure !== exp0) exposureKept = false;
-      if (env.grade !== grade0) gradeKept = false;
+      if (E.phase === 'jump' && env.grade !== grade0) gradeKept = false;
+      if (E.phase === 'jump' && JSON.stringify(lit()) !== JSON.stringify(lit0)) lightsKept = false;
+      if (!after && E.S.clock.t >= J.doneAt + 0.3 && E.S.clock.t < J.doneAt + 0.6) after = { t: +(E.S.clock.t - J.doneAt).toFixed(2), ...lit() };
       if (rows.length < 12 && Math.round((E.S.clock.t - J.at) * 15) % 8 === 0) rows.push([+(E.S.clock.t - J.at).toFixed(2), E.phase, +ang.toFixed(1), +(U.uCloudParams.value.z / Math.max(1e-6, cloud0)).toFixed(1)]);
     }
     const sunEnd = Math.acos(Math.max(-1, Math.min(1, U.uSunDir.value.dot(sun0)))) * 180 / Math.PI, envMap1 = __G.scene.environment;
-    R('12c: the time-lapse from J to done — the sun swings (≥ 30° at its widest), the clouds race (≥ 5×), exposure and the grade held; at done the new era\'s look settles (the sun back within 5°, the clouds at their rate) and the env map is rebuilt once',
-      maxAng >= 30 && maxCloud >= cloud0 * 5 && exposureKept && gradeKept && sunEnd < 5 && Math.abs(U.uCloudParams.value.z - cloud0) < 1e-6 && envMap1 && envMap1 !== envMap0 && W.stats.envFinalMs !== undefined,
-      { timelapse: TL, maxSunAngle: +maxAng.toFixed(1), maxCloudRate: +(maxCloud / Math.max(1e-6, cloud0)).toFixed(1), exposureKept, gradeKept, sunEnd: +sunEnd.toFixed(1), horizon: [hz0, U.uHorizon.value.getHexString()], envMapNew: envMap1 !== envMap0, envFinalMs: W.stats.envFinalMs, rows });
-    E.debugJump(1, { instant: true });
+    // the new era's theme (eras.look[2] over the sunset), by value
+    const T = env._stageTheme(env.theme), lin = (h, k = 1) => new THREE.Color(h).multiplyScalar(k), near = (a, b) => Math.abs(a - b) < 1e-4;
+    const cnear = (c, h, k) => { const w = lin(h, k); return near(c.r, w.r) && near(c.g, w.g) && near(c.b, w.b); };
+    const gv = (gr) => JSON.stringify(['uExposure', 'uSat', 'uVib', 'uContrast', 'uLift', 'uVignette', 'uShadowTint', 'uHighTint', 'bloom'].map((k) => gr?.[k] ?? null));
+    const want = { envEra: W.envEra === 2, sun: near(env.sun.intensity, T.sunIntensity) && cnear(env.sun.color, T.sunColor), hemi: near(env.hemi.intensity, T.hemiIntensity) && cnear(env.hemi.color, T.hemiSky) && cnear(env.hemi.groundColor, T.hemiGround, T.hemiGroundK ?? 1),
+      envK: near(env.scene.environmentIntensity, T.envK ?? 0.66), grade: gv(env.grade) === gv(T.grade), sunLight: cnear(U.uSunLight.value, T.sunColor, (T.skySun ?? T.sunIntensity) / Math.PI),
+      sky: cnear(U.uGround.value, T.ground) && cnear(U.uHorizonGlow.value, T.horizonGlow, T.horizonGlowK) && cnear(U.uGlowColor.value, T.glowColor) && cnear(U.uSunDisk.value, T.sunDisk, T.sunDiskK) && cnear(U.uCloudLit.value, T.cloudLit, T.cloudLitK) && cnear(U.uCloudShade.value, T.cloudShade) && near(U.uNight.value, T.night) };
+    const changed = lit0.exposure !== T.grade?.uExposure && !near(lit0.sun, T.sunIntensity);   // (the two eras' dusk lights do differ)
+    const mid = after && after.exposure > Math.min(lit0.exposure, T.grade.uExposure) && after.exposure < Math.max(lit0.exposure, T.grade.uExposure);
+    R('12c: the time-lapse from J to done — the sun swings (≥ 30° at its widest), the clouds race (≥ 5×), exposure, the grade and the world\'s lights held to done; at done the new era\'s look settles (the sun back within 5°, the clouds at their rate) and the env map is rebuilt once',
+      maxAng >= 30 && maxCloud >= cloud0 * 5 && exposureKept && gradeKept && lightsKept && sunEnd < 5 && Math.abs(U.uCloudParams.value.z - cloud0) < 1e-6 && envMap1 && envMap1 !== envMap0 && W.stats.envFinalMs !== undefined,
+      { theme: env.theme, timelapse: TL, maxSunAngle: +maxAng.toFixed(1), maxCloudRate: +(maxCloud / Math.max(1e-6, cloud0)).toFixed(1), exposureKept, gradeKept, lightsKept, sunEnd: +sunEnd.toFixed(1), horizon: [hz0, U.uHorizon.value.getHexString()], envMapNew: envMap1 !== envMap0, envFinalMs: W.stats.envFinalMs, rows });
+    R('12c (fix round 3): … and from done the new era\'s lights come in — blended (at done + 0.3–0.6 the exposure lies between the two eras\'), then at done + 1.2 the sun, the hemisphere, the sky IBL, the sky / sea sun, the grade (by value) and the sky\'s light colours equal the new era\'s theme',
+      changed && mid && Object.values(want).every(Boolean), { before: lit0, mid: after, at: lit(), want, theme: { sun: T.sunIntensity, hemi: T.hemiIntensity, envK: T.envK, exposure: T.grade?.uExposure } });
+    env.setTheme(th0); E.debugJump(2, { instant: true }); step(0.1); E.debugJump(1, { instant: true }); step(0.1);
   }
 
   // ------------------------------------------------------------------------------------------- modes (last: new matches)

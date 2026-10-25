@@ -26,7 +26,13 @@
 //   brightness ≥ 34/255 in this page's frame in every era (shoot.cjs's mid at dusk: review 2 16 / 22 / 44 before, Halyard
 //   49; 43.5 / 47.7 / 49.9 after), and the 3000s' violet dusk does not tint
 //   the city into Cobalt's hue (≤ 5 % of the lower frame within 15° of Cobalt's hue at saturation ≥ 0.5, value ≥ 0.3);
-//   (h) (fix round 2) the level's static programs at rest and its depth prepass change no pixel and follow the eras.
+//   (h) (fix round 2) the level's static programs at rest and its depth prepass change no pixel and follow the eras;
+//   (i) (fix round 3, review 3's major; also alone: PAGE_ARGS='only=6') a REAL jump applies the new era's lights — a match
+//   started at dusk run through both jumps on its own clock (no debugJump): at done + 2 s the sun, the hemisphere, the sky
+//   IBL's strength and the grade's exposure equal a debugJump's to that era (every light / sky / fog value the environment
+//   sets, compared by value), the world's light blended in from done to done + 0.7 s (no pop), the 'mid' camera's lower
+//   frame (the (g) measure) as bright after the real jump as after the debugJump, the 3000s' share above 200/255 ≤ 7 %, and
+//   with the pulse over the frame after the real jump equals the frame a late joiner's seek gives (the same uTime).
 (async () => {
   const g = window.__inkwave, out = [];
   const R = (name, ok, info) => out.push({ name, ok: !!ok, info: info === undefined ? undefined : JSON.parse(JSON.stringify(info)) });
@@ -434,6 +440,81 @@
     }
     R('art phase (f): the per-era dusk looks apply — eras.look keys are theme names and THEMES keys; at dusk the 1880s, TODAY and the 3000s skies differ (the same camera up at the sky: mean change between eras ≥ 6/255), the 1880s\' violet twilight zenith in force',
       !badKeys.length && dz.every((d) => d >= 6) && sky[0].zenith === '#3f3766' && sky.every((x) => x.theme === 'sunset'), { badKeys, skyChange: { e1e2: dz[0], e2e3: dz[1], e1e3: dz[2] }, sky });
+  }
+  // (i) (fix round 3) a real jump applies the new era's lights (review 3's major: before it the room kept the 1880s' sun,
+  // hemisphere, sky IBL, grade, sky glow and clouds through both jumps; only a debugJump or a seek applied them). Last: it
+  // starts a new match, at dusk, and runs its own clock through both jumps
+  if (only.includes(5) || only.includes(6)) {
+    const waitPlaying = async () => { for (let i = 0; i < 300; i++) { if (g.match?.state === 'playing') return true; await new Promise((r) => setTimeout(r, 100)); } return false; };
+    dbg.unfreeze?.();
+    await g.api.startMatch({ mapId: 'bluestone', mode: 'turf', duration: 180, time: 'dusk' });
+    await waitPlaying(); dbg.freeze();
+    for (const a of g.match.actors) { if (a.bot) a.bot.update = () => {}; if (a.intent) { a.intent.move?.set(0, 0, 0); a.intent.fire = a.intent.squid = a.intent.jump = false; } a.character.root.visible = false; a.character.setVisible?.(false); }
+    __G.projectiles?.clear?.(); __G.paint?.clear?.(); g.hud?.setVisible?.(false);
+    const m = g.match, E2 = m.eras, W2 = __G.eraWorld, env = __G.env, U = env.U;
+    const tAt = (t) => step(Math.max(0, t - E2.S.clock.t));
+    const hx = (c) => '#' + c.getHexString();
+    // every value the environment's theme sets on the lights, the grade, the sky, the fog and the stars
+    const KEYS = ['uSunDir', 'uZenith', 'uSkyMid', 'uHorizon', 'uGround', 'uHorizonGlow', 'uGlowColor', 'uGlowParams', 'uHaze', 'uNight', 'uSunDisk', 'uSunCos', 'uCloudLit', 'uCloudShade', 'uCloudParams', 'uSunLight', 'uSeaAmbient', 'uSeaDeep', 'uSeaShallow', 'uSeaCrest', 'uSunSpec', 'uWaveStrength', 'uCloudMix'];
+    const arr = (v) => (typeof v === 'number' ? [v] : v.toArray ? v.toArray() : [v.r, v.g, v.b]);
+    const snap = () => {
+      const gr = env.grade || {}, o = { sun: [env.sun.intensity, ...arr(env.sun.color)], hemi: [env.hemi.intensity, ...arr(env.hemi.color), ...arr(env.hemi.groundColor)], envK: [env.scene.environmentIntensity],
+        grade: [gr.uExposure, gr.uSat, gr.uVib, gr.uContrast, gr.uLift, gr.uVignette, ...(gr.uShadowTint || []), ...(gr.uHighTint || []), ...(gr.bloom || [])],
+        fog: env.scene.fog ? [...arr(env.scene.fog.color), env.scene.fog.near, env.scene.fog.far] : [], stars: [env.stars?.material.uniforms.uK.value ?? 0], lamps: [...arr(g.decor?.bulbMat?.emissive || { r: 0, g: 0, b: 0 })] };
+      for (const k of KEYS) if (U[k]) o[k] = arr(U[k].value);
+      return o;
+    };
+    const differ = (a, b) => { const bad = []; for (const k of Object.keys(b)) { const x = a[k] || [], y = b[k]; let d = x.length === y.length ? 0 : 1; for (let i = 0; i < y.length; i++) d = Math.max(d, Math.abs((x[i] ?? 1e9) - y[i])); if (d > 1e-4) bad.push(`${k} ${+d.toFixed(4)}`); } return bad; };
+    const brief = (o) => ({ sun: +o.sun[0].toFixed(3), hemi: +o.hemi[0].toFixed(3), envK: +o.envK[0].toFixed(3), exposure: o.grade[0], sunColor: hx(new THREE.Color(o.sun[1], o.sun[2], o.sun[3])) });
+    const B = L.bounds, Wd = B.maxX - B.minX, Dp = B.maxZ - B.minZ;
+    // the (g) measure: the 'mid' camera's lower two thirds — the median Rec.601 brightness, the share above 200/255, Cobalt-hue
+    const mid = () => {
+      __G.fx?.clear?.(); __G.projectiles?.clear?.();   // (no passing puff or flecks in front of the camera)
+      cam([Wd * 0.08, 7, -Dp * 0.2], [0, 1, Dp * 0.08], 82); step(0.02);
+      const F = grab(), y1 = Math.floor(F.h * 2 / 3), lum = []; let cob = 0;
+      for (let y = 0; y < y1; y++) for (let x = 0; x < F.w; x += 2) {
+        const i = (y * F.w + x) * 4, r = F.px[i], g2 = F.px[i + 1], b = F.px[i + 2];
+        lum.push(0.299 * r + 0.587 * g2 + 0.114 * b);
+        const mx = Math.max(r, g2, b), mn = Math.min(r, g2, b), c = mx - mn;
+        if (mx >= 77 && c / mx >= 0.5) { let h = mx === r ? ((g2 - b) / c) % 6 : mx === g2 ? (b - r) / c + 2 : (r - g2) / c + 4; h = (h * 60 + 360) % 360; if (Math.min(Math.abs(h - 225), 360 - Math.abs(h - 225)) < 15) cob++; }
+      }
+      const n = lum.length, over = lum.filter((v) => v > 200).length; lum.sort((a2, b2) => a2 - b2);
+      return { F, median: +lum[n >> 1].toFixed(1), over200: +(100 * over / n).toFixed(2), cobaltHue: +(100 * cob / n).toFixed(2) };
+    };
+    // the frame at fixed uTime (the clouds' drift, the water, the stars) from a street camera and up at the sky
+    const still = (ut) => { U.uTime.value = ut; __G.fx?.clear?.(); const out2 = []; for (const [from, look] of [[[-17.9, 1.75, -32.0], [-27, 3.0, -13]], [[0, 2.0, -40], [-20, 52, -70]]]) { cam(from, look, 66); step(0.02); U.uTime.value = ut; out2.push(grab()); } return out2; };
+    const D = W2.doneOff, real = {}, blend = [];
+    const theme = env.theme, era0 = E2.era, x0 = brief(snap());
+    m.time = m.duration - 39; step(0.1);                     // (39 s played: before jump 1's pre-bell)
+    tAt(60 + D + 2);
+    real[2] = { era: E2.era, envEra: W2.envEra, at: 'done + 2', ...snap() }; real[2].g2 = mid(); delete real[2].g2.F;
+    tAt(60 + D + 4.5); real[2].g = mid(); delete real[2].g.F;   // (the done pulse over: 4 s)
+    m.time = m.duration - 99; step(0.1);                     // (99 s: before jump 2's pre-bell; the era in force unchanged, no theme)
+    const slices0 = W2.stats.cloudSlices || 0;
+    tAt(120 + D - 0.02); blend.push(['done', +E2.S.clock.t.toFixed(2), brief(snap())]);
+    tAt(120 + D + 0.35); blend.push(['done + 0.35', +E2.S.clock.t.toFixed(2), brief(snap())]);
+    tAt(120 + D + 0.75); blend.push(['done + 0.75', +E2.S.clock.t.toFixed(2), brief(snap())]);
+    tAt(120 + D + 2);
+    real[3] = { era: E2.era, envEra: W2.envEra, at: 'done + 2', ...snap() }; real[3].g2 = mid(); delete real[3].g2.F;
+    const slices = (W2.stats.cloudSlices || 0) - slices0, late = W2.stats.cloudLate;
+    tAt(120 + D + 4.5); real[3].g = mid(); delete real[3].g.F;
+    const ut = U.uTime.value, realStill = still(ut);
+    // the same eras by debugJump (a seek: setTheme, the look a late joiner gets)
+    const ref = {};
+    E2.debugJump(1, { instant: true }); step(0.1);
+    E2.debugJump(2, { instant: true }); step(0.3); ref[2] = snap(); ref[2].g = mid(); delete ref[2].g.F;
+    E2.debugJump(3, { instant: true }); step(0.3); ref[3] = snap(); ref[3].g = mid(); delete ref[3].g.F;
+    const refStill = still(ut);
+    const bad2 = differ(real[2], ref[2]), bad3 = differ(real[3], ref[3]);
+    const same = realStill.map((F, i) => diff(F, refStill[i], [0, 0, 1, 1]));
+    const e0 = blend[0][2].exposure, e1 = blend[1][2].exposure, e2 = blend[2][2].exposure, eT = brief(ref[3]).exposure;
+    const smooth = Math.abs(e0 - brief(ref[2]).exposure) < 1e-6 && (eT - e0) * (e1 - e0) > 0 && Math.abs(e1 - e0) < Math.abs(eT - e0) && Math.abs(e2 - eT) < 1e-6;
+    R('art phase (i) (fix round 3): a REAL jump applies the new era\'s lights — a dusk match through both jumps on its own clock: at done + 2 s every light, grade, sky, fog, star and lamp value equals a debugJump\'s (a late joiner\'s seek) to that era; the world\'s light (exposure) blends from the old era\'s at done to the new at done + 0.7 (no pop); the clouds re-baked in slices before the jump',
+      theme === 'sunset' && era0 === 1 && real[2].era === 2 && real[3].era === 3 && !bad2.length && !bad3.length && smooth && slices > 0 && !late,
+      { theme, start: x0, real2: brief(real[2]), ref2: brief(ref[2]), real3: brief(real[3]), ref3: brief(ref[3]), differ2: bad2.slice(0, 8), differ3: bad3.slice(0, 8), blend, cloudSliceFrames: slices, cloudRowsLeftAtDone: late ?? 0 });
+    R('art phase (i): … and the street reads after the real jump as at rest — the mid camera\'s lower frame (the (g) measure) at done + 2 (the done pulse still lighting the new pieces) ≥ 34 in this page\'s frame with the 3000s\' share above 200/255 ≤ 7 % and Cobalt-hue ≤ 5 %; with the pulse over (done + 4.5) within 2/255 of the debugJump\'s, and the frame after the real jump equal to the seek\'s at the same uTime (a street camera and the sky: mean ≤ 1/255)',
+      [2, 3].every((e) => real[e].g2.median >= 34 && real[e].g.median >= 34 && Math.abs(real[e].g.median - ref[e].g.median) <= 2) && real[3].g2.over200 <= 7 && real[3].g.over200 <= 7 && real[3].g2.cobaltHue <= 5 && same.every((d) => d.mean <= 1),
+      { realDonePlus2: { 2: real[2].g2, 3: real[3].g2 }, realDonePlus4_5: { 2: real[2].g, 3: real[3].g }, debugJump: { 2: ref[2].g, 3: ref[3].g }, frameRealVsSeek: same });
   }
   return out;
 })()
