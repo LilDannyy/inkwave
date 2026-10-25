@@ -862,6 +862,72 @@ const FBASE = /* glsl */`
         base = mix(pearl, seat, inset);
         float ls = bsAA(abs(e2 - 0.08) - 0.01, pw); base = mix(base, WG, ls); gBsGlow += ls * WG * 0.6;
       }
+      // (fix round 2, review 2 issue 7: the family was one white box repeated) each piece its own trade over the family:
+      if (prm == 7) {
+        // the hover cart: a canopy band in sage and cream stripes over a display window of goods, the body riding on a
+        // gap of light (a dark recess over a white-gold strip at the foot); on top its goods in crates
+        if (wall) {
+          float hov = step(0.04, fy) * step(fy, 0.26);
+          base = mix(base, bsC(0.16, 0.17, 0.19), hov);
+          float lstrip = bsAA(abs(fy - 0.06) - 0.025, pw); base = mix(base, WG, lstrip); gBsGlow += lstrip * WG * 1.6;
+          gBsGlow += hov * smoothstep(0.26, 0.04, fy) * WG * 0.35;
+          float can = step(h - 0.3, fy);
+          float stripe = step(0.5, fract(fu.x / 0.24));
+          float scal = step(h - 0.3 - 0.05 * (1.0 - abs(fract(fu.x / 0.24) - 0.5) * 2.0), fy);
+          base = mix(base, mix(bsC(0.86, 0.85, 0.8), bsC(0.48, 0.58, 0.48), stripe), scal * can + scal * (1.0 - can));
+          float win = bsRect(fu, vec2(0.12, 0.42), vec2(fsz.x - 0.12, h - 0.4), pw);
+          float gx = fract(fu.x / 0.14), gyR = fract((fy - 0.42) / 0.13);
+          float good = step(0.22, gx) * step(gx, 0.78) * step(0.16, gyR) * step(gyR, 0.72) * step(0.45, h21(floor(vec2(fu.x / 0.14, (fy - 0.42) / 0.13)) + vBsArt.y));
+          float gk = h21(floor(vec2(fu.x / 0.14, (fy - 0.42) / 0.13)) + 7.0);
+          vec3 gc = gk < 0.3 ? bsC(0.54, 0.6, 0.48) : (gk < 0.55 ? bsC(0.66, 0.52, 0.54) : (gk < 0.8 ? bsC(0.85, 0.81, 0.66) : bsC(0.6, 0.57, 0.66)));   // (muted: the ink stays loudest)
+          base = mix(base, mix(bsC(0.2, 0.22, 0.26), gc, good), win);
+          gBsRoom += win * mix(vec3(0.0), gc * 0.25, good) + win * bsC(0.5, 0.48, 0.44) * 0.12;
+        } else if (top) {
+          vec2 cq = fu / vec2(0.36, 0.3), ci = floor(cq), cf = fract(cq);
+          float crate = step(0.08, cf.x) * step(cf.x, 0.92) * step(0.08, cf.y) * step(cf.y, 0.92);
+          float gk = h21(ci + 3.0), dots = step(length(fract(cq * vec2(3.0, 2.5)) - 0.5), 0.36);
+          vec3 gc = gk < 0.35 ? bsC(0.54, 0.6, 0.48) : (gk < 0.6 ? bsC(0.66, 0.52, 0.54) : (gk < 0.85 ? bsC(0.85, 0.81, 0.66) : bsC(0.6, 0.57, 0.66)));
+          base = mix(base, mix(bsC(0.86, 0.86, 0.84), gc * (0.8 + 0.3 * dots), crate * 0.92), step(0.1, min(min(fu.x, fsz.x - fu.x), min(fu.y, fsz.y - fu.y))));
+        }
+      } else if (prm == 10) {
+        // the café pod: a glass band onto its lit counter (cups, the espresso machine), a light ring at the brim, and on
+        // its top the parasol of light — eight white-gold ribs from the centre and their soft glow
+        if (wall) {
+          float band = step(0.45, fy) * step(fy, h - 0.12);
+          float cup = step(0.5, fract(fu.x / 0.18)) * step(0.55, fy) * step(fy, 0.68);
+          float mach = bsRect(fu, vec2(fsz.x * 0.6, 0.55), vec2(fsz.x * 0.85, 0.85), pw);
+          vec3 inside = mix(bsC(0.44, 0.38, 0.32), bsC(0.9, 0.88, 0.84), cup);
+          inside = mix(inside, bsC(0.62, 0.64, 0.66), mach);
+          base = mix(base, inside, band * 0.9);
+          gBsRoom += band * inside * 0.3;
+          float brim = bsAA(abs(fy - h + 0.06) - 0.02, pw); base = mix(base, WG, brim); gBsGlow += brim * WG * 1.3;
+        } else if (top) {
+          vec2 c = fu - fsz * 0.5;
+          float r = length(c), ang = atan(c.y, c.x);
+          float rib = bsAA(abs(fract(ang / 6.2832 * 8.0 + 0.5) - 0.5) * r * 0.785 - 0.012, pw) * step(r, min(fsz.x, fsz.y) * 0.46);
+          float rim = bsAA(abs(r - min(fsz.x, fsz.y) * 0.44) - 0.015, pw);
+          float glow = smoothstep(min(fsz.x, fsz.y) * 0.46, 0.0, r);
+          base = mix(base, bsC(0.96, 0.94, 0.88), glow * 0.5);
+          base = mix(base, WG, clamp(rib + rim, 0.0, 1.0));
+          gBsGlow += clamp(rib + rim, 0.0, 1.0) * WG * 1.1 + glow * WG * 0.25;
+        }
+      } else if (prm == 1) {
+        // the recycling pod: a sorting lid in three colours (sage, pale blue, warm grey), each with a white-gold mark, and
+        // the same three as bands down its faces
+        if (top) {
+          float sl = floor(fu.x / max(fsz.x / 3.0, 0.01));
+          vec3 lc = sl < 0.5 ? bsC(0.52, 0.64, 0.5) : (sl < 1.5 ? bsC(0.58, 0.66, 0.76) : bsC(0.64, 0.6, 0.56));
+          float lid = step(0.08, min(fu.y, fsz.y - fu.y)) * bsAA(-abs(fract(fu.x / max(fsz.x / 3.0, 0.01)) - 0.5) * fsz.x / 3.0 + fsz.x / 6.0 - 0.04, pw);
+          base = mix(base, lc, lid);
+          vec2 mc = vec2((sl + 0.5) * fsz.x / 3.0, fsz.y * 0.5);
+          float mk = bsAA(abs(length(fu - mc) - 0.07) - 0.012, pw);
+          base = mix(base, WG, mk * lid); gBsGlow += mk * lid * WG * 0.8;
+        } else if (wall) {
+          float sb = floor(fu.x / max(fsz.x / 3.0, 0.01));
+          vec3 bc = sb < 0.5 ? bsC(0.52, 0.64, 0.5) : (sb < 1.5 ? bsC(0.58, 0.66, 0.76) : bsC(0.64, 0.6, 0.56));
+          base = mix(base, bc, bsAA(abs(fy - h + 0.2) - 0.08, pw));
+        }
+      }
     }
     else if (st == 2) {
       vec2 q = wall ? W : P.xz;
@@ -906,12 +972,47 @@ const FBASE = /* glsl */`
         if (wall) {
           base = mix(base, bs * 1.25, bsAA(abs(fy - h + 0.07) - 0.07, pw));
           base *= 1.0 - 0.25 * bsAA((0.5 - abs(fract(fy / 0.3) - 0.5)) * 0.3 - 0.008, pw);
-          if (prm == 9 || prm == 16) {
-            // the statue plinth (and the deck's foundation stone): a bronze plaque per era (a lord mayor, a tram conductor, a time traveller)
+          if (prm == 16) {
+            // the deck's foundation stone: a bronze plaque
             float pq = bsRect(fu, vec2(fsz.x * 0.2, h * 0.35), vec2(fsz.x * 0.8, h * 0.72), pw);
             base = mix(base, bsC(0.36, 0.27, 0.16), pq);
             base = mix(base, bsC(0.66, 0.52, 0.3), pq * bsText(fu, vec2(fsz.x * 0.5, h * 0.6), 0.07, fsz.x * 0.5, 13.0 + float(E), pw));
-            base = mix(base, bsC(0.66, 0.52, 0.3), pq * bsText(fu, vec2(fsz.x * 0.5, h * 0.46), 0.045, fsz.x * 0.45, 17.0 + float(E), pw) * 0.8);
+          }
+          if (prm == 9) {
+            // (fix round 2, review 2 issue 7) the statue plinth as a monument (its top is walkable: no figure stands on it):
+            // a darker base course with a moulded top, a cornice of two mouldings under the coping, and on each face a
+            // bronze relief in a moulded frame — per era its subject: the lord mayor in his chain and top hat (1880s), a tram
+            // conductor with his cap and ticket machine (TODAY), the time traveller in a long coat holding a light (3000s) —
+            // and its inscription under it
+            float bc = step(fy, 0.26);
+            base = mix(base, base * 0.78, bc);
+            base = mix(base, base * 1.3, bsAA(abs(fy - 0.27) - 0.02, pw));
+            base *= 1.0 - 0.35 * bsAA(abs(fy - 0.3) - 0.01, pw);
+            base = mix(base, base * 1.22, bsAA(abs(fy - h + 0.2) - 0.03, pw));
+            base *= 1.0 - 0.3 * bsAA(abs(fy - h + 0.25) - 0.012, pw);
+            vec2 pc = vec2(fsz.x * 0.5, 1.06);
+            float frame = bsRect(fu, pc - vec2(0.4, 0.36), pc + vec2(0.4, 0.36), pw);
+            float panel = bsRect(fu, pc - vec2(0.34, 0.3), pc + vec2(0.34, 0.3), pw);
+            vec3 bronze = bsC(0.4, 0.3, 0.17), bronzeL = bsC(0.68, 0.54, 0.3);
+            base = mix(base, bronze * 1.15, frame);
+            base = mix(base, bronze * 0.82, panel);
+            // the figure in relief (a standing silhouette, lit from the upper left: its highlight edge)
+            vec2 q2 = (fu - pc) / 0.3;
+            float body = bsAA(bsBox(q2, vec2(0.0, -0.18), vec2(0.2 + (E == 2 ? 0.08 * (-q2.y) : 0.0), 0.5)) * 0.3, pw);
+            float head = bsAA((length(q2 - vec2(0.0, 0.47)) - 0.13) * 0.3, pw);
+            float hat = E == 0 ? bsAA(bsBox(q2, vec2(0.0, 0.68), vec2(0.1, 0.1)) * 0.3, pw) + bsAA(bsBox(q2, vec2(0.0, 0.59), vec2(0.17, 0.02)) * 0.3, pw)
+                      : (E == 1 ? bsAA(bsBox(q2, vec2(0.02, 0.6), vec2(0.15, 0.05)) * 0.3, pw) : 0.0);
+            float prop2 = E == 0 ? bsAA((length(q2 - vec2(0.0, 0.22)) - 0.09) * 0.3, pw)                                         // the mayoral chain's badge
+                        : (E == 1 ? bsAA(bsBox(q2, vec2(0.24, -0.05), vec2(0.08, 0.1)) * 0.3, pw)                                  // the ticket machine at his hip
+                        : bsAA((length(q2 - vec2(0.3, 0.12)) - 0.08) * 0.3, pw));                                                  // the light in the traveller's hand
+            float fig = clamp(body + head + hat, 0.0, 1.0);
+            float edge = fig * (1.0 - bsAA(bsBox(q2 + vec2(0.03, -0.03), vec2(0.0, -0.18), vec2(0.17, 0.47)) * 0.3, pw));
+            base = mix(base, bronzeL, fig * panel);
+            base = mix(base, bronzeL * 1.25, edge * panel * 0.7);
+            base = mix(base, E == 2 ? WG : bronzeL * 1.3, prop2 * panel);
+            if (E == 2) gBsGlow += prop2 * panel * WG * 1.2;
+            base = mix(base, bronzeL, bsText(fu, vec2(fsz.x * 0.5, h * 0.12 + 0.02), 0.06, fsz.x * 0.6, 13.0 + float(E), pw) * (1.0 - bc * 0.0) * 0.9);
+            gBaseRough = mix(gBaseRough, 0.4, panel);
           }
           if (prm == 2 && E == 0) {
             // the 1880s: a granite mounting block — a carved step line and V.R. (the iron rings are props)
@@ -980,6 +1081,25 @@ const FBASE = /* glsl */`
         if (E == 0) { float pl = fract(fy / 0.16); base = bsC(0.5, 0.36, 0.24) * (1.0 - 0.35 * bsAA((0.5 - abs(pl - 0.5)) * 0.16 - 0.006, pw)); if (top) base = mix(bsC(0.62, 0.5, 0.26), bsC(0.55, 0.15, 0.12), step(0.5, h21(floor(P.xz * 7.0)))) * (0.8 + 0.3 * vnoise(P.xz * 14.0)); }
         else if (E == 1) { base = bsC(0.22, 0.32, 0.3); if (wall) { base = mix(base, bsC(0.85, 0.82, 0.74), bsRect(fu, vec2(0.1, h * 0.45), vec2(fsz.x - 0.1, h * 0.85), pw)); base = mix(base, bsC(0.22, 0.2, 0.18), bsText(fu, vec2(fsz.x * 0.5, h * 0.66), 0.13, fsz.x * 0.7, 21.0, pw)); } if (top) base = bsC(0.5, 0.42, 0.34); }
         else { base = bsC(0.92, 0.92, 0.9); float ls = bsAA(abs(fy - 0.2) - 0.03, pw) * float(wall); base = mix(base, WG, ls); gBsGlow += ls * WG * 1.2; if (top) base = bsC(0.85, 0.87, 0.9); }
+      } else if (prm == 8 && E == 2) {
+        // (fix round 2, review 2 issue 7) the 3000s: a fountain of light — the pearl drum with arcs of light rising up its
+        // faces and spilling over the brim, the bowl a pool of light with rings running out from the centre
+        base = bsC(0.9, 0.9, 0.88) * (0.95 + 0.06 * vnoise(q * 3.0));
+        if (wall) {
+          float ax = fract(fu.x / 0.5) - 0.5, ay = fy / max(h, 0.1);
+          float arc = bsAA(abs(ax - 0.28 * sin(ay * 3.1416)) - 0.03, pw) * step(0.15, fy);
+          float run = 0.55 + 0.45 * sin(fy * 9.0 - uTime * 2.5 + floor(fu.x / 0.5) * 1.7);
+          base = mix(base, WG, arc * 0.8); gBsGlow += arc * run * WG * 1.4;
+          float brim = bsAA(abs(fy - h + 0.05) - 0.03, pw); base = mix(base, WG, brim); gBsGlow += brim * WG * 1.2;
+          base = mix(base, bsC(0.2, 0.22, 0.24), bsAA(fy - 0.08, pw));
+        }
+        if (top) {
+          float e2 = min(min(fu.x, fsz.x - fu.x), min(fu.y, fsz.y - fu.y)), bowl = step(0.2, e2);
+          float r = length(fu - fsz * 0.5), ring = 0.5 + 0.5 * sin(r * 22.0 - uTime * 3.0);
+          base = mix(base, mix(bsC(0.86, 0.88, 0.92), WG, ring * 0.6), bowl);
+          gBsGlow += bowl * WG * (0.35 + 0.65 * ring) * 0.9;
+          gBaseRough = mix(gBaseRough, 0.1, bowl);
+        }
       } else if (prm == 8) {
         // the drinking fountain: polished granite with a bronze basin rim, a lion's mask on the faces
         base = bsC(0.5, 0.5, 0.49) * (0.88 + 0.22 * vnoise(q * 6.0)) * (0.95 + 0.1 * step(0.5, fract(fy / 0.4)));
@@ -1014,6 +1134,17 @@ const FBASE = /* glsl */`
           base = mix(base, bsC(0.2, 0.24, 0.3), lab); base = mix(base, WG, lab * bsText(fu, vec2(fsz.x * 0.5, 0.2), 0.07, fsz.x * 0.4, 205.0, pw)); gBsGlow += lab * WG * 0.3;
         }
         if (top) base = bsC(0.06, 0.06, 0.065) * (0.6 + 0.9 * vnoise(P.xz * 20.0));
+      } else if (prm == 12 && E == 2) {
+        // (fix round 2, review 2 issue 7) the 3000s' buffer of light: a pearl block, on its face a ring of light round a
+        // white-gold bar where the red disc was, light lines at the foot and the brim
+        base = bsC(0.9, 0.9, 0.88) * (0.95 + 0.06 * vnoise(q * 3.0));
+        if (wall) {
+          vec2 dc = vec2(fsz.x * 0.5, h * 0.6);
+          float ring = bsAA(abs(length(fu - dc) - 0.22) - 0.025, pw), bar = bsRect(fu, dc - vec2(0.17, 0.035), dc + vec2(0.17, 0.035), pw);
+          float lines = bsAA(abs(fy - 0.1) - 0.012, pw) + bsAA(abs(fy - h + 0.07) - 0.012, pw);
+          base = mix(base, WG, clamp(ring + bar + lines, 0.0, 1.0)); gBsGlow += clamp(ring + bar, 0.0, 1.0) * WG * 1.5 + clamp(lines, 0.0, 1.0) * WG * 0.9;
+          base = mix(base, bsC(0.2, 0.22, 0.24), bsAA(fy - 0.07, pw));
+        }
       } else if (prm == 12) {
         // the buffer stop: timber beam on iron, the red disc and the white bar on its face
         base = bsC(0.4, 0.3, 0.2) * (0.9 + 0.15 * vnoise(q * 5.0));

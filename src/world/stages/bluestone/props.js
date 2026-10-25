@@ -383,6 +383,24 @@ export function register(D, H) {
       B.add(e === 3 ? 'glow' : 'metal', torG(0.62, 0.035, 6, 28), e === 3 ? '#f4e9c8' : '#c9a356', 0, 7.94, 0, { rx: Math.PI / 2 });
     },
   };
+  // (fix round 2, review 2 issue 7) a wreath laid against the statue plinth's face under its relief, per era (within 8 cm
+  // of the face; the plinth's top is walkable, so nothing stands on it): a ring of laurel with flowers and a ribbon — red
+  // and white with a maroon ribbon (1880s), lilac and cream with a blue ribbon (TODAY), white flowers round a ring of light
+  // (3000s). The face frame: x along it, +z out of it
+  D.bluestone_wreath = {
+    build(B, o) {
+      const e = o.era || 1, R = 0.17, n = 22, cy = 0.5;
+      const LEAF = ['#40603a', '#527448', '#38522f'], FL = e === 1 ? ['#8a2a24', '#ece4d4'] : e === 2 ? ['#a7a0c8', '#efe6cc'] : ['#f4f2ee', '#e6e2f2'];
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2, x = Math.cos(a) * R, y = cy + Math.sin(a) * R;
+        B.add('rubber', sphG(0.04, 6, 4), LEAF[i % 3], x, y, 0.035, { sz: 0.7 });
+        if (i % 3 === 0) B.add('rubber', sphG(0.028, 6, 4), FL[(i / 3) % 2], x * 1.05, y + 0.01, 0.06, { sz: 0.7 });
+      }
+      B.box('gloss', e === 1 ? '#6b2c27' : e === 2 ? '#2c4466' : '#f4f1ea', 0.05, 0.16, 0.012, -0.03, cy - R - 0.06, 0.03, { rz: 0.25 });   // the ribbon's tails
+      B.box('gloss', e === 1 ? '#6b2c27' : e === 2 ? '#2c4466' : '#f4f1ea', 0.05, 0.16, 0.012, 0.03, cy - R - 0.06, 0.03, { rz: -0.25 });
+      if (e === 3) B.add('glow', torG(R * 0.82, 0.008, 4, 28), '#f4e9c8', 0, cy, 0.04, { glow: 1.3 });
+    },
+  };
   // the street lamps on the shared lamp spots: a gas lamp (the 1880s), a street light (today), a light mast (the 3000s)
   D.bluestone_gaslamp = {
     build(B) {
@@ -493,6 +511,7 @@ const ERAS3 = [1, 2, 3];
 placements.push({ type: 'bluestone_station', pos: [0, 0, 0] });
 for (const e of ERAS3) placements.push({ type: 'bluestone_domeera', pos: [0, 0, 0], mirror: false, era: e, eras: String(e) });
 for (const e of ERAS3) placements.push({ type: 'bluestone_drumceiling', pos: [0, 0, 0], mirror: false, era: e, eras: String(e) });   // (fix round 2)
+for (const e of ERAS3) placements.push({ type: 'bluestone_wreath', pos: [-22.2, 0, -4.0], rotY: Math.PI / 2, era: e, eras: String(e) });   // (fix round 2: the statue plinth's circus face)
 for (const e of ERAS3) placements.push({ type: 'bluestone_drumletters', pos: [0, 0, 0], era: e, eras: String(e) });
 for (const e of ERAS3) placements.push({ type: 'bluestone_clockfaces', pos: [0, 0, -7.575], era: e, eras: String(e) });
 placements.push({ type: 'bluestone_destplates', pos: [0, 0, 0] });
@@ -546,6 +565,12 @@ for (const d of LAYOUT.half) {
     continue;
   }
   const kind = d.tag === 'balustrade' ? 'lace' : d.tag === 'punt-rail' ? 'rope' : d.tag === 'deck-rail' ? (d.min && d.min[1] > 3 ? 'gallery' : 'timber') : /glass|halo/.test(d.tag) ? 'glass' : 'gallery';
+  // (fix round 2, review 2 issue 7: the wharf decks' timber rails stood unchanged in every era) a timber rail on a shared
+  // deck is the 1880s' look: TODAY painted steel, the 3000s glass
+  if (kind === 'timber' && !d.eras) {
+    placements.push({ type: 'bluestone_rail', ...r, kind: 'timber', eras: '1', ...g }, { type: 'bluestone_rail', ...r, kind: 'steel', eras: '2', ...g }, { type: 'bluestone_rail', ...r, kind: 'glass', eras: '3', ...g });
+    continue;
+  }
   placements.push({ type: 'bluestone_rail', ...r, kind, ...(d.eras ? { eras: d.eras } : {}), ...g });
 }
 // ---- the planting on the planters' tops (roof tops only: nobody stands there), per era; the Halo's and the garden's

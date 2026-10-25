@@ -89,7 +89,7 @@ export function registerDress(D, H, KIT) {
   // ============================================================================================================ rail
   // along local x (len), h tall, its foot at y 0 (rise: the top runs up by rise over the length)
   D.bluestone_rail = {
-    desc: 'a railing along local x (len, h) of one kind: lace / gallery / timber / rope / lattice / glass',
+    desc: 'a railing along local x (len, h) of one kind: lace / gallery / timber / steel / rope / lattice / glass',
     build(B, o) {
       const L = o.len, h = o.h ?? 1.0, kind = o.kind || 'gallery';
       if (kind === 'lace') {
@@ -119,6 +119,14 @@ export function registerDress(D, H, KIT) {
         for (let i = 0; i <= n; i++) pbox(B, 'wood', K.timberLt, 0.1, h, 0.1, -L / 2 + (L * i) / n, h / 2, 0);
         pbox(B, 'wood', K.oak, L + 0.1, 0.07, 0.12, 0, h - 0.035, 0);
         pbox(B, 'wood', K.timberLt, L, 0.05, 0.04, 0, h * 0.5, 0);
+      } else if (kind === 'steel') {
+        // (fix round 2) today's painted steel balustrade (the wharf decks' timber rails replaced): square posts every 1.2 m,
+        // a flat top rail and two mid rails, graphite green
+        const n = Math.max(1, Math.round(L / 1.2));
+        for (let i = 0; i <= n; i++) pbox(B, 'metal', '#34403c', 0.06, h, 0.06, -L / 2 + (L * i) / n, h / 2, 0);
+        pbox(B, 'metal', '#34403c', L + 0.06, 0.05, 0.1, 0, h - 0.025, 0);
+        for (const yy of [h * 0.62, h * 0.32]) pbox(B, 'metal', '#3d4a46', L, 0.035, 0.035, 0, yy, 0);
+        pbox(B, 'metal', '#8a9294', L, 0.012, 0.11, 0, h + 0.004, 0);
       } else if (kind === 'rope') {
         const n = Math.max(1, Math.round(L / 2.0));
         for (let i = 0; i <= n; i++) { const x = -L / 2 + (L * i) / n; B.cyl('wood', K.timber, 0.07, h + 0.15, x, (h + 0.15) / 2, 0, { seg: 8 }); }
