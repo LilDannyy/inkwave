@@ -241,27 +241,110 @@ export function register(D, H) {
       B.box('metal', '#3a3a36', 2.2, 0.08, 0.08, 0, 1.0, -3.0); B.box('metal', '#3a3a36', 2.2, 0.08, 0.08, 0, 1.0, 3.0);   // the dashboards
     },
   };
-  // today: an electric tram, green with a cream band, dark windows and a pantograph
+  // (fix round 2, review 2 issue 3: the two later trams were blank slabs; DESIGN §2.10 / §5.2)
+  const tramFace = (B, x, y, z, nx, nz, fn) => { B.push(x, y, z, Math.atan2(nx, nz)); fn(); B.pop(); };
+  // today: a low-floor tram, white and graphite with a thin yellow band (DESIGN §5.2): graphite skirts over the bogies, the
+  // glazing from 1.25 to 2.6 m in separate panes in black frames, a hint of the lit saloon in each (the ceiling strip, the
+  // seat backs, a grab pole), two pairs of doors per side with yellow edges, at each end a raked windscreen under the lit
+  // destination blind (11 FLOUNDERS ST) and the fleet number on the dash, air-conditioning pods and the pantograph on the
+  // roof. Era 2's buckets only (gloss, glow, metal, rubber)
   D.bluestone_tram = {
     build(B) {
-      for (const z of [-2, 2]) B.box('rubber', '#262626', 2.0, 0.45, 1.4, 0, 0.3, z);  // the bogies
-      B.box('gloss', '#4f6b52', 2.6, 1.25, 6.0, 0, 1.15, 0, { round: true, r: 0.12 });
-      B.box('gloss', '#e4dcc6', 2.62, 0.22, 6.02, 0, 1.86, 0);
-      B.box('gloss', '#2b3236', 2.58, 0.95, 5.7, 0, 2.45, 0, { round: true, r: 0.08 });   // the windows
-      B.box('gloss', '#4f6b52', 2.6, 0.32, 6.0, 0, 3.05, 0, { round: true, r: 0.12 });
-      B.box('metal', '#8c9294', 0.1, 0.5, 1.4, 0, 3.45, 0, { rx: 0.5 });                // the pantograph
-      B.box('metal', '#8c9294', 1.3, 0.05, 0.1, 0, 3.72, -0.25);
-      for (const z of [-3.01, 3.01]) B.box('glow', '#fff1cc', 0.5, 0.18, 0.04, 0, 1.0, z);   // headlights
+      const { letters, pbox, rod } = KIT;
+      const WH = '#e9ebea', GR = '#32373c', GD = '#1d2125', YL = '#d6aa2c', GLS = '#2c3740', REF = '#4d5c68', SEAT = '#a3aeb8', LIT = '#fff0d2', FR = '#0e1012', HEAD = '#5a5048';
+      B.box('rubber', GD, 2.2, 0.3, 5.3, 0, 0.22, 0);                                        // the running gear, in shadow
+      B.box('gloss', GR, 2.54, 0.46, 5.9, 0, 0.6, 0, { round: true, r: 0.06 });               // the graphite skirt band
+      for (const z of [-1.95, 1.95]) B.box('gloss', GD, 2.6, 0.4, 1.55, 0, 0.43, z, { round: true, r: 0.05 });   // the skirts over the bogies
+      B.box('gloss', WH, 2.6, 0.48, 6.0, 0, 1.0, 0, { round: true, r: 0.08 });               // the white body under the glazing
+      B.box('gloss', YL, 2.62, 0.05, 6.02, 0, 1.2, 0);                                        // the thin yellow band
+      B.box('gloss', GR, 2.56, 1.38, 5.9, 0, 1.92, 0, { round: true, r: 0.05 });              // the glazing band (graphite)
+      B.box('gloss', WH, 2.6, 0.34, 6.0, 0, 2.78, 0, { round: true, r: 0.1 });                // the cant rail
+      B.box('gloss', '#d5d8d9', 2.3, 0.1, 5.7, 0, 2.98, 0, { round: true, r: 0.04 });         // the roof
+      for (const z of [-1.75, 1.75]) B.box('gloss', WH, 1.5, 0.24, 1.3, 0, 3.12, z, { round: true, r: 0.08 });   // air-conditioning pods
+      B.box('gloss', GR, 1.0, 0.16, 0.9, 0, 3.08, 0, { round: true, r: 0.05 });              // the pantograph's pod
+      rod(B, 'metal', '#8c9295', [0, 3.17, -0.36], [0, 3.6, 0.06], 0.026, { seg: 6 });        // the pantograph: a single arm, the pan across
+      rod(B, 'metal', '#8c9295', [0, 3.6, 0.06], [0, 3.84, -0.22], 0.022, { seg: 6 });
+      B.box('metal', '#8c9295', 1.3, 0.04, 0.1, 0, 3.86, -0.22);
+      // the sides: panes and doors along the face (local x along the tram, +z out of the face)
+      const panes = [[-2.3, 0.56], [-0.36, 0.64], [0.36, 0.64], [2.3, 0.56]], doors = [-1.35, 1.35];
+      for (const sd of [1, -1]) tramFace(B, sd * 1.282, 0, 0, sd, 0, () => {
+        for (const [cx, w] of panes) {
+          B.box('gloss', GLS, w, 1.12, 0.02, cx, 1.9, 0.012);                                 // the pane
+          pbox(B, 'gloss', REF, w, 0.26, 0.01, cx, 2.33, 0.023);                                // the sky in its upper part
+          for (const y of [1.33, 2.47]) pbox(B, 'gloss', FR, w + 0.06, 0.045, 0.03, cx, y, 0.016);   // its black frame
+          for (const x of [cx - w / 2, cx + w / 2]) pbox(B, 'gloss', FR, 0.045, 1.18, 0.03, x, 1.9, 0.016);
+          B.box('glow', LIT, w - 0.12, 0.05, 0.01, cx, 2.38, 0.028, { glow: 1.4 });            // the saloon's ceiling strip seen through it
+          const nk = Math.round(w / 0.32);
+          for (let k = 0; k < nk; k++) {
+            const sx = cx - w / 2 + 0.16 + k * 0.32;
+            pbox(B, 'gloss', SEAT, 0.24, 0.3, 0.01, sx, 1.5, 0.024);                           // the seat backs
+            if ((k + Math.round(cx * 3)) % 3 === 0) B.add('gloss', KIT.sphG(0.1, 8, 6), HEAD, sx, 1.78, 0.02, { sz: 0.25 });   // a passenger's head
+          }
+          pbox(B, 'metal', '#c4c9cc', 0.025, 1.0, 0.01, cx + w * 0.32, 1.88, 0.026);             // a grab pole
+        }
+        for (const dx of doors) {
+          for (const lx of [dx - 0.3, dx + 0.3]) {
+            B.box('gloss', WH, 0.58, 2.2, 0.03, lx, 1.43, 0.02);                              // a door leaf
+            B.box('gloss', GLS, 0.42, 1.62, 0.012, lx, 1.6, 0.038);                           // its glazing
+          }
+          for (const ex of [dx - 0.025, dx + 0.025]) pbox(B, 'gloss', YL, 0.035, 2.2, 0.012, ex, 1.43, 0.04);   // the yellow edges where they meet
+          pbox(B, 'gloss', YL, 0.035, 2.2, 0.012, dx - 0.59, 1.43, 0.04); pbox(B, 'gloss', YL, 0.035, 2.2, 0.012, dx + 0.59, 1.43, 0.04);
+          B.box('glow', '#d9f2dc', 0.07, 0.07, 0.01, dx + 0.68, 1.12, 0.03, { glow: 0.8 });   // the door button
+        }
+      });
+      // the ends: the windscreen, the destination blind over it, the fleet number on the dash, the headlights
+      for (const sd of [1, -1]) tramFace(B, 0, 0, sd * 3.0, 0, sd, () => {
+        B.box('gloss', GLS, 2.2, 1.22, 0.06, 0, 1.9, 0.02, { round: true, r: 0.06 });
+        pbox(B, 'gloss', REF, 2.1, 0.3, 0.01, 0, 2.36, 0.055);                                // the sky in the windscreen
+        pbox(B, 'gloss', '#454b52', 1.9, 0.2, 0.01, 0, 1.42, 0.055);                          // the driver's desk behind it
+        B.add('gloss', KIT.sphG(0.11, 8, 6), HEAD, -0.55, 1.78, 0.05, { sz: 0.25 });          // the driver
+        B.box('glow', LIT, 1.6, 0.04, 0.01, 0, 2.18, 0.056, { glow: 1.1 });                   // the cab's light
+        pbox(B, 'gloss', FR, 0.04, 0.7, 0.01, 0.35, 1.7, 0.06, { rz: 0.5 });                   // a wiper
+        B.box('gloss', FR, 1.84, 0.3, 0.06, 0, 2.72, 0.04);                                   // the destination blind
+        letters(B, '11 FLOUNDERS ST', { h: 0.12, y: 2.66, z: 0.075, c: LIT, lit: true, glow: 1.3, flat: true, wt: 0.2, track: 0.1 });
+        letters(B, '6012', { h: 0.11, y: 0.94, z: 0.06, c: GD, flat: true, wt: 0.22, mat: 'gloss' });
+        for (const x of [-0.85, 0.85]) B.box('glow', '#fff4dc', 0.34, 0.1, 0.03, x, 0.78, 0.06, { glow: 1.2 });
+      });
     },
   };
-  // the 3000s: a float-tram, a pearl capsule hovering over its light-rail plinth, a white-gold glow underneath
+  // the 3000s: a glass float-tram on a glowing magnetic plinth (DESIGN §2.10): a pearl lower body hovering over the light-rail
+  // plinth on a sheet of light (the gap glows: nothing seen through it), the upper body a rounded glass capsule (era 3's
+  // clear 'glass' bucket) over a lit saloon with a pearl frame — ribs and posts every 1.05 m, moss-green seats, standing
+  // passengers, a ceiling of light — an opaque partition along its middle (no sightline through the cover), a pearl roof
+  // with white-gold seams, the line's name in light on its flanks. Era 3's buckets only (gloss, glow, rubber, glass)
   D.bluestone_floattram = {
     build(B) {
-      B.box('rubber', '#cfd2d4', 1.6, 0.3, 6.0, 0, 0.15, 0, { r: 0.05 });              // the light-rail plinth
-      B.box('glow', '#f4e9c8', 1.2, 0.05, 5.6, 0, 0.32, 0);                            // its light seam
-      B.box('gloss', '#eef0f2', 2.5, 2.1, 6.0, 0, 1.95, 0, { round: true, r: 0.85 });   // the capsule
-      B.box('gloss', '#3a4650', 2.52, 0.7, 4.8, 0, 2.3, 0, { round: true, r: 0.3 });     // the window band
-      B.box('glow', '#f4e9c8', 2.0, 0.06, 5.0, 0, 0.88, 0);                            // the hover glow
+      const { letters, sphG } = KIT;
+      const PE = '#eef0f2', PF = '#f6f7f8', WG = '#f4e9c8', MOSS = '#7d9468', FIG = '#5b5c66';
+      B.box('rubber', '#d4d6da', 1.8, 0.28, 6.0, 0, 0.14, 0, { r: 0.05 });                    // the light-rail plinth
+      B.box('glow', WG, 1.3, 0.04, 5.7, 0, 0.29, 0, { glow: 1.2 });                             // its light seam
+      B.box('glow', '#ece6f6', 2.1, 0.3, 5.5, 0, 0.44, 0, { glow: 0.85 });                      // the magnetic field: the hover gap glows
+      B.box('gloss', PE, 2.5, 0.72, 5.8, 0, 0.94, 0, { round: true, r: 0.26 });               // the pearl lower body
+      for (const sd of [1, -1]) B.box('glow', WG, 0.03, 0.04, 5.2, sd * 1.25, 0.66, 0, { glow: 1.0 });   // its light line
+      // the saloon (opaque, inside the glass)
+      B.box('gloss', '#dcdde2', 2.24, 0.04, 5.3, 0, 1.31, 0);                                 // the floor
+      B.box('gloss', '#e8e5ee', 0.1, 1.32, 5.2, 0, 1.97, 0);                                  // the partition along the middle
+      for (const z of [-2.1, -1.05, 0, 1.05, 2.1]) {
+        B.box('gloss', PF, 2.36, 0.06, 0.08, 0, 2.6, z);                                      // the pearl frame: a rib over the saloon
+        for (const sd of [1, -1]) B.box('gloss', PF, 0.06, 1.3, 0.08, sd * 1.12, 1.96, z);     // and its posts
+      }
+      for (const sd of [1, -1]) B.box('glow', WG, 0.2, 0.03, 5.0, sd * 0.55, 2.56, 0, { glow: 0.9 });   // the ceiling of light
+      for (const z of [-2.35, -1.55, 0.55, 1.35]) for (const sd of [1, -1]) {
+        B.box('rubber', MOSS, 0.62, 0.12, 0.46, sd * 0.68, 1.62, z);                           // a seat (moss on pearl)
+        B.box('rubber', MOSS, 0.62, 0.46, 0.09, sd * 0.68, 1.88, z + 0.22);
+        B.box('gloss', PF, 0.66, 0.3, 0.5, sd * 0.68, 1.44, z);                                // its pearl base
+      }
+      for (const [x, z, h] of [[0.62, -0.42, 1.0], [-0.6, -0.2, 0.92], [0.7, 2.2, 0.96], [-0.66, -1.95, 1.0]]) {
+        B.cyl('rubber', FIG, 0.15, h, x, 1.33 + h / 2, z, { seg: 10 });                        // standing passengers' silhouettes
+        B.add('rubber', sphG(0.12, 10, 8), FIG, x, 1.33 + h + 0.13, z, {});
+      }
+      B.box('glass', '#e8eef2', 2.5, 1.46, 5.8, 0, 1.98, 0, { round: true, r: 0.5 });         // the glass capsule
+      B.box('gloss', PE, 2.4, 0.3, 5.7, 0, 2.82, 0, { round: true, r: 0.14 });               // the pearl roof
+      for (const sd of [1, -1]) B.box('glow', WG, 0.04, 0.04, 5.4, sd * 1.15, 2.72, 0, { glow: 1.2 });   // its white-gold seams
+      for (const sd of [1, -1]) {
+        B.box('glow', WG, 1.6, 0.06, 0.03, 0, 1.08, sd * 2.91, { glow: 1.3 });                 // the nose's light band
+        tramFace(B, sd * 1.26, 0, 0, sd, 0, () => letters(B, 'FLOUNDERS ST', { h: 0.12, y: 0.9, z: 0.02, c: WG, lit: true, glow: 1.3, flat: true, wt: 0.18 }));
+      }
     },
   };
   // the street lamps on the shared lamp spots: a gas lamp (the 1880s), a street light (today), a light mast (the 3000s)
