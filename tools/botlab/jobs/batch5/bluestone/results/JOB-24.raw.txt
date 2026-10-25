@@ -1,0 +1,30 @@
+JOB-24 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 18:09:37
+branch botlab-b5-bluestone, ran at bf734d00, exit code 0, wall time 14min
+(a written-up JOB-24.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-24 head bf734d00
+# sweep e1-dusk load { 2.72 2.76 2.79 }
+HARNESS ERA=1: every game page loads with ?era=1
+# sweep e2-dusk load { 3.11 2.64 2.69 }
+HARNESS ERA=2: every game page loads with ?era=2
+# sweep e3-dusk load { 3.25 2.53 2.59 }
+HARNESS ERA=3: every game page loads with ?era=3
+### done
+
+## last 15 lines of job.log
+-rw-r--r--@  1 danielosling  staff  462817 Oct 25 17:59 sweep-e1-dusk-01.jpg
+-rw-r--r--@  1 danielosling  staff  446764 Oct 25 17:59 sweep-e1-dusk-02.jpg
+-rw-r--r--@  1 danielosling  staff  458126 Oct 25 17:59 sweep-e1-dusk-03.jpg
+-rw-r--r--@  1 danielosling  staff  200656 Oct 25 17:59 sweep-e1-dusk-04.jpg
+-rw-r--r--@  1 danielosling  staff  498320 Oct 25 18:04 sweep-e2-dusk-00.jpg
+-rw-r--r--@  1 danielosling  staff  489325 Oct 25 18:04 sweep-e2-dusk-01.jpg
+-rw-r--r--@  1 danielosling  staff  462069 Oct 25 18:04 sweep-e2-dusk-02.jpg
+-rw-r--r--@  1 danielosling  staff  473809 Oct 25 18:04 sweep-e2-dusk-03.jpg
+-rw-r--r--@  1 danielosling  staff  225392 Oct 25 18:04 sweep-e2-dusk-04.jpg
+-rw-r--r--@  1 danielosling  staff  525424 Oct 25 18:09 sweep-e3-dusk-00.jpg
+-rw-r--r--@  1 danielosling  staff  530119 Oct 25 18:09 sweep-e3-dusk-01.jpg
+-rw-r--r--@  1 danielosling  staff  489531 Oct 25 18:09 sweep-e3-dusk-02.jpg
+-rw-r--r--@  1 danielosling  staff  456570 Oct 25 18:09 sweep-e3-dusk-03.jpg
+-rw-r--r--@  1 danielosling  staff  401674 Oct 25 18:09 sweep-e3-dusk-04.jpg
+### done
