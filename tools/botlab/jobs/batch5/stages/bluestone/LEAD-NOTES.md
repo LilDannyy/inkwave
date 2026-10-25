@@ -218,9 +218,10 @@ Bluestone ×6.7); every GPU number in JOB-15 and JOB-18–21 is void, as an abso
   to do on GPU time in this stage.
 - **JOB-27 (art review 3's job; `results/JOB-27.txt`):** the GPU gate by method C is MET in every era, day and dusk: e1 6.16 /
   6.56, e2 6.36 / 6.58, e3 6.47 / 6.92 ms against Halyard 7.12 / 7.27 (×0.86–0.95). Suite, frames ×2, first, bake, stage-audit
-  10/10, net-eras lagged all pass; **net-eras 13/14**: the guest's Iron Bridge splats around a flip leave 1 of 368 cells
-  different on the two screens — the same check beta1's JOB-7 failed once and JOB-9 then passed 3/3. Lead's ruling: a rare
-  online paint divergence in the flip window, pre-existing, NOT an art-acceptance gate; it goes to the beta round 2 brief as
+  10/10, net-eras lagged all pass; **net-eras 13/14**: the guest's Iron Bridge splats around a flip leave 2 of 368 cells
+  different on the two screens — THE SAME 2 CELLS in each of 6 tries (the Mac mini's correction), so this is deterministic,
+  not flaky (beta1's JOB-7 saw 1 cell once, JOB-9 passed 3/3). Lead's ruling: a reproducible online paint divergence in the
+  flip window, pre-existing and not art, NOT an art-acceptance gate; it goes to the beta round 2 brief as
   a named item (make splats that land inside the flip window reconcile deterministically on both screens: the host's
   authoritative paint for cells touched during the flip, or hold the guest's splats until the flip's paint is applied). The
   reviewer notes it, does not fail on it.
