@@ -232,3 +232,15 @@ above (crucibles, the tower, lamps, the works' roofs), dusk is lit, decals 04 / 
    LOW and HIGH to prove ink stays the loudest colour. Four pictures (two palettes × LOW / HIGH), ink plainly visible.
 What stands from review 1 stands. Next report: the head, re-shot pictures (all of them at the new head), and the sweep
 pages looked at view by view before the claim. After my eye passes the Opus reviewer runs the sweep tool itself.
+
+## Art review 3 (the lead, by eye, 2026-10-25 21:00) — head 58295cc4: passes my eye; the Opus reviewer takes over
+
+The eye-level sweep pages now show real things: the pour floor's pieces are riveted iron plate with trims, ladders,
+crucibles and a sign behind; the works' buildings have orange roofs, windows, chimneys; all eight decals read (06 CASTING
+FLOOR / EBB ONLY, 07 PUMICE RACE, 10 KEEP CLEAR DURING A SURGE, 11 the cabinet and stencils); the pairs are within ±10 %
+(lavafall 104 → 96); the rise sheet is 2 × 2 by palette and lava level; 7.09 ms by method C against Halyard's 6.98. My nits
+for the reviewer to weigh, not to decide: `sweep-day-low-rim-head` 0.1 and 0.3 still show a plain pale block and a plain
+pale cube (stone pieces want a dressed face or a cap); `pair-gauge` (after) keeps a plain white block centre-left; in the
+rise sheet I cannot see the team ink at thumbnail size — the reviewer measures it; `decal-11` wants a closer look. The
+independent review (the sweep tool in every set, the tests, the ink measured, the bar) now decides; its JSON goes to
+`LEAD-REVIEW-ART.json` and `LEAD-REVIEWS-ALL.json`, and Antigravity's next round answers that JSON.
