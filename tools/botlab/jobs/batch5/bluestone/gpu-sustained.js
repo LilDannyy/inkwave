@@ -14,7 +14,11 @@
   if (/nobloom/.test(args) && Rr.bloom) Rr.bloom.enabled = false;
   if (/nogtao/.test(args) && Rr.gtao) Rr.gtao.enabled = false;
   if (/plain/.test(args)) { const plain = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.8 }); G.scene.traverse((o) => { if (o.isMesh && /^level/.test(o.name || '')) o.material = plain; }); if (G.eraWorld) G.eraWorld._levelProgram = () => {}; }
-  if (/half/.test(args)) { Rr.renderer?.setPixelRatio?.(0.5); }
+  // 'live': the full level program at rest and no prepass (this round's static programs and prepass off); 'noprepass'
+  const W = G.eraWorld;
+  if (W && /live/.test(args)) { const f = W._levelProgram; W._levelProgram = () => f.call(W, 0); W._levelProgram(); }
+  if (W && /noprepass/.test(args)) { const f = W._levelProgram; W._levelProgram = (e) => { f.call(W, e); for (const t of W._prepass?.twins || []) t.visible = false; }; }
+  for (let i = 0; i < 4; i++) g.debug.step(1000 / 60);
   const L = G.level, lay = L.layout || {}, B = L.bounds, sp = lay.spawnPads || [[0, 2, B.minZ + 4], [0, 2, B.maxZ - 4]];
   const V = (a) => new THREE.Vector3(a[0], a[1], a[2]);
   const views = [];
@@ -29,7 +33,7 @@
     qs.forEach((qq) => gl.deleteQuery(qq));
     return ms[Math.floor(ms.length / 2)] || 0;
   };
-  const A = [], Bq = [], Bw = [], Ci = [], Cd = [];
+  const A = [], A2 = [], Bq = [], Bw = [], Ci = [], Cd = [];
   for (const [f, l] of views) {
     g.rig.cinematic(V(f), V(f), V(l), V(l), 99, () => {});
     for (let i = 0; i < 20; i++) g.debug.step(1000 / 60);
@@ -45,6 +49,11 @@
     for (let k = 0; k < 5000 && last && !gl.getQueryParameter(last, gl.QUERY_RESULT_AVAILABLE); k++) await new Promise((r) => setTimeout(r, 1));
     Bw.push((performance.now() - t0) / 24);
     Bq.push(await collect(qs));
+    // A2 — the gate's method without the sim step: the render alone, timed, gl.finish after each (is A's excess the step's
+    // side effects — uploads, buffers — or the isolation of each frame?)
+    qs = [];
+    for (let i = 0; i < 24; i++) { q = null; Rr.render(); gl.finish(); if (q) qs.push(q); }
+    A2.push(await collect(qs));
     // C — GPU throughput: the game's render alone (no sim step), 30 times back to back, no timer queries; the CPU's issue
     // time per frame, and the time until a fence after the last frame signals (the GPU done), per frame. When 'done' is
     // well above 'issue' the GPU is the bottleneck and done / frame is its real time per frame
@@ -60,5 +69,5 @@
   }
   Rr.render = rend0;
   const mean = (a) => +(a.reduce((s, x) => s + x, 0) / a.length).toFixed(2);
-  return { map: g.mapDef?.id, era: G.eraWorld?.era ?? 0, time: G.env?.theme, args, A: mean(A), B: mean(Bq), Bwall: mean(Bw), Cissue: mean(Ci), Cdone: mean(Cd), views: { A: A.map((x) => +x.toFixed(1)), B: Bq.map((x) => +x.toFixed(1)), Cdone: Cd.map((x) => +x.toFixed(1)) } };
+  return { map: g.mapDef?.id, era: G.eraWorld?.era ?? 0, time: G.env?.theme, args, A: mean(A), A2: mean(A2), B: mean(Bq), Bwall: mean(Bw), Cissue: mean(Ci), Cdone: mean(Cd), views: { A: A.map((x) => +x.toFixed(1)), B: Bq.map((x) => +x.toFixed(1)), Cdone: Cd.map((x) => +x.toFixed(1)) } };
 })()
