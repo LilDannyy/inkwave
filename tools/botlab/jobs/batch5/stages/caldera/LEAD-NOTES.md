@@ -208,3 +208,27 @@ faults are visible without it. In order of weight:
 Process for the next round: finish the whole pass, re-shoot every picture at the new head, LOOK at each one against
 Halyard's cards and the Bluestone sweep pages before claiming it reads, then report the head and the report path. I judge
 by eye first; the Opus reviewer runs only after my eye passes.
+
+## Art review 2 (the lead, by eye, 2026-10-25 19:40) — head 56551fa9: REDO, narrower
+
+A real step: the day reads as day (pairs within ±10 % except the lavafall), the spawn view is clear, the hero cards read from
+above (crucibles, the tower, lamps, the works' roofs), dusk is lit, decals 04 / 05 / 08 / 09 read, 761 k triangles, GPU
+×1.008 by method C, geometry frozen. Not yet the bar, and the eye-level sweep pages are the test that says so:
+1. **The play pieces are still flat slabs.** `sweep-day-low-pour-floor`: seven views, every one a flat grey slab or box on
+   the cracked paving — a faint tile line, no material, no edge, no prop, nothing that says foundry. `sweep-day-low-rim-head`
+   0.3 and 0.1: plain cubes. In `pair-pour-floor` (after) the buildings around the floor are flat grey walls without
+   openings, trims or roofs, and the horizon is a row of flat boxes. The cover blocks and walls are the frozen colliders,
+   so dress them the way Bluestone and the aquarium did: a skin within 8.5 cm of each face (iron plate with rust streaks,
+   riveted edge trims, brick courses, timber, mould boxes, ingot stacks, slag skips, drums, cooling racks, crates with
+   stencils), nothing on a walkable top. Every eye-level view in every sweep page must show at least one real material and
+   one foundry object; the buildings' upper storeys get their openings, gutters, vents, tanks, chimneys and roof forms.
+2. **Four decal pictures show no readable decal:** 06 (a dark wall with a yellow edge), 07 (a flat blue-grey plane), 10 (a
+   cylinder in front of the sign), 11 (tiny text on green). Either the decal is not where the report says or the camera is
+   wrong. Fix or re-shoot: each of the eight readable at eye level, the way 04 / 05 / 08 / 09 are.
+3. **The lavafall pair is −32 %** (104 → 71): the after view from the bridge is dark where the blockout's was lit. Find
+   what darkened it (the new gorge / rim backdrop shading the bridge? the lavafall's curtain blend?) and bring it within
+   ±10 %, or show why the darker view is right.
+4. `rise-shelf-ink`: I cannot find team ink in the frame; the brief wants ink in frame in every palette with the lava at
+   LOW and HIGH to prove ink stays the loudest colour. Four pictures (two palettes × LOW / HIGH), ink plainly visible.
+What stands from review 1 stands. Next report: the head, re-shot pictures (all of them at the new head), and the sweep
+pages looked at view by view before the claim. After my eye passes the Opus reviewer runs the sweep tool itself.
