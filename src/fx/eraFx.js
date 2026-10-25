@@ -550,7 +550,10 @@ export class EraFx {
     // Tartar: shakes on each ring, lifts his receiver at the pickup, spins his dial into the jump
     const ring = st.ring || 0, pick = st.pickup || 0;
     this.tartar.rotation.z = 0.07 * ring * Math.sin(t * 46); this.tartar.rotation.x = 0.04 * ring * Math.sin(t * 39 + 1);
-    this.tHand.position.set(0, 0.45 * pick, 0); this.tHand.rotation.z = 0.35 * pick;
+    // (fix round 1: the cradle telephone's handset rests 0.25 m under the drum's ceiling — lifted 0.16 m off its cradle and
+    //  tilted 0.18 rad about its own middle (the grip at y 7.6, 0.6 m under the pivot), so it clears the forks and never
+    //  enters the ceiling at y 8)
+    { const th = 0.18 * pick; this.tHand.rotation.z = th; this.tHand.position.set(-0.6 * Math.sin(th), -0.6 * (1 - Math.cos(th)) + 0.16 * pick, 0); }
     this.tDial.rotation.z += dt * (st.phase === 'jump' || pick > 0.5 ? 9 : 0);
     // the beam
     this.beam.visible = st.beam > 0.01; this.beam.material.uniforms.uA.value = st.beam;

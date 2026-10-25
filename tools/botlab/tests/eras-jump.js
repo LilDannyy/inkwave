@@ -432,7 +432,11 @@
     tAt(J.at - 9.6);
     const fx = W.fx, warn = { phase: E.phase, holo: !!fx.holo && fx.holo.every((m) => m.visible), holoPieces: fx.stats.holoPieces, beads: !!fx.beads?.visible, bells: fx.phones.some((p) => p.sp.visible), shake: Math.abs(fx.tartar.rotation.z) + Math.abs(fx.tartar.rotation.x) > 0 };
     tAt(J.at - 0.5);
-    const pick = { hand: +fx.tHand.position.y.toFixed(2), beam: fx.beam.visible };
+    // (fix round 1: the receiver is the cradle telephone's handset — lifted clear of its cradle forks (≥ 0.12 m up) and
+    //  never into the drum's ceiling at y 8: its vertices' box at the pickup)
+    fx.tartar.updateMatrixWorld(true);
+    const hb = new THREE.Box3().setFromObject(fx.tHand, true), hb0y = fx.tHand.position.y;
+    const pick = { hand: +hb0y.toFixed(2), top: +hb.max.y.toFixed(2), bottom: +hb.min.y.toFixed(2), beam: fx.beam.visible };
     // frames: from J − 1 to done + 1.5
     const ft = [], top = []; let curt = null, um = 0;
     const upd = E.update.bind(E); E.update = (dt, t) => { const a0 = performance.now(); upd(dt, t); um = performance.now() - a0; };
@@ -446,8 +450,8 @@
     ft.sort((a, b) => a - b);
     const need = ['era_bell', 'era_ring', 'era_kiosk', 'era_pickup', 'era_swell', 'era_front:loop', 'era_pop'];
     if (parts.includes('fx')) {
-      R('step 8: the warning shows what comes (white-gold holograms of every appearing block, the wire beads, the kiosks\' bells, Tartar shaking); the pickup lifts his receiver and drops the beam; the curtain rides the front',
-        pre.phase === 'prebell' && warn.phase === 'warn' && warn.holo && warn.holoPieces === 24 && warn.holoPieces === E._info(J).appear.length && warn.beads && warn.bells && warn.shake && pick.hand > 0.3 && pick.beam && curt && curt.visible && Math.abs(curt.scale - curt.front) < 1.5,
+      R('step 8: the warning shows what comes (white-gold holograms of every appearing block, the wire beads, the kiosks\' bells, Tartar shaking); the pickup lifts his receiver (≥ 0.12 m, clear of the cradle, under the drum\'s ceiling at 8 m) and drops the beam; the curtain rides the front',
+        pre.phase === 'prebell' && warn.phase === 'warn' && warn.holo && warn.holoPieces === 24 && warn.holoPieces === E._info(J).appear.length && warn.beads && warn.bells && warn.shake && pick.hand >= 0.12 && pick.top < 8.0 && pick.beam && curt && curt.visible && Math.abs(curt.scale - curt.front) < 1.5,
         { pre, warn, pick, curt });
       R('step 8: the sounds are synthesized in code (src/audio/sfx-eras.js) and play in order: the pre-bell, Tartar\'s rings and the kiosks, the pickup, the swell, the front\'s loop, the pops',
         need.every((n) => played.includes(n)) && need.filter((n) => !n.endsWith(':loop')).every((n) => SFX[n] && (SFX[n].build || SFX[n].loop)), { played: [...new Set(played)].filter((n) => n.startsWith('era_')) });
