@@ -767,7 +767,10 @@ const FBASE = /* glsl */`
             dc = mix(dc, bsC(0.72, 0.68, 0.56), clamp(ledge + brace, 0.0, 1.0));
             dc = mix(dc, bsC(0.16, 0.16, 0.16), hinge);
             dc = mix(dc, bsC(0.3, 0.42, 0.34), bsAA(abs(dx - 1.35) - 0.025, pw));   // the meeting stile
-            base = mix(base, dc, door * 0.92);
+            base = mix(base, dc, door);
+            gTexStr *= 1.0 - door;   // (the weatherboards' relief stops at the door: it read as a grid)
+            gBsRoom *= 1.0 - door; gBsLit *= 1.0 - door;   // (nor does a shop's room show through it, nor its glass's gloss)
+            gBaseRough = mix(gBaseRough, 0.75, door);
             base = mix(base, bsC(0.82, 0.78, 0.66), bsAA(abs(y - 2.25) - 0.08, pw));
           } else if (E == 1) {
             base = mix(base, bsC(0.86, 0.82, 0.72), 0.6);
