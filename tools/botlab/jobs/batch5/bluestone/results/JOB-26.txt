@@ -1,0 +1,9 @@
+JOB-26 (bluestone, fix round 2) @ 35381026 — Mac mini b5-runner, 2026-10-25 18:43–18:54, exit 0. Short summary — METHOD C only (the GPU's
+throughput: 30 back-to-back renders and a fence, ms per frame, mean of 2 rounds); the timer's A / A2 / B stay in JOB-26.raw.txt.
+- Bluestone e2 as built 6.18 day / 6.62 dusk (×0.88 / ×0.93 Halyard's 7.05 / 7.14).
+- 'live' (the round's static programs and prepass both off) 7.25 / 7.55: the round's work saves ~1.0 ms a frame (~14 %); prepass alone off
+  6.47 / 7.00 (the prepass saves 0.3–0.4 ms).
+- bloom off 5.45 / 5.73 on Bluestone, 6.17 / 6.18 on Halyard: bloom COSTS ~0.8–0.9 ms on both — the 'bloom off is slower' anomaly was the
+  timer's, not the GPU's.
+- idle.js (why the timer reads high): with no idle gap before each frame it reads 17–18 ms on both stages; with an 8–16 ms gap 7.8–8.5 ms —
+  close to C. The timer counts the frame's wait behind the previous one when frames are queued back to back.
