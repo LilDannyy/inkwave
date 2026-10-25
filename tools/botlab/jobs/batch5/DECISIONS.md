@@ -110,3 +110,9 @@ marked TELL THE USER goes into the lead's final report as a choice they may want
     re-run. The Gate ring's entrance count is DECLARED by the layout (Halyard: five) and the checker compares physical
     entrances against the declaration; an undeclared physical entrance is declared (a swim-jump entry is legitimate, S21) or
     blocked. The report lists every class with its outcome, length and L before / after.
+    **Addendum (2026-10-26):** #7 compares physical reach against graph REACH — a candidate whose endpoints the graph already
+    joins by a path no longer than 1.5× the straight-line distance (a ramp's walk join, a modelled hop) is not a missing
+    connection; a single modelled move is never longer than 20 m, so a longer legitimate crossing is split into ≤ 20 m legs
+    through a visible landing that exists in the bazookarp variant, or blocked; unreachable roofs are handled by the map
+    standard (non-inkable, slide off) before any barrier; a class that loses more than half its candidates to #16 has the
+    wrong bounds. Shape: `carrierField.gapClasses[{ name, kind, from{x,z,y}, to{x,z,y}, maxLen ≤ 20, oneWay?, perNode = 2 }]`.
