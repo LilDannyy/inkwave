@@ -152,7 +152,7 @@ export const HALYARD = {
     B(1.8, 16, 1.3, 2.0, -5, -4.6, { tag: 'ferry-bulwark', color: M.navy, pattern: PATTERN.hullpaint }),
     // sun-deck stair (Alpha's, at its left end). Small cover (fuel pumps, dock box, pump-out station, crates, keel
     // blocks, dinghy, ferry locker + cargo) is set dressing with colliders — see docs/HALYARD.md
-    R([12.6, 1.3, -1.9], [6.5, 3.8, -1.9], 2.0, { tag: 'ferry-stair', color: M.steel, pattern: PATTERN.treads, notIn: 'tower' }),
+    R([12.6, 1.3, -1.9], [6.5, 3.8, -1.9], 2.0, { tag: 'ferry-stair', color: M.steel, pattern: PATTERN.treads, notIn: ['tower', 'bazookarp'] }),
     // Tower Command: narrowed to 1.45 m (z -2.9…-1.45) so the track down the middle of the ferry (z 0, a 2.5 m platform)
     // passes it and drops straight off the sun deck's end
     R([12.6, 1.3, -2.175], [6.5, 3.8, -2.175], 1.45, { tag: 'ferry-stair', color: M.steel, pattern: PATTERN.treads, onlyIn: 'tower' }),
