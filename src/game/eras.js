@@ -346,7 +346,8 @@ export class EraWorld {
     this.levelMat = levelMat;
     // (fix round 2) the stage may drop texlib's hex anti-tiling on its level (LAYOUT.levelTexlib.hex === false: one tap
     // instead of three, the per-tile flips of the grid mode kept): its own level material's uniforms only
-    if (this.layout?.levelTexlib?.hex === false) for (const mt of [levelMat, grateMat]) for (const v of mt?.userData?.uniforms?.uTL?.value || []) if (v.z === 2) { v.z = 1; v.w = 7; }
+    this._hexOff = [];   // ([vec, mode, sym] as they were: the audits put them back to compare)
+    if (this.layout?.levelTexlib?.hex === false) for (const mt of [levelMat, grateMat]) for (const v of mt?.userData?.uniforms?.uTL?.value || []) if (v.z === 2) { this._hexOff.push([v, v.z, v.w]); v.z = 1; v.w = 7; }
     this._levelMeshes = [o.levelMesh, ...this.meshes.filter((m) => !/:grate$/.test(m.name))].filter(Boolean);
     this._static = levelMat ? { 1: this._staticMat(levelMat, 1), 2: this._staticMat(levelMat, 2), 3: this._staticMat(levelMat, 3) } : null;
     this._matNow = levelMat;
