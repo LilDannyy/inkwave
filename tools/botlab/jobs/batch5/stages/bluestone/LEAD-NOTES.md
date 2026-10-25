@@ -281,3 +281,8 @@ carried items had no decision. Decisions:
   update. Builder told: reproduce with `--disable-gpu-shader-disk-cache` (every page cold), name the program, warm every era ×
   theme-state variant at load as _precompile does for the era programs, and prove with the cache OFF (JOB-32 frames ×3, both
   side jumps, worst frame per run < 50 ms from the round's code).
+- **JOB-32 (de8e927e against 9012ec65, frames ×5 each, alternating):** the head 4/4 ×5 with no frame over 50 ms in any jump;
+  the base 4/4 ×4 and 3/4 once — the unmeasured stall (429.5 ms, render 0.1), which shows on both codes and stays a beta round 2
+  item. No settle render spike in any of the ten runs; overall it showed in 3 of 19 runs, all at fix round 3's heads before
+  de8e927e. The builder's report must say whether JOB-32 ran with the shader disk cache OFF; if not, the warm-up is proven
+  only warm, and the cold proof is owed before acceptance (review 4, after the reset).
