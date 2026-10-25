@@ -1,0 +1,9 @@
+JOB-18 (bluestone, art review 2) @ 91629600 (the builder's 8188097a) — Mac mini b5-runner, 2026-10-25 14:35–15:20, exit 0 (load 1.8). Short summary.
+- the GPU GATE (≤ 1.2× Halyard, every era, day and dusk) FAILS: Bluestone e1 / e2 / e3 44.3 / 44.9 / 46.0 ms by day (×1.46–1.51), 46.4 / 47.3
+  / 47.8 ms at dusk (×1.68–1.73); Halyard 30.4 day, 27.7 dusk (3 rounds; medians).
+- where the time goes (e2 by day): switching off the level art −1.7 to −2.6 ms, the era re-skin loop −1.5 to −1.9, the rooms behind the glass
+  and the front-cut discard ~0 — none of them is the gap. gpu-attr: Bluestone 45.3 ms → no level 37.0, no props 44.0, no backdrop 42.4,
+  no env root 41.3; Halyard 31.8 → no level 21.8. So with NO level geometry at all Bluestone still costs 37 ms against Halyard's 21.8:
+  ~15 ms of the gap sits outside the level (the scene-wide parts: backdrop, env root, what neither switch removes).
+- perf6 vs Halyard: calls ×0.84–0.94, triangles ×0.36–0.39, cpuRender ×0.75–0.87.
+- every other test full: eras-jump first 1/1 ×2, frames 4/4 ×3, net-eras 14/14 and lagged 8/8, art-tests, check-maps (Bluestone clean).
