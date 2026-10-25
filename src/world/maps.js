@@ -89,7 +89,7 @@ export const HALYARD = {
     // walkable and inkable (a perch you reach on foot, not an off-limits roof)
     B(-1.7, 1.7, 0, 2.7, -22.5, -18.8, { tag: 'fuel-hut', color: M.hut, pattern: PATTERN.render, onlyIn: 'tower' }),
     // gangway onto the ferry's side corridor (free-spanning plank over the water)
-    R([0, 0, -8.8], [0, 1.3, -4.95], 3.4, { tag: 'gangway', thin: true, thickness: 0.22, color: M.steel, pattern: PATTERN.gangdeck }),
+    R([0, 0, -9.8], [0, 1.3, -4.0], 3.8, { tag: 'gangway', thin: true, thickness: 0.22, color: M.steel, pattern: PATTERN.gangdeck }),
 
     // ================= right lane: the Long Pier (−X for Alpha)
     B(-24, -19.5, -1.2, 0, QF, 0, deck({ tag: 'long-pier' })),
@@ -154,7 +154,7 @@ export const HALYARD = {
     // plank from the boatyard onto the ferry's end deck
     R([19.7, 0, -3.6], [15.85, 1.3, -3.6], 2.0, { tag: 'ferry-plank', thin: true, thickness: 0.2, color: M.wood, pattern: PATTERN.planks }),
     // Bazookarp gets a second, visible ferry landing to the Long Pier so the central push has a true alternate route.
-    R([-19.7, 0, -3.6], [-15.85, 1.3, -3.6], 2.0, { tag: 'ferry-plank', thin: true, thickness: 0.2, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
+    R([-20.5, 0, -3.6], [-15.0, 1.3, -3.6], 2.6, { tag: 'ferry-plank', thin: true, thickness: 0.2, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
 
     // ================= ferry details (mirrored to the far side)
     // bulwarks along the long sides, open at the gangway
