@@ -757,7 +757,17 @@ const FBASE = /* glsl */`
           if (E == 0) {
             base = mix(base, base * bsC(0.6, 0.78, 0.62), 0.55);
             float door = bsRect(vec2(mod(W.x, 3.5), y), vec2(0.4, 0.0), vec2(3.1, 2.1), pw) * step(0.5, mod(floor(W.x / 3.5), 2.0));
-            base = mix(base, bsC(0.82, 0.78, 0.66), door * 0.85);
+            // (fix round 1) the boat doors as doors: vertical boards, a ledge-and-brace Z on each leaf, strap hinges
+            float dx = mod(W.x, 3.5) - 0.4, lx3 = mod(dx, 1.35);
+            float bd3 = bsAA((0.5 - abs(fract(dx / 0.15) - 0.5)) * 0.15 - 0.006, pw);
+            float ledge = bsAA(abs(y - 0.35) - 0.06, pw) + bsAA(abs(y - 1.75) - 0.06, pw);
+            float brace = bsAA(abs(y - 0.35 - (lx3 / 1.35) * 1.4) - 0.07, pw) * step(0.35, y) * step(y, 1.75);
+            float hinge = bsAA(abs(y - 0.35) - 0.025, pw) * step(lx3, 0.5) + bsAA(abs(y - 1.75) - 0.025, pw) * step(lx3, 0.5);
+            vec3 dc = bsC(0.82, 0.78, 0.66) * (1.0 - 0.25 * bd3);
+            dc = mix(dc, bsC(0.72, 0.68, 0.56), clamp(ledge + brace, 0.0, 1.0));
+            dc = mix(dc, bsC(0.16, 0.16, 0.16), hinge);
+            dc = mix(dc, bsC(0.3, 0.42, 0.34), bsAA(abs(dx - 1.35) - 0.025, pw));   // the meeting stile
+            base = mix(base, dc, door * 0.92);
             base = mix(base, bsC(0.82, 0.78, 0.66), bsAA(abs(y - 2.25) - 0.08, pw));
           } else if (E == 1) {
             base = mix(base, bsC(0.86, 0.82, 0.72), 0.6);
@@ -1124,10 +1134,16 @@ const FBASE = /* glsl */`
           float frame = bsRect(wq, vec2(-fsz.x / nwin * 0.32 - 0.06, h * 0.5 - 0.06), vec2(fsz.x / nwin * 0.32 + 0.06, h * 0.82 + 0.06), pw) * (1.0 - win);
           float bar = bsAA(abs(wq.x) - 0.016, pw) * float(E == 0);
           base = mix(base, E == 2 ? bsC(0.98, 0.97, 0.94) : bsC(0.86, 0.82, 0.7), frame);
-          vec3 g = E == 2 ? mix(bsC(0.82, 0.86, 0.9), WG, 0.15) : bsGlass(wq, h * 0.5, h * 0.82, 1.0);
+          // (fix round 1) a room behind each window, with its use (the shelters' benches, the news kiosk's papers, the
+          // ferry office's charts, the boat shed's boats), lit by its own light — not a flat lit pane at dusk
+          float hk = prm == 6 ? 4.0 : (prm == 8 || prm == 13 ? 10.0 : (prm == 9 ? 7.0 : 9.0));
+          vec3 Vh = bsViewIn();
+          float fh = 0.05 + 0.75 * pow(1.0 - Vh.z, 4.0);
+          vec3 hroom = bsRoom(wq, Vh, vec4(fsz.x / nwin * 0.32 + 0.15, 0.05, h - 0.15, min(fsz.y, 1.8)), hk, float(prm) + floor(f.x / (fsz.x / nwin)), E);
+          vec3 g = mix(hroom * 0.14, bsGlass(wq, h * 0.5, h * 0.82, 1.0), fh);
           base = mix(base, g, win * (1.0 - bar));
           base = mix(base, bsC(0.86, 0.82, 0.7), win * bar);
-          gBsLit += win * (1.0 - bar) * (E == 0 ? bsC(1.0, 0.7, 0.4) * 0.45 : (E == 1 ? bsC(1.0, 0.86, 0.64) * 0.75 : WG * 0.4));
+          gBsRoom += win * (1.0 - bar) * hroom * (1.0 - fh) * (E == 0 ? 0.7 : 0.95);
           if (win > 0.5) { gBaseRough = 0.1; gTexStr = 0.0; }
           if (E == 2) { float seam = bsAA(abs(fy - h * 0.92) - 0.015, pw); base = mix(base, WG, seam); gBsGlow += seam * WG; }
           // a fascia band under the eaves with signwriting (the props carry the important words), and a door on the long side
