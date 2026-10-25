@@ -176,3 +176,29 @@ re-measures.
   GPU gate ALONE (every art item passed) the stage ships as PUBLIC BETA with the GPU gap written into the beta round 2 brief
   (DECISIONS #33: playable but unfinished ships BETA); the art is not held hostage to it, and the GPU work resumes after the
   reset of 2026-10-30. The reviewer writes the per-era numbers either way.
+
+## The GPU gate, corrected (the lead, 2026-10-25 17:50): the timer query was never the GPU's time
+
+JOB-22 (`results/JOB-22.txt`, head d68d1c1f; the Mac mini's correction b7be2e8d on botlab-b5-bluestone) timed the same
+`R.render` three ways at perf6's eight views: A, the gate's timer query with `gl.finish` after each frame (JOB-15's method and
+gpu-time.sh's): Bluestone 40.8–44.4 ms, ×1.60–1.72 Halyard; B, 24 queried frames back to back: the same as A; **C, the
+render 30× back to back with a fence after the last, the wall time until the GPU is really done: Bluestone 6.28–6.94 ms per
+frame at the head (6.96–7.57 at review 2's src), HALYARD 7.35 / 7.33; the CPU issues a frame in 0.8–1.0 ms on both.** C is a
+physical measure that cannot be out by more than the CPU's issue time; if a frame really cost 44 ms, 30 of them would take
+1.3 s, not 0.2 s — and the stage runs at 60 fps at rest on that Mac. **So on this Mac (M4, WebGL on Metal) the
+EXT_disjoint_timer_query reads about six times the frame's real GPU cost and does not even keep the ratio (Halyard ×3.6,
+Bluestone ×6.7); every GPU number in JOB-15 and JOB-18–21 is void, as an absolute and as a ratio.** Lead's rulings:
+1. **The gate's method is C** (`tools/botlab/jobs/batch5/bluestone/gpu-sustained.js`, the 'done / frame' column): Bluestone
+   ≤ 1.2× Halyard in every era, day and dusk. **By it the gate is MET at the head (×0.85–0.95) and was met at review 2's src
+   (×0.95–1.03).** Review 2's issue 1 is closed; no further GPU work in this round. gpu-time.sh is not a gate method any more
+   (its header says so); the reviewer re-measures with gpu-sustained.js C only, on the Mac mini or locally.
+2. The first cut (2d4f7a6b: static programs at rest, the depth prepass, the lighter noise paths, hex anti-tiling off) saves
+   about a tenth by C too, so it STAYS — on the condition the reviewer's pictures are unchanged (static vs full program at rest
+   0–1/255 is shown; the hex-off and the coping / noise paths want the eye-level check) and the prepass shows no fault: no
+   holes or z-fighting from the polygon offset, the era pieces that appear / vanish matching their prepass twins in every era
+   and during a jump, the see-through window round the local player intact, the river and the backs still correct where they
+   show. A fault in the prepass → revert the prepass alone, keep the static programs.
+3. Lesson for the harness, recorded in COMMON.md's spirit: a WebGL timer query on Apple silicon measures something other
+   than GPU execution; time GPU cost by throughput (N renders + a fence), and corroborate any 'GPU-bound' claim with the
+   frame interval at rest before acting on it. The ×1.5–1.9 'gap' cost two jobs' worth of fixes chasing an artefact; the
+   LOD / lamp / backdrop ideas above are not needed for the gate.
