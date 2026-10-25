@@ -279,7 +279,7 @@ vec3 bsShopWall(vec2 uv, float kind, float seed, int E, float y1, bool back) {
   }
   if (kind > 10.5) {
     // the cable tramway's engine hall: brick walls, the great winding wheels (iron rims and spokes) and their shafts
-    c = E == 0 ? bsC(0.42, 0.26, 0.2) : bsC(0.6, 0.5, 0.42);
+    c = E == 0 ? bsC(0.42, 0.26, 0.2) : (E == 1 ? bsC(0.6, 0.5, 0.42) : bsC(0.86, 0.86, 0.88));
     vec2 wc = vec2(mod(u, 4.2) - 2.1, v - 2.2);
     float rr = length(wc), ang = atan(wc.y, wc.x);
     float rim = bsAA(abs(rr - 1.55) - 0.1, 0.02), hub = bsAA(rr - 0.22, 0.02);
@@ -508,13 +508,12 @@ const FBASE = /* glsl */`
               // with depth: its counters and pinned notices, lit by its own light — not a flat lit pane at dusk
               vec3 Vc = bsViewIn();
               float fc2 = 0.05 + 0.75 * pow(1.0 - Vc.z, 4.0);
-              vec3 croom = E == 2 ? vec3(0.0) : bsRoom(p, Vc, vec4(hh.x + 0.5, plinth, gf - 0.1, 4.0), fam == 2 ? 3.0 : 10.0, float(bi) + float(prm) * 5.0, E);
-              vec3 gl = E == 2 ? mix(bsC(0.86, 0.88, 0.9), WG, 0.25) : mix(croom * 0.14, bsGlass(p, c.y - hh.y, c.y + hh.y, 1.0), fc2);
+              vec3 croom = bsRoom(p, Vc, vec4(hh.x + 0.5, plinth, gf - 0.1, 4.0), fam == 2 ? 3.0 : 10.0, float(bi) + float(prm) * 5.0, E);
+              vec3 gl = E == 2 ? mix(mix(bsC(0.86, 0.88, 0.9), WG, 0.25), croom * 0.3, 0.5 * (1.0 - fc2)) : mix(croom * 0.14, bsGlass(p, c.y - hh.y, c.y + hh.y, 1.0), fc2);
               base = mix(base, gl, w.y);
               base = mix(base, E == 0 ? bsC(0.24, 0.28, 0.24) : (E == 1 ? bsC(0.86, 0.85, 0.8) : bsC(0.92, 0.92, 0.9)), w.z);
               if (w.y > 0.5) { gBaseRough = 0.12; gTexStr = 0.0; }
-              if (E == 2) gBsLit += w.y * bsC(0.95, 0.94, 0.98) * 0.7 * step(0.3, bsH(vec2(bi, float(prm))));
-              else gBsRoom += w.y * croom * (1.0 - fc2) * (E == 0 ? 0.7 : 0.95) * (0.6 + 0.4 * step(0.3, bsH(vec2(bi, float(prm)))));
+              gBsRoom += w.y * croom * (1.0 - fc2) * (E == 0 ? 0.7 : (E == 1 ? 0.95 : 0.55)) * (0.6 + 0.4 * step(0.3, bsH(vec2(bi, float(prm)))));   // (the 3000s: seen through pearl glass at about half)
               // keystone
               base = mix(base, stone * 1.25, bsRect(p, vec2(-0.1, c.y + hh.y + 0.02), vec2(0.1, c.y + hh.y + 0.3), pw));
             } else if (inBay || fam == 3) {
@@ -725,14 +724,15 @@ const FBASE = /* glsl */`
               //  lit by its own light — not a flat orange pane at dusk)
               vec3 Ve = bsViewIn();
               float fe = 0.05 + 0.75 * pow(1.0 - Ve.z, 4.0);
-              vec3 eroom = E == 2 ? vec3(0.0) : bsRoom(p, Ve, vec4(hh.x + 0.4, plinth, gf + 1.6, 5.0), 11.0, float(bi), E);
-              fill = E == 2 ? mix(bsC(0.84, 0.86, 0.9), WG, 0.25) : mix(eroom * 0.14, bsGlass(p, c.y - hh.y, c.y + hh.y, 1.0), fe);
+              vec3 eroom = bsRoom(p, Ve, vec4(hh.x + 0.4, plinth, gf + 1.6, 5.0), 11.0, float(bi), E);
+              fill = E == 2 ? mix(mix(bsC(0.84, 0.86, 0.9), WG, 0.25), eroom * 0.3, 0.5 * (1.0 - fe)) : mix(eroom * 0.14, bsGlass(p, c.y - hh.y, c.y + hh.y, 1.0), fe);
               float bars = max(bsAA(abs(fract(p.x / 0.45) - 0.5) * 0.45 - 0.02, pw), bsAA(abs(fract(p.y / 0.5) - 0.5) * 0.5 - 0.02, pw));
-              if (E < 2) { fill = mix(fill, bsC(0.24, 0.27, 0.26), bars); gBsRoom += inside * (1.0 - bars) * eroom * (1.0 - fe) * (E == 0 ? 0.7 : 0.9); }
+              if (E < 2) fill = mix(fill, bsC(0.24, 0.27, 0.26), bars);
+              gBsRoom += inside * (E < 2 ? 1.0 - bars : 1.0) * eroom * (1.0 - fe) * (E == 0 ? 0.7 : (E == 1 ? 0.9 : 0.5));
             }
             base = mix(base, fill, inside);
             if (inside > 0.5) { gBaseRough = vari == 1 && E == 0 ? 0.8 : 0.12; gTexStr = vari == 1 && E == 0 ? gTexStr : 0.0; }
-            gBsLit += inside * (E == 2 ? bsC(0.95, 0.94, 1.0) * 0.7 : (vari == 1 && E == 1 ? bsC(1.0, 0.86, 0.66) * 0.7 : vec3(0.0)));
+            gBsLit += inside * (E == 2 && vari == 1 ? bsC(0.95, 0.94, 1.0) * 0.7 : (vari == 1 && E == 1 ? bsC(1.0, 0.86, 0.66) * 0.7 : vec3(0.0)));
           }
           // the lettering band over the front (the props carry the raised words; here the band they sit on)
           if (front && fb == 4) {
