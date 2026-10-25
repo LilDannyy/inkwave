@@ -208,7 +208,7 @@ dusk): jump 1's new ground 4/8 and 2/8 bots within 30 s, jump 2's 8/8 (median 6.
 ### The round's other changes
 - The stage-select **cards re-rendered** at this art (`4a112ad4`, again at the final head `0aeea997`): day = jump 1 (TODAY inside the curtain with the
   hotel's umbrellas and Tartar the telephone), dusk = jump 2 under TODAY's pink-violet sunset with the 3000s inside.
-- New files: `tools/botlab/jobs/batch5/bluestone/gpu-views.js`, `gpu-attr.js` (scratch probes), JOB-12 … JOB-16; the
+- New files: `tools/botlab/jobs/batch5/bluestone/gpu-views.js`, `gpu-attr.js` (scratch probes), JOB-12 … JOB-17; the
   Mac mini helper added `gpu-time.sh` (JOB-15's measure as a reusable job step).
 
 ## 0. The merge (first)
