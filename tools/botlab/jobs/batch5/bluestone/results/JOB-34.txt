@@ -1,0 +1,19 @@
+JOB-34 (Mac mini M4) on new-stages 6fbfaeb6 (the merged tree, pinned): the record for review 4.
+
+Tests: net-eras 14/14, net-eras lagged 8/8, eras-world 12/12 + 7/7 + 3/3, eras-hud 12/12, eras-modes 6/6. All pass, no console errors.
+
+GPU gate, method C (30 renders + fence, mean of 2 rounds), Bluestone / Halyard at the same time of day: MET everywhere.
+  day:  e1 6.11 (x0.87)  e2 6.19 (x0.88)  e3 6.43 (x0.92)  | Halyard 7.02
+  dusk: e1 6.46 (x0.89)  e2 6.46 (x0.89)  e3 6.83 (x0.94)  | Halyard 7.23
+
+perf6, median of 3, Bluestone / Halyard: calls x0.84-0.96, tris x0.41-0.45, cpuRender x0.70-0.82 (Bluestone lower on all three, every era, day and dusk).
+
+Cold load (first-frames-cold.sh, no shader disk cache):
+  Bluestone load 2976 / 2885 / 2778 ms (median 2885), warm 636 ms. Halyard load 2349 ms (1 run), warm 122 ms.
+  No shader compiled in the first frames or in 20 s of play on either map.
+  Bluestone: one gap of 170 ms between frames about 0.2 s into play, in the job's run only. It was a long task with no script over 15 ms and render 12 ms (the same unmeasured-stall kind seen before), so the check failed 1 of 3. My 2 repeats at the same tree were clean (worst gap 15 ms). Halyard: clean (worst gap 15 ms).
+
+Menu backdrop (menu-hitch.cjs, cold boot to the menu at day and at dusk, 15 s each):
+  Bluestone's warm-up finishes when the menu appears (warmed at the same frame the api comes up), and nothing more is built afterwards.
+  All four (Bluestone day/dusk, Halyard day/dusk) have the same small hitch: one ~100 ms frame and one ~67 ms frame about 2.6 s after the menu appears. No frame is over 100 ms. It is the same on both maps, so it is not from Bluestone's warm-up or its theme.
+  Note: this boots straight into each time of day. It does not change the time of day live while the menu is open.
