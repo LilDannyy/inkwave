@@ -70,12 +70,11 @@ export const HALYARD = {
     B(-8.5, 8.5, 0, 2.2, hq(-45.4), hq(-38.5), { tag: 'spawn-terrace-body', color: M.render, pattern: PATTERN.render }),
     B(-8.5, 8.5, 2.2, 2.4, hq(-45.4), hq(-38.5), { tag: 'spawn-terrace', color: M.spawn, pattern: PATTERN.spawn }),
     // Bazookarp's Gate apron bridges the final quay lip under its four posts; it is a paved continuation of the marina quay.
-    B(-7, 7, -0.2, 0, 50, 57.5, { tag: 'karp-gate-apron', color: M.pavers, pattern: PATTERN.pavers, onlyIn: 'bazookarp' }),
     // 2.3 m quay-side returns stop a jump from the spawn deck dropping straight into the Gate ring; the grand stair and both
     // side stairs remain the three visible entrances to the lower apron.
     B(-6.3, -3.2, 2.4, 4.8, -hq(-38.4), -hq(-38.7), { tag: 'karp-spawn-parapet', roof: true, color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
     B(3.2, 6.3, 2.4, 4.8, -hq(-38.4), -hq(-38.7), { tag: 'karp-spawn-parapet', roof: true, color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
-    B(8.5, 11.5, 0, 2.4, 61, 63, { tag: 'karp-quay-return', roof: true, color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
+    B(8.5, 11.5, 0, 3.2, 61, 63, { tag: 'karp-quay-return', roof: true, color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
     B(3.2, 6.3, 2.4, 4.8, -hq(-38.4), -hq(-38.7), { tag: 'karp-spawn-parapet', roof: true, color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
     R([0, 0, hq(-32.4)], [0, 2.4, hq(-38.5)], 6, { tag: 'grand-stair', color: M.stone, pattern: PATTERN.stonestep }),
     // Side flights turn the tall spawn-deck edge into two safe, readable exits for the Bazookarp Gate apron.
