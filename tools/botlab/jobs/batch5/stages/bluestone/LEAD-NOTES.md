@@ -274,3 +274,10 @@ carried items had no decision. Decisions:
   flipped) recompiling every material in the next render. Builder told: diagnose with renderer.info.programs / textures before
   and after the event, make the event change uniform values and in-place textures only (per-era env maps and cloud bakes made
   at load), prove with JOB-31 frames ×3 in both side jumps, no frame over 50 ms from the round's code.
+- **JOB-31:** frames 2/4, 4/4, 4/4, 4/4 — run 1, the job's FIRST page, spiked in both side jumps at the settle (407.5 / 411.2 ms,
+  render 405 / 410) and runs 2–4 were clean; 3 of 9 runs since fix round 3. Lead's reading: a COLD GPU SHADER CACHE — a program
+  variant first used at the settle, compiled by the GPU process the first time and served from Chromium's disk cache after, so
+  it is invisible to renderer.info and intermittent by job; for players it is a ~400 ms hitch at the first jump after every
+  update. Builder told: reproduce with `--disable-gpu-shader-disk-cache` (every page cold), name the program, warm every era ×
+  theme-state variant at load as _precompile does for the era programs, and prove with the cache OFF (JOB-32 frames ×3, both
+  side jumps, worst frame per run < 50 ms from the round's code).
