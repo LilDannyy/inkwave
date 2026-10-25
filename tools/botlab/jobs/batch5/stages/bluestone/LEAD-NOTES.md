@@ -202,3 +202,12 @@ Bluestone ×6.7); every GPU number in JOB-15 and JOB-18–21 is void, as an abso
    than GPU execution; time GPU cost by throughput (N renders + a fence), and corroborate any 'GPU-bound' claim with the
    frame interval at rest before acting on it. The ×1.5–1.9 'gap' cost two jobs' worth of fixes chasing an artefact; the
    LOD / lamp / backdrop ideas above are not needed for the gate.
+- **JOB-25 (fix round 2's head, the full set; `results/JOB-25.txt`):** art-tests.sh, eras-jump first, frames ×2 of 3,
+  eras-bake 3/3, stage-audit turf / zones / tower × e1–e3 (lightmap applied, not stale: JOB-7's lightmaps still match this
+  build, so no new PNG / JSON), net-eras 14/14 and lagged 8/8, check-maps clean; perf6 against Halyard calls ×0.83–0.95,
+  tris ×0.39–0.45, cpuRender ×0.73–0.86. **One miss: frames run 3 had a 421.7 ms frame at J + 0.93 s** whose measured parts
+  total ~1.5 ms (era update 0, render 0.1) and nothing compiled — the same unmeasured stall as JOB-16 and JOB-21, one run in
+  three or four. Lead's ruling: pre-existing (JOB-16 predates the art), so NOT a gate for the art's acceptance; it goes to
+  the beta round 2 brief as a named item with the hypotheses to test there: a texture or lightmap first bound in the new
+  era and uploaded inside the draw (warm every era's textures at load as the programs are), a GC pause (the jump's
+  allocations), the lightmap swap. The reviewer notes it, does not fail on it.
