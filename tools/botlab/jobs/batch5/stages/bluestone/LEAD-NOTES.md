@@ -225,3 +225,39 @@ Bluestone ×6.7); every GPU number in JOB-15 and JOB-18–21 is void, as an abso
   a named item (make splats that land inside the flip window reconcile deterministically on both screens: the host's
   authoritative paint for cells touched during the flip, or hold the guest's splats until the flip's paint is applied). The
   reviewer notes it, does not fail on it.
+
+## After review 3 (the lead, 2026-10-25 20:10): one more round, then the stage ships as BETA
+
+Review 3 (LEAD-REVIEW.json, `review:bluestone#9`; head 866e11ec) holds everything measured — geometry frozen, the engine's
+tests, the bake, perf and the GPU gate by method C, the eight places in three eras, ink the loudest colour — and finds ONE
+major fault: **a real jump never applies the new era's lights.** `_envFinal` sets sky, haze, fog and the env map but not the
+sun, hemisphere, environment intensity, grade / exposure, ground, glow, clouds or stars; only debugJump (apply) and seek
+(setTheme) do. So every dusk picture, sweep and test so far measured a look a match never reaches, and the 3000s plays
+washed out to lilac-white at dusk. Three minors: the procedural pseudo-lettering reads as placeholder blocks up close; five
+1880s / TODAY cover pieces are still plain boxes (fountain, trough, Hoki Lane bin, coal bin, bollard blocks); and issue 8's
+carried items had no decision. Decisions:
+1. **Issue 8, decided:** DESIGN §3.10 (the end-of-match beat, the Professor) and the timetabled tram are CUT from batch 5 —
+   they go on the batch-6 list; the stage's showpiece is the jump and it is built. "Bots slow onto jump 1's new ground"
+   (2/8 within 30 s) is a beta round 2 balance item for the Mac mini (`_pickPaintGoal` drawing from `E.fresh` for 30 s
+   after done), not this round's.
+2. **Fix round 3, scoped and ordered (one builder, about three hours, the major first; stop and report what is unfinished
+   rather than overrun):**
+   a. The major, fully, as the review's fix 1–5 says: `env.applyLights(T)` factored out of setTheme and called from
+      `_envFinal` (sun, uSunLight, hemisphere, environmentIntensity, grade, uGround / glow / sun disk / cloud colours /
+      uNight / stars; re-bake the clouds only when their colours change), blended over done → done + 0.7 s so the light
+      does not pop; seek and the done path give the same look (a late joiner matches the room); eras-jump 'sky' corrected
+      (hold the grade to done only, then assert the target theme's values); a real-jump test in eras-look (a dusk match
+      through both jumps with no debugJump; at done + 2 s sun / hemi / environmentIntensity / uExposure equal a debugJump
+      to that era; (g)'s lower-frame median and Cobalt share re-run in that state); the dusk 'mid' median after a real jump
+      ≥ 40 and the 3000s' share above 200/255 ≤ 7 %; the review's real-vs-instant pair re-shot with its own tool
+      (`scratchpad/art3/tools/ajmetric.py`, the method in `art3/afterjump`). Online: net-eras must still pass as before.
+   b. The five cover pieces dressed as the review's fix lists (within 8.5 cm, no colliders, tops walkable), re-shot in each era.
+   c. Real words where a player reads up close: the arcade and Swimston fascias per era, the ticket booths, the forecourt
+      booth, the kiosk boards, the bins — through the sign atlas that already renders the street plates; `bsText` kept only
+      where the text is under ~12 px on screen from the nearest walkable point, or replaced by a plain moulded panel.
+   Proofs as always: pictures looked at, the day and dusk sweeps in every era, the engine's tests, check-maps / climb-audit /
+   cover-map / spawn-mid / tower-check unchanged, the bake re-run if any level face changed (stage-audit "not stale"), the
+   Mac mini for the suite and frames (JOB-28 on botlab-b5-bluestone).
+3. **Shipping:** after this round the stage is merged into new-stages, packaged and hosted **with its BETA tag kept**
+   (DECISIONS #33), whatever is left unfinished in 2b / 2c; the acceptance review (the Opus reviewer with the sweep tool,
+   review 4) runs after the week's reset of 2026-10-30 and decides the tag. The budget rule of 2026-10-25 19:00 is why.
