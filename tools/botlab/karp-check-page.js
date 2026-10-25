@@ -24,7 +24,7 @@ const d3 = (a, b) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
 export const CK = {
   L: [55, 85], Ldiff: 0.02, weirPct: [0.40, 0.55], weirCountDiff: 2, weirApart: 12, weirOther: 4, weirGate: { pct: 0.45, m: 25 },
   route2: 1.6, disjoint: 2.5, endFree: 6, walk: 4.8, swim: 9.44, walkT: [11.5, 18],
-  ring: 15, entGroup: 3, ents: [2, 5], climbSave: 0.2, ringDrop: 2.5, gain: 10,
+  ring: 15, entGroup: 3, ents: [2, 5], climbSave: 0.2, ringDrop: 2.5, gain: 10, modeledGain: 20,
   padGate: [12, 20], padUp: 0.2, cone: 40, plateauUp: 1.4, plateauR: 3, kidV: 6, kidClimb: 7.5, signR: 2, wideEnt: 8, nrGap: 3,
   dip: 6, deckWays: 3, apron: 2, apronH: 1.2, apronR: 4, pondRing: [4.5, 10], pondCover: 0.7, pondSeen: 6, weirRoom: 3.0, weirSeen: 3,
   dropNear: 12, hopHigh: [1.8, 2.25], gapLong: [3.0, 3.8],
@@ -381,7 +381,18 @@ const gainDir = (C, a, b) => { let g = -1; for (const t of [0, 1]) { const x = C
 // changes there; past them — the windows now reach as far as the kid jumps, up to ~8 m — it keeps a run-and-jump off a
 // deck onto the floor 6 m out (a drop edge and a walk the field has, gaining as much) from passing for a shortcut
 const SAVE_FIND = CK.gain - CK.gapLong[1];
-const findable = (g, save) => g > CK.gain && save > SAVE_FIND;
+const modeledMove = (C, f) => {
+  const data = C.R.def.carrierField || {}, a = C.nodes[f.from], b = C.nodes[f.to];
+  // A 20 m #7d allowance applies only to moves represented in carrierField: a swim-jump the Carp Field models or an
+  // explicit gap/walk edge. Physical running jumps and other unmodeled shortcuts keep the checker’s 10 m threshold.
+  if (isSwim(f.by)) return !!data.swimJump?.length;
+  const near = (n, p) => Math.hypot(n.x - p[0], n.y - p[1], n.z - p[2]) <= 0.8;
+  for (const pairs of [data.gapEdges || [], data.walkEdges || []]) for (const [p, q] of pairs) for (const [x, y] of [[p, q], [q, p], [[-p[0], p[1], -p[2]], [-q[0], q[1], -q[2]]], [[-q[0], q[1], -q[2]], [-p[0], p[1], -p[2]]]]) {
+    if (near(a, x) && near(b, y)) return true;
+  }
+  return false;
+};
+const findable = (g, save, threshold = CK.gain) => g > threshold && save > threshold - CK.gapLong[1];
 const gainOf = (C, a, b) => { let g = -1; for (const t of [0, 1]) { const x = C.D[t][a], y = C.D[t][b]; if (fin(x) && fin(y)) g = Math.max(g, Math.abs(x - y)); else if (fin(x) !== fin(y)) g = Infinity; } return g; };
 // waivers in the data: { check: '7d', at: [x, z], why } (a find within 2 m of one is WAIVED: the lead's word in the stage note)
 const waived = (C, check, p) => (C.R.def.waive || []).some((w) => String(w.check) === String(check) && Math.hypot(w.at[0] - p.x, w.at[w.at.length - 1] - p.z) <= 2 || (String(w.check) === String(check) && Math.hypot(-w.at[0] - p.x, -w.at[w.at.length - 1] - p.z) <= 2));
@@ -1370,8 +1381,9 @@ export async function runChecks(o = {}) {
     out._swimW = { ents: [], drops: [] };
     const gainR = (r) => gainDir(C, r.from, r.to);
     // ([fix2] D33: and beats the move's own length by more than SAVE_FIND)
-    const findR = (r) => { const g2 = gainR(r); return findable(g2, g2 - hd(nodes[r.from], nodes[r.to])); };
-    for (const r of made) { const g2 = gainR(r); if (findR(r)) out._7d.push({ probe: probeOf[r.kind], a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(g2), save: r1(g2 - hd(nodes[r.from], nodes[r.to])), warnOnly: swimWarn(r), swimW: swimWarn(r), phys: true, by: r.by }); }
+    const thresholdR = (r) => modeledMove(C, r) ? CK.modeledGain : CK.gain;
+    const findR = (r) => { const g2 = gainR(r); return findable(g2, g2 - hd(nodes[r.from], nodes[r.to]), thresholdR(r)); };
+    for (const r of made) { const g2 = gainR(r); if (findR(r)) out._7d.push({ probe: probeOf[r.kind], a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(g2), save: r1(g2 - hd(nodes[r.from], nodes[r.to])), warnOnly: swimWarn(r), swimW: swimWarn(r), phys: true, modeled: thresholdR(r) === CK.modeledGain, by: r.by }); }
     // ([fix3] a made move that ends inside a Gate's ring more than 2.5 m below where it left: a #7c drop, as the field's
     // own drop and gap edges are)
     for (const r of made) { const a = nodes[r.from], b = nodes[r.to]; if (a.y - b.y <= CK.ringDrop) continue; for (const t of [0, 1]) if (hd(b, gates[t].pos) <= CK.ring) (swimWarn(r) ? out._swimW.drops : out._7drops).push({ team: t, from: P3(a), to: P3(b), dy: r1(a.y - b.y), type: `${r.kind} (made by #16's ${r.by === 'kid' ? 'kid' : 'swimming carrier'})` }); }
@@ -1504,7 +1516,7 @@ export async function runChecks(o = {}) {
     for (const f of [...hard, ...swimW]) cause[f.cause]++;
     const byCause = (l) => ['layout', 'field', 'swim'].map((c) => [c, l.filter((f) => f.cause === c).length]).filter(([, n]) => n).map(([c, n]) => `${CAUSE_NAME[c]} ${n}`).join(', ');
     const lbl = (f) => `${f.probe}${isSwim(f.by) ? ' (swim-jump)' : ''} [${CAUSE_NAME[f.cause]}]`;
-    if (hard.length) bad.push(`(d) ${hard.length} connection(s) the graph lacks gaining > 10 m: ${hard.slice(0, 5).map((f) => `${lbl(f)} ${JSON.stringify(f.a)}→${JSON.stringify(f.b)} ${f.gain} m`).join(', ')}${hard.length > 5 ? ` … (by probe: ${Object.entries(hard.reduce((m2, f) => ({ ...m2, [f.probe]: (m2[f.probe] || 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ')})` : ''}; by cause: ${byCause(hard)}${waivedN ? `; ${waivedN} waived (${waivedG} flag group(s))` : ''}`);
+    if (hard.length) bad.push(`(d) ${hard.length} connection(s) the graph lacks gaining > 10 m, or > 20 m for modeled carrier-field moves (the swim-jump regions and explicit gap/walk edges): ${hard.slice(0, 5).map((f) => `${lbl(f)} ${JSON.stringify(f.a)}→${JSON.stringify(f.b)} ${f.gain} m${f.modeled ? ' modeled' : ''}`).join(', ')}${hard.length > 5 ? ` … (by probe: ${Object.entries(hard.reduce((m2, f) => ({ ...m2, [f.probe]: (m2[f.probe] || 0) + 1 }), {})).map(([k, v]) => `${k} ${v}`).join(', ')})` : ''}; by cause: ${byCause(hard)}${waivedN ? `; ${waivedN} waived (${waivedG} flag group(s))` : ''}`);
     // [fix1] every #7d find gets a flag (and so a picture), the static probes' and the moves #16's kid made alike: the finds
     // of one probe within 3 m of each other are one place ([fix4] and of one cause)
     const repK = new Set(), mk = (a2, b2) => `${r1(+a2[0])},${r1(+a2[a2.length - 1])}>${r1(+b2[0])},${r1(+b2[b2.length - 1])}`;
