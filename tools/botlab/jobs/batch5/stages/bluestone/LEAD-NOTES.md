@@ -302,3 +302,13 @@ the sweep tool, acceptance) runs after the reset of 2026-10-30** and decides the
 the runs not repeated at the final code (net-eras + lagged, GPU gate by C, perf6, eras-world / hud / modes → JOB-34), the
 eras-look (h) flake under load, the main jump's own front frame 49–52 ms on a loaded Mac, the 3000s shop names softer than
 TODAY's, the 45-word grid full, the net-eras 2-cell flip-window divergence, bots slow onto jump 1's new ground.
+- **JOB-34 at new-stages 6fbfaeb6 (the merged tree; `results/JOB-34.txt` on botlab-b5-bluestone 2be915bf) — the record for
+  review 4:** net-eras 14/14, lagged 8/8, eras-world 12/12 + 7/7 + 3/3, eras-hud 12/12, eras-modes 6/6. GPU gate (C) MET: day e1
+  6.11 / e2 6.19 / e3 6.43 ms (×0.87–0.92 Halyard's 7.02), dusk 6.46 / 6.46 / 6.83 (×0.89–0.94 of 7.23). perf6 ×3: calls
+  ×0.84–0.96, tris ×0.41–0.45, cpuRender ×0.70–0.82. Cold load: Bluestone 2976 / 2885 / 2778 ms (median 2885; warm-up 636 ms)
+  against Halyard 2349 (warm-up 122) — half a second more, accepted for a stage with three looks; no shader compiled in the
+  first frames or 20 s of play on either map. One 170 ms gap 0.2 s into play in 1 of 3 runs (no script over 15 ms, render
+  12 ms: the unmeasured-stall family, beta round 2). Menu backdrop: Bluestone's warm-up finishes before the menu appears
+  and nothing is built after; a hitch ~2.6 s after the menu appears (one ~100 ms frame, one ~67 ms) shows on BOTH maps, day
+  and dusk — pre-existing, not Bluestone's → beta round 2 (the menu). A live time-of-day change in the open menu was not
+  measured; review 4 should.

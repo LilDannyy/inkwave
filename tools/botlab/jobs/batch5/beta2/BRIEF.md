@@ -51,6 +51,12 @@ there stand (run.sh, SLOTS=3, the Mac mini runner, git identity, never the user'
 - Reference layouts (Codex, WP4b): the lead's reviewer against SPEC §9 and the stage rules, then the 14 per-stage layouts
   (karp-stages/BUILDER.md); the bots' balance pass (SPEC §9.1) on the Mac mini.
 
+## 4b. The menu and loads (both stages, pre-existing)
+- A hitch ~2.6 s after the menu appears on a cold boot: one ~100 ms frame and one ~67 ms frame, on Halyard as on Bluestone,
+  day and dusk (JOB-34). Find what runs there (an audio decode? the stage-art cards? the env map?) and move it or slice it.
+- Bluestone's cold load is 2.9 s against Halyard's 2.3 s (warm-up 636 vs 122 ms): accepted; measure a live time-of-day change
+  in the open menu (not measured in JOB-34) and slice the warm-up if it hitches.
+
 ## 5. The flaky set (Mac mini, ×10 each, before anything is called fixed)
 bot-specials, eras-jump frames, karp-bots C / H, net-eras, lava-karp, 2-client net-karp, the isolated sfx-cues run.
 
