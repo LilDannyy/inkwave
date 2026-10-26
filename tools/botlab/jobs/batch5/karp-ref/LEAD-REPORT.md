@@ -1,15 +1,15 @@
 # WP4b karp-ref: the takeover from Codex — report to the lead (2026-10-26)
 
 Branch `b5-karp-ref`, worktree `/Users/danielosling/Desktop/1/st-b5-karp-ref`. Took over at 44b357d6 with Codex's
-uncommitted edits; about four hours of work. **Lockgate passes all 16 checks. Halyard does not yet: #7a (the Gate ring
-funnel), one #16 entrance walk and #12 (no bake) are left — see §6.** Every #7d row on both stages is now classed
-(7d=0/0/0 on both).
+uncommitted edits; about four hours of work, then the lead's 90-minute Halyard finish (§7). **Both reference layouts pass
+all 16 checks** (PHYS and CARRY on); every #7d row is classed (7d=0/0/0 on both); both teams of both stages have exactly
+their five declared Gate entrances, all seen; `halyard.bazookarp` is baked (hash 592dc01).
 
 ## RESULT lines (full runs: PHYS on, CARRY on, pictures on)
 
 | | baseline (Codex's edits committed, before any change of mine) | now |
 |---|---|---|
-| halyard | `fail L=55.43/55.3 weir=48 gate=12.2 routes=2/2 zones=2 hops=65+4554 walks=8/8+6/10 swim=fail 7d=10/40/59 FAIL=7,12,16` | `fail L=55.43/55.3 weir=48 gate=12.2 routes=2/2 zones=2 hops=65+4537 walks=8/8+11/12 swim=fail 7d=0/0/0 FAIL=7,12,16` |
+| halyard | `fail L=55.43/55.3 weir=48 gate=12.2 routes=2/2 zones=2 hops=65+4554 walks=8/8+6/10 swim=fail 7d=10/40/59 FAIL=7,12,16` | `ok L=55.43/55.3 weir=48 gate=12.2 routes=2/2 zones=2 hops=63+4403 walks=8/8+10/10 swim=fail 7d=0/0/0` |
 | lockgate | `fail L=55.86/55.73 weir=49 gate=13.1 routes=2/2 zones=2 hops=62+3893 walks=8/8+8/8 swim=fail 7d=0/0/14 FAIL=7` | `ok L=55.86/55.73 weir=49 gate=13.1 routes=2/2 zones=2 hops=62+3893 walks=8/8+8/8 swim=fail 7d=0/0/0` |
 
 Lockgate's baseline failed only because Codex's uncommitted checker change (kept: it is right) narrowed the 20 m #7d
@@ -38,11 +38,11 @@ Turf / Zones / Tower / Boss build byte-identical on every stage.
 | 4 the 1.5× reach clause | Codex's, kept |
 | 5 no modelled move over 20 m | no modelled or tolerated move is longer than 11.15 m; the spawn north-edge crossings (gains to 24.1 m) are blocked, not split |
 | 6 the west cluster blocked, roofs first | the trailer and the mast rack get off-limits tops (new placement flag `roofCols`), a timber hoarding closes the alley for the vaults; pictured |
-| 7 declared entrances | Halyard `entrances: 5`, Lockgate `entrances: 5`; Lockgate matches (5 / 5), Halyard does not (8 / 9) — §6 |
+| 7 declared entrances | Halyard `entrances: 5`, Lockgate `entrances: 5`; both stages, both teams: 5 / 5, all seen (§7) |
 | 8 entrance walk from the zone boundary | done properly now (nearest carrier node outside every zone, ≤ 6 m); Halyard's four spawn-deck walks pass |
 | 9 vetoes, then #7 re-run | Codex's 885 / 457 vetoes kept; every run since: 0 edges not made |
 
-### Halyard: the class table (Alpha's half; every class mirrored)
+### Halyard: the class table at the first report (Alpha's half; every class mirrored; the final one is in §7)
 
 L = Pond → Gate 55.43 / 55.30, spawn → Pond 69.42 / 70.84 (teams 0 / 1); 10 % of L = 5.54 / 5.53 m.
 
@@ -64,7 +64,7 @@ L = Pond → Gate 55.43 / 55.30, spawn → Pond 69.42 / 70.84 (teams 0 / 1); 10 
 | Gate-side access pontoon: swim / kid rises onto the Gate apron (14.8–24.1 m) | **block**: the pontoon and its gangway not built in Bazookarp (the quay returns already stood on its gangway's landing: a dead end inside the ring) | 39 gone | 9.1 m | same | same |
 | Long Pier root → that pontoon, swim drop into the ring, unseen (13.7–16.6 m) | **block**: same removal | 7 gone | 8.1 m | same | same |
 
-### Halyard: the entrance table (team 0 / team 1, the mirror)
+### Halyard: the entrance table at the first report (team 0 / team 1; the final one is in §7)
 
 | # | entrance | how | seen | outcome |
 |---|---|---|---|---|
@@ -170,16 +170,84 @@ are in `tools/botlab/jobs/batch5/karp-stages/BUILDER.md` (the brief named `tools
 does not exist) and `docs/BAZOOKARP.md`.
 
 ## 6. Unfinished, uncertain
-- **Halyard #7a**: 8 / 9 physical entrances against the 5 declared, and the slip-plank / yard-edge swim landing on the
-  fuel dock (∓4.5, ±43.5) unseen from the deck. Each open entrance is a block (the count cannot go above SPEC's 5):
-  the moored yachts LADY GREY and MORWENNA (Bazookarp copies of the berths with off-limits tops, `roofCols`), the
-  loading-deck → quay long gap (find the boat it uses), and the plank / yard-edge swim onto the fuel dock's east edge
-  (a ≥ 2.3 m bund or the plank out in Bazookarp). Each change needs a checker run (~6 min) to see what it exposes.
-- **Halyard #16**: team 1's walk through entrance 6 falls off LADY GREY at (-15.3, -46) (a drop edge the physics can't
-  make); closes with entrance 6's block.
-- **Halyard #12**: no `halyard.bazookarp` bake — deliberately not baked while the ring geometry is still moving.
-- **Lockgate**: one bot stuck 5.25 s (refill mode) in one of six matches; not reproduced in the two re-runs.
-- Codex's mid-transfer gangway is a plain steel ramp up onto a lifejacket locker's roof (picture): it works, but the
-  locker roof as a walkable perch is a design choice the lead may want to revisit.
-- The access pontoon's removal leaves the spine pontoon's float dressing showing a join where the finger was (minor).
-- `MAP=all` with full physics was not run (an hour of the shared Electron).
+- Nothing the lead listed is open. Notes for the integrator / the balance pass:
+- **Early knockouts** (input to the balance pass): of the bot matches here, halyard 63.6 s and 69.1 s, lockgate 71.7 s.
+- **Lockgate's 5.25 s stuck bot** at the refill point: a known beta round 2 item (the lead's ruling), not a gate.
+- **The stage-card change** (`mapThumb.js`): Bazookarp-only pieces are left off every card; caldera's card loses its
+  Bazookarp-only pieces against the branch point (accepted by the lead; for the integrator).
+- The base `halyard` check-maps line (`half[41] ramp is 25.7°`, the tug ramp) is pre-existing and stays (the lead's ruling).
+- `size-budget.js` was not run for the new `halyard.bazookarp` bake (249 KB PNG, 878/2048 rows; lockgate's is in the tree
+  already).
+- Codex's mid-transfer gangway (a steel ramp onto a lifejacket locker's roof) works but is a design choice to revisit;
+  the spine pontoon's float dressing shows a join where the removed access pontoon was (minor).
+- `MAP=all` with full physics was not run (an hour of the shared Electron); the quick summary is in §4.
+
+## 7. The Halyard finish (the lead's 90 minutes, 2026-10-26)
+
+**Final:** `RESULT halyard ok L=55.43/55.3 weir=48 gate=12.2 routes=2/2 zones=2 hops=63+4403 walks=8/8+10/10 swim=fail 7d=0/0/0`
+(all 16 checks, #9 WARN only; #12 `lightmap halyard.bazookarp fresh`). Lockgate re-run at the same code:
+`RESULT lockgate ok L=55.86/55.73 weir=49 gate=13.1 routes=2/2 zones=2 hops=62+3893 walks=8/8+8/8 swim=fail 7d=0/0/0`.
+check-maps: `halyard.bazookarp 216 pieces ok`; base `halyard` unchanged (its one pre-existing tug-ramp line);
+karp-layout-diff vs the branch point: Turf / Zones / Tower / Boss byte-identical on every stage (94/96; the two are
+caldera's cards).
+
+**The blocks (Bazookarp only, each pictured):**
+- **LADY GREY and MORWENNA** (moored inside the ring) are Bazookarp copies with off-limits tops — the yacht props' own
+  `col: 'roof'` (no ink, a kid slides off); the base berths get `notIn: 'bazookarp'`. Closes entrances 6 and 7 and the
+  #16 walk that fell off LADY GREY's stern. (`out/halyard-roof-lady-grey-morwenna.jpg`)
+- **The loading-deck → quay long gap** used no boat: #16's trace (`PROBE`) shows the kid running off the loading deck's
+  south-west corner, south of the deck ramp, down onto the fuel dock. Closed by the **fuel-dock spill screen**: a 2.4 m
+  boarded timber screen with an off-limits top on the fuel dock's channel edge, two lengths either side of the deck ramp
+  (z −52.4…−48.4 and −44.4…−38.5 on Alpha's half). The northern length also removes **the slip-plank / yard-edge
+  swim-jump landing on #1** for both teams (unseen from the deck; a separate entrance only on team 1 because team 0's
+  copy merged into #1). I walled the landing rather than removing the plank: the plank's removal alone left the same
+  swim-jump from the yard's edge beside it. The ice chest that stood on that edge goes in Bazookarp, so the Gate's
+  route 2 keeps its 3 m from route 1 (it ran 1.87× route 1 without that). (`out/halyard-barrier-fuel-screen.jpg`)
+- **A 1.3 m timber parapet on the loading deck's channel edge** (top 2.6 m over the yard): with the screen in, a
+  swim-jump from the yard's edge across the channel's corner up onto the deck showed as a sixth entrance; gone.
+  (`out/halyard-barrier-deck-parapet.jpg`)
+- From the first report: the tug-alley hoarding, the off-limits trailer and mast rack, the access pontoon removed.
+
+**Final class table** (L = Pond → Gate 55.43 / 55.30, spawn → Pond 69.42 / 70.84; no class moves either by 0.01 m):
+
+| class | outcome | generated / kept / vetoed (or moves) | longest | Pond → Gate | spawn → Pond |
+|---|---|---|---|---|---|
+| Long Pier mid-edge hop | model (hop) | 16 / 8 / 8 | 7.17 m | unchanged | unchanged |
+| Long Pier south transfer gangway | model (one-way gangway) | 6 / 6 / 0 | 7.34 m | unchanged | unchanged |
+| houseboat sun deck → fuel dock | tolerate | 14 moves | 6.87 m | unchanged | unchanged |
+| boatyard edge swim → yard walkway | tolerate | 2 | 7.81 m | unchanged | unchanged |
+| Long Pier plank head swim → car-deck apron | tolerate | 10 | 9.27 m | unchanged | unchanged |
+| over the ferry bulwark onto the car-deck apron | tolerate | 22 | 6.5 m | unchanged | unchanged |
+| Long Pier → visitor spine past LADY GREY (new: LADY GREY's deck had carried it) | tolerate | 48 | 10.85 m | unchanged | unchanged |
+| tug alley vaults / trailer hops / mast rack hops | block (hoarding, roof tops) | 13 rows gone | 3.2 m | unchanged | unchanged |
+| access pontoon swims and rises (gain to 24.1 m) | block (pontoon removed) | 46 rows gone | 9.1 m | unchanged | unchanged |
+| yacht decks, loading-deck corner, plank / yard-edge swim, yard → deck swim (the ring) | block (roof tops, screen, parapet) | entrances 6–9 + the #1 landing gone | – | unchanged | unchanged |
+
+Deleted as dead data: the 'pontoon gangway foot → fuel dock' tolerate class (its moves were off MORWENNA's deck) and
+'loading deck swim → fuel dock' (closed by the screen); a trial 'visitor pontoon west gangway' class generated nothing
+(the gangway lies under the move, the class generator wants open air) and was replaced by the tolerated class above.
+
+**Final entrance table (both teams identical, mirrored; all seen from the spawn deck, all walked by #16):**
+
+| # | entrance | team 0 at | team 1 at | how |
+|---|---|---|---|---|
+| 1 | main street, the fuel dock from the weir | (-1.5, 39.4) | (1.5, -39.4) | walk |
+| 2 | the visitor spine pontoon | (11.2, 43.1) | (-11.2, -43.1) | walk, gaps, a long gap (the tolerated Long Pier jumps land here) |
+| 3 | the loading-deck ramp | (-11, 45.4) | (11, -45.4) | walk, climb |
+| 4 | the spawn-deck side walk | (-6.4, 66.3) | (6.4, -66.3) | walk, proved from the free-zone boundary |
+| 5 | the spawn-deck drop | (6.5, 68) | (-6.5, -68) | drop |
+| – | LADY GREY's deck, MORWENNA → fuel dock, loading-deck corner, slip plank / yard-edge swim, yard → deck swim, the access pontoon | – | – | **blocked** |
+
+**Bake:** `assets/lightmaps/halyard.bazookarp.{json,png}`, hash **592dc01** (29 s, 2048², 878 rows), on the final ring
+geometry; #12 fresh.
+
+**Matches at the final head (normal):**
+- `RESULT karp halyard win=B reason=knockout ko=298.2 c=98/0 pops=10/20 carries=30 blasts=0 ot=no` — stuck > 5 s: 0, carrier stuck 0 s
+- `RESULT karp halyard win=B reason=knockout ko=63.6 c=91/0 pops=3/5 carries=8 blasts=0 ot=no` — stuck > 5 s: 0, carrier stuck 0 s
+
+No console errors (the missing-lightmap warning is gone). The 63.6 s knockout is another early one for the balance pass.
+
+**BUILDER.md refined:** the boats-and-props rule now names the fixes used (a prop's own off-limits collider option, e.g.
+the yachts' `col: 'roof'`, before `roofCols`), "trace a find before you block it" (the loading-deck long gap used no
+boat), and "check a block against the routes it crosses" (the screen pushed route 2 off the dock edge until the ice
+chest went).
