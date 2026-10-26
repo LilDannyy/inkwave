@@ -13,7 +13,10 @@ function expand(layout) {
     : d.kind === 'obox' ? { ...d, center: [-d.center[0], d.center[1], -d.center[2]], oct: d.oct && [-d.oct[0], -d.oct[1], d.oct[2]] }
     : { ...d, low: [-d.low[0], d.low[1], -d.low[2]], high: [-d.high[0], d.high[1], -d.high[2]] };
   // (rails are collision-only railings: nothing to draw)
-  const all = [...layout.single, ...layout.half, ...layout.half.map((d) => (d.oct && d.kind === 'box' ? { ...mirror(d), oct: [-d.oct[0], -d.oct[1], d.oct[2]] } : mirror(d)))].filter((d) => !d.rail);
+  // ([b5-karp-ref] a Bazookarp-only piece is not drawn: the stage card shows the stage every other mode builds, and SPEC
+  // §9.1 #13 keeps it unchanged by the Bazookarp layouts)
+  const karpOnly = (d) => d.onlyIn != null && [].concat(d.onlyIn).every((m) => m === 'bazookarp');
+  const all = [...layout.single, ...layout.half, ...layout.half.map((d) => (d.oct && d.kind === 'box' ? { ...mirror(d), oct: [-d.oct[0], -d.oct[1], d.oct[2]] } : mirror(d)))].filter((d) => !d.rail && !karpOnly(d));
   // octagon platforms (maps.js OCT) are drawn as one octagon instead of their plus + corner-slab parts
   const out = [], seen = new Set();
   for (const d of all) {

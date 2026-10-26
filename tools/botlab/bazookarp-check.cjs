@@ -138,6 +138,16 @@ app.on('browser-window-created', (_, win) => {
       const zoneN = rep.checks[9]?.nums?.zones?.filter((z) => z.team === 1).length ?? 0;
       const rt = rep.checks[5]?.nums?.rows?.filter((r) => r.team === 0).map((r) => (r.r2 ? 2 : 1));
       console.log(`RESULT ${id}${rep.states.length > 1 ? '@' + rep.key : ''} ${ok ? 'ok' : 'fail'} L=${rep.L.join('/')} weir=${w?.weirs?.map((q) => q.count).join(',')} gate=${rep.checks[8]?.nums?.rows?.[0]?.dist} routes=${rt && rt.length ? Math.min(...rt) : 0}/2 zones=${zoneN} hops=${hops?.hops}+${hops?.gaps}${rep.checks[16]?.nums?.walkRoutes ? ` walks=${rep.checks[16].nums.walkRoutes.join('/')}+${rep.checks[16].nums.walkEntrances.join('/')}` : ''} swim=${rep.swim}${(() => { const cz = rep.checks[7]?.nums?.cause; return cz ? ` 7d=${cz.layout}/${cz.field}/${cz.swim}${cz.waived ? ` (${cz.waived} waived)` : ''}` : ''; })()}${fails.length ? ' FAIL=' + fails.join(',') : ''}${skips.length ? ' SKIP=' + skips.join(',') : ''}`);
+      // [b5-karp-ref] the route classes (DECISIONS #34): modelled (carrierField.gapClasses, #16's numbers) and tolerated
+      // (carrierField.tolerate, #7's numbers), each with the shortest Pond → Gate and spawn → Pond before and after it
+      {
+        const cls = rep.checks[16]?.nums?.classes || [], tol = rep.checks[7]?.nums?.tolerated || [], j = (v) => (Array.isArray(v) ? v.join('/') : '–');
+        if (cls.length || tol.length) {
+          console.log(`  classes (${cls.length} modelled, ${tol.length} tolerated):`);
+          for (const c of cls) console.log(`    model    ${c.name} [${c.kind}]: generated ${c.generated}, kept ${c.kept}, vetoed ${c.vetoed}${c.physicalFails ? ` (${c.physicalFails} by #16 now)` : ''}, longest ${c.longestKept} m; Pond→Gate ${j(c.LBefore)} → ${j(c.LAfter)}, spawn→Pond ${j(c.SPBefore)} → ${j(c.SPAfter)}`);
+          for (const c of tol) console.log(`    tolerate ${c.name}: ${c.finds} move(s)${c.tooLong ? `, ${c.tooLong} over ${c.maxLen} m` : ''}, longest ${c.longest} m; Pond→Gate ${j(c.LBefore)} → ${j(c.LAfter)}, spawn→Pond ${j(c.SPBefore)} → ${j(c.SPAfter)} (limit ${c.shortening.map((q) => q.lim).join('/')} m) ${c.ok ? 'ok' : 'OVER'}`);
+        }
+      }
       if (shots.length) console.log(`  pictures (${OUT}): ${shots.join(', ')}`);
       // the flags, numbered as on the top-down (its discs and key) and in the -flag-<n> pictures; #11's carry places last
       const flags = await js(`${mod}.then((m) => m.numberFlags(window.__karpCheck.out.checks))`);

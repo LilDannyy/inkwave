@@ -1,0 +1,5 @@
+PASS step 8: the guard window — a splat on the Halo 0.3 s before its flip (absent) and 0.2 s after (guarded) claims nothing; 0.65 s after it inks; a replay is judged at its painter's time  {"early":0,"guarded":0,"late":92,"replayIn":false,"replayOut":true}
+PASS step 8: the warning shows what comes (white-gold holograms of every appearing block, the wire beads, the kiosks' bells, Tartar shaking); the pickup lifts his receiver and drops the beam; the curtain rides the front  {"pre":{"phase":"prebell"},"warn":{"phase":"warn","holo":true,"holoPieces":24,"beads":true,"bells":true,"shake":true},"pick":{"hand":0.45,"beam":true},"curt":{"visible":true,"scale":30.4,"front":30.4}}
+PASS step 8: the sounds are synthesized in code (src/audio/sfx-eras.js) and play in order: the pre-bell, Tartar's rings and the kiosks, the pickup, the swell, the front's loop, the pops  {"played":["era_bell","era_ring","era_kiosk","era_pickup","era_swell","era_front:loop","era_pop"]}
+RESULT 3/3
+console errors: none

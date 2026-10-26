@@ -24,6 +24,7 @@ import { buildBackdrop } from './backdrop.js';
 import { SURF } from './surfaces.js';
 import { ERA, eraFilter } from './era.js';
 import { MURAL } from './murals.js';
+import { levelArt, makeArtOf, LAMPS, WIRES, wirePath } from './levelart.js';
 import { BOT, TIER_Y, coverRects, bars, junctionPatches, tierBoxes, symOutline, rectPoly } from './ground.js';
 
 // ------------------------------------------------------------------------------------------------ frames
@@ -521,24 +522,61 @@ const ERAS = {
   tartar: { type: 'bluestone_tartar', pos: [0, 5.4, 0], rotY: 0 },
   clocks: [{ type: 'bluestone_clockhands', pos: [0, 5.95, -7.88], rotY: 180, faces: 5 }],
   phones: [[17.73, 1.2, -3.13], [-17.1, 1.2, -12.8], [-15, 2.1, -51.8]],   // (round C: the third on the forecourt terrace's ticket booth)
-  pulses: [                                                                  // (round C: the overhead wires on the Z, Alpha's half)
-    [[0, 9, 0], [-20, 6.5, -10], [-20, 6.5, -50], [-21.5, 7, -62]],          //   up Swimston to the engine house
-    [[0, 9, 0], [-30, 6.5, -18], [-34, 6.5, -45]],                          //   Prow Place and Hoki Lane
-    [[0, 9, 0], [-8, 6, -24], [-8, 6, -45]],                                //   the quay
-    [[0, 9, 0], [12.5, 6, -20], [12.5, 6, -42]],                            //   the punt crossing
-    [[0, 9, 0], [-30, 6.5, 2], [-35, 6.5, -10]],                            //   the knee's river walk
-  ],
-  tint: { 1: [1.05, 0.99, 0.90, 0.20], 2: [1, 1, 1, 0], 3: [0.97, 1.0, 1.03, 0.08] },
+  // (the art phase: the warning's pulses run along Tartar's real wires, hung from the drum to the parapets and roof poles:
+  //  levelart.js WIRES — up Swimston, Prow Place and Hoki Lane, the quay, the punt crossing, the knee's river walk)
+  pulses: WIRES.map((w) => wirePath(w)),
+  tint: { 1: [1.05, 0.99, 0.90, 0.20], 2: [1, 1, 1, 0], 3: [1.0, 0.99, 0.97, 0.08] },
   remap: [
     { base: SURF.granite, eras: [SURF.granite, PATTERN.asphalt, PATTERN.pavers] },
     { base: PATTERN.planks, eras: [PATTERN.planks, PATTERN.planks, PATTERN.glasstile] },
   ],
   murals: { 4: '123', 5: '123', 6: '23', 7: '23', 8: '2', 9: '1', 10: '123', 11: '3' },
   colors: { appear: '#f4e9c8', vanish: '#a9a49a' },
+  // the per-era looks over the time of day (DESIGN §5.6 / §5.7). The theme keys are the environment's THEMES keys and its
+  // theme NAMES (config.js bluestone times: day → 'day', dusk → 'sunset'; fix round 1: the 1880s' twilight was keyed
+  // `dusk` and never applied, so the 1880s and TODAY shared the base orange sunset). At dusk no era paints the city
+  // orange: a pale warm key light, violet / pink-violet / lilac skies, so team ink (Tangerine, Lemon) stays the loudest
   look: {
-    1: { theme: { all: { haze: [1 / 900, 0.9, 200], fog: [30, 520], horizon: '#e9dcc4' }, dusk: { zenith: '#3f3766', horizon: '#a996c2', sun: '#ffe6c8' } }, lamps: '#ffe0b8' },
-    2: { lamps: '#ffd9a8' },
-    3: { theme: { all: { horizon: '#e6eef6', zenith: '#4a86d0' } }, lamps: '#eef4ff' },
+    1: {
+      theme: {
+        all: { haze: [1 / 900, 0.9, 200], fog: [30, 520] },
+        day: { horizon: '#e9dcc4' },
+        // the 1880s: a violet twilight over the river through the coal haze, a pale warm sun low in the west
+        sunset: {
+          sunColor: '#ffe6c8', sunIntensity: 3.5, skySun: 3.0, hemiSky: '#8a84b8', hemiGround: '#b8a8b8', hemiGroundK: 1.4, hemiIntensity: 2.1, envK: 1.2,
+          zenith: '#3f3766', skyMid: '#6a6292', horizon: '#a996c2', ground: '#4a4466',
+          horizonGlow: '#dcc8d4', horizonGlowK: 0.3, glowColor: '#f4e0d4', glow: [320, 2.0, 5.5, 0.4],
+          sunDisk: '#ffe6c8', cloudLit: '#d2c6de', cloudLitK: 0.88, cloudShade: '#5c5684',
+          grade: { uExposure: 1.2, uHighTint: [1.02, 1.0, 0.97], uShadowTint: [0.94, 0.96, 1.08] },
+        },
+      },
+      lamps: '#ffe0b8',
+    },
+    2: {
+      theme: {
+        // TODAY: the base theme by day; a pink-violet sunset (no orange cast on the facades)
+        sunset: {
+          sunColor: '#ffd4bc', sunIntensity: 3.9, skySun: 3.4, hemiSky: '#8c8cb8', hemiGround: '#b8a4b0', hemiGroundK: 1.5, hemiIntensity: 2.2, envK: 0.75,
+          zenith: '#232a6e', skyMid: '#6a4ea2', horizon: '#f4a0b4', ground: '#4a4a7a',
+          horizonGlow: '#f8a0b4', horizonGlowK: 0.55, glowColor: '#ffc0c4', cloudLit: '#ffb8c8', cloudShade: '#5e5490',
+          grade: { uExposure: 1.08, uHighTint: [1.04, 1.0, 0.96] },
+        },
+      },
+      lamps: '#ffd9a8',
+    },
+    3: {
+      theme: {
+        // the 3000s: a clean bright sky by day; a violet dusk, cool and clear, the light seams glowing white-gold
+        day: { horizon: '#e6eef6', zenith: '#4a86d0' },
+        sunset: {
+          sunColor: '#fff2e2', sunIntensity: 3.2, skySun: 3.0, hemiSky: '#a29eb6', hemiGround: '#a8a2aa', hemiGroundK: 1.4, hemiIntensity: 0.8, envK: 0.3,
+          zenith: '#3a3080', skyMid: '#8a84b0', horizon: '#ccc0ec', ground: '#44447a',
+          horizonGlow: '#d8ccf2', horizonGlowK: 0.36, glowColor: '#e6dcff', sunDisk: '#f4f0ff', cloudLit: '#dcd4f4', cloudShade: '#4e4c88',
+          haze: [1 / 1500, 0.9, 260], grade: { uHighTint: [1.0, 1.0, 1.02], uShadowTint: [0.95, 0.96, 1.05] },
+        },
+      },
+      lamps: '#eef4ff',
+    },
   },
   timelapse: { sunSwing: 60, cloudRate: 20 },
   // check-maps' accepted exceptions, printed on every run (eras-data.js): rule 22 wants an overhead piece's underside
@@ -546,7 +584,7 @@ const ERAS = {
   // top corner, where the flight runs out under its outer edge (the blockout as accepted: DESIGN §3.6 #3 gives the Halo's
   // smallest clearance as 3.8 m; the final review's issue 6 check measured this). Lever if the camera minds it: the
   // diagonal sides 0.2 m thick (underside 5.1), a collider change and a re-bake.
-  accept: { rule22: [{ group: 'halo-6', min: 3.65, why: 'the Halo 225° side over the balcony stair\'s top corner, 3.66 m: accepted blockout geometry, DESIGN §3.6 #3' }] },
+  accept: { rule22: [{ group: 'halo-6', min: 3.65, why: 'the Halo 225° side over the balcony stair\'s top corner, 3.75 m (check-maps\' measure): accepted blockout geometry, DESIGN §3.6 #3' }] },
 };
 
 // ------------------------------------------------------------------------------------------------ the whole union, then this build's era
@@ -570,7 +608,22 @@ const LAYOUT_BLUESTONE = {
   bazookarp: BAZOOKARP,
   eras: ERAS,
   era: ERA,   // (always 0: the union; the audit option ?era=n is the engine's, era.js)
-  decor: { lamps: [], palms: [], flags: [] },
+  // the shared lamp spots (DESIGN.md §5.7; ENGINE rule 42: their colour per era from eras.look[e].lamps, blended in the
+  // time-lapse): the lamp bodies are the eras' own (props.js: a gas lamp, a street light, a light mast on each spot); the
+  // decor's glass carries the light, and the level art pools it on the floors at dusk
+  decor: { lamps: LAMPS, palms: [], flags: [] },
+  // the level art (stages/bluestone/levelart.js): the three looks of the streets drawn under the ink, per block and per era
+  levelArt, levelArtOf: makeArtOf,
+  // (fix round 2, GPU time) no hex anti-tiling on the level (render, asphalt, rubber: the grid's per-tile flips instead):
+  // the art breaks the walls into bays and courses, so the repeat it hid does not show
+  levelTexlib: { hex: false },
+  // the intro (DESIGN.md §5.8): high over Alpha's west wharf, looking east-north-east along the crossbar at the dome with
+  // Tartar under it (he rings once as the camera passes the clocks: the era engine), then back to the team's spawn deck
+  intro: { from: [-58, 16, -24], lookFrom: [0, 7, 0], toBack: 3.2 },
+  // the stage-select art (DESIGN.md §5.8): high over the south-east river corner, over the punt, the bridge site and the
+  // Boathouse to the dome and its clocks, Swimston running off to Bravo's chimney; rendered mid-jump (ERA_FROM / ERA_TO /
+  // FRONT, stageart.cjs): day 1 → 2 at r 30, dusk 2 → 3 at r 30
+  art: { from: [44, 26, -46], look: [0, 4, -6], fov: 56 },
 };
 
 export const LAYOUT = LAYOUT_BLUESTONE;

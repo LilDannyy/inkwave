@@ -1,0 +1,5 @@
+PASS step 13: halyard builds as before — no era world, the level program key 'inkwave-level-v8' (no -eras), no aEra attribute, no presence on any block, the nav an ordinary graph  {"key":"inkwave-level-v8","gk":"inkwave-level-v8-grate","layout":"halyard"}
+PASS step 13: calamari builds as before — no era world, the level program key 'inkwave-level-v8' (no -eras), no aEra attribute, no presence on any block, the nav an ordinary graph  {"key":"inkwave-level-v8","gk":"inkwave-level-v8-grate","layout":"calamari"}
+PASS step 13: treehills builds as before — no era world, the level program key 'inkwave-level-v8' (no -eras), no aEra attribute, no presence on any block, the nav an ordinary graph  {"key":"inkwave-level-v8","gk":"inkwave-level-v8-grate","layout":"treehills"}
+RESULT 3/3
+console errors: none

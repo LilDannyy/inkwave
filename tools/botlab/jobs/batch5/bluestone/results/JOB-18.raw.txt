@@ -1,0 +1,230 @@
+JOB-18 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 15:20:17
+branch botlab-b5-bluestone, ran at 91629600, exit code 0, wall time 44min
+(a written-up JOB-18.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-18 (art review 2) head 91629600 load { 1.82 2.16 2.54 }
+### gpu-time at 91629600 load { 1.82 2.16 2.54 } | sets [halyard:0 bluestone:1 bluestone:2 bluestone:3] times [day dusk] rounds 3 base none
+# variant noart matches 1
+# variant norooms matches 1
+# variant noremap matches 1
+# variant nodiscard matches 1
+== gpuv head halyard e0 day r1: "views":[36.67,36.49,37.2,23.14,22.76,19.37,37.29,39.26] "avg":{"gpu":31.52,"calls":167.38,"tris":3085163}  
+== gpuv head bluestone e2 day r1: "views":[44.3,44.54,48.77,47.04,46.89,46.24,43.01,45.2] "avg":{"gpu":45.75,"calls":113.75,"tris":942942}  
+== gpuv noart bluestone e2 day r1: "views":[42.19,42.6,44.58,46.29,45.1,44.32,44.47,43.1] "avg":{"gpu":44.08,"calls":112.88,"tris":947850}  
+== gpuv norooms bluestone e2 day r1: "views":[43.79,45.8,45.62,44.84,47.13,44.48,44.94,43.47] "avg":{"gpu":45.01,"calls":109.75,"tris":934950}  
+== gpuv noremap bluestone e2 day r1: "views":[42.19,45.67,44.19,45.74,43.46,42.22,44.54,42.97] "avg":{"gpu":43.87,"calls":112.13,"tris":938977}  
+== gpuv nodiscard bluestone e2 day r1: "views":[43.55,45.35,42.82,48,45.67,44.35,46.35,44.27] "avg":{"gpu":45.05,"calls":112.13,"tris":939819}  
+== gpuv head halyard e0 day r2: "views":[36.88,24.08,37.4,36.8,24.76,23.25,24.35,21.46] "avg":{"gpu":28.62,"calls":168.25,"tris":3088605}  
+== gpuv head bluestone e2 day r2: "views":[45.08,46.52,45.32,47.31,44.7,45.64,47.91,42.92] "avg":{"gpu":45.68,"calls":110.63,"tris":940751}  
+== gpuv noart bluestone e2 day r2: "views":[42.35,43.83,43.82,45.38,43.41,40.37,44.1,42.07] "avg":{"gpu":43.17,"calls":115.88,"tris":945801}  
+== gpuv norooms bluestone e2 day r2: "views":[47.54,46.21,45.73,46.19,45.85,45.48,43.76,44.42] "avg":{"gpu":45.65,"calls":120,"tris":954465}  
+== gpuv noremap bluestone e2 day r2: "views":[44.48,44.26,46.43,45.73,42.3,43.49,44.71,41.83] "avg":{"gpu":44.15,"calls":118.13,"tris":954507}  
+== gpuv nodiscard bluestone e2 day r2: "views":[44.7,44.34,47.53,47.89,43.78,44.58,44.44,44.2] "avg":{"gpu":45.18,"calls":112.25,"tris":940207}  
+== gpu-attr bluestone e2: PRE {"map":"bluestone","levelMeshes":5,"levelNames":["level","level:era1","level:era3","level:era4","level:era6"],"props":1,"sets":3,"res":{"base":45.27,"noLevel":37,"noProps":44.04,"noBackdrop":42.43,"noEnvRoot":41.29,"base2":42.99}}
+== gpu-attr halyard e0: PRE {"map":"halyard","levelMeshes":1,"levelNames":["level"],"props":1,"sets":0,"res":{"base":31.76,"noLevel":21.79,"noProps":27.08,"noBackdrop":24.87,"noEnvRoot":36.52,"base2":26.81}}
+== first-1: RESULT 1/1  0 FAIL
+== first-2: RESULT 1/1  0 FAIL
+== frames-1: RESULT 4/4  0 FAIL
+# frames-1 jump worst "worst":[[34.2,1.47,"jump",0,0.1,6.2],[11.3,1.67,"jump",0,0.1,0]
+== frames-2: RESULT 4/4  0 FAIL
+# frames-2 jump worst "worst":[[34.2,1.47,"jump",0,0,4.9],[15.8,1.15,"jump",0,1.7,0]
+== frames-3: RESULT 4/4  0 FAIL
+# frames-3 jump worst "worst":[[36.5,1.47,"jump",0,0.1,0],[16.9,1.67,"jump",0,0,0]
+== net-eras: RESULT 14/14  0 FAIL
+== net-eras lagged: RESULT 8/8  0 FAIL
+== check-maps (every stage): 19 ok lines, 5 not ok; bluestone#1  568 pieces  (strips over 25 m: 0);bluestone#2  590 pieces  (strips over 25 m: 0);bluestone#3  700 pieces  (strips over 25 m: 0);bluestone    712 pieces  ok;
+== eras-static: RESULT eras-static 23/23
+== eras-world-12: RESULT 12/12  0 FAIL
+== eras-world-34: RESULT 7/7  0 FAIL
+== eras-world-5: RESULT 3/3  0 FAIL
+== eras-look: RESULT 18/18  0 FAIL
+== eras-jump-first: RESULT 1/1  0 FAIL
+== eras-jump-a: RESULT 8/8  0 FAIL
+== eras-jump-b: RESULT 7/7  0 FAIL
+== eras-jump-c: RESULT 3/3  0 FAIL
+== eras-jump-d: RESULT 4/4  0 FAIL
+== eras-jump-e: RESULT 6/6  0 FAIL
+== eras-hud: RESULT 12/12  0 FAIL
+== eras-modes: RESULT 6/6  0 FAIL
+== stage-mods: RESULT 36/36  0 FAIL
+== world-build-halyard: RESULT 5/5  0 FAIL
+== world-build-bluestone: RESULT 5/5  0 FAIL
+== climb-audit-e1: RESULT 1/1  0 FAIL
+== cover-map-e1: RESULT 1/1  0 FAIL
+== spawn-mid-e1: RESULT 1/1  0 FAIL
+== tower-check e1: HARNESS ERA=1: every game page loads with ?era=1 ERA 1 (started in era 1, held there: ?era=1; page ?autopilot&era=1) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e2: RESULT 1/1  0 FAIL
+== cover-map-e2: RESULT 1/1  0 FAIL
+== spawn-mid-e2: RESULT 1/1  0 FAIL
+== tower-check e2: HARNESS ERA=2: every game page loads with ?era=2 ERA 2 (started in era 2, held there: ?era=2; page ?autopilot&era=2) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e3: RESULT 1/1  0 FAIL
+== cover-map-e3: RESULT 1/1  0 FAIL
+== spawn-mid-e3: RESULT 1/1  0 FAIL
+== tower-check e3: HARNESS ERA=3: every game page loads with ?era=3 ERA 3 (started in era 3, held there: ?era=3; page ?autopilot&era=3) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== done
+== eras-bake: RESULT 3/3  0 FAIL
+== stage-audit turf e1: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit zones e1: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"zones","rows":1142} RESULT 3/3 
+== stage-audit tower e1: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower","rows":1141} RESULT 4/4 
+== stage-audit turf e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit zones e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"zones","rows":1142} RESULT 3/3 
+== stage-audit tower e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower","rows":1141} RESULT 4/4 
+== stage-audit turf e3: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit zones e3: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"zones","rows":1142} RESULT 3/3 
+== stage-audit tower e3: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower","rows":1141} RESULT 4/4 
+== stage-audit boss e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"boss","rows":1142} RESULT 1/1 
+### done
+
+## last 15 lines of job.log
+== spawn-mid-e3: RESULT 1/1  0 FAIL
+== tower-check e3: HARNESS ERA=3: every game page loads with ?era=3 ERA 3 (started in era 3, held there: ?era=3; page ?autopilot&era=3) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints   
+== done
+== eras-bake: RESULT 3/3  0 FAIL
+== stage-audit turf e1: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit zones e1: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"zones","rows":1142} RESULT 3/3 
+== stage-audit tower e1: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower","rows":1141} RESULT 4/4 
+== stage-audit turf e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit zones e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"zones","rows":1142} RESULT 3/3 
+== stage-audit tower e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower","rows":1141} RESULT 4/4 
+== stage-audit turf e3: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit zones e3: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"zones","rows":1142} RESULT 3/3 
+== stage-audit tower e3: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"tower","rows":1141} RESULT 4/4 
+== stage-audit boss e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"boss","rows":1142} RESULT 1/1 
+### done
+
+## art-tests.txt
+== check-maps (every stage): 19 ok lines, 5 not ok; bluestone#1  568 pieces  (strips over 25 m: 0);bluestone#2  590 pieces  (strips over 25 m: 0);bluestone#3  700 pieces  (strips over 25 m: 0);bluestone    712 pieces  ok;
+== eras-static: RESULT eras-static 23/23
+== eras-world-12: RESULT 12/12  0 FAIL
+== eras-world-34: RESULT 7/7  0 FAIL
+== eras-world-5: RESULT 3/3  0 FAIL
+== eras-look: RESULT 18/18  0 FAIL
+== eras-jump-first: RESULT 1/1  0 FAIL
+== eras-jump-a: RESULT 8/8  0 FAIL
+== eras-jump-b: RESULT 7/7  0 FAIL
+== eras-jump-c: RESULT 3/3  0 FAIL
+== eras-jump-d: RESULT 4/4  0 FAIL
+== eras-jump-e: RESULT 6/6  0 FAIL
+== eras-hud: RESULT 12/12  0 FAIL
+== eras-modes: RESULT 6/6  0 FAIL
+== stage-mods: RESULT 36/36  0 FAIL
+== world-build-halyard: RESULT 5/5  0 FAIL
+== world-build-bluestone: RESULT 5/5  0 FAIL
+== climb-audit-e1: RESULT 1/1  0 FAIL
+== cover-map-e1: RESULT 1/1  0 FAIL
+== spawn-mid-e1: RESULT 1/1  0 FAIL
+== tower-check e1: HARNESS ERA=1: every game page loads with ?era=1 ERA 1 (started in era 1, held there: ?era=1; page ?autopilot&era=1) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e2: RESULT 1/1  0 FAIL
+== cover-map-e2: RESULT 1/1  0 FAIL
+== spawn-mid-e2: RESULT 1/1  0 FAIL
+== tower-check e2: HARNESS ERA=2: every game page loads with ?era=2 ERA 2 (started in era 2, held there: ?era=2; page ?autopilot&era=2) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e3: RESULT 1/1  0 FAIL
+== cover-map-e3: RESULT 1/1  0 FAIL
+== spawn-mid-e3: RESULT 1/1  0 FAIL
+== tower-check e3: HARNESS ERA=3: every game page loads with ?era=3 ERA 3 (started in era 3, held there: ?era=3; page ?autopilot&era=3) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== done
+
+## check-maps-bluestone.txt
+bluestone#1  568 pieces  (strips over 25 m: 0)
+bluestone#2  590 pieces  (strips over 25 m: 0)
+bluestone#3  700 pieces  (strips over 25 m: 0)
+bluestone    712 pieces  ok
+
+## gpu-attr.txt
+== gpu-attr bluestone e2: PRE {"map":"bluestone","levelMeshes":5,"levelNames":["level","level:era1","level:era3","level:era4","level:era6"],"props":1,"sets":3,"res":{"base":45.27,"noLevel":37,"noProps":44.04,"noBackdrop":42.43,"noEnvRoot":41.29,"base2":42.99}}
+== gpu-attr halyard e0: PRE {"map":"halyard","levelMeshes":1,"levelNames":["level"],"props":1,"sets":0,"res":{"base":31.76,"noLevel":21.79,"noProps":27.08,"noBackdrop":24.87,"noEnvRoot":36.52,"base2":26.81}}
+
+## gpu-runs.txt
+== gpu head halyard e0 day r1: "views":[39.36,37.16,38.66,38.37,35.34,24.51,21.27,26.19] "avg":{"gpu":32.61,"calls":171,"tris":3109359}  
+== gpu head bluestone e1 day r1: "views":[43.42,44.92,43.98,46.3,45.75,45.47,44.95,43.18] "avg":{"gpu":44.75,"calls":112.63,"tris":991032}  
+== gpu head bluestone e2 day r1: "views":[44.02,44.22,45.14,46.82,43.39,45.33,46,46.1] "avg":{"gpu":45.13,"calls":113.75,"tris":939422}  
+== gpu head bluestone e3 day r1: "views":[45.29,46.94,46.76,48.49,45.83,45.53,46.35,45.18] "avg":{"gpu":46.3,"calls":123.38,"tris":1022225}  
+== gpu head halyard e0 dusk r1: "views":[36.01,38.67,38.91,20.58,20.89,18.34,23.95,23.93] "avg":{"gpu":27.66,"calls":174.38,"tris":3086732}  
+== gpu head bluestone e1 dusk r1: "views":[44.08,46.71,43.9,45.52,45.37,45.92,47.07,45.95] "avg":{"gpu":45.56,"calls":111.13,"tris":981045}  
+== gpu head bluestone e2 dusk r1: "views":[46.91,45.54,48.59,49.57,48.23,46.66,46.12,46.75] "avg":{"gpu":47.3,"calls":113.13,"tris":940314}  
+== gpu head bluestone e3 dusk r1: "views":[47.26,49.04,48.47,48.77,46.92,46.1,47.02,48.57] "avg":{"gpu":47.77,"calls":114.13,"tris":1009806}  
+== gpu head halyard e0 day r2: "views":[38.67,37.93,39.11,39.35,22.18,20.45,20.15,25.08] "avg":{"gpu":30.37,"calls":171,"tris":3087665}  
+== gpu head bluestone e1 day r2: "views":[44.77,43.81,44.61,43.91,42.7,44.58,44.77,45.03] "avg":{"gpu":44.27,"calls":113.88,"tris":987131}  
+== gpu head bluestone e2 day r2: "views":[45.53,44.39,45.23,46.91,42.53,45.08,44.06,45.3] "avg":{"gpu":44.88,"calls":121.25,"tris":954951}  
+== gpu head bluestone e3 day r2: "views":[46.38,48.02,44.51,46.59,45.07,44.17,47.49,45.58] "avg":{"gpu":45.98,"calls":116.63,"tris":1007052}  
+== gpu head halyard e0 dusk r2: "views":[20.36,25.24,35.25,38.83,20.67,22.13,18.57,24.23] "avg":{"gpu":25.66,"calls":167.13,"tris":3076959}  
+== gpu head bluestone e1 dusk r2: "views":[45.99,49.47,45.17,47.5,49.25,48.69,49.78,50.39] "avg":{"gpu":48.28,"calls":111.75,"tris":985458}  
+== gpu head bluestone e2 dusk r2: "views":[46.11,47.64,47.17,48.15,44.82,48.87,47.81,46.72] "avg":{"gpu":47.16,"calls":115.5,"tris":949376}  
+== gpu head bluestone e3 dusk r2: "views":[46.99,48.82,48.39,49.1,47.84,48.7,48.64,47.6] "avg":{"gpu":48.26,"calls":113.5,"tris":999191}  
+== gpu head halyard e0 day r3: "views":[39.55,21.35,38.4,37.45,23.02,22.57,24.08,20.55] "avg":{"gpu":28.37,"calls":163.25,"tris":3085216}  
+== gpu head bluestone e1 day r3: "views":[43.47,43.71,43.63,44.63,43.95,43.19,45.29,46.11] "avg":{"gpu":44.25,"calls":111.63,"tris":984239}  
+== gpu head bluestone e2 day r3: "views":[44.54,44.52,43.16,45.64,42.78,44.54,44.52,45.62] "avg":{"gpu":44.41,"calls":111.13,"tris":943645}  
+== gpu head bluestone e3 day r3: "views":[44.18,45.52,44.47,43.03,40.74,40.47,43.94,42.86] "avg":{"gpu":43.15,"calls":108.5,"tris":995018}  
+== gpu head halyard e0 dusk r3: "views":[41.97,39.87,41.59,24.78,24.45,23.31,23.47,21.07] "avg":{"gpu":30.06,"calls":166.38,"tris":3075329}  
+== gpu head bluestone e1 dusk r3: "views":[44.23,45.38,46.23,45.95,45.42,46.32,48.37,49.53] "avg":{"gpu":46.43,"calls":119.13,"tris":997196}  
+== gpu head bluestone e2 dusk r3: "views":[47.71,48.76,48,47.38,46.75,44.74,48.47,50.1] "avg":{"gpu":47.74,"calls":114.5,"tris":941401}  
+== gpu head bluestone e3 dusk r3: "views":[47.31,47.54,48.02,49.4,46.34,46.8,48.78,47.75] "avg":{"gpu":47.74,"calls":117.88,"tris":1010467}  
+
+## gpu-variants.txt
+== gpuv head halyard e0 day r1: "views":[36.67,36.49,37.2,23.14,22.76,19.37,37.29,39.26] "avg":{"gpu":31.52,"calls":167.38,"tris":3085163}  
+== gpuv head bluestone e2 day r1: "views":[44.3,44.54,48.77,47.04,46.89,46.24,43.01,45.2] "avg":{"gpu":45.75,"calls":113.75,"tris":942942}  
+== gpuv noart bluestone e2 day r1: "views":[42.19,42.6,44.58,46.29,45.1,44.32,44.47,43.1] "avg":{"gpu":44.08,"calls":112.88,"tris":947850}  
+== gpuv norooms bluestone e2 day r1: "views":[43.79,45.8,45.62,44.84,47.13,44.48,44.94,43.47] "avg":{"gpu":45.01,"calls":109.75,"tris":934950}  
+== gpuv noremap bluestone e2 day r1: "views":[42.19,45.67,44.19,45.74,43.46,42.22,44.54,42.97] "avg":{"gpu":43.87,"calls":112.13,"tris":938977}  
+== gpuv nodiscard bluestone e2 day r1: "views":[43.55,45.35,42.82,48,45.67,44.35,46.35,44.27] "avg":{"gpu":45.05,"calls":112.13,"tris":939819}  
+== gpuv head halyard e0 day r2: "views":[36.88,24.08,37.4,36.8,24.76,23.25,24.35,21.46] "avg":{"gpu":28.62,"calls":168.25,"tris":3088605}  
+== gpuv head bluestone e2 day r2: "views":[45.08,46.52,45.32,47.31,44.7,45.64,47.91,42.92] "avg":{"gpu":45.68,"calls":110.63,"tris":940751}  
+== gpuv noart bluestone e2 day r2: "views":[42.35,43.83,43.82,45.38,43.41,40.37,44.1,42.07] "avg":{"gpu":43.17,"calls":115.88,"tris":945801}  
+== gpuv norooms bluestone e2 day r2: "views":[47.54,46.21,45.73,46.19,45.85,45.48,43.76,44.42] "avg":{"gpu":45.65,"calls":120,"tris":954465}  
+== gpuv noremap bluestone e2 day r2: "views":[44.48,44.26,46.43,45.73,42.3,43.49,44.71,41.83] "avg":{"gpu":44.15,"calls":118.13,"tris":954507}  
+== gpuv nodiscard bluestone e2 day r2: "views":[44.7,44.34,47.53,47.89,43.78,44.58,44.44,44.2] "avg":{"gpu":45.18,"calls":112.25,"tris":940207}  
+
+## gpu.txt
+GPU ms per frame (median of the runs; [each run]) | draw calls | triangles | ÷ halyard (same time of day)
+  head bluestone e1    day   44.27 ms [44.75, 44.27, 44.25] | 112.63 | 987131 | ×1.46
+  head bluestone e1    dusk  46.43 ms [45.56, 48.28, 46.43] | 111.75 | 985458 | ×1.68
+  head bluestone e2    day   44.88 ms [45.13, 44.88, 44.41] | 113.75 | 943645 | ×1.48
+  head bluestone e2    dusk  47.30 ms [47.3, 47.16, 47.74] | 114.5 | 941401 | ×1.71
+  head bluestone e3    day   45.98 ms [46.3, 45.98, 43.15] | 116.63 | 1007052 | ×1.51
+  head bluestone e3    dusk  47.77 ms [47.77, 48.26, 47.74] | 114.13 | 1009806 | ×1.73
+  head halyard         day   30.37 ms [32.61, 30.37, 28.37] | 171 | 3087665 | -
+  head halyard         dusk  27.66 ms [27.66, 25.66, 30.06] | 167.13 | 3076959 | -
+
+## perf-runs.txt
+== perf bluestone1-day-1: "quality":"high" "avg":{"calls":217,"tris":1225037,"ms":6.47}  HARNESS ERA=1: every game page loads with ?era=1 
+== perf bluestone2-day-1: "quality":"high" "avg":{"calls":206,"tris":1183231,"ms":6.5}  HARNESS ERA=2: every game page loads with ?era=2 
+== perf bluestone3-day-1: "quality":"high" "avg":{"calls":217,"tris":1250161,"ms":7.22}  HARNESS ERA=3: every game page loads with ?era=3 
+== perf halyard0-day-1: "quality":"high" "avg":{"calls":244,"tris":3316814,"ms":8.34}  
+== perf bluestone1-dusk-1: "quality":"high" "avg":{"calls":230,"tris":1263970,"ms":6.7}  HARNESS ERA=1: every game page loads with ?era=1 
+== perf bluestone2-dusk-1: "quality":"high" "avg":{"calls":203,"tris":1210631,"ms":6.86}  HARNESS ERA=2: every game page loads with ?era=2 
+== perf bluestone3-dusk-1: "quality":"high" "avg":{"calls":253,"tris":1342137,"ms":7.08}  HARNESS ERA=3: every game page loads with ?era=3 
+== perf halyard0-dusk-1: "quality":"high" "avg":{"calls":264,"tris":3322188,"ms":8.88}  
+== perf bluestone1-day-2: "quality":"high" "avg":{"calls":218,"tris":1218408,"ms":6.97}  HARNESS ERA=1: every game page loads with ?era=1 
+== perf bluestone2-day-2: "quality":"high" "avg":{"calls":214,"tris":1203849,"ms":6.71}  HARNESS ERA=2: every game page loads with ?era=2 
+== perf bluestone3-day-2: "quality":"high" "avg":{"calls":219,"tris":1288491,"ms":7.29}  HARNESS ERA=3: every game page loads with ?era=3 
+== perf halyard0-day-2: "quality":"high" "avg":{"calls":237,"tris":3312615,"ms":9.1}  
+== perf bluestone1-dusk-2: "quality":"high" "avg":{"calls":217,"tris":1251719,"ms":7.16}  HARNESS ERA=1: every game page loads with ?era=1 
+== perf bluestone2-dusk-2: "quality":"high" "avg":{"calls":225,"tris":1221446,"ms":6.65}  HARNESS ERA=2: every game page loads with ?era=2 
+== perf bluestone3-dusk-2: "quality":"high" "avg":{"calls":214,"tris":1234846,"ms":7.21}  HARNESS ERA=3: every game page loads with ?era=3 
+== perf halyard0-dusk-2: "quality":"high" "avg":{"calls":255,"tris":3315680,"ms":8.21}  
+== perf bluestone1-day-3: "quality":"high" "avg":{"calls":231,"tris":1267798,"ms":6.63}  HARNESS ERA=1: every game page loads with ?era=1 
+== perf bluestone2-day-3: "quality":"high" "avg":{"calls":227,"tris":1202212,"ms":6.99}  HARNESS ERA=2: every game page loads with ?era=2 
+== perf bluestone3-day-3: "quality":"high" "avg":{"calls":240,"tris":1284515,"ms":7.15}  HARNESS ERA=3: every game page loads with ?era=3 
+== perf halyard0-day-3: "quality":"high" "avg":{"calls":268,"tris":3311923,"ms":8.81}  
+== perf bluestone1-dusk-3: "quality":"high" "avg":{"calls":203,"tris":1209733,"ms":6.83}  HARNESS ERA=1: every game page loads with ?era=1 
+== perf bluestone2-dusk-3: "quality":"high" "avg":{"calls":228,"tris":1230076,"ms":7.22}  HARNESS ERA=2: every game page loads with ?era=2 
+== perf bluestone3-dusk-3: "quality":"high" "avg":{"calls":243,"tris":1292278,"ms":7.18}  HARNESS ERA=3: every game page loads with ?era=3 
+== perf halyard0-dusk-3: "quality":"high" "avg":{"calls":259,"tris":3296920,"ms":8.18}  
+
+## perf.txt
+perf6 medians of 3 runs (the runs in brackets); each Bluestone era / Halyard
+  day  halyard:      calls 244 [244, 237, 268] | tris 3312615 [3316814, 3312615, 3311923] | ms 8.81 [8.34, 9.10, 8.81]
+  day  bluestone e1: calls 218 [217, 218, 231] | tris 1225037 [1225037, 1218408, 1267798] | ms 6.63 [6.47, 6.97, 6.63]
+  day    ratio e1:   calls x0.89 | tris x0.37 | cpuRender x0.75
+  day  bluestone e2: calls 214 [206, 214, 227] | tris 1202212 [1183231, 1203849, 1202212] | ms 6.71 [6.50, 6.71, 6.99]
+  day    ratio e2:   calls x0.88 | tris x0.36 | cpuRender x0.76
+  day  bluestone e3: calls 219 [217, 219, 240] | tris 1284515 [1250161, 1288491, 1284515] | ms 7.22 [7.22, 7.29, 7.15]
+  day    ratio e3:   calls x0.90 | tris x0.39 | cpuRender x0.82
+  dusk halyard:      calls 259 [264, 255, 259] | tris 3315680 [3322188, 3315680, 3296920] | ms 8.21 [8.88, 8.21, 8.18]
+  dusk bluestone e1: calls 217 [230, 217, 203] | tris 1251719 [1263970, 1251719, 1209733] | ms 6.83 [6.70, 7.16, 6.83]
+  dusk   ratio e1:   calls x0.84 | tris x0.38 | cpuRender x0.83
+  dusk bluestone e2: calls 225 [203, 225, 228] | tris 1221446 [1210631, 1221446, 1230076] | ms 6.86 [6.86, 6.65, 7.22]
+  dusk   ratio e2:   calls x0.87 | tris x0.37 | cpuRender x0.84
+  dusk bluestone e3: calls 243 [253, 214, 243] | tris 1292278 [1342137, 1234846, 1292278] | ms 7.18 [7.08, 7.21, 7.18]
+  dusk   ratio e3:   calls x0.94 | tris x0.39 | cpuRender x0.87

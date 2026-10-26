@@ -47,6 +47,9 @@ const _p = new THREE.Vector3(), _q = new THREE.Vector3(), _c = new THREE.Color()
 // placed or stuck; a running / winding-up Skitter Bomb and the clouds follow the ground or the air as before)
 const RESTING = new Set(['stuck', 'spray', 'curtain', 'mine', 'beacon']);
 const DEG = Math.PI / 180;
+// (fix round 3) what the cloud bake reads from a theme: two looks with the same key share their clouds (no re-bake)
+const CLOUD_IN = ['sunColor', 'skySun', 'sunIntensity', 'cloudCov', 'cloudSeed', 'sunEl', 'sunAz', 'zenith', 'skyMid', 'horizon', 'ground', 'horizonGlow', 'horizonGlowK', 'glowColor', 'glow', 'night', 'cloudLit', 'cloudLitK', 'cloudShade', 'cloud'];
+const cloudKey = (T) => JSON.stringify(CLOUD_IN.map((k) => T[k] ?? null));
 
 // the presence fields (docs/STAGE-MODS.md "Level"): a def or a prop collider carrying `eras` / `eraGroup`
 Level.blockField('eras', (b, d, level) => { b.eras = eraMask(d.eras); b.presence = b.eras === 7 ? 0 : b.eras; level.presenceAll = 7; });
@@ -71,6 +74,44 @@ function auditFront() {
   return ok(a) && ok(b) && a !== b && Number.isFinite(r) && r >= 0 ? { from: a, to: b, front: r } : null;
 }
 
+// (fix round 2) the level's depth prepass at rest: the level's own transform, absent pieces collapsed as LV_VMAIN does
+// (eraFx.js), and the see-through window round the local player left out (the level's cut, levelMaterial.js, with a wider
+// margin and no exceptions: there the level simply draws without a prepass)
+const PREPASS_VS = /* glsl */`
+attribute vec2 aEra;
+uniform vec4 uEra;
+varying vec3 vVP;
+float eraHasV(float m, float b) { return mod(floor(m / b + 0.01), 2.0); }
+void main() {
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  vVP = mv.xyz;
+  gl_Position = projectionMatrix * mv;
+  float em = aEra.x < 0.5 ? 7.0 : aEra.x;
+  if (em < 6.5 && eraHasV(em, uEra.x) < 0.5) gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+}`;
+const PREPASS_FS = /* glsl */`
+uniform vec3 uSeeB;
+uniform float uSeeOn;
+uniform float uSeeFeet;
+varying vec3 vVP;
+void main() {
+  if (uSeeOn > 0.001) {
+    vec3 Bv = (viewMatrix * vec4(uSeeB, 1.0)).xyz;
+    float dB = -Bv.z, dP = -vVP.z;
+    if (dB > 0.6 && dP < dB - 0.1) {
+      float bodyH = uSeeB.y - uSeeFeet;
+      vec3 Fv = (viewMatrix * vec4(uSeeB.x, uSeeFeet - 0.2, uSeeB.z, 1.0)).xyz;
+      vec3 Hv = (viewMatrix * vec4(uSeeB.x, uSeeFeet + bodyH * 1.42 + 0.3, uSeeB.z, 1.0)).xyz;
+      vec2 p = vVP.xy / max(dP, 0.05), f = Fv.xy / max(-Fv.z, 0.05), h = Hv.xy / max(-Hv.z, 0.05);
+      vec2 fh = h - f;
+      float t = clamp(dot(p - f, fh) / max(dot(fh, fh), 1e-8), 0.0, 1.0);
+      float sd = length(p - (f + fh * t)) * dB;
+      if (sd < 0.46 + 0.42 + 0.25) discard;
+    }
+  }
+  gl_FragColor = vec4(0.0);
+}`;
+
 // ================================================================================================== the world
 export class EraWorld {
   constructor(ctx) {
@@ -81,6 +122,7 @@ export class EraWorld {
     this.frozen = auditFront();   // (the stage art: { from, to, front } or null)
     this.audit = this.frozen ? this.frozen.from : auditEra();
     this.mode = ctx.mode;
+    this.layout = ctx.layout;
     this.planGroups = eraGroups(eraPieces(ctx.layout));   // (r_g for the props, before the Level exists)
     const V4 = (a = 0, b = 0, c = 0, d = 0) => new THREE.Vector4(a, b, c, d);
     const tint = [1, 2, 3].map((e) => { const t = E.tint?.[e] || [1, 1, 1, 0]; return V4(t[0], t[1], t[2], t[3]); });
@@ -107,10 +149,28 @@ export class EraWorld {
   // ---------------------------------------------------------------- build chain
   prop(it, kit) {
     if (!it.eras) return it;
-    if (kit && !kit.tagMaterial) kit.tagMaterial = (key, tag, base) => (tag && tag[0] === 'e' ? eraMaterial(base, this.uniforms, 'aTag') : null);
+    if (kit && !kit.tagMaterial) kit.tagMaterial = (key, tag, base) => (tag && tag[0] === 'e' && (base || key === 'glass') ? eraMaterial(base || this._glassMat(), this.uniforms, 'aTag') : null);
     const mask = eraMask(it.eras), p = it.pos || [0, 0, 0];
     const g = it.eraGroup ? this.planGroups.get(groupKey(it.eraGroup, p[2], '')) : null;
     return { ...it, bucketTag: 'e' + mask, bucketVec: [mask, g ? g.rg : Math.hypot(p[0], p[2])] };
+  }
+  // (fix round 1) the era props' clear glass ('glass' buckets: the 3000s' glass rails — see-through like the rails they draw,
+  // which shots and ink pass): a pale tint at ~22 % that rises to ~70 % at a grazing angle (a fresnel edge), no depth
+  // write, no shadow (PropKit's CASTS has no 'glass'), out of the GTAO pass (afterMeshes)
+  _glassMat() {
+    if (this._glass) return this._glass;
+    const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.06, metalness: 0, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide, envMapIntensity: 1.4 });
+    m.onBeforeCompile = (sh) => {
+      sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', `{
+  float bsFres = pow(1.0 - abs(dot(normalize(vViewPosition), normal)), 3.0);
+  diffuseColor.a = clamp(diffuseColor.a + bsFres * 0.5, 0.0, 0.72);
+  outgoingLight += vec3(0.05, 0.05, 0.055) + bsFres * vec3(0.18, 0.18, 0.2);
+}
+#include <opaque_fragment>`);
+    };
+    m.customProgramCacheKey = () => 'bs-glass';
+    this._glass = m;
+    return m;
   }
   colliders(it, cols) { return it.eras ? cols.map((c) => ({ ...c, eras: it.eras, eraGroup: it.eraGroup })) : cols; }
 
@@ -118,6 +178,9 @@ export class EraWorld {
     const t0 = now();
     this.level = level;
     level.geomAttrs = [{ name: 'aEra', size: 2, value: (b) => [b.presence || 7, b.eraR || 0] }];
+    // the stage's own level art (LAYOUT.levelArt / levelArtOf: Bluestone's facades, streets and cover per era, drawn under
+    // the ink by the fragment's era — stages/bluestone/levelart.js): its per-block attribute rides beside aEra
+    if (typeof this.layout?.levelArtOf === 'function') level.geomAttrs.push({ name: 'aArt', size: 2, value: this.layout.levelArtOf(this.layout) });
     level.eraCount = 3;
     const map = new Map();
     this.groups = []; this.eraIds = [];
@@ -238,7 +301,18 @@ export class EraWorld {
     return changed;
   }
 
-  levelMaterial({ grate }) { return eraLevelExt(this.uniforms, grate); }
+  levelMaterial({ grate }) {
+    const fn = this.layout?.levelArt;
+    if (typeof fn !== 'function') return eraLevelExt(this.uniforms, grate);
+    // the stage's level art goes between the era chunks' halves: it reads the fragment's era (eraOneHot) and paints the bare
+    // surface; the era's tint, the warning's sepia flicker, the done pulse and the front's cut then act on what it painted
+    // (night: the environment's factor, read live). Its own pars / emissive / attribute ride as an extension of their own
+    const night = { get value() { return G.env?.U?.uNight?.value || 0; }, set value(v) { /* the environment's */ } };
+    const art = fn({ grate, night, lamps: [1, 2, 3].map((e) => this.E.look?.[e]?.lamps || '#ffe0b8') });
+    if (!art) return eraLevelExt(this.uniforms, grate);
+    const ext = eraLevelExt(this.uniforms, grate, art.fragBase || '');
+    return [ext, { ...art, fragBase: '' }];
+  }
   levelFilter() { return (b) => !b.grate && !b.presence; }   // the main mesh: shared blocks only
 
   afterMeshes(o) {
@@ -261,11 +335,78 @@ export class EraWorld {
       if (!tag || tag[0] !== 'e') continue;
       m.userData.eraMask = +tag.slice(1);
       m.customDepthMaterial = eraDepthMaterial(this.uniforms, 'aTag');
-      m.onBeforeRender = this._aoGateFor(m.userData.eraMask);
+      // (fix round 1: a see-through bucket — the glass — never draws into the GTAO override pass)
+      m.onBeforeRender = m.material?.transparent ? (r, s, c, g) => { g.drawRange.count = s.overrideMaterial ? 0 : Infinity; } : this._aoGateFor(m.userData.eraMask);
+      if (m.material?.transparent) m.castShadow = false;
       this.propMeshes.push(m);
     }
     this.fx = new EraFx(this, { scene, props });
+    // (fix round 2, the art phase's GPU gate) the level's programs while no jump runs: one per era with the era a
+    // compile-time constant (ERA_STATIC, ERA_NOW: no per-fragment era, front, warning or pulse; a stage's level art folds to
+    // that era's code alone), swapped in by looks() at rest; the full program (levelMat) from the warning to the done
+    // pulse's end. And a depth prepass of the level drawn first at rest, so each pixel of the level shades once and what
+    // the level hides (the river, the far city, the backs of pieces) is rejected before it shades.
+    this.levelMat = levelMat;
+    // (fix round 2) the stage may drop texlib's hex anti-tiling on its level (LAYOUT.levelTexlib.hex === false: one tap
+    // instead of three, the per-tile flips of the grid mode kept): its own level material's uniforms only
+    this._hexOff = [];   // ([vec, mode, sym] as they were: the audits put them back to compare)
+    if (this.layout?.levelTexlib?.hex === false) for (const mt of [levelMat, grateMat]) for (const v of mt?.userData?.uniforms?.uTL?.value || []) if (v.z === 2) { this._hexOff.push([v, v.z, v.w]); v.z = 1; v.w = 7; }
+    this._levelMeshes = [o.levelMesh, ...this.meshes.filter((m) => !/:grate$/.test(m.name))].filter(Boolean);
+    this._static = levelMat ? { 1: this._staticMat(levelMat, 1), 2: this._staticMat(levelMat, 2), 3: this._staticMat(levelMat, 3) } : null;
+    this._matNow = levelMat;
+    this._prepass = this._buildPrepass(scene, levelMat);
     this.stats.meshMs = now() - t0;
+  }
+  // a copy of the level material that compiles the static program of era e: the same uniforms (the very objects: the paint,
+  // the lamps, the see-through and the era uniforms all reach it), the same patch, its own program key
+  _staticMat(mat, e) {
+    const ud = mat.userData;
+    mat.userData = {};   // (Material.copy clones userData through JSON: the uniforms hold textures)
+    const m = new mat.constructor();
+    try { m.copy(mat); } finally { mat.userData = ud; }
+    m.userData = ud;
+    m.defines = { ...(mat.defines || {}), ERA_STATIC: 1, ERA_NOW: e - 1 };
+    m.onBeforeCompile = mat.onBeforeCompile; m.onBeforeRender = mat.onBeforeRender;
+    const key = mat.customProgramCacheKey;
+    m.customProgramCacheKey = () => key.call(mat) + '-static' + e;
+    m.name = (mat.name || 'level') + ':static' + e;
+    return m;
+  }
+  // the depth prepass: per level mesh (not the grates) a twin sharing its position and aEra buffers, colour off, drawn
+  // before every opaque mesh (renderOrder −100), pushed back a hair (polygon offset) so the level's own fragments pass; it
+  // collapses absent pieces as the level does and leaves out the see-through window round the local player (a margin
+  // wider than the level's own cut: there the level draws without the prepass), never in the shadow or GTAO passes
+  _buildPrepass(scene, levelMat) {
+    const lu = levelMat?.userData?.uniforms;
+    if (!lu || !lu.uSeeB || !this._levelMeshes.length) return null;
+    const mat = new THREE.ShaderMaterial({
+      name: 'level:prepass',
+      uniforms: { uEra: this.uniforms.uEra, uSeeB: lu.uSeeB, uSeeOn: lu.uSeeOn, uSeeFeet: lu.uSeeFeet },
+      vertexShader: PREPASS_VS, fragmentShader: PREPASS_FS,
+      colorWrite: false, side: levelMat.side, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2,
+    });
+    const twins = [];
+    for (const m of this._levelMeshes) {
+      const g = new THREE.BufferGeometry(), src = m.geometry;
+      g.setIndex(src.index); g.setAttribute('position', src.attributes.position);
+      if (src.attributes.aEra) g.setAttribute('aEra', src.attributes.aEra);
+      g.boundingBox = src.boundingBox; g.boundingSphere = src.boundingSphere;
+      const t = new THREE.Mesh(g, mat);
+      t.name = 'prepass:' + m.name; t.renderOrder = -100; t.castShadow = false; t.receiveShadow = false; t.frustumCulled = m.frustumCulled;
+      t.matrixAutoUpdate = false; t.matrix.copy(m.matrix); t.matrixWorld.copy(m.matrixWorld);
+      // (out of override passes; and the see-through's feet height set here as the level's onBeforeRender sets it, so the
+      //  prepass, drawn first, never cuts its window with last frame's height)
+      t.onBeforeRender = (r, sc, c, geo) => { geo.drawRange.count = sc.overrideMaterial ? 0 : Infinity; const loc = G.match && !G.match.attract ? G.match.local : null; lu.uSeeFeet.value = loc ? loc.pos.y : lu.uSeeB.value.y - 1.0; };
+      t.userData.of = m; t.visible = false;
+      scene.add(t); twins.push(t);
+    }
+    return { mat, twins };
+  }
+  // the level's program for a moment: static (era e) or the full one; the prepass only with a static program
+  _levelProgram(e) {
+    const mat = (e && this._static && this._static[e]) || this.levelMat;
+    if (mat && this._matNow !== mat) { this._matNow = mat; for (const m of this._levelMeshes) m.material = mat; }
+    if (this._prepass) for (const t of this._prepass.twins) t.visible = !!e && t.userData.of.visible;
   }
 
   // three NavGraphs (one per era's solidity) merged into one union graph with an era mask on every edge
@@ -414,13 +555,26 @@ export class EraWorld {
     return { ...(L.theme.all || {}), ...(L.theme[name] || {}) };
   }
   _sets(e) { const S = this.env?.stageSets; if (S) for (const k of [1, 2, 3]) if (S[k]) S[k].visible = k === e; }
+  // ENGINE rule 42 (the art phase): the lamps' light per era — eras.look[e].lamps on the decor's lamp glass (its bodies are
+  // the eras' own props on the same spots: a gas lamp, a street light, a light mast; the decor's iron body is hidden),
+  // blended from the old era's to the new one's through the time-lapse (k 0 … 1)
+  _lamps(e, from = e, k = 1) {
+    const d = G.game?.decor;
+    if (!d || !d.bulbMat || G.level !== this.level) return;
+    if (!this._lampHid || this._lampHid !== d) { d.group?.traverse?.((o) => { if (o.name === 'lamps:body') o.visible = false; }); this._lampHid = d; }
+    const L = this.E.look || {}, a = L[from]?.lamps || '#ffd9a0', b = L[e]?.lamps || '#ffd9a0';
+    d.bulbMat.emissive.set(a);
+    if (k > 0) d.bulbMat.emissive.lerp(_c.set(b), Math.min(1, k));
+    this.stats.lampEra = k >= 1 ? e : from;
+  }
   _envEra(e, apply = true) {
     if (this.envEra === e && !apply) return;
     const changed = this.envEra !== e;
     this.envEra = e;
+    this._lamps(e);
     this._sets(e);
     this.uniforms.uEraFar.value.w = 0;
-    if (apply && changed && this.env?.setTheme && this.env.theme) { const t = now(); this.env.setTheme(this.env.theme); this.stats.setThemeMs = Math.round(now() - t); }
+    if (apply && changed && this.env?.setTheme && this.env.theme) { const t = now(); this.env.setTheme(this.env.theme); G.fx?.setLighting?.(this.env.getSkyColors?.()); this.stats.setThemeMs = Math.round(now() - t); }
   }
 
   ready() {
@@ -432,7 +586,65 @@ export class EraWorld {
   // [b5-beta1] the other eras' minimap bases and every era program, now: at a match's load (StageWorld.warm, the screen
   // faded out) or in idle time after a menu backdrop's build, whichever comes first — never in the intro (the idle job
   // above ran ~0.8 s into a Bluestone match's intro when the match built the world: a 0.1–2 s hitch on screen)
-  warm() { if (this.jumping) return; this._prebuildBases(); if (!this._warmed) { this._warmed = true; this._precompile(); } }
+  warm() { if (this.jumping) return; this._prebuildBases(); this._warmClouds(); if (!this._warmed) { this._warmed = true; this._precompile(); } }
+  // (fix round 3) every era's clouds at this time of day, baked whole now — at a match's load, behind the faded screen (~0.45 s
+  // of GPU each on an M4) — so a jump only cross-fades the sky to the new look's and swaps the texture (no bake in a jump).
+  // Eras whose clouds are the environment's own bake (the theme setTheme last baked) need none; the cache keeps one target
+  // per look, reused when the time of day changes
+  _warmClouds() {
+    const env = this.env;
+    if (!env?.cloudBakeInto || !env._stageTheme || !env.theme) return 0;
+    this._cloudTheme = env.theme;
+    const C = this._cloudCache || (this._cloudCache = new Map()), want = new Map(), save = this.envEra;
+    for (const e of [1, 2, 3]) { this.envEra = e; const T = env._stageTheme(env.theme); want.set(cloudKey(T), T); }
+    this.envEra = save;
+    const prim = env._cloudPrimaryT ? cloudKey(env._cloudPrimaryT) : null;
+    want.delete(prim);
+    const spare = [];
+    for (const [k, rt] of C) if (!want.has(k)) { C.delete(k); spare.push(rt); }
+    const t = now(); let n = 0;
+    for (const [k, T] of want) if (!C.has(k)) { C.set(k, env.cloudBakeInto(T, spare.pop() || env._makeCloudRT())); n++; }
+    for (const rt of spare) rt.dispose();
+    // each era's env map (PMREM) too, with its clouds: the settle swaps it in by reference, no PMREM pass in a jump
+    const EM = this._envCache || (this._envCache = new Map()), all = new Map();
+    for (const e of [1, 2, 3]) { this.envEra = e; const T = env._stageTheme(env.theme); all.set(cloudKey(T), T); }
+    this.envEra = save;
+    for (const [k, rt] of EM) if (!all.has(k)) { EM.delete(k); rt.dispose(); }
+    if (env.envMapFor) for (const [k, T] of all) if (!EM.has(k)) { const ct = this._cloudTex(T); if (ct) { EM.set(k, env.envMapFor(T, ct)); n++; } }
+    if (n) this._warmLooks(all);
+    // (the bakes' GPU work finished here, at load, so none of it is still queued when the intro or a jump draws)
+    if (n) { try { env.renderer?.getContext?.().finish(); } catch (e) { /* (a headless page) */ } this.stats.cloudBakes = (this.stats.cloudBakes || 0) + n; this.stats.cloudWarmMs = Math.round(now() - t); }
+    return n;
+  }
+  // every state a jump's settle can put the frame in, drawn once now (one real frame per era: its lights, grade, sky light
+  // colours, env map and cached clouds, the sky's cross-fade on), so nothing the settle shows is first drawn — and none of
+  // its pipeline states first built by the GPU — inside a match; then the era in force put back
+  _warmLooks(all) {
+    const env = this.env, U = env?.U, sc = env?.scene;
+    if (!env?.applyLights || !U?.uCloudMix || !G.game?.R?.render) return;
+    const save = { em: env.envMap, se: sc.environment, ct: U.uCloudTex.value, ct2: U.uCloudTex2.value, mix: U.uCloudMix.value, grade: env.grade };
+    const cur = env._stageTheme(env.theme);
+    try {
+      for (const [k, T] of all) {
+        env.applyLights(T);
+        const ct = this._cloudTex(T), em = this._envCache?.get(k);
+        if (em) env.useEnvMap(em);
+        if (ct) { U.uCloudTex2.value = ct; U.uCloudMix.value = 0.5; }
+        try { G.game.R.render(); } catch (e) { /* (a headless page) */ }
+      }
+    } finally {
+      env.applyLights(cur);
+      env.grade = save.grade; env.envMap = save.em; sc.environment = save.se;
+      U.uCloudTex.value = save.ct; U.uCloudTex2.value = save.ct2; U.uCloudMix.value = save.mix;
+      this.stats.looksWarmed = (this.stats.looksWarmed || 0) + all.size;
+    }
+  }
+  // a look's clouds: the environment's own bake if it is that look's, else the cache's (null if not baked)
+  _cloudTex(T) {
+    const env = this.env, k = cloudKey(T);
+    if (env?._cloudPrimaryT && cloudKey(env._cloudPrimaryT) === k) return env._cloudRT.texture;
+    return this._cloudCache?.get(k)?.texture || null;
+  }
 
   // every era material's program (and its shadow depth program) compiled now, at load, not when a piece first shows
   // mid-jump: each era mesh shown once, collapsed, for a compile pass
@@ -448,12 +660,19 @@ export class EraWorld {
     const sprites = fx.filter((o) => o.isSprite), op = sprites.map((o) => o.material.opacity);
     for (const o of sprites) o.material.opacity = 0;
     const sets = Object.values(this.env?.stageSets || {}).filter(Boolean);
-    const t = now(), ms = [...this.meshes, ...this.propMeshes, ...fx, ...sets], was = ms.map((m) => m.visible);
+    const twins = this._prepass?.twins || [];
+    const t = now(), ms = [...this.meshes, ...this.propMeshes, ...fx, ...sets, ...twins], was = ms.map((m) => m.visible);
     for (const m of ms) m.visible = true;
     const p0 = r.info?.programs?.length || 0;
     // a real frame (the game's own post stack: the exact program variants, the shadow depth and the GTAO passes), every
-    // era mesh up but collapsed by the shader (uEra holds the world's era: a piece of another era draws nothing)
-    try { if (G.game?.R?.render) G.game.R.render(); else r.compile(sc, cam); } catch (e) { /* (a headless page) */ }
+    // era mesh up but collapsed by the shader (uEra holds the world's era: a piece of another era draws nothing) — once
+    // with each of the level's programs (fix round 2: the full one and the three static ones)
+    const now0 = this._matNow, progs = [this.levelMat, ...Object.values(this._static || {})].filter(Boolean);
+    for (const pm of progs.length ? progs : [null]) {
+      if (pm) for (const m of this._levelMeshes) m.material = pm;
+      try { if (G.game?.R?.render) G.game.R.render(); else r.compile(sc, cam); } catch (e) { /* (a headless page) */ }
+    }
+    if (progs.length) for (const m of this._levelMeshes) m.material = now0;
     ms.forEach((m, i) => { m.visible = was[i]; });
     sprites.forEach((o, i) => { o.material.opacity = op[i]; });
     // the paint atlas's clearing quad (paint.clearFaces: first used at the warning, when the appearing pieces are cleared):
@@ -492,6 +711,9 @@ export class EraWorld {
     const vis = (m) => hasEra(m, from) || (front >= 0 && hasEra(m, to)) || (this.warming && hasEra(m, nextTo));
     for (const m of this.meshes) m.visible = vis(m.userData.eraMask);
     for (const m of this.propMeshes) m.visible = vis(m.userData.eraMask);
+    // (fix round 2) at rest — no front, no warning, no done pulse, not a frozen still — the static program of the era in
+    // force and the depth prepass; else the full program
+    this._levelProgram(front < 0 && !(warnK > 0) && !(pulseK > 0) && from === to && !this.frozen ? from : 0);
   }
   // is this block in play at the painter's stage time (and outside its flip's guard)? — the paint block gate (H5)
   inkOk(b, et) {
@@ -507,9 +729,14 @@ export class EraWorld {
   dispose() {
     if (this.mm && Object.prototype.hasOwnProperty.call(this.mm, 'setViewerTeam')) delete this.mm.setViewerTeam;
     for (const m of this.meshes) { this.scene?.remove(m); m.geometry.dispose(); }
+    if (this._prepass) { for (const t of this._prepass.twins) { this.scene?.remove(t); } this._prepass.mat.dispose(); this._prepass = null; }
+    for (const m of Object.values(this._static || {})) m.dispose();
+    this._static = null; this._levelMeshes = [];
     this.meshes = []; this.propMeshes = [];
     this.fx?.dispose(); this.fx = null;
     if (this.env && this.env.themeOverlay) this.env.themeOverlay = null;
+    if (this._cloudCache) { for (const rt of this._cloudCache.values()) rt.dispose(); this._cloudCache = null; }
+    if (this._envCache) { for (const rt of this._envCache.values()) rt.dispose(); this._envCache = null; }
   }
 }
 
@@ -544,6 +771,7 @@ export class StageEras {
     if (!m.attract) W._syncTheme();
     this.chip = m.attract ? null : new EraHud(this);   // (not `hud`: R.hud is a registry hook name)
     if (W.frozen && !m.attract) this.freeze(W.frozen);
+    W._lamps(W.envEra);
     emit('era:set', { era: st, instant: true, why: 'start' });
   }
   get plan() { return this.over || this.sched; }
@@ -622,6 +850,12 @@ export class StageEras {
     const t = clockT > this._tHigh ? clockT : this._tHigh;
     this._tHigh = t;
     if (this._frz) { this._frozenView(); return; }
+    // (the art phase, DESIGN §3.5) Tartar rings once in the intro fly-in, as the camera sweeps past the dome toward the
+    // spawn: the sound every jump starts with, taught before the first one (the ring's look runs on the intro's own clock)
+    if (this.m.state === 'intro' && !this.m.attract && !this._introRung && this.m.stateT >= 0.7) {
+      this._introRung = true; this._ring(null, 'intro'); this._ringAt = undefined; this._introRingAt = this.m.stateT;
+      this.stats.introRing = 1;
+    }
     const list = this.jumps(t);
     // every group to its era at this moment (a pure function of the clock): the front flips each when it reaches r_g
     for (const g of W.groups) { const e = this.eraAt(g.rg, t, list); if (g.era !== e) this._flip(g, e, t); }
@@ -632,6 +866,7 @@ export class StageEras {
     if (t > this.lastT && t - this.lastT < 1.0) this._events(this.lastT, t, list);
     this.lastT = t;
     this._view(t, list);
+    if (W._cloudTheme !== undefined && W.env && W.env.theme !== W._cloudTheme) W._warmClouds();   // (a time of day switched after the load's warm: tests, tools)
     if (this.cur || this._visit) this._botTick(t, this.cur);
     // a minimap base still missing (a drop the load did not see: the time of day changed mid-match) is rebuilt outside a
     // jump, one per frame (~0.1 s each): from J to done only cached bases are swapped
@@ -1095,6 +1330,59 @@ export class StageEras {
     }
     return { y: best, roof };
   }
+  // the highest top under (x, z) at or below y among the blocks that stand at stage time t (an era piece by its group's
+  // flip at t, every other block as it is now): { y, roof, b } (y −Infinity: nothing — water)
+  _floorAtT(x, z, y, t, skipRoof = false) {
+    const L = this.W.level, ids = L.queryBlocks(x - 0.01, z - 0.01, x + 0.01, z + 0.01, this._qbt || (this._qbt = []));
+    let best = -Infinity, roof = false, blk = null;
+    for (const id of ids) {
+      const b = L.blocks[id];
+      if (b.dynamic || (b.presence ? !this.present(b, t) : !b.solid)) continue;
+      if (skipRoof && b.roof) continue;
+      const top = this._topOf(b, x, z);
+      if (top !== null && top <= y && top > best) { best = top; roof = b.roof; blk = b; }
+    }
+    return { y: best, roof, b: blk };
+  }
+  // (the art phase's first commit: the final review's minor 1) a super jump launched onto an era piece that will be gone at
+  // touchdown — its group flips before the flight ends, and the floor left under the landing is water, or a roof with
+  // nothing walkable within 3.4 m below — lands where the rescue would put that kid instead: the nearest nav node (≤ 12 m)
+  // whose floor stands at touchdown and that is valid in the era the jump goes to (ground that stays; valid in the era in
+  // force as well first, the rescue's own order); none: the jumper's own pad. The owner's screen decides at launch (the
+  // registry's superJumpLanding: charge → flight), and the 'superjump' record carries the moved landing to every screen.
+  // Without it a teammate on a span or a garden tile in Practice's rewind was a landing into the river (the reviewer's
+  // probe: bridge-2, bridge-3, garden-11, touchdown 0.3 s after the flip, 3 of 3 splatted)
+  superJumpLanding(a, s) {
+    if (!this.W.groups.length || !G.nav) return;
+    const to = s.to, t0 = this.tNow, t1 = t0 + (s.dur || 1.5), tz = t1 + 0.4;   // (touchdown, and the landing's settle)
+    const here = this._floorAtT(to.x, to.z, to.y + 0.4, t0);
+    if (!here.b || !here.b.presence || here.y < to.y - 0.8) return;   // shared ground under the landing: it stays
+    if (this.present(here.b, t1) && this.present(here.b, tz)) return;   // its piece is still there at touchdown
+    const f = this._floorAtT(to.x, to.z, here.y - 0.05, tz);
+    let bad = f.y === -Infinity || f.y < PLAYER.waterY + 0.25;
+    if (!bad && f.roof) bad = this._floorAtT(to.x, to.z, f.y - 0.05, tz, true).y < f.y - 3.4;
+    if (!bad) return;   // (it drops onto ground that stands: the flight lands there, as a walker would fall)
+    const nav = G.nav, J = this.activeAt(t1), eTo = J ? J.to : this.eraInForce(tz), EV = this._eraValid(eTo), V0 = nav.valid;
+    const cand = [];
+    for (const n of nav.nodes) {
+      if (!EV[n.id]) continue;
+      const d2 = (n.x - to.x) ** 2 + (n.z - to.z) ** 2 + ((n.y - to.y) * 0.5) ** 2;
+      if (d2 < 144) cand.push([d2, n]);
+    }
+    cand.sort((p, q) => p[0] - q[0]);
+    const stands = (n) => { const fl = this._floorAtT(n.x, n.z, n.y + 0.3, tz); return fl.y > n.y - 0.25 && fl.y > PLAYER.waterY + 0.3; };
+    let best = null;
+    for (const ok of [(n) => V0[n.id], () => true]) {
+      for (const [, n] of cand) if (ok(n) && stands(n)) { best = n; break; }
+      if (best) break;
+    }
+    const from = [+to.x.toFixed(2), +to.y.toFixed(2), +to.z.toFixed(2)];
+    if (best) to.set(best.x, best.y, best.z);
+    else { const pad = G.level?.spawnPads?.[a.team]; if (pad) to.copy(pad); }
+    this.stats.sjRedirects = (this.stats.sjRedirects || 0) + 1;
+    this.stats.sjLog = this.stats.sjLog || [];
+    if (this.stats.sjLog.length < 40) this.stats.sjLog.push({ who: a.name, t: +t0.toFixed(2), tag: here.b.tag, from, to: [+to.x.toFixed(2), +to.y.toFixed(2), +to.z.toFixed(2)], pad: !best });
+  }
   // the nav's valid flags in era e (the union graph's per-era set; the era in force when there is none)
   _eraValid(e) { const nav = G.nav; return (e && nav.eraValid && nav.eraValid[e - 1]) || nav.valid; }
   // an own squidkid left over water, or on a roof with nothing walkable within 3.4 m below it, after a piece went from
@@ -1155,10 +1443,14 @@ export class StageEras {
     else { const lj = this._lastDone(t, list); W.looks(e, e, -1, 0, pulse, lj ? lj.from : e, lj ? lj.to : e); }
     if (this.fresh && t > this._freshUntil) this.fresh = null;
     // the environment: the time-lapse from J to done, the backdrop's horizon run
-    if (phase === 'jump') this._timelapse(J, t); else if (this._envBase && !(J && t >= J.at)) this._envRestore();
+    // (fix round 3: after done the new era's lights come in)
+    if (phase === 'jump') this._timelapse(J, t);
+    else if (this._envBase && J && t >= J.at && this._envBase.at === J.at) this._lightsIn(J, t);
+    else if (this._envBase && !(J && t >= J.at)) this._envRestore();
     this._horizon(J, t);
     // FX
-    const ringK = this._ringAt !== undefined && t - this._ringAt < this._ringLen ? 1 - (t - this._ringAt) / this._ringLen : 0;
+    let ringK = this._ringAt !== undefined && t - this._ringAt < this._ringLen ? 1 - (t - this._ringAt) / this._ringLen : 0;
+    if (this._introRingAt !== undefined && this.m.state === 'intro') { const k = this.m.stateT - this._introRingAt; ringK = k >= 0 && k < 1.6 ? 1 - k / 1.6 : 0; }
     const pick = J && t >= J.at - 1 && t < J.at + 1.2 ? 1 : 0;
     const beam = J && t >= J.at - 1 && t < J.at + 0.6 ? Math.min(1, (t - (J.at - 1)) / 0.3) * (t > J.at + 0.3 ? 1 - (t - J.at - 0.3) / 0.3 : 1) : 0;
     const warnIn = J && phase === 'warn' ? Math.min(1, (t - J.warnAt) / 0.6) : 0;   // (the holograms and wires: up within 0.6 s of the warning)
@@ -1178,15 +1470,23 @@ export class StageEras {
   _lastDone(t, list) { let r = null; for (const j of list) { if (t >= j.at + this.W.doneOff) r = j; else break; } return r; }
   // H13: from J to done the sky runs fast — the sun swings sunSwing° and back, clouds race cloudRate ×, the sky's colours
   // blend from the old era's look to the new; exposure and the grade are never touched (ink stays as readable)
+  // the old era's theme and the new one's at this time of day (the eras' looks over the theme)
+  _themes(J) {
+    const env = G.env, W = this.W, save = W.envEra;
+    W.envEra = J.from; const Tf = env._stageTheme(env.theme);
+    W.envEra = J.to; const Tt = env._stageTheme(env.theme);
+    W.envEra = save;
+    return { Tf, Tt };
+  }
   _timelapse(J, t) {
     const env = G.env, W = this.W;
     if (!env || !env.U || !env._stageTheme) return;
     if (!this._envBase || this._envBase.at !== J.at) {
-      const save = W.envEra;
-      W.envEra = J.from; const Tf = env._stageTheme(env.theme);
-      W.envEra = J.to; const Tt = env._stageTheme(env.theme);
-      W.envEra = save;
-      this._envBase = { at: J.at, Tf, Tt, cloud: env.U.uCloudParams.value.z, fog: env.scene?.fog ? [env.scene.fog.near, env.scene.fog.far] : null };
+      const { Tf, Tt } = this._themes(J);
+      // (fix round 3) the new look's clouds, baked at load (W._warmClouds): the sky cross-fades to them, nothing is baked here
+      const ct = W._cloudTex(Tt);
+      this._envBase = { at: J.at, Tf, Tt, cloud: env.U.uCloudParams.value.z, fog: env.scene?.fog ? [env.scene.fog.near, env.scene.fog.far] : null, cloudTex: ct && ct !== env.U.uCloudTex.value ? ct : null, envRT: W._envCache?.get(cloudKey(Tt)) || null };
+      if (!ct) W.stats.cloudMiss = (W.stats.cloudMiss || 0) + 1;
     }
     const B = this._envBase, U = env.U, k = Math.min(1, (t - J.at) / W.doneOff), s = k * k * (3 - 2 * k), bump = Math.sin(Math.PI * k);
     const TL = W.E.timelapse || { sunSwing: 60, cloudRate: 20 };
@@ -1198,11 +1498,30 @@ export class StageEras {
     const el = (B.Tf.sunEl + (B.Tt.sunEl - B.Tf.sunEl) * s) * DEG, az = (B.Tf.sunAz + (B.Tt.sunAz - B.Tf.sunAz) * s + TL.sunSwing * bump) * DEG;
     U.uSunDir.value.set(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).normalize();
     U.uCloudParams.value.z = B.cloud * (1 + (TL.cloudRate - 1) * bump);
+    // (fix round 3) the sky's light colours (its ground, glows, sun disk, cloud colours, night, stars) blend with it, and the
+    // clouds cross-fade to the new look's bake; the world's lights and the grade hold until done (ink stays as readable)
+    env.applyLights?.(B.Tt, B.Tf, s, 'sky');
+    if (U.uCloudMix) { U.uCloudTex2.value = B.cloudTex; U.uCloudMix.value = B.cloudTex ? s : 0; }
+    W._lamps(J.to, J.from, s);
     env._fitShadow?.();
   }
-  // done + 0.7 s: the new era's look settles — the uniforms the time-lapse blended are set to the new theme exactly, the
-  // fog colour follows, and the env map (PMREM, 256) is rebuilt once; no cloud re-bake (the eras' looks never change the
-  // clouds), so this costs a few ms where a full setTheme costs tens (ENGINE §7 risk 10)
+  // done → done + 0.7 s: the new era's lights come in — the world's part (the sun, the sky / sea sun, the hemisphere, the
+  // sky IBL's strength, the grade: exposure, tints, bloom) blended from the old era's, the sky's held at the new look —
+  // so the light does not pop; at done + 0.7 _envFinal sets everything exactly as setTheme would (a late joiner's look)
+  _lightsIn(J, t) {
+    const env = G.env, B = this._envBase;
+    if (!env?.applyLights || !B) return;
+    const k = Math.min(1, Math.max(0, (t - (J.at + this.W.doneOff)) / 0.7)), s = k * k * (3 - 2 * k);
+    env.applyLights(B.Tt, null, 1, 'sky');
+    env.applyLights(B.Tt, B.Tf, s, 'world');
+    if (env.U.uCloudMix) { env.U.uCloudTex2.value = B.cloudTex; env.U.uCloudMix.value = B.cloudTex ? 1 : 0; }
+    G.fx?.setLighting?.(env.getSkyColors?.());
+  }
+  // done + 0.7 s: the new era's look settles — everything setTheme would set for the new era, set exactly: the uniforms the
+  // time-lapse blended, the lights, the grade and the sky's light colours (env.applyLights: fix round 3 — before it a real
+  // jump kept the old era's sun, hemisphere, sky IBL and grade, and only a seek or a debugJump applied the new ones), the
+  // fog, the clouds (the slices baked from the pre-bell swapped in: no full re-bake, ~0.45 s of GPU) and the env map
+  // (PMREM, 256) rebuilt once — so a late joiner's seek and the room's jump give the same look
   _envFinal(J) {
     const env = G.env, B = this._envBase;
     this._envBase = null;
@@ -1212,12 +1531,20 @@ export class StageEras {
     if (T.haze) U.uHaze.value.set(T.haze[0], T.haze[1], T.haze[2], 0);
     const el = T.sunEl * DEG, az = T.sunAz * DEG;
     U.uSunDir.value.set(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).normalize();
-    U.uCloudParams.value.z = B.cloud;
+    if (T.cloud) U.uCloudParams.value.set(...T.cloud); else U.uCloudParams.value.z = B.cloud;
+    if (T.sunRadius !== undefined && U.uSunCos) U.uSunCos.value = Math.cos(T.sunRadius * DEG);
+    if (T.seaDeep && U.uSeaDeep) { U.uSeaDeep.value.set(T.seaDeep); U.uSeaShallow.value.set(T.seaShallow); U.uSeaCrest.value.set(T.seaCrest); U.uFoamColor.value.set(T.foam); }
+    if (U.uSunSpec && T.sunSpec !== undefined) { U.uSunSpec.value = T.sunSpec; U.uWaveStrength.value = T.waveStrength; }
     if (U.uSeaAmbient && T.seaAmbientK !== undefined) U.uSeaAmbient.value.copy(U.uSkyMid.value).lerp(U.uHorizon.value, 0.5).multiplyScalar(T.seaAmbientK);
+    env.applyLights?.(T);
     if (env.fogColor) env.fogColor.copy(U.uHorizon.value).lerp(U.uSkyMid.value, 0.15);
     if (env.scene?.fog?.isFog) { env.scene.fog.color.copy(env.fogColor); if (T.fog) { env.scene.fog.near = T.fog[0]; env.scene.fog.far = T.fog[1]; } }
+    // the clouds: the new look's, baked at load, swapped in (a texture pointer: no bake in or after a jump)
+    if (U.uCloudMix) { if (B.cloudTex) U.uCloudTex.value = B.cloudTex; U.uCloudMix.value = 0; }
+    G.fx?.setLighting?.(env.getSkyColors?.());
     env._fitShadow?.();
-    env._rebuildEnvMap?.();
+    // the env map: the new look's, built at load, swapped in by reference (a PMREM pass only if it was not cached)
+    if (B.envRT && env.useEnvMap) env.useEnvMap(B.envRT); else { env._rebuildEnvMap?.(); this.W.stats.envMiss = (this.W.stats.envMiss || 0) + 1; }
     this.W.stats.envFinalMs = Math.round((now() - t) * 10) / 10;
   }
   _envRestore() {
@@ -1225,6 +1552,7 @@ export class StageEras {
     this._envBase = null;
     if (!env || !B) return;
     if (env.U?.uCloudParams) env.U.uCloudParams.value.z = B.cloud;
+    if (env.U?.uCloudMix) env.U.uCloudMix.value = 0;
     if (env.setTheme && env.theme) env.setTheme(env.theme);
   }
   // the horizon run: as the front leaves the arena the backdrop's era sets swap, a radial wipe from R_max outward (1.3 s)
@@ -1319,6 +1647,7 @@ export class StageEras {
     for (const a of this.m.actors) if (a.bot) a.bot._eraHold = null;
     if (this._fz) { this._fz.stop(0.1); this._fz = null; }
     if (this._envBase) this._envRestore();
+    if (G.env?.U?.uCloudMix) G.env.U.uCloudMix.value = 0;
     this.chip?.dispose(); this.chip = null;
     const W = this.W;
     W.fx?.setJump(null);

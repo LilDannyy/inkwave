@@ -1,0 +1,186 @@
+JOB-12 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 13:14:28
+branch botlab-b5-bluestone, ran at 7ac4bf62, exit code 0, wall time 25min
+(a written-up JOB-12.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-12 head 7ac4bf62 load { 2.26 2.05 1.96 }
+== first-a: RESULT 1/1  0 FAIL
+== frames-a: RESULT 4/4  0 FAIL
+== first-b: RESULT 1/1  0 FAIL
+== frames-b: RESULT 4/4  0 FAIL
+== first-c: RESULT 1/1  0 FAIL
+== frames-c: RESULT 4/4  0 FAIL
+== probe-gpu: RESULT 9/9  0 FAIL
+== eras-hud-1: RESULT 12/12  0 FAIL
+== eras-hud-2: RESULT 12/12  0 FAIL
+== eras-hud-3: RESULT 12/12  0 FAIL
+== perf bluestone1-day-1: "quality":"high" "avg":{"calls":237,"tris":1231830,"ms":6.3}  HARNESS ERA=1: every game page loads with ?era=1 
+== perf bluestone2-day-1: "quality":"high" "avg":{"calls":216,"tris":1194505,"ms":6.58}  HARNESS ERA=2: every game page loads with ?era=2 
+== perf bluestone3-day-1: "quality":"high" "avg":{"calls":200,"tris":1209835,"ms":7.03}  HARNESS ERA=3: every game page loads with ?era=3 
+== perf halyard0-day-1: "quality":"high" "avg":{"calls":272,"tris":3338793,"ms":8.23}  
+== perf bluestone1-dusk-1: "quality":"high" "avg":{"calls":227,"tris":1226582,"ms":6.14}  HARNESS ERA=1: every game page loads with ?era=1 
+== perf bluestone2-dusk-1: "quality":"high" "avg":{"calls":233,"tris":1207288,"ms":6.44}  HARNESS ERA=2: every game page loads with ?era=2 
+== perf bluestone3-dusk-1: "quality":"high" "avg":{"calls":211,"tris":1233225,"ms":7.31}  HARNESS ERA=3: every game page loads with ?era=3 
+== perf halyard0-dusk-1: "quality":"high" "avg":{"calls":245,"tris":3265932,"ms":8.12}  
+== perf bluestone1-day-2: "quality":"high" "avg":{"calls":206,"tris":1214531,"ms":6.35}  HARNESS ERA=1: every game page loads with ?era=1 
+== perf bluestone2-day-2: "quality":"high" "avg":{"calls":233,"tris":1222306,"ms":6.75}  HARNESS ERA=2: every game page loads with ?era=2 
+== perf bluestone3-day-2: "quality":"high" "avg":{"calls":211,"tris":1250199,"ms":7.11}  HARNESS ERA=3: every game page loads with ?era=3 
+== perf halyard0-day-2: "quality":"high" "avg":{"calls":267,"tris":3326855,"ms":8.19}  
+== perf bluestone1-dusk-2: "quality":"high" "avg":{"calls":232,"tris":1265367,"ms":7.03}  HARNESS ERA=1: every game page loads with ?era=1 
+== perf bluestone2-dusk-2: "quality":"high" "avg":{"calls":212,"tris":1151003,"ms":6.88}  HARNESS ERA=2: every game page loads with ?era=2 
+== perf bluestone3-dusk-2: "quality":"high" "avg":{"calls":224,"tris":1277969,"ms":7.08}  HARNESS ERA=3: every game page loads with ?era=3 
+== perf halyard0-dusk-2: "quality":"high" "avg":{"calls":242,"tris":3274281,"ms":8.12}  
+== perf bluestone1-day-3: "quality":"high" "avg":{"calls":202,"tris":1220956,"ms":6.06}  HARNESS ERA=1: every game page loads with ?era=1 
+== perf bluestone2-day-3: "quality":"high" "avg":{"calls":216,"tris":1170668,"ms":6.61}  HARNESS ERA=2: every game page loads with ?era=2 
+== perf bluestone3-day-3: "quality":"high" "avg":{"calls":217,"tris":1232530,"ms":6.93}  HARNESS ERA=3: every game page loads with ?era=3 
+== perf halyard0-day-3: "quality":"high" "avg":{"calls":262,"tris":3331838,"ms":8.06}  
+== perf bluestone1-dusk-3: "quality":"high" "avg":{"calls":226,"tris":1215882,"ms":6.75}  HARNESS ERA=1: every game page loads with ?era=1 
+== perf bluestone2-dusk-3: "quality":"high" "avg":{"calls":232,"tris":1211170,"ms":7.51}  HARNESS ERA=2: every game page loads with ?era=2 
+== perf bluestone3-dusk-3: "quality":"high" "avg":{"calls":189,"tris":1242774,"ms":6.97}  HARNESS ERA=3: every game page loads with ?era=3 
+== perf halyard0-dusk-3: "quality":"high" "avg":{"calls":246,"tris":3302191,"ms":8.87}  
+== check-maps (every stage): 19 ok lines, 5 not ok; bluestone#1  568 pieces  (strips over 25 m: 0);bluestone#2  590 pieces  (strips over 25 m: 0);bluestone#3  700 pieces  (strips over 25 m: 0);bluestone    712 pieces  ok;
+== eras-static: RESULT eras-static 23/23
+== eras-world-12: RESULT 12/12  0 FAIL
+== eras-world-34: RESULT 7/7  0 FAIL
+== eras-world-5: RESULT 3/3  0 FAIL
+== eras-look: RESULT 17/18  1 FAIL
+== eras-jump-first: RESULT 1/1  0 FAIL
+== eras-jump-a: RESULT 8/8  0 FAIL
+== eras-jump-b: RESULT 7/7  0 FAIL
+== eras-jump-c: RESULT 3/3  0 FAIL
+== eras-jump-d: RESULT 4/4  0 FAIL
+== eras-jump-e: RESULT 6/6  0 FAIL
+== eras-hud: RESULT 12/12  0 FAIL
+== eras-modes: RESULT 6/6  0 FAIL
+== stage-mods: RESULT 36/36  0 FAIL
+== world-build-halyard: RESULT 5/5  0 FAIL
+== world-build-bluestone: RESULT 5/5  0 FAIL
+== climb-audit-e1: RESULT 1/1  0 FAIL
+== cover-map-e1: RESULT 1/1  0 FAIL
+== spawn-mid-e1: RESULT 1/1  0 FAIL
+== tower-check e1: HARNESS ERA=1: every game page loads with ?era=1 ERA 1 (started in era 1, held there: ?era=1; page ?autopilot&era=1) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e2: RESULT 1/1  0 FAIL
+== cover-map-e2: RESULT 1/1  0 FAIL
+== spawn-mid-e2: RESULT 1/1  0 FAIL
+== tower-check e2: HARNESS ERA=2: every game page loads with ?era=2 ERA 2 (started in era 2, held there: ?era=2; page ?autopilot&era=2) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e3: RESULT 1/1  0 FAIL
+== cover-map-e3: RESULT 1/1  0 FAIL
+== spawn-mid-e3: RESULT 1/1  0 FAIL
+== tower-check e3: HARNESS ERA=3: every game page loads with ?era=3 ERA 3 (started in era 3, held there: ?era=3; page ?autopilot&era=3) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== done
+== eras-bake: RESULT 3/3  0 FAIL
+== stage-audit turf e1: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit turf e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit turf e3: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+### done
+
+## last 15 lines of job.log
+== tower-check e1: HARNESS ERA=1: every game page loads with ?era=1 ERA 1 (started in era 1, held there: ?era=1; page ?autopilot&era=1) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints   
+== climb-audit-e2: RESULT 1/1  0 FAIL
+== cover-map-e2: RESULT 1/1  0 FAIL
+== spawn-mid-e2: RESULT 1/1  0 FAIL
+== tower-check e2: HARNESS ERA=2: every game page loads with ?era=2 ERA 2 (started in era 2, held there: ?era=2; page ?autopilot&era=2) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints   
+== climb-audit-e3: RESULT 1/1  0 FAIL
+== cover-map-e3: RESULT 1/1  0 FAIL
+== spawn-mid-e3: RESULT 1/1  0 FAIL
+== tower-check e3: HARNESS ERA=3: every game page loads with ?era=3 ERA 3 (started in era 3, held there: ?era=3; page ?autopilot&era=3) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints   
+== done
+== eras-bake: RESULT 3/3  0 FAIL
+== stage-audit turf e1: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit turf e2: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+== stage-audit turf e3: PASS lightmap applied (baked for this build, not stale)  {"id":"bluestone","mode":"turf","rows":1142} RESULT 3/3 
+### done
+
+## art-tests.txt
+== check-maps (every stage): 19 ok lines, 5 not ok; bluestone#1  568 pieces  (strips over 25 m: 0);bluestone#2  590 pieces  (strips over 25 m: 0);bluestone#3  700 pieces  (strips over 25 m: 0);bluestone    712 pieces  ok;
+== eras-static: RESULT eras-static 23/23
+== eras-world-12: RESULT 12/12  0 FAIL
+== eras-world-34: RESULT 7/7  0 FAIL
+== eras-world-5: RESULT 3/3  0 FAIL
+== eras-look: RESULT 17/18  1 FAIL
+== eras-jump-first: RESULT 1/1  0 FAIL
+== eras-jump-a: RESULT 8/8  0 FAIL
+== eras-jump-b: RESULT 7/7  0 FAIL
+== eras-jump-c: RESULT 3/3  0 FAIL
+== eras-jump-d: RESULT 4/4  0 FAIL
+== eras-jump-e: RESULT 6/6  0 FAIL
+== eras-hud: RESULT 12/12  0 FAIL
+== eras-modes: RESULT 6/6  0 FAIL
+== stage-mods: RESULT 36/36  0 FAIL
+== world-build-halyard: RESULT 5/5  0 FAIL
+== world-build-bluestone: RESULT 5/5  0 FAIL
+== climb-audit-e1: RESULT 1/1  0 FAIL
+== cover-map-e1: RESULT 1/1  0 FAIL
+== spawn-mid-e1: RESULT 1/1  0 FAIL
+== tower-check e1: HARNESS ERA=1: every game page loads with ?era=1 ERA 1 (started in era 1, held there: ?era=1; page ?autopilot&era=1) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e2: RESULT 1/1  0 FAIL
+== cover-map-e2: RESULT 1/1  0 FAIL
+== spawn-mid-e2: RESULT 1/1  0 FAIL
+== tower-check e2: HARNESS ERA=2: every game page loads with ?era=2 ERA 2 (started in era 2, held there: ?era=2; page ?autopilot&era=2) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== climb-audit-e3: RESULT 1/1  0 FAIL
+== cover-map-e3: RESULT 1/1  0 FAIL
+== spawn-mid-e3: RESULT 1/1  0 FAIL
+== tower-check e3: HARNESS ERA=3: every game page loads with ?era=3 ERA 3 (started in era 3, held there: ?era=3; page ?autopilot&era=3) == bluestone tower track · heading 0° · length 73.99 / 73.99 m (Alpha's / Bravo's side) · speed 0.92 m/s at 1 rider · to the goal ≈ 100 s with checkpoints    holes (no floor under the platform): none    clearance: clean    ride Alpha: knockout (winner 0) at
+== done
+
+## perf.txt
+medians of 3 runs (the runs in brackets); each Bluestone era ÷ Halyard
+  day  halyard:      calls 267 [272, 267, 262] | tris 3331838 [3338793, 3326855, 3331838] | ms 8.19 [8.23, 8.19, 8.06]
+  day  bluestone e1: calls 206 [237, 206, 202] | tris 1220956 [1231830, 1214531, 1220956] | ms 6.30 [6.30, 6.35, 6.06]
+  day    ratio e1:   calls ×0.77 | tris ×0.37 | cpuRender ×0.77
+  day  bluestone e2: calls 216 [216, 233, 216] | tris 1194505 [1194505, 1222306, 1170668] | ms 6.61 [6.58, 6.75, 6.61]
+  day    ratio e2:   calls ×0.81 | tris ×0.36 | cpuRender ×0.81
+  day  bluestone e3: calls 211 [200, 211, 217] | tris 1232530 [1209835, 1250199, 1232530] | ms 7.03 [7.03, 7.11, 6.93]
+  day    ratio e3:   calls ×0.79 | tris ×0.37 | cpuRender ×0.86
+  dusk halyard:      calls 245 [245, 242, 246] | tris 3274281 [3265932, 3274281, 3302191] | ms 8.12 [8.12, 8.12, 8.87]
+  dusk bluestone e1: calls 227 [227, 232, 226] | tris 1226582 [1226582, 1265367, 1215882] | ms 6.75 [6.14, 7.03, 6.75]
+  dusk   ratio e1:   calls ×0.93 | tris ×0.37 | cpuRender ×0.83
+  dusk bluestone e2: calls 232 [233, 212, 232] | tris 1207288 [1207288, 1151003, 1211170] | ms 6.88 [6.44, 6.88, 7.51]
+  dusk   ratio e2:   calls ×0.95 | tris ×0.37 | cpuRender ×0.85
+  dusk bluestone e3: calls 211 [211, 224, 189] | tris 1242774 [1233225, 1277969, 1242774] | ms 7.08 [7.31, 7.08, 6.97]
+  dusk   ratio e3:   calls ×0.86 | tris ×0.38 | cpuRender ×0.87
+
+## probe-gpu.txt
+PASS issue 7: fresh nodes per jump against the sampler (28 draws from validIds)  [{"jump":"1>2","validIds":4958,"fresh":150,"share":3.03,"pDrawAtLeastOneOf28":57.7},{"jump":"2>3","validIds":5844,"fresh":952,"share":16.29,"pDrawAtLeastOneOf28":99.3}]
+PASS the GPU timer extension  {"ext":true,"renderer":"WebKit WebGL","version":"WebGL 2.0 (OpenGL ES 3.0 Chromium)","size":[1134,708],"quality":"low"}
+PASS base: 240 frames, no jump  {"disjoint":false,"frames":240,"wallMedian":2.3,"wallMax":4.6,"gpuMedian":9.17,"gpuMax":18.85,"worstWall":[[null,4.6,3.51,0,"idle"],[null,4.6,2.93,0,"idle"],[null,4.5,8.32,0,"idle"],[null,4.4,4.93,0,"idle"],[null,4.4,9.73,0.1,"idle"]],"worstGpu":[[null,1.9,18.85,0,"idle"],[null,1.4,18.45,0,"idle"],[null,1.8,18.44,0.1,"idle"],[null,2.7,17.61,0,"idle"],[null,3.4,17.6,
+PASS pmrem: env._rebuildEnvMap() alone (size 256, GGX 256 samples), then the next frame  {"disjoint":false,"rows":[[0,0.4,11.15,0,"pmrem"],[null,4.1,7.39,0,"after"],[1,0.3,11.37,0,"pmrem"],[null,3.2,11.95,0,"after"],[2,0.2,20.18,0,"pmrem"],[null,3.2,11.17,0,"after"],[3,0.2,22.31,0,"pmrem"],[null,3.2,9.54,0.1,"after"],[4,0.3,22.93,0,"pmrem"],[null,3.1,16.12,0,"after"]]}
+PASS jump1: 1 → 2, J − 0.5 … done + 1.5 [J + s, wall ms (finished), GPU ms, era update ms, phase]  {"disjoint":false,"doneAt":3.96,"frames":358,"wallMedian":2.3,"wallMax":12,"gpuMedian":11.53,"gpuMax":27.07,"worstWall":[[4.37,12,21.75,0.1,"idle"],[4.28,9.9,9.88,0.1,"idle"],[3.97,8.8,9.74,1.8,"idle"],[3.83,7.6,21.49,0,"jump"],[3.28,6.7,23.5,0,"jump"]],"worstGpu":[[3.27,2.8,27.07,0.1,"jump"],[
+PASS theme: 3 → 1 at sunset [J + s, wall ms (finished), GPU ms, era update ms, phase]  {"label":"theme","theme":"sunset","disjoint":false,"frames":358,"wallMedian":2.7,"wallMax":312.6,"gpuMedian":14,"gpuMax":31.64,"worstWall":[[0.02,312.6,20.78,0.4,"jump"],[4.32,39,27.84,0,"idle"],[-0.32,31.1,17.4,0,"warn"],[0.85,26.8,10.28,0.1,"jump"],[1.33,22.7,18.13,0,"jump"]],"worstGpu":[[4.3,2.8,31.64,0,"id
+PASS theme-noCurtain: 3 → 1 at sunset [J + s, wall ms (finished), GPU ms, era update ms, phase]  {"label":"theme-noCurtain","theme":"sunset","disjoint":false,"frames":358,"wallMedian":2.7,"wallMax":217.1,"gpuMedian":13.96,"gpuMax":34.31,"worstWall":[[0,217.1,21.79,0,"warn"],[4.32,37.5,30.28,0.1,"idle"],[0.85,21.8,11.74,0.2,"jump"],[3.97,12.4,11.4,0.9,"idle"],[5.32,10,14.83,0,"idle"]],"worstGpu":
+PASS theme-noHolo: 3 → 1 at sunset [J + s, wall ms (finished), GPU ms, era update ms, phase]  {"label":"theme-noHolo","theme":"sunset","disjoint":false,"frames":358,"wallMedian":2.7,"wallMax":188.7,"gpuMedian":7.67,"gpuMax":18.54,"worstWall":[[0.02,188.7,6.34,0.3,"jump"],[4.32,34.9,11.62,0,"idle"],[0.85,22.6,5.38,0,"jump"],[5.3,14,6.81,0.1,"idle"],[3.97,12,13.86,1,"idle"]],"worstGpu":[[3.47,5.7,
+PASS theme-noEnv: 3 → 1 at sunset [J + s, wall ms (finished), GPU ms, era update ms, phase]  {"label":"theme-noEnv","theme":"sunset","disjoint":false,"frames":358,"wallMedian":2.7,"wallMax":241.5,"gpuMedian":7.46,"gpuMax":21.29,"worstWall":[[0.02,241.5,5.76,0.2,"jump"],[4.32,37.3,4.56,0,"idle"],[0.85,22.9,6.5,0.1,"jump"],[3.97,12.4,12.47,1.2,"idle"],[2.5,10.5,15.14,0,"jump"]],"worstGpu":[[-0.03,
+RESULT 9/9
+
+## timing-a.txt
+### first a
+PASS step 8 (review 2, issue 1): the page's first jump on the real schedule compiles no shader program from J − 20 to done + 1.5 (every era program was compiled at load: the bells' sprites and the holograms too) and the warning frame's era update is under 10 ms  {"precompiled":1,"compiledAtLoad":9,"compileMs":218,"programs":[128,128],"grew":[],"newPrograms":[],"warnFrame":{"t":-10,"updateMs":7.4
+RESULT 1/1
+### frames a
+PASS step 8: no frame over 50 ms during a jump (each simulated and rendered frame from J − 0.5 to done + 1.5, performance.now())  {"baselineNoJump":{"max":6.6,"p95":4.1},"baselineInking":[[314.9,86],[6,91],[5.7,90],[5.6,92]],"frames":358,"worst":[[34.3,1.47,"jump",0,0.1,2.8],[16.9,1.73,"jump",0,0,0],[16.8,1.75,"jump",0,0.1,5.1],[11.6,5,"idle",0,0.1,0]],"baseMs":[88,0,0],"compileMs":29,"max":34.3
+PASS step 8 (review fix 1): a viewer on Bravo (the minimap's side flip drops its cached era bases) and a match at another time of day (the theme drops them): the bases are rebuilt before the jump, and none is built between J and done + 1  [{"label":"bravo","flip":true,"cached":"123","programsCompiled":0,"rebuiltBefore":["1:side 64 ms","3:side 54 ms"],"missingAtJ":false,"jump":"2>3","buildsJtoDone1
+PASS step 8 (final review, issue 5): … and the era update itself (the module's whole per-frame work) stays under 10 ms in every frame of those two jumps — a frame spike there is the render's or the machine's, split per frame [total, J + s, era update, render, the rest]  [{"label":"bravo","jump":"2>3","eraUpdateMaxMs":2.9,"worst":[[12,0.02,2.9,5,4.1,0,0,1],[11,3.97,1,1.8,8.2,0,0,2],[8.4,0.03,0.
+PASS step 8 (review fix 1, timing): … and no frame of those two jumps passes 50 ms  {"worst":[["bravo",[[12,0.02,2.9,5,4.1,0,0,1],[11,3.97,1,1.8,8.2,0,0,2],[8.4,0.03,0.8,3.3,4.3,0,0,0]]],["theme",[[13.1,4.32,0,12.5,0.6,0,0,0],[12,3.97,0.9,1.4,9.7,0,0,2],[11.5,0.02,0.6,7.7,3.2,0,0,0]]]],"baselineNoJumpMax":6.6}
+RESULT 4/4
+
+## timing-b.txt
+### first b
+PASS step 8 (review 2, issue 1): the page's first jump on the real schedule compiles no shader program from J − 20 to done + 1.5 (every era program was compiled at load: the bells' sprites and the holograms too) and the warning frame's era update is under 10 ms  {"precompiled":1,"compiledAtLoad":9,"compileMs":26,"programs":[124,124],"grew":[],"newPrograms":[],"warnFrame":{"t":-10,"updateMs":3.8,
+RESULT 1/1
+### frames b
+PASS step 8: no frame over 50 ms during a jump (each simulated and rendered frame from J − 0.5 to done + 1.5, performance.now())  {"baselineNoJump":{"max":204.9,"p95":4.4},"baselineInking":[[247.2,186],[5.6,190],[5.4,188],[5.2,217]],"frames":358,"worst":[[33.9,1.45,"jump",0,0,5.8],[17.9,1.67,"jump",0,0,0],[12.4,4.97,"idle",0,0.1,0],[10.8,4.32,"idle",0,0,0]],"baseMs":[91,0,0],"compileMs":29,"max"
+PASS step 8 (review fix 1): a viewer on Bravo (the minimap's side flip drops its cached era bases) and a match at another time of day (the theme drops them): the bases are rebuilt before the jump, and none is built between J and done + 1  [{"label":"bravo","flip":true,"cached":"123","programsCompiled":0,"rebuiltBefore":["1:side 65 ms","3:side 53 ms"],"missingAtJ":false,"jump":"2>3","buildsJtoDone1
+PASS step 8 (final review, issue 5): … and the era update itself (the module's whole per-frame work) stays under 10 ms in every frame of those two jumps — a frame spike there is the render's or the machine's, split per frame [total, J + s, era update, render, the rest]  [{"label":"bravo","jump":"2>3","eraUpdateMaxMs":2.9,"worst":[[12.2,0.02,2.9,4.7,4.6,0,0,1],[11.1,3.97,1.7,1.7,7.7,0,0,2],[7.1
+PASS step 8 (review fix 1, timing): … and no frame of those two jumps passes 50 ms  {"worst":[["bravo",[[12.2,0.02,2.9,4.7,4.6,0,0,1],[11.1,3.97,1.7,1.7,7.7,0,0,2],[7.1,0.03,0.8,2.4,3.9,0,0,0]]],["theme",[[13.3,3.97,1.5,1.2,10.6,0,0,2],[12.6,4.28,0,11.4,1.2,0,0,0],[8.3,0.02,0.7,3.9,3.7,0,0,0]]]],"baselineNoJumpMax":204.9}
+RESULT 4/4
+
+## timing-c.txt
+### first c
+PASS step 8 (review 2, issue 1): the page's first jump on the real schedule compiles no shader program from J − 20 to done + 1.5 (every era program was compiled at load: the bells' sprites and the holograms too) and the warning frame's era update is under 10 ms  {"precompiled":1,"compiledAtLoad":9,"compileMs":30,"programs":[126,126],"grew":[],"newPrograms":[],"warnFrame":{"t":-10,"updateMs":3.8,
+RESULT 1/1
+### frames c
+PASS step 8: no frame over 50 ms during a jump (each simulated and rendered frame from J − 0.5 to done + 1.5, performance.now())  {"baselineNoJump":{"max":5.1,"p95":3.8},"baselineInking":[[333.7,85],[5.1,87],[5.1,90],[5,86]],"frames":358,"worst":[[32.4,1.48,"jump",0,0,4],[14.6,1.78,"jump",0,0,0],[13.3,1.72,"jump",0,0.1,0],[11.9,4.37,"idle",0,0,0]],"baseMs":[90,0,0],"compileMs":30,"max":32.4,"p95
+PASS step 8 (review fix 1): a viewer on Bravo (the minimap's side flip drops its cached era bases) and a match at another time of day (the theme drops them): the bases are rebuilt before the jump, and none is built between J and done + 1  [{"label":"bravo","flip":true,"cached":"123","programsCompiled":0,"rebuiltBefore":["1:side 66 ms","3:side 55 ms"],"missingAtJ":false,"jump":"2>3","buildsJtoDone1
+PASS step 8 (final review, issue 5): … and the era update itself (the module's whole per-frame work) stays under 10 ms in every frame of those two jumps — a frame spike there is the render's or the machine's, split per frame [total, J + s, era update, render, the rest]  [{"label":"bravo","jump":"2>3","eraUpdateMaxMs":2.7,"worst":[[11.7,0.02,2.7,4.5,4.5,0,0,0],[10.2,3.97,0.9,1.6,7.7,0,0,2],[9.3
+PASS step 8 (review fix 1, timing): … and no frame of those two jumps passes 50 ms  {"worst":[["bravo",[[11.7,0.02,2.7,4.5,4.5,0,0,0],[10.2,3.97,0.9,1.6,7.7,0,0,2],[9.3,0.03,0.9,4.4,4,0,0,0]]],["theme",[[13.1,4.32,0,12.3,0.8,0,0,0],[12.9,3.97,1.1,1.2,10.6,0,0,2],[5.8,0.53,0.5,1.9,3.4,0,0,0]]]],"baselineNoJumpMax":5.1}
+RESULT 4/4

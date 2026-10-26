@@ -1,0 +1,5 @@
+JOB-32 (bluestone, fix round 3) @ de8e927e vs 9012ec65 (before fix round 3) — Mac mini b5-runner, 2026-10-25 22:41–22:46, exit 0 (load 1.6–3.4). Short summary.
+- eras-jump frames ×5 each, alternating: THIS HEAD 4/4 ×5 (no frame over 50 ms in any of the three jumps); THE BASE 4/4 ×4 and 3/4 once
+  (base-4: one 429.5 ms frame in the main jump at J + 2.8, split [era update 0, render 0.1, rest 2.4] — the unmeasured stall, not a render spike).
+- no settle render spike in any of the ten runs, on either code. With JOB-28 / 30 / 31: the ~400 ms render spike at ~J + 4.85 has shown in 3 of
+  19 runs, all at fix round 3's heads before de8e927e; the ~400 ms unmeasured stall shows on both codes.

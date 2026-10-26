@@ -69,5 +69,5 @@
   }
   Rr.render = rend0;
   const mean = (a) => +(a.reduce((s, x) => s + x, 0) / a.length).toFixed(2);
-  return [{ name: 'gpu-sustained', ok: true, info: { map: g.mapDef?.id, era: G.eraWorld?.era ?? 0, time: G.env?.theme, args, A: mean(A), A2: mean(A2), B: mean(Bq), Bwall: mean(Bw), Cissue: mean(Ci), Cdone: mean(Cd), views: { A: A.map((x) => +x.toFixed(1)), B: Bq.map((x) => +x.toFixed(1)), Cdone: Cd.map((x) => +x.toFixed(1)) } } }];
+  return { map: g.mapDef?.id, era: G.eraWorld?.era ?? 0, time: G.env?.theme, args, A: mean(A), A2: mean(A2), B: mean(Bq), Bwall: mean(Bw), Cissue: mean(Ci), Cdone: mean(Cd), views: { A: A.map((x) => +x.toFixed(1)), B: Bq.map((x) => +x.toFixed(1)), Cdone: Cd.map((x) => +x.toFixed(1)) } };
 })()

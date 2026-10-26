@@ -1,0 +1,8 @@
+== bluestone [turf 180s]: turf 34.4% vs 22.8%
+   ERAS shoves 0 rescues 0 flips 52 | at a flip: on a vanishing top 0, inside an appearing piece 0 | in an appearing box before its flip 0 bot-s | splats by a jump 0 (other env splats in a jump's window 0) | replans at done 0 | pre-positioned 1 (held 1) | era 3, started in era 1, 2 jumps planned
+   ERAS 1>2 done @63.97s: 2/8 bots on new ground within 30 s (2 within 20 s), median - s | [10.41,19.48]
+   ERAS 2>3 done @123.97s: 5/8 bots on new ground within 30 s (4 within 20 s), median 9.88 s | [5.08,6.68,7.21,9.88,20.55]
+   stuck 0% (0% counting holds on purpose) | splats 50 (water 0) | specials 2 | super jumps 25 | turf 34.4/22.8 | sim 180s in 27s (wall 27s) | {"cpuSimMs":0.9}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT_JSON {"simT":180,"simMs":26511,"state":"finish","stuckPct":0,"stuckHoldPct":0,"splats":50,"water":0,"specials":2,"jumps":25,"cov":[34.4,22.8],"teamKD":[{"k":26,"d":24,"sp":0,"by":{}},{"k":24,"d":26,"sp":0,"by":{}}],"spUses":[{"wail":2},{}],"spEnds":[{"wail":{"place":2}},{}],"zipcheer":{"zipUses":0,"zips":0,"zipHits":0,"zipSaved":0,"orbs":0,"lifted":0,"liftM":0,"cheers":0,"helped":0,"orbCharge":0,"gains":0,"gainPts":0,"splatHeld":0,"dmgHeld":0,"thrown":0},"drainbow":{"placed":0,"passes":0,"cuts":0,"crossings":0,"fizzles":0,"pops":0,"extended":0,"holds":0},"spStats":{"noticed":6,"missed":0,"escapes":2,"evaded":2,"caught":0,"avoidedPath":1,"goalMoved":2,"guard":0,"backedOff":0,"retargeted":0,"heldFire":0,"knockShots":0,"reengaged":0,"bubbleHold":0,"popShots":0,"hops":0,"hunted":0,"splattedBy":{},"bySrc":{"wail":{"caught":0,"evaded":2}}},"surf":{"stats":{"uses":0,"throws":0,"lands":0,

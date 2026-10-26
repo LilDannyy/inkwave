@@ -3305,7 +3305,9 @@ export class PropKit {
     try { def.build(B, o); } finally { this._tag = null; this._tagV = null; }
     this.lastTris = B.tris;
     this.count++;
-    return { colliders: this._xfCols(B.cols, pos, rotY, scale, !!o.oboxCols) };
+    const cols = this._xfCols(B.cols, pos, rotY, scale, !!o.oboxCols);
+    if (o.roofCols) for (const c of cols) if (!c.rail) c.roof = true;   // [b5-karp-ref] a mode-only copy whose tops are off limits (the map standard: no ink, you slide off)
+    return { colliders: cols };
   }
 
   // A prop that moves (stage movers, src/game/movers.js: Calamari County's railcars): built like add() but in its own

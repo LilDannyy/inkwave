@@ -33,6 +33,10 @@ const LV_VMAIN = /* glsl */`
   if (em < 6.5) {
     float ek = uEra.z < 0.0 ? 0.0 : clamp((uEra.z - aEra.y) / max(uEra.w, 0.01) + 0.5, 0.0, 1.0);
     vEraK = mix(eraHasV(em, uEra.x), eraHasV(em, uEra.y), ek);
+    // (art phase: a live jump keeps a piece of either era up while the front crosses the city — each fragment then takes
+    //  its era from its own side of the front: one clean sweeping edge, no blocky dissolve; a frozen still keeps each
+    //  piece whole on its group's side)
+    if (uEra.z >= 0.0 && uEra.w > 0.05) vEraK = max(eraHasV(em, uEra.x), eraHasV(em, uEra.y));
     if (vEraK < 0.001) gl_Position = vec4(0.0, 0.0, 2.0, 1.0);   // absent: collapsed behind the far plane
   }
 }`;
@@ -47,22 +51,45 @@ uniform vec3 uEraColV;
 uniform float uEraT;
 varying vec2 vEra;
 varying float vEraK;
+#ifdef ERA_STATIC
+// (fix round 2, GPU time) the static program: the era in force is a compile-time constant (ERA_NOW 0 / 1 / 2) while no jump
+// runs — no per-fragment era, no front, no warning, no pulse; a stage's level art folds to that era's code alone
+#if ERA_NOW == 0
+const vec3 eraOneHot = vec3(1.0, 0.0, 0.0);
+#elif ERA_NOW == 1
+const vec3 eraOneHot = vec3(0.0, 1.0, 0.0);
+#else
+const vec3 eraOneHot = vec3(0.0, 0.0, 1.0);
+#endif
+#else
 vec3 eraOneHot = vec3(1.0, 0.0, 0.0);
+#endif
 float eraHasF(float m, float b) { return mod(floor(m / b + 0.01), 2.0); }
 // the warning's film tint on what is about to vanish: eras.colors.vanish's warm hue, its chroma ×4 (old film), luminance 1
 vec3 eraFilm() { float l = max(dot(uEraColV, vec3(0.299, 0.587, 0.114)), 0.01); return max(vec3(0.0), vec3(1.0) + (uEraColV / l - vec3(1.0)) * 4.0); }
-// the era bit of this fragment: shared ground by its side of the front, an era piece by its own flip (at its group's r_g)
+// the warning's projector flicker: one brightness per 1/9 s for everything about to vanish, ±25 % at the warning's peak
+float eraFlick(float k) { float f = fract(sin(floor(uEraT * 9.0) * 12.9898 + 0.31) * 43758.5453); return 1.0 + k * 0.25 * (f < 0.5 ? -1.0 : 1.0) * (0.8 + 0.2 * fract(f * 7.3)); }
+// the era bit of this fragment: by its own side of the front during a live jump (shared ground and era pieces alike: the
+// front rewrites everything along one clean line), an era piece by its group's flip (r_g) in a frozen still
 float eraBitHere() {
-  if (vEra.x > 6.5) return (uEra.z >= 0.0 && length(vWPos.xz) < uEra.z) ? uEra.y : uEra.x;
+#ifdef ERA_STATIC
+  return ERA_NOW == 0 ? 1.0 : (ERA_NOW == 1 ? 2.0 : 4.0);
+#else
+  if (vEra.x > 6.5 || uEra.w > 0.05) return (uEra.z >= 0.0 && length(vWPos.xz) < uEra.z) ? uEra.y : uEra.x;
   return uEra.z >= vEra.y ? uEra.y : uEra.x;
+#endif
 }`;
 const LV_FMURAL = /* glsl */`
     mc.a *= eraHasF(uMurEra[mi], eraBitHere());`;
 const LV_FBASE = /* glsl */`
   {
+#ifdef ERA_STATIC
+    const int ei = ERA_NOW;
+#else
     float eb = eraBitHere();
     int ei = eb > 3.5 ? 2 : (eb > 1.5 ? 1 : 0);
     eraOneHot = vec3(ei == 0 ? 1.0 : 0.0, ei == 1 ? 1.0 : 0.0, ei == 2 ? 1.0 : 0.0);
+#endif
 #ifdef USE_TEXLIB
     // re-skin (eras.remap): the bare surface sampled again from this era's texlib layer (the ink on it stays)
     for (int r = 0; r < 4; r++) {
@@ -82,27 +109,41 @@ const LV_FBASE = /* glsl */`
       break;
     }
 #endif
+  }`;
+// (art phase) the second half: the era's tint, the warning's flicker, the done pulse and the front's cut act on the bare
+// surface AFTER a stage's own level art (LAYOUT.levelArt), which reads eraOneHot from the first half and paints `base`
+const LV_FBASE_B = /* glsl */`
+  {
+#ifdef ERA_STATIC
+    // (the static program: the tint alone — nothing about to vanish, nothing new, no front)
+    vec4 etn = uEraTint[ERA_NOW];
+    float elum = dot(base, vec3(0.299, 0.587, 0.114));
+    base = mix(base, vec3(elum), etn.w) * etn.rgb;
+#else
+    float eb = eraBitHere();
+    int ei = eb > 3.5 ? 2 : (eb > 1.5 ? 1 : 0);
     // the era's tint on the bare surface (the 1880s: warm and a little desaturated), never on the ink
     vec4 etn = uEraTint[ei];
     float elum = dot(base, vec3(0.299, 0.587, 0.114));
     base = mix(base, vec3(elum), etn.w) * etn.rgb;
     if (vEra.x < 6.5) {
       float hf = eraHasF(vEra.x, uEraW.x), ht = eraHasF(vEra.x, uEraW.y);
-      // the warning: what is about to vanish flickers in a sepia film grain (up to 15 %)
+      // the warning: what is about to vanish turns to old film (fix round 1: it still did not read) — sepia rising with the
+      // warning to full at its peak (the last 3 s), a projector's flicker in the brightness (±25 % at 9 Hz, the whole piece
+      // at once: eraFlick) and a little grain
       if (uEraW.z > 0.0 && hf > 0.5 && ht < 0.5) {
-        float fl = step(0.45, fract(sin(floor(uEraT * 9.0) * 12.9898 + dot(floor(vWPos * 3.0), vec3(1.7, 3.1, 2.3))) * 43758.5453));
-        base = mix(base, vec3(elum) * eraFilm(), uEraW.z * (0.08 + 0.07 * fl));
+        float gr = fract(sin(floor(uEraT * 9.0) * 4.1414 + dot(floor(vWPos * 3.0), vec3(1.7, 3.1, 2.3))) * 43758.5453);
+        base = mix(base, vec3(elum) * eraFilm(), clamp(uEraW.z * (0.88 + 0.12 * step(0.5, gr)), 0.0, 1.0)) * eraFlick(uEraW.z);
       }
       // done: what is new pulses white-gold for 4 s
       if (uEraW.w > 0.0 && ht > 0.5 && hf < 0.5) base = mix(base, uEraColA, uEraW.w * (0.3 + 0.2 * sin(uEraT * 7.0)));
     }
-    // the dissolve as the front reaches a piece (0.3 s)
-    if (vEraK < 0.999) {
-      float en = fract(sin(dot(floor(vWPos * 5.0), vec3(12.9898, 78.233, 37.719))) * 43758.5453);
-      if (en > vEraK) discard;
-    }
+    // the front's clean edge: a piece is drawn where this fragment's era has it (art phase: no 20 cm block dissolve)
+    if (vEra.x < 6.5 && eraHasF(vEra.x, eb) < 0.5) discard;
+#endif
   }`;
 const LV_FFINAL = /* glsl */`
+#ifndef ERA_STATIC
 if (uEra.z >= 0.0) {
   // the clock-light front: a white-gold line with a soft glow, ticks of light running round it like a dial's minutes
   float ed = length(vWPos.xz) - uEra.z;
@@ -112,11 +153,14 @@ if (uEra.z >= 0.0) {
   float esh = 0.6 + 0.4 * sin(vWPos.y * 4.0 + length(vWPos.xz) * 1.3 - uEraT * 9.0);
   outgoingLight = mix(outgoingLight, outgoingLight * 0.85 + uEraColA * 0.2, clamp(eband * 0.6, 0.0, 1.0));
   outgoingLight += uEraColA * (ecore * 2.0 + eband * 0.45 * esh + etick * 1.2);
-}`;
-export function eraLevelExt(U, grate = false) {
+}
+#endif`;
+// (split: the era bit and the re-skins first; a stage's level art may go between; the tint / flicker / pulse / cut after —
+//  pass the art's chunk as `art` and it is spliced in between, else the two halves run back to back as before)
+export function eraLevelExt(U, grate = false, art = '') {
   return {
     key: 'eras', uniforms: U, defines: { ERAS: 1 },
-    vertPars: LV_VPARS, vertMain: LV_VMAIN, fragPars: LV_FPARS, fragMural: LV_FMURAL, fragBase: LV_FBASE, fragFinal: grate ? '' : LV_FFINAL,
+    vertPars: LV_VPARS, vertMain: LV_VMAIN, fragPars: LV_FPARS, fragMural: LV_FMURAL, fragBase: LV_FBASE + (art || '') + LV_FBASE_B, fragFinal: grate ? '' : LV_FFINAL,
     aoSample: 'dot(texture2D(uLight, vLightUv).rgb, eraOneHot)',
   };
 }
@@ -141,10 +185,12 @@ const PR_VMAIN = (attr, depth) => /* glsl */`
   if (em < 6.5) {
     float ek = uEra.z < 0.0 ? 0.0 : clamp((uEra.z - ${attr}.y) / max(uEra.w, 0.01) + 0.5, 0.0, 1.0);
     vEraK = mix(eraHasV(em, uEra.x), eraHasV(em, uEra.y), ek);
+    if (uEra.z >= 0.0 && uEra.w > 0.05) vEraK = max(eraHasV(em, uEra.x), eraHasV(em, uEra.y));   // (a live jump: the fragment decides)
     if (vEraK < ${depth ? '0.5' : '0.001'}) gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
   }
 }`;
 const PR_FPARS = /* glsl */`
+uniform vec4 uEra;
 uniform vec4 uEraW;
 uniform vec3 uEraColA;
 uniform vec3 uEraColV;
@@ -153,13 +199,16 @@ varying float vEraK;
 varying float vEraM;
 varying vec3 vEraWP;
 float eraHasF(float m, float b) { return mod(floor(m / b + 0.01), 2.0); }
-vec3 eraFilm() { float l = max(dot(uEraColV, vec3(0.299, 0.587, 0.114)), 0.01); return max(vec3(0.0), vec3(1.0) + (uEraColV / l - vec3(1.0)) * 4.0); }`;
+vec3 eraFilm() { float l = max(dot(uEraColV, vec3(0.299, 0.587, 0.114)), 0.01); return max(vec3(0.0), vec3(1.0) + (uEraColV / l - vec3(1.0)) * 4.0); }
+float eraFlick(float k) { float f = fract(sin(floor(uEraT * 9.0) * 12.9898 + 0.31) * 43758.5453); return 1.0 + k * 0.25 * (f < 0.5 ? -1.0 : 1.0) * (0.8 + 0.2 * fract(f * 7.3)); }`;
 const PR_FCOLOR = /* glsl */`
 if (vEraM < 6.5) {
-  if (vEraK < 0.999) { float en = fract(sin(dot(floor(vEraWP * 5.0), vec3(12.9898, 78.233, 37.719))) * 43758.5453); if (en > vEraK) discard; }
+  // the front's clean edge (art phase): in a live jump each fragment by its own side of the front; else whole
+  if (uEra.z >= 0.0 && uEra.w > 0.05) { if (eraHasF(vEraM, length(vEraWP.xz) < uEra.z ? uEra.y : uEra.x) < 0.5) discard; }
+  else if (vEraK < 0.5) discard;
   float hf = eraHasF(vEraM, uEraW.x), ht = eraHasF(vEraM, uEraW.y);
   float elum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-  if (uEraW.z > 0.0 && hf > 0.5 && ht < 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, vec3(elum) * eraFilm(), uEraW.z * (0.08 + 0.07 * step(0.5, fract(uEraT * 9.0 + vEraWP.x))));
+  if (uEraW.z > 0.0 && hf > 0.5 && ht < 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, vec3(elum) * eraFilm(), clamp(uEraW.z * 0.92, 0.0, 1.0)) * eraFlick(uEraW.z);   // (fix round 1: as the level's)
   if (uEraW.w > 0.0 && ht > 0.5 && hf < 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, uEraColA, uEraW.w * (0.3 + 0.2 * sin(uEraT * 7.0)));
 }`;
 // a clone of a prop material whose parts carry `attr` = (era mask, r_g): absent → collapsed; dissolving at the flip
@@ -174,6 +223,7 @@ export function eraMaterial(base, U, attr = 'aTag') {
   };
   m.customProgramCacheKey = () => key0 + '|era-' + attr;
   m.userData.eraOf = base;
+  if (base.color && m.color) m.color = base.color;   // (art phase: the same Color object, so the kit's setNight — the glow by day / dusk — reaches the era props)
   return m;
 }
 // the shadow (depth) pass of an era mesh: an absent piece casts nothing
@@ -185,6 +235,13 @@ export function eraDepthMaterial(U, attr = 'aEra') {
   m.onBeforeCompile = (sh) => {
     sh.uniforms.uEra = U.uEra;
     sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>\n${PR_VPARS(attr)}`).replace('#include <project_vertex>', `#include <project_vertex>\n${PR_VMAIN(attr, true)}`);
+    // (art phase: during a live jump a piece casts its shadow only on its own side of the front, like its look)
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+uniform vec4 uEra;
+varying float vEraM;
+varying vec3 vEraWP;
+float eraHasF(float m, float b) { return mod(floor(m / b + 0.01), 2.0); }`).replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+if (vEraM < 6.5 && uEra.z >= 0.0 && uEra.w > 0.05 && eraHasF(vEraM, length(vEraWP.xz) < uEra.z ? uEra.y : uEra.x) < 0.5) discard;`);
   };
   m.customProgramCacheKey = () => 'era-depth-' + attr;
   DEPTH.set(k, { U, m });
@@ -522,7 +579,10 @@ export class EraFx {
     // Tartar: shakes on each ring, lifts his receiver at the pickup, spins his dial into the jump
     const ring = st.ring || 0, pick = st.pickup || 0;
     this.tartar.rotation.z = 0.07 * ring * Math.sin(t * 46); this.tartar.rotation.x = 0.04 * ring * Math.sin(t * 39 + 1);
-    this.tHand.position.set(0, 0.45 * pick, 0); this.tHand.rotation.z = 0.35 * pick;
+    // (fix round 1: the cradle telephone's handset rests 0.25 m under the drum's ceiling — lifted 0.16 m off its cradle and
+    //  tilted 0.18 rad about its own middle (the grip at y 7.6, 0.6 m under the pivot), so it clears the forks and never
+    //  enters the ceiling at y 8)
+    { const th = 0.18 * pick; this.tHand.rotation.z = th; this.tHand.position.set(-0.6 * Math.sin(th), -0.6 * (1 - Math.cos(th)) + 0.16 * pick, 0); }
     this.tDial.rotation.z += dt * (st.phase === 'jump' || pick > 0.5 ? 9 : 0);
     // the beam
     this.beam.visible = st.beam > 0.01; this.beam.material.uniforms.uA.value = st.beam;
@@ -682,7 +742,10 @@ export class EraHud {
     //  a gameplay callout or a Zone Control callout comes or goes, the chip changes state — never every frame)
     this._dirty = false;
     if (typeof MutationObserver === 'function') {
-      this._mo = new MutationObserver(() => { this._dirty = true; });
+      // (fix round 1: and when one of them changes size after it came — a gameplay callout's box settling after its first
+      //  layout left the band 5 px over it under load: each new child is watched for its size too)
+      this._ro = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { this._dirty = true; }) : null;
+      this._mo = new MutationObserver((recs) => { this._dirty = true; if (this._ro) for (const r of recs) for (const n of r.addedNodes) if (n.nodeType === 1 && n !== this.calls) this._ro.observe(n); });
       const HC = G.hud?.callouts, BL = G.hud?.bannerLayer;
       if (HC) this._mo.observe(HC, { childList: true });
       if (BL) this._mo.observe(BL, { childList: true });   // (the HUD's banners: "1 minute left!" comes with jump 2 in a 3:00 Turf War)
@@ -756,7 +819,7 @@ export class EraHud {
     if (w !== this._w) { this._w = w; this.bar.style.width = w; }
   }
   get text() { return this.el ? this.el.textContent : ''; }
-  dispose() { this._mo?.disconnect(); this._mo = null; this.el?.remove(); this.el = null; this.calls?.remove(); this.calls = null; }
+  dispose() { this._mo?.disconnect(); this._mo = null; this._ro?.disconnect(); this._ro = null; this.el?.remove(); this.el = null; this.calls?.remove(); this.calls = null; }
 }
 
 // --------------------------------------------------------------------------------------------- the minimap (H14)

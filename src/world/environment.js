@@ -128,6 +128,15 @@ const THEMES = {
 };
 
 const lin = (hex, k = 1) => new THREE.Color(hex).multiplyScalar(k);
+// [b5-bluestone] two themes' grades blended (applyLights): numbers and tint arrays by k, anything else the target's
+const blendGrade = (a = {}, c = {}, k = 1) => {
+  const o = {};
+  for (const key of new Set([...Object.keys(a), ...Object.keys(c)])) {
+    const x = a[key], y = c[key];
+    o[key] = typeof x === 'number' && typeof y === 'number' ? x + (y - x) * k : Array.isArray(x) && Array.isArray(y) ? y.map((v, i) => x[i] + (v - x[i]) * k) : y ?? x;
+  }
+  return o;
+};
 
 // ---------------------------------------------------------------------------------------------------------------
 // GLSL
@@ -366,6 +375,8 @@ uniform vec3 uCloudLit;
 uniform vec3 uCloudShade;
 uniform vec4 uCloudParams;   // x overhead coverage, y horizon bank amount, z drift speed, w bank height
 uniform sampler2D uCloudTex;
+uniform sampler2D uCloudTex2;   // [b5-bluestone] a time jump: the next look's clouds, cross-faded in by uCloudMix
+uniform float uCloudMix;
 varying vec3 vDir;
 
 void main() {
@@ -380,6 +391,7 @@ void main() {
     float u = atan(d.z, d.x) / 6.28318531 + 0.5 + uTime * 0.00035 * uCloudParams.z;
     float v = pow(clamp(d.y, 0.0, 1.0), 1.0 / 1.6);
     vec4 cl = textureLod(uCloudTex, vec2(u, v), 0.0);
+    if (uCloudMix > 0.0) cl = mix(cl, textureLod(uCloudTex2, vec2(u, v), 0.0), uCloudMix);
     cl *= smoothstep(-0.002, 0.012, d.y);
     col = col * (1.0 - cl.a) + cl.rgb;
     cloudA = cl.a;
@@ -1541,6 +1553,7 @@ export class Environment {
       uSeaDeep: C(), uSeaShallow: C(), uSeaCrest: C(), uFoamColor: C(), uSunLight: C(), uSeaAmbient: C(),
       uSunSpec: { value: 1 }, uWaveStrength: { value: 1 },
       uCloudTex: { value: null },
+      uCloudTex2: { value: null }, uCloudMix: { value: 0 },   // [b5-bluestone] a time jump's cross-fade to the next look's clouds
       uSnow: { value: new THREE.Vector4(1e4, 0, 0, 0) },   // stage looks: backdrop terrain snow (line above the sea, cover)
       // marina water (theme.marina)
       uWet: { value: Array.from({ length: MAX_WET }, () => new THREE.Vector4()) }, uWetCount: { value: 0 }, uArena: { value: new THREE.Vector4() },
@@ -1732,12 +1745,15 @@ export class Environment {
     this._pmrem = new THREE.PMREMGenerator(this.renderer);
   }
 
-  _initCloudBake() {
-    this._cloudRT = new THREE.WebGLRenderTarget(CLOUD_W, CLOUD_H, {
+  _makeCloudRT() {
+    return new THREE.WebGLRenderTarget(CLOUD_W, CLOUD_H, {
       type: THREE.HalfFloatType, format: THREE.RGBAFormat, colorSpace: THREE.NoColorSpace,
       minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, generateMipmaps: false,
       wrapS: THREE.RepeatWrapping, wrapT: THREE.ClampToEdgeWrapping, depthBuffer: false, stencilBuffer: false,
     });
+  }
+  _initCloudBake() {
+    this._cloudRT = this._makeCloudRT();
     this.U.uCloudTex.value = this._cloudRT.texture;
     this._cloudMat = new THREE.ShaderMaterial({
       name: 'CloudBake', vertexShader: 'void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }', fragmentShader: CLOUD_BAKE_FRAG,
@@ -1761,6 +1777,7 @@ export class Environment {
     const prev = r.getRenderTarget(), ac = r.autoClear, xr = r.xr.enabled;
     r.autoClear = false; r.xr.enabled = false;
     const rt = this._cloudRT;
+    this.U.uCloudTex.value = rt.texture; this.U.uCloudMix.value = 0; this._cloudPrimaryT = T;   // [b5-bluestone] (a time jump's cross-fade ends here; the theme baked)
     r.setRenderTarget(rt);
     r.setClearColor(0x000000, 0); r.clear(true, false, false);
     const strips = 10, h = Math.ceil(CLOUD_H / strips);
@@ -3228,6 +3245,88 @@ export class Environment {
     return pts;
   }
 
+  // [b5-bluestone] The theme's lights, its grade and the sky's light colours in one place: setTheme applies them, and so
+  // does a stage module's time jump when it settles (eras.js _envFinal), so a jump's settled look is exactly the one a
+  // seek (a late joiner, a clock snap) gets from setTheme. With F and k < 1 they are blended from theme F's (k 0 … 1): the
+  // jump blends the sky's part ('sky': the dome's ground, horizon glow, sun glow, sun disk, cloud colours, night, stars)
+  // with the time-lapse and the world's ('world': the sun, the sky / clouds / sea sun, the hemisphere, the sky IBL's
+  // strength, the grade — exposure, tints, bloom) from done to done + 0.7 s, so the light does not pop.
+  applyLights(T, F = null, k = 1, part = 'all') {
+    const U = this.U, b = F && k < 1 ? F : null;
+    const mx = (a, c) => (b ? a + (c - a) * k : c);
+    const L = (dst, f, t) => (b ? dst.copy(lin(...f)).lerp(lin(...t), k) : dst.copy(lin(...t)));
+    if (part !== 'world') {
+      L(U.uGround.value, b && [F.ground], [T.ground]);
+      L(U.uHorizonGlow.value, b && [F.horizonGlow, F.horizonGlowK], [T.horizonGlow, T.horizonGlowK]);
+      L(U.uGlowColor.value, b && [F.glowColor], [T.glowColor]);
+      U.uGlowParams.value.set(...T.glow);
+      if (b) U.uGlowParams.value.set(...F.glow.map((v, i) => v + (T.glow[i] - v) * k));
+      U.uNight.value = mx(b && F.night, T.night);
+      L(U.uSunDisk.value, b && [F.sunDisk, F.sunDiskK], [T.sunDisk, T.sunDiskK]);
+      L(U.uCloudLit.value, b && [F.cloudLit, F.cloudLitK], [T.cloudLit, T.cloudLitK]);
+      L(U.uCloudShade.value, b && [F.cloudShade], [T.cloudShade]);
+      if (this.stars) this.stars.material.uniforms.uK.value = mx(b && F.night * (F.stars ?? 1), T.night * (T.stars ?? 1));
+    }
+    if (part !== 'sky') {
+      // sky / clouds / sea keep the sun strength they were tuned with (skySun) — the key light on the world is balanced on
+      // its own (sunIntensity vs hemi + envK) without re-exposing the sky
+      L(U.uSunLight.value, b && [F.sunColor, (F.skySun ?? F.sunIntensity) / Math.PI], [T.sunColor, (T.skySun ?? T.sunIntensity) / Math.PI]);
+      L(this.sun.color, b && [F.sunColor], [T.sunColor]);
+      this.sun.intensity = mx(b && F.sunIntensity, T.sunIntensity);
+      // sky fill = directional hemisphere (sky above, warm ground bounce below) + the omnidirectional sky IBL; both set
+      // here on every theme change so a stage/time looks identical whether it was booted into or switched to
+      // hemiGroundK: the ground term is the sunlit deck's bounce (fake GI) — brighter than the sky term, which the IBL
+      // already carries — so walls and faces turned away from the sun keep their form instead of crushing to black
+      L(this.hemi.color, b && [F.hemiSky], [T.hemiSky]);
+      L(this.hemi.groundColor, b && [F.hemiGround, F.hemiGroundK ?? 1], [T.hemiGround, T.hemiGroundK ?? 1]);
+      this.hemi.intensity = mx(b && F.hemiIntensity, T.hemiIntensity);
+      this.scene.environmentIntensity = mx(b && (F.envK ?? 0.66), T.envK ?? 0.66);
+      // colour grade the renderer applies for this theme (a new object while blending: the renderer takes it on change)
+      this.grade = b ? blendGrade(F.grade, T.grade, k) : T.grade;
+      if (!b) this.lhBeam.visible = T.night > 0.01 && this.bay.visible;
+    }
+  }
+  // [b5-bluestone] theme T's clouds baked whole into another target rt (the sky's own uniforms set to T's for the bake and
+  // put back, so the live sky is untouched): a stage module's time jump bakes each look's clouds once, at load (eras.js
+  // _warmClouds: ~0.45 s of GPU each on an M4), and only cross-fades (uCloudTex2 / uCloudMix) and swaps textures in a jump
+  // [b5-bluestone] theme T's env map (PMREM, 256) built now with its clouds `cloudTex`, the live sky untouched: a stage
+  // module's time jump builds each look's at load and swaps it in by reference (useEnvMap) — no PMREM pass in a jump
+  envMapFor(T, cloudTex) {
+    return this._withSky(T, () => {
+      this.U.uCloudTex.value = cloudTex; this.U.uCloudMix.value = 0;
+      return this._pmrem.fromScene(this._envScene, 0, 0.1, 100, { size: 256 });
+    });
+  }
+  useEnvMap(rt) {
+    const prev = this.envMap;
+    this.envMap = rt.texture;
+    if (this.scene.environment === prev || this.scene.environment == null) this.scene.environment = this.envMap;
+  }
+  // the sky's uniforms set to theme T's for fn() and put back
+  _withSky(T, fn) {
+    const U = this.U, keep = ['uSunDir', 'uZenith', 'uSkyMid', 'uHorizon', 'uHaze', 'uCloudParams', 'uGround', 'uHorizonGlow', 'uGlowColor', 'uGlowParams', 'uSunDisk', 'uCloudLit', 'uCloudShade', 'uNight'];
+    const was = keep.map((key) => (typeof U[key].value === 'number' ? U[key].value : U[key].value.clone()));
+    const tex = U.uCloudTex.value, mix = U.uCloudMix.value, prim = this._cloudPrimaryT, sk = this.stars?.material.uniforms.uK.value;
+    const el = T.sunEl * DEG, az = T.sunAz * DEG;
+    U.uSunDir.value.set(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).normalize();
+    U.uZenith.value.set(T.zenith); U.uSkyMid.value.set(T.skyMid); U.uHorizon.value.set(T.horizon);
+    U.uHaze.value.set(T.haze[0], T.haze[1], T.haze[2], 0); U.uCloudParams.value.set(...T.cloud);
+    this.applyLights(T, null, 1, 'sky');
+    try { return fn(); } finally {
+      this._cloudPrimaryT = prim; U.uCloudTex.value = tex; U.uCloudMix.value = mix;
+      keep.forEach((key, j) => { if (typeof was[j] === 'number') U[key].value = was[j]; else U[key].value.copy(was[j]); });
+      if (this.stars) this.stars.material.uniforms.uK.value = sk;
+    }
+  }
+  cloudBakeInto(T, rt) {
+    return this._withSky(T, () => {
+      const rt0 = this._cloudRT;
+      this._cloudRT = rt;
+      try { this._bakeClouds(T); } finally { this._cloudRT = rt0; }
+      return rt;
+    });
+  }
+
   setTheme(name) {
     const T = this._stageTheme(name);
     const r0 = this.renderer;
@@ -3236,22 +3335,15 @@ export class Environment {
     const U = this.U;
     const el = T.sunEl * DEG, az = T.sunAz * DEG;
     U.uSunDir.value.set(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az)).normalize();
-    U.uZenith.value.set(T.zenith); U.uSkyMid.value.set(T.skyMid); U.uHorizon.value.set(T.horizon); U.uGround.value.set(T.ground);
-    U.uHorizonGlow.value.copy(lin(T.horizonGlow, T.horizonGlowK)); U.uGlowColor.value.set(T.glowColor);
-    U.uGlowParams.value.set(...T.glow);
+    U.uZenith.value.set(T.zenith); U.uSkyMid.value.set(T.skyMid); U.uHorizon.value.set(T.horizon);
     U.uHaze.value.set(T.haze[0], T.haze[1], T.haze[2], 0);
-    U.uNight.value = T.night;
-    U.uSunDisk.value.copy(lin(T.sunDisk, T.sunDiskK));
     U.uSunCos.value = Math.cos(T.sunRadius * DEG);
-    U.uCloudLit.value.copy(lin(T.cloudLit, T.cloudLitK)); U.uCloudShade.value.set(T.cloudShade);
     U.uCloudParams.value.set(...T.cloud);
     U.uSeaDeep.value.set(T.seaDeep); U.uSeaShallow.value.set(T.seaShallow); U.uSeaCrest.value.set(T.seaCrest); U.uFoamColor.value.set(T.foam);
-    // sky / clouds / sea keep the sun strength they were tuned with (skySun) — the key light on the world is balanced on
-    // its own (sunIntensity vs hemi + envK) without re-exposing the sky
-    U.uSunLight.value.copy(lin(T.sunColor, (T.skySun ?? T.sunIntensity) / Math.PI));
     U.uSeaAmbient.value.copy(U.uSkyMid.value).lerp(U.uHorizon.value, 0.5).multiplyScalar(T.seaAmbientK);
     U.uSunSpec.value = T.sunSpec; U.uWaveStrength.value = T.waveStrength;
-    this.grade = T.grade;    // colour grade the renderer applies for this theme
+    // the lights, the grade and the sky's light colours ([b5-bluestone] one source of truth with a stage module's time jump)
+    this.applyLights(T);
     // sky extras (compiled in only for themes that use them, so the other themes run the exact same shader)
     const shafts = !!T.shafts;
     if (('SKY_SHAFTS' in this.skyMat.defines) !== shafts) {
@@ -3269,19 +3361,8 @@ export class Environment {
     U.uStripK.value.set(MA.caustic, MA.wet, 0, 0);
     this._applyMarina();
 
-    this.sun.color.set(T.sunColor);
-    this.sun.intensity = T.sunIntensity;
-    // sky fill = directional hemisphere (sky above, warm ground bounce below) + the omnidirectional sky IBL; both set
-    // here on every theme change so a stage/time looks identical whether it was booted into or switched to
-    // hemiGroundK: the ground term is the sunlit deck's bounce (fake GI) — brighter than the sky term, which the IBL
-    // already carries — so walls and faces turned away from the sun keep their form instead of crushing to black
-    this.hemi.color.set(T.hemiSky); this.hemi.groundColor.set(T.hemiGround).multiplyScalar(T.hemiGroundK ?? 1);
-    this.hemi.intensity = T.hemiIntensity;
-    this.scene.environmentIntensity = T.envK ?? 0.66;
     this.fogColor.copy(U.uHorizon.value).lerp(U.uSkyMid.value, 0.15);
     if (this.scene.fog && this.scene.fog.isFog) { this.scene.fog.color.copy(this.fogColor); this.scene.fog.near = T.fog[0]; this.scene.fog.far = T.fog[1]; }
-    this.lhBeam.visible = T.night > 0.01 && this.bay.visible;
-    if (this.stars) this.stars.material.uniforms.uK.value = T.night * (T.stars ?? 1);
     this._fitShadow();
     const cc = r0.getClearColor(new THREE.Color()), ca = r0.getClearAlpha();
     this._bakeClouds(T);

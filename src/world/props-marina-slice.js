@@ -107,11 +107,19 @@ function slicePlacements() {
   for (const [list, nb, tag] of [[rects, near, { notIn: 'tower' }], [rectsT, nearT, { onlyIn: 'tower' }]]) for (const r of list) {
     const shared = r !== S.fingers[1] && r !== S.towerFinger;
     if (shared && tag.onlyIn) continue;   // (the shared sections are placed once, with the Turf War build's sides)
-    out.push({ type: 'floatdeck', pos: [(r[0] + r[1]) / 2, S.pontoonY, (r[2] + r[3]) / 2], w: r[1] - r[0], d: r[3] - r[2], y0: -S.pontoonDepth, sea: -1.6 - S.pontoonY, sides: pontoonSides(r, list, nb), piles: [], lite: true, ...(shared ? {} : tag) });
+    out.push({ type: 'floatdeck', pos: [(r[0] + r[1]) / 2, S.pontoonY, (r[2] + r[3]) / 2], w: r[1] - r[0], d: r[3] - r[2], y0: -S.pontoonDepth, sea: -1.6 - S.pontoonY, sides: pontoonSides(r, list, nb), piles: [], lite: true, ...(shared ? (r === S.fingers[2] ? { notIn: 'bazookarp' } : {}) : tag) });
   }
   // ---- the visiting yachts (hull + deckhouse colliders: the cover along the pontoons)
   // (Tower Command: SANDPIPER's berth is kept clear for the water-bus PUFFIN's gangway down onto the moved short finger)
-  for (const [type, x, z, L, dir, name] of BERTHS) out.push({ type, pos: [x, -1.6, z], rotY: dir > 0 ? 0 : P, length: L, name, col: true, fenderSide: x < -12 ? -1 : 1, notIn: name === 'SANDPIPER' ? 'tower' : undefined });
+  // ([b5-karp-ref] Bazookarp: LADY GREY and MORWENNA, moored inside the Gate's ring, get off-limits tops (col 'roof': no ink,
+  // a kid slides off): their decks were three extra ways into the ring — a walk off LADY GREY's stern, long gaps off both
+  // onto the fuel dock — beyond the layout's five (bazookarp-check #7a; the lead's ruling 7))
+  const KARP_ROOF = new Set(['LADY GREY', 'MORWENNA']);
+  for (const [type, x, z, L, dir, name] of BERTHS) {
+    const b = { type, pos: [x, -1.6, z], rotY: dir > 0 ? 0 : P, length: L, name, col: true, fenderSide: x < -12 ? -1 : 1, notIn: name === 'SANDPIPER' ? 'tower' : undefined };
+    if (!KARP_ROOF.has(name)) { out.push(b); continue; }
+    out.push({ ...b, notIn: 'bazookarp' }, { ...b, col: 'roof', notIn: undefined, onlyIn: 'bazookarp' });
+  }
   // ---- the travel-lift dock: the yard's portal hoist straddling the slip (legs on the hardstanding either side, open end
   //      to the channel) with a motor cruiser hanging in its slings; its workbench + pressure washer by the mouth
   const liftZ = (S.slip[2] + S.slip[3]) / 2, H = S.hung, wl = H.keel + 0.6;   // (the motor cruiser's keel is 0.6 below its waterline)
@@ -132,13 +140,16 @@ function slicePlacements() {
   const bo = S.booth;
   // (turned so its door faces the lane and its service hatch + VISITORS fascia face the quay and the spawn)
   out.push({ type: 'harbouroffice', pos: [(bo[0] + bo[1]) / 2, 0, (bo[2] + bo[3]) / 2], rotY: P / 2, w: bo[3] - bo[2], d: bo[1] - bo[0], h: S.boothTop, label: 'VISITORS' });
-  out.push({ type: 'cooler', pos: [3.55, 0, -40.8], rotY: -P / 2, variant: 1 });
+  out.push({ type: 'cooler', pos: [3.55, 0, -40.8], rotY: -P / 2, variant: 1, notIn: 'bazookarp' });   // ([b5-karp-ref] Bazookarp: the fuel screen takes the dock's edge, so the ice chest goes: the second route to the Gate runs where it stood)
   out.push({ type: 'crates', pos: [3.4, 0, -35.6], rotY: 0.15, variant: 1, color: '#3f6fb0' });
   out.push({ type: 'palletjack', pos: [2.6, 0, -51.8], rotY: 0.4 });
   out.push({ type: 'bollard', pos: [-3.9, 0, -48.4], variant: 1 });
   out.push({ type: 'quaycrates', pos: [-3.25, 0, -50.2], rotY: P / 2 + 0.06, variant: 1 });
   out.push({ type: 'vending', pos: [-3.75, 0, -29.6], rotY: P / 2, variant: 1, color: 'teal' });
   out.push({ type: 'cabinet', pos: [3.85, 0, -30.4], rotY: -P / 2 });
+  // Bazookarp's Gate apron: export crates give the defenders two readable cover blocks around the fuel-dock goal.
+  out.push({ type: 'quaycrates', pos: [-3.9, 0, -52.3], rotY: 0.08, variant: 0, onlyIn: 'bazookarp' });
+  out.push({ type: 'quaycrates', pos: [3.9, 0, -52.3], rotY: -0.08, variant: 1, onlyIn: 'bazookarp' });
   // ---- the Long Pier's new stretch: shore power at ORCA BAY, a dock box, a crate stack, crab pots, a bench
   //      facing the berths, bollard lights, a life ring, the pontoon sign at the gangway head
   out.push({ type: 'shorepower', pos: [-19.88, 0, -35.2], rotY: P / 2, berth: 'V1' });
@@ -155,12 +166,15 @@ function slicePlacements() {
   out.push({ type: 'gangwayrails', pos: [S.spine[0], S.pontoonY, -44.3], rotY: -P / 2, run: S.spine[0] + 19.5, rise: -S.pontoonY, width: 1.6, thick: 0.2, posts: 3 });
   out.push({ type: 'gangwayrails', pos: [S.spine[1], S.pontoonY, -44.3], rotY: P / 2, run: -4.5 - S.spine[1], rise: -S.pontoonY, width: 1.6, thick: 0.2, posts: 3 });
   out.push({ type: 'gangwayrails', pos: [-13.1, S.pontoonY, -28.75], rotY: 0, run: 2.35, rise: -S.pontoonY, width: 1.2, thick: 0.2, posts: 3 });
-  out.push({ type: 'gangwayrails', pos: [-12.1, S.pontoonY, S.fingers[2][2]], rotY: P, run: S.fingers[2][2] - QF, rise: -S.pontoonY, width: 1.6, thick: 0.2, posts: 3 });
+  out.push({ type: 'gangwayrails', pos: [-12.1, S.pontoonY, S.fingers[2][2]], rotY: P, run: S.fingers[2][2] - QF, rise: -S.pontoonY, width: 1.6, thick: 0.2, posts: 3, notIn: 'bazookarp' });   // ([b5-karp-ref] its pontoon is not built in Bazookarp: maps.js)
   out.push({ type: 'shorepower', pos: [-9.9, S.pontoonY, -43.6], rotY: 0, berth: 'V2' });
   out.push({ type: 'dockbox', pos: [-15.6, S.pontoonY, -44.95], rotY: P });
   // ---- the hardstanding: a yacht laid up on stands by the quay, the mast rack, a trailer, drums
   out.push({ type: 'yardyacht', pos: [17.6, 0, -51.5], rotY: 0, length: 8.0, name: 'OYSTERCATCHER', color: '#2f3a57', accent: '#c9a24a' });
-  out.push({ type: 'mastrack', pos: [22.35, 0, -47.4], rotY: 0, length: 8, notIn: 'tower' });
+  out.push({ type: 'mastrack', pos: [22.35, 0, -47.4], rotY: 0, length: 8, notIn: ['tower', 'bazookarp'] });
+  // [b5-karp-ref] Bazookarp: the same rack with an off-limits top (no ink, a kid slides off): a carrier hopped onto it from
+  // the yard's edge, ground no walk reaches (bazookarp-check #7d, the lead's ruling 6: roofs by the map standard first)
+  out.push({ type: 'mastrack', pos: [22.35, 0, -47.4], rotY: 0, length: 8, roofCols: true, onlyIn: 'bazookarp' });
   out.push({ type: 'barrel', pos: [23.2, 0, -37.2], rotY: 0.4, variant: 1, color: '#2f6b62', notIn: 'tower' });
   out.push({ type: 'dinghy_trailer', pos: [22.2, 0, -33.6], rotY: P / 2 - 0.05, notIn: 'tower' });
   return out;

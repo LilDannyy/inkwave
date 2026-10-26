@@ -1,0 +1,37 @@
+JOB-29 raw results — automatic, by the Mac mini's b5-runner, 2026-10-25 22:05:30
+branch botlab-b5-bluestone, ran at f03f8511, exit code 0, wall time 16min
+(a written-up JOB-29.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-29 head f03f8511 load { 2.96 3.89 3.57 }
+# sweep e1-day load { 2.96 3.89 3.57 }
+HARNESS ERA=1: every game page loads with ?era=1
+# sweep e2-day load { 2.10 2.82 3.17 }
+HARNESS ERA=2: every game page loads with ?era=2
+# sweep e3-day load { 2.41 2.45 2.88 }
+HARNESS ERA=3: every game page loads with ?era=3
+== eras-look: RESULT 22/22  0 FAIL
+== eras-jump-first: RESULT 1/1  0 FAIL
+== eras-jump-frames: RESULT 4/4  0 FAIL
+# frames worst "worst":[[31.9,1.47,"jump",0,0.1,4.9],[26.5,1.75,"jump",0,0,5.1]
+# frames worst "worst":[[11.2,0.02,2.5,4.7,4,0,0,1],[10.4,3.97,1,1.7,7.7,0,0,2]
+# frames worst "worst":[[13.1,4.3,0.1,12.4,0.6,0,0,0],[12.3,3.97,1,1.3,10,0,0,2]
+== world-build-bluestone: RESULT 5/5  0 FAIL
+### done
+
+## last 15 lines of job.log
+-rw-r--r--@  1 danielosling  staff  478712 Oct 25 21:57 sweep-e2-day-03.jpg
+-rw-r--r--@  1 danielosling  staff  232755 Oct 25 21:58 sweep-e2-day-04.jpg
+-rw-r--r--@  1 danielosling  staff  513856 Oct 25 22:03 sweep-e3-day-00.jpg
+-rw-r--r--@  1 danielosling  staff  513327 Oct 25 22:03 sweep-e3-day-01.jpg
+-rw-r--r--@  1 danielosling  staff  483947 Oct 25 22:03 sweep-e3-day-02.jpg
+-rw-r--r--@  1 danielosling  staff  462454 Oct 25 22:03 sweep-e3-day-03.jpg
+-rw-r--r--@  1 danielosling  staff  434482 Oct 25 22:03 sweep-e3-day-04.jpg
+== eras-look: RESULT 22/22  0 FAIL
+== eras-jump-first: RESULT 1/1  0 FAIL
+== eras-jump-frames: RESULT 4/4  0 FAIL
+# frames worst "worst":[[31.9,1.47,"jump",0,0.1,4.9],[26.5,1.75,"jump",0,0,5.1]
+# frames worst "worst":[[11.2,0.02,2.5,4.7,4,0,0,1],[10.4,3.97,1,1.7,7.7,0,0,2]
+# frames worst "worst":[[13.1,4.3,0.1,12.4,0.6,0,0,0],[12.3,3.97,1,1.3,10,0,0,2]
+== world-build-bluestone: RESULT 5/5  0 FAIL
+### done

@@ -99,3 +99,20 @@ marked TELL THE USER goes into the lead's final report as a choice they may want
     4969), and Bazookarp leaves `WIP_MODES` with `beta: true` on its mode card. `wip` stays only for what is not yet
     playable at all. The art passes, the per-stage Bazookarp layouts and the balance passes then land on a live beta,
     and the tags come off stage by stage when the lead judges each finished.
+
+34. **Bazookarp carrier field, checker #7 / #7d (2026-10-26, for the reference layouts and every stage after them):**
+    NODE coverage is absolute — every floor a carrier can stand on with the Karp is a graph node, or an off-limits top that
+    never holds a kid (#32). EDGES are judged by route class (origin area → destination area), each class one of: (a) MODEL
+    it in the carrier field, allowed up to 20 m (legitimate routes: Halyard's north gangway route 2, documented swim
+    crossings); (b) BLOCK it physically in the bazookarp variant only, never in the base layout (accidental moves); (c)
+    TOLERATE an unmodelled shortcut only if ≤ 20 m AND it shortens the shortest spawn → Pond or Pond → Gate route by no more
+    than 10 % of the modelled L. Longer than 20 m is never (c). Graph edges the physics cannot make (#16) are vetoed, then #7
+    re-run. The Gate ring's entrance count is DECLARED by the layout (Halyard: five) and the checker compares physical
+    entrances against the declaration; an undeclared physical entrance is declared (a swim-jump entry is legitimate, S21) or
+    blocked. The report lists every class with its outcome, length and L before / after.
+    **Addendum (2026-10-26):** #7 compares physical reach against graph REACH — a candidate whose endpoints the graph already
+    joins by a path no longer than 1.5× the straight-line distance (a ramp's walk join, a modelled hop) is not a missing
+    connection; a single modelled move is never longer than 20 m, so a longer legitimate crossing is split into ≤ 20 m legs
+    through a visible landing that exists in the bazookarp variant, or blocked; unreachable roofs are handled by the map
+    standard (non-inkable, slide off) before any barrier; a class that loses more than half its candidates to #16 has the
+    wrong bounds. Shape: `carrierField.gapClasses[{ name, kind, from{x,z,y}, to{x,z,y}, maxLen ≤ 20, oneWay?, perNode = 2 }]`.
