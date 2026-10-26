@@ -102,6 +102,10 @@ export const HALYARD = {
     // Bazookarp's north gangway connects the ferry-side boat line to the main deck beside the weir;
     // it gives the west jetty a real second approach through mid, mirrored for both teams.
     R([-12.5, 1.3, 1.5], [-2.5, 0, 26.5], 3.6, { tag: 'karp-north-gangway', thickness: 0.6, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'bazookarp' }),
+    // Mode-only timber-and-steel gangways make the three missed pier transfers walkable for the carrier.
+    R([-11.5, 1.3, -7.5], [-11.5, 2.4, -1.5], 4.2, { tag: 'karp-mid-transfer-gangway', thickness: 0.35, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'bazookarp' }),
+    R([12.5, 0, 25.5], [12.5, 0.7, 22.5], 4.2, { tag: 'karp-north-riser-gangway', thickness: 0.35, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'bazookarp' }),
+    R([-12.5, -0.9, -30.5], [-12.5, 0.7, -22.5], 3.6, { tag: 'karp-south-riser-gangway', thickness: 0.35, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'bazookarp' }),
 
     // ================= right lane: the Long Pier (−X for Alpha)
     B(-24, -19.5, -1.2, 0, QF, 0, deck({ tag: 'long-pier' })),
