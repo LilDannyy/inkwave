@@ -71,6 +71,86 @@ finds of one probe and cause within 3 m of each other: a canal bank's whole run 
 (`'longGap'`, `'step'`, …: only that probe's flags) and a radius `r` (m, more than 2). The RESULT line counts the waived
 finds. List every waiver in the note.
 
+**The carrier field's route classes (DECISIONS #34 and its addendum; the lead's nine rulings for the reference
+layouts, 2026-10-26; how Halyard and Lockgate applied them is in `../karp-ref/LEAD-REPORT.md`).** Binding for every
+layout:
+
+1. **Nodes absolute, edges by class.** Every floor a carrier can stand on with the Karp is a graph node, or an off-limits
+   top that never holds a kid (#32). A missing standable node always fails. Every move the graph lacks (a #7d row) is
+   grouped by origin area → destination area into a **class**, and each class gets exactly one outcome:
+   - (a) **MODEL** it: one `carrierField.gapClasses` rule (below), every edge ≤ 20 m, #16 the proof;
+   - (b) **BLOCK** it physically, in the Bazookarp variant only (`onlyIn: 'bazookarp'` / `notIn`), never in the base
+     layout: a visible barrier (rail, chain, crates, hoarding — never an invisible wall), a top made off limits, or the
+     piece that makes the move removed from the variant;
+   - (c) **TOLERATE** it: one `carrierField.tolerate` rule (below); allowed only when every move is ≤ 20 m and the class
+     shortens neither the shortest spawn → Pond nor the shortest Pond → Gate by more than 10 % of the modelled L.
+   Longer than 20 m is never (c).
+2. **Model by class, not by edge.** One parametrised rule per class, never hundreds of pasted edges. A class that loses
+   more than half its candidates to #16 has the wrong bounds: tighten its boxes, don't keep it sparse (#16 FAILs it).
+3. **L is protected.** The checker measures both routes before and after every class, cumulatively in the data's order
+   (modelled classes first, then tolerated ones) and prints the table (`classes (…)` under the RESULT line; the JSON has
+   it in `checks[16].nums.classes` and `checks[7].nums.tolerated`). A modelled class that shortens either route by more
+   than 10 % of L FAILs #16, a tolerated one FAILs #7: stop and send the numbers to the lead.
+4. **The 1.5× reach clause.** A #7d move whose ends the graph already joins by a path ≤ 1.5× the straight line is not a
+   missing connection (the checker counts it as graph-represented). Where a ramp exists in the world but the graph's join
+   detours, fix the model to match the world (the ramp's ends, its landings) before classing what is left.
+5. **No single modelled move over 20 m.** A longer legitimate crossing is split into ≤ 20 m legs through a visible landing
+   that exists in the Bazookarp variant (a pontoon, a buoy ledge, a step), or blocked.
+6. **Accidental moves are blocked — roofs by the map standard first.** A top a carrier should not reach becomes off limits
+   (no ink, a kid slides off): a layout piece gets `roof: true`; a prop placement gets a Bazookarp-only copy with
+   `roofCols: true` (`props.js`: every collider of that placement becomes an off-limits top; the base placement gets
+   `notIn: 'bazookarp'`). A barrier only where the roof rule does not apply, and it must beat the swim-jump as well as the
+   kid (a top 2.3 m or more over the floor it is jumped from, or a moat wider than 8 m). Picture every barrier.
+7. **The Gate ring's entrances are declared.** `gate: { …, entrances: n }` (SPEC: 2–5); #7a compares the physical
+   entrances (every graph crossing into the 15 m ring and every move #16's kid makes into it) against the declaration.
+   An undeclared physical entrance is declared and its move modelled (a swim-jump entry is legitimate, SPEC S21) — only
+   if it is seen from the spawn deck and the count stays within 5 — or blocked. Say which, per entrance, in the note.
+8. **The entrance walk starts at the free zone's boundary.** A carrier cannot be inside a Carp-Free Zone, so a #16
+   entrance walk whose crossing lands inside one (or on no carrier node) starts at the nearest carrier node just outside
+   every zone, within 6 m of the landing, that has a climb-free way to the Gate. A crossing that lands on a carrier node
+   outside the zones is walked as before: an 8 m run-up, the crossing itself, then on to the Gate. Neither the zone nor
+   the geometry changes for this.
+9. **#16's vetoes are applied, then #7 re-run.** Paste the printed `hopVeto` entries (graph edges the physics cannot make
+   never stay), then run again: removing edges can expose new #7d rows.
+
+Also learned on the two reference stages:
+- **The base layout and the stage card never change.** Run `node tools/botlab/karp-layout-diff.mjs <branch-point tree>`
+  after every geometry edit: Turf / Zones / Tower / Boss must build byte-identical. A widened gangway, a moved prop, a
+  re-coloured box: always as a Bazookarp-only copy plus `notIn: 'bazookarp'` on the original. (The stage card leaves
+  Bazookarp-only pieces out: `mapThumb.js`.)
+- **Moored boats and props are floor.** A yacht's deck, a locker's roof, a trailer, a mast rack: a kid stands on them, so
+  they are graph nodes or off-limits tops, and they are the stepping stones of many "impossible" long gaps into a ring.
+  To close one, use the prop's own off-limits option first (the yacht props' `col: 'roof'`), else `roofCols`, always on a
+  Bazookarp-only copy. A roofed stepping stone can expose the move it carried (Halyard: LADY GREY's deck had stood in for
+  a Long Pier → pontoon jump, which then needed its own class).
+- **Trace a find before you block it.** `PROBE='[x, y, z, x, y, z]'` shows how #16's kid makes it and what it touched:
+  Halyard's loading-deck → quay "long gap" used no boat, it was a run off the deck's corner beside a ramp.
+- **Check a block against the routes it crosses.** A screen on a dock's edge takes the edge's nodes: Halyard's fuel-dock
+  screen pushed the Gate's route 2 within 2.5 m of route 1 (#5: 1.87×) until the ice chest beside it went.
+- **Check a new wall against the routes it lands on.** Halyard's quay returns (a good block) stood on a pontoon gangway's
+  landing and turned the pontoon into a dead end inside the Gate ring: the dead end then made a 23 m swim-jump shortcut.
+- **A class with no candidates is dead data.** When a physical ramp or a removal makes a class empty, delete the rule.
+
+Data shapes (Alpha's attack, mirrored by the field and the checker):
+
+```js
+carrierField: {
+  gapClasses: [   // (a) modelled: generates edges inside the boxes, the perNode shortest per source, mirrored unless oneWay
+    { name: 'Long Pier south transfer gangway', kind: 'gangway' /* | 'hop' | 'swimJump' */, from: { x: [a, b], z: [a, b], y: [a, b] },
+      to: { x: [a, b], z: [a, b], y: [a, b] }, maxLen: 10 /* ≤ 20 */, perNode: 1, oneWay: true },
+  ],
+  tolerate: [     // (c) tolerated: #7d moves whose ends fall in the boxes (either way unless oneWay; the mirror too)
+    { name: 'houseboat sun deck → fuel dock', from: { … }, to: { … }, maxLen: 8 /* ≤ 20 */, oneWay: true },
+  ],
+}
+```
+
+A `gangway` edge is proved by #16's kid walking it; a `swimJump` edge by the swimming carrier; a `hop` by the kid's jump.
+`gangway` and `swimJump` classes (and moves from a `swimJump` region) are "modelled" for #7d's 20 m allowance; ordinary
+running jumps keep the 10 m bar. The note's class table: per class its outcome, generated / kept / vetoed (or moves),
+longest, and Pond → Gate and spawn → Pond before / after; its entrance table: every physical entrance, declared or not,
+and what was done with it.
+
 **Stage states** (bluestone's eras, caldera's lava). Your stage module offers its states through
 `R.karpStates() → [{ key, nodeOk(id), query }]` (`G.match.stage.karpStates()`, docs/STAGE-MODS.md); `query` is the page
 query that shows your world in that state (your audit switch, `era=2` / `lava=high`). The checker then builds each

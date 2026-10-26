@@ -53,8 +53,12 @@ export const HALYARD = {
     // ---- the ferry: navy hull, light non-slip deck plate (its 0.2 m edge reads as the sheer stripe)
     B(-16, 16, -1.9, 1.1, -5, 5, { color: M.navy, tag: 'ferry-hull', pattern: PATTERN.hullpaint }),
     B(-16, 16, 1.1, 1.3, -5, 5, { tag: 'ferry-deck', color: M.carDeck, pattern: PATTERN.nonslip, mural: [{ n: [0, 1, 0], id: 4 }] }),
+    // Bazookarp's Pond needs an honest fight ring on the ferry's open car deck. These broad side aprons turn its
+    // narrow vehicle deck into the public loading apron around the centre; only this mode gets the extra float-deck.
+    B(-12, 12, 1.1, 1.3, -12, -5, { tag: 'car-deck-apron', color: M.ferryDeck, pattern: PATTERN.nonslip, onlyIn: 'bazookarp' }),
+    B(-12, 12, 1.1, 1.3, 5, 12, { tag: 'car-deck-apron', color: M.ferryDeck, pattern: PATTERN.nonslip, onlyIn: 'bazookarp' }),
     // cabin (its roof is the sun deck) + wheelhouse on top
-    B(-6.5, 6.5, 1.3, 3.8, -2.9, 2.9, { tag: 'ferry-cabin', color: M.cabin, pattern: PATTERN.hullpaint, mural: [{ n: [1, 0, 0], id: 6 }, { n: [-1, 0, 0], id: 6 }, { n: [0, 0, 1], id: 5 }, { n: [0, 0, -1], id: 5 }] }),
+    B(-6.5, 6.5, 1.3, 3.8, -2.9, 2.9, { tag: 'ferry-cabin', color: M.cabin, pattern: PATTERN.hullpaint, mural: [{ n: [1, 0, 0], id: 6 }, { n: [-1, 0, 0], id: 6 }, { n: [0, 0, 1], id: 5 }, { n: [0, 0, -1], id: 5 }], notIn: 'bazookarp' }),
     B(-1.5, 1.5, 3.8, 5.2, -1.6, 1.6, { tag: 'ferry-wheelhouse', roof: true, color: M.cabin, pattern: PATTERN.hullpaint, notIn: ['tower', 'bazookarp'] }),   // [b5-karp] (the Pond on the cabin roof)
   ],
   half: [
@@ -65,7 +69,22 @@ export const HALYARD = {
     // (body in the clubhouse's render so the terrace reads as part of the building; spawn tiles only on the deck + lip)
     B(-8.5, 8.5, 0, 2.2, hq(-45.4), hq(-38.5), { tag: 'spawn-terrace-body', color: M.render, pattern: PATTERN.render }),
     B(-8.5, 8.5, 2.2, 2.4, hq(-45.4), hq(-38.5), { tag: 'spawn-terrace', color: M.spawn, pattern: PATTERN.spawn }),
+    // Bazookarp's Gate apron bridges the final quay lip under its four posts; it is a paved continuation of the marina quay.
+    // 2.3 m quay-side returns stop a jump from the spawn deck dropping straight into the Gate ring; the grand stair and both
+    // side stairs remain the three visible entrances to the lower apron.
+    B(-6.3, -3.2, 2.4, 4.8, -hq(-38.4), -hq(-38.7), { tag: 'karp-spawn-parapet', roof: true, color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
+    // Bazookarp-only quay-side bulkheads funnel the Gate ring to the street and the two visible side flights.
+    // At 2.8 m above the spawn deck these marina stone returns stop the 2 m swim-jumps across the water.
+    B(-18, -8, 0, 5.2, 55.5, 68, { tag: 'karp-quay-return', roof: true, color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
+    B(8, 18, 0, 5.2, 55.5, 68, { tag: 'karp-quay-return', roof: true, color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
+    B(3.2, 6.3, 2.4, 4.8, -hq(-38.4), -hq(-38.7), { tag: 'karp-spawn-parapet', roof: true, color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
     R([0, 0, hq(-32.4)], [0, 2.4, hq(-38.5)], 6, { tag: 'grand-stair', color: M.stone, pattern: PATTERN.stonestep }),
+    // Side flights turn the tall spawn-deck edge into two safe, readable exits for the Bazookarp Gate apron.
+    R([-7.4, 0, hq(-32.4)], [-7.4, 2.4, hq(-38.5)], 2.2, { tag: 'spawn-side-stair', color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
+    R([7.4, 0, hq(-32.4)], [7.4, 2.4, hq(-38.5)], 2.2, { tag: 'spawn-side-stair', color: M.stone, pattern: PATTERN.stonestep, onlyIn: 'bazookarp' }),
+    // The Gate apron has two staggered cargo stacks for cover on the otherwise exposed clubhouse quay.
+    B(-4.5, -2.2, 0, 1.35, -53.5, -52.5, { tag: 'gate-crate-cover', color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
+    B(2.2, 4.5, 0, 1.35, -53.5, -52.5, { tag: 'gate-crate-cover', color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
     B(-8.5, -4.6, 2.4, 3.15, hq(-39.1), hq(-38.5), { tag: 'parapet', color: M.clubhouse, pattern: PATTERN.render }),
     B(4.6, 8.5, 2.4, 3.15, hq(-39.1), hq(-38.5), { tag: 'parapet', color: M.clubhouse, pattern: PATTERN.render }),
     // quay corners: boathouse (left) and a harbour-office kiosk (right) — cover + landmarks, out of the lanes
@@ -79,7 +98,17 @@ export const HALYARD = {
     // walkable and inkable (a perch you reach on foot, not an off-limits roof)
     B(-1.7, 1.7, 0, 2.7, -22.5, -18.8, { tag: 'fuel-hut', color: M.hut, pattern: PATTERN.render, onlyIn: 'tower' }),
     // gangway onto the ferry's side corridor (free-spanning plank over the water)
-    R([0, 0, -8.8], [0, 1.3, -4.95], 3.4, { tag: 'gangway', thin: true, thickness: 0.22, color: M.steel, pattern: PATTERN.gangdeck }),
+    R([0, 0, -8.8], [0, 1.3, -4.95], 3.4, { tag: 'gangway', thin: true, thickness: 0.22, color: M.steel, pattern: PATTERN.gangdeck, notIn: 'bazookarp' }),
+    // [b5-karp-ref] Bazookarp's wider, longer gangway (Codex's landing fix, dfd50f69, had changed it for every mode: the
+    // base layout stays as it was)
+    R([0, 0, -9.8], [0, 1.3, -4.0], 3.8, { tag: 'gangway', thin: true, thickness: 0.22, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'bazookarp' }),
+    // Bazookarp's north gangway connects the ferry-side boat line to the main deck beside the weir;
+    // it gives the west jetty a real second approach through mid, mirrored for both teams.
+    R([-12.5, 1.3, 1.5], [-2.5, 0, 26.5], 3.6, { tag: 'karp-north-gangway', thickness: 0.6, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'bazookarp' }),
+    // Mode-only timber-and-steel gangways make the three missed pier transfers walkable for the carrier.
+    R([-11.5, 1.3, -7.5], [-11.5, 2.4, -1.5], 4.2, { tag: 'karp-mid-transfer-gangway', thickness: 0.35, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'bazookarp' }),
+    R([12.5, 0, 25.5], [12.5, 0.7, 22.5], 4.2, { tag: 'karp-north-riser-gangway', thickness: 0.35, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'bazookarp' }),
+    R([-12.5, -0.9, -30.5], [-12.5, 0.7, -22.5], 3.6, { tag: 'karp-south-riser-gangway', thickness: 0.35, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'bazookarp' }),
 
     // ================= right lane: the Long Pier (−X for Alpha)
     B(-24, -19.5, -1.2, 0, QF, 0, deck({ tag: 'long-pier' })),
@@ -107,13 +136,16 @@ export const HALYARD = {
     // visitor pontoons 0.9 m below the piers: the spine from the Long Pier to the fuel dock (a gangway down at each end),
     // the long finger north to the finger pier (a gangway up onto it), a short finger, the access pontoon to the quay
     B(SL.spine[0], SL.spine[1], SL.pontoonY - SL.pontoonDepth, SL.pontoonY, SL.spine[2], SL.spine[3], { tag: 'visitor-pontoon', color: M.float, pattern: PATTERN.rubber }),
-    ...SL.fingers.map((f, i) => B(f[0], f[1], SL.pontoonY - SL.pontoonDepth, SL.pontoonY, f[2], f[3], { tag: 'visitor-finger', color: M.float, pattern: PATTERN.rubber, notIn: i === 1 ? 'tower' : undefined })),
+    // ([b5-karp-ref] Bazookarp: the access pontoon (fingers[2]) and its gangway are not built: the quay returns stand on its
+    // gangway's landing, so it was a dead end inside the Gate's ring from which a carrier swim-jumped onto the Gate apron,
+    // 15–23 m nearer than any walk, and onto which one swim-jumped from the Long Pier's root, unseen from the deck)
+    ...SL.fingers.map((f, i) => B(f[0], f[1], SL.pontoonY - SL.pontoonDepth, SL.pontoonY, f[2], f[3], { tag: 'visitor-finger', color: M.float, pattern: PATTERN.rubber, notIn: i === 1 ? 'tower' : i === 2 ? 'bazookarp' : undefined })),
     // Tower Command: the short finger moved under the water-bus PUFFIN's gangway (its berth kept clear)
     B(SL.towerFinger[0], SL.towerFinger[1], SL.pontoonY - SL.pontoonDepth, SL.pontoonY, SL.towerFinger[2], SL.towerFinger[3], { tag: 'visitor-finger', color: M.float, pattern: PATTERN.rubber, onlyIn: 'tower' }),
     R([SL.spine[0], SL.pontoonY, -44.3], [-19.5, 0, -44.3], 1.6, { tag: 'pontoon-gangway', thin: true, thickness: 0.2, color: M.steel, pattern: PATTERN.gangdeck }),
     R([SL.spine[1], SL.pontoonY, -44.3], [-4.5, 0, -44.3], 1.6, { tag: 'pontoon-gangway', thin: true, thickness: 0.2, color: M.steel, pattern: PATTERN.gangdeck }),
     R([-13.1, SL.pontoonY, -28.75], [-13.1, 0, -26.4], 1.2, { tag: 'pontoon-gangway', thin: true, thickness: 0.2, color: M.steel, pattern: PATTERN.gangdeck }),
-    R([-12.1, SL.pontoonY, SL.fingers[2][2]], [-12.1, 0, QF], 1.6, { tag: 'pontoon-gangway', thin: true, thickness: 0.2, color: M.steel, pattern: PATTERN.gangdeck }),
+    R([-12.1, SL.pontoonY, SL.fingers[2][2]], [-12.1, 0, QF], 1.6, { tag: 'pontoon-gangway', thin: true, thickness: 0.2, color: M.steel, pattern: PATTERN.gangdeck, notIn: 'bazookarp' }),
     // the chandlery's store (roof off limits) and its loading deck (the strategic point) on piles across the channel, a
     // ramp up from the fuel dock, a ramp up from the hardstanding
     B(SL.store[0], SL.store[1], -1.2, SL.storeTop, SL.store[2], SL.store[3], { tag: 'chandlery', roof: true, color: M.store, pattern: PATTERN.weatherboard }),
@@ -127,7 +159,9 @@ export const HALYARD = {
     // tug up on blocks: deck = flank high ground, ramp up from the mid end, wheelhouse for cover
     B(14.5, 20.5, 0, 2.6, -24, -13, { tag: 'tug-hull', color: M.tug, pattern: PATTERN.hullpaint, notIn: 'zones' }),
     B(15.8, 19.2, 2.6, 4.3, -20.4, -17.4, { tag: 'tug-house', roof: true, color: M.tugHouse, pattern: PATTERN.hullpaint }),
-    R([17.5, 0, -7.6], [17.5, 2.6, -13], 2.2, { tag: 'tug-ramp', color: M.wood, pattern: PATTERN.rampboard, notIn: 'zones' }),
+    R([17.5, 0, -7.6], [17.5, 2.6, -13], 2.2, { tag: 'tug-ramp', color: M.wood, pattern: PATTERN.rampboard, notIn: ['zones', 'bazookarp'] }),
+    // Bazookarp keeps the tug as flank high ground, but eases its 25.7° Turf ramp to meet the 24° map limit.
+    R([17.5, 0, -7.0], [17.5, 2.6, -13], 2.2, { tag: 'tug-ramp', color: M.wood, pattern: PATTERN.rampboard, onlyIn: 'bazookarp' }),
     // Zone Control (the tug deck is each team's side zone): easier ways up for both sides
     //  • defenders: a steel boarding stair from the yard (quay side) straight up onto the bow
     //  • attackers: the stern ramp eased to 23.8° (it lands 0.45 m into a notch in the stern) and a two-step stack of
@@ -141,6 +175,23 @@ export const HALYARD = {
     R([19.0, 0, -29.95], [19.0, 2.6, -24.0], 2.2, { tag: 'tug-bow-ramp', color: M.wood, pattern: PATTERN.rampboard, onlyIn: 'tower' }),
     // plank from the boatyard onto the ferry's end deck
     R([19.7, 0, -3.6], [15.85, 1.3, -3.6], 2.0, { tag: 'ferry-plank', thin: true, thickness: 0.2, color: M.wood, pattern: PATTERN.planks }),
+    // Bazookarp: a boarded timber hoarding (2.4 m, off-limits top) closes the alley between the laid-up tug and the yard's
+    // edge at the tug's stern: a carrier vaulted the drums there and hopped the dinghy trailer out of a dead end, 29–39 m
+    // nearer a Gate than any walk (bazookarp-check #7d; the lead's ruling 6: accidental moves are blocked by a visible
+    // Bazookarp-only barrier, never in the base layout)
+    B(20.5, 24, 0, 2.4, -25.2, -24.0, { tag: 'karp-yard-hoarding', roof: true, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
+    // Bazookarp: a boarded timber spill screen (2.4 m, off-limits top) along the fuel dock's channel edge, either side of
+    // the loading-deck ramp, inside the Gate's ring. It closes two ways in beyond the layout's five: the swim-jump from the
+    // slip plank and the yard's edge across the channel onto the main street (unseen from the spawn deck), and the run off
+    // the loading deck's corner down onto the fuel dock south of the ramp (bazookarp-check #7a; the lead's ruling 7). 2.4 m
+    // beats both the kid's vault and the carrier's swim-jump (≥ 2.3 m over the floor it leaves).
+    B(4.25, 4.5, 0, 2.4, -44.4, -38.5, { tag: 'karp-fuel-screen', roof: true, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
+    B(4.25, 4.5, 0, 2.4, -52.4, -48.4, { tag: 'karp-fuel-screen', roof: true, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
+    // … and a 1.3 m timber parapet on the loading deck's channel edge (its top 2.6 m over the yard): a carrier swim-jumped
+    // from the yard's edge across the channel's corner up onto the deck, a sixth way into the ring
+    B(4.5, 10, 1.3, 2.6, -44.6, -44.3, { tag: 'karp-deck-parapet', roof: true, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
+    // Bazookarp gets a second, visible ferry landing to the Long Pier so the central push has a true alternate route.
+    R([-20.5, 0, -3.6], [-15.0, 1.3, -3.6], 2.6, { tag: 'ferry-plank', thin: true, thickness: 0.2, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
 
     // ================= ferry details (mirrored to the far side)
     // bulwarks along the long sides, open at the gangway
@@ -148,7 +199,7 @@ export const HALYARD = {
     B(1.8, 16, 1.3, 2.0, -5, -4.6, { tag: 'ferry-bulwark', color: M.navy, pattern: PATTERN.hullpaint }),
     // sun-deck stair (Alpha's, at its left end). Small cover (fuel pumps, dock box, pump-out station, crates, keel
     // blocks, dinghy, ferry locker + cargo) is set dressing with colliders — see docs/HALYARD.md
-    R([12.6, 1.3, -1.9], [6.5, 3.8, -1.9], 2.0, { tag: 'ferry-stair', color: M.steel, pattern: PATTERN.treads, notIn: 'tower' }),
+    R([12.6, 1.3, -1.9], [6.5, 3.8, -1.9], 2.0, { tag: 'ferry-stair', color: M.steel, pattern: PATTERN.treads, notIn: ['tower', 'bazookarp'] }),
     // Tower Command: narrowed to 1.45 m (z -2.9…-1.45) so the track down the middle of the ferry (z 0, a 2.5 m platform)
     // passes it and drops straight off the sun deck's end
     R([12.6, 1.3, -2.175], [6.5, 3.8, -2.175], 1.45, { tag: 'ferry-stair', color: M.steel, pattern: PATTERN.treads, onlyIn: 'tower' }),
