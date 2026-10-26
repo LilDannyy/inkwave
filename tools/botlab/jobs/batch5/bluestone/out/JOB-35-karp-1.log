@@ -1,0 +1,194 @@
+INKWAVE issue log: /Users/danielosling/inkwave-botlab/.botlab/ud-slot1/issues.log
+(electron) 'console-message' arguments are deprecated and will be removed. Please use Event<WebContentsConsoleMessageEventParams> object instead.
+== halyard [bazookarp L 55.4/55.3 m]: winner B (stopped) | counts 28 vs 5 | best A 40.1 m B 52.7 m | ko - | OT dropped 6.6 s → stopped | sim 306.5 s
+   shell: pops A 16 B 16 | first pop 10.52 s (first bots by the Pond at [9,10.3] s) | pops at [10.52,14.53,23.28,28.17,38.98,42.45,46.1,69.85,79.08,82.88,90.98,94.97,98.88,107.93,111.47,119.42,130.98,136.23,143.02,146.02,159.1,168.6,186.57,208.15,216.25,219.55,245.58,264.98,274.7,282.27,288.77,300.95] | burst splats 0 | re-formed 31 | devices crushed 0
+   pick-ups A 17 B 15 | carries 32: A:splat/0.7s/1.6m B:splat/1.1s/4.2m B:splat/1.5s/5.8m B:plant/5.8s/18.8m B:splat/0.4s/1.5m A:splat/0.5s/0m A:plant/20.4s/27.3m A:splat/1.3s/5.3m B:splat/1s/0m A:splat/0.2s/0m A:splat/1.3s/4.5m B:splat/0.3s/0m A:splat/0.5s/0.2m A:splat/0.1s/0m B:splat/3.8s/0m B:splat/4.7s/0m A:splat/1.4s/0m A:splat/2.6s/0m B:splat/0.6s/0m B:splat/4.6s/0m A:splat/2.8s/0m B:splat/13.7s/0m B:splat/17.1s/17m B:splat/3.2s/5.4m B:splat/0.5s/0.1m A:splat/22.9s/0m A:splat/1.6s/0m A:splat/1s/0m A:splat/1.2s/0m A:splat/0.9s/0m B:splat/0.4s/0m A:splat/5.4s/1.3m
+   plants [{"t":34.3,"team":1,"index":0},{"t":66.9,"team":0,"index":0}] | gates [{"t":34.3,"team":1},{"t":66.9,"team":0}] | Carp Blasts own 0 enemy 0 | resets {} | moved 0
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.4% (holding on purpose 8.2%)
+   Carp Shots by tier [splash, burst, big] [37,7,33] landed 75 blasts 74 hits 11 splats 5 | carrier shot decisions 127 | breakers at the shell 161 bot-s
+   specials 7 | super jumps 40 (to the carrier 11) | Bubble Guards on the carrier 2, a knockout within 8 s of one: no | splats 96 (fuse 0) | grants 32 refused 0
+   field: 166.4 ms at load {"graph":162.9,"extra":159,"dist":1.7,"rest":1.8,"perState":166.4}, hop edges 63, gap edges 4403 | sim 306.5 s in 43 s (wall 43 s)
+   bots [WP3 normal]: route picks 33 shares {"short":32,"alt":1} | Carp Shots noticed: escaped 42 caught 12 | carrier shots {"push":39,"dodge":0,"splash":17,"ink":37} | keepers on spot 54 s, interceptors on the carrier 97 s | jumps to the carrier 11 | karp specials 2
+   roles (bot-s): {"grab":367,"perch":173,"break":499,"fight":60,"lead":129,"anchor":68,"carry":171,"flank":117,"intercept":212,"keeper":140} | shell danger {"caught":0,"evaded":6} | fuse danger null
+   carries: 20 of 32 ended in a splat within 2.5 s; 19 made no new ground
+   stuck {"t":253.5,"name":"P1","w":"brush","mode":"paint","role":"break","carry":false,"pos":[20.2,0,9.9],"dur":2}
+   stuck {"t":293.5,"name":"Bubbles","w":"brush","mode":"paint","role":"grab","carry":false,"pos":[1,0,31.4],"dur":1.75}
+   stuck {"t":229.5,"name":"Kelp","w":"blaster","mode":"refill","role":"keeper","carry":false,"pos":[7.3,1.53,60.3],"dur":1.5}
+   stuck {"t":294.8,"name":"P1","w":"brush","mode":"refill","role":"grab","carry":false,"pos":[-2.7,0.19,22.2],"dur":1.5}
+   stuck {"t":107,"name":"Sprinkle","w":"twins","mode":"paint","role":"grab","carry":false,"pos":[-3.5,0,28.4],"dur":1}
+   stuck {"t":248.8,"name":"P1","w":"brush","mode":"paint","role":"grab","carry":false,"pos":[12.4,0,11.3],"dur":1}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp halyard win=B reason=stopped ko=- c=28/5 pops=16/16 carries=32 blasts=0 ot=stopped/dropped
+RESULT_JSON {"map":"halyard","winner":1,"reason":"stopped","koT":null,"counts":[28,5],"pops":[16,16],"firstPop":10.52,"carries":32,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":{"why":"dropped","losing":0,"len":6.6,"end":"stopped","windows":{"opened":1,"paused":0,"closed":0}},"stuckPct":0.4,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+== lockgate [bazookarp L 55.9/55.7 m]: winner A (knockout) | counts 0 vs 100 | best A 55.9 m B 0 m | ko 44.4 | OT no | sim 44.3 s
+   shell: pops A 5 B 1 | first pop 10.47 s (first bots by the Pond at [9.5,9.3] s) | pops at [10.47,13.3,18,26.08,31.22,35.33] | burst splats 0 | re-formed 5 | devices crushed 0
+   pick-ups A 4 B 2 | carries 6: B:splat/0.3s/0m A:splat/2.7s/15.1m A:plant/3.8s/13.4m A:splat/2s/7.4m B:splat/0.5s/0m A:knockout/8.2s/20m
+   plants [{"t":22.3,"team":0,"index":0}] | gates [{"t":22.3,"team":0}] | Carp Blasts own 0 enemy 0 | resets {} | moved 0
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.1% (holding on purpose 3.6%)
+   Carp Shots by tier [splash, burst, big] [9,1,1] landed 11 blasts 11 hits 1 splats 0 | carrier shot decisions 13 | breakers at the shell 34 bot-s
+   specials 0 | super jumps 5 (to the carrier 1) | Bubble Guards on the carrier 0, a knockout within 8 s of one: no | splats 13 (fuse 0) | grants 6 refused 0
+   field: 127.6 ms at load {"graph":121.9,"extra":112.9,"dist":2.5,"rest":3.2,"perState":127.6}, hop edges 62, gap edges 3893 | sim 44.3 s in 9 s (wall 9 s)
+   bots [WP3 normal]: route picks 6 shares {"short":5,"alt":1} | Carp Shots noticed: escaped 4 caught 2 | carrier shots {"push":5,"dodge":0,"splash":5,"ink":0} | keepers on spot 0 s, interceptors on the carrier 5 s | jumps to the carrier 1 | karp specials 0
+   roles (bot-s): {"break":106,"grab":51,"fight":14,"intercept":13,"keeper":29,"carry":22,"anchor":13,"flank":17,"lead":20} | shell danger {"caught":0,"evaded":1} | fuse danger null
+   carries: 3 of 6 ended in a splat within 2.5 s; 2 made no new ground
+   stuck {"t":34.5,"name":"P1","w":"shooter","mode":"paint","role":"break","carry":false,"pos":[-2,0,25.4],"dur":0.25}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp lockgate win=A reason=knockout ko=44.4 c=0/100 pops=5/1 carries=6 blasts=0 ot=no
+RESULT_JSON {"map":"lockgate","winner":0,"reason":"knockout","koT":44.4,"counts":[0,100],"pops":[5,1],"firstPop":10.47,"carries":6,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.1,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+== halyard [bazookarp L 55.4/55.3 m]: winner A (retake) | counts 8 vs 47 | best A 51.5 m B 29.8 m | ko - | OT dropped 2 s → retake | sim 302 s
+   shell: pops A 17 B 17 | first pop 10.55 s (first bots by the Pond at [10.8,10.5] s) | pops at [10.55,18.1,30.63,46.33,50.7,62.38,94.55,98.73,114,134,148.7,155.15,159.68,167,172.92,181.53,185.68,200.92,205.52,210.88,216.9,223.17,231.03,234.98,240.78,246.88,251.42,255.92,258.93,266.1,272.13,277.35,283.92,301.6] | burst splats 1 | re-formed 33 | devices crushed 1
+   pick-ups A 16 B 18 | carries 34: A:splat/0.2s/0m A:plant/9.7s/28.8m A:splat/12.9s/20.8m A:splat/1.6s/1.8m B:splat/4.9s/0m B:plant/28s/28.8m B:splat/0.4s/1m A:splat/11.8s/0m A:splat/14.5s/0m B:splat/9.3s/0m B:splat/3.1s/0m A:splat/0.8s/0m A:splat/3s/0m B:splat/3.3s/0m B:splat/4.4s/0m A:splat/0.3s/0m A:splat/11.9s/0m A:splat/2.1s/0m B:splat/1.6s/0m B:splat/2.6s/0m B:splat/1.8s/0m A:splat/2.7s/0m B:splat/0.5s/0m A:splat/1.4s/0m B:splat/3s/0m A:splat/1s/0m B:splat/2.7s/0m B:splat/0.5s/0m B:splat/3.2s/0m B:splat/1.7s/0m B:splat/1.9s/0m B:splat/0.9s/0m A:splat/11.4s/0m A:end/0s/0m
+   plants [{"t":28.8,"team":0,"index":0},{"t":91.8,"team":1,"index":0}] | gates [{"t":28.8,"team":0},{"t":91.8,"team":1}] | Carp Blasts own 0 enemy 0 | resets {} | moved 0
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.1% (holding on purpose 5.3%)
+   Carp Shots by tier [splash, burst, big] [52,2,52] landed 104 blasts 104 hits 27 splats 17 | carrier shot decisions 152 | breakers at the shell 144 bot-s
+   specials 4 | super jumps 30 (to the carrier 12) | Bubble Guards on the carrier 0, a knockout within 8 s of one: no | splats 89 (fuse 0) | grants 34 refused 0
+   field: 203.9 ms at load {"graph":201.5,"extra":197.1,"dist":1.4,"rest":1,"perState":203.9}, hop edges 63, gap edges 4403 | sim 302 s in 45 s (wall 45 s)
+   bots [WP3 normal]: route picks 34 shares {"short":33,"alt":1} | Carp Shots noticed: escaped 57 caught 27 | carrier shots {"push":37,"dodge":0,"splash":24,"ink":24} | keepers on spot 47 s, interceptors on the carrier 126 s | jumps to the carrier 12 | karp specials 0
+   roles (bot-s): {"break":455,"grab":288,"fight":118,"flank":151,"anchor":91,"lead":166,"carry":199,"intercept":284,"keeper":173} | shell danger {"caught":0,"evaded":5} | fuse danger null
+   burst victims [{"t":155.2,"w":"blade","role":"grab","mode":"paint","d":3.12,"esc":true,"knew":true,"dangerFor":0.27,"shellHp":500}]
+   carries: 15 of 34 ended in a splat within 2.5 s; 29 made no new ground
+   stuck {"t":130.8,"name":"Sprinkle","w":"bow","mode":"refill","role":"grab","carry":false,"pos":[-2.5,0.18,22.5],"dur":1}
+   stuck {"t":83.3,"name":"Sprinkle","w":"bow","mode":"fight","role":"keeper","carry":false,"pos":[0.2,0.6,-22.9],"dur":0.5}
+   stuck {"t":78.3,"name":"Sprinkle","w":"bow","mode":"fight","role":"keeper","carry":false,"pos":[4.6,0.26,-21.5],"dur":0.25}
+   stuck {"t":89.3,"name":"Sprinkle","w":"bow","mode":"fight","role":"keeper","carry":false,"pos":[0.1,0,-23.6],"dur":0.25}
+   stuck {"t":231.3,"name":"P1","w":"twins","mode":"paint","role":"grab","carry":false,"pos":[-5.6,0.32,20.5],"dur":0.25}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp halyard win=A reason=retake ko=- c=8/47 pops=17/17 carries=34 blasts=0 ot=retake/dropped
+RESULT_JSON {"map":"halyard","winner":0,"reason":"retake","koT":null,"counts":[8,47],"pops":[17,17],"firstPop":10.55,"carries":34,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":{"why":"dropped","losing":1,"len":2,"end":"retake","windows":{"opened":1,"paused":0.016666666666666666,"closed":0}},"stuckPct":0.1,"over5":0,"issueStuck":0,"clamped":0,"crushes":1,"console":0,"frameErrors":0}
+== lockgate [bazookarp L 55.9/55.7 m]: winner B (time) | counts 56 vs 3 | best A 24.8 m B 54.6 m | ko - | OT no | sim 300 s
+   shell: pops A 4 B 23 | first pop 10.12 s (first bots by the Pond at [9.5,10.3] s) | pops at [10.12,16.52,21,31.65,38.3,45.03,56.6,60.8,66.8,77.58,110.45,114.9,123.78,126.55,134.45,138.55,142.8,149.85,155.43,172.5,213.62,220.58,225.05,229.27,252.4,272.42,277.23] | burst splats 0 | re-formed 26 | devices crushed 2
+   pick-ups A 9 B 18 | carries 27: B:splat/0.4s/1m A:splat/1.4s/0m B:splat/8.1s/13.5m B:plant/4.3s/14m B:splat/2.3s/6.1m B:splat/5.8s/8.9m B:splat/1.8s/4.2m A:splat/1.4s/0m B:splat/3.2s/7m A:splat/23.6s/21.5m B:splat/0.3s/0m A:splat/0.3s/0m A:splat/0.5s/0m B:splat/1.8s/0m B:splat/1.2s/0m B:splat/0.7s/0m A:splat/0.3s/0m B:splat/0.8s/0m B:splat/11.7s/0m A:splat/31.3s/3.2m B:splat/4.6s/0m B:splat/0.5s/0m B:splat/0.8s/0m A:splat/15.4s/0m B:splat/4.9s/0m A:splat/1.4s/0m B:end/20.7s/0m
+   plants [{"t":36.2,"team":1,"index":0}] | gates [{"t":36.2,"team":1}] | Carp Blasts own 0 enemy 0 | resets {} | moved 0
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.3% (holding on purpose 8.8%)
+   Carp Shots by tier [splash, burst, big] [51,4,48] landed 102 blasts 102 hits 13 splats 4 | carrier shot decisions 199 | breakers at the shell 167 bot-s
+   specials 7 | super jumps 22 (to the carrier 5) | Bubble Guards on the carrier 0, a knockout within 8 s of one: no | splats 82 (fuse 0) | grants 27 refused 0
+   field: 122.8 ms at load {"graph":118.5,"extra":115.8,"dist":1.5,"rest":2.8,"perState":122.8}, hop edges 62, gap edges 3893 | sim 300 s in 55 s (wall 55 s)
+   bots [WP3 normal]: route picks 30 shares {"short":27,"alt":3} | Carp Shots noticed: escaped 41 caught 13 | carrier shots {"push":45,"dodge":0,"splash":28,"ink":68} | keepers on spot 48 s, interceptors on the carrier 133 s | jumps to the carrier 5 | karp specials 0
+   roles (bot-s): {"break":483,"grab":307,"fight":135,"keeper":175,"intercept":265,"anchor":114,"lead":151,"flank":146,"carry":174} | shell danger {"caught":0,"evaded":7} | fuse danger null
+   carries: 16 of 27 ended in a splat within 2.5 s; 18 made no new ground
+   stuck {"t":56.3,"name":"Bubbles","w":"spinner","mode":"paint","role":"break","carry":false,"pos":[-7,0,-33.6],"dur":1}
+   stuck {"t":20.8,"name":"P1","w":"blaster","mode":"refill","role":"break","carry":false,"pos":[0.5,0,-25.9],"dur":0.75}
+   stuck {"t":55.8,"name":"P1","w":"blaster","mode":"paint","role":"grab","carry":false,"pos":[-9,0,-47.6],"dur":0.75}
+   stuck {"t":11.8,"name":"Marlo","w":"twins","mode":"refill","role":"break","carry":false,"pos":[-0.9,0,24],"dur":0.5}
+   stuck {"t":123.5,"name":"Loop","w":"bow","mode":"refill","role":"grab","carry":false,"pos":[-0.3,0,24.5],"dur":0.5}
+   stuck {"t":152.3,"name":"Marlo","w":"twins","mode":"paint","role":"break","carry":false,"pos":[-1.8,0,10.9],"dur":0.5}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp lockgate win=B reason=time ko=- c=56/3 pops=4/23 carries=27 blasts=0 ot=no
+RESULT_JSON {"map":"lockgate","winner":1,"reason":"time","koT":null,"counts":[56,3],"pops":[4,23],"firstPop":10.12,"carries":27,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.3,"over5":0,"issueStuck":0,"clamped":0,"crushes":2,"console":0,"frameErrors":0}
+== halyard [bazookarp L 55.4/55.3 m]: winner B (knockout) | counts 48 vs 0 | best A 28.8 m B 55.3 m | ko 92.4 | OT no | sim 92.5 s
+   shell: pops A 2 B 5 | first pop 11.93 s (first bots by the Pond at [10.3,11] s) | pops at [11.93,16.73,29.43,53.1,56.88,78.48,89.95] | burst splats 0 | re-formed 6 | devices crushed 0
+   pick-ups A 2 B 5 | carries 7: A:splat/0.3s/0.9m B:splat/5.4s/19.7m A:plant/17.4s/28m B:splat/0.8s/0m B:plant/19.2s/9.1m B:splat/6.5s/18.6m B:knockout/1.6s/8m
+   plants [{"t":47.1,"team":0,"index":0},{"t":76.8,"team":1,"index":0}] | gates [{"t":47.1,"team":0},{"t":76.8,"team":1}] | Carp Blasts own 0 enemy 0 | resets {} | moved 0
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.1% (holding on purpose 9.5%)
+   Carp Shots by tier [splash, burst, big] [19,2,12] landed 33 blasts 33 hits 7 splats 4 | carrier shot decisions 34 | breakers at the shell 69 bot-s
+   specials 2 | super jumps 4 (to the carrier 2) | Bubble Guards on the carrier 0, a knockout within 8 s of one: no | splats 25 (fuse 0) | grants 7 refused 0
+   field: 181.9 ms at load {"graph":178.7,"extra":175.3,"dist":0.9,"rest":2.3,"perState":181.9}, hop edges 63, gap edges 4403 | sim 92.5 s in 14 s (wall 14 s)
+   bots [WP3 normal]: route picks 7 shares {"short":7} | Carp Shots noticed: escaped 9 caught 8 | carrier shots {"push":7,"dodge":0,"splash":9,"ink":5} | keepers on spot 27 s, interceptors on the carrier 52 s | jumps to the carrier 2 | karp specials 1
+   roles (bot-s): {"break":171,"grab":82,"fight":8,"lead":52,"anchor":45,"carry":56,"flank":50,"intercept":79,"keeper":61} | shell danger {"caught":0,"evaded":1} | fuse danger null
+   carries: 2 of 7 ended in a splat within 2.5 s; 1 made no new ground
+   stuck {"t":29.5,"name":"P1","w":"bucket","mode":"fight","role":"fight","carry":false,"pos":[7.9,0,-24.7],"dur":0.5}
+   stuck {"t":29.8,"name":"Loop","w":"bow","mode":"refill","role":"intercept","carry":false,"pos":[6.5,1.3,-11.1],"dur":0.25}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp halyard win=B reason=knockout ko=92.4 c=48/0 pops=2/5 carries=7 blasts=0 ot=no
+RESULT_JSON {"map":"halyard","winner":1,"reason":"knockout","koT":92.4,"counts":[48,0],"pops":[2,5],"firstPop":11.93,"carries":7,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.1,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+== lockgate [bazookarp L 55.9/55.7 m]: winner B (knockout) | counts 100 vs 0 | best A 0 m B 55.7 m | ko 81.2 | OT no | sim 81.3 s
+   shell: pops A 0 B 7 | first pop 11.03 s (first bots by the Pond at [9.5,9.8] s) | pops at [11.03,13.88,23.57,26.43,33.98,55.92,79.73] | burst splats 0 | re-formed 6 | devices crushed 1
+   pick-ups A 1 B 6 | carries 7: B:splat/0.7s/2.7m B:plant/7.7s/25.7m B:splat/0.8s/3.4m B:splat/2.5s/10.8m A:splat/16.8s/0m B:splat/20.7s/9.9m B:knockout/1.2s/3.1m
+   plants [{"t":21.9,"team":1,"index":0}] | gates [{"t":21.9,"team":1}] | Carp Blasts own 0 enemy 0 | resets {} | moved 0
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.1% (holding on purpose 8.1%)
+   Carp Shots by tier [splash, burst, big] [11,2,17] landed 30 blasts 30 hits 6 splats 4 | carrier shot decisions 40 | breakers at the shell 20 bot-s
+   specials 1 | super jumps 3 (to the carrier 2) | Bubble Guards on the carrier 0, a knockout within 8 s of one: no | splats 23 (fuse 0) | grants 7 refused 0
+   field: 112.4 ms at load {"graph":109.2,"extra":102.4,"dist":1,"rest":2.2,"perState":112.4}, hop edges 62, gap edges 3893 | sim 81.3 s in 11 s (wall 11 s)
+   bots [WP3 normal]: route picks 7 shares {"short":7} | Carp Shots noticed: escaped 21 caught 4 | carrier shots {"push":2,"dodge":0,"splash":9,"ink":9} | keepers on spot 25 s, interceptors on the carrier 44 s | jumps to the carrier 2 | karp specials 0
+   roles (bot-s): {"grab":63,"perch":27,"break":98,"fight":11,"intercept":68,"keeper":63,"flank":48,"carry":53,"anchor":39,"lead":53} | shell danger null | fuse danger null
+   carries: 2 of 7 ended in a splat within 2.5 s; 1 made no new ground
+   stuck {"t":33,"name":"Drip","w":"shooter","mode":"paint","role":"grab","carry":false,"pos":[1.2,1.08,-32.8],"dur":0.5}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp lockgate win=B reason=knockout ko=81.2 c=100/0 pops=0/7 carries=7 blasts=0 ot=no
+RESULT_JSON {"map":"lockgate","winner":1,"reason":"knockout","koT":81.2,"counts":[100,0],"pops":[0,7],"firstPop":11.03,"carries":7,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.1,"over5":0,"issueStuck":0,"clamped":0,"crushes":1,"console":0,"frameErrors":0}
+== halyard [bazookarp L 55.4/55.3 m]: winner A (knockout) | counts 0 vs 84 | best A 55.4 m B 9 m | ko 181 | OT no | sim 181 s
+   shell: pops A 15 B 7 | first pop 10.23 s (first bots by the Pond at [10,9.8] s) | pops at [10.23,14.35,19.83,31.37,36.57,41.92,49.35,53.83,62.78,66.98,83.33,94.55,108.93,118.63,127.02,134.07,139.32,143.42,147.48,151.07,160.97,165.67] | burst splats 0 | re-formed 21 | devices crushed 3
+   pick-ups A 15 B 7 | carries 22: A:splat/0.6s/1.9m B:splat/1.8s/3.7m A:splat/0.7s/0m A:splat/1s/1.6m A:splat/0.3s/0m A:splat/0.5s/0m A:splat/1.2s/1m A:splat/4.2s/17.6m A:splat/1.6s/2.2m B:splat/11.8s/0m B:splat/3.4s/5.3m A:splat/11s/0m B:splat/3.3s/0m A:splat/4.8s/1m A:plant/0.4s/3.5m B:splat/0.5s/0m A:splat/0.8s/2.5m A:splat/0.6s/0.5m A:splat/0.7s/0m B:splat/6.5s/0m B:splat/1.1s/0m A:knockout/15s/23.7m
+   plants [{"t":127.7,"team":0,"index":0}] | gates [{"t":127.7,"team":0}] | Carp Blasts own 0 enemy 0 | resets {} | moved 0
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.2% (holding on purpose 7.4%)
+   Carp Shots by tier [splash, burst, big] [21,1,17] landed 39 blasts 39 hits 6 splats 2 | carrier shot decisions 85 | breakers at the shell 123 bot-s
+   specials 4 | super jumps 19 (to the carrier 5) | Bubble Guards on the carrier 0, a knockout within 8 s of one: no | splats 55 (fuse 0) | grants 22 refused 0
+   field: 173 ms at load {"graph":170.7,"extra":168.9,"dist":1,"rest":1.3,"perState":173}, hop edges 63, gap edges 4403 | sim 181 s in 31 s (wall 31 s)
+   bots [WP3 normal]: route picks 22 shares {"short":22} | Carp Shots noticed: escaped 33 caught 7 | carrier shots {"push":4,"dodge":0,"splash":14,"ink":12} | keepers on spot 27 s, interceptors on the carrier 67 s | jumps to the carrier 5 | karp specials 2
+   roles (bot-s): {"break":393,"grab":223,"fight":44,"lead":79,"flank":66,"carry":85,"anchor":44,"keeper":94,"intercept":122} | shell danger {"caught":0,"evaded":3} | fuse danger null
+   carries: 13 of 22 ended in a splat within 2.5 s; 10 made no new ground
+   stuck {"t":41.3,"name":"Kelp","w":"spinner","mode":"paint","role":"grab","carry":false,"pos":[-1.2,1.3,-4.1],"dur":0.75}
+   stuck {"t":119,"name":"Loop","w":"blaster","mode":"refill","role":"grab","carry":false,"pos":[-4,0.35,19.3],"dur":0.75}
+   stuck {"t":18.8,"name":"Moxie","w":"bow","mode":"refill","role":"break","carry":false,"pos":[3,0,-9.8],"dur":0.5}
+   stuck {"t":31,"name":"Moxie","w":"bow","mode":"refill","role":"break","carry":false,"pos":[1.6,0.09,-9.4],"dur":0.5}
+   stuck {"t":116.5,"name":"Sprinkle","w":"blade","mode":"retreat","role":"break","carry":false,"pos":[-7.3,0.49,17.5],"dur":0.5}
+   stuck {"t":27.5,"name":"Loop","w":"blaster","mode":"paint","role":"grab","carry":false,"pos":[2.1,1.88,6.6],"dur":0.25}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp halyard win=A reason=knockout ko=181 c=0/84 pops=15/7 carries=22 blasts=0 ot=no
+RESULT_JSON {"map":"halyard","winner":0,"reason":"knockout","koT":181,"counts":[0,84],"pops":[15,7],"firstPop":10.23,"carries":22,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.2,"over5":0,"issueStuck":0,"clamped":0,"crushes":3,"console":0,"frameErrors":0}
+== lockgate [bazookarp L 55.9/55.7 m]: winner A (time) | counts 7 vs 59 | best A 52.4 m B 23 m | ko - | OT no | sim 300 s
+   shell: pops A 12 B 13 | first pop 10.33 s (first bots by the Pond at [9.8,9.8] s) | pops at [10.33,19.6,27.8,34.28,69.8,76.65,94.35,118.08,121.53,127.1,134.1,138.8,147.65,152.93,158.6,163.97,170.48,176.1,187.37,190.3,205.3,236.97,269.17,272.43,296.77] | burst splats 0 | re-formed 25 | devices crushed 3
+   pick-ups A 13 B 12 | carries 25: A:plant/5.2s/28.5m A:splat/5.6s/14.8m A:splat/2.4s/9.1m B:splat/31.1s/6.4m B:splat/1.7s/5m A:splat/11s/0m B:splat/5.5s/0m A:splat/0.3s/0m A:splat/2.1s/0m B:splat/4s/11.6m B:splat/1.4s/0m A:splat/1.3s/0m A:splat/2.2s/0m A:splat/1.6s/0m B:splat/0.6s/0m A:splat/0.4s/0m B:splat/1.7s/0m B:splat/8.7s/0m B:splat/0.2s/0m A:splat/11.1s/0m B:splat/28.4s/0m A:splat/30s/0m A:splat/0.7s/0m B:splat/20.1s/0m B:splat/1.1s/0m
+   plants [{"t":16.8,"team":0,"index":0}] | gates [{"t":16.8,"team":0}] | Carp Blasts own 0 enemy 0 | resets {} | moved 0
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0.5 s (> 3 s episodes 0) | bots stuck 0.1% (holding on purpose 9%)
+   Carp Shots by tier [splash, burst, big] [40,6,62] landed 108 blasts 108 hits 14 splats 9 | carrier shot decisions 173 | breakers at the shell 103 bot-s
+   specials 10 | super jumps 23 (to the carrier 10) | Bubble Guards on the carrier 0, a knockout within 8 s of one: no | splats 77 (fuse 0) | grants 25 refused 0
+   field: 104.6 ms at load {"graph":102.2,"extra":100,"dist":1.1,"rest":1.3,"perState":104.6}, hop edges 62, gap edges 3893 | sim 300 s in 56 s (wall 56 s)
+   bots [WP3 normal]: route picks 28 shares {"short":25,"alt":2,"alt2":1} | Carp Shots noticed: escaped 60 caught 13 | carrier shots {"push":20,"dodge":0,"splash":32,"ink":33} | keepers on spot 108 s, interceptors on the carrier 151 s | jumps to the carrier 10 | karp specials 0
+   roles (bot-s): {"break":326,"grab":246,"perch":148,"fight":87,"anchor":109,"carry":192,"lead":184,"flank":171,"keeper":253,"intercept":263} | shell danger {"caught":0,"evaded":4} | fuse danger null
+   carries: 14 of 25 ended in a splat within 2.5 s; 19 made no new ground
+   stuck {"t":116,"name":"Juno","w":"spinner","mode":"refill","role":"grab","carry":false,"pos":[8.3,1.59,-8.1],"dur":1.25}
+   stuck {"t":25.3,"name":"Juno","w":"spinner","mode":"fight","role":"keeper","carry":false,"pos":[1.6,0,57.6],"dur":0.75}
+   stuck {"t":57,"name":"Fizz","w":"blaster","mode":"paint","role":"carry","carry":true,"pos":[-3,0,15.8],"dur":0.5}
+   stuck {"t":118.3,"name":"Juno","w":"spinner","mode":"refill","role":"fight","carry":false,"pos":[7.7,1.57,-8.8],"dur":0.25}
+   stuck {"t":216.8,"name":"P1","w":"spinner","mode":"fight","role":"keeper","carry":false,"pos":[7.4,0,-28.9],"dur":0.25}
+   stuck {"t":268.3,"name":"Coral","w":"charger","mode":"paint","role":"perch","carry":false,"pos":[-11.9,0,12.3],"dur":0.25}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp lockgate win=A reason=time ko=- c=7/59 pops=12/13 carries=25 blasts=0 ot=no
+RESULT_JSON {"map":"lockgate","winner":0,"reason":"time","koT":null,"counts":[7,59],"pops":[12,13],"firstPop":10.33,"carries":25,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.1,"over5":0,"issueStuck":0,"clamped":0,"crushes":3,"console":0,"frameErrors":0}
+== halyard [bazookarp L 55.4/55.3 m]: winner B (knockout) | counts 100 vs 0 | best A 0 m B 55.3 m | ko 52.8 | OT no | sim 52.8 s
+   shell: pops A 1 B 6 | first pop 10.52 s (first bots by the Pond at [10.3,10.3] s) | pops at [10.52,13.9,24.37,28.57,31.52,35.83,42.07] | burst splats 0 | re-formed 6 | devices crushed 0
+   pick-ups A 2 B 5 | carries 7: B:splat/0.4s/0m B:splat/5s/20.8m B:splat/1.3s/4m A:splat/1s/0m A:splat/0.7s/0m B:plant/0.9s/4m B:knockout/10.2s/26.5m
+   plants [{"t":37.4,"team":1,"index":0}] | gates [{"t":37.4,"team":1}] | Carp Blasts own 0 enemy 0 | resets {} | moved 0
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0 s (> 3 s episodes 0) | bots stuck 0.2% (holding on purpose 9.2%)
+   Carp Shots by tier [splash, burst, big] [7,1,3] landed 11 blasts 11 hits 4 splats 1 | carrier shot decisions 67 | breakers at the shell 31 bot-s
+   specials 0 | super jumps 5 (to the carrier 1) | Bubble Guards on the carrier 0, a knockout within 8 s of one: no | splats 14 (fuse 0) | grants 7 refused 0
+   field: 168.3 ms at load {"graph":166.4,"extra":164.7,"dist":0.8,"rest":1.1,"perState":168.3}, hop edges 63, gap edges 4403 | sim 52.8 s in 9 s (wall 9 s)
+   bots [WP3 normal]: route picks 7 shares {"short":7} | Carp Shots noticed: escaped 13 caught 4 | carrier shots {"push":53,"dodge":0,"splash":9,"ink":2} | keepers on spot 4 s, interceptors on the carrier 7 s | jumps to the carrier 1 | karp specials 0
+   roles (bot-s): {"break":99,"grab":68,"perch":34,"fight":25,"intercept":19,"keeper":28,"lead":19,"anchor":12,"flank":19,"carry":29} | shell danger {"caught":0,"evaded":1} | fuse danger null
+   carries: 4 of 7 ended in a splat within 2.5 s; 3 made no new ground
+   stuck {"t":18,"name":"Tako","w":"bow","mode":"paint","role":"flank","carry":false,"pos":[-2.6,1.3,5.9],"dur":0.5}
+   stuck {"t":10.8,"name":"Inky Vee","w":"charger","mode":"refill","role":"fight","carry":false,"pos":[0.7,0,-38.5],"dur":0.25}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp halyard win=B reason=knockout ko=52.8 c=100/0 pops=1/6 carries=7 blasts=0 ot=no
+RESULT_JSON {"map":"halyard","winner":1,"reason":"knockout","koT":52.8,"counts":[100,0],"pops":[1,6],"firstPop":10.52,"carries":7,"plants":1,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.2,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}
+== lockgate [bazookarp L 55.9/55.7 m]: winner B (knockout) | counts 16 vs 0 | best A 47.1 m B 55.7 m | ko 260.1 | OT no | sim 260.3 s
+   shell: pops A 10 B 16 | first pop 11.13 s (first bots by the Pond at [9.5,9.5] s) | pops at [11.13,14.28,26,32.53,37.88,46.6,49.13,74.58,78.25,83.2,87.25,107.13,114.73,123.43,129.28,136.75,140.28,146.15,149.92,157.95,161.4,190.33,198.33,206.02,211.07,221.35] | burst splats 1 | re-formed 25 | devices crushed 0
+   pick-ups A 9 B 17 | carries 26: B:splat/0.5s/0.5m A:splat/8.8s/19.8m B:splat/0.8s/0m B:splat/0.7s/0m B:splat/0.6s/0m B:splat/0.2s/0m B:splat/23.1s/24.3m B:plant/0.5s/3.6m B:splat/0.6s/2.2m A:splat/0.4s/0m A:splat/11.6s/0m B:splat/3.1s/0m A:splat/6.8s/0m A:plant/3.7s/8.7m A:splat/3.8s/16.9m B:splat/0.2s/0m B:splat/0.9s/0m B:splat/0.1s/0m B:splat/1.9s/0m A:splat/1s/1.7m B:splat/25.6s/0m B:splat/0.8s/0m A:splat/1.4s/0m B:splat/0.7s/0m A:splat/6s/0m B:knockout/38s/25.2m
+   plants [{"t":75.6,"team":1,"index":0},{"t":127.4,"team":0,"index":0}] | gates [{"t":75.6,"team":1},{"t":127.4,"team":0}] | Carp Blasts own 0 enemy 0 | resets {} | moved 0
+   fast fuse (s): retreat 0 zone 0 | clamp rejections 0 | carrierRetreatFallback 0 (a dip the engine forgives, no ×3: 0) | carrier stuck 0.5 s (> 3 s episodes 0) | bots stuck 0.1% (holding on purpose 9.3%)
+   Carp Shots by tier [splash, burst, big] [32,6,48] landed 86 blasts 86 hits 8 splats 2 | carrier shot decisions 216 | breakers at the shell 128 bot-s
+   specials 5 | super jumps 28 (to the carrier 10) | Bubble Guards on the carrier 0, a knockout within 8 s of one: no | splats 90 (fuse 0) | grants 26 refused 0
+   field: 114.7 ms at load {"graph":110.5,"extra":108.1,"dist":1.2,"rest":3,"perState":114.7}, hop edges 62, gap edges 3893 | sim 260.3 s in 47 s (wall 47 s)
+   bots [WP3 normal]: route picks 26 shares {"short":26} | Carp Shots noticed: escaped 48 caught 8 | carrier shots {"push":12,"dodge":0,"splash":23,"ink":85} | keepers on spot 71 s, interceptors on the carrier 130 s | jumps to the carrier 10 | karp specials 0
+   roles (bot-s): {"break":376,"grab":242,"fight":58,"keeper":152,"intercept":238,"flank":123,"anchor":79,"lead":162,"carry":164} | shell danger {"caught":0,"evaded":13} | fuse danger null
+   burst victims [{"t":14.3,"w":"mitts","role":"grab","mode":"paint","d":4.16,"esc":true,"knew":true,"dangerFor":0.23,"shellHp":500}]
+   carries: 15 of 26 ended in a splat within 2.5 s; 17 made no new ground
+   stuck {"t":205.8,"name":"P1","w":"shooter","mode":"refill","role":"grab","carry":false,"pos":[-0.5,0,-22.4],"dur":0.75}
+   stuck {"t":57.8,"name":"P1","w":"shooter","mode":"retreat","role":"keeper","carry":false,"pos":[5.4,0,-22.9],"dur":0.25}
+   stuck {"t":106,"name":"Marlo","w":"blade","mode":"fight","role":"break","carry":false,"pos":[-2.9,0.15,8.5],"dur":0.25}
+   stuck {"t":136.5,"name":"Loop","w":"roller","mode":"paint","role":"grab","carry":false,"pos":[0.5,0,37.3],"dur":0.25}
+   stuck {"t":257,"name":"Coral","w":"shooter","mode":"fight","role":"carry","carry":true,"pos":[-0.5,0.44,-45.5],"dur":0.25}
+   STUCK episodes over 5 s: 0 | ISSUELOG stuck-bot entries this match: 0
+CONSOLE 0 unique warning/error line(s)
+RESULT karp lockgate win=B reason=knockout ko=260.1 c=16/0 pops=10/16 carries=26 blasts=0 ot=no
+RESULT_JSON {"map":"lockgate","winner":1,"reason":"knockout","koT":260.1,"counts":[16,0],"pops":[10,16],"firstPop":11.13,"carries":26,"plants":2,"blasts":{"own":0,"enemy":0},"resets":{},"ot":null,"stuckPct":0.1,"over5":0,"issueStuck":0,"clamped":0,"crushes":0,"console":0,"frameErrors":0}

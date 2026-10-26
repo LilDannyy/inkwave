@@ -1,0 +1,27 @@
+JOB-35 raw results — automatic, by the Mac mini's b5-runner, 2026-10-26 15:52:00
+branch botlab-b5-bluestone, ran at 298ce1e3, exit code 0, wall time 7min
+(a written-up JOB-35.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### bluestone JOB-35 (Bazookarp balance data) on new-stages f8b630d4 (pinned) load { 2.01 2.24 2.11 }
+== size-budget halyard.bazookarp: RESULT 3/3 
+== karp-1.log: 10 matches 
+== karp-2.log: 10 matches 
+== console:   20 CONSOLE 0 unique warning/error line(s)  | lightmap warnings: 0 0  | frame errors: 0 0 
+
+## last 15 lines of job.log
+   stuck >5 s: 0
+M17 karp lockgate win=B reason=time ko=- c=44/34 pops=19/9 carries=28 blasts=0 ot=no
+   stuck >5 s: 0
+M18 karp halyard win=B reason=knockout ko=173.7 c=99/0 pops=7/15 carries=22 blasts=0 ot=no
+   stuck >5 s: 0
+M19 karp lockgate win=A reason=stopped ko=- c=10/53 pops=12/15 carries=27 blasts=0 ot=stopped/held
+   stuck >5 s: 0
+M20 karp halyard win=B reason=knockout ko=54.6 c=100/0 pops=0/5 carries=5 blasts=0 ot=no
+   stuck >5 s: 0
+
+per stage: n | knockouts (before 1:30) | median ko s | no knockout {end reasons} | wins A/B | mean carries | mean pops A+B | stuck>5s eps
+halyard: 10 | 6 (2: 52.8 / 54.6) | 133.05 | 4 {"stopped":3,"retake":1,"knockout":6} | 5/5 | 20.6 | 20.6 | 0
+   ko times: 52.8 / 54.6 / 92.4 / 173.7 / 181 / 205.1 | OT: dropped->stopped 6.6s, dropped->retake 2s, held->stopped 7.6s, dropped->stopped 2.1s | stuck%: 0.4 0.1 0.1 0.2 0.2 0.4 0.4 0.1 1 0.1
+lockgate: 10 | 5 (2: 44.4 / 81.2) | 177.8 | 5 {"knockout":5,"time":4,"stopped":1} | 6/4 | 19.7 | 19.7 | 0
+   ko times: 44.4 / 81.2 / 177.8 / 193.9 / 260.1 | OT: held->stopped 40.8s | stuck%: 0.1 0.3 0.1 0.1 0.1 0.2 0.1 0.3 0.1 0.1
