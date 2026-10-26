@@ -540,19 +540,14 @@ export function registerArch(D, H) {
       }
 
       // 5. Island Cover Blocks Dressing (Skin within 8.5 cm)
-      // Ingot Stack at [2.9, 1.2, -9.3] (1.2 x 1.1 x 1.2)
+      // Ingot Stack at [2.9, 1.2, -9.3] (1.2 x 1.1 x 1.2, paint: false stacked bars)
       B.push(2.9, 1.2, -9.3);
-      pbox(B, 'wood', K.woodDk, 1.28, 0.1, 1.28, 0, 0.05, 0);
-      for (const sx of [-0.62, 0.62]) {
-        pbox(B, 'metal', K.iron, 0.06, 1.05, 1.18, sx, 0.58, 0);
-        pbox(B, 'glow', K.lavaGlow, 0.07, 0.04, 1.05, sx, 0.45, 0, { glow: 1.5 });
-        pbox(B, 'glow', K.lavaGlow, 0.07, 0.04, 1.05, sx, 0.75, 0, { glow: 1.5 });
-      }
-      for (const sz of [-0.62, 0.62]) {
-        pbox(B, 'metal', K.iron, 1.18, 1.05, 0.06, 0, 0.58, sz);
-        pbox(B, NS('metal'), K.ironRust, 1.24, 0.06, 0.08, 0, 0.3, sz);
-        pbox(B, NS('metal'), K.ironRust, 1.24, 0.06, 0.08, 0, 0.85, sz);
-      }
+      for (const sx of [-0.36, 0.36]) pbox(B, 'wood', '#654e38', 0.10, 0.08, 1.10, sx, 0.04, 0);
+      for (let k = -1; k <= 1; k++) pbox(B, 'metal', K.ironLt, 1.10, 0.18, 0.30, 0, 0.18, k * 0.36, { r: 0.02 });
+      for (let k = -1; k <= 1; k++) pbox(B, 'metal', K.ironDk, 0.30, 0.18, 1.10, k * 0.34, 0.40, 0, { r: 0.02 });
+      for (let k = -1; k <= 1; k++) pbox(B, 'metal', K.ironLt, 1.05, 0.18, 0.28, 0, 0.62, k * 0.34, { r: 0.02 });
+      for (const sx of [-0.22, 0.22]) pbox(B, 'metal', K.ironDk, 0.28, 0.18, 0.98, sx, 0.84, 0, { r: 0.02 });
+      for (let k = -1; k <= 1; k++) pbox(B, NS('glow'), K.seam, 0.80, 0.03, 0.06, 0, 0.30, k * 0.36, { glow: 1.2 });
       B.pop();
 
       // Stilling Drum at [7.6, 1.2, -6.3] (OCT r = 1.0, h = 1.4, within 4 cm of face)
@@ -893,9 +888,9 @@ export function registerArch(D, H) {
         const tag = b.tag || '';
         const y0 = cy - h / 2;
 
-        // ONLY dress objects! Skip all ground, terrain, floors, ledges, and big walls!
+        // ONLY dress standalone objects! Skip walls, parapets, terrain, floors, ledges!
         const isObject = [
-          'parapet', 'valve-chest', 'vent-hood', 'weighbridge',
+          'valve-chest', 'vent-hood', 'weighbridge',
           'gauge-machine-house', 'lamp-plinth'
         ].some(t => tag.includes(t));
 
@@ -905,28 +900,36 @@ export function registerArch(D, H) {
 
         if (tag.includes('parapet')) {
           // Architectural trims leaving >75% of face open for ink/climbing
-          // 0 m² coplanar with floor or wall, 0 lids (y: 0.03 to h - 0.04)
+          // 0 m² coplanar with floor or wall, 0 lids (y: 0.05 to h - 0.05, proud of faces)
+          const tw = Math.max(0.08, w - 0.05);
+          const td = Math.max(0.08, d - 0.05);
           for (const sz of [-1, 1]) {
-            const zc = sz * (d / 2 + 0.015);
-            pbox(B, 'metal', K.ironDk, w + 0.04, 0.08, 0.03, 0, 0.07, zc);
-            pbox(B, NS('metal'), K.ironLt, w + 0.04, 0.06, 0.03, 0, h - 0.07, zc);
+            const zc = sz * (d / 2 + 0.018);
+            pbox(B, 'metal', K.ironDk, tw, 0.08, 0.028, 0, 0.07, zc);
+            pbox(B, NS('metal'), K.ironLt, tw, 0.06, 0.028, 0, h - 0.07, zc);
             for (const sx of [-1, 1]) {
               const xc = sx * (w / 2 - 0.08);
-              pbox(B, 'metal', K.ironRust, 0.10, h - 0.14, 0.035, xc, (h - 0.07) / 2 + 0.015, zc);
+              pbox(B, 'metal', K.ironRust, 0.08, h - 0.14, 0.028, xc, (h - 0.07) / 2 + 0.015, zc);
             }
           }
           for (const sx of [-1, 1]) {
-            const xc = sx * (w / 2 + 0.015);
-            pbox(B, 'metal', K.ironDk, 0.03, 0.08, d + 0.04, xc, 0.07, 0);
-            pbox(B, NS('metal'), K.ironLt, 0.03, 0.06, d + 0.04, xc, h - 0.07, 0);
+            const xc = sx * (w / 2 + 0.018);
+            pbox(B, 'metal', K.ironDk, 0.028, 0.08, td, xc, 0.07, 0);
+            pbox(B, NS('metal'), K.ironLt, 0.028, 0.06, td, xc, h - 0.07, 0);
           }
         } else if (tag.includes('valve-chest')) {
-          pbox(B, 'metal', K.ironDk, w + 0.04, 0.08, d + 0.04, 0, 0.07, 0);
-          pbox(B, 'metal', K.ironDk, w + 0.04, 0.06, d + 0.04, 0, h - 0.06, 0);
+          const tw = Math.max(0.08, w - 0.04), td = Math.max(0.08, d - 0.04);
+          for (const sz of [-1, 1]) pbox(B, 'metal', K.ironDk, tw, 0.07, 0.028, 0, 0.07, sz * (d / 2 + 0.016));
+          for (const sx of [-1, 1]) pbox(B, 'metal', K.ironDk, 0.028, 0.07, td, sx * (w / 2 + 0.016), 0.07, 0);
+          for (const sz of [-1, 1]) pbox(B, 'metal', K.ironDk, tw, 0.05, 0.028, 0, h - 0.06, sz * (d / 2 + 0.016));
+          for (const sx of [-1, 1]) pbox(B, 'metal', K.ironDk, 0.028, 0.05, td, sx * (w / 2 + 0.016), h - 0.06, 0);
           ptor(B, 'metal', K.red, 0.16, 0.02, w / 2 + 0.025, h * 0.6, 0, { ry: HP });
         } else if (tag.includes('vent-hood')) {
-          pbox(B, 'metal', K.ironDk, w + 0.04, 0.08, d + 0.04, 0, 0.07, 0);
-          pbox(B, 'metal', K.ironDk, w + 0.04, 0.06, d + 0.04, 0, h - 0.06, 0);
+          const tw = Math.max(0.08, w - 0.04), td = Math.max(0.08, d - 0.04);
+          for (const sz of [-1, 1]) pbox(B, 'metal', K.ironDk, tw, 0.07, 0.028, 0, 0.07, sz * (d / 2 + 0.016));
+          for (const sx of [-1, 1]) pbox(B, 'metal', K.ironDk, 0.028, 0.07, td, sx * (w / 2 + 0.016), 0.07, 0);
+          for (const sz of [-1, 1]) pbox(B, 'metal', K.ironDk, tw, 0.05, 0.028, 0, h - 0.06, sz * (d / 2 + 0.016));
+          for (const sx of [-1, 1]) pbox(B, 'metal', K.ironDk, 0.028, 0.05, td, sx * (w / 2 + 0.016), h - 0.06, 0);
         } else if (tag.includes('gauge-machine-house')) {
           for (const sx of [-w / 2 + 0.1, w / 2 - 0.1]) {
             pbox(B, 'metal', K.greenDk, 0.18, h - 0.06, d + 0.03, sx, (h - 0.06) / 2, 0);

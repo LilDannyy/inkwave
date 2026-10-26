@@ -286,73 +286,89 @@ export function register(D, H) {
   // ------------------------------------------------------------------------------------------ Moorings & Lakefront Bollards & Capstan
   D.caldera_chain_bollard = {
     build(B, o = {}) {
-      const h = o.h ?? 1.1;
-      B.box('metal', K.ironDk, 1.04, 0.18, 1.04, 0, 0.09, 0, { r: 0.02 });
-      for (const sx of [-0.46, 0.46]) for (const sz of [-0.46, 0.46]) {
-        B.box(NS('metal'), K.ironDk, 0.10, h - 0.22, 0.10, sx, (h - 0.22) / 2 + 0.09, sz, { r: 0.02 });
+      const h = o.h ?? 1.1, w = o.w ?? 1.0, d = o.d ?? 1.0;
+      // Heavy cast-iron chain bollard with flared retention collar, mooring ring, and draped chain links
+      for (const sz of [-1, 1]) B.box('paint', K.basaltDk, w * 0.82, 0.12, 0.035, 0, 0.28, sz * (d / 2 + 0.016), { r: 0.02 });
+      for (const sx of [-1, 1]) B.box('paint', K.basaltDk, 0.035, 0.12, d * 0.82, sx * (w / 2 + 0.016), 0.28, 0, { r: 0.02 });
+      B.box('metal', K.ironDk, w + 0.03, 0.06, d + 0.03, 0, h - 0.06, 0, { r: 0.02 });
+      for (const sx of [-w / 2 + 0.10, w / 2 - 0.10]) for (const sz of [-d / 2 + 0.10, d / 2 - 0.10]) {
+        B.cyl(NS('metal'), K.ironLt, 0.03, 0.03, sx, h - 0.02, sz, { seg: 6 });
       }
-      B.cyl('metal', K.iron, 0.46, h - 0.28, 0, (h - 0.28) / 2 + 0.18, 0, { seg: 16 });
-      B.tor(NS('metal'), K.ironLt, 0.47, 0.025, 0, h * 0.75, 0, { rx: HP });
-      B.tor(NS('metal'), K.ironLt, 0.15, 0.03, 0, h * 0.55, 0.28, { rx: HP });
-      B.cyl('metal', K.ironDk, 0.49, 0.06, 0, h - 0.07, 0, { seg: 16 });
-      B.cyl(NS('metal'), K.iron, 0.44, 0.04, 0, h - 0.04, 0, { seg: 16 });
+      const r = Math.min(w, d) / 2 - 0.04;
+      B.cyl('metal', K.iron, r, h - 0.32, 0, (h - 0.32) / 2 + 0.22, 0, { seg: 16 });
+      B.cyl('metal', K.ironDk, r + 0.04, 0.06, 0, h - 0.07, 0, { seg: 16 });
+      B.cyl(NS('metal'), K.ironLt, r - 0.02, 0.04, 0, h - 0.03, 0, { seg: 16 });
+      B.tor(NS('metal'), K.ironLt, r + 0.01, 0.028, 0, h * 0.72, 0, { rx: HP });
+      B.tor(NS('metal'), K.ironLt, 0.14, 0.028, 0, h * 0.55, d / 2 + 0.022);
     },
   };
 
   D.caldera_mooring_bollard = {
     build(B, o = {}) {
       const h = o.h ?? 1.1, w = o.w ?? 1.0, d = o.d ?? 1.0;
-      B.box('metal', K.ironDk, w + 0.04, 0.18, d + 0.04, 0, 0.09, 0, { r: 0.02 });
-      for (const sx of [-(w / 2 - 0.03), w / 2 - 0.03]) for (const sz of [-(d / 2 - 0.03), d / 2 - 0.03]) {
-        B.box(NS('metal'), K.ironDk, 0.10, h - 0.22, 0.10, sx, (h - 0.22) / 2 + 0.09, sz, { r: 0.02 });
+      // Heavy mooring block with cast-iron cap plate, bolt heads, flared horns, ring, and rust streak
+      for (const sz of [-1, 1]) B.box('paint', K.basaltDk, w * 0.84, 0.12, 0.035, 0, 0.28, sz * (d / 2 + 0.016), { r: 0.02 });
+      for (const sx of [-1, 1]) B.box('paint', K.basaltDk, 0.035, 0.12, d * 0.84, sx * (w / 2 + 0.016), 0.28, 0, { r: 0.02 });
+      B.box('metal', K.ironDk, w + 0.04, 0.07, d + 0.04, 0, h - 0.06, 0, { r: 0.02 });
+      for (const sx of [-w / 2 + 0.10, w / 2 - 0.10]) for (const sz of [-d / 2 + 0.10, d / 2 - 0.10]) {
+        B.cyl(NS('metal'), K.ironLt, 0.035, 0.03, sx, h - 0.02, sz, { seg: 6 });
       }
-      const r = Math.min(w, d) / 2 - 0.03;
-      B.cyl('metal', K.iron, r, h - 0.28, 0, (h - 0.28) / 2 + 0.18, 0, { seg: 16 });
-      B.cyl('metal', K.ironLt, 0.08, w + 0.04, 0, h * 0.65, 0, { rz: HP, seg: 12 });
-      B.sph(NS('metal'), K.ironLt, 0.05, (w + 0.04) / 2, h * 0.65, 0);
-      B.sph(NS('metal'), K.ironLt, 0.05, -(w + 0.04) / 2, h * 0.65, 0);
-      B.cyl('metal', K.ironDk, r + 0.03, 0.06, 0, h - 0.07, 0, { seg: 16 });
-      B.cyl(NS('metal'), K.iron, r - 0.03, 0.04, 0, h - 0.04, 0, { seg: 16 });
+      const r = Math.min(w, d) / 2 - 0.04;
+      B.cyl('metal', K.iron, r, h - 0.32, 0, (h - 0.32) / 2 + 0.22, 0, { seg: 16 });
+      B.cyl('metal', K.ironDk, r + 0.04, 0.06, 0, h - 0.07, 0, { seg: 16 });
+      B.cyl(NS('metal'), K.ironLt, r - 0.02, 0.04, 0, h - 0.03, 0, { seg: 16 });
+      B.cyl('metal', K.ironLt, 0.065, w + 0.02, 0, h * 0.68, 0, { rz: HP, seg: 12 });
+      B.sph(NS('metal'), K.ironLt, 0.045, (w + 0.02) / 2, h * 0.68, 0);
+      B.sph(NS('metal'), K.ironLt, 0.045, -(w + 0.02) / 2, h * 0.68, 0);
+      B.box(NS('metal'), K.ironDk, 0.12, 0.12, 0.04, 0, h * 0.52, d / 2 + 0.02, { r: 0.01 });
+      B.tor(NS('metal'), K.ironLt, 0.15, 0.028, 0, h * 0.52, d / 2 + 0.022);
+      B.box('paint', '#8f4228', 0.12, 0.32, 0.025, 0, 0.42, d / 2 + 0.015);
     },
   };
 
   D.caldera_race_bollard = {
     build(B, o = {}) {
-      const h = o.h ?? 1.1;
-      B.box('metal', K.ironDk, 1.04, 0.18, 1.24, 0, 0.09, 0, { r: 0.02 });
-      for (const sx of [-0.46, 0.46]) for (const sz of [-0.56, 0.56]) {
-        B.box(NS('metal'), K.ironDk, 0.10, h - 0.22, 0.10, sx, (h - 0.22) / 2 + 0.09, sz, { r: 0.02 });
-      }
-      B.cyl('metal', K.iron, 0.46, h - 0.28, 0, (h - 0.28) / 2 + 0.18, 0, { seg: 16 });
-      B.tor(NS('metal'), K.ironLt, 0.47, 0.025, 0, h * 0.72, 0, { rx: HP });
-      B.cyl('metal', K.ironDk, 0.49, 0.06, 0, h - 0.07, 0, { seg: 16 });
-      B.cyl(NS('metal'), K.iron, 0.44, 0.04, 0, h - 0.04, 0, { seg: 16 });
+      const h = o.h ?? 1.1, w = o.w ?? 1.04, d = o.d ?? 1.24;
+      for (const sz of [-1, 1]) B.box('paint', K.basaltDk, w * 0.84, 0.18, 0.035, 0, 0.13, sz * (d / 2 + 0.016), { r: 0.02 });
+      for (const sx of [-1, 1]) B.box('paint', K.basaltDk, 0.035, 0.18, d * 0.84, sx * (w / 2 + 0.016), 0.13, 0, { r: 0.02 });
+      B.box('metal', K.ironDk, w + 0.03, 0.06, d + 0.03, 0, h - 0.06, 0, { r: 0.02 });
+      const r = Math.min(w, d) / 2 - 0.04;
+      B.cyl('metal', K.iron, r, h - 0.22, 0, (h - 0.22) / 2 + 0.12, 0, { seg: 16 });
+      B.tor(NS('metal'), K.ironLt, r + 0.02, 0.025, 0, h * 0.72, 0, { rx: HP });
+      B.cyl('metal', K.ironDk, r + 0.04, 0.06, 0, h - 0.07, 0, { seg: 16 });
+      B.cyl(NS('metal'), K.iron, r - 0.02, 0.04, 0, h - 0.04, 0, { seg: 16 });
     },
   };
 
   D.caldera_capstan = {
     build(B, o = {}) {
-      const h = o.h ?? 1.5;
-      B.box('metal', K.ironDk, 1.44, 0.16, 1.24, 0, 0.30, 0, { r: 0.03 });
-      for (const sx of [-0.66, 0.66]) for (const sz of [-0.56, 0.56]) {
-        B.box(NS('metal'), K.ironDk, 0.12, h - 0.44, 0.12, sx, (h - 0.44) / 2 + 0.30, sz, { r: 0.02 });
+      const h = o.h ?? 1.5, w = o.w ?? 1.4, d = o.d ?? 1.2;
+      // Capstan: riveted base housing, drum lid, bar sockets, two wooden bars hugging sides, riveted plates
+      B.box('metal', K.ironDk, w * 0.88, 0.16, d * 0.88, 0, 0.26, 0, { r: 0.03 });
+      for (const sx of [-w * 0.38, w * 0.38]) for (const sz of [-d * 0.38, d * 0.38]) {
+        B.cyl(NS('metal'), K.ironLt, 0.03, 0.03, sx, 0.35, sz, { seg: 6 });
       }
-      B.cyl('metal', K.greenDk, 0.52, h - 0.45, 0, (h - 0.45) / 2 + 0.30, 0, { r2: 0.46, seg: 16 });
+      B.cyl('metal', K.greenDk, 0.54, h - 0.44, 0, (h - 0.44) / 2 + 0.26, 0, { r2: 0.46, seg: 16 });
       for (let a = 0; a < 6; a++) {
         const ang = (a * Math.PI) / 3;
-        B.box(NS('metal'), K.ironLt, 0.05, h - 0.55, 0.05, Math.cos(ang) * 0.50, (h - 0.55) / 2 + 0.32, Math.sin(ang) * 0.50);
+        B.box(NS('metal'), K.ironLt, 0.04, h - 0.50, 0.04, Math.cos(ang) * 0.51, (h - 0.50) / 2 + 0.28, Math.sin(ang) * 0.51);
       }
-      B.tor(NS('metal'), K.brass, 0.53, 0.03, 0, 0.34, 0, { rx: HP });
-      const drumY = h - 0.22;
-      B.cyl('metal', K.iron, 0.54, 0.14, 0, drumY, 0, { seg: 16 });
+      B.tor(NS('metal'), K.brass, 0.54, 0.03, 0, 0.32, 0, { rx: HP });
+      const drumY = h - 0.18;
+      B.cyl('metal', K.ironDk, 0.56, 0.14, 0, drumY, 0, { seg: 16 });
+      B.cyl('metal', K.iron, 0.50, 0.06, 0, h - 0.07, 0, { seg: 16 });
       for (let k = 0; k < 4; k++) {
-        B.push(0, drumY, 0, (k * PI) / 2);
-        B.box('wood', K.wood, 1.22, 0.08, 0.08, 0, 0, 0);
-        B.box(NS('metal'), K.brass, 0.08, 0.09, 0.09, 0.58, 0, 0);
-        B.box(NS('metal'), K.brass, 0.08, 0.09, 0.09, -0.58, 0, 0);
+        const a = (k * Math.PI) / 2;
+        B.box(NS('metal'), K.ironLt, 0.08, 0.07, 0.08, Math.cos(a) * 0.48, drumY + 0.03, Math.sin(a) * 0.48);
+      }
+      for (const s of [-1, 1]) {
+        B.push(s * 0.44, drumY - 0.25, 0, 0, 0, s * 0.22);
+        B.box('wood', K.wood, 0.075, 0.85, 0.075, 0, 0, 0);
+        B.box(NS('metal'), K.brass, 0.085, 0.10, 0.085, 0, 0.38, 0);
+        B.box(NS('metal'), K.brass, 0.085, 0.10, 0.085, 0, -0.38, 0);
         B.pop();
       }
-      B.cyl('metal', K.ironLt, 0.48, 0.06, 0, h - 0.06, 0, { seg: 16 });
+      B.sph(NS('metal'), K.ironLt, 0.07, 0, h - 0.02, 0, { ws: 8, hs: 6 });
     },
   };
 
@@ -398,40 +414,87 @@ export function register(D, H) {
   // ------------------------------------------------------------------------------------------ Slump Hornitos, Cairns & Outcrops
   D.caldera_hornito = {
     build(B, o = {}) {
-      const h = o.h ?? 1.3;
-      B.box('paint', K.scoria, 1.44, 0.18, 1.44, 0, 0.11, 0, { r: 0.04 });
-      for (const sx of [-0.66, 0.66]) for (const sz of [-0.66, 0.66]) {
-        B.box(NS('paint'), K.scoria, 0.14, h - 0.20, 0.14, sx, (h - 0.20) / 2 + 0.10, sz, { r: 0.02 });
+      const h = o.h ?? 1.3, w = o.w ?? 1.44, d = o.d ?? 1.44;
+      // Spatter mound with rounded crusted cap, glowing vent on top, and viscous drip relief
+      for (const sz of [-1, 1]) {
+        B.box('paint', K.scoria, w * 0.82, 0.36, 0.045, 0, 0.23, sz * (d / 2 + 0.018), { r: 0.03 });
       }
-      B.tor('paint', '#d6b838', 0.50, 0.04, 0, h - 0.08, 0, { rx: HP });
-      B.cyl(NS('glow'), K.seam, 0.38, 0.06, 0, h - 0.11, 0, { seg: 12, glow: 1.5 });
+      for (const sx of [-1, 1]) {
+        B.box('paint', K.scoria, 0.045, 0.36, d * 0.82, sx * (w / 2 + 0.018), 0.23, 0, { r: 0.03 });
+      }
+      for (const sz of [-1, 1]) {
+        B.box('paint', '#4a221b', 0.16, 0.42, 0.055, -w * 0.22, 0.28, sz * (d / 2 + 0.022), { r: 0.03 });
+        B.box('paint', '#2e140f', 0.14, 0.52, 0.052, w * 0.24, 0.35, sz * (d / 2 + 0.022), { r: 0.03 });
+      }
+      for (const sx of [-1, 1]) {
+        B.box('paint', '#4a221b', 0.055, 0.46, 0.16, sx * (w / 2 + 0.022), 0.30, d * 0.20, { r: 0.03 });
+        B.box('paint', '#2e140f', 0.052, 0.38, 0.14, sx * (w / 2 + 0.022), 0.26, -d * 0.22, { r: 0.03 });
+      }
+      B.box('paint', K.scoria, w * 0.72, 0.38, d * 0.72, 0, 0.62, 0, { r: 0.04 });
+      B.tor(NS('paint'), '#d6b838', 0.52, 0.038, 0, 0.76, 0, { rx: HP });
+      B.lathe('paint', K.scoria, [[0, 0.45], [0.38, 0.45], [0.58, 0.22], [0.64, 0.0], [0, 0.0]], 0, h - 0.46, 0, { seg: 14 });
+      B.tor('paint', '#8f3825', 0.36, 0.045, 0, h - 0.06, 0, { rx: HP });
+      B.tor(NS('paint'), '#d6b838', 0.34, 0.025, 0, h - 0.04, 0, { rx: HP });
+      B.cyl(NS('glow'), K.seam, 0.32, 0.06, 0, h - 0.08, 0, { seg: 12, glow: 1.6 });
     },
   };
+
   D.caldera_cairn = {
     build(B, o = {}) {
       const h = o.h ?? 1.2, w = o.w ?? 1.2, d = o.d ?? 1.2;
-      B.box('paint', K.basaltDk, w + 0.04, 0.18, d + 0.04, 0, 0.11, 0, { r: 0.04 });
-      for (const sx of [-(w / 2 - 0.03), w / 2 - 0.03]) for (const sz of [-(d / 2 - 0.03), d / 2 - 0.03]) {
-        B.box(NS('paint'), K.basalt, 0.12, h - 0.20, 0.12, sx, (h - 0.20) / 2 + 0.10, sz, { r: 0.02 });
+      // Dry-stone masonry cairn: 3 open relief courses, chamfered corners, capstone (>75% face open for ink)
+      // Course 1 (y = 0.30, height 0.09)
+      for (const sz of [-1, 1]) {
+        B.box('paint', K.basaltDk, w * 0.42, 0.09, 0.035, -w * 0.22, 0.30, sz * (d / 2 + 0.016), { r: 0.02 });
+        B.box('paint', '#444850', w * 0.42, 0.09, 0.035, w * 0.22, 0.30, sz * (d / 2 + 0.016), { r: 0.02 });
       }
-      B.box('paint', '#444850', w - 0.06, 0.32, d - 0.06, 0, 0.45, 0, { r: 0.03 });
-      B.box(NS('paint'), K.scoria, w - 0.04, 0.08, d - 0.04, 0, 0.45, 0);
-      B.box('paint', K.basaltDk, w - 0.24, 0.28, d - 0.24, 0, 0.78, 0, { r: 0.03 });
-      B.box('paint', K.ash, 0.40, 0.16, 0.40, 0, h - 0.09, 0, { r: 0.03 });
+      for (const sx of [-1, 1]) {
+        B.box('paint', K.scoria, 0.035, 0.09, d * 0.42, sx * (w / 2 + 0.016), 0.30, -d * 0.22, { r: 0.02 });
+        B.box('paint', K.basalt, 0.035, 0.09, d * 0.42, sx * (w / 2 + 0.016), 0.30, d * 0.22, { r: 0.02 });
+      }
+      // Course 2 (y = 0.65, height 0.09)
+      for (const sz of [-1, 1]) {
+        B.box('paint', K.basalt, w * 0.38, 0.09, 0.035, -w * 0.24, 0.65, sz * (d / 2 + 0.016), { r: 0.02 });
+        B.box('paint', K.basaltDk, w * 0.42, 0.09, 0.035, w * 0.22, 0.65, sz * (d / 2 + 0.016), { r: 0.02 });
+        B.box(NS('paint'), K.ash, 0.08, 0.06, 0.038, 0, 0.65, sz * (d / 2 + 0.018));
+      }
+      for (const sx of [-1, 1]) {
+        B.box('paint', '#444850', 0.035, 0.09, d * 0.38, sx * (w / 2 + 0.016), 0.65, d * 0.24, { r: 0.02 });
+        B.box('paint', K.basalt, 0.035, 0.09, d * 0.42, sx * (w / 2 + 0.016), 0.65, -d * 0.22, { r: 0.02 });
+        B.box(NS('paint'), K.ash, 0.038, 0.06, 0.08, sx * (w / 2 + 0.018), 0.65, 0);
+      }
+      // Chamfered corner quoins at 4 corners
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        B.push(sx * (w / 2 + 0.014), (h - 0.16) / 2 + 0.06, sz * (d / 2 + 0.014), PI / 4);
+        B.box('paint', K.basaltDk, 0.08, h - 0.16, 0.08, 0, 0, 0, { r: 0.02 });
+        B.pop();
+      }
+      // Projecting capstone slab
+      B.box('paint', K.basaltDk, w + 0.05, 0.08, d + 0.05, 0, h - 0.05, 0, { r: 0.03 });
+      B.cyl(NS('metal'), K.ironLt, 0.05, 0.05, 0, h - 0.01, 0, { seg: 8 });
     },
   };
+
   D.caldera_outcrop = {
     build(B, o = {}) {
       const h = o.h ?? 1.3, w = o.w ?? 1.6, d = o.d ?? 1.4;
-      B.box('paint', K.basaltDk, w + 0.04, 0.18, d + 0.04, 0, 0.11, 0, { r: 0.04 });
-      for (const sx of [-(w / 2 - 0.03), w / 2 - 0.03]) for (const sz of [-(d / 2 - 0.03), d / 2 - 0.03]) {
-        B.box(NS('paint'), K.basalt, 0.12, h - 0.20, 0.12, sx, (h - 0.20) / 2 + 0.10, sz, { r: 0.02 });
+      // Faceted basalt rock outcrop with stepped horizontal fracture ledges and corner bevels (>75% face open for ink)
+      for (const sz of [-1, 1]) {
+        B.box('paint', K.basalt, w * 0.44, 0.12, 0.032, -w * 0.20, 0.38, sz * (d / 2 + 0.016), { r: 0.02 });
+        B.box('paint', '#484d54', w * 0.44, 0.12, 0.035, w * 0.20, 0.72, sz * (d / 2 + 0.018), { r: 0.02 });
       }
-      B.box('paint', K.basalt, w - 0.06, 0.35, d - 0.06, 0, 0.45, 0, { r: 0.04 });
-      B.box('paint', '#444850', w - 0.24, 0.32, d - 0.24, 0, 0.82, 0, { r: 0.03 });
-      const benchY = h - 0.08;
-      B.cyl(NS('metal'), K.brass, 0.06, 0.06, 0, benchY, 0, { seg: 8 });
-      B.sph(NS('metal'), K.gold, 0.04, 0, benchY + 0.03, 0);
+      for (const sx of [-1, 1]) {
+        B.box('paint', K.scoria, 0.032, 0.12, d * 0.44, sx * (w / 2 + 0.016), 0.38, d * 0.20, { r: 0.02 });
+        B.box('paint', K.basaltLt, 0.035, 0.12, d * 0.44, sx * (w / 2 + 0.018), 0.72, -d * 0.20, { r: 0.02 });
+      }
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        B.push(sx * (w / 2 + 0.015), (h - 0.16) / 2 + 0.06, sz * (d / 2 + 0.015), PI / 4);
+        B.box('paint', K.basaltDk, 0.08, h - 0.16, 0.08, 0, 0, 0, { r: 0.02 });
+        B.pop();
+      }
+      B.box('paint', K.basaltDk, w * 0.65, 0.07, d * 0.65, 0, h - 0.05, 0, { r: 0.03 });
+      B.cyl(NS('metal'), K.brass, 0.05, 0.04, 0.12, h - 0.015, 0.08, { seg: 8 });
+      B.sph(NS('metal'), K.gold, 0.03, 0.12, h + 0.01, 0.08);
     },
   };
 
@@ -454,11 +517,18 @@ export function register(D, H) {
   D.caldera_mould_stack = {
     build(B, o = {}) {
       const h = o.h ?? 1.8, w = o.w ?? 1.4, d = o.d ?? 1.4;
-      for (let i = 0; i < 4; i++) {
-        const my = (i + 0.5) * ((h - 0.08) / 4);
-        B.box('metal', K.ironDk, w + 0.04, 0.36, d + 0.04, 0, my, 0, { r: 0.02 });
-        for (const sx of [-w / 2 + 0.02, w / 2 - 0.02]) for (const sz of [-d / 2 + 0.02, d / 2 - 0.02]) {
-          B.box(NS('metal'), K.ironLt, 0.06, 0.40, 0.06, sx, my, sz);
+      // Mould stack (paint: false): 4 stacked flask sections with perimeter clamping edges, guide pins, handles
+      const nSections = 4, secH = (h - 0.08) / nSections;
+      for (let i = 0; i < nSections; i++) {
+        const my = 0.04 + (i + 0.5) * secH;
+        B.box('metal', K.ironDk, w * 0.88, secH - 0.04, d * 0.88, 0, my, 0, { r: 0.02 });
+        B.box(NS('metal'), K.iron, w + 0.03, 0.04, d + 0.03, 0, my - secH / 2 + 0.02, 0);
+        B.box(NS('metal'), K.iron, w + 0.03, 0.04, d + 0.03, 0, my + secH / 2 - 0.02, 0);
+        for (const sx of [-w / 2 + 0.04, w / 2 - 0.04]) for (const sz of [-d / 2 + 0.04, d / 2 - 0.04]) {
+          B.cyl(NS('metal'), K.ironLt, 0.025, secH + 0.02, sx, my, sz, { seg: 6 });
+        }
+        for (const sx of [-w / 2 - 0.015, w / 2 + 0.015]) {
+          B.tor(NS('metal'), K.ironLt, 0.08, 0.022, sx, my, 0, { ry: HP });
         }
       }
     },
@@ -466,13 +536,27 @@ export function register(D, H) {
   D.caldera_ladle_stand = {
     build(B, o = {}) {
       const h = o.h ?? 2.0, w = o.w ?? 1.6, d = o.d ?? 1.6;
-      for (const sx of [-w / 2 + 0.06, w / 2 - 0.06]) for (const sz of [-d / 2 + 0.06, d / 2 - 0.06]) {
-        B.box('metal', K.greenDk, 0.12, h - 0.08, 0.12, sx, (h - 0.08) / 2 + 0.03, sz, { r: 0.02 });
+      // Riveted structural steel cradle base with ladle lip and pouring spout hugging front side
+      for (const sx of [-w / 2 + 0.08, w / 2 - 0.08]) for (const sz of [-d / 2 + 0.08, d / 2 - 0.08]) {
+        B.box('metal', K.greenDk, 0.15, h - 0.10, 0.15, sx, (h - 0.10) / 2 + 0.05, sz, { r: 0.02 });
       }
-      B.box('metal', K.ironDk, w - 0.06, 0.12, 0.05, 0, h * 0.65, d / 2 - 0.06);
-      B.box('metal', K.ironDk, w - 0.06, 0.12, 0.05, 0, h * 0.65, -d / 2 + 0.06);
-      B.lathe('metal', K.ironDk, [[0, 0.80], [0.55, 0.80], [0.45, 0.1], [0, 0]], 0, 0.6, 0, { seg: 14 });
-      B.cyl(NS('glow'), K.seam, 0.48, 0.04, 0, 1.42, 0, { seg: 12, glow: 1.2 });
+      for (const sz of [-d / 2 + 0.08, d / 2 - 0.08]) {
+        B.box('metal', K.ironDk, w - 0.12, 0.14, 0.06, 0, 0.40, sz);
+        B.box('metal', K.ironDk, w - 0.12, 0.14, 0.06, 0, h * 0.68, sz);
+      }
+      for (const sx of [-w / 2 + 0.08, w / 2 - 0.08]) {
+        B.box('metal', K.ironDk, 0.06, 0.14, d - 0.12, sx, 0.40, 0);
+        B.box('metal', K.ironDk, 0.06, 0.14, d - 0.12, sx, h * 0.68, 0);
+      }
+      for (const sx of [-w / 2 + 0.08, w / 2 - 0.08]) {
+        B.box(NS('metal'), K.brass, 0.16, 0.08, 0.20, sx, h * 0.76, 0);
+      }
+      B.lathe('metal', K.ironDk, [[0, 0.88], [0.58, 0.88], [0.46, 0.08], [0, 0.08]], 0, 0.55, 0, { seg: 16 });
+      B.push(0, 1.40, -d / 2 + 0.04, -0.22);
+      B.box('metal', K.ironDk, 0.24, 0.12, 0.15, 0, 0, 0, { r: 0.02 });
+      B.cyl(NS('glow'), K.seam, 0.12, 0.04, 0, 0.06, 0, { seg: 8, glow: 1.3 });
+      B.pop();
+      B.cyl(NS('glow'), K.seam, 0.52, 0.04, 0, 1.42, 0, { seg: 12, glow: 1.4 });
     },
   };
 
@@ -513,46 +597,118 @@ export function register(D, H) {
   D.caldera_pattern_crates = {
     build(B, o = {}) {
       const h = o.h ?? 0.9, w = o.w ?? 1.0, d = o.d ?? 1.2;
-      B.box('wood', K.wood, w + 0.04, h - 0.06, d + 0.04, 0, (h - 0.06) / 2, 0, { r: 0.02 });
-      for (const sx of [-w / 2 + 0.02, w / 2 - 0.02]) for (const sz of [-d / 2 + 0.02, d / 2 - 0.02]) {
-        B.box(NS('metal'), K.ironLt, 0.05, h - 0.04, 0.05, sx, (h - 0.04) / 2, sz);
+      // Pattern crates (paint: false): slatted planks with recessed gaps, corner angle brackets, stencil
+      const nSlats = 3, slatH = (h - 0.08) / nSlats, gap = 0.022, plankH = slatH - gap;
+      for (let i = 0; i < nSlats; i++) {
+        const py = 0.04 + (i + 0.5) * slatH;
+        for (const sz of [-1, 1]) {
+          B.box('wood', K.wood, w * 0.86, plankH, 0.032, 0, py, sz * (d / 2 + 0.015));
+        }
+        for (const sx of [-1, 1]) {
+          B.box('wood', '#785d42', 0.032, plankH, d * 0.86, sx * (w / 2 + 0.015), py, 0);
+        }
       }
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        B.box('metal', K.ironLt, 0.05, h - 0.05, 0.05, sx * (w / 2 + 0.015), (h - 0.05) / 2 + 0.025, sz * (d / 2 + 0.015));
+      }
+      B.box('paint', K.cream, 0.38, 0.10, 0.035, 0, h * 0.52, d / 2 + 0.018);
     },
   };
+
   D.caldera_stone_crate = {
     build(B, o = {}) {
       const h = o.h ?? 1.2, w = o.w ?? 1.2, d = o.d ?? 1.2;
-      B.box('wood', '#7a6046', w + 0.04, h - 0.06, d + 0.04, 0, (h - 0.06) / 2, 0, { r: 0.02 });
-      for (const sx of [-w / 2 + 0.02, w / 2 - 0.02]) for (const sz of [-d / 2 + 0.02, d / 2 - 0.02]) {
-        B.box(NS('metal'), K.ironRust, 0.05, h - 0.04, 0.05, sx, (h - 0.04) / 2, sz);
+      // Heavy timber quarry crate (paint: false): slats with recessed gaps, corner iron straps, stencil
+      const nSlats = 4, slatH = (h - 0.12) / nSlats, gap = 0.025, plankH = slatH - gap;
+      for (let i = 0; i < nSlats; i++) {
+        const py = 0.06 + (i + 0.5) * slatH;
+        for (const sz of [-1, 1]) {
+          B.box('wood', '#785d42', w * 0.86, plankH, 0.035, 0, py, sz * (d / 2 + 0.016));
+        }
+        for (const sx of [-1, 1]) {
+          B.box('wood', '#6a5138', 0.035, plankH, d * 0.86, sx * (w / 2 + 0.016), py, 0);
+        }
       }
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        B.box('metal', K.ironRust, 0.065, h - 0.06, 0.065, sx * (w / 2 + 0.016), (h - 0.06) / 2 + 0.03, sz * (d / 2 + 0.016));
+        for (let b = 0; b < 3; b++) {
+          const by = 0.18 + b * ((h - 0.36) / 2);
+          B.cyl(NS('metal'), K.ironLt, 0.018, 0.02, sx * (w / 2 + 0.028), by, sz * (d / 2 + 0.028), { seg: 6 });
+        }
+      }
+      for (const sx of [-w * 0.28, w * 0.28]) {
+        B.box('metal', K.ironDk, 0.05, 0.025, d + 0.03, sx, h - 0.015, 0);
+      }
+      B.box('paint', K.cream, 0.46, 0.12, 0.038, 0, h * 0.52, d / 2 + 0.018);
+      B.box(NS('metal'), K.ironDk, 0.38, 0.04, 0.040, 0, h * 0.52, d / 2 + 0.018);
     },
   };
+
   D.caldera_chain_bin = {
     build(B, o = {}) {
       const h = o.h ?? 1.1, w = o.w ?? 1.0, d = o.d ?? 0.8;
-      B.box('metal', K.ironDk, w + 0.04, h - 0.06, d + 0.04, 0, (h - 0.06) / 2, 0, { r: 0.02 });
+      // Heavy riveted sheet-steel chain bin (paint: false) with draped chains and lifting lugs
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        B.box('metal', K.ironDk, 0.06, h - 0.06, 0.06, sx * (w / 2 + 0.015), (h - 0.06) / 2 + 0.03, sz * (d / 2 + 0.015));
+      }
+      B.box('metal', K.iron, w + 0.03, 0.04, d + 0.03, 0, h - 0.04, 0);
       for (let k = 0; k < 3; k++) {
-        B.tor(NS('metal'), K.ironLt, 0.18, 0.035, 0, h - 0.10, -0.2 + k * 0.2, { rx: HP });
+        B.tor(NS('metal'), K.ironLt, 0.16, 0.032, -0.22 + k * 0.22, h - 0.08, 0, { rx: HP });
+      }
+      B.tor(NS('metal'), K.ironLt, 0.12, 0.024, 0.08, h - 0.12, d / 2 + 0.022);
+      B.tor(NS('metal'), K.ironLt, 0.12, 0.024, 0.16, h - 0.22, d / 2 + 0.024);
+      for (const sx of [-w / 2 - 0.015, w / 2 + 0.015]) {
+        B.tor(NS('metal'), K.ironLt, 0.07, 0.022, sx, h * 0.65, 0, { ry: HP });
       }
     },
   };
+
   D.caldera_firebrick_store = {
     build(B, o = {}) {
       const h = o.h ?? 3.5, w = o.w ?? 3.23, d = o.d ?? 2.35;
-      B.box('paint', K.brick, w + 0.04, h - 0.08, d + 0.04, 0, (h - 0.08) / 2, 0, { r: 0.03 });
-      B.box('metal', K.green, 1.4, 2.2, 0.08, 0, 1.1, d / 2 + 0.02, { r: 0.02 });
-      B.box('metal', K.verdDk, w + 0.08, 0.08, d + 0.08, 0, h - 0.06, 0);
+      // Firebrick store: courses, dressed lintel, recessed double door within 8.5 cm, ink showing on brick
+      const nCourses = 7;
+      for (let i = 0; i < nCourses; i++) {
+        const cy = 0.25 + i * 0.45;
+        const col = i % 2 === 0 ? '#d49b56' : K.brick;
+        for (const sz of [-1, 1]) {
+          B.box('paint', col, w * 0.88, 0.12, 0.035, 0, cy, sz * (d / 2 + 0.016));
+        }
+        for (const sx of [-1, 1]) {
+          B.box('paint', col, 0.035, 0.12, d * 0.88, sx * (w / 2 + 0.016), cy, 0);
+        }
+      }
+      B.box('paint', K.basaltDk, 1.65, 0.22, 0.055, 0, 2.32, d / 2 + 0.026, { r: 0.02 });
+      B.box('metal', K.greenDk, 1.45, 2.15, 0.045, 0, 1.10, d / 2 + 0.018, { r: 0.02 });
+      B.box(NS('metal'), K.ironDk, 0.06, 2.15, 0.055, 0, 1.10, d / 2 + 0.024);
+      for (const y of [0.45, 1.75]) {
+        B.box(NS('metal'), K.ironLt, 1.40, 0.05, 0.055, 0, y, d / 2 + 0.024);
+      }
+      for (const sx of [-w * 0.38, w * 0.38]) {
+        B.box(NS('metal'), K.ironDk, 0.18, 0.18, 0.035, sx, 2.75, d / 2 + 0.02);
+        B.cyl(NS('metal'), K.ironLt, 0.03, 0.04, sx, 2.75, d / 2 + 0.038, { rx: HP, seg: 6 });
+      }
+      B.box('paint', K.basaltDk, w + 0.04, 0.08, d + 0.04, 0, h - 0.05, 0, { r: 0.02 });
     },
   };
+
   D.caldera_flask_stack = {
     build(B, o = {}) {
       const h = o.h ?? 1.6, w = o.w ?? 1.2, d = o.d ?? 0.9;
-      for (let i = 0; i < 3; i++) {
-        const fy = (i + 0.5) * ((h - 0.08) / 3);
-        B.box('metal', '#5c5248', w + 0.04, 0.42, d + 0.04, 0, fy, 0, { r: 0.02 });
-        B.box(NS('metal'), K.ironLt, 0.05, 0.46, 0.05, (w + 0.04) / 2, fy, 0);
-        B.box(NS('metal'), K.ironLt, 0.05, 0.46, 0.05, -(w + 0.04) / 2, fy, 0);
+      // Moulding flasks with wooden frames, clamping brackets, guide pins, handles
+      const nFlasks = 3, flH = (h - 0.08) / nFlasks;
+      for (let i = 0; i < nFlasks; i++) {
+        const fy = 0.04 + (i + 0.5) * flH;
+        B.box('wood', '#6b543e', w * 0.88, flH - 0.03, d * 0.88, 0, fy, 0, { r: 0.02 });
+        for (const sx of [-w / 2 + 0.02, w / 2 - 0.02]) for (const sz of [-d / 2 + 0.02, d / 2 - 0.02]) {
+          B.box(NS('metal'), K.ironDk, 0.05, flH, 0.05, sx, fy, sz);
+        }
+        for (const sx of [-w / 2 + 0.05, w / 2 - 0.05]) {
+          B.cyl(NS('metal'), K.ironLt, 0.022, 0.08, sx, fy + flH / 2, 0, { seg: 6 });
+        }
+        for (const sx of [-w / 2 - 0.015, w / 2 + 0.015]) {
+          B.tor(NS('metal'), K.ironLt, 0.07, 0.02, sx, fy, 0, { ry: HP });
+        }
       }
     },
   };
@@ -593,10 +749,21 @@ export function register(D, H) {
   D.caldera_ingot_pile = {
     build(B, o = {}) {
       const h = o.h ?? 1.3, w = o.w ?? 1.2, d = o.d ?? 1.4;
-      B.box('metal', K.ironDk, w + 0.04, 0.10, d + 0.04, 0, 0.07, 0);
-      for (let tier = 0; tier < 3; tier++) {
-        const ty = 0.18 + tier * 0.32;
-        B.box('metal', K.brass, w - 0.06 - tier * 0.10, 0.14, d - 0.06 - tier * 0.10, 0, ty, 0, { r: 0.02 });
+      // Stacked individual cast bronze ingots in alternating criss-cross tiers (paint: false)
+      for (const sx of [-w * 0.32, w * 0.32]) {
+        B.box('wood', '#684e36', 0.10, 0.08, d * 0.88, sx, 0.04, 0);
+      }
+      for (let k = -1; k <= 1; k++) {
+        B.box('metal', K.brass, w * 0.84, 0.14, 0.26, 0, 0.15, k * 0.36, { r: 0.02 });
+      }
+      for (let k = -1; k <= 1; k++) {
+        B.box('metal', '#c89d48', 0.26, 0.14, d * 0.84, k * 0.34, 0.31, 0, { r: 0.02 });
+      }
+      for (let k = -1; k <= 1; k++) {
+        B.box('metal', K.brass, w * 0.80, 0.14, 0.25, 0, 0.47, k * 0.34, { r: 0.02 });
+      }
+      for (const sx of [-0.18, 0.18]) {
+        B.box('metal', '#c89d48', 0.24, 0.14, d * 0.76, sx, 0.63, 0, { r: 0.02 });
       }
     },
   };
@@ -626,11 +793,16 @@ export function register(D, H) {
   };
   D.caldera_planter_urn = {
     build(B, o = {}) {
-      const h = o.h ?? 1.1;
-      B.box('paint', K.basaltDk, 0.65, 0.18, 0.65, 0, 0.09, 0, { r: 0.02 });
-      B.cyl('paint', K.basalt, 0.28, h - 0.45, 0, (h - 0.45) / 2 + 0.18, 0, { r2: 0.38, seg: 12 });
-      B.tor(NS('paint'), K.basaltLt, 0.39, 0.035, 0, h - 0.25, 0, { rx: HP });
-      B.sph(NS('paint'), '#3f5845', 0.18, 0, h - 0.24, 0, { ws: 8, hs: 6 });
+      const h = o.h ?? 1.1, w = o.w ?? 1.2, d = o.d ?? 1.2;
+      // Classical carved basalt planter urn with flared rim, decorative belly band, and dark volcanic soil
+      B.box('paint', K.basaltDk, w + 0.02, 0.18, d + 0.02, 0, 0.09, 0, { r: 0.03 });
+      B.lathe('paint', K.basalt, [[0, 0.18], [0.44, 0.18], [0.58, 0.52], [0.48, 0.88], [0.58, h - 0.06], [0, h - 0.06]], 0, 0.0, 0, { seg: 16 });
+      B.tor(NS('paint'), K.basaltLt, 0.58, 0.042, 0, 0.52, 0, { rx: HP });
+      B.tor('paint', K.basaltDk, 0.57, 0.048, 0, h - 0.05, 0, { rx: HP });
+      B.cyl(NS('paint'), '#30241c', 0.50, 0.06, 0, h - 0.08, 0, { seg: 12 });
+      for (const s of [-1, 1]) {
+        B.tor(NS('paint'), K.basaltLt, 0.12, 0.035, s * 0.58, 0.65, 0, { ry: HP });
+      }
     },
   };
 

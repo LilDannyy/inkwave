@@ -217,7 +217,7 @@ function segsAlong(pts, t, y0, y1, o, side = 0) {
 }
 const stairOn = (c, run, y0, y1, width, o) => R([G.r3(c.mid[0] + c.n[0] * run), y0, G.r3(c.mid[1] + c.n[1] * run)], [G.r3(c.mid[0]), y1, G.r3(c.mid[1])], width, o);
 const stack = (x, z, w, d, h, base, tag, c = K.cast, o = {}) => B(G.r3(x - w / 2), G.r3(x + w / 2), base, G.r3(base + h), G.r3(z - d / 2), G.r3(z + d / 2), cover(c, { tag, ...o }));
-const stack2 = (x, z, w, d, h, base, tag, c, [w2, d2, h2, ox = 0, oz = 0]) => [stack(x, z, w, d, h, base, tag, c), stack(x + ox, z + oz, w2, d2, h2, base + h, tag, c)];
+const stack2 = (x, z, w, d, h, base, tag, c, [w2, d2, h2, ox = 0, oz = 0], o = {}) => [stack(x, z, w, d, h, base, tag, c, o), stack(x + ox, z + oz, w2, d2, h2, base + h, tag, c, o)];
 const drum = (x, z, r, h, base, tag, c) => OCT(x, z, r, base, G.r3(base + h), cover(c, { tag }));
 const ob = (p, w, d, y0, y1, deg, o) => O(G.r3(p[0]), G.r3(p[1]), w, d, y0, y1, G.r3(deg), o);
 // a box in the Spillway arm's frame (s along the arm, t across): centre (s, t), size along s × along t
@@ -265,7 +265,7 @@ add(noBoss(B(-6.9, DECK.x1, 2.4, 3.4, DECK.z0, DECK.z0 + 1.2, cover(K.ironDk, { 
 // — the coping between it and race 7 — was a dead end 18.7 m round on foot, and a running jump steered off it onto race 7
 // saved 14.5–15 m. 0.6 m nearer the deck and 0.1 m slimmer, a 1.2 m walk opens past it to the pier)
 for (const [x, z, r, top] of [[-6.4, -8.6, 0.9, 2.1], [-12.3, -2.7, 0.8, 2.4], [-7.0, -3.6, 0.8, 1.8]]) add(noBoss(OCT(x, z, r, 1.2, top, rock({ tag: 'organ-stump', color: K.basaltDk }))));
-add(noBoss([stack(2.9, -9.3, 1.2, 1.2, 1.1, 1.2, 'ingot-stack'), drum(7.6, -6.3, 1.0, 1.4, 1.2, 'stilling-drum', '#5d6268'), stack(11.6, 0.8, 1.4, 1.8, 1.4, 1.2, 'ladle-stand', K.ironDk)]));
+add(noBoss([stack(2.9, -9.3, 1.2, 1.2, 1.1, 1.2, 'ingot-stack', K.cast, { paint: false }), drum(7.6, -6.3, 1.0, 1.4, 1.2, 'stilling-drum', '#5d6268'), stack(11.6, 0.8, 1.4, 1.8, 1.4, 1.2, 'ladle-stand', K.ironDk)]));
 
 // ---------------------------------------------------------------------------------------- Alpha's base: the gallery
 // the spawn gallery (4.8): the Casting Hall's gable balcony, open to the sky. Pad (−17, 4.8, −62.5). Three exits: the
@@ -306,7 +306,7 @@ add(castWall(-27.7, G.GAL.z1, LANE_Z[0], 2.4, 'ferry-castings', K.cast));
 add(castWall(-12.4, G.GAL.z1, LANE_Z[0], 2.3, 'ferry-castings', '#5f6a63', { mural: [{ n: [1, 0, 0], id: MURAL.highmark }] }), castWall(-12.4, LANE_Z[1], -40.85, 2.4, 'ferry-castings', '#5f6a63'));
 // the Gate's apron (Bazookarp: blocks ≥ 1.2 m within 4 m of route 1 between the gallery and the Gate): the centre lane's
 // cluster, two stepped stacks (1.8 and 1.9 m to the top)
-add(stack2(-20.6, -49.4, 1.6, 1.2, 1.3, 3.6, 'drain-grates', '#56606a', [1.0, 0.8, 0.5, 0, 0]), stack2(-14.6, -48.7, 1.6, 1.4, 1.3, 3.6, 'ingot-rack', K.cast, [1.1, 0.9, 0.6, 0.1, 0]));
+add(stack2(-20.6, -49.4, 1.6, 1.2, 1.3, 3.6, 'drain-grates', '#56606a', [1.0, 0.8, 0.5, 0, 0]), stack2(-14.6, -48.7, 1.6, 1.4, 1.3, 3.6, 'ingot-rack', K.cast, [1.1, 0.9, 0.6, 0.1, 0], { paint: false }));
 // the west side yard's cluster: the bay of patterns south of the gallery's west side stair (2.0 m, filling the dead end
 // between the stair, the gallery and the hall) and the drum stack
 add(B(-30.6, G.GAL.x0, 3.6, 5.6, G.GAL.z0, SWZ - 1.5, cover('#6a6258', { tag: 'pattern-bay' })), drum(-36.0, -59.8, 0.85, 1.3, 3.6, 'drum-stack', '#56606a'));
@@ -322,8 +322,8 @@ add(drum(-7.6, -48.6, 0.8, 1.3, 3.6, 'cable-drum', K.ironDk));
 // the Upper Surge Steps' landing) with a lamp-post rack (2.2 m over the yard) and flasks on it, and an ingot pile beside
 // it — the front's cluster, clear of the tower's run (z ≥ −43.25) and of the steps' landing (x ≤ −19.8)
 add(B(-27.1, -22.4, 3.6, 4.2, -42.7, -40.5, { color: K.sand, pattern: SURF.tuff, tag: 'moulding-floor' }));
-add(B(-26.9, -25.5, 3.6, 5.8, -42.5, -40.7, cover(K.ironDk, { tag: 'lamp-post-rack' })), B(-23.6, -22.6, 3.6, 5.2, -42.3, -41.2, cover('#6b5f55', { tag: 'flask-stack' })));
-add(stack(-21.0, -42.2, 1.2, 1.4, 1.2, 3.6, 'ingot-pile'));
+add(B(-26.9, -25.5, 3.6, 5.8, -42.5, -40.7, cover(K.ironDk, { tag: 'lamp-post-rack' })), B(-23.6, -22.6, 3.6, 5.2, -42.3, -41.2, cover('#6b5f55', { tag: 'flask-stack', paint: false })));
+add(stack(-21.0, -42.2, 1.2, 1.4, 1.2, 3.6, 'ingot-pile', K.cast, { paint: false }));
 // the yard front: a railing on the spiral (squids pass), open at the Bay Stair, the Upper Surge Steps and the tower's climb;
 // none east of the Bay Stair, where the Firebrick Store (on the terrace below, 2.3 m over the yard) closes the yard's tip
 { const gaps = [[G.ST_CUPOLA.a[0], G.TL + 0.6], G.ST_UPPER.a, G.CHORD_Y.a];
@@ -377,7 +377,7 @@ add(noBoss(segsAlong([[-20.22, 8.92], [-20.4, 8.22], [-20.74, 7.34], [-21.03, 6.
     // stair → yard hop across it — and a sand box squares off the wedge in front of the foot's yard-face corner)
     frameBox([0, 0], ur, [45.0, 46.2], [4.11, 5.4], 2.4, 3.7, cover(K.sand, { tag: 'sand-bin' }))); }
 add(B(-14.3, -11.05, 2.4, 3.0, -39.05, -36.95, { color: K.sand, pattern: SURF.tuff, tag: 'casting-bed' }));
-add(B(-14.15, -12.95, 2.4, 4.0, -37.95, -37.05, cover('#6b5f55', { tag: 'flask-stack' })), B(-12.3, -11.3, 3.0, 3.9, -38.8, -37.6, cover(K.wood, { tag: 'pattern-crates' })));
+add(B(-14.15, -12.95, 2.4, 4.0, -37.95, -37.05, cover('#6b5f55', { tag: 'flask-stack', paint: false })), B(-12.3, -11.3, 3.0, 3.9, -38.8, -37.6, cover(K.wood, { tag: 'pattern-crates', paint: false })));
 { const c = G.ST_CUPOLA, u = unit(c.pts[0], c.pts[1]), e = [c.mid[0] + u[0] * 1.2, c.mid[1] + u[1] * 1.2];   // the stair's top east corner
   add(frameBox(e, u, [0.02, 3.25], [-0.05, 2.3], 2.4, 5.9, { color: K.brick, pattern: PATTERN.brick, roof: true, tag: 'firebrick-store' })); }
 
@@ -388,19 +388,19 @@ add(noBoss(stack(-4.0, -23.2, 1.0, 1.0, 1.1, 1.2, 'mooring-bollard', K.ironDk)))
 // the East Steps' west side
 add(noBoss(polBox(G.RT(-75.95) - 0.52, -75.95, 1.3, 1.0, 1.2, 2.8, cover(K.ironDk, { tag: 'ladle-cradle' }))));
 // and a chain bin at the face's foot beside the Lower Surge Steps (3.3 m from the weir)
-add(stack(1.8, -29.3, 1.0, 0.8, 1.1, 1.2, 'chain-bin', '#4f5a52', { mural: [{ n: [0, 0, 1], id: MURAL.warning }] }));
+add(stack(1.8, -29.3, 1.0, 0.8, 1.1, 1.2, 'chain-bin', '#4f5a52', { paint: false, mural: [{ n: [0, 0, 1], id: MURAL.warning }] }));
 // the Moorings (the side zone): the capstan, a chain bollard (off the tower's climb lane, x ≥ −17.75), the spare-stone
 // crate and a mooring bollard on its lake edge (north of the tower's run, z ≥ −24.25). Their colliders start 0.2 m down
 // in the Moorings' deck (1.6): the same on screen and to every player, and the cover rule's Lakefront-level measure
 // (bare.mjs reads the Moorings at 1.2) sees them as the pieces they are
 add(noBoss([stack(-14.4, -29.8, 1.4, 1.2, 1.5, 1.6, 'capstan', '#4f5a52'), stack(-17.2, -28.6, 1.0, 1.0, 1.2, 1.6, 'chain-bollard', K.ironDk),
-  stack(-22.7, -26.6, 1.2, 1.2, 1.2, 1.6, 'stone-crate', K.pumice), stack(-13.6, -23.4, 1.0, 0.9, 1.3, 1.6, 'mooring-bollard', K.ironDk)]));
+  stack(-22.7, -26.6, 1.2, 1.2, 1.2, 1.6, 'stone-crate', K.pumice, { paint: false }), stack(-13.6, -23.4, 1.0, 0.9, 1.3, 1.6, 'mooring-bollard', K.ironDk)]));
 // the south Slump head: a chain bollard back from the Race's landing; the winch house against the Rim Head's face
 { const [x, z] = G.sp(G.S0, -2.4, -1.4); add(O(x, z, 1.0, 1.0, 1.2, 2.3, 19, cover(K.ironDk, { tag: 'chain-bollard' }))); }
 { const [x, z] = P(30.4, -139.5); add(O(x, z, 2.4, 2.4, 1.2, 4.0, 139.5, white({ tag: 'winch-house', mural: [{ n: [-0.7604, 0, -0.6494], id: MURAL.pumice }, { n: [0.7604, 0, 0.6494], id: MURAL.pumice }, { n: [0.6494, 0, -0.7604], id: MURAL.pumice }, { n: [-0.6494, 0, 0.7604], id: MURAL.pumice }, { n: [1, 0, 0], id: MURAL.pumice }] }))); }
 
 // ---------------------------------------------------------------------------------------- the Casting Floor (0, LOW only)
-add(stack(12.0, -18.4, 1.4, 1.4, 1.8, 0, 'mould-stack', K.ironDk), stack(14.0, -13.6, 1.6, 1.6, 2.0, 0, 'ladle-stand', K.ironDk));
+add(stack(12.0, -18.4, 1.4, 1.4, 1.8, 0, 'mould-stack', K.ironDk, { paint: false }), stack(14.0, -13.6, 1.6, 1.6, 2.0, 0, 'ladle-stand', K.ironDk));
 
 // ---------------------------------------------------------------------------------------- the Spillway
 // the Spillway Bridge (deck 2.3: 0.1 under the banks it bears on, underside 1.95): square across the arm's throat at the
