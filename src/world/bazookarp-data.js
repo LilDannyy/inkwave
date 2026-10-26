@@ -282,6 +282,14 @@ export const BAZOOKARP_DEFS = {
       [[-5.5, 0.25, 2.5], [-3.5, 0.25, 4.5]], [[3.5, 0.25, -4.5], [5.5, 0.25, -2.5]],
       [[-18.5, -1.08, -10.5], [-17.5, -1.52, -12.25]], [[-17.5, -1.52, -10.5], [-17.5, -1.52, -12.25]],
       ], // the underbridge and drained-lock passage gaps, mirrored by the Carp Field
+      // [b5-karp-ref] TOLERATED route classes (DECISIONS #34 (c)): unmodelled moves of at most 20 m that the checker weighs
+      // against the shortest spawn → Pond and Pond → Gate (each may shorten them by no more than 10 % of L)
+      tolerate: [
+        // a carrier swimming in its own ink off the Pond deck's corner, across the canal to the far towpath (7–10 m)
+        { name: 'Pond deck corner swim-jump to the towpath', from: { x: [-8, -7], z: [-8, -7], y: [0.2, 0.3] }, to: { x: [-10, -7], z: [-18, -14], y: [-0.1, 0.2] }, maxLen: 12, oneWay: true },
+        // … and from the towpath over the bridge's low parapet onto its stair (3.4 m)
+        { name: 'towpath swim-vault onto the bridge stair', from: { x: [9, 10], z: [-5, -4], y: [-0.1, 0.1] }, to: { x: [8, 9], z: [-8, -7], y: [1.6, 1.8] }, maxLen: 5, oneWay: true },
+      ],
     },
     weirs: [{ at: [-2.5, 0, 27], yaw: 0 }],             // central bridge-street lane at mid distance, clear of the shifted stables
     gate: { at: [3.5, 0, 53.1], yaw: 0, entrances: 5 }, // five visible entrances in the accepted ring

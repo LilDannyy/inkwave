@@ -482,31 +482,70 @@ export class KarpField {
     this.setState(0);
     const p = this.R.pond;
     this.L = [0, 1].map((t) => { const r = this.fieldAt(t, p); return r ? r.d : INF; });
-    // Per-class cumulative route lengths let the checker show exactly what each bounded rule changes.
-    if (this.gapClasses?.length) {
-      const all = new Set(this.gapClasses.map((c) => c.id)), included = new Set(), okN = this.states[0].okN;
-      const lengthFor = (D, t) => {
-        const i = this.ownNode(p); if (i < 0) return INF;
-        let best = D[i] + Math.hypot(p.x - this.nav.nodes[i].x, p.y - this.nav.nodes[i].y, p.z - this.nav.nodes[i].z);
-        for (let k = this.fs[i]; k < this.fs[i + 1]; k++) {
-          const c = this.fc[k]; if (c && !included.has(c)) continue;
-          const q = this.nav.nodes[this.ft[k]], v = D[this.ft[k]] + Math.hypot(p.x - q.x, p.y - q.y, p.z - q.z);
-          if (v < best) best = v;
-        }
-        return best;
-      };
-      const lengths = () => [0, 1].map((t) => {
-        const excluded = new Set([...all].filter((id) => !included.has(id)));
-        return lengthFor(this._dijkstra(okN, this.seeds[t], false, excluded), t);
-      });
-      let before = lengths();
-      for (const c of this.gapClasses) {
-        included.add(c.id);
-        const after = lengths();
-        c.LBefore = before.map((v) => +v.toFixed(2)); c.LAfter = after.map((v) => +v.toFixed(2));
-        before = after;
+  }
+  // [b5-karp-ref] The route lengths the lead's class rule protects (DECISIONS #34, rulings 1 and 3), on demand (the
+  // checker's class table; never at match start): per team the shortest Pond → Gate (read at the Pond as the field
+  // reads it) and spawn → Pond (from the floor round the team's own pad, beyond its spawn zone), with some gap classes
+  // left out of the graph (`exclude`: class ids) and some extra one-way moves put in (`extra`: [{ from, to, len }], the
+  // tolerated moves the checker weighs).
+  routeLengths({ exclude = null, extra = [] } = {}) {
+    const okN = this.states[0].okN, nav = this.nav, p = this.R.pond, N = this.N;
+    const xr = new Map();   // the extra moves, reversed (to → [from, len])
+    for (const e of extra) { if (!xr.has(e.to)) xr.set(e.to, []); xr.get(e.to).push([e.from, e.len]); }
+    const dij = (seeds) => {
+      const D = new Float32Array(N).fill(INF), heap = new Heap(N);
+      for (const [s, d0] of seeds) if (okN[s] && d0 < D[s]) { D[s] = d0; heap.push(s, d0); }
+      while (heap.n) {
+        const u = heap.pop(), du = D[u];
+        const relax = (v, l) => { if (!okN[v]) return; const nd = du + l; if (nd < D[v]) { D[v] = nd; heap.push(v, nd); } };
+        for (let k = this.rs[u]; k < this.rs[u + 1]; k++) if (!(exclude && exclude.has(this.rc[k]))) relax(this.rt[k], this.rl[k]);
+        for (const [v, l] of xr.get(u) || []) relax(v, l);
       }
+      return D;
+    };
+    const d3 = (q) => Math.hypot(p.x - q.x, p.y - q.y, p.z - q.z);
+    const own = this.ownNode(p);
+    const L = [0, 1].map((t) => {
+      if (own < 0) return INF;
+      const D = dij(this.seeds[t].map((s) => [s, 0]));
+      let best = D[own] + d3(nav.nodes[own]);
+      for (let k = this.fs[own]; k < this.fs[own + 1]; k++) {
+        if (exclude && exclude.has(this.fc[k])) continue;
+        const q = nav.nodes[this.ft[k]], v = D[this.ft[k]] + d3(q);
+        if (v < best) best = v;
+      }
+      return +best.toFixed(2);
+    });
+    // spawn → Pond: one backwards search from the Pond's own node, read at each team's ring of floor round its pad
+    const toPond = own < 0 ? null : dij([[own, d3(nav.nodes[own])]]);
+    const SP = [0, 1].map((t) => {
+      const pad = this.level.spawnPads?.[t]; if (!toPond || !pad) return INF;
+      const r = (this.level.spawnBarrier || 4.2) + 3;
+      let best = INF;
+      for (let i = 0; i < N; i++) {
+        if (!okN[i]) continue;
+        const n = nav.nodes[i], h = Math.hypot(n.x - pad.x, n.z - pad.z);
+        if (h > r || Math.abs(n.y - pad.y) > 1.6) continue;
+        const v = toPond[i] + h; if (v < best) best = v;
+      }
+      return +best.toFixed(2);
+    });
+    return { L, SP };
+  }
+  // per gap class, cumulative in the data's order: L and SP before and after the class joins the graph
+  classLengths() {
+    if (this._classLengths) return this._classLengths;
+    const all = new Set((this.gapClasses || []).map((c) => c.id)), included = new Set();
+    const ex = () => new Set([...all].filter((id) => !included.has(id)));
+    const base = this.routeLengths({ exclude: ex() }), rows = [];
+    let before = base;
+    for (const c of this.gapClasses || []) {
+      included.add(c.id);
+      const after = this.routeLengths({ exclude: ex() });
+      rows.push({ id: c.id, name: c.name, LBefore: before.L, LAfter: after.L, SPBefore: before.SP, SPAfter: after.SP });
+      before = after;
     }
+    return (this._classLengths = { base, rows, final: before });
   }
   // the field without the hop and gap edges (the start state; computed on demand: the checker's "gain" and the tests)
   get plainD() { return this._plainD || (this._plainD = [0, 1].map((t) => this._dijkstra(this.states[0].okN, this.seeds[t], true))); }
