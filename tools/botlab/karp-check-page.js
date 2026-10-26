@@ -1595,7 +1595,9 @@ export async function runChecks(o = {}) {
           moves: phys.length, physUnseen: physUnseen.map((p) => ({ at: [r1(p.x), r1(p.y), r1(p.z)], from: P3(nodes[p.from]), type: TYPE_NAME[p.type] + (isSwim(p.by) ? ' (swim-jump)' : '') })), from: P3(nodes[e.pts[0].from] || e.c) };
       });
       const declared = Number.isInteger(C.R.def.gate?.entrances) ? C.R.def.gate.entrances : null;
-      if (declared != null ? ents.length !== declared : (ents.length < CK.ents[0] || ents.length > CK.ents[1])) {
+      // ([b5-karp-ref] with PHYS=0 the kid's moves into the ring are not tried, so only more graph entrances than declared fail)
+      const physOff = o.phys === false;
+      if (declared != null ? (physOff ? ents.length > declared : ents.length !== declared) : (ents.length < CK.ents[0] || ents.length > CK.ents[1])) {
         const expectation = declared != null ? `${declared} declared` : '2–5';
         bad.push(`(a) team ${t}: ${ents.length} entrances into its Gate's 15 m ring (${expectation})`);
         fl.push({ at: P3(g), what: `7a: ${ents.length} entrances into the Gate's ring (${expectation})` });
