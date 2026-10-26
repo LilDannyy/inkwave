@@ -614,7 +614,10 @@ export function register(D, H) {
       }
       // 6. Top ladle retaining collar rim
       B.box('metal', K.ironDk, w + 0.06, 0.07, d + 0.06, 0, h - 0.045, 0, { r: 0.02 });
-      B.cyl(NS('glow'), K.seam, 0.50, 0.025, 0, h - 0.015, 0, { seg: 12, glow: 1.3 });
+      const rTop = Math.min(w, d) / 2 - 0.18;
+      if (rTop > 0.1) {
+        B.cyl(NS('glow'), K.seam, rTop, 0.025, 0, h - 0.015, 0, { seg: 12, glow: 1.3 });
+      }
     },
   };
 
@@ -812,31 +815,76 @@ export function register(D, H) {
       }
     },
   };
-  D.caldera_ingot_pile = {
+  D.caldera_ingot_bars = {
     build(B, o = {}) {
-      const h = o.h ?? 1.3, w = o.w ?? 1.2, d = o.d ?? 1.4;
-      // Stacked individual cast bronze ingots in alternating criss-cross tiers with visible spacing (paint: false)
-      for (const sx of [-w * 0.32, w * 0.32]) {
-        B.box('wood', '#584432', 0.12, 0.08, d * 0.90, sx, 0.04, 0);
+      const h = o.h ?? 1.2, w = o.w ?? 1.2, d = o.d ?? 1.2;
+      // Stacked individual cast bronze/brass ingot bars with visible dark gaps, bar ends, steel straps, chalked tally
+      // 1. Heavy timber runner skids at base
+      const skidH = Math.min(0.06, h * 0.08);
+      for (const sx of [-w * 0.35, w * 0.35]) {
+        B.box('wood', '#544030', 0.11, skidH, d - 0.06, sx, skidH / 2 + 0.01, 0);
       }
-      // Tier 1: 3 ingots along X
-      for (let k = -1; k <= 1; k++) {
-        B.box('metal', K.brass, w * 0.88, 0.14, 0.28, 0, 0.16, k * 0.38, { r: 0.02 });
+      // 2. Stacked tiers of trapezoidal ingot bars with recessed horizontal & vertical shadow gaps
+      const availH = h - skidH - 0.03;
+      const nTiers = Math.max(2, Math.round(availH / 0.14));
+      const tierH = availH / nTiers;
+      const barH = tierH - 0.016; // 16 mm horizontal gap between tiers
+      for (let i = 0; i < nTiers; i++) {
+        const ty = skidH + 0.01 + (i + 0.5) * tierH;
+        if (i % 2 === 0) {
+          // Even tier: bars run along X (span width w)
+          const nBars = Math.max(2, Math.round((d - 0.08) / 0.32));
+          const barPitch = (d - 0.08) / nBars;
+          const barW = barPitch - 0.025; // 25 mm gap between adjacent bars
+          for (let b = 0; b < nBars; b++) {
+            const bz = -(d - 0.08) / 2 + (b + 0.5) * barPitch;
+            // Bar body in cast bronze/brass
+            const col = (i + b) % 2 === 0 ? '#caa248' : K.brass;
+            B.box('metal', col, w - 0.04, barH, barW, 0, ty, bz, { r: 0.01 });
+            // Distinct protruding trapezoidal bar heads at the ends (X faces)
+            for (const sx of [-1, 1]) {
+              B.box('metal', '#d8b056', 0.024, barH - 0.012, barW - 0.015, sx * (w / 2 + 0.01), ty, bz, { r: 0.008 });
+            }
+          }
+        } else {
+          // Odd tier: crosswise bars run along Z (span depth d)
+          const nBars = Math.max(2, Math.round((w - 0.08) / 0.32));
+          const barPitch = (w - 0.08) / nBars;
+          const barW = barPitch - 0.025;
+          for (let b = 0; b < nBars; b++) {
+            const bx = -(w - 0.08) / 2 + (b + 0.5) * barPitch;
+            const col = (i + b) % 2 === 0 ? '#b88c38' : '#c89d44';
+            B.box('metal', col, barW, barH, d - 0.04, bx, ty, 0, { r: 0.01 });
+            // Distinct protruding trapezoidal bar heads at the ends (Z faces)
+            for (const sz of [-1, 1]) {
+              B.box('metal', '#d8b056', barW - 0.015, barH - 0.012, 0.024, bx, ty, sz * (d / 2 + 0.01), { r: 0.008 });
+            }
+          }
+        }
       }
-      // Tier 2: 3 ingots crosswise along Z
-      for (let k = -1; k <= 1; k++) {
-        B.box('metal', '#caa248', 0.28, 0.14, d * 0.88, k * 0.36, 0.32, 0, { r: 0.02 });
+      // 3. Heavy steel tensioned strapping bands wrapping the stack
+      for (const sx of [-w * 0.28, w * 0.28]) {
+        B.box('metal', K.ironDk, 0.045, h - 0.06, 0.015, sx, (h - 0.06) / 2 + 0.04, d / 2 + 0.016);
+        B.box('metal', K.ironDk, 0.045, h - 0.06, 0.015, sx, (h - 0.06) / 2 + 0.04, -d / 2 - 0.016);
+        B.box('metal', K.ironDk, 0.045, 0.014, d + 0.035, sx, h - 0.008, 0);
+        // Bright steel tensioner buckle/seal clip
+        B.box(NS('metal'), K.ironLt, 0.055, 0.045, 0.022, sx, h * 0.65, d / 2 + 0.020);
       }
-      // Tier 3: 3 ingots along X
-      for (let k = -1; k <= 1; k++) {
-        B.box('metal', K.brass, w * 0.84, 0.14, 0.26, 0, 0.48, k * 0.36, { r: 0.02 });
+      // 4. Chalked tally board / plate on front face
+      B.box('metal', '#202226', 0.42, 0.16, 0.018, 0, h * 0.52, d / 2 + 0.016, { r: 0.01 });
+      // White chalk tally hash marks (|||| /)
+      for (let t = -2; t <= 1; t++) {
+        B.box(NS('paint'), '#f4efe6', 0.012, 0.10, 0.022, t * 0.045 - 0.045, h * 0.52, d / 2 + 0.018);
       }
-      // Tier 4: 2 ingots along Z
-      for (const sx of [-0.18, 0.18]) {
-        B.box('metal', '#caa248', 0.26, 0.14, d * 0.80, sx, 0.64, 0, { r: 0.02 });
-      }
+      B.box(NS('paint'), '#f4efe6', 0.012, 0.12, 0.022, -0.045, h * 0.52, d / 2 + 0.019, { rz: 0.5 });
+      // Chalked lot and weight notation
+      B.box(NS('paint'), '#e8e2d4', 0.11, 0.018, 0.022, 0.11, h * 0.55, d / 2 + 0.018);
+      B.box(NS('paint'), '#e8e2d4', 0.09, 0.018, 0.022, 0.11, h * 0.49, d / 2 + 0.018);
     },
   };
+  D.caldera_ingot_pile = D.caldera_ingot_bars;
+  D.caldera_ingot_stack = D.caldera_ingot_bars;
+  D.caldera_ingot_rack = D.caldera_ingot_bars;
 
   // ------------------------------------------------------------------------------------------ Casting Hall (Spawn)
   D.caldera_hall_roof = {
@@ -931,11 +979,16 @@ export const PLACEMENTS = [
   { type: 'caldera_stone_crate', pos: [-22.7, 1.6, -26.6], h: 1.2 },
   { type: 'caldera_chain_bin', pos: [1.8, 1.2, -29.3], h: 1.1, w: 1.0, d: 0.8 },
 
-  // Casting Floor (LOW, single half)
-  { type: 'caldera_pig_bed', pos: [10.5, 0, -15.5], mirror: false },
-  { type: 'caldera_floor_drain', pos: [13.0, 0, -16.5], mirror: false },
-  { type: 'caldera_mould_stack', pos: [12.0, 0, -18.4], h: 1.8, w: 1.4, d: 1.4, mirror: false },
-  { type: 'caldera_ladle_stand', pos: [14.0, 0, -13.6], h: 2.0, w: 1.6, d: 1.6, mirror: false },
+  // Pour Floor & Island
+  { type: 'caldera_ingot_bars', pos: [2.9, 1.2, -9.3], h: 1.1, w: 1.2, d: 1.2 },
+  { type: 'caldera_ladle_stand', pos: [-11.6, 1.2, -0.8], h: 1.4, w: 1.4, d: 1.8 },
+  { type: 'caldera_ladle_stand', pos: [21.721, 2.4, -11.549], rotY: -152.0 * D_, h: 1.3, w: 1.4, d: 1.8 },
+
+  // Casting Floor (LOW)
+  { type: 'caldera_pig_bed', pos: [10.5, 0, -15.5] },
+  { type: 'caldera_floor_drain', pos: [13.0, 0, -16.5] },
+  { type: 'caldera_mould_stack', pos: [12.0, 0, -18.4], h: 1.8, w: 1.4, d: 1.4 },
+  { type: 'caldera_ladle_stand', pos: [14.0, 0, -13.6], h: 2.0, w: 1.6, d: 1.6 },
 
   // Spillway
   { type: 'caldera_slag_pot', pos: [14.934, 2.3, -25.818], rotY: 78.0 * D_, h: 1.1 },
@@ -950,7 +1003,10 @@ export const PLACEMENTS = [
 
   // Yard
   { type: 'caldera_lamp_post_rack', pos: [-26.2, 3.6, -41.6], h: 2.2, w: 1.4, d: 1.8 },
-  { type: 'caldera_ingot_pile', pos: [-14.6, 3.6, -48.7], h: 1.3, w: 1.2, d: 1.4 },
+  { type: 'caldera_ladle_stand', pos: [-6.518, 3.6, -50.846], rotY: 72.39 * D_, h: 1.8, w: 1.8, d: 1.85 },
+  { type: 'caldera_ingot_bars', pos: [-21.0, 3.6, -42.2], h: 1.2, w: 1.2, d: 1.4 },
+  { type: 'caldera_ingot_bars', pos: [-14.6, 3.6, -48.7], h: 1.3, w: 1.6, d: 1.4 },
+  { type: 'caldera_ingot_bars', pos: [-14.5, 4.9, -48.7], h: 0.6, w: 1.1, d: 0.9 },
 
   // Urns
   { type: 'caldera_planter_urn', pos: [-25.4, 4.8, -57.4], h: 1.1 },

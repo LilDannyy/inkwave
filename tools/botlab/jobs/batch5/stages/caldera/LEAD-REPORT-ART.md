@@ -1,7 +1,7 @@
-# Highmark Foundry, art phase: lead report (Round 9: Box-as-Object Re-Cast & Reviewer Sweep Proof)
+# Highmark Foundry, art phase: lead report (Round 9b: Ingot Stacks & Ladle Stands Overhaul)
 
 Worktree `/Users/danielosling/Desktop/1/st-b5-caldera-art`, branch `b5-caldera-art`.
-Carried out `tools/botlab/jobs/batch5/stages/caldera/AGY-BRIEF.md` and addressed all rulings and instructions from session "Inkwave local setup" (Round 9) to completion under shared lock `SLOTS=3`.
+Carried out `tools/botlab/jobs/batch5/stages/caldera/AGY-BRIEF.md` and addressed all rulings and instructions from session "Inkwave local setup" (Rounds 9 and 9b) to completion under shared lock `SLOTS=3`.
 
 Play geometry is frozen: 0 collider, layout, nav, or rider changes.
 `build/check-maps.mjs` piece counts:
@@ -11,7 +11,7 @@ Play geometry is frozen: 0 collider, layout, nav, or rider changes.
 
 ---
 
-## 1. Round 9 Mandate: Objects that ARE Boxes
+## 1. Round 9 & 9b Mandate: Objects that ARE Boxes
 
 The Round 9 rule strictly enforces that **a box collider becomes a thing that IS a box** — never a pretend cylinder or mound. If a stranger cannot immediately name the object from its sweep picture, it is not done.
 
@@ -53,17 +53,23 @@ Following the model of Bluestone's dressed frozen cover boxes (`bluestone_coverd
    - Dark volcanic soil bed inset on top.
    - Low succulent / rosette plant clusters on top strictly $\le h + 0.05\text{ m}$ (safely below $gh + 0.08\text{ m}$ player body check).
    - Foundry botanical conservancy brass plaque on front face.
-7. **Ladle Cradle Base** (`caldera_ladle_stand`):
+7. **Ladle Cradle Bases** (`caldera_ladle_stand`, Round 9b re-cast across all four blocks `.0` to `.3`):
    - Heavy machinery base in green machinery iron with foundation plinth course.
    - Massive trunnion bearing saddles on flanks with brass journal bushings.
    - Ladle pouring lip and spout hugging front face with glowing molten seam.
    - Heavy forged restraint chain draped across the cradle face.
-8. **Stacks & Bins** (`caldera_flask_stack`, `caldera_mould_stack`, `caldera_ingot_stack`, `caldera_ingot_pile`, `caldera_ingot_rack`, `caldera_chain_bin`, `caldera_pattern_crates`, `caldera_stone_crate`):
+   - Retaining collar rim adapted to block width/depth.
+8. **Stacked Ingot Bars** (`caldera_ingot_bars`, Round 9b re-cast across `ingot-stack.0`, `ingot-pile.0`, `ingot-rack.0` both base and top blocks):
+   - Heavy timber runner skids at the base.
+   - Stacked alternating criss-cross tiers of trapezoidal cast bronze/brass ingot bars with visible horizontal and vertical shadow gaps ($16\text{ mm}$ tier gap, $25\text{ mm}$ bar pitch gap).
+   - Protruding trapezoidal bar heads at the lateral ends.
+   - Heavy tensioned steel strapping bands wrapping the stack with bright steel tensioner buckles.
+   - Iron tally plate on front face with chalked hash tally marks (`|||| /`) and batch lot notation.
+9. **Stacks & Bins** (`caldera_flask_stack`, `caldera_mould_stack`, `caldera_chain_bin`, `caldera_pattern_crates`, `caldera_stone_crate`):
    - Multi-tier stacks with prominent dark parting shadow lines, alignment guide pins, flange ears, drop handles, slats, and hardware.
-   - Ingot piles as individual criss-cross cast bars on timber runners.
    - Chain bin with lid rim, forged hasp, brass padlock, and draped chain loops.
-9. **Firebrick Store** (`caldera_firebrick_store`):
-   - Refractory storehouse with alternating red and buff brick courses, dressed basalt lintel, and recessed double iron doors with strap hinges and latch. Fully paintable surface with team ink showing on the brickwork.
+10. **Firebrick Store** (`caldera_firebrick_store`):
+    - Refractory storehouse with alternating red and buff brick courses, dressed basalt lintel, and recessed double iron doors with strap hinges and latch. Fully paintable surface with team ink showing on the brickwork.
 
 ---
 
@@ -96,12 +102,12 @@ NOT granted for `firebrick-store`. A $3.5\text{ m}$ wall that cannot take ink ca
 
 - `tools/botlab/jobs/batch5/stages/caldera/review-tools/probe-props2.js`:
   ```
-  PASS MODE turf: placements 83, vertices 437852  {}
+  PASS MODE turf: placements 99, vertices 533501  {}
   PASS totals  {"ghost":0,"onTop":0,"rider":0,"lava":0,"body":0}
   PASS decor lamps (x, z, foot y, walkable top under, in lava region)  [[-3,-14.5,2.5,"causeway",true],[3,-14.5,2.5,"causeway",true],[-3,-19.5,2.5,"causeway",true],[3,-19.5,2.5,"causeway",true],[3,14.5,2.5,"causeway",true],[-3,14.5,2.5,"causeway",true],[3,19.5,2.5,"causeway",true],[-3,19.5,2.5,"causeway",true]]
   RESULT 3/3
   ```
-  - **Ghosts**: strictly **0** across all 437,852 dressing vertices.
+  - **Ghosts**: strictly **0** across all 533,501 dressing vertices.
   - **On Top**: 0.
   - **Rider**: 0.
   - **Lava**: 0.
@@ -112,7 +118,7 @@ NOT granted for `firebrick-store`. A $3.5\text{ m}$ wall that cannot take ink ca
   floorFight: strictly 0.0 m²
   wallFight:  0.2 m² (within tolerance, passed in caldera-art)
   floorCov:   7.6 m²
-  wallCov:    125.6 m²
+  wallCov:    132.2 m² (ladle-stand: 9.0 m²)
   ```
 
 ---
@@ -134,14 +140,14 @@ All audits proven identical against blockout base `8082e99a`:
    - `RESULT_JSON {"map":"caldera","len":[100,100],"holes":0,"issues":0,"climbs":3,"drops":1,"rides":[{"reason":"knockout","drops":0,"stalls":0},{"reason":"knockout","drops":0,"stalls":0}]}`
    - 0 holes, 0 issues, identical 100 m / 100 m track length, knockout rides clean.
 6. **Art Verification Suite** (`tools/botlab/tests/caldera-art.js`):
-   - `PASS dressing adds no colliders (visual only) {"placements":84,"types":36,"colliders":0}`
+   - `PASS dressing adds no colliders (visual only) {"placements":100,"types":36,"colliders":0}`
    - `PASS open Pour Floor center is clear below 7.0 m (Tower Pond unblocked) {"verticesBelow7m":0,"culprits":{},"sampleMid":[]}`
    - `PASS dressing vertices on walkable tops within 8.5 cm of solid faces {"ghosts":0,"farthest":0,"atFarthest":null,"culprits":{},"samples":{}}`
    - `PASS no dressing vertices in lava below HIGH + 0.3 off solid blocks {"lavaGhosts":0,"culprits":{}}`
    - `PASS decor lamps stand only on the 4 plinths {"total":4,"badLamps":[]}`
    - `PASS stage surfaces (tuff 70, basalt 71, glaze 72) carry the stage`
-   - `PASS 0 m² paintable floor coplanar with dressing (no z-fighting lids) {"floorFight":0,"floorCov":114.3}`
-   - `PASS 0 m² paintable wall coplanar with dressing (no z-fighting) {"wallFight":0.2,"wallCov":162.9}`
+   - `PASS 0 m² paintable floor coplanar with dressing (no z-fighting lids) {"floorFight":0,"floorCov":113.9}`
+   - `PASS 0 m² paintable wall coplanar with dressing (no z-fighting) {"wallFight":0.2,"wallCov":171.5}`
    - **RESULT 8/8**
 
 ---
@@ -149,5 +155,6 @@ All audits proven identical against blockout base `8082e99a`:
 ## 5. Contact Sheet Deliverables (`out/art/`)
 
 Re-shot from stage sweep using the reviewer's cameras and verified for the stranger test on every tile:
-- `tools/botlab/jobs/batch5/stages/caldera/out/art/objects-day.jpg`: 279.2 KB (1920 × 988, JPEG quality 65, < 290 KB budget). 5 × 4 grid presenting all 20 eye-level objects in day lighting.
-- `tools/botlab/jobs/batch5/stages/caldera/out/art/objects-dusk.jpg`: 287.6 KB (1920 × 988, JPEG quality 75, < 290 KB budget). 5 × 4 grid presenting all 20 eye-level objects in dusk lighting.
+- `tools/botlab/jobs/batch5/stages/caldera/out/art/objects-9b.jpg`: 263 KB (1280 × 1557, JPEG quality 80, < 290 KB budget). Composite of the reviewer camera sweep sheets for all 7 target clusters (`ingot-stack.0`, `ingot-rack.0`, `ingot-pile.0`, `ladle-stand.0`, `ladle-stand.1`, `ladle-stand.2`, `ladle-stand.3`).
+- `tools/botlab/jobs/batch5/stages/caldera/out/art/objects-day.jpg`: 266 KB (1920 × 988, JPEG quality 60, < 290 KB budget). 5 × 4 grid presenting all 20 eye-level objects in day lighting.
+- `tools/botlab/jobs/batch5/stages/caldera/out/art/objects-dusk.jpg`: 267 KB (1920 × 988, JPEG quality 70, < 290 KB budget). 5 × 4 grid presenting all 20 eye-level objects in dusk lighting.
