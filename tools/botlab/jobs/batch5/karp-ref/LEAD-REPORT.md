@@ -133,7 +133,27 @@ No console errors, no clamp rejections, no carrier-retreat fallbacks. Two knocko
   `lockgate.bazookarp` ok; `halyard` (base) has one issue, `half[41] ramp is 25.7° (max 24)` — the base tug ramp, the
   same at the branch point (not ours, not changed: the base must not change).
 - `karp-layout-diff.mjs` vs the branch point 8082e99a: 94/96 same; the two left are caldera's cards (§2).
-- `MAP=all` quick summary (PHYS=0 CARRY=0 SHOTS=0): see the RESULT lines appended below if it finished in time.
+- `MAP=all` quick summary (PHYS=0 CARRY=0 SHOTS=0, so #11 / #16 SKIP and no RESULT can be ok in this mode): the eleven
+  stages without a layout fail as before (placeholders); halyard `FAIL=7,12`, lockgate `FAIL=7`. Lockgate's quick-mode #7
+  was the declared-entrance comparison counting 4 graph entrances against 5 declared without the kid's physical moves;
+  fixed (with PHYS=0 only *more* entrances than declared fail) and re-run: lockgate quick `7d=0/0/0 SKIP=11,16`, #7 OK.
+  The full lines:
+
+```
+RESULT tidewater fail L=57.02/55.45 weir=100 gate=18.3 routes=0/2 zones=1 hops=6+108 swim=fail 7d=57/13/0 FAIL=2,3,4,5,7,12,15 SKIP=11,16
+RESULT kelpline fail L=51.96/51.95 weir=50 gate=20 routes=2/2 zones=1 hops=40+1674 swim=fail 7d=12/0/0 FAIL=3,5,6,7,9,12,15 SKIP=11,16
+RESULT halyard fail L=55.43/55.3 weir=48 gate=12.2 routes=2/2 zones=2 hops=65+4537 swim=fail 7d=0/0/0 FAIL=7,12 SKIP=11,16
+RESULT saltpan fail L=83.48/81.06 weir=50 gate=8.5 routes=2/2 zones=1 hops=91+186 swim=fail 7d=47/0/0 FAIL=2,7,8,9,12,13,15 SKIP=11,16
+RESULT crossmarket fail L=65.13/65.4 weir=49 gate=8.4 routes=1/2 zones=1 hops=0+173 swim=fail 7d=0/0/0 FAIL=5,8,9,12,13,14,15 SKIP=11,16
+RESULT lockgate fail L=55.86/55.73 weir=49 gate=13.1 routes=2/2 zones=2 hops=62+3893 swim=fail 7d=0/0/0 FAIL=7 SKIP=11,16   (before the PHYS=0 fix)
+RESULT terraces fail L=66.01/61.2 weir=48 gate=8 routes=2/2 zones=1 hops=145+641 swim=fail 7d=10/0/0 FAIL=2,7,8,9,12,13,15 SKIP=11,16
+RESULT nantai fail L=72.85/72.99 weir=50 gate=8.5 routes=2/2 zones=1 hops=99+323 swim=fail 7d=18/0/0 FAIL=7,8,9,12,13,15 SKIP=11,16
+RESULT craters fail L=69.39/69.26 weir=50 gate=8.5 routes=2/2 zones=1 hops=317+1376 swim=fail 7d=40/0/0 FAIL=7,8,9,12,13,15 SKIP=11,16
+RESULT calamari fail L=64.82/64.82 weir=48 gate=8.4 routes=2/2 zones=1 hops=74+239 swim=fail 7d=4/0/0 FAIL=7,8,9,12,13 SKIP=11,16
+RESULT spirhalite fail L=80.25/79.54 weir=50 gate=8.2 routes=2/2 zones=1 hops=84+622 swim=fail 7d=16/0/0 FAIL=5,7,8,12,13,14,15 SKIP=11,16
+RESULT treehills fail L=70.93/70.48 weir=52 gate=8.2 routes=2/2 zones=1 hops=197+200 swim=fail 7d=16/0/0 FAIL=7,8,9,12,13,15 SKIP=11,16
+RESULT cargo fail L=51.96/51.95 weir=50 gate=20 routes=2/2 zones=1 hops=40+1674 swim=fail 7d=12/0/0 FAIL=3,5,6,7,9,12,15 SKIP=11,16
+```
 - Pictures (`out/`, JPEG < 300 KB, looked at): `halyard-gate-ring-aerial`, `-gate-ring-east` (the access pontoon gone),
   `-gate-ring-main-swim` (the open swim landing), `-gate-approach`, `-gate-deck`, `-gangway-north`,
   `-gangway-mid-transfer`, `-barrier-yard-hoarding` (with the off-limits trailer), `-roof-mastrack`, `-pond`,
