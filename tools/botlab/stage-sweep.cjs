@@ -224,6 +224,7 @@ app.on('browser-window-created', (_, win) => {
         // bubbles, every backdrop animation — set before the frames each view steps, so before / after differ only where
         // the stage did)
         if (g.match) g.match.time = 170;
+        if ('${process.env.LAVA || ''}' && g.match?.lava) g.match.lava.hold('${process.env.LAVA}');
         if (__G.env) __G.env.time = ${+(process.env.ENVT || 100)};
         { const pl = g.match?.pipes?.W?.looks; if (pl && typeof pl.t === 'number') pl.t = ${+(process.env.ENVT || 100)}; }   // (the pipe engine's looks: its chevrons, bubbles)
         __G.paint.clear(); __G.projectiles.clear(); __G.fx?.clear?.();

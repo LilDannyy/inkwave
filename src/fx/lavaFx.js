@@ -164,8 +164,9 @@ float lvn(vec2 p) { vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0
 void main() {
   float s = lvn(vec2(vUv.x * 9.0, vUv.y * 3.0 + uTime * 1.8)) * 0.6 + lvn(vec2(vUv.x * 23.0, vUv.y * 7.0 + uTime * 3.1)) * 0.4;
   vec3 col = mix(uA, uB, smoothstep(0.35, 0.8, s)) * (1.6 + 0.8 * s);
-  float edge = 1.0;
-  float a = clamp((0.45 + 0.55 * uK) * edge * (0.7 + 0.5 * s) * (1.0 - smoothstep(0.75, 1.0, vUv.y)), 0.0, 1.0);
+  float edge = smoothstep(0.0, 0.08, vUv.x) * (1.0 - smoothstep(0.92, 1.0, vUv.x));
+  float top = smoothstep(0.0, 0.03, vUv.y);
+  float a = clamp((0.45 + 0.55 * uK) * edge * top * (0.7 + 0.5 * s) * (1.0 - smoothstep(0.75, 1.0, vUv.y)), 0.0, 1.0);
   gl_FragColor = vec4(col, a);
 #include <tonemapping_fragment>
 #include <colorspace_fragment>
@@ -284,14 +285,96 @@ totalEmissiveRadiance += vec3(1.0, 0.13, 0.02) * gCr * uCrack * 1.5;`);
         return;
       }
       const g = new THREE.Group(); g.name = 'lava:rider:' + r.id;
-      const parts = [colourGeo(new THREE.CylinderGeometry(r.r, r.r, r.depth, 6, 1, false, Math.PI / 2).translate(0, -r.depth / 2, 0), LOOK.basalt),
-        colourGeo(new THREE.CylinderGeometry(r.r - 0.04, r.r - 0.04, 0.06, 6, 1, false, Math.PI / 2).translate(0, -0.02, 0), LOOK.basaltTop)];
-      // (fix round 6: the lookout's crown — a part marked `pipe` is drawn as a hexagonal basalt pipe over its square collider,
-      // flats 0.26 m across like the box, a lighter cap on top)
-      for (const q of r.parts) if (!q.body && q.pipe) { const rr = q.hx / Math.cos(Math.PI / 6), h = q.y1 - q.y0;
-        parts.push(colourGeo(new THREE.CylinderGeometry(rr, rr, h, 6, 1, false, Math.PI / 6).rotateY(q.yaw).translate(q.ox, (q.y0 + q.y1) / 2, q.oz), LOOK.basalt),
-          colourGeo(new THREE.CylinderGeometry(rr * 0.92, rr * 0.92, 0.04, 6, 1, false, Math.PI / 6).rotateY(q.yaw).translate(q.ox, q.y1 + 0.01, q.oz), LOOK.basaltTop)); }
+      // 1. Columnar basalt with horizontal joint lines and lighter cap edge
+      const parts = [
+        colourGeo(new THREE.CylinderGeometry(r.r, r.r, r.depth, 6, 1, false, Math.PI / 2).translate(0, -r.depth / 2, 0), LOOK.basalt),
+        colourGeo(new THREE.CylinderGeometry(r.r + 0.01, r.r + 0.01, 0.08, 6, 1, false, Math.PI / 2).translate(0, -0.04, 0), '#787e88'),
+        colourGeo(new THREE.CylinderGeometry(r.r - 0.02, r.r - 0.02, 0.04, 6, 1, false, Math.PI / 2).translate(0, -0.01, 0), LOOK.basaltTop),
+      ];
+      // Horizontal joint grooves every 0.9 m down the column
+      for (let jy = -0.9; -jy < r.depth - 0.3; jy -= 0.9) {
+        parts.push(colourGeo(new THREE.CylinderGeometry(r.r - 0.015, r.r - 0.015, 0.04, 6, 1, false, Math.PI / 2).translate(0, jy, 0), '#22252a'));
+        parts.push(colourGeo(new THREE.CylinderGeometry(r.r + 0.008, r.r + 0.008, 0.02, 6, 1, false, Math.PI / 2).translate(0, jy + 0.03, 0), '#6c727c'));
+      }
+      // Hexagonal crown pipes with lighter caps
+      for (const q of r.parts) if (!q.body && q.pipe) {
+        const rr = q.hx / Math.cos(Math.PI / 6), h = q.y1 - q.y0;
+        parts.push(
+          colourGeo(new THREE.CylinderGeometry(rr, rr, h, 6, 1, false, Math.PI / 6).rotateY(q.yaw).translate(q.ox, (q.y0 + q.y1) / 2, q.oz), '#52565e'),
+          colourGeo(new THREE.CylinderGeometry(rr * 0.92, rr * 0.92, 0.05, 6, 1, false, Math.PI / 6).rotateY(q.yaw).translate(q.ox, q.y1 + 0.02, q.oz), '#8a909a'),
+          colourGeo(new THREE.CylinderGeometry(rr + 0.02, rr + 0.02, 0.08, 6, 1, false, Math.PI / 6).rotateY(q.yaw).translate(q.ox, q.y0 + 0.04, q.oz), '#2b2e34')
+        );
+      }
       for (const q of r.parts) if (!q.body && !q.pipe) parts.push(colourGeo(new THREE.BoxGeometry(q.hx * 2, q.y1 - q.y0, q.hz * 2).rotateY(q.yaw).translate(q.ox, (q.y0 + q.y1) / 2, q.oz), LOOK.basalt));
+
+      // Organ Pipes dynamic set dressing: riveted iron bands, bright galvanised checkerplate steps, yellow safety nosings
+      if (r.look?.type === 'caldera_organ') {
+        const isLookout = r.look?.role === 'lookout';
+        // 0. Columnar basalt masonry jointing: horizontal course lines & corner bevels
+        for (const jy of [-0.3, -1.1, -2.1]) {
+          if (-jy < r.depth) {
+            parts.push(colourGeo(new THREE.CylinderGeometry(r.r + 0.012, r.r + 0.012, 0.035, 6, 1, false, Math.PI / 2).translate(0, jy, 0), '#24272c'));
+          }
+        }
+        // Lighter basalt cap stone course below deck
+        parts.push(colourGeo(new THREE.CylinderGeometry(r.r + 0.018, r.r + 0.018, 0.08, 6, 1, false, Math.PI / 2).translate(0, -0.04, 0), '#6c727c'));
+        // Vertical corner chamfers along the 6 hexagonal column facets
+        const colH = Math.min(r.depth, 3.2);
+        for (let a = 0; a < 6; a++) {
+          const ang = (a * Math.PI) / 3;
+          parts.push(colourGeo(new THREE.BoxGeometry(0.04, colH, 0.04).translate(Math.cos(ang) * (r.r + 0.005), -colH / 2, Math.sin(ang) * (r.r + 0.005)), '#32363d'));
+        }
+        // 1. Riveted hexagonal wrought-iron bands around column
+        for (const by of [-0.6, -1.6, -2.6]) {
+          if (-by < r.depth) {
+            parts.push(colourGeo(new THREE.CylinderGeometry(r.r + 0.035, r.r + 0.035, 0.12, 6, 1, false, Math.PI / 2).translate(0, by, 0), '#282b30'));
+            for (let a = 0; a < 6; a++) {
+              const ang = (a * Math.PI) / 3;
+              parts.push(colourGeo(new THREE.BoxGeometry(0.05, 0.05, 0.05).translate(Math.cos(ang) * (r.r + 0.045), by, Math.sin(ang) * (r.r + 0.045)), '#626872'));
+            }
+          }
+        }
+        // 2. Climbable step links: bright galvanised checkerplate with high-visibility yellow nosing
+        const stepFaces = isLookout ? [1] : [-1, 1];
+        for (const sf of stepFaces) {
+          const zSign = sf; // +1 facing south (island / lower column), -1 facing north
+          const cz = zSign * (r.r - 0.02);
+          const numSteps = isLookout ? 4 : 2;
+          for (let s = 0; s < numSteps; s++) {
+            const sy = -0.35 - s * 0.42;
+            // Bright galvanised steel checkerplate step (stands proud of the face)
+            parts.push(colourGeo(new THREE.BoxGeometry(0.82, 0.06, 0.24).translate(0, sy, cz + zSign * 0.11), '#d2d8e0'));
+            // Safety yellow nosing stripe along the front step edge
+            parts.push(colourGeo(new THREE.BoxGeometry(0.82, 0.03, 0.04).translate(0, sy + 0.02, cz + zSign * 0.22), '#ffcc00'));
+            // Heavy steel mounting gussets under step
+            for (const gx of [-0.32, 0.32]) {
+              parts.push(colourGeo(new THREE.BoxGeometry(0.04, 0.14, 0.18).translate(gx, sy - 0.08, cz + zSign * 0.09), '#2b2e34'));
+            }
+            // Safety yellow grab handles clearly reading as climbable routes
+            parts.push(colourGeo(new THREE.BoxGeometry(0.58, 0.05, 0.05).translate(0, sy + 0.30, cz + zSign * 0.15), '#ffd700'));
+            parts.push(colourGeo(new THREE.BoxGeometry(0.05, 0.12, 0.05).translate(-0.26, sy + 0.24, cz + zSign * 0.15), '#ffd700'));
+            parts.push(colourGeo(new THREE.BoxGeometry(0.05, 0.12, 0.05).translate(0.26, sy + 0.24, cz + zSign * 0.15), '#ffd700'));
+          }
+        }
+        // 3. Lookout platform dressing (organL)
+        if (isLookout) {
+          // Top deck rim curb
+          parts.push(colourGeo(new THREE.CylinderGeometry(r.r + 0.02, r.r + 0.02, 0.12, 6, 1, false, Math.PI / 2).translate(0, 0.06, 0), '#282b30'));
+          // Crown acoustic organ pipes along rear/north rim
+          for (let p = -2; p <= 2; p++) {
+            const py = 0.5 + Math.abs(p) * 0.25;
+            const px = p * 0.28, pz = -(r.r - 0.15);
+            parts.push(colourGeo(new THREE.CylinderGeometry(0.07, 0.07, py, 10).translate(px, py / 2, pz), '#4a5058'));
+            parts.push(colourGeo(new THREE.CylinderGeometry(0.08, 0.08, 0.04, 10).translate(px, py - 0.02, pz), '#b89438'));
+            parts.push(colourGeo(new THREE.CylinderGeometry(0.04, 0.04, 0.02, 8).translate(px, py, pz), '#181a1d'));
+          }
+          // Caged inspection bulkhead lamp facing south (toward mid / Pour Floor)
+          const lz = r.r + 0.06;
+          parts.push(colourGeo(new THREE.BoxGeometry(0.22, 0.32, 0.12).translate(0, -0.4, lz), '#243e32'));
+          parts.push(colourGeo(new THREE.CylinderGeometry(0.06, 0.06, 0.06, 10).rotateX(Math.PI / 2).translate(0, -0.4, lz + 0.07), '#fff2a8'));
+          parts.push(colourGeo(new THREE.BoxGeometry(0.24, 0.34, 0.03).translate(0, -0.4, lz + 0.10), '#d4a034'));
+        }
+      }
       // (only the lookouts cast shadows: the short columns' shadows cost a draw call per cascade for little)
       const m = new THREE.Mesh(mergeGeos(parts), basalt); m.castShadow = r.look?.role === 'lookout'; m.receiveShadow = true; g.add(m);
       g.rotation.y = r.yaw;
