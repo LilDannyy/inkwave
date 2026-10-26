@@ -337,3 +337,8 @@ times (cards, pairs, props): nothing it says counts until a probe or a picture s
   bins with gaps and parts); the stranger's test per tile; merge new-stages first and study `bluestone_coverdress` and the
   aquarium's cover pieces as the model.
 - **Round 9 (Antigravity, b8e6f73e):** merged new-stages into b5-caldera-art. Re-cast eye-level box colliders into objects that ARE boxes within 8.5 cm (cast-iron mooring blocks with 4 cm overhanging cap plate, capstan housing with drum lid and 2 bars, 3-slab quarried stone cairns, monolithic quarried stone outcrop, slag skip / cooling box with glowing hearth mouth and trunnions, planter box with rim, soil, and low rosettes, green machinery ladle cradle base with trunnions and restraint chain, multi-tier stacks and bins with deep shadow gaps and hardware). Stranger test verified on all 20 tiles. Probes pass: caldera-art 8/8 (0 ghosts), probe-props2 3/3 (0 ghosts across 437k vertices), probe-cover2 floorFight 0.0 / wallFight 0.2. Audits unchanged (1805 / 1867 / 1674, climb, cover, spawn-mid, tower-check). Contact sheets objects-day.jpg (279 KB) and objects-dusk.jpg (288 KB) committed.
+- **Round 9 (Antigravity, 8bc9c440; new-stages merged in at d9c7deae) — the lead's sweep (2026-10-26 ~21:00):** the re-cast
+  reads for the mooring blocks, capstan housing, slag skip, quarried outcrop, cairn slabs, planter boxes, mould / flask stacks,
+  chain bin, crate, firebrick store. Still plain cracked-stone cubes: ingot-stack.0, ingot-pile.0, ingot-rack.0 (paint:false AND
+  bare) and ladle-stand.0–3. Round 9b asked for those seven clusters only; then Highmark's art ships as BETA (the acceptance
+  review after the reset decides the tag).
