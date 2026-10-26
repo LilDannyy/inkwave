@@ -48,7 +48,14 @@ there stand (run.sh, SLOTS=3, the Mac mini runner, git identity, never the user'
 - karp-bots B(b2) 2.83–2.88 m regression (WP3): find the commit, restore ≥ 3.0 m.
 - Long stuck: halyard karp grabber; refill stands 4–8 s.
 - karpKitFx warm (first use compiles); the bot-escape rows in the issue log.
-- Reference layouts (Codex, WP4b): the lead's reviewer against SPEC §9 and the stage rules, then the 14 per-stage layouts
+- Balance pass input (Mac mini JOB-35 at f8b630d4, 10 bot matches per reference stage, no bot stuck over 5 s): Halyard 6
+  knockouts (52.8 / 54.6 / 92.4 / 173.7 / 181 / 205.1 s; median 133), 4 overtimes, wins 5/5; Lockgate 5 knockouts (44.4 / 81.2 /
+  177.8 / 193.9 / 260.1 s; median 178), 4 time-outs, wins 6/4. **Fast knockouts (44–55 s) came after 0–1 pops for the loser
+  and 5–6 for the winner** — the losing bots never stop the carrier; **Carp Blasts were 0 in all 20 matches** (do the bots ever
+  blast? is the trigger reachable?); **carries equal total pops in every match** (check the counters are not one event
+  counted twice). SPEC §9.1 pass: the bots' defence of the carrier line, the blast, and a knockout floor (a match should not
+  end under ~75 s against bots that never pop).
+- Reference layouts (WP4b, DONE and shipped at f8b630d4 — Halyard and Lockgate 16/16): the lead's reviewer against SPEC §9 and the stage rules, then the 14 per-stage layouts
   (karp-stages/BUILDER.md); the bots' balance pass (SPEC §9.1) on the Mac mini.
 
 ## 4b. The menu and loads (both stages, pre-existing)
