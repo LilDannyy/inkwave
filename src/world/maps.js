@@ -180,6 +180,16 @@ export const HALYARD = {
     // nearer a Gate than any walk (bazookarp-check #7d; the lead's ruling 6: accidental moves are blocked by a visible
     // Bazookarp-only barrier, never in the base layout)
     B(20.5, 24, 0, 2.4, -25.2, -24.0, { tag: 'karp-yard-hoarding', roof: true, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
+    // Bazookarp: a boarded timber spill screen (2.4 m, off-limits top) along the fuel dock's channel edge, either side of
+    // the loading-deck ramp, inside the Gate's ring. It closes two ways in beyond the layout's five: the swim-jump from the
+    // slip plank and the yard's edge across the channel onto the main street (unseen from the spawn deck), and the run off
+    // the loading deck's corner down onto the fuel dock south of the ramp (bazookarp-check #7a; the lead's ruling 7). 2.4 m
+    // beats both the kid's vault and the carrier's swim-jump (≥ 2.3 m over the floor it leaves).
+    B(4.25, 4.5, 0, 2.4, -44.4, -38.5, { tag: 'karp-fuel-screen', roof: true, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
+    B(4.25, 4.5, 0, 2.4, -52.4, -48.4, { tag: 'karp-fuel-screen', roof: true, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
+    // … and a 1.3 m timber parapet on the loading deck's channel edge (its top 2.6 m over the yard): a carrier swim-jumped
+    // from the yard's edge across the channel's corner up onto the deck, a sixth way into the ring
+    B(4.5, 10, 1.3, 2.6, -44.6, -44.3, { tag: 'karp-deck-parapet', roof: true, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
     // Bazookarp gets a second, visible ferry landing to the Long Pier so the central push has a true alternate route.
     R([-20.5, 0, -3.6], [-15.0, 1.3, -3.6], 2.6, { tag: 'ferry-plank', thin: true, thickness: 0.2, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
 

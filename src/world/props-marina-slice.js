@@ -111,7 +111,15 @@ function slicePlacements() {
   }
   // ---- the visiting yachts (hull + deckhouse colliders: the cover along the pontoons)
   // (Tower Command: SANDPIPER's berth is kept clear for the water-bus PUFFIN's gangway down onto the moved short finger)
-  for (const [type, x, z, L, dir, name] of BERTHS) out.push({ type, pos: [x, -1.6, z], rotY: dir > 0 ? 0 : P, length: L, name, col: true, fenderSide: x < -12 ? -1 : 1, notIn: name === 'SANDPIPER' ? 'tower' : undefined });
+  // ([b5-karp-ref] Bazookarp: LADY GREY and MORWENNA, moored inside the Gate's ring, get off-limits tops (col 'roof': no ink,
+  // a kid slides off): their decks were three extra ways into the ring — a walk off LADY GREY's stern, long gaps off both
+  // onto the fuel dock — beyond the layout's five (bazookarp-check #7a; the lead's ruling 7))
+  const KARP_ROOF = new Set(['LADY GREY', 'MORWENNA']);
+  for (const [type, x, z, L, dir, name] of BERTHS) {
+    const b = { type, pos: [x, -1.6, z], rotY: dir > 0 ? 0 : P, length: L, name, col: true, fenderSide: x < -12 ? -1 : 1, notIn: name === 'SANDPIPER' ? 'tower' : undefined };
+    if (!KARP_ROOF.has(name)) { out.push(b); continue; }
+    out.push({ ...b, notIn: 'bazookarp' }, { ...b, col: 'roof', notIn: undefined, onlyIn: 'bazookarp' });
+  }
   // ---- the travel-lift dock: the yard's portal hoist straddling the slip (legs on the hardstanding either side, open end
   //      to the channel) with a motor cruiser hanging in its slings; its workbench + pressure washer by the mouth
   const liftZ = (S.slip[2] + S.slip[3]) / 2, H = S.hung, wl = H.keel + 0.6;   // (the motor cruiser's keel is 0.6 below its waterline)
@@ -132,7 +140,7 @@ function slicePlacements() {
   const bo = S.booth;
   // (turned so its door faces the lane and its service hatch + VISITORS fascia face the quay and the spawn)
   out.push({ type: 'harbouroffice', pos: [(bo[0] + bo[1]) / 2, 0, (bo[2] + bo[3]) / 2], rotY: P / 2, w: bo[3] - bo[2], d: bo[1] - bo[0], h: S.boothTop, label: 'VISITORS' });
-  out.push({ type: 'cooler', pos: [3.55, 0, -40.8], rotY: -P / 2, variant: 1 });
+  out.push({ type: 'cooler', pos: [3.55, 0, -40.8], rotY: -P / 2, variant: 1, notIn: 'bazookarp' });   // ([b5-karp-ref] Bazookarp: the fuel screen takes the dock's edge, so the ice chest goes: the second route to the Gate runs where it stood)
   out.push({ type: 'crates', pos: [3.4, 0, -35.6], rotY: 0.15, variant: 1, color: '#3f6fb0' });
   out.push({ type: 'palletjack', pos: [2.6, 0, -51.8], rotY: 0.4 });
   out.push({ type: 'bollard', pos: [-3.9, 0, -48.4], variant: 1 });

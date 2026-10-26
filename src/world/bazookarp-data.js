@@ -42,18 +42,17 @@ export const BAZOOKARP_DEFS = {
       // mirrored.
       tolerate: [
         // a running jump off the houseboat's sun deck, over its porch rail and 2.5 m of water, onto the fuel dock (≤ 6 m)
-        { name: 'houseboat sun deck → fuel dock', from: { x: [-10, -8], z: [-21, -16], y: [1.1, 1.6] }, to: { x: [-5, -4], z: [-24, -20], y: [-0.1, 0.1] }, maxLen: 8, oneWay: true },
+        { name: 'houseboat sun deck → fuel dock', from: { x: [-11, -8], z: [-22, -16], y: [1.1, 1.6] }, to: { x: [-5, -4], z: [-25, -19], y: [-0.1, 0.1] }, maxLen: 8, oneWay: true },
         // a swim-jump from the boatyard's edge across the channel onto the yard walkway (7.8 m)
         { name: 'boatyard edge swim → yard walkway', from: { x: [10, 11], z: [-32, -31], y: [-0.1, 0.1] }, to: { x: [4, 5], z: [-37, -36], y: [-0.1, 0.1] }, maxLen: 9, oneWay: true },
         // a swim-jump from the Long Pier's plank head onto the car-deck apron (≤ 9.3 m)
-        { name: 'Long Pier plank head swim → car-deck apron', from: { x: [-17, -16], z: [-5, -4], y: [0.9, 1.0] }, to: { x: [-13, -10], z: [-12, -10], y: [-0.1, 1.4] }, maxLen: 10, oneWay: true },
+        { name: 'Long Pier plank head swim → car-deck apron', from: { x: [-17, -16], z: [-5, -4], y: [0.85, 1.05] }, to: { x: [-14, -10], z: [-12, -10], y: [-0.1, 1.4] }, maxLen: 10, oneWay: true },
         // off the lifejacket locker's roof / the transfer gangway's head, or over the bulwark from the side corridor, down
         // onto the car-deck apron (≤ 6.5 m)
         { name: 'over the ferry bulwark onto the car-deck apron', from: { x: [-14, 14], z: [-4, -1], y: [1.2, 2.5] }, to: { x: [-14, 14], z: [-7, -6], y: [1.2, 1.5] }, maxLen: 8, oneWay: true },
-        // a rising running jump from the visitor pontoon's gangway foot onto the fuel dock's side (≤ 5.2 m)
-        { name: 'pontoon gangway foot → fuel dock', from: { x: [-7, -5], z: [-38, -37], y: [-0.8, -0.7] }, to: { x: [-5, -4], z: [-35, -32], y: [-0.1, 0.1] }, maxLen: 6, oneWay: true },
-        // a swim-jump off the chandlery's loading deck down onto the fuel dock, outside the Gate's ring (≤ 11.1 m)
-        { name: 'loading deck swim → fuel dock', from: { x: [-7.5, -7], z: [44, 45], y: [1.2, 1.4] }, to: { x: [-5, -2], z: [34, 37], y: [-0.1, 0.1] }, maxLen: 12, oneWay: true },
+        // a running jump or swim-jump off the Long Pier, past LADY GREY's stern, onto the visitor spine (≤ 11 m): LADY GREY's
+        // deck stood in for it until its top went off limits; it lands in the spine entrance, one of the five
+        { name: 'Long Pier → visitor spine past LADY GREY', from: { x: [-22, -19], z: [-52, -46], y: [-0.1, 0.1] }, to: { x: [-15, -9], z: [-45, -43], y: [-1, -0.8] }, maxLen: 12, oneWay: true },
       ],
     },   // [b5-karp-ref] measured swim jumps and layout gap moves, mirrored by the Carp Field
     weirs: [{ at: [-1.5, 0, 27.5], yaw: 0 }],          // Long Pier / boatyard junction (§9.3)
