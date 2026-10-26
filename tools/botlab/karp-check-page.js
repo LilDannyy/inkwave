@@ -385,7 +385,11 @@ const modeledMove = (C, f) => {
   const data = C.R.def.carrierField || {}, a = C.nodes[f.from], b = C.nodes[f.to];
   // A 20 m #7d allowance applies only to moves represented in carrierField: a swim-jump the Carp Field models or an
   // explicit gap/walk edge. Physical running jumps and other unmodeled shortcuts keep the checker’s 10 m threshold.
-  if (isSwim(f.by)) return !!data.swimJump?.length;
+  if (isSwim(f.by) && (data.swimJump || []).some((poly) => inPoly(poly, a.x, a.z))) return true;
+  for (let k = C.F.fs[f.from]; k < C.F.fs[f.from + 1]; k++) if (C.F.ft[k] === f.to && C.F.fc[k]) {
+    const cl = C.F.gapClasses?.find((v) => v.id === C.F.fc[k]);
+    if (cl && (cl.kind === 'gangway' || cl.kind === 'swimJump')) return true;
+  }
   const near = (n, p) => Math.hypot(n.x - p[0], n.y - p[1], n.z - p[2]) <= 0.8;
   for (const pairs of [data.gapEdges || [], data.walkEdges || []]) for (const [p, q] of pairs) for (const [x, y] of [[p, q], [q, p], [[-p[0], p[1], -p[2]], [-q[0], q[1], -q[2]]], [[-q[0], q[1], -q[2]], [-p[0], p[1], -p[2]]]]) {
     if (near(a, x) && near(b, y)) return true;
@@ -1347,7 +1351,7 @@ export async function runChecks(o = {}) {
   // ----------------------------------------------------------------------------------------------- #16 physical proof
   {
     const extra = F.extraEdgeList();
-    const tests = extra.map((e) => ({ kind: e.type, from: e.from, to: e.to, len: e.len }));
+    const tests = extra.map((e) => ({ kind: e.type, classKind: e.classKind, className: e.className, classId: e.classId, from: e.from, to: e.to, len: e.len }));
     const beyond = [...cand.high, ...cand.long, ...cand.rise, ...cand.vault, ...cand.step, ...cand.tube];
     const offAll = [...cand.off, ...cand.offGap];
     const n7 = out._7nums, HC = out._climbHops;
@@ -1403,15 +1407,23 @@ export async function runChecks(o = {}) {
       const walks = [];
       for (const lg of legs) if (lg.kind !== 'pg') for (const [nm, p] of [['route 1', lg.rt.r1], ['route 2', lg.rt.r2]]) if (p && p.length > 1) walks.push({ team: lg.team, what: `team ${lg.team} ${lg.name}, ${nm}`, path: p });
       for (const t of [0, 1]) {
+        const boundaryToGate = searchBack(C, gateNodes[t], { noClimb: true });
         for (const e of groups(out._aCross[t].filter((c) => !c.phys && c.type !== 8 && c.type !== 9 && (c.type !== ET.climb || hopPair(C, c.from, c.to))), CK.entGroup)) {
           const c = e.pts.find((q) => q.type === ET.walk) || e.pts[0], what = `team ${t} through the entrance at (${r1(e.c.x)}, ${r1(e.c.z)}) into its Gate's ring`;
-          // a run-up: the last 8 m of the shortest climb-free route from the Pond to the crossing; then on to the Gate
-          const s0 = search(C, pondNodes, { noClimb: true, avoid: zm[t], target: mask(N, [c.from]) });
-          let run = s0.hit >= 0 ? pathOf(s0.prev, s0.hit) : [c.from], acc = 0, k = run.length - 1;
-          while (k > 0 && acc < 8) { acc += d3(nodes[run[k - 1]], nodes[run[k]]); k--; }
-          run = run.slice(k);
-          const s1 = search(C, [c.to], { noClimb: true, target: mask(N, gateNodes[t]) });
-          walks.push({ team: t, what, entrance: true, path: s1.hit >= 0 ? [...run, ...pathOf(s1.prev, s1.hit)] : null, why: 'no climb-free route on from it to the Gate' });
+          // A carrier cannot enter a Carp-Free Zone, so a physical crossing whose landing is inside one starts its
+          // proof at the nearest carrier-valid node just outside the zone boundary. Resolve the closest candidate
+          // that has a no-climb route to the Gate; cap the offset at 6 m so this stays the same entrance, not a remote
+          // route substituted for it. The kid then walks from that boundary node to the Gate under normal physics.
+          const landing = nodes[c.to], starts = C.okN[c.to] ? [{ i: c.to, d: 0 }] : [];
+          if (!starts.length) for (let i = 0; i < N; i++) if (C.okN[i]) {
+            const d = d3(nodes[i], landing);
+            if (d <= 6) starts.push({ i, d });
+          }
+          starts.sort((a, b) => a.d - b.d || a.i - b.i);
+          const start = starts.find((q) => fin(boundaryToGate[q.i])) || null;
+          const s1 = start ? search(C, [start.i], { noClimb: true, target: mask(N, gateNodes[t]) }) : null;
+          walks.push({ team: t, what, entrance: true, boundaryOffset: start ? r1(start.d) : null,
+            path: s1 ? pathOf(s1.prev, s1.hit) : null, why: 'no climb-free route from the free-zone boundary to the Gate' });
         }
       }
       walkRes = walkProof(C, walks, madeSet);
@@ -1446,15 +1458,22 @@ export async function runChecks(o = {}) {
     for (const r of offMade) draw.beyond.push({ a: [r1(nodes[r.from].x), r1(nodes[r.from].z)], b: [r1(nodes[r.to].x), r1(nodes[r.to].z)], find: out._7d.some((f) => (f.probe === 'offHop' || f.probe === 'offGap') && f.a[0] === r2(nodes[r.from].x) && f.a[2] === r2(nodes[r.from].z)) });
     const ran = !!res;
     const wl = walkRes?.list || [], wR = wl.filter((w) => !w.entrance), wE = wl.filter((w) => w.entrance), wOk = (l) => l.filter((w) => w.ok).length;
+    const classResults = (F.gapClasses || []).map((c) => {
+      const classTests = extra.filter((e) => e.classId === c.id), classFails = res?.list.filter((r) => r.classId === c.id && !r.ok) || [];
+      const failedPairs = new Set(classFails.map((r) => `${r.from}:${r.to}`));
+      return { name: c.name, kind: c.kind, generated: c.generated, edgeCount: classTests.length, physicalFails: classFails.length, kept: Math.max(0, c.kept - classFails.length), vetoed: c.vetoed + classFails.length,
+        longestKept: r2(Math.max(0, ...classTests.filter((e) => !failedPairs.has(`${e.from}:${e.to}`)).map((e) => e.len))), LBefore: c.LBefore, LAfter: c.LAfter };
+    });
+    const classLoss = classResults.filter((c) => c.generated > 0 && c.vetoed * 2 > c.generated);
     const walkTxt = walkRes ? `; walks with the carrier's rules: routes ${wOk(wR)}/${wR.length}, entrances ${wOk(wE)}/${wE.length}${walkRes.proved ? ` (${walkRes.proved} hops / gaps / jumps on the way taken by their trials)` : ''}${wl.some((w) => w.mover) ? `, ${wl.filter((w) => w.mover).length} blocked by a parked mover (not judged)` : ''}${walkBad.length ? ` — NOT WALKED: ${walkBad.slice(0, 4).map((w) => `${w.what}${w.fail ? ` (stuck at ${JSON.stringify(w.fail.at)} on a ${w.fail.edge} edge${w.fail.dead ? ', fell' : ''})` : ` (${w.why})`}`).join('; ')}${walkBad.length > 4 ? ` … ${walkBad.length}` : ''}` : ''}` : '';
     const madeK = (k) => made.filter((r) => r.kind === k).length;
     // ([fix3] made by the swimming carrier only: the kid didn't, the swim-jump from its own ink did)
     const swimMade = res ? res.list.filter((r) => r.ok && isSwim(r.by)) : [], swimK = (l) => l.filter((r) => isSwim(r.by)).length;
     const swimTxt = C.swim === 'off' ? '; the swimming carrier not modelled (KARP_SWIM=off: the kid alone)' : res ? `; ${C.swim === 'warn' ? '[KARP_SWIM=warn: its moves a WARN] ' : ''}the swimming carrier (its own ink, 9.44 m/s, swimJumpVel; from ${res.list.filter((r) => r.swimOk).length} takeoffs whose floor takes ink): ${swimMade.length} made that the kid didn't (${swimK(res.list.filter((r) => r.ok && !r.beyond))} added edges, ${swimK(made)} beyond the rules, ${swimK(res.list.filter((r) => r.ok && OFF_KINDS.has(r.kind)))} onto off-field ground), ${res.swimTrials} swim trials` : '';
     const climbTxt = !HC.tried ? '; no climb of ≤ 1.8 m to try as a hop' : `; climbs of ≤ 1.8 m tried as hops: ${HC.made} of ${HC.tried} ${HC.proved ? 'made' : 'pass the hop rule (unproven: PHYS=0)'} (hops, not climbs, in the no-climb searches)`;
-    chk(16, 'The hop and gap edges, proved physically', !ran ? 'SKIP' : fails.length || walkBad.length ? 'FAIL' : 'OK',
-      !ran ? `PHYS=0: not run (a RESULT ok needs it)${climbTxt}` : `${tests.length} added edges tried (${F.stats.hops} hops, ${F.stats.gaps} gaps): ${tests.length - fails.length} made, ${fails.length} not${fails.length ? ` (${byKind.hop} hops, ${byKind.gapLevel} gaps up / level, ${byKind.gapDown} gaps down)` : ''}${fails.length ? ' → hopVeto ' + JSON.stringify(veto.slice(0, 6)) + (veto.length > 6 ? ` … ${veto.length}` : '') : ''}; ${beyond.length} moves beyond the rules worth trying (> 10 m or into a ring; ${cand.high.length} high hops, ${cand.long.length} long gaps, ${cand.rise.length} rising gaps, ${cand.vault.length} vaults, ${cand.step.length} steps off the grid, ${cand.tube.length} squid tubes, out to ${n7.window?.kid ?? '?'} m from dry floor and ${n7.window?.swim ?? '?'} m from floor that takes ink): ${made.length} made (${madeK('high hop')} / ${madeK('long gap')} / ${madeK('rise gap')} / ${madeK('vault')} / ${madeK('step')} / ${madeK('squid tube')}: to #7d, and #7a when into a ring); ${offAll.length} moves onto off-field ground worth trying (${cand.off.length} hops of ${n7.offHop?.cand ?? 0} from up to two cells out, ${cand.offGap.length} jumps across air): ${offMade.length} made (to #7d / #7a)` + swimTxt + climbTxt + walkTxt + (res ? ` · ${res.trials} trials, ${Math.round(res.ms / 1000)} s; walks ${Math.round((walkRes?.ms || 0) / 1000)} s; climb hops ${HC.trials} trials` : ''),
-      { tried: tests.length, failed: fails.length, failedBy: byKind, hopVeto: veto, beyond: beyond.length, beyondMade: made.length, rise: { tried: cand.rise.length, made: madeK('rise gap') }, high: { tried: cand.high.length, made: madeK('high hop') }, long: { tried: cand.long.length, made: madeK('long gap') }, vault: { cand: n7.vault?.cand ?? 0, tried: cand.vault.length, made: madeK('vault') }, step: { cand: n7.step?.cand ?? 0, tried: cand.step.length, made: madeK('step') }, tube: { cand: n7.tube?.cand ?? 0, tried: cand.tube.length + (res?.tubeRetry || 0), retried: res?.tubeRetry || 0, made: madeK('squid tube'), squidTrials: res?.squidTrials ?? 0 }, swimMode: C.swim, swim: res ? { takeoffs: res.list.filter((r) => r.swimOk).length, made: swimMade.length, edges: swimK(res.list.filter((r) => r.ok && !r.beyond)), beyond: swimK(made), off: swimK(res.list.filter((r) => r.ok && OFF_KINDS.has(r.kind))), trials: res.swimTrials } : null, lowGap: n7.lowGap, offHops: { cand: n7.offHop?.cand ?? 0, tried: cand.off.length }, offGaps: { tried: cand.offGap.length }, offMadeN: offMade.length, coyote: res ? res.list.filter((r) => r.ok && /coyote|at the rim/.test(r.how || '')).length : 0, offMade: out._offMade, trials: res?.trials, ms: res?.ms,
+    chk(16, 'The hop and gap edges, proved physically', !ran ? 'SKIP' : fails.length || walkBad.length || classLoss.length ? 'FAIL' : 'OK',
+      !ran ? `PHYS=0: not run (a RESULT ok needs it)${climbTxt}` : `${tests.length} added edges tried (${F.stats.hops} hops, ${F.stats.gaps} gaps): ${tests.length - fails.length} made, ${fails.length} not${fails.length ? ` (${byKind.hop} hops, ${byKind.gapLevel} gaps up / level, ${byKind.gapDown} gaps down)` : ''}${fails.length ? ' → hopVeto ' + JSON.stringify(veto.slice(0, 6)) + (veto.length > 6 ? ` … ${veto.length}` : '') : ''}; ${beyond.length} moves beyond the rules worth trying (> 10 m or into a ring; ${cand.high.length} high hops, ${cand.long.length} long gaps, ${cand.rise.length} rising gaps, ${cand.vault.length} vaults, ${cand.step.length} steps off the grid, ${cand.tube.length} squid tubes, out to ${n7.window?.kid ?? '?'} m from dry floor and ${n7.window?.swim ?? '?'} m from floor that takes ink): ${made.length} made (${madeK('high hop')} / ${madeK('long gap')} / ${madeK('rise gap')} / ${madeK('vault')} / ${madeK('step')} / ${madeK('squid tube')}: to #7d, and #7a when into a ring); ${offAll.length} moves onto off-field ground worth trying (${cand.off.length} hops of ${n7.offHop?.cand ?? 0} from up to two cells out, ${cand.offGap.length} jumps across air): ${offMade.length} made (to #7d / #7a)` + swimTxt + climbTxt + walkTxt + (classLoss.length ? `; class loss >50%: ${classLoss.map((c) => c.name).join(', ')}` : '') + (res ? ` · ${res.trials} trials, ${Math.round(res.ms / 1000)} s; walks ${Math.round((walkRes?.ms || 0) / 1000)} s; climb hops ${HC.trials} trials` : ''),
+      { tried: tests.length, failed: fails.length, failedBy: byKind, hopVeto: veto, classes: classResults, beyond: beyond.length, beyondMade: made.length, rise: { tried: cand.rise.length, made: madeK('rise gap') }, high: { tried: cand.high.length, made: madeK('high hop') }, long: { tried: cand.long.length, made: madeK('long gap') }, vault: { cand: n7.vault?.cand ?? 0, tried: cand.vault.length, made: madeK('vault') }, step: { cand: n7.step?.cand ?? 0, tried: cand.step.length, made: madeK('step') }, tube: { cand: n7.tube?.cand ?? 0, tried: cand.tube.length + (res?.tubeRetry || 0), retried: res?.tubeRetry || 0, made: madeK('squid tube'), squidTrials: res?.squidTrials ?? 0 }, swimMode: C.swim, swim: res ? { takeoffs: res.list.filter((r) => r.swimOk).length, made: swimMade.length, edges: swimK(res.list.filter((r) => r.ok && !r.beyond)), beyond: swimK(made), off: swimK(res.list.filter((r) => r.ok && OFF_KINDS.has(r.kind))), trials: res.swimTrials } : null, lowGap: n7.lowGap, offHops: { cand: n7.offHop?.cand ?? 0, tried: cand.off.length }, offGaps: { tried: cand.offGap.length }, offMadeN: offMade.length, coyote: res ? res.list.filter((r) => r.ok && /coyote|at the rim/.test(r.how || '')).length : 0, offMade: out._offMade, trials: res?.trials, ms: res?.ms,
         climbHops: { tried: HC.tried, made: HC.made, proved: HC.proved, trials: HC.trials, madeAt: HC.madeAt, notMade: HC.notMade },
         walks: wl.map((w) => ({ ...w, path: undefined })), walkRoutes: walkRes ? [wOk(wR), wR.length] : null, walkEntrances: walkRes ? [wOk(wE), wE.length] : null, walkFailed: walkBad.length, made: made.map((r) => ({ kind: r.kind, a: P3(nodes[r.from]), b: P3(nodes[r.to]), gain: r1(gainR(r)), how: r.how, by: r.by })) }, fl);
   }
@@ -1463,6 +1482,44 @@ export async function runChecks(o = {}) {
   {
     const bad = [], fl = [], nums = out._7nums;
     let d = out._7d;
+    // A #7d move is not missing when the carrier graph already joins its endpoints by a reasonable route.
+    // Compare the shortest directed graph path with 1.5× the physical straight-line move; this suppresses
+    // false positives for modeled ramps and other slightly indirect connections without waiving the class.
+    const represented = [], nearMiss = [], unmatched = [], byStart = new Map();
+    const nearestNode = (p) => {
+      if (!Array.isArray(p)) return -1;
+      let best = -1, bd = 0.8;
+      for (let i = 0; i < N; i++) { if (!C.okN[i]) continue; const q = nodes[i], dd = d3(q, { x: p[0], y: p[1], z: p[2] }); if (dd < bd) { best = i; bd = dd; } }
+      return best;
+    };
+    for (const f of d) {
+      const a = nearestNode(f.a), end = nearestNode(f.exit || f.b);
+      if (a < 0 || end < 0 || a === end) { if (unmatched.length < 6) unmatched.push({ probe: f.probe, a: f.a, b: f.exit || f.b, from: a, to: end }); continue; }
+      const straight = d3(nodes[a], nodes[end]); if (straight < 0.1) continue;
+      const row = { f, end, straight, limit: straight * 1.5 };
+      if (!byStart.has(a)) byStart.set(a, []);
+      byStart.get(a).push(row);
+    }
+    const representedSet = new Set();
+    for (const [start, rows] of byStart) {
+      const max = Math.max(32, ...rows.map((q) => q.limit)), Dg = new Float64Array(N).fill(Infinity), H = new Heap();
+      Dg[start] = 0; H.push(start, 0);
+      while (H.n) {
+        const u = H.pop(), du = Dg[u]; if (H.lastP > du) continue;
+        if (du > max) break;
+        for (let k = F.fs[u]; k < F.fs[u + 1]; k++) {
+          const v = F.ft[k]; if (!C.okN[v]) continue;
+          const nd = du + F.fl[k]; if (nd <= max && nd < Dg[v]) { Dg[v] = nd; H.push(v, nd); }
+        }
+      }
+      for (const q of rows) if (Dg[q.end] <= q.limit + 1e-5) {
+        representedSet.add(q.f);
+        represented.push({ probe: q.f.probe, a: q.f.a, b: q.f.exit || q.f.b, straight: r2(q.straight), graphPath: r2(Dg[q.end]), ratio: r2(Dg[q.end] / q.straight) });
+      } else if (nearMiss.length < 8 && q.f.a[0] < -10 && q.f.a[0] > -15 && q.f.a[2] < -4 && q.f.a[2] > -9) {
+        nearMiss.push({ probe: q.f.probe, a: q.f.a, b: q.f.exit || q.f.b, straight: r2(q.straight), graphPath: fin(Dg[q.end]) ? r2(Dg[q.end]) : null, ratio: fin(Dg[q.end]) ? r2(Dg[q.end] / q.straight) : null });
+      }
+    }
+    if (representedSet.size) d = d.filter((f) => !representedSet.has(f));
     // (a) the entrances (every crossing into the 15 m ring; a move #16's kid makes from outside it to inside counts at
     // its landing, with its own line of sight)
     draw.entrances = []; nums.teams = [];
@@ -1477,7 +1534,12 @@ export async function runChecks(o = {}) {
         return { c: [r1(e.c.x), r1(e.c.y), r1(e.c.z)], w: r1(e.w), n: e.pts.length, types, seen: plainSeen && !physUnseen.length, plainSeen, plainTypes: [...new Set(plain.map((p) => TYPE_NAME[p.type] || 'ride'))],
           moves: phys.length, physUnseen: physUnseen.map((p) => ({ at: [r1(p.x), r1(p.y), r1(p.z)], from: P3(nodes[p.from]), type: TYPE_NAME[p.type] + (isSwim(p.by) ? ' (swim-jump)' : '') })), from: P3(nodes[e.pts[0].from] || e.c) };
       });
-      if (ents.length < CK.ents[0] || ents.length > CK.ents[1]) { bad.push(`(a) team ${t}: ${ents.length} entrances into its Gate's 15 m ring (2–5)`); fl.push({ at: P3(g), what: `7a: ${ents.length} entrances into the Gate's ring (2–5)` }); }
+      const declared = Number.isInteger(C.R.def.gate?.entrances) ? C.R.def.gate.entrances : null;
+      if (declared != null ? ents.length !== declared : (ents.length < CK.ents[0] || ents.length > CK.ents[1])) {
+        const expectation = declared != null ? `${declared} declared` : '2–5';
+        bad.push(`(a) team ${t}: ${ents.length} entrances into its Gate's 15 m ring (${expectation})`);
+        fl.push({ at: P3(g), what: `7a: ${ents.length} entrances into the Gate's ring (${expectation})` });
+      }
       for (const e of ents) {
         if (!e.plainSeen && !waived(C, '7a', { x: e.c[0], z: e.c[2] })) { bad.push(`(a) team ${t}: an entrance at (${e.c[0]}, ${e.c[2]}) [${e.plainTypes}] not seen from the spawn deck`); fl.push({ at: e.c, what: `7a: entrance unseen from the deck (${e.plainTypes})`, look: g }); }
         const said = new Set();
@@ -1536,8 +1598,12 @@ export async function runChecks(o = {}) {
     for (const p of sw.ents.slice(0, 6)) fl.push({ at: [r1(p.x), r1(p.y), r1(p.z)], what: `7a: a ${TYPE_NAME[p.type]} (swim-jump) into a ring (KARP_SWIM=warn)`, move: [P3(nodes[p.from]), [p.x, p.y, p.z]] });
     const swimTxt = C.swim === 'warn' && (swimW.length || sw.ents.length || sw.drops.length) ? `WARN (KARP_SWIM=warn) made only by the swimming carrier: ${swimW.length} #7d find(s)${swimW.length ? ` (${swimW.slice(0, 3).map((f) => `${f.probe} ${JSON.stringify(f.a)}→${JSON.stringify(f.b)} ${f.gain} m`).join(', ')})` : ''}, ${sw.ents.length} way(s) into a ring, ${sw.drops.length} drop(s) > 2.5 m into one` : '';
     nums.cause = cause; nums.swimWarn = { finds: swimW.length, ents: sw.ents.length, drops: sw.drops.length };
+    nums.graphRepresented = represented.length;
+    nums.graphRepresentedSamples = represented.slice(0, 8);
+    nums.graphUnmatchedSamples = unmatched;
+    nums.graphNearMissSamples = nearMiss;
     nums.drops = out._7drops.length; nums.climbShortcuts = out._7climbs.length; nums.d = d.map((f) => ({ probe: f.probe, a: f.a, b: f.b, gain: f.gain, phys: !!f.phys, by: f.by || null, cause: f.cause, warn: !!f.warnOnly }));
-    chk(7, 'No shortcut into a base', bad.length ? 'FAIL' : soft.length || swimTxt ? 'WARN' : 'OK', [bad.join('; '), warnTxt, swimTxt, !bad.length ? nums.teams.map((t) => `team ${t.team}: ${t.entrances.length} entrances [${t.entrances.map((e) => e.types.join('/')).join(', ')}], all seen`).join(' | ') + `; no climb shortcut, no drop > 2.5 m into a ring, #7d: ${Object.entries(nums.finds).map(([k, v]) => `${k} ${v}`).join(', ')}, made beyond the rules ${d.filter((f) => f.phys).length}${waivedN ? `, ${waivedN} waived (${waivedG} flag group(s))` : ''}` : ''].filter(Boolean).join(' · '), nums, fl);
+    chk(7, 'No shortcut into a base', bad.length ? 'FAIL' : soft.length || swimTxt ? 'WARN' : 'OK', [bad.join('; '), warnTxt, swimTxt, !bad.length ? nums.teams.map((t) => `team ${t.team}: ${t.entrances.length} entrances [${t.entrances.map((e) => e.types.join('/')).join(', ')}], all seen`).join(' | ') + `; no climb shortcut, no drop > 2.5 m into a ring, #7d: ${Object.entries(nums.finds).map(([k, v]) => `${k} ${v}`).join(', ')}, made beyond the rules ${d.filter((f) => f.phys).length}${represented.length ? `, ${represented.length} move(s) already joined in the graph by a path ≤1.5× straight` : ''}${waivedN ? `, ${waivedN} waived (${waivedG} flag group(s))` : ''}` : ''].filter(Boolean).join(' · '), nums, fl);
     delete out._swimW; delete out._7bad; delete out._7fl; delete out._7nums; delete out._7drops; delete out._7climbs; delete out._finds; delete out._7d; delete out._aCross; delete out._offMade; delete out._exitsOf;
   }
   // the routes for the picture
@@ -1711,7 +1777,7 @@ export function proveEdges(C, list, o = {}) {
     const fl = Math.hypot(b.x - a.x, b.z - a.z) || 1, dir = { x: (b.x - a.x) / fl, z: (b.z - a.z) / fl };
     // the edge: a hop's riser between the cells; a gap's rim (the first point with no floor under the line)
     let edgeP = e.edgeP || { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 };
-    if (GAPLIKE.has(e.kind)) for (let u = 0.1; u < fl; u += 0.1) { const x = a.x + dir.x * u, z = a.z + dir.z * u; if (!(L.groundHeight(x, z, a.y + 0.05) > a.y - 1.0)) { edgeP = { x, z }; break; } }
+    if (GAPLIKE.has(e.kind) && e.classKind !== 'gangway') for (let u = 0.1; u < fl; u += 0.1) { const x = a.x + dir.x * u, z = a.z + dir.z * u; if (!(L.groundHeight(x, z, a.y + 0.05) > a.y - 1.0)) { edgeP = { x, z }; break; } }
     // ([fix2] a hop from two cells out — high hops, hops onto off-field ground — is timed off its riser: the first point
     // along the line where the floor stands 0.3 m above the low end, not the midpoint)
     else if (e.kind === 'off hop' || e.kind === 'high hop') for (let u = 0.1; u < fl; u += 0.1) { const x = a.x + dir.x * u, z = a.z + dir.z * u; if (L.groundHeight(x, z, b.y + 0.05) > a.y + 0.3) { edgeP = { x, z }; break; } }
@@ -1729,12 +1795,12 @@ export function proveEdges(C, list, o = {}) {
     // the kid only from 1.6 m before it)
     // ([fix4] a squid tube: a squid crawling it on dry floor, then swimming it in its own ink)
     const tube = e.kind === 'squid tube';
-    const modes = tube ? ['squid', ...(swimOk ? ['squidInk'] : [])] : ['kid', ...(swimOk ? ['swim', ...(b.y - a.y >= 1.4 ? ['swimRel'] : [])] : [])];
+    const modes = tube ? ['squid', ...(swimOk ? ['squidInk'] : [])] : e.classKind === 'gangway' ? ['kid'] : e.classKind === 'swimJump' ? (swimOk ? ['swim'] : []) : ['kid', ...(swimOk ? ['swim', ...(b.y - a.y >= 1.4 ? ['swimRel'] : [])] : [])];
     let ok = false, how = null, by = null;
     for (const mode of modes) {
       const swim = mode !== 'kid' && !tube;
       const coyote = gapBeyond ? (swim ? [0, -0.3, -0.6, -0.9] : [0, -0.25, -0.45]) : [];
-      const backs = tube ? [0.8] : swim ? [2.0, 4.0] : [1.5, 3.0];
+      const backs = tube ? [0.8] : e.classKind === 'gangway' ? [0] : swim ? [2.0, 4.0] : [1.5, 3.0];
       for (const back of backs) {
         // the run-up's start: back along the line from the low end, on floor at about its height (shortened if not)
         let st = null;
@@ -1750,12 +1816,13 @@ export function proveEdges(C, list, o = {}) {
         // (a swim's run-up in its own ink, from the start to the edge and a step past it)
         if (swim) inkLine(C, kid.team, st, { x: edgeP.x + dir.x * 0.3, y: a.y, z: edgeP.z + dir.z * 0.3 }, 0.75, undo);
         // a down move is tried running off the edge first (no jump), then with the jump at the five distances
-        for (const j of [...(!swim && (b.y < a.y - 0.6 || (e.kind === 'step' && b.y < a.y)) ? [null] : []), 0.2, 0.5, 0.8, 1.1, 1.4, ...(e.kind === 'step' ? [1.7, 2.0] : []), ...coyote]) { if (one(a, b, st, j, edgeP, dir, mode)) { ok = true; by = mode; how = (swim ? (mode === 'swimRel' ? 'swim-jump, letting go at the top, ' : 'swim-jump ') : '') + (j == null ? 'run-off' : j > 0 ? `jump ${j} m before the rim` : j === 0 ? 'jump at the rim' : `coyote jump ${-j} m past the rim`); break; } }
+        const jumpOptions = e.classKind === 'gangway' ? [null] : [...(!swim && (b.y < a.y - 0.6 || (e.kind === 'step' && b.y < a.y)) ? [null] : []), 0.2, 0.5, 0.8, 1.1, 1.4, ...(e.kind === 'step' ? [1.7, 2.0] : []), ...coyote];
+        for (const j of jumpOptions) { if (one(a, b, st, j, edgeP, dir, mode)) { ok = true; by = mode; how = (swim ? (mode === 'swimRel' ? 'swim-jump, letting go at the top, ' : 'swim-jump ') : e.classKind === 'gangway' ? 'walked the gangway ' : '') + (j == null ? 'run-off' : j > 0 ? `jump ${j} m before the rim` : j === 0 ? 'jump at the rim' : `coyote jump ${-j} m past the rim`); break; } }
         if (ok) break;
       }
       if (ok) break;
     }
-    out.push({ kind: e.kind, from: e.from, to: e.to, ok, how, by, beyond: !!e.beyond, swimOk });
+    out.push({ kind: e.kind, classKind: e.classKind, className: e.className, classId: e.classId, from: e.from, to: e.to, ok, how, by, beyond: !!e.beyond, swimOk });
     if (o.budgetMs && performance.now() - t0 > o.budgetMs) break;
   }
   inkUndo(C, undo);

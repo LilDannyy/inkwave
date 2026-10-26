@@ -71,6 +71,37 @@ finds of one probe and cause within 3 m of each other: a canal bank's whole run 
 (`'longGap'`, `'step'`, …: only that probe's flags) and a radius `r` (m, more than 2). The RESULT line counts the waived
 finds. List every waiver in the note.
 
+**Carrier graph coverage and route classes (lead rule, WP4b).** Every floor a carrier can physically stand on with the
+Karp must be a graph node, unless it is an off-limits top that never holds a kid (DECISIONS #32). Missing standable
+nodes always fail. A #7d physical move is already represented when the carrier graph's shortest path between its
+endpoints is no longer than 1.5× the move's straight-line length; compare physical reach to graph reach, not to whether
+the graph has a direct edge. The checker records these as graph-represented candidates, not waivers. Judge other
+candidate edges by route class (origin area → destination area), not one edge at a time: model
+intended carrier routes in `carrierField` (modeled moves may be up to 20 m); physically block accidental moves in the
+Bazookarp variant only; or tolerate an unmodeled shortcut only when it is ≤20 m and it shortens neither the modeled
+spawn → Pond nor Pond → Gate shortest route by more than 10% of modeled L. Anything longer than 20 m must be modeled
+or blocked. Record each class, outcome, edge-length range, and measured L before and after in the stage note. The
+#16 `hopVeto` list records graph edges physics cannot make; after applying it, rerun #7 because the graph can expose
+further physically reachable nodes. Declare the Gate-ring entrance count as `gate.entrances` and make the physical
+entrances match it; Halyard's accepted declaration is five. Any undeclared physical entrance must be added and modeled
+(a legitimate swim-jump is allowed by SPEC S21) or physically blocked. If a class has no defensible outcome, send it
+to the lead before guessing.
+
+**#16 physical entrance walks and Carp-Free Zones.** A physical crossing may land inside the defender's Carp-Free
+Zone, where a carrier cannot stand and the field intentionally has no graph node. For that entrance's #16 walk, start
+at the nearest carrier-valid graph node just outside the free-zone boundary (within 6 m of the landing) that has a
+no-climb path to the Gate, then physically walk that route to the Gate. This proves the route from the point where a
+carrier can actually enter play without pretending it can carry through the zone. Crossings outside a free zone still
+start at their actual landing node.
+
+`carrierField.gapClasses` is the reusable bounded form for route classes (do not paste hundreds of individual edges):
+`{ name, kind: 'hop' | 'swimJump' | 'gangway', from: { x:[a,b], z:[a,b], y:[a,b] }, to: { x:[a,b], z:[a,b], y:[a,b] }, maxLen: 20, oneWay?, perNode? }`.
+Each rule generates candidates within its endpoint boxes, keeps the `perNode` shortest per source (default 2), and is
+mirrored unless `oneWay` is set. `maxLen` must be ≤20 m. The #16 physical walk is the proof: veto impossible
+directions, but if more than half a class is vetoed, tighten its bounds. The checker records candidates/kept/vetoed,
+longest kept edge, and the before/after L for every class. `gangway` and documented `swimJump` moves use the 20 m #7d
+bar; ordinary `hop` running jumps retain the SPEC bar.
+
 **Stage states** (bluestone's eras, caldera's lava). Your stage module offers its states through
 `R.karpStates() → [{ key, nodeOk(id), query }]` (`G.match.stage.karpStates()`, docs/STAGE-MODS.md); `query` is the page
 query that shows your world in that state (your audit switch, `era=2` / `lava=high`). The checker then builds each
