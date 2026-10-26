@@ -329,3 +329,10 @@ times (cards, pairs, props): nothing it says counts until a probe or a picture s
   flag only, with check-maps, climb-audit, cover-map, spawn-mid, tower-check and lava-audit proven unchanged against 8082e99a.
   NOT granted for the firebrick store (3.5 m: an uninkable wall cannot be climbed → routes change); its brick is relief on a
   paintable face. Each paint:false block named with tag and box in LEAD-REPORT-ART.md for the acceptance review.
+- **Round 8 (Antigravity, 85326204) — the lead's gate (2026-10-26 ~17:50):** probes pass (floorFight 0, wallFight 0, props
+  clean, audits unchanged, paint:false applied on the nine granted blocks), but my sweep AND the builder's own objects-day.jpg
+  show the objects as cubes still (bollards with a ring, a green capstan cube, cracked cairn / outcrop cubes, a banded hornito
+  box, banded stacks); only the stone crate and the firebrick store read. Rule for round 9: a box collider becomes a thing
+  that IS a box (mooring blocks, capstan housing, quarried stone blocks, slag skip, planter box, ladle cradle base, stacks and
+  bins with gaps and parts); the stranger's test per tile; merge new-stages first and study `bluestone_coverdress` and the
+  aquarium's cover pieces as the model.
