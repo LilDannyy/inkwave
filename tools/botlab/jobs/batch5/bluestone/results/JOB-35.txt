@@ -1,0 +1,15 @@
+JOB-35 (Mac mini M4) on new-stages f8b630d4 (pinned): the first Bazookarp balance data (SPEC §9.1). 20 matches, bots vs bots, normal, full 5:00, alternating stages. Wall time 7 min.
+Per-match lines are in JOB-35.raw.txt. Full logs: out/JOB-35-karp-1.log and out/JOB-35-karp-2.log.
+
+size-budget on halyard.bazookarp: 3/3 PASS. Lightmap uses 878 of 2048 rows at 8 ppm, paint 11.9 ppm, A* 4099 nodes (cap 12297). No console errors.
+
+             KO  KO<1:30          median KO  to the clock (how it ended)     wins A/B  carries  pops A+B
+  halyard    6   2 (52.8, 54.6)   133 s      4, all overtime: stopped 3, retake 1   5/5   20.6     20.6
+  lockgate   5   2 (44.4, 81.2)   178 s      5: time 4, overtime stopped 1          6/4   19.7     19.7
+  KO times. halyard: 52.8 / 54.6 / 92.4 / 173.7 / 181 / 205.1. lockgate: 44.4 / 81.2 / 177.8 / 193.9 / 260.1.
+
+- Stuck: no bot was stuck over 5 s in any of the 20 matches. No carrier was stuck over 3 s. Bots spent 0.1-1.0 % of their time stuck.
+- Carp Blasts: 0 in every match on both stages.
+- Carries equal total pops in every match.
+- The fast knockouts came after only a few pops: 0-1 for the losing side and 5-6 for the winner.
+- No console warnings or errors, no frame errors, and no missing-lightmap warnings (the fresh bakes loaded).
