@@ -317,3 +317,10 @@ the backdrop and Organ columns still basic shapes. Probe-cover2 (reachable / unr
 probe-cover2 reachable wall ≈ 0 except blocks listed for `paint:false`, the eight decal pictures each showing the sign, the
 four sweep sets looked at. Next independent pass after 2026-10-30. Antigravity's reports have claimed unplaced work three
 times (cards, pairs, props): nothing it says counts until a probe or a picture shows it.
+- **Round 7 (Antigravity, 5a011094) — the lead's gate (2026-10-26 ~10:00):** probe-props2 placements 83, totals 0 ✓; probe-cover2
+  floorCov 7.8 / live wallCov 174.7 / wallFight 0.4 (one strip left); eight decals read ✓; perimeter walls dressed ✓. **Blocker
+  1 still open:** my own sweep of the object clusters (reviewer's cameras, day LOW) shows cairn, mooring bollard, capstan,
+  hornito, stone crate and ladle stand as texture-wrapped cubes — the props are placed but draw as wraps. Round 8 rule: relief
+  and parts within the 8.5 cm (courses, caps, chamfers, straps, bars, rims), never a flat wrap; proof = a per-object sheet of
+  the sweep's own shots, looked at. Objects that ARE their dressing (crates, flask / mould / ingot stacks, firebrick store,
+  pattern crates, chain bin) → listed for a `paint:false` ruling. No reviewer before the reset.
