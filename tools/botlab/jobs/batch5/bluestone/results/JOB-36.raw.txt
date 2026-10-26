@@ -1,0 +1,113 @@
+JOB-36 raw results — automatic, by the Mac mini's b5-runner, 2026-10-26 20:30:58
+branch botlab-b5-bluestone, ran at 7caa0bc9, exit code 0, wall time 63min
+(a written-up JOB-36.txt may follow when a helper session is awake)
+
+## job.log (RESULT / FAIL / summary lines)
+### JOB-36 Highmark Foundry on new-stages 8e78f191 (pinned) load { 2.81 2.15 1.99 }
+== check-maps caldera: caldera      1805 pieces  ok 
+== check-maps caldera.bazookarp: caldera.bazookarp 1867 pieces  ok 
+== check-maps caldera.boss: caldera.boss 1674 pieces  ok 
+== lavajs-1: RESULT 60/60  0 FAIL console errors: none
+== lavajs-2: RESULT 60/60  0 FAIL console errors: none
+== lavajs-3: RESULT 58/60  2 FAIL console errors: none
+FAIL F8c escapes off a rising stone up the step at its end (race1 / 5 / 6 / 7, the stone 0.45–0.75 m under it): each node within 2.6 m of the floor, run in at ±40° at 5.5 m/s, its jump cool-down left by a refused press — up within 4 s, no death  {"n":76,"weapon":"blade","died":1,"notUp":1,"bad":[["race1",40.4,4410,-0.7,null,["lava",41.8]]],"slowest":1.7,"trails":[{"sid":"race1","t0":40.4,"no
+FAIL F10 the lookout claim: a claim for each team with a long- or mid-range kit; a claimant reaches its own lookout at HIGH and holds it (≥ 2 s); every claim let go at the fall warning  {"claims":[["P1",0,"charger",34.217],["Marlo",1,"charger",34.217]],"claimed":[0,1],"upAt":[null,null],"seconds":[0,0],"long":[0,0],"held":0,"nClaims":2,"footOuts":0,"stalls":0,"busyOuts":1,"released":true,"t":61.
+== audit-rest: RESULT 9/9  0 FAIL console errors: none
+== r44-low: RESULT 23/23  0 FAIL console errors: none
+== r44-high: RESULT 25/25  0 FAIL console errors: none
+== r47b1: RESULT 2/2  0 FAIL console errors: none
+## rule 47 PASS
+##  b low {"weapon":"spinner","roofBlocks":112,"reachBy":{"hop":102,"climb":0,"mitts":10},"unreachable":0,"trials":12116,"touched":11610,"died":0,"flung":0,"perched":0,"held":2,"rescued":2,"rescueFar":0,"rescueMaxH":1.73,"rescueMaxM":8.09}
+##    farthest {"part":"b","level":"low","at":[-29.05,7.9,-5.32],"mode":"drift","h":315,"unreach":false,"block":"caldera-wall#952","to":[-27.5,0,-4.5]}
+##  b high {"weapon":"spinner","roofBlocks":150,"reachBy":{"hop":122,"climb":0,"mitts":16},"unreachable":12,"trials":16246,"touched":15390,"died":0,"flung":0,"perched":0,"held":2018,"rescued":2018,"rescueFar":0,"rescueMaxH":5.8,"rescueMaxM":8.56,"unreachRescue":{"n":624,"over6":290,"maxH":8.2,"maxAt":["caldera-wall#1775",[29.28,7.9,9.7],[24.5,1.2,16.5]]}}
+##    farthest {"part":"b","level":"high","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  total {"touched":27000,"died":0,"flung":0,"perched":0,"held":2020,"rescued":2020,"rescueFar":0,"rescueMaxM":8.56,"rescueMaxH":5.8,"rescueWorst":{"m":5.8,"at":{"part":"b","level":"high","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}},"relaunched":0,"unreachRescue":{"n":624,"over6":290,"maxH":8.2},"engine":{"rescues":2020,"rescueF
+== r47b2: RESULT 2/2  0 FAIL console errors: none
+## rule 47 PASS
+##  b r30 {"weapon":"mitts","roofBlocks":112,"reachBy":{"hop":102,"climb":0,"mitts":10},"unreachable":0,"trials":12116,"touched":11086,"died":0,"flung":0,"perched":0,"held":940,"rescued":940,"rescueFar":0,"rescueMaxH":5.8,"rescueMaxM":7.6}
+##    farthest {"part":"b","level":"r30","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  b r60 {"weapon":"mitts","roofBlocks":150,"reachBy":{"hop":122,"climb":0,"mitts":16},"unreachable":12,"trials":16246,"touched":14683,"died":0,"flung":0,"perched":0,"held":2058,"rescued":2058,"rescueFar":0,"rescueMaxH":5.99,"rescueMaxM":8.56,"unreachRescue":{"n":624,"over6":290,"maxH":8.2,"maxAt":["caldera-wall#1775",[29.28,7.9,9.7],[24.5,1.2,16.5]]}}
+##    farthest {"part":"b","level":"r60","at":[-19.53,1.89,-7.09],"mode":"drift","h":180,"unreach":false,"block":"lava:race3:1#1810","to":[-24.5,1.5,-2.5]}
+##  total {"touched":25769,"died":0,"flung":0,"perched":0,"held":2998,"rescued":2998,"rescueFar":0,"rescueMaxM":8.56,"rescueMaxH":5.99,"rescueWorst":{"m":5.99,"at":{"part":"b","level":"r60","at":[-19.53,1.89,-7.09],"mode":"drift","h":180,"unreach":false,"block":"lava:race3:1#1810","to":[-24.5,1.5,-2.5]}},"relaunched":0,"unreachRescue":{"n":624,"over6":290,"maxH":8.2},"engine":{"rescues":2998,"resc
+== r47b3: RESULT 2/2 WATCHDOG  0 FAIL console errors: none
+## rule 47 PASS
+##  b r90 {"weapon":"bow","roofBlocks":150,"reachBy":{"hop":122,"climb":0,"mitts":16},"unreachable":12,"trials":16246,"touched":14730,"died":0,"flung":0,"perched":0,"held":2018,"rescued":2018,"rescueFar":0,"rescueMaxH":5.8,"rescueMaxM":8.56,"unreachRescue":{"n":624,"over6":290,"maxH":8.2,"maxAt":["caldera-wall#1775",[29.28,7.9,9.7],[24.5,1.2,16.5]]}}
+##    farthest {"part":"b","level":"r90","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  b f50 {"weapon":"bow","roofBlocks":150,"reachBy":{"hop":122,"climb":0,"mitts":16},"unreachable":12,"trials":16246,"touched":15390,"died":0,"flung":0,"perched":0,"held":2174,"rescued":1930,"rescueFar":0,"rescueMaxH":5.8,"rescueMaxM":8.56,"unreachRescue":{"n":380,"over6":0,"maxH":5.98,"maxAt":["caldera-wall#946",[-28.32,7.9,-12.85],[-25.5,1.2,-17.5]]}}
+##    farthest {"part":"b","level":"f50","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  total {"touched":30120,"died":0,"flung":0,"perched":0,"held":4192,"rescued":3948,"rescueFar":0,"rescueMaxM":8.56,"rescueMaxH":5.8,"rescueWorst":{"m":5.8,"at":{"part":"b","level":"r90","at":[27.76,1.3,12.27],"mode":"drift","h":315,"unreach":false,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}},"relaunched":244,"unreachRescue":{"n":1004,"over6":290,"maxH":8.2},"engine":{"rescues":3948,"rescu
+== r47e: RESULT 2/2  0 FAIL console errors: none
+## rule 47 PASS
+##  e low {"tops":44,"feet":295,"byMode":{"idle":{"tries":295,"reached":258,"died":0},"push":{"tries":295,"reached":258,"died":6},"back":{"tries":295,"reached":258,"died":0},"left":{"tries":295,"reached":258,"died":2},"right":{"tries":295,"reached":258,"died":5}},"trials":516,"touched":516,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":774,"died":13,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":1,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"low","on":"gauge-machine-house","id":711,"mode":"right","face":[0,-1],"foot":[-11.7,2.4,2],"block":"gauge-machine-house#711","died":true,"flung":fals
+##  e high {"tops":46,"feet":267,"byMode":{"idle":{"tries":267,"reached":226,"died":0},"push":{"tries":267,"reached":226,"died":6},"back":{"tries":267,"reached":226,"died":0},"left":{"tries":267,"reached":226,"died":3},"right":{"tries":267,"reached":226,"died":5}},"trials":452,"touched":452,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":678,"died":14,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":2,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"high","on":"gauge-machine-house","id":711,"mode":"left","face":[0,1],"foot":[-11.7,1.4,7.2],"block":"gauge-machine-house#711","died":true,"flung":fal
+##  e r30 {"tops":38,"feet":247,"byMode":{"idle":{"tries":247,"reached":210,"died":0},"push":{"tries":247,"reached":210,"died":6},"back":{"tries":247,"reached":210,"died":0},"left":{"tries":247,"reached":210,"died":2},"right":{"tries":247,"reached":210,"died":5}},"trials":420,"touched":420,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##    steered (listed) {"touched":630,"died":13,"flung":0,"perched":0,"badBy":{"gauge-machine-house#711":1,"tide-board#842":6,"tide-board#1668":6},"eg":[{"part":"e","level":"r30","on":"gauge-machine-house","id":711,"mode":"right","face":[0,-1],"foot":[-11.7,2.4,2],"block":"gauge-machine-house#711","died":true,"flung":fals
+##  e r60 {"tops":46,"feet":267,"byMode":{"idle":{"tries":267,"reached":226,"died":0},"push":{"tries":267,"reached":226,"died":6},"back":{"tries":267,"reached":226,"died":0},"left":{"tries":267,"reached":226,"died":3},"right":{"tries":267,"reached":226,"died":5}},"trials":452,"touched":452,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+== r47acd: RESULT 2/2  0 FAIL console errors: none
+## rule 47 PASS
+##  a low {"byMode":{"idle":[2166,0],"save":[2166,0]},"trials":4332,"touched":4332,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##  a high {"byMode":{"idle":[2500,0],"save":[2500,0]},"trials":5000,"touched":5000,"died":0,"flung":0,"perched":0,"held":0,"rescued":0,"rescueFar":0,"rescueMaxH":0,"rescueMaxM":0}
+##  c holders [["mould-stack",852,["high","r60","r90","f50"]],["ladle-stand",853,["high","r30","r60","r90","f50"]],["slump-hornito",862,["high","r30","r60","r90","f50"]],["slump-hornito",863,["high","r30","r60","r90","f50"]],["caldera-wall",945,["high","r60","r90","f50"]],["caldera-wall",946,["high","r60","r90","
+##  c mitts {"trials":1200,"touched":1077,"died":0,"flung":0,"perched":0,"held":831,"rescued":831,"rescueFar":0,"rescueMaxH":5.77,"rescueMaxM":5.77}
+##    farthest {"part":"c","how":"mitts","level":"high","on":"slump-hornito","from":[24.5,1.5,1.5],"c":0.75,"pitch":0.4,"block":"slump-hornito#1688","to":[23.5,1.1,15.5]}
+##  c run {"trials":168,"touched":168,"died":0,"flung":0,"perched":0,"held":168,"rescued":168,"rescueFar":0,"rescueMaxH":4.67,"rescueMaxM":4.67}
+##    farthest {"part":"c","how":"run","level":"high","on":"slump-hornito","from":[-26.5,4.2,-18.5],"ru":2.6,"block":"slump-hornito#862","to":[-23.5,1.1,-15.5]}
+== bots: RESULT 7/7  0 FAIL console errors: none
+== karp: RESULT 10/10  0 FAIL console errors: none
+== audit-turf: RESULT 3/3  0 FAIL console errors: none
+== audit-zones: RESULT 3/3  0 FAIL console errors: none
+== audit-tower: RESULT 4/4  0 FAIL console errors: none
+== audit-bazookarp: RESULT 3/3  0 FAIL console errors: none
+== audit-boss: RESULT 1/1  0 FAIL console errors: none
+== match-turf: RESULT 7/7  0 FAIL console errors: none
+== match-zones: RESULT 7/7  0 FAIL console errors: none
+### done load { 3.14 3.49 4.05 }
+
+## last 15 lines of job.log
+PASS stuck: % of bot time; no episode ≥ 10 s; none at the Pumice Races  {"stuckPct":0.54,"longest":[{"t":265,"name":"Zest","pos":[10.3,1.2,1.9],"mode":"fight","dur":4,"stone":false,"organ":false,"crest":false,"lava":"fall","why":{"mode":"fight","ink":100,"groundTeam":2,"seen":2,"floor":"island","g
+PASS an Organ lookout (organL / organL~) used at HIGH in this match, by a long-range kit (the claim)  {"lookTeam":[67.8,53.4],"lookLong":[0,53.4],"longKits":[[1,"charger"],[1,"spinner"]],"applies":true,"claims":8,"held":114.9,"organL":121.2,"log":[{"t":25.1,"team":0,"who":"Marlo","kit":"twins","up":
+perf6 medians of 3 runs; caldera / Halyard (runs found: day|calderahigh 3, dusk|calderahigh 3, day|calderalow 3, dusk|calderalow 3, day|halyard0 3, dusk|halyard0 3)
+  day  low : calls 224 / 260 x0.86 | tris 1345531 / 3329709 x0.40 | cpuRender ms 6.71 / 7.88 x0.85
+  day  high: calls 230 / 260 x0.88 | tris 1319996 / 3329709 x0.40 | cpuRender ms 6.50 / 7.88 x0.82
+  dusk low : calls 215 / 253 x0.85 | tris 1311738 / 3316364 x0.40 | cpuRender ms 6.78 / 8.19 x0.83
+  dusk high: calls 225 / 253 x0.89 | tris 1347351 / 3316364 x0.41 | cpuRender ms 6.70 / 8.19 x0.82
+method C (the gate): GPU throughput ms per frame, mean of 2 rounds | / halyard (same time of day)
+  caldera HIGH   day  C 6.99 (x0.98) issue 0.82 n 2
+  caldera HIGH   dusk C 7.28 (x1.02) issue 0.80 n 2
+  caldera LOW    day  C 7.00 (x0.98) issue 0.84 n 2
+  caldera LOW    dusk C 7.29 (x1.02) issue 0.87 n 2
+  halyard        day  C 7.12 (x1.00) issue 1.04 n 2
+  halyard        dusk C 7.12 (x1.00) issue 1.06 n 2
+### done load { 3.14 3.49 4.05 }
+
+## gate-c.txt
+method C (the gate): GPU throughput ms per frame, mean of 2 rounds | / halyard (same time of day)
+  caldera HIGH   day  C 6.99 (x0.98) issue 0.82 n 2
+  caldera HIGH   dusk C 7.28 (x1.02) issue 0.80 n 2
+  caldera LOW    day  C 7.00 (x0.98) issue 0.84 n 2
+  caldera LOW    dusk C 7.29 (x1.02) issue 0.87 n 2
+  halyard        day  C 7.12 (x1.00) issue 1.04 n 2
+  halyard        dusk C 7.12 (x1.00) issue 1.06 n 2
+
+## perf.txt
+perf6 medians of 3 runs; caldera / Halyard (runs found: day|calderahigh 3, dusk|calderahigh 3, day|calderalow 3, dusk|calderalow 3, day|halyard0 3, dusk|halyard0 3)
+  day  low : calls 224 / 260 x0.86 | tris 1345531 / 3329709 x0.40 | cpuRender ms 6.71 / 7.88 x0.85
+  day  high: calls 230 / 260 x0.88 | tris 1319996 / 3329709 x0.40 | cpuRender ms 6.50 / 7.88 x0.82
+  dusk low : calls 215 / 253 x0.85 | tris 1311738 / 3316364 x0.40 | cpuRender ms 6.78 / 8.19 x0.83
+  dusk high: calls 225 / 253 x0.89 | tris 1347351 / 3316364 x0.41 | cpuRender ms 6.70 / 8.19 x0.82
+
+## sus.txt
+== sus halyard 0 day r1: "Cissue":1.05,"Cdone":7.21 
+== sus caldera low day r1: "Cissue":0.81,"Cdone":6.92 
+== sus caldera high day r1: "Cissue":0.88,"Cdone":6.97 
+== sus halyard 0 dusk r1: "Cissue":1.05,"Cdone":7.08 
+== sus caldera low dusk r1: "Cissue":0.87,"Cdone":7.3 
+== sus caldera high dusk r1: "Cissue":0.83,"Cdone":7.16 
+== sus halyard 0 day r2: "Cissue":1.02,"Cdone":7.02 
+== sus caldera low day r2: "Cissue":0.87,"Cdone":7.07 
+== sus caldera high day r2: "Cissue":0.77,"Cdone":7.02 
+== sus halyard 0 dusk r2: "Cissue":1.08,"Cdone":7.15 
+== sus caldera low dusk r2: "Cissue":0.87,"Cdone":7.28 
+== sus caldera high dusk r2: "Cissue":0.77,"Cdone":7.39 
