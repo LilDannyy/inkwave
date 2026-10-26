@@ -2471,7 +2471,8 @@ const DRAWN = [
   { type: 'lockgate_cottage', pos: [-17.75, 0, -28.75], rotY: 0 },
   { type: 'lockgate_office', pos: [-4.75, 0, -22], rotY: 0, notIn: 'tower' },
   { type: 'lockgate_office', pos: [-4.75, 0, -22.5], rotY: 0, depth: 7, onlyIn: 'tower' },
-  { type: 'lockgate_stables', pos: [9, 0, -23], rotY: 0, notIn: 'tower' },
+  { type: 'lockgate_stables', pos: [9, 0, -23], rotY: 0, notIn: ['tower', 'bazookarp'] },
+  { type: 'lockgate_stables', pos: [11, 0, -23], rotY: 0, onlyIn: 'bazookarp' },
   { type: 'lockgate_stables', pos: [9, 0, -23], rotY: 0, flat: true, onlyIn: 'tower' },
   { type: 'lockgate_shed', pos: [23, 0, -9.5], rotY: 0 },
   { type: 'lockgate_mill', pos: [27, 0, 12], rotY: -P / 2, W: 28 },
@@ -2512,8 +2513,8 @@ const DRAWN = [
   { type: 'lockgate_enamel', pos: [26.98, 3.2, 18.2], rotY: -P / 2, variant: 4 },
 
   // ================= the diagonal pound: Alpha's towpath quay, moored boats, wharf crane, ladders, rings
-  { type: 'lockgate_narrowboat', pos: DW(7.5, -3.67, -0.7), rotY: Q, kind: 'working', L: 7.8, W: 2.0, cab: 2.9, lines: [[-2.3, -1.5, 0.9], [2.7, -1.5, 0.9]], notIn: 'tower' },
-  { type: 'lockgate_narrowboat', pos: DW(7.2, -1.52, -0.7), rotY: Q, kind: 'cabin', L: 7.8, W: 2.0, cab: 2.9, lines: [[-2.0, -3.6, 0.9], [3.0, -3.6, 0.9]], notIn: 'tower' },
+  { type: 'lockgate_narrowboat', pos: DW(7.5, -3.67, -0.7), rotY: Q, kind: 'working', L: 7.8, W: 2.0, cab: 2.9, lines: [[-2.3, -1.5, 0.9], [2.7, -1.5, 0.9]], notIn: ['tower', 'bazookarp'] },
+  { type: 'lockgate_narrowboat', pos: DW(7.2, -1.52, -0.7), rotY: Q, kind: 'cabin', L: 7.8, W: 2.0, cab: 2.9, lines: [[-2.0, -3.6, 0.9], [3.0, -3.6, 0.9]], notIn: ['tower', 'bazookarp'] },
   { type: 'lockgate_bollard', pos: DW(5.2, -5.25, 0.15), notIn: 'tower' },
   { type: 'lockgate_bollard', pos: DW(10.2, -5.25, 0.15), notIn: 'tower' },
   // (Tower Command: the two boats turned across the pound beside the bridge — layout.js XBOATS builds the hulls, roofs
@@ -2688,7 +2689,6 @@ const DOCK_PLACEMENTS = [
   // the head of the yard, where the bridge street comes out of the canal-side row: the weigh house (its weighbridge in
   // front), a dray waiting by the stables' back
   { type: 'lockgate_weighhouse', pos: [2.2, 0, -31.0], rotY: 0, notIn: 'bazookarp' },
-  { type: 'lockgate_weighhouse', pos: [5.2, 0, -31.0], rotY: 0, onlyIn: 'bazookarp' },
   { type: 'lockgate_cart', pos: [9.4, 0, -31.2], rotY: P + 0.15 },
   // small dressing: the dockmaster's planter, a fingerpost at the dock road's corner, a bench under the shed's windows,
   // weeds along the shed and the copings

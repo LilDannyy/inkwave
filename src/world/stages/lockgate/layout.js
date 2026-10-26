@@ -220,9 +220,19 @@ const LOCKGATE = {
   // A fixed 11 m towpath deck bridges the lower canal under the moving bridge; the Pond and both lower-bank routes meet
   // here at the true centre, with the bridge crest still overhead as landmark and high route.
   single: [
-    B(-6.5, 6.5, -0.05, 0.25, -6.5, 6.5, { tag: 'karp-underbridge-quay', color: LG.quay, pattern: PATTERN.pavers, onlyIn: 'bazookarp' }),
+    B(-7.5, 7.5, -0.05, 0.25, -7.5, 7.5, { tag: 'karp-underbridge-quay', color: LG.quay, pattern: PATTERN.pavers, onlyIn: 'bazookarp' }),
   ],
   half: [
+    // Tall brick crash barrier closes unsafe spawn-deck drops and leaps over the retaining edge; the carrier exits by
+    // the signed side walks instead. Its 2.5 m face is above a kid's 2.25 m jump and leaves flank exits open.
+    O(8, -61.5, 8, 0.5, 2.4, 4.9, 0, wall({ tag: 'karp-spawn-leap-barrier', onlyIn: 'bazookarp' })),
+    // A raised stone loading apron catches the 3.2 m spawn-front fall at a safe 2.3 m; low cobbled ramps keep it
+    // walkable from the forecourt on either side of the barrier.
+    B(-4, 4, 0.8, 0.9, 58, 61, { tag: 'karp-spawn-catch-apron', color: LG.quay, pattern: SURF.setts, onlyIn: 'bazookarp' }),
+    R([-5.8, 0, 59.5], [-4, 0.8, 59.5], 2, { tag: 'karp-spawn-apron-ramp', color: LG.setts, pattern: SURF.hoofsteps, onlyIn: 'bazookarp' }),
+    R([5.8, 0, 59.5], [4, 0.8, 59.5], 2, { tag: 'karp-spawn-apron-ramp', color: LG.setts, pattern: SURF.hoofsteps, onlyIn: 'bazookarp' }),
+    // A stone step deck in the drained lock catches falls from the upper bridge at its lower landing.
+    B(5.5, 11.5, -0.35, -0.25, 37, 44, { tag: 'karp-lock-catch-deck', color: LG.quay, pattern: SURF.setts, onlyIn: 'bazookarp' }),
     // ================= canal: towpath quay, lock E (both sides; lock W is its twin), basins, drained chamber, boats
     D(-16.4, 17.85, -HW - TOW, -HW, -3, 0.15, { tag: 'towpath', color: LG.lockside, pattern: PATTERN.brick, notIn: 'tower' }),
     // (Tower Command: the towpath stops 2.3 m short at the office end, so the tower's street past the office runs level
@@ -241,10 +251,10 @@ const LOCKGATE = {
     B(15.5, 28, -3, 1.3, 14.75, 21, { tag: 'lockside-n', color: LG.lockside, pattern: PATTERN.brick }),
     B(8, 15.5, -3, 0, 14.75, 21, { tag: 'basin-quay', color: LG.setts, pattern: SURF.setts }),
     B(16.5, 24.5, -3, -1.9, 9.25, 14.75, { tag: 'chamber-floor', color: LG.setts, pattern: PATTERN.concrete }),
-    D(3.6, 11.4, -4.72, -2.62, -2.6, -0.7, { tag: 'boat-a-hull', color: LG.hull, pattern: PATTERN.hullpaint, notIn: 'tower' }),
-    D(3.3, 11.1, -2.57, -0.47, -2.6, -0.7, { tag: 'boat-b-hull', color: LG.hull, pattern: PATTERN.hullpaint, notIn: 'tower' }),
-    D(4.6, 10.4, -4.62, -2.72, -0.7, 0.25, { tag: 'boat-a-hold', color: '#2c3a31', pattern: PATTERN.rubber, notIn: 'tower' }),
-    D(4.3, 10.1, -2.47, -0.57, -0.7, 0.25, { tag: 'boat-b-cabin', color: '#2f4a3c', pattern: PATTERN.hullpaint, mural: [{ n: nV, id: 4 }], notIn: 'tower' }),
+    D(3.6, 11.4, -4.72, -2.62, -2.6, -0.7, { tag: 'boat-a-hull', color: LG.hull, pattern: PATTERN.hullpaint, notIn: ['tower', 'bazookarp'] }),
+    D(3.3, 11.1, -2.57, -0.47, -2.6, -0.7, { tag: 'boat-b-hull', color: LG.hull, pattern: PATTERN.hullpaint, notIn: ['tower', 'bazookarp'] }),
+    D(4.6, 10.4, -4.62, -2.72, -0.7, 0.25, { tag: 'boat-a-hold', color: '#2c3a31', pattern: PATTERN.rubber, notIn: ['tower', 'bazookarp'] }),
+    D(4.3, 10.1, -2.47, -0.57, -0.7, 0.25, { tag: 'boat-b-cabin', color: '#2f4a3c', pattern: PATTERN.hullpaint, mural: [{ n: nV, id: 4 }], notIn: ['tower', 'bazookarp'] }),
     // (Tower Command: the same two boats turned across the pound as a crossing beside the bridge — XBOATS)
     ...XBOATS.flatMap(xboat),
     // gate walkways (lower gates x 16.5, upper gates x 24.5); one broad maintenance stair fills the drained chamber from the
@@ -308,7 +318,8 @@ const LOCKGATE = {
     R([-7, 0, -32], [-7, 2.6, -26], 2, { tag: 'office-stair', color: LG.stone, pattern: PATTERN.stonestep }),
 
     // ================= centre-east: stables + hay loft (the bridge street bends round it)
-    B(5.5, 12.5, 0, 3.6, -27, -19, brick({ tag: 'stables', roof: true, notIn: 'tower' })),
+    B(5.5, 12.5, 0, 3.6, -27, -19, brick({ tag: 'stables', roof: true, notIn: ['tower', 'bazookarp'] })),
+    B(7.5, 14.5, 0, 3.6, -27, -19, brick({ tag: 'stables', roof: true, onlyIn: 'bazookarp' })),
     // Tower Command: the stables' roof is a flat leaded loft deck, inkable and walkable (the user's "INKABLE ROOF", the
     // one roof in play: it overlooks the first checkpoint), reached by a cobbled horse ramp up the far side that rises
     // toward the bridge street end (the user's "RAMP"; 23°) onto a brick landing flush with the roof
