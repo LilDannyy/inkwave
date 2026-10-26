@@ -324,3 +324,8 @@ times (cards, pairs, props): nothing it says counts until a probe or a picture s
   and parts within the 8.5 cm (courses, caps, chamfers, straps, bars, rims), never a flat wrap; proof = a per-object sheet of
   the sweep's own shots, looked at. Objects that ARE their dressing (crates, flask / mould / ingot stacks, firebrick store,
   pattern crates, chain bin) → listed for a `paint:false` ruling. No reviewer before the reset.
+- **paint:false ruling (2026-10-26 15:10):** granted for the blocks that are their own dressing AND climb without ink (≤ 1.8 m):
+  stone-crate, chain-bin, pattern-crates, both flask-stack blocks, mould-stack, ingot-stack, ingot-pile, ingot-rack — a paint
+  flag only, with check-maps, climb-audit, cover-map, spawn-mid, tower-check and lava-audit proven unchanged against 8082e99a.
+  NOT granted for the firebrick store (3.5 m: an uninkable wall cannot be climbed → routes change); its brick is relief on a
+  paintable face. Each paint:false block named with tag and box in LEAD-REPORT-ART.md for the acceptance review.
