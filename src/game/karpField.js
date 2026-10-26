@@ -189,8 +189,8 @@ export class KarpField {
     }
     this.states = states;
     // forward edges (CSR): nav's own, then the hops and gaps
-    const from = [], to = [], len = [], type = [];
-    const push = (a, b, l, t) => { from.push(a); to.push(b); len.push(l); type.push(t); };
+    const from = [], to = [], len = [], type = [], edgeClass = [];
+    const push = (a, b, l, t, c = 0) => { from.push(a); to.push(b); len.push(l); type.push(t); edgeClass.push(c); };
     for (let i = 0; i < N; i++) {
       if (!ok[i]) continue;
       const n = nav.nodes[i];
@@ -211,17 +211,17 @@ export class KarpField {
     this._extraEdges(push);
     this._xMs = performance.now() - tx;
     const E = from.length;
-    const fs = (this.fs = new Int32Array(N + 1)), ft = (this.ft = new Int32Array(E)), fl = (this.fl = new Float32Array(E)), fy = (this.fy = new Uint8Array(E));
+    const fs = (this.fs = new Int32Array(N + 1)), ft = (this.ft = new Int32Array(E)), fl = (this.fl = new Float32Array(E)), fy = (this.fy = new Uint8Array(E)), fc = (this.fc = new Uint16Array(E));
     for (let k = 0; k < E; k++) fs[from[k] + 1]++;
     for (let i = 0; i < N; i++) fs[i + 1] += fs[i];
     const fill = fs.slice(0, N);
-    for (let k = 0; k < E; k++) { const p = fill[from[k]]++; ft[p] = to[k]; fl[p] = len[k]; fy[p] = type[k]; }
+    for (let k = 0; k < E; k++) { const p = fill[from[k]]++; ft[p] = to[k]; fl[p] = len[k]; fy[p] = type[k]; fc[p] = edgeClass[k]; }
     // reverse (for the backwards Dijkstra)
-    const rs = (this.rs = new Int32Array(N + 1)), rt = (this.rt = new Int32Array(E)), rl = (this.rl = new Float32Array(E)), ry = (this.ry = new Uint8Array(E));
+    const rs = (this.rs = new Int32Array(N + 1)), rt = (this.rt = new Int32Array(E)), rl = (this.rl = new Float32Array(E)), ry = (this.ry = new Uint8Array(E)), rc = (this.rc = new Uint16Array(E));
     for (let k = 0; k < E; k++) rs[to[k] + 1]++;
     for (let i = 0; i < N; i++) rs[i + 1] += rs[i];
     const rfill = rs.slice(0, N);
-    for (let k = 0; k < E; k++) { const p = rfill[to[k]]++; rt[p] = from[k]; rl[p] = len[k]; ry[p] = type[k]; }
+    for (let k = 0; k < E; k++) { const p = rfill[to[k]]++; rt[p] = from[k]; rl[p] = len[k]; ry[p] = type[k]; rc[p] = edgeClass[k]; }
     this.E = E;
   }
 
@@ -398,6 +398,54 @@ export class KarpField {
       addLayoutEdges(layoutGaps, TYPES.gap, Gp.flatMax);
       addLayoutEdges(layoutWalks, TYPES.walk, 8);
     }
+    // [b5-karp-ref] Parametric, physically proved route classes. The class bounds keep data compact and are mirrored
+    // with the arena; hopVeto removes any generated direction #16 proves the kid cannot make.
+    const classes = R.def.carrierField?.gapClasses || [], classNames = [''];
+    this.gapClasses = [];
+    const mirrored = (b) => ({ x: [-b.x[1], -b.x[0]], y: b.y, z: [-b.z[1], -b.z[0]] });
+    const classSeen = new Set();
+    for (const [ci, c] of classes.entries()) {
+      if (!c || !['hop', 'swimJump', 'gangway'].includes(c.kind) || !Number.isFinite(c.maxLen) || c.maxLen <= 0 || c.maxLen > 20) continue;
+      const id = ci + 1, type = c.kind === 'hop' ? TYPES.hop : c.kind === 'gangway' ? TYPES.walk : TYPES.gap;
+      classNames[id] = c.name || `gap-class-${id}`;
+      let generated = 0, kept = 0, vetoed = 0;
+      const inside = (n, b) => ['x', 'y', 'z'].every((k) => Array.isArray(b[k]) && n[k] >= b[k][0] - 1e-4 && n[k] <= b[k][1] + 1e-4);
+      const addDirection = (src, dst, key) => {
+        const targets = nav.validIds.filter((j) => ok[j] && inside(nodes[j], dst));
+        for (const i of nav.validIds) {
+          if (!ok[i] || !inside(nodes[i], src)) continue;
+          const a = nodes[i], near = [];
+          for (const j of targets) {
+            if (i === j) continue;
+            const b = nodes[j], len3 = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
+            if (len3 > c.maxLen + 1e-6 || within6(i, j)) continue;
+            const flat = Math.hypot(b.x - a.x, b.z - a.z), dy = b.y - a.y;
+            if (!openAir(a, b, flat, dy) || nav._blocked(a, b, Math.max(a.y, b.y))) continue;
+            near.push({ j, len3 });
+          }
+          near.sort((a, b) => a.len3 - b.len3 || a.j - b.j);
+          for (const q of near.slice(0, Math.max(1, c.perNode | 0 || 2))) {
+            const edgeKey = `${i}:${q.j}`;
+            if (classSeen.has(edgeKey)) continue;
+            classSeen.add(edgeKey);
+            generated++;
+            if (this._veto(a, nodes[q.j])) { vetoed++; continue; }
+            push(i, q.j, q.len3, type, id);
+            kept++;
+            if (type === TYPES.gap) gaps++;
+            if (!c.oneWay) {
+              generated++;
+              if (this._veto(nodes[q.j], a)) vetoed++;
+              else { push(q.j, i, q.len3, type, id); kept++; if (type === TYPES.gap) gaps++; }
+            }
+          }
+        }
+      };
+      const sides = [[c.from, c.to], [mirrored(c.from), mirrored(c.to)]];
+      for (const [s, d] of sides) addDirection(s, d, id);
+      this.gapClasses.push({ id, name: classNames[id], kind: c.kind, generated, kept, vetoed, maxLen: c.maxLen, perNode: c.perNode || 2 });
+    }
+    this.gapClassNames = classNames;
     this.stats.hops = hops; this.stats.gaps = gaps;
   }
 
@@ -411,7 +459,7 @@ export class KarpField {
     }
     return out;
   }
-  _dijkstra(okN, seeds, plain = false) {
+  _dijkstra(okN, seeds, plain = false, excludedClasses = null) {
     const N = this.N, D = new Float32Array(N).fill(INF), heap = new Heap(N);
     for (const s of seeds) if (okN[s]) { D[s] = 0; heap.push(s, 0); }
     const rs = this.rs, rt = this.rt, rl = this.rl, ry = this.ry;
@@ -419,6 +467,7 @@ export class KarpField {
       const u = heap.pop(), du = D[u];
       for (let k = rs[u]; k < rs[u + 1]; k++) {
         const v = rt[k];
+        if (excludedClasses?.has(this.rc[k])) continue;
         if (!okN[v] || (plain && ry[k] >= TYPES.hop && ry[k] <= TYPES.gap)) continue;
         const nd = du + rl[k];
         if (nd < D[v]) { D[v] = nd; heap.push(v, nd); }
@@ -433,6 +482,31 @@ export class KarpField {
     this.setState(0);
     const p = this.R.pond;
     this.L = [0, 1].map((t) => { const r = this.fieldAt(t, p); return r ? r.d : INF; });
+    // Per-class cumulative route lengths let the checker show exactly what each bounded rule changes.
+    if (this.gapClasses?.length) {
+      const all = new Set(this.gapClasses.map((c) => c.id)), included = new Set(), okN = this.states[0].okN;
+      const lengthFor = (D, t) => {
+        const i = this.ownNode(p); if (i < 0) return INF;
+        let best = D[i] + Math.hypot(p.x - this.nav.nodes[i].x, p.y - this.nav.nodes[i].y, p.z - this.nav.nodes[i].z);
+        for (let k = this.fs[i]; k < this.fs[i + 1]; k++) {
+          const c = this.fc[k]; if (c && !included.has(c)) continue;
+          const q = this.nav.nodes[this.ft[k]], v = D[this.ft[k]] + Math.hypot(p.x - q.x, p.y - q.y, p.z - q.z);
+          if (v < best) best = v;
+        }
+        return best;
+      };
+      const lengths = () => [0, 1].map((t) => {
+        const excluded = new Set([...all].filter((id) => !included.has(id)));
+        return lengthFor(this._dijkstra(okN, this.seeds[t], false, excluded), t);
+      });
+      let before = lengths();
+      for (const c of this.gapClasses) {
+        included.add(c.id);
+        const after = lengths();
+        c.LBefore = before.map((v) => +v.toFixed(2)); c.LAfter = after.map((v) => +v.toFixed(2));
+        before = after;
+      }
+    }
   }
   // the field without the hop and gap edges (the start state; computed on demand: the checker's "gain" and the tests)
   get plainD() { return this._plainD || (this._plainD = [0, 1].map((t) => this._dijkstra(this.states[0].okN, this.seeds[t], true))); }
@@ -672,10 +746,10 @@ export class KarpField {
   extraEdgeList() {
     const out = [], nav = this.nav;
     for (let i = 0; i < this.N; i++) for (let k = this.fs[i]; k < this.fs[i + 1]; k++) {
-      const t = this.fy[k];
-      if (t !== TYPES.hop && t !== TYPES.gap) continue;
+      const t = this.fy[k], classId = this.fc[k] || 0;
+      if (t !== TYPES.hop && t !== TYPES.gap && !classId) continue;
       const a = nav.nodes[i], b = nav.nodes[this.ft[k]];
-      out.push({ type: t === TYPES.hop ? 'hop' : 'gap', a: [a.x, a.y, a.z], b: [b.x, b.y, b.z], from: i, to: this.ft[k], len: this.fl[k] });
+      out.push({ type: t === TYPES.hop ? 'hop' : 'gap', classId, className: this.gapClassNames?.[classId] || '', classKind: this.gapClasses?.find((c) => c.id === classId)?.kind || '', a: [a.x, a.y, a.z], b: [b.x, b.y, b.z], from: i, to: this.ft[k], len: this.fl[k] });
     }
     return out;
   }
