@@ -30,3 +30,11 @@ routes, block accidental moves with Bazookarp-only physical geometry, or tolerat
 that shortens neither spawn → Pond nor Pond → Gate by more than 10% of modeled L. Anything longer than 20 m must be
 modeled or blocked. Declare a Gate's intended entrance count as `gate.entrances`; the physical ring crossings must
 match that count and each must be visible or modeled under SPEC S21.
+
+`tolerate` holds the classes a layout leaves unmodelled on purpose (DECISIONS #34 (c)), in the same box shape
+(`{ name, from, to, maxLen <= 20, oneWay? }`, mirrored). The field ignores them; `bazookarp-check` weighs them: the
+class's #7d moves go into the graph as extra one-way edges, cumulatively after the modelled classes, and the shortest
+spawn -> Pond and Pond -> Gate are measured for both teams (`KarpField.routeLengths` / `classLengths`, computed on
+demand, never at match start). Within 10 % of L the class is tolerated and listed; past it the check fails. A prop
+placement can make its colliders off-limits tops in one mode (`roofCols: true` on a mode-only copy) — the map
+standard's way to close a top a carrier should not reach (`tools/botlab/jobs/batch5/karp-stages/BUILDER.md`).
