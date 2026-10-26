@@ -1,0 +1,23 @@
+JOB-36 (Mac mini M4) on new-stages 8e78f191 (pinned): Highmark Foundry's engine record for its acceptance review. Wall time 63 min.
+
+- check-maps: caldera, caldera.bazookarp and caldera.boss all ok.
+- lava.js: 60/60, 60/60, then 58/60 in the job. My 3 repeats on the same tree afterwards were 60/60 each, so 5 of 6 runs were clean. The one run's 2 FAILs:
+    F8c: 1 death in 76 trials (blade, race1, into the lava).
+    F10: neither team's claimant (both chargers) reached its lookout (upAt null, held 0, busyOuts 1).
+- lava-audit, all PASS:
+    rules 14/21/22/25/38/42/45/46: 9/9 (rule 42: no void in any view).
+    rule 44: LOW 23/23, HIGH 25/25. Largest running-jump gain 13.66 m at LOW and 14.74 m at HIGH (gate: under 15 m).
+    rule 47: b at low+high 2/2, r30+r60 2/2, r90+f50 2/2; e 2/2; a,c,d 2/2. 0 died, 0 flung, 0 perched. Furthest rescue 8.56 m, highest 5.99 m.
+      r47b3 printed its RESULT and then hit the 900 s watchdog, the same as in caldera JOB-19. Its result is complete.
+      Part e's steered tries (listed, not gated) had 13-14 deaths per level, all on tide-board #842 / #1668 and gauge-machine-house #711.
+- lava-bots 7/7 (the gate: 0 escape deaths, 0 fight deaths in 360 bot-trials). lava-karp 10/10.
+- stage-audit: turf 3/3, zones 3/3, tower 4/4, bazookarp 3/3, boss 1/1. Every mode shows "lightmap applied (baked for this build, not stale)".
+- Bot matches (lava-match), no console errors in either:
+    Turf War 3:00: 7/7. 0 lava deaths, 0 sea falls, stuck 0.19 %, no episode of 10 s or more, none at the Races.
+    Zone Control 5:00: 7/7. 0 lava deaths, 0 sea falls, stuck 0.54 % (longest 4 s), none at the Races.
+    Organ lookouts were used at HIGH by a long-range kit in both.
+- perf6, median of 3, caldera / Halyard: calls x0.85-0.89, tris x0.40-0.41, cpuRender x0.82-0.85. Same at LOW and HIGH, day and dusk.
+- GPU, method C (ms per frame, mean of 2 rounds), caldera / Halyard at the same time of day:
+    day:  LOW 7.00 (x0.98)  HIGH 6.99 (x0.98)  | Halyard 7.12
+    dusk: LOW 7.29 (x1.02)  HIGH 7.28 (x1.02)  | Halyard 7.12
+  Caldera is level with Halyard. Halyard's own dusk read 7.23 in JOB-34, so ±2 % is within the noise between jobs.
