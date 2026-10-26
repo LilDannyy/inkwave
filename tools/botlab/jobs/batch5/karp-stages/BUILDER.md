@@ -119,8 +119,14 @@ Also learned on the two reference stages:
   re-coloured box: always as a Bazookarp-only copy plus `notIn: 'bazookarp'` on the original. (The stage card leaves
   Bazookarp-only pieces out: `mapThumb.js`.)
 - **Moored boats and props are floor.** A yacht's deck, a locker's roof, a trailer, a mast rack: a kid stands on them, so
-  they are graph nodes or off-limits tops, and they are the stepping stones of most "impossible" long gaps into a ring.
-  Look at the flag pictures before you class anything.
+  they are graph nodes or off-limits tops, and they are the stepping stones of many "impossible" long gaps into a ring.
+  To close one, use the prop's own off-limits option first (the yacht props' `col: 'roof'`), else `roofCols`, always on a
+  Bazookarp-only copy. A roofed stepping stone can expose the move it carried (Halyard: LADY GREY's deck had stood in for
+  a Long Pier → pontoon jump, which then needed its own class).
+- **Trace a find before you block it.** `PROBE='[x, y, z, x, y, z]'` shows how #16's kid makes it and what it touched:
+  Halyard's loading-deck → quay "long gap" used no boat, it was a run off the deck's corner beside a ramp.
+- **Check a block against the routes it crosses.** A screen on a dock's edge takes the edge's nodes: Halyard's fuel-dock
+  screen pushed the Gate's route 2 within 2.5 m of route 1 (#5: 1.87×) until the ice chest beside it went.
 - **Check a new wall against the routes it lands on.** Halyard's quay returns (a good block) stood on a pontoon gangway's
   landing and turned the pontoon into a dead end inside the Gate ring: the dead end then made a 23 m swim-jump shortcut.
 - **A class with no candidates is dead data.** When a physical ramp or a removal makes a class empty, delete the rule.
