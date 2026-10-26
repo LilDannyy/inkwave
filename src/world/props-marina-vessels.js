@@ -2787,7 +2787,10 @@ export const HALYARD_VESSELS = [
   // ---- dinghy on its trailer (boatyard cover piece). Zone Control: the bow stair takes the yard in front of the tug's
   //      bow, so the trailer is parked out on the quay by the boathouse instead (keeps the lane east of the stair open
   //      from the quay — no dead-end alley beside the tug)
-  { type: 'dinghy_trailer', pos: [22.1, 0, -27.7], notIn: ['zones', 'tower'] },
+  { type: 'dinghy_trailer', pos: [22.1, 0, -27.7], notIn: ['zones', 'tower', 'bazookarp'] },
+  // [b5-karp-ref] Bazookarp: the same trailer with an off-limits top (no ink, a kid slides off the dinghy): a carrier hopped
+  // onto it from the alley beside the tug, ground no walk reaches (bazookarp-check #7d, the lead's ruling 6)
+  { type: 'dinghy_trailer', pos: [22.1, 0, -27.7], roofCols: true, onlyIn: 'bazookarp' },
   { type: 'dinghy_trailer', pos: [20.4, 0, hq(-35.3)], rotY: 0.12, onlyIn: 'tower' },   // (Tower Command: clear of the bow ramp, as in Zone Control)
   { type: 'dinghy_trailer', pos: [20.4, 0, hq(-35.3)], rotY: 0.12, onlyIn: 'zones' },
   // ---- Tower Command (the user's notes; authored on Bravo's half where they drew them, mirrored): the floating docks'

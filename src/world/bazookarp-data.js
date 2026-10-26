@@ -34,12 +34,26 @@ export const BAZOOKARP_DEFS = {
         [[-4.5, 0.3, 21.5], [-2.5, 0, 26.5]],
       ],
       gapClasses: [
-        { name: 'Long Pier mid transfer gangway', kind: 'gangway', from: { x: [-12.5, -10.5], z: [-7, -6], y: [1.2, 1.4] }, to: { x: [-12, -10], z: [-3, -2], y: [2.3, 2.5] }, maxLen: 6, perNode: 2 },
         { name: 'Long Pier mid-edge hop', kind: 'hop', from: { x: [-13.7, -12.5], z: [-7.6, -6.2], y: [1.2, 1.5] }, to: { x: [-15, -14], z: [-1, 1], y: [2.1, 2.3] }, maxLen: 8, perNode: 2 },
-        { name: 'Long Pier north risers', kind: 'gangway', from: { x: [10.5, 14.5], z: [25, 26], y: [0, 0.2] }, to: { x: [10.5, 14.5], z: [21.5, 22.5], y: [0.6, 0.8] }, maxLen: 6 },
         { name: 'Long Pier south transfer gangway', kind: 'gangway', from: { x: [-19.6, -19.4], z: [-42.6, -40.4], y: [-0.1, 0.1] }, to: { x: [-12.6, -12.4], z: [-42.6, -42.4], y: [-1, -0.6] }, maxLen: 10, perNode: 1, oneWay: true },
-        { name: 'Long Pier south risers', kind: 'gangway', from: { x: [-13.5, -11.5], z: [-31, -29.5], y: [-1, -0.8] }, to: { x: [-13.5, -11.5], z: [-23, -21.5], y: [0.6, 0.8] }, maxLen: 9 },
-        { name: 'south spawn swim crossing', kind: 'swimJump', from: { x: [-13, -11], z: [-55, -54], y: [-0.2, 0] }, to: { x: [-4, -2], z: [-56, -54], y: [-0.1, 0.1] }, maxLen: 11, perNode: 2 },
+      ],
+      // [b5-karp-ref] TOLERATED route classes (DECISIONS #34 (c)): unmodelled moves of at most 20 m that the checker weighs
+      // against the shortest spawn → Pond and Pond → Gate (each may shorten them by no more than 10 % of L). Alpha's half;
+      // mirrored.
+      tolerate: [
+        // a running jump off the houseboat's sun deck, over its porch rail and 2.5 m of water, onto the fuel dock (≤ 6 m)
+        { name: 'houseboat sun deck → fuel dock', from: { x: [-10, -8], z: [-21, -16], y: [1.1, 1.6] }, to: { x: [-5, -4], z: [-24, -20], y: [-0.1, 0.1] }, maxLen: 8, oneWay: true },
+        // a swim-jump from the boatyard's edge across the channel onto the yard walkway (7.8 m)
+        { name: 'boatyard edge swim → yard walkway', from: { x: [10, 11], z: [-32, -31], y: [-0.1, 0.1] }, to: { x: [4, 5], z: [-37, -36], y: [-0.1, 0.1] }, maxLen: 9, oneWay: true },
+        // a swim-jump from the Long Pier's plank head onto the car-deck apron (≤ 9.3 m)
+        { name: 'Long Pier plank head swim → car-deck apron', from: { x: [-17, -16], z: [-5, -4], y: [0.9, 1.0] }, to: { x: [-13, -10], z: [-12, -10], y: [-0.1, 1.4] }, maxLen: 10, oneWay: true },
+        // off the lifejacket locker's roof / the transfer gangway's head, or over the bulwark from the side corridor, down
+        // onto the car-deck apron (≤ 6.5 m)
+        { name: 'over the ferry bulwark onto the car-deck apron', from: { x: [-14, 14], z: [-4, -1], y: [1.2, 2.5] }, to: { x: [-14, 14], z: [-7, -6], y: [1.2, 1.5] }, maxLen: 8, oneWay: true },
+        // a rising running jump from the visitor pontoon's gangway foot onto the fuel dock's side (≤ 5.2 m)
+        { name: 'pontoon gangway foot → fuel dock', from: { x: [-7, -5], z: [-38, -37], y: [-0.8, -0.7] }, to: { x: [-5, -4], z: [-35, -32], y: [-0.1, 0.1] }, maxLen: 6, oneWay: true },
+        // a swim-jump off the chandlery's loading deck down onto the fuel dock, outside the Gate's ring (≤ 11.1 m)
+        { name: 'loading deck swim → fuel dock', from: { x: [-7.5, -7], z: [44, 45], y: [1.2, 1.4] }, to: { x: [-5, -2], z: [34, 37], y: [-0.1, 0.1] }, maxLen: 12, oneWay: true },
       ],
     },   // [b5-karp-ref] measured swim jumps and layout gap moves, mirrored by the Carp Field
     weirs: [{ at: [-1.5, 0, 27.5], yaw: 0 }],          // Long Pier / boatyard junction (§9.3)

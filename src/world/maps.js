@@ -98,7 +98,10 @@ export const HALYARD = {
     // walkable and inkable (a perch you reach on foot, not an off-limits roof)
     B(-1.7, 1.7, 0, 2.7, -22.5, -18.8, { tag: 'fuel-hut', color: M.hut, pattern: PATTERN.render, onlyIn: 'tower' }),
     // gangway onto the ferry's side corridor (free-spanning plank over the water)
-    R([0, 0, -9.8], [0, 1.3, -4.0], 3.8, { tag: 'gangway', thin: true, thickness: 0.22, color: M.steel, pattern: PATTERN.gangdeck }),
+    R([0, 0, -8.8], [0, 1.3, -4.95], 3.4, { tag: 'gangway', thin: true, thickness: 0.22, color: M.steel, pattern: PATTERN.gangdeck, notIn: 'bazookarp' }),
+    // [b5-karp-ref] Bazookarp's wider, longer gangway (Codex's landing fix, dfd50f69, had changed it for every mode: the
+    // base layout stays as it was)
+    R([0, 0, -9.8], [0, 1.3, -4.0], 3.8, { tag: 'gangway', thin: true, thickness: 0.22, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'bazookarp' }),
     // Bazookarp's north gangway connects the ferry-side boat line to the main deck beside the weir;
     // it gives the west jetty a real second approach through mid, mirrored for both teams.
     R([-12.5, 1.3, 1.5], [-2.5, 0, 26.5], 3.6, { tag: 'karp-north-gangway', thickness: 0.6, color: M.steel, pattern: PATTERN.gangdeck, onlyIn: 'bazookarp' }),
@@ -133,13 +136,16 @@ export const HALYARD = {
     // visitor pontoons 0.9 m below the piers: the spine from the Long Pier to the fuel dock (a gangway down at each end),
     // the long finger north to the finger pier (a gangway up onto it), a short finger, the access pontoon to the quay
     B(SL.spine[0], SL.spine[1], SL.pontoonY - SL.pontoonDepth, SL.pontoonY, SL.spine[2], SL.spine[3], { tag: 'visitor-pontoon', color: M.float, pattern: PATTERN.rubber }),
-    ...SL.fingers.map((f, i) => B(f[0], f[1], SL.pontoonY - SL.pontoonDepth, SL.pontoonY, f[2], f[3], { tag: 'visitor-finger', color: M.float, pattern: PATTERN.rubber, notIn: i === 1 ? 'tower' : undefined })),
+    // ([b5-karp-ref] Bazookarp: the access pontoon (fingers[2]) and its gangway are not built: the quay returns stand on its
+    // gangway's landing, so it was a dead end inside the Gate's ring from which a carrier swim-jumped onto the Gate apron,
+    // 15–23 m nearer than any walk, and onto which one swim-jumped from the Long Pier's root, unseen from the deck)
+    ...SL.fingers.map((f, i) => B(f[0], f[1], SL.pontoonY - SL.pontoonDepth, SL.pontoonY, f[2], f[3], { tag: 'visitor-finger', color: M.float, pattern: PATTERN.rubber, notIn: i === 1 ? 'tower' : i === 2 ? 'bazookarp' : undefined })),
     // Tower Command: the short finger moved under the water-bus PUFFIN's gangway (its berth kept clear)
     B(SL.towerFinger[0], SL.towerFinger[1], SL.pontoonY - SL.pontoonDepth, SL.pontoonY, SL.towerFinger[2], SL.towerFinger[3], { tag: 'visitor-finger', color: M.float, pattern: PATTERN.rubber, onlyIn: 'tower' }),
     R([SL.spine[0], SL.pontoonY, -44.3], [-19.5, 0, -44.3], 1.6, { tag: 'pontoon-gangway', thin: true, thickness: 0.2, color: M.steel, pattern: PATTERN.gangdeck }),
     R([SL.spine[1], SL.pontoonY, -44.3], [-4.5, 0, -44.3], 1.6, { tag: 'pontoon-gangway', thin: true, thickness: 0.2, color: M.steel, pattern: PATTERN.gangdeck }),
     R([-13.1, SL.pontoonY, -28.75], [-13.1, 0, -26.4], 1.2, { tag: 'pontoon-gangway', thin: true, thickness: 0.2, color: M.steel, pattern: PATTERN.gangdeck }),
-    R([-12.1, SL.pontoonY, SL.fingers[2][2]], [-12.1, 0, QF], 1.6, { tag: 'pontoon-gangway', thin: true, thickness: 0.2, color: M.steel, pattern: PATTERN.gangdeck }),
+    R([-12.1, SL.pontoonY, SL.fingers[2][2]], [-12.1, 0, QF], 1.6, { tag: 'pontoon-gangway', thin: true, thickness: 0.2, color: M.steel, pattern: PATTERN.gangdeck, notIn: 'bazookarp' }),
     // the chandlery's store (roof off limits) and its loading deck (the strategic point) on piles across the channel, a
     // ramp up from the fuel dock, a ramp up from the hardstanding
     B(SL.store[0], SL.store[1], -1.2, SL.storeTop, SL.store[2], SL.store[3], { tag: 'chandlery', roof: true, color: M.store, pattern: PATTERN.weatherboard }),
@@ -169,6 +175,11 @@ export const HALYARD = {
     R([19.0, 0, -29.95], [19.0, 2.6, -24.0], 2.2, { tag: 'tug-bow-ramp', color: M.wood, pattern: PATTERN.rampboard, onlyIn: 'tower' }),
     // plank from the boatyard onto the ferry's end deck
     R([19.7, 0, -3.6], [15.85, 1.3, -3.6], 2.0, { tag: 'ferry-plank', thin: true, thickness: 0.2, color: M.wood, pattern: PATTERN.planks }),
+    // Bazookarp: a boarded timber hoarding (2.4 m, off-limits top) closes the alley between the laid-up tug and the yard's
+    // edge at the tug's stern: a carrier vaulted the drums there and hopped the dinghy trailer out of a dead end, 29–39 m
+    // nearer a Gate than any walk (bazookarp-check #7d; the lead's ruling 6: accidental moves are blocked by a visible
+    // Bazookarp-only barrier, never in the base layout)
+    B(20.5, 24, 0, 2.4, -25.2, -24.0, { tag: 'karp-yard-hoarding', roof: true, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
     // Bazookarp gets a second, visible ferry landing to the Long Pier so the central push has a true alternate route.
     R([-20.5, 0, -3.6], [-15.0, 1.3, -3.6], 2.6, { tag: 'ferry-plank', thin: true, thickness: 0.2, color: M.wood, pattern: PATTERN.planks, onlyIn: 'bazookarp' }),
 
